@@ -3,7 +3,6 @@ header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
-$debug=1;
 include '../common.inc';
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
