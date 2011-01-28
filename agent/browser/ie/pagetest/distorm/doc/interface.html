@@ -1,0 +1,283 @@
+<h3>diStorm3 v1.0</h3>
+<table width=80%><tr><td>
+The goal of diStorm3 is to decode x86/AMD64 binary streams and return a structure that describes each instruction.
+The structure is generic enough to describe all types of instructions and their operands.
+diStorm3 doesn't supply any text representation in the returned structure, it is up to the user to translate the results into text.
+The structure was designed with two key guidelines, saving memory and the possibility to represent any instruction.
+The format of an x86 instruction was taken into consideration and it allowed to optimize the structure.
+</td></tr></table>
+
+<font face="Courier New">
+<pre>
+<b>Syntax -</b>
+typedef struct {
+  _OffsetType addr;
+  uint8_t size;
+  uint8_t flags;
+  uint8_t segment;
+  uint16_t opcode;
+  _Operand ops[OPERANDS_NO];
+  uint8_t base, scale;
+  uint8_t dispSize;
+  uint64_t disp;
+  _Value imm;
+} _DecompedInst;
+
+<b>Members -</b>
+<b>addr</b>
+    Specifies the address in memory of the instruction.
+<b>size</b>
+    Specifies the size of the whole instruction.
+<b>flags</b>
+    Specifies possible cases about the instruction itself. This is a bit-field and might contain a few values together.
+    If it contains equals to FLAG_NOT_DECODABLE the instruction is not decodeable
+    (a few reason might cause so, lack of bytes to disassemble it, invaild instruction, invalid encoding, etc).
+    Otherwise, it will indicate which prefixes were used for the instruction, such as:
+    FLAG_LOCK - The instruction will access memory atomically.
+    FLAG_REPNZ - The instruction is repeated as long as zero flag is clear.
+    FLAG_REP - The instruction is repeated as long as zero flag is set.
+
+    FLAG_GET_OPSIZE - Returns the DecodeType (Decode16Bits, Decode32Bits or Decode64Bits) of the effective operand size of the instruction.
+    FLAG_GET_ADDRSIZE - Returns the DecodeType (Decode16Bits, Decode32Bits or Decode64Bits) of the effective address size of the instruction.
+    Using the latter two macros you can determine the size of operand or address, Decode16Bits - 16 bits, Decode32Bits - 32 bits and Decode64Bits - 64 bits.
+    The sizes returns by these macros take into consideration the prefixes even if they are dropped.
+
+    NOTE - Even if an operand size prefix or an address size prefix were dropped (ignored) they are still taken into account in the flags above!
+    This behavior is good if diStorm doesn't use the prefix, but the the prefix really affects the instruction and you have to take care of it on your own.
+    For instance, 'db 0x66 ret' in 16 bits mode, will read an address into EIP from SP.
+    diStorm doesn't know how to deal with such a combination, but for an accurate decode, you might wish to know to handle these situations.
+<b>segment</b>
+    Specifies the index of the segment register which the instruction uses to access memory.
+    This member contains the segment override prefix only, if one exists.
+    Note that if the instruction doesn't access memory and a segment override was used, it will be ignored.
+<b>opcode</b>
+    Specifies the index of the opcode. This index will be used to recognize an instruction.
+    Note that this index is shared among all opcodes with the same mnemonic.
+		E.G: MOV EAX, 0 and MOV CR0, EAX, which are certainly <i>different</i> instructions, will both have the same opcode index for 'MOV'.
+    You will be able to distinguish between them only by examining the operands.
+<b>ops</b>
+    An array of up to 4 instructions that describe the operands of the instruction. See <a href="#_Operand">_Operand structure</a>.
+<b>base</b>
+    Specifies the index of the 'base' register for a <i>memory indirection</i> operand.
+    Used only when there is an operand type of O_MEM.
+<b>scale</b>
+    Specifies the scale number of the <i>'index'</i> register only for a <i>memory indirection</i> operand.
+    Used only when there is an operand type of O_MEM. Note that scale can be one of: 2, 4, 8. Scale of 1 is ignored.
+<b>dispSize</b>
+    Specifies the size of the 'disp' member. Despite of the fixed allocated size of the 'disp' member, this size indicates the original displacement size.
+    Used only when there is an operand type of O_MEM or O_DISP.
+<b>disp</b>
+    Specifies the displacement value of a <i>memory indirection</i> operand. This value can be treated as signed.
+    Used only when there is an operand type of O_MEM, O_SMEM or O_DISP.
+<b>value</b>
+    The 'value' member can be used separately for different operand types:
+    O_IMM: Specifies the value of an immediate operand. This value can be treated in any size and signdness.
+           The size of the immediate is found inside the specific operand whose type is O_IMM.
+    O_PTR: Specifies the segment and offset of an absolute address pointer which is a part of the instruction itself.
+           Use value.ptr.seg and value.ptr.off to access them correspondingly.
+           The size of the ptr.off is found inside the specific operand whose type is O_PTR.
+    O_PC: Specifies the relative offset to the branch target, calculated relative to the address of the current instruction.
+          The size of the relative branch offset is found inside the specific operand whose type is O_PC.
+          Use only the 'imm' member to access the branch offset, which might be also signed.
+
+<b>Remarks -</b>
+    Don't access members that you're not allowed to. Some of them might contain garbage data and lead to errornous decode.
+    Access to members that are safe, or only to those that the 'ops' indicated that are safe.
+
+    Before you access any member of this structure make sure the instruction is valid by comparing 'flags' with FLAG_NOT_DECODABLE.
+    If the instruction isn't valid, you can find the faulting byte at imm.byte.
+
+    If a prefix byte was dropped (ignored) it will be considered as invalid instruction, it is up to the user how to handle this situation.
+
+    Warning - You must not depend on the values of the 'opcode' member between different versions of diStorm3.
+              The _MNEMONICS and _InstructionType values might change from version to version.
+              Therefore, if you want to save the opcode member to you will have to translate it to something constant, like its text.
+
+<b>Usage Examples -</b>
+    In order to print the mnemonic of an instruction use the _MNEMONICS, such as:
+    print _MNEMONICS[_DecodeInst.mnemonic]
+
+    For testing the opcode for a specific mnemonic use the _InstructionType enum. For instance, testing for flow control instructions:
+    if (_DecodeInst.opcode in [I_JMP, I_CALL, I_LOOP, I_JZ, I_JNZ, ...]) A flow control instruction is found, use imm.addr...
+<hr>
+
+<a name="_Operand">
+<b>Syntax -</b>
+typedef struct {
+    uint8_t type; /* _OperandType */
+    uint8_t size;
+    uint8_t index;
+} _Operand;
+
+<b>Members -</b>
+<b>type</b>
+    Type is _OperandType enum:
+    typedef enum { O_NONE, O_REG, O_IMM, O_IMM1, O_IMM2, O_DISP, O_SMEM, O_MEM, O_PC, O_PTR } _OperandType;
+    And can be any of the specified above.
+
+    O_NONE: Indicates there is no operand and all members of it should be ignored.
+            It also implies that the following operands are empty as well as this one.
+    O_REG: The 'index' member specifies the index of a register.
+           All types of registers (E.G: MMX, SSE, FPU, GPR, etc) are representable by O_REG.
+           The 'size' member specifies the size of the register.
+    O_IMM: Indicates that the _DecodeInst.imm contains the value of the immediate, whose size is specified in the 'size' member.
+    O_IMM1: Indicates that the _DecodeInst.imm.ex.i1 contains the value of the immediate, whose size is specified in the 'size' member.
+    O_IMM2: Indicates that the _DecodeInst.imm.ex.i2 contains the value of the immediate, whose size is specified in the 'size' member.
+    O_DISP: Indicates that the _DecodeInst.disp contains the value of the displacement of absolute memory address.
+            The 'size' member specifies the bandwidth of memory access. E.G: INC <b>QWORD</b> [0x12345678], whereas size of displacement is 32 bits.
+            The '_DecodeInst.dispSize' indicates the size of the displacement value itself.
+    O_SMEM: (Simple memory dereference) - The 'index' member specifies the index of a register for a memory dereference.
+            The 'size' member specifies the bandwidth of memory access.
+            O_SMEM might also contain a displacement, refer to O_DISP.
+    O_MEM: (Memory dereference) - The 'index' member specifies the index of the Index register.
+           The Index register is the one that might be scaled by _DecodeInst.scale.
+           The _DecodeInst.base might specify the index of a register, otherwise it is R_NONE.
+           The 'size' member specifies the bandwidth of memory access.
+           The O_MEM might also contain a displacement, refer to O_DISP.
+    O_PC: (Program Counter) Indicates that _DecodeInst.imm contains the relative offset to the target instruction.
+          The offset is calculated relative to the address of the current instruction.
+          The 'size' member specifies the size of the relative branch offset of the instruction itself.
+    O_PTR: Indicates that _DecodeInst.imm.ptr contain the segment-offset pair.
+           The 'size' member specifies the size of the offset value.
+           E.G: JMP FAR ffff:fff0.
+<b>size</b>
+    Specifies the size of the member the 'type' member refers to.
+    E.G: For a register it will be the size of that register. For a memory dereference, it will be the size of read or write operation.
+<b>index</b>
+    Specifies the index of a register, used only when 'type' is O_REG, O_SMEM or O_MEM.
+    This member holds any one of the registers (MMX, SSE, FPU, GPR, etc).
+
+<b>Remarks -</b>
+    The O_IMM1 and O_IMM2 types are special types used by instructions that have two immediates (E.G: ENTER),
+    since there is only a one 'imm' member in the _DecodeInst shared among all potential operands, these two additional types,
+    will be stored inside the 'imm' member without overriding each other.
+
+<b>Usage Examples -</b>
+    For instance, if you want to check whether a register is of FPU type:
+    if ((ops[n].index &gt;= R_ST0)) &amp;&amp; ((ops[n].index &lt;= R_ST7)) This is an FPU register.
+
+    In order to print the name of the instruction use the _REGISTERS table, such as:
+    print _REGISTERS[ops[n].index]
+
+    If you want to check for a specific register you can use the _RegisterType enum,
+    which contains all registers in the specific order of the processor.
+    if (ops[n].index == R_RIP) ...
+<hr>
+
+<b>Syntax -</b>
+typedef union {
+  int8_t sbyte;
+  uint8_t byte;
+  int16_t sword;
+  uint16_t word;
+  int32_t sdword;
+  uint32_t dword;
+  int64_t sqword;
+  uint64_t qword;
+  _OffsetType addr;
+  struct {
+    uint16_t seg;
+    uint32_t off;
+  } ptr;
+  struct {
+    uint32_t i1;
+    uint32_t i2;
+  } ex;
+} _Value;
+
+<b>Members -</b>
+<b>sbyte</b>, <b>sword</b>, <b>sdword</b> and <b>sqword</b>: signed integers with varying sizes to access the immediate value.
+<b>byte</b>, <b>word</b>, <b>dword</b> and <b>qword</b>: unsigned integers with varying sizes to access the immediate value.
+    The sizes are corresponding to 8, 16, 32 and 64 bits.
+    These members are there only for ease and must be used only when the operand type is O_IMM.
+    Accessing the 'qword' member will be most convenient,
+    unless you need to know the size specifically and to change signedness.
+<b>addr</b>
+    Contains the absolute target address of a branched-type instruction, such as: CALL, JMP, etc.
+    Use only when the operand type is O_PC.
+
+    Notice the type of the 'addr' member is _OffsetType, which is dependent upon the way
+    diStorm3 was compiled - whether with support for 64 bit offsets or not. If there is a support for 64 bit offsets,
+    the _OffsetType is 64 bits long, otherwise 32 bits. This is supposed to be transparent to the library user.
+<b>ptr</b>
+    Contains the absolute target address of instructions which can branch to a 'far' address, such as: CALL FAR and JMP FAR.
+    The 'seg' member contains the 16 bits segment value.
+    The 'off' member contains the 16 or 32 bits offset value.
+    The size of the offset is specified in the 'size' member of the operand whose type is O_PTR.
+<b>ex</b>
+    Contains two immediate values in 'ex.i1' and 'ex.i2'. Access 'ex.i1' when the operand type is O_IMM1.
+    Access 'ex.i2' when the operand type is O_IMM2. The size of the ex.i immediate value is specified in the 'size' member of the operand.
+
+    Note that this is unlike the above members ('byte', 'word', etc) to access the single immediate value of type O_IMM,
+    in this case the 'ex' structure contains two separated 32bit values which represent two different immediates.
+
+<hr>
+<b>Undefined Size</b>
+The following instructions have their size undefined, they use OT_MEM. This means you should not rely on their size, which is 0.
+INVLPG, PREFETCH, PREFETCHW, PREFETCHNTA, PREFETCHT0, PREFETCHT1, PREFETCHT2, FXSAVE, FXRSTOR, LDMXCSR, STMXCSR,
+CLFLUSH, BOUND, LEA, FSTENV, FSTCW, FSAVE, FSTSW, FLDENV, FLDCW, FNSTENV, FNSTCW, FRSTOR, FNSAVE, FNSTSW, LDDQU.
+
+Note that LEA has the operand type OT_MEM as well, you might want to check for LEA specifically and handle its fake memory dereference.
+<hr>
+<b>Special Case Instructions</b>
+JMP/CALL/LOOP -
+When the JMP, CALL and LOOP instructions are used with relative offset, you have to add the size of the instruction yourself to the given offset.
+Therefore the destination offset is calculated as: ii.imm + ii.size.
+
+LOOP -
+For all loop instructions you might be interested in knowing the size of the rCX register (either 16/32/64),
+which is calculated according to the Effective Address size, therefore you should examine the 'flags' member for getting this,
+use the macro: FLAG_GET_ADDRSIZE.
+
+MOVS/CMPS -
+Since these instructions return only the first operand; the data structures diStorm3 uses cannot represent
+two memory indirection operands at the same instruction. Therefore you have to determine the second operand on your own.
+To find out the right register size use the address size from the 'flags' member.
+For MOVS it will be SI, ESI or RSI according to FLAG_GET_ADDRSIZE respectively.
+And for CMPS it will be DI, EDI or RDI according to the FLAG_GET_ADDRSIZE respectively.
+E.G: CMPS BYTE [ESI], [EDI] - size of dereference is found in ops[0].size, of course, '[ESI'] is supplied by ops[0] as well.
+A segment override may be used only for the first operand.
+
+JCXZ/JECXZ/JRCXZ -
+Each of this instruction has its own opcode-id, this way you can distinguish them easily
+and know the size of the counter register (CX/ECX/RCX correspondly).
+
+PUSH -
+The immediate size specifies the size of the immediate that was read from the instruction. It might be even a byte using opcode 0x6a.
+To know how many bytes really were written to the stack use the 'flags' member macros to get the effective operand size.
+
+PUSHA/POPA -
+You have to know the operand size and address size in order to know whether to push AX or EAX and whether to use SP or ESP.
+In order to get this information use the 'flags' member macros. PUSHA and POPA are not decodeable in 64bits.
+
+PUSHF/POPF -
+The operand size from the 'flags' member will indicate the size you have to pad the flags to push.
+The address size will indicate the size of stack pointer to use.
+
+BSWAP -
+BSWAP can operate on either 32 or 64 bits. You will determine the behavior of BSWAP by the operand size from the 'flags' member.
+
+IMUL -
+The IMUL instruction has actually three forms where it gets from one up to three operands. In order to distinguish among each
+form you should rely on the number of operands of the IMUL opcode-id.
+
+RET -
+The RET instruction has two variations, one that only pops the IP and another that cleans the stack.
+To distinguish between them, rely on the number of operands. If it's 0, it's a simple RET.
+And if it's 1 it is a RET that gets a 16bits immediate to adjust the stack pointer after popping the IP.
+
+XLAT -
+The single operand of XLAT has already the memory indirection ready to use, [rBX+AL]. rBX is determined by the effective address size.
+
+BT/BTC/BTS/BTR -
+When these instructions are used with a first operand as memory indirection, the effective address has to be extended.
+diStorm doesn't return all information you need for this instructions. Because the effective address is really based
+on the <i>second operand</i>, it has to be treated as well. For more information see x86 Instruction Set Architecture references.
+
+There might be other instructions that need a special treatment, therefore you should rely on the 'flags' member to know the effective
+operand size and address size and act accordingly.
+
+<hr>
+diStorm3 Copyright (C) 2008 Gil Dabah.
+</pre>
+</font>

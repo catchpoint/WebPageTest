@@ -1,0 +1,21 @@
+URL: http://optipng.sourceforge.net/
+Version: 0.6.4
+License: zlib/libpng
+License File: LICENSE.txt
+
+Description:
+OptiPNG is a PNG optimizer that recompresses image files to a smaller
+size, without losing any information. This program also converts
+external formats (BMP, GIF, PNM and TIFF) to optimized PNG, and
+performs PNG integrity checks and corrections.
+If you wish to learn how PNG optimization is done, or to know about
+other similar tools, read the PNG-Tech article "A guide to PNG
+optimization".
+
+Local Modifications:
+
+1. opngreduc has been modified to conditionally include support for
+   ancillary chunks.
+
+2. a call to png_get_image_height has been inlined since not all
+   versions of libpng provide this function.

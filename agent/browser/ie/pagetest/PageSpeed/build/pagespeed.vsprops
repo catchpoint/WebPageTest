@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="Page Speed Properties"
+        InheritedPropertySheets="$(SolutionDir)\pagespeed_root_dir.vsprops"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(PageSpeedRootDir);$(PageSpeedRootDir)\third_party\chromium\src;$(PageSpeedRootDir)\third_party\protobuf2\src\src"
+		PreprocessorDefinitions="&quot;WIN32&quot;;&quot;_WINDOWS&quot;;&quot;NOMINMAX&quot;;&quot;_CRT_RAND_S&quot;;&quot;CERT_CHAIN_PARA_HAS_EXTRA_FIELDS&quot;;&quot;WIN32_LEAN_AND_MEAN&quot;;&quot;_SECURE_ATL&quot;;&quot;_ATL_NO_OPENGL&quot;;&quot;GOOGLE_PROTOBUF_NO_RTTI&quot;;&quot;PAGESPEED_PNG_OPTIMIZER_GIF_READER&quot;;&quot;__STDC_FORMAT_MACROS&quot;"
+	/>
+</VisualStudioPropertySheet>

@@ -1,0 +1,10 @@
+Description:
+Provides a regular expression (in the form of a string) to match ad
+URLs.
+
+LICENSE copied from http://adblockrules.org/wiki.php?Wiki:About on
+Jan 20, 2010.
+
+Ads patterns downloaded from http://adblockrules.org/download.php
+(with just "Ads" checked) and then hand converted to regular
+expressions.
