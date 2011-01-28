@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<!-- This file must be in the solution's root dir and provides a path
+     to the root of the Page Speed SDK. Solutions that want to
+     integrate the SDK must provide this file, with the
+     PageSpeedRootDir user macro updated to reflect the path to the
+     root of the Page Speed SDK. -->
+<!-- We also add some AdditionalIncludeDirectories for projects
+     provided by Page Speed but used elsewhere in WebPagetest, e.g. zlib,
+     libpng, libjpeg. -->
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="Page Speed Root Dir User Macro"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		AdditionalIncludeDirectories="$(SolutionDir)\pagetest\PageSpeed\third_party\zlib;$(SolutionDir)\pagetest\PageSpeed\third_party\libpng;$(SolutionDir)\pagetest\PageSpeed\third_party\libjpeg;$(SolutionDir)\pagetest\PageSpeed\third_party"
+	/>
+	<UserMacro
+		Name="PageSpeedRootDir"
+		Value="$(SolutionDir)\pagetest\PageSpeed\"
+	/>
+</VisualStudioPropertySheet>
