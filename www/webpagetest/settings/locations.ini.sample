@@ -1,0 +1,15 @@
+[locations]
+1=Test_loc
+default=Test_loc
+
+[Test_loc]
+1=Test
+default=Test
+label=Test Location
+
+[Test]
+browser=IE 7
+latency=0
+label="Test Location"
+localDir=C:\Web Site\content\work\jobs\test
+key=TestKey123

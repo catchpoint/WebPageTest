@@ -1,0 +1,123 @@
+            <div style="width:100%;float:none;clear:both;"></div>
+
+            <?php
+            //If we're looking at a test result, include the inner test result div
+            if( !strcasecmp('Test Result', $tab) && !$nosubheader )
+            {
+                echo '</div></div>';
+            }
+            ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <?php
+        // display the sponsor logos across the bottom of the page
+        $sponsors = array();
+        $s = parse_ini_file('./settings/sponsors.ini', true);
+        foreach( $s as &$entry )
+            if( strlen($entry['logo']) )
+                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'alt' => $entry['alt']);
+        
+        $count = count($sponsors);
+        if( $count )
+        {
+            shuffle($sponsors);
+            
+            $rows = ceil((float)$count / 5.0);
+            $rowCount = ceil((float)$count / (float)$rows);
+            echo '<div id="links">';
+            echo'<table class="links"><tr>';
+            $i = 0;
+            foreach( $sponsors as &$sponsor )
+            {
+                if( $i >= $rowCount )
+                {
+                    $i = 1;
+                    echo '</tr></table><table class="links"><tr>';
+                }
+                else
+                    $i++;
+
+                $used++;                        
+                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img src=\"{$sponsor['logo']}\" alt=\"{$sponsor['alt']}\"></a></td>";
+            }
+            echo '</tr></table>';
+            echo '</div>';
+        }
+    ?>
+    <div class="cleared"></div>
+    
+    <?php
+        $feeds = null;
+        if( is_file('./cache/feeds.dat') )
+            $feeds = json_decode(file_get_contents('./cache/feeds.dat'), true);
+        
+        if( count($feeds) )
+        {
+            echo '<table id="feeds"><tr>';
+            
+            // display the column headers
+            foreach( $feeds as $title => &$feed )
+                echo "<th>$title</th>";
+            echo '</tr><tr>';
+            
+            // display the feed contents
+            $column = 0;
+            foreach( $feeds as $title => &$feed )
+            {
+                $column++;
+                echo '<td><ul>';
+                
+                // keep a list of titles so we only display the most recent (for threads)
+                $titles = array();
+                
+                $count = 0;
+                $extended = false;
+                foreach( $feed as $time => &$item )
+                {
+                    if( $count <= 25 )
+                    {
+                        $dupe = false;
+                        foreach( $titles as $title )
+                            if( $title == $item['title'] )
+                                $dupe = true;
+                        
+                        if( !$dupe )
+                        {
+                            $count++;
+                            if( $count == 6 )
+                            {
+                                $extended = true;
+                                echo "<li id=\"show_more_feeds_$column\"><a href=\"javascript:void(o)\" onclick=\"showFeeds($column)\">more...</a></li><li class=\"morefeeds\" ><div id=\"more_feeds_$column\" class=\"hidden\"><ul>";
+                            }
+                        
+                            $titles[] = $item['title'];
+                            echo "<li><a title=\"{$item['source']}\" href=\"{$item['link']}\">{$item['title']}</a></li>";
+                        }
+                    }
+                }
+                
+                unset($titles);
+                
+                if( $extended )
+                    echo '</ul></div></li>';
+                    
+                echo '</ul></td>';
+            }
+            echo '</tr></table>';
+        }
+    ?>
+
+    <script type="text/javascript">
+    function showFeeds(column)
+    {
+        var label = document.getElementById("show_more_feeds_" + column);
+        label.parentNode.removeChild( label );
+        
+        document.getElementById("more_feeds_" + column).className = "";
+        return false;
+    }
+    </script>
+    <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=7"></script>
