@@ -7,92 +7,421 @@
 * @param mixed $run
 * @param mixed $cached
 */
-function dumpOptimizationReport($testPath, $run, $cached, $includeHeader = false)
+function dumpOptimizationReport(&$pageData, &$requests)
 {
-    // load the raw results
-    $cachedText='';
-    if((int)$cached == 1)
-        $cachedText='_Cached';
-    $fileName = $testPath . '/' . $run . $cachedText . '_optimization.txt';
-    $lines = gz_file($fileName);
-    if( $lines)
+    if( $pageData && $requests )
     {
-        if( $includeHeader )
-            echo '<h3>Statistics:</h3>';
-            
-        $needsClose = true;
-        $display = false;
-        echo '<p class="indented1">';
+        ReportKeepAlive($pageData, $requests);
+        ReportTextCompression($pageData, $requests);
+        ReportImageCompression($pageData, $requests);
+        ReportCache($pageData, $requests);
+        ReportCombine($pageData, $requests);
+        ReportCDN($pageData, $requests);
+        ReportMinify($pageData, $requests);
+        ReportCookies($pageData, $requests);
+        ReportETags($pageData, $requests);
+    }
+}
 
-        // loop through each line in the file
-        foreach($lines as $linenum => $line) 
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportKeepAlive(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_keep-alive']) && $pageData['score_keep-alive'] >= 0 )
+    {
+        $score = "{$pageData['score_keep-alive']}/100";
+        
+        foreach( $requests as $index => &$request )
         {
-            $line = htmlspecialchars(trim($line));
-
-            $tag = null;
-            if( !strcmp($line,"Enable browser caching of static assets:") )
-                $tag = 'cache_static_content';
-            elseif( !strcmp($line,"Use one CDN for all static assets:") || !strcmp($line,"Use a CDN for all static assets:") )
-                $tag = 'use_of_cdn';
-            elseif( !strcmp($line,"Combine static CSS and JS files:") )
-                $tag = 'combine_js_css_files';
-            elseif( !strncmp($line,"GZIP encode all appropriate text assets (text responses > 1400 bytes):", 20) )
-                $tag = 'compress_text';
-            elseif( !strcmp($line,"Compress Images:") )
-                $tag = 'compress_images';
-            elseif( !strcmp($line,"Use persistent connections (keep alive):") )
-                $tag = 'keep_alive_enabled';
-            elseif( !strcmp($line,"Proper cookie usage:") )
-                $tag = 'cookies';
-            elseif( !strcmp($line,"Minify JS:") )
-                $tag = 'minify_js';
-            elseif( !strcmp($line,"JQuery Selectors not descended from an ID:") )
-                $tag = 'jquery_selectors';
-            elseif( !strcmp($line,"No ETag headers (ETag headers should generally not be used unless you have an explicit reason to need them):") )
-                $tag = 'etags';
-            
-            if( $tag )
+            if( isset($request['score_keep-alive']) && $request['score_keep-alive'] >= 0 && $request['score_keep-alive'] < 100 )
             {
-                if( $needsClose )
-                    echo '</p>';
-
-                echo "<a  name=\"$tag\"><h3>" . $line . '</h3></a><p class="indented1">' . "\n";
-                $needsClose = true;
-                $display = true;
-            }
-            else
-            {
-                if( !$display && $includeHeader && (strpos($line, 'Page load time:') !== false) )
-                    $display = true;
-                    
-                if( $display )
-                {
-                    if( strpos($line, "Cache score :") !== false || 
-                        strpos($line, "CDN score (static objects) :") !== false || 
-                        strpos($line, "Combine score :") !== false || 
-                        strpos($line, "GZIP score :") !== false || 
-                        strpos($line, "Image Compression score :") !== false || 
-                        strpos($line, "Keep-Alive score :") !== false || 
-                        strpos($line, "Cookie score :") !== false || 
-                        strpos($line, "Minify score :") !== false || 
-                        strpos($line, "ETag score :") !== false )
-                    {
-                        echo '<br><b>' . $line . "</b><br>\n";
-                    }
-                    elseif( !strncmp($line, 'cookie:', 7) || !strncmp($line, 'Line ', 5) || !strncmp($line, '...', 3)  )
-                    {
-                        echo '<span class="indented1">' . $line . "</span><br>\n";
-                    }
-                    else
-                    {
-                        echo $line . "<br>\n";
-                    }
-                }
+                $key = $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
+                $report[$key] = $value;
             }
         }
-        if( $needsClose )
-            echo '</p>';
+        
+        ksort($report);
     }
+        
+    echo "<a  name=\"keep_alive_enabled\"><h3>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportTextCompression(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_gzip']) && $pageData['score_gzip'] >= 0 )
+    {
+        $original = number_format($pageData['gzip_total'] / 1024.0, 1);
+        $save = number_format($pageData['gzip_savings'] / 1024.0, 1);
+        $target = number_format(($pageData['gzip_total'] - $pageData['gzip_savings']) / 1024.0, 1);
+
+        $summary = "$original KB total in compressible text, target size = $target KB - potential savings = <b>$save KB</b>";
+        $score = "{$pageData['score_gzip']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_gzip']) && $request['score_gzip'] >= 0 && $request['score_gzip'] < 100 )
+            {
+                $key = $request['gzip_save'] . ' ' . $request['host'] . ' ' . $index;
+                $original = number_format($request['gzip_total'] / 1024.0, 1);
+                $save = number_format($request['gzip_save'] / 1024.0, 1);
+                $target = number_format(($request['gzip_total'] - $request['gzip_save']) / 1024.0, 1);
+                
+                if( $request['score_gzip'] < 50 )
+                    $value = 'FAILED - ';
+                else
+                    $value = 'WARNING - ';
+
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value .=  "($original KB, compressed = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
+
+                $report[$key] = $value;
+            }
+        }
+        
+        krsort($report, SORT_NUMERIC);
+    }
+        
+    echo "<a  name=\"compress_text\"><h3>GZIP encode all appropriate text assets: $score</h3></a>\n";
+    if( isset($summary) )
+        echo "<p>$summary</p>\n";
+    echo "<p class=\"indented1\">";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportImageCompression(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_compress']) && $pageData['score_compress'] >= 0 )
+    {
+        $original = number_format($pageData['image_total'] / 1024.0, 1);
+        $save = number_format($pageData['image_savings'] / 1024.0, 1);
+        $target = number_format(($pageData['image_total'] - $pageData['image_savings']) / 1024.0, 1);
+
+        $summary = "$original KB total in images, target size = $target KB - potential savings = <b>$save KB</b>";
+        $score = "{$pageData['score_compress']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_compress']) && $request['score_compress'] >= 0 && $request['score_compress'] < 100 )
+            {
+                $key = $request['image_save'] . ' ' . $request['host'] . ' ' . $index;
+                $original = number_format($request['image_total'] / 1024.0, 1);
+                $save = number_format($request['image_save'] / 1024.0, 1);
+                $target = number_format(($request['image_total'] - $request['image_save']) / 1024.0, 1);
+                
+                if( $request['score_compress'] < 50 )
+                    $value = 'FAILED - ';
+                else
+                    $value = 'WARNING - ';
+
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value .=  "($original KB, compressed = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
+
+                $report[$key] = $value;
+            }
+        }
+        
+        krsort($report, SORT_NUMERIC);
+    }
+        
+    echo "<a  name=\"compress_images\"><h3>Compress Images: $score</h3></a>\n";
+    if( isset($summary) )
+        echo "<p>$summary</p>\n";
+    echo "<p class=\"indented1\">";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportCache(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_cache']) && $pageData['score_cache'] >= 0 )
+    {
+        $score = "{$pageData['score_cache']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_cache']) && $request['score_cache'] >= 0 && $request['score_cache'] < 100 )
+            {
+                $key = $request['cache_time'] . ' ' . $request['host'] . ' ' . $index;
+                
+                if( $request['score_cache'] < 50 )
+                    $value = 'FAILED - ';
+                else
+                    $value = 'WARNING - ';
+                    
+                $time = 'No max-age or expires';
+                if( $request['cache_time'] > 0 )
+                {
+                    if( $request['cache_time'] > 86400 )
+                        $time = number_format($request['cache_time'] / 86400.0, 1) . ' days';
+                    elseif( $request['cache_time'] > 3600 )
+                        $time = number_format($request['cache_time'] / 3600.0, 1) . ' hours';
+                    elseif( $request['cache_time'] > 60 )
+                        $time = number_format($request['cache_time'] / 60.0, 1) . ' minutes';
+                    else
+                        $time = $request['cache_time'] . ' seconds';
+                }
+
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value .=  "(<b>$time</b>) - " . $proto . $request['host'] . $request['url'];
+
+                $report[$key] = $value;
+            }
+        }
+        
+        ksort($report, SORT_NUMERIC);
+    }
+        
+    echo "<a  name=\"cache_static_content\"><h3>Leverage browser caching of static assets: $score</h3></a>\n";
+    echo "<p class=\"indented1\">";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportCombine(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_combine']) && $pageData['score_combine'] >= 0 )
+    {
+        $score = "{$pageData['score_combine']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_combine']) && $request['score_combine'] >= 0 && $request['score_combine'] < 100 )
+            {
+                $key = $request['contentType'] . ' ' . $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
+                $report[$key] = $value;
+            }
+        }
+        
+        ksort($report);
+    }
+        
+    echo "<a  name=\"combine_js_css_files\"><h3>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportCDN(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    $cdns = array();
+    if( isset($pageData['score_cdn']) && $pageData['score_cdn'] >= 0 )
+    {
+        $score = "{$pageData['score_cdn']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_cdn']) && $request['score_cdn'] >= 0 && $request['score_cdn'] < 100 )
+            {
+                $key = $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
+                $report[$key] = $value;
+            }
+            elseif( isset($request['cdn_provider']) )
+            {
+                $cdns[$request['host']] = $request['cdn_provider'];
+            }
+        }
+        
+        ksort($report);
+    }
+        
+    echo "<a  name=\"use_of_cdn\"><h3>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    if( count($cdns) )
+    {
+        echo "<br>CDN's Used:<br>";
+        foreach( $cdns as $host => $provider )
+            echo "$host : $provider<br>";
+    }
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportMinify(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_minify']) && $pageData['score_minify'] >= 0 )
+    {
+        $original = number_format($pageData['minify_total'] / 1024.0, 1);
+        $save = number_format($pageData['minify_savings'] / 1024.0, 1);
+        $target = number_format(($pageData['minify_total'] - $pageData['minify_savings']) / 1024.0, 1);
+
+        $summary = "$original KB total in minifiable text, target size = $target KB - potential savings = <b>$save KB</b>";
+        $score = "{$pageData['score_minify']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_minify']) && $request['score_minify'] >= 0 && $request['score_minify'] < 100 )
+            {
+                $key = $request['minify_save'] . ' ' . $request['host'] . ' ' . $index;
+                $original = number_format($request['minify_total'] / 1024.0, 1);
+                $save = number_format($request['minify_save'] / 1024.0, 1);
+                $target = number_format(($request['minify_total'] - $request['minify_save']) / 1024.0, 1);
+                
+                if( $request['score_minify'] < 50 )
+                    $value = 'FAILED - ';
+                else
+                    $value = 'WARNING - ';
+
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value .=  "($original KB, minified = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
+
+                $report[$key] = $value;
+            }
+        }
+        
+        krsort($report, SORT_NUMERIC);
+    }
+        
+    echo "<a  name=\"minify_js\"><h3>Minify JS: $score</h3></a>\n";
+    if( isset($summary) )
+        echo "<p>$summary</p>\n";
+    echo "<p class=\"indented1\">";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportCookies(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_cookies']) && $pageData['score_cookies'] >= 0 )
+    {
+        $score = "{$pageData['score_cookies']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_cookies']) && $request['score_cookies'] >= 0 && $request['score_cookies'] < 100 )
+            {
+                $key = $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
+                $report[$key] = $value;
+            }
+        }
+        
+        ksort($report);
+    }
+        
+    echo "<a  name=\"cookies\"><h3>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportETags(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_etags']) && $pageData['score_etags'] >= 0 )
+    {
+        $score = "{$pageData['score_etags']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( isset($request['score_etags']) && $request['score_etags'] >= 0 && $request['score_etags'] < 100 )
+            {
+                $key = $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['secure'] )
+                    $proto = 'https://';
+                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
+                $report[$key] = $value;
+            }
+        }
+        
+        ksort($report);
+    }
+        
+    echo "<a  name=\"etags\"><h3>Remove ETag headers: $score</h3></a><p class=\"indented1\">\n";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
 }
 
 /**

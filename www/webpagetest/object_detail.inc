@@ -25,6 +25,18 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
 	{
 		$dnsTime;
 		$socketTime;
+        
+        $columns = array(   4 => 'ipAddr', 5 => 'method', 6 => 'host', 7 => 'url', 
+                            8 => 'responseCode', 9 => 'loadTime', 10 => 'ttfb', 11 => 'offset', 
+                            12 => 'bytesOut', 13 => 'bytesIn', 14 => 'objectSize', 17 => 'expires', 
+                            18 => 'cacheControl', 19 => 'contentType', 20 => 'contentEncoding', 21 => 'type', 
+                            22 => 'socket', 24 => 'totalEndOffset', 36 => 'score_cache', 37 => 'score_cdn', 
+                            38 => 'score_gzip', 39 => 'score_cookies', 40 => 'score_keep-alive', 42 => 'score_minify', 
+                            43 => 'score_combine', 44 => 'score_compress', 45 => 'score_etags', 47 => 'secure', 
+                            48 => 'dnsTime', 49 => 'socketTime', 50 => 'sslTime', 51 => 'gzip_total',
+                            52 => 'gzip_save', 53 => 'minify_total', 54 => 'minify_save', 55 => 'image_total',
+                            56 => 'image_save', 57 => 'cache_time', 61 => 'cdn_provider'
+                        );
 		
 		// loop through each line in the file
 		foreach($lines as $linenum => &$line) 
@@ -36,52 +48,15 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
 				
 				// tokenize the line
 				$parseLine = str_replace("\t", "\t ", $line);
-				$token = strtok($parseLine, "\t");
-				$column = 0;
-				while($token)
+                $column = explode("\t", $parseLine);
+                if( count($column) )
 				{
-					$column++;
-					$token = trim($token);
-					if( strlen($token) > 0)
-					{
-						switch($column)
-						{
-							case 4: $event['ipAddr'] = $token; break;
-                            case 5: $event['method'] = $token; break;
-							case 6: $event['host'] = $token; break;
-							case 7: $event['url'] = $token; break;
-							case 8: $event['responseCode'] = $token; break;
-							case 9: $event['loadTime'] = (int)$token; break;
-							case 10: $event['ttfb'] = (int)$token; break;
-							case 11: $event['offset'] = (int)$token; break;
-							case 12: $event['bytesOut'] = (int)$token; break;
-							case 13: $event['bytesIn'] = (int)$token; break;
-							case 14: $event['objectSize'] = (int)$token; break;
-							case 17: $event['expires'] = $token; break;
-							case 18: $event['cacheControl'] = $token; break;
-							case 19: $event['contentType'] = $token; break;
-							case 20: $event['contentEncoding'] = $token; break;
-							case 21: $event['type'] = (int)$token; break;
-							case 22: $event['socket'] = (int)$token; break;
-                            case 24: $event['totalEndOffset'] = (int)$token; break;
-                            case 36: $event['score_cache'] = (int)$token; break;
-                            case 37: $event['score_cdn'] = (int)$token; break;
-                            case 38: $event['score_gzip'] = (int)$token; break;
-                            case 39: $event['score_cookies'] = (int)$token; break;
-                            case 40: $event['score_keep-alive'] = (int)$token; break;
-                            case 42: $event['score_minify'] = (int)$token; break;
-                            case 43: $event['score_combine'] = (int)$token; break;
-                            case 44: $event['score_compress'] = (int)$token; break;
-                            case 45: $event['score_etags'] = (int)$token; break;
-							case 47: $event['secure'] = (int)$token; break;
-							case 48: $event['dnsTime'] = (int)$token; break;
-							case 49: $event['socketTime'] = (int)$token; break;
-							case 50: $event['sslTime'] = (int)$token; break;
-						}
-					}
-					
-					// on to the next token
-					$token = strtok("\t");
+                    foreach( $columns as $columnNum => $key )
+                    {
+                        $col = $columnNum - 1;
+                        if( array_key_exists($col, $column) )
+                            $event[$key] = trim($column[$col]);
+                    }
 				}
 				
 				// Track the individual requests only (roll-up the connections and DNS lookups)

@@ -62,7 +62,16 @@ require_once('optimization_detail.inc.php');
             <h2>Details:</h2>
             <?php
                 require 'optimization.inc';
-                dumpOptimizationReport("./$testPath", $run, $cached);
+
+                require_once('page_data.inc');
+                $pageData = loadPageRunData($testPath, $run, $cached);
+
+                require_once('object_detail.inc');
+                $secure = false;
+                $haveLocations = false;
+                $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+
+                dumpOptimizationReport($pageData, $requests);
                 echo '<p></p><br>';
                 include('./ads/optimization_bottom.inc');
                 echo '<br>';

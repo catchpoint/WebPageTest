@@ -71,8 +71,11 @@ else
                     $ext = $parts['extension'];
                     if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') )
                     {
-                        // delete any files with sensitive data if we have to
-                        if( $ini['sensitive'] && (strpos($textFile, '_report') || strpos($textFile, '_optimization')) )
+                        // delete the optimization file (generated dynamically now)
+                        // or any files with sensitive data if we were asked to
+                        if( strpos($textFile, '_optimization') )
+                            unlink("$testPath/$textFile");
+                        elseif( $ini['sensitive'] && strpos($textFile, '_report') )
                             unlink("$testPath/$textFile");
                         else
                         {
