@@ -71,8 +71,12 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         echo '<br><b>Authenticated: ' . $login . '</b>';
                     if( (int)$test['test']['connections'] !== 0) 
                         echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-                    if( $test['test']['script'] ) 
+                    if( $test['test']['script'] )
+                    {
                         echo '<b>Scripted test</b><br>';
+                        if ($settings['show_script_in_results'])
+                            AddScriptDiv($testPath);
+                    }
                 ?>
                 </p>
                 <?php 
@@ -98,8 +102,12 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         echo '<br><b>Authenticated: ' . $login . '</b>';
                     if( (int)$test['test']['connections'] !== 0) 
                         echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-                    if( $test['test']['script'] ) 
+                    if( $test['test']['script'] )
+                    {
                         echo '<b>Scripted test</b><br>';
+                        if ($settings['show_script_in_results'])
+                            AddScriptDiv($testPath);
+                    }
                     if( gz_is_file("$testPath/testinfo.json") )
                     {
                         $owner = null;
@@ -380,5 +388,19 @@ function LookupError($error)
     }
     
     return $errorText;
+}
+
+function AddScriptDiv($testPath)
+{
+    echo '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
+    echo '<div id="script_in_results-container" class="hidden">';
+    echo '<pre>' . GetScript($testPath) . '</pre>';
+    echo '</div>';
+}
+
+function GetScript($testPath)
+{
+    $json_contents = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    return htmlspecialchars($json_contents['script']);
 }
 ?>

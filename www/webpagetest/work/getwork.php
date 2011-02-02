@@ -162,7 +162,7 @@ if( !$done )
                     $out = str_replace('[test]', $start, $ini);
                     file_put_contents("$testPath/testinfo.ini", $out);
                     
-                    if( is_file("$testPath/testinfo.json") )
+                    if( gz_is_file("$testPath/testinfo.json") )
                     {
                         $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                         $testInfoJson['started'] = $time;

@@ -16,6 +16,10 @@ RewriteEngine on
 #main pages
 RewriteRule ^about$ /about.php
 
+# Job cancellation paths
+RewriteRule ^cancel/([a-zA-Z0-9_]+)$ /cancel/$1/ [R] 
+RewriteRule ^cancel/([a-zA-Z0-9_]+)/$ /cancelTest.php?test=$1
+
 #result paths
 RewriteRule ^result/([a-zA-Z0-9_]+)$ /result/$1/ [R] 
 RewriteRule ^result/([a-zA-Z0-9_]+)/$ /results.php?test=$1 

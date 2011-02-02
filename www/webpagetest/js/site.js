@@ -572,7 +572,15 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
             
             return false;
         });
-        
+
+
+        // Advanced Settings toggle
+        $('#script_in_results').click(function() {
+            $(this).toggleClass('extended');
+            $('#script_in_results-container').toggleClass('hidden');
+            return false;
+        });
+
         // jQuery UI Tabs
         $('#test_subbox-container').tabs();
         

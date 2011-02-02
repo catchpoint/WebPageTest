@@ -96,6 +96,11 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 #advanced_settings .arrow { margin-left: 5px; font-size: 10px; margin-bottom: 3px; border-left-width: 0.9em; border-left-style: solid; border-left-color: #f1c52e; left: 0.25em; }
 #advanced_settings.extended .arrow { border-top-width: 0.9em; border-top-style: solid; border-top-color: #f1c52e; top: 0.25em;  border-left-color: transparent; border-left-width: 0.53em; border-left-style: dashed; left: 0;}
 
+#script_in_results {color: #f1c52e !important; text-decoration: none; font-size: 13px; font-weight: bold; }
+#script_in_results .arrow { margin-left: 5px; font-size: 10px; margin-bottom: 3px; border-left-width: 0.9em; border-left-style: solid; border-left-color: #f1c52e; left: 0.25em; }
+#script_in_results.extended .arrow { border-top-width: 0.9em; border-top-style: solid; border-top-color: #f1c52e; top: 0.25em;  border-left-color: transparent; border-left-width: 0.53em; border-left-style: dashed; left: 0;}
+
+
 #bwTable {margin-left: 170px; margin-top: 10px;}
 #bwTable td {width: 100px;}
 .backlogWarn{color: #f1c52e; font-weight:bold;}
