@@ -150,7 +150,7 @@ Options -Indexes
 #
 # Block access to .inc and .ini files
 #
-<Files ~ "\.(inc|ini)$">
+<Files ~ "\.(inc|ini|gz)$">
     order allow,deny
     deny from all
 </Files>
