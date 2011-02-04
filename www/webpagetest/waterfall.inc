@@ -301,15 +301,24 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         $startRender = $pageData['render'];
         $domElement = $pageData['domTime'];
         $docComplete = $pageData['docTime'];
+        $aft = $pageData['aft'];
         $colStartRender = GetColor($im, 40, 188, 0);
         $colDomElement  = GetColor($im, 242, 131, 0);
         $colDocComplete = GetColor($im, 0, 0, 255);
+        $colAFT = GetColor($im, 255, 0, 0);
         
         if( $startRender > 0 && $startRender <= $range )
         {
             $x = $left + (int)((double)$w * ((double)$startRender / $range));
             imageline($im, $x, 1, $x, $height - 1, $colStartRender);
             imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
+        }
+
+        if( $aft > 0 && $aft <= $range )
+        {
+            $x = $left + (int)((double)$w * ((double)$aft / $range));
+            imageline($im, $x, 1, $x, $height - 1, $colAFT);
+            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
         }
 
         if( $domElement > 0 && $domElement <= $range )
