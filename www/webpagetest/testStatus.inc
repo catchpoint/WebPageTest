@@ -29,7 +29,17 @@ function GetTestStatus($id)
             if( isset($test['test']['loc']) )
                 $ret['location'] = $test['test']['loc'];
 
-            // see if it started
+            // Ignore the cancelled tests.
+            if( is_file("$testPath/testinfo.json") )
+            {
+              $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+              if( isset($testInfoJson['cancelled']) )
+              {
+                $ret['statusCode'] = 402;
+                $ret['statusText'] = 'Test Cancelled';
+                return $ret;
+              }
+            }
             if( isset($test['test']['startTime']) || isset($test['test']['completeTime']) )
             {
                 $ret['startTime'] = $test['test']['startTime'];
@@ -142,13 +152,21 @@ function GetTestStatus($id)
 function GetTestStatusText($id, $test)
 {
   $statusText = "";
+  $testPath = './' . GetTestPath($id);
+  $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+  if( isset($testInfoJson['cancelled']) )
+  {
+    return "Test Cancelled";
+  }
   if( $test['test']['startTime'] )
   {
     $started = true;
     $now = time();
     $start = strtotime($test['test']['startTime']);
-    $testPath = './' . GetTestPath($id);
-    $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if( isset($testInfoJson['cancelled']) )
+    {
+        return "Test Cancelled";
+    }
     if( $testInfoJson['started'] )
       $start = $testInfoJson['started'];
 

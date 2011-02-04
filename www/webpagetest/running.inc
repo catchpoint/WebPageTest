@@ -16,7 +16,13 @@
             include 'header.inc';
             ?>
             <div class="translucent">
-                <h2>Testing...</h2>
+                <h3 align="left">Testing...
+                <?php
+                if ( !$test['test']['startTime'] )
+                {
+                    echo "( <a href=\"/cancelTest.php?test=$id \">Cancel Test</a> )";
+                }
+                ?></h3>
                 <p>
                 Url: <a rel="nofollow" href=<?php echo '"' . $url . '"';?>><?php echo $url;?></a><br>
                 From: <?php echo $test['test']['location'];?><br>
@@ -53,7 +59,6 @@
                 <br><br>
                 <?php include('./ads/test_progress_bottom.inc'); ?>
             </div>
-            
             <?php include('footer.inc'); ?>
         </div>
         <script type="text/javascript">

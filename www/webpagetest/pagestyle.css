@@ -4,7 +4,7 @@ body {margin: 0 0 40px;color: #222;line-height: 1.4em;font-family: Arial, Helvet
 .cufon-dincond_black {font-family: Arial Narrow, Arial, Helvetica, sans-serif; font-weight: bold;}
 
 h1 {font-size: 2.8em; line-height:1em;} h2 {font-size: 2.5em; line-height:1em;} h3 {font-size: 2em; line-height:1em;} h4 {font-size: 1em; line-height:1em;} h5 {font-size: 1em; line-height:1em;} h6 {font-size: 0.83em; line-height:1em;}
-h1, h2 {text-transform: uppercase;}
+h1, h2
 h1, h2, h3, h4, h5, h6 {margin: 0 0 1em;}
 p {margin: 0 0 1em;}
 ul {list-style: none;margin: 0;padding: 0;}

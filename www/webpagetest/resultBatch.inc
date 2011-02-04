@@ -100,7 +100,16 @@
                         <?php }
                         else
                         { ?>
-                                <td align="center" class="border" valign="middle" colspan="5"><?php echo $status_column; ?></td>
+                                <td align="center" class="border" valign="middle" colspan="5">
+                                <?php
+                                    echo $status_column;
+                                    $status = GetTestStatus($current_id);
+                                    if( $status['statusCode'] == 101 )
+                                    {
+                                        echo "( <a href=\"/cancelTest.php?test=$current_id \">Cancel Test</a> )";
+                                    }
+                                ?>
+                                </td>
                         <?php } ?>
                     </tr>
                 <?php

@@ -248,7 +248,7 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
             <div id="tables" style="text-align:left;">
             <?php
             if( count($pageData) > 1) 
-                echo '<h2 style="text-align:center;">Test Results</h2>';
+                echo '<h3 style="text-align:center;">Test Results</h3>';
 
             $runs = count($pageData);
             $fvonly = 1;

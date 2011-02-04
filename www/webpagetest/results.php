@@ -13,6 +13,8 @@ if( is_file("$testPath/testinfo.json") )
 
 if( isset($test['test']) && $test['test']['batch'] )
     include 'resultBatch.inc';
+elseif( isset($test['testinfo']['cancelled']) )
+    include 'testcancelled.inc';
 elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 )
     include 'result.inc';
 else
