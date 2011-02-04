@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 using namespace std::tr1;
+#include "AFT.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 CPagetestReporting * reporting = NULL;
@@ -178,6 +179,7 @@ void CPagetestReporting::Reset(void)
 		tmStartRender = 0;
 		tmDOMElement = 0;
 		tmBasePage = 0;
+    msAFT = 0;
 		reportSt = NONE;
 		
 		basePageResult = -1;
@@ -250,9 +252,10 @@ void CPagetestReporting::FlushResults(void)
 	StopTimers();
 
 	EnterCriticalSection(&cs);
-	if( active )
+	if( active || capturingAFT )
 	{
 		active = false;
+    capturingAFT = false;
 		LeaveCriticalSection(&cs);
 		
 		// make sure we got at least one document complete, otherwise we really have no data
@@ -287,11 +290,12 @@ void CPagetestReporting::FlushResults(void)
 					if( screenShotErrors && errorCode && errorCode != 99999 )
 						SaveProgressImage(imgFullyLoaded, logFile + CString(_T("_")) + guid + _T(".jpg"), false);
 
-					// only save the result data if we did not fail because of what looks like a network connection problem
-					if( saveEverything || !(errorCode == 0x800C0005 && nRequest == 1 && nReqOther == 1) )
-						GenerateLabReport(saveEverything ? true : false, logFile);
+					DWORD msDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
+					DWORD msDone = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
+					DWORD msRender = (DWORD)(tmStartRender * 1000.0);
+					DWORD msDom = (DWORD)(tmDOMElement * 1000.0);
 
-					if( saveEverything && script_logData )
+          if( saveEverything && script_logData )
 					{
 						CString step;
 						//if( runningScript )
@@ -351,11 +355,6 @@ void CPagetestReporting::FlushResults(void)
 						SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
 						// save out the progress data (and video imaages)
-						DWORD msDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
-						DWORD msDone = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
-						DWORD msRender = (DWORD)(tmStartRender * 1000.0);
-						DWORD msDom = (DWORD)(tmDOMElement * 1000.0);
-
 						// pre-process the video images (make sure they are all the correct sizes
 						PreProcessVideo();
 
@@ -383,7 +382,6 @@ void CPagetestReporting::FlushResults(void)
 									data.img->SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
 									data.img->SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
 									data.img->Save(logFile+step+CA2T(buff), CXIMAGE_FORMAT_JPG);
-									data.img->Destroy();
 								}
 							}
 						}
@@ -425,7 +423,37 @@ void CPagetestReporting::FlushResults(void)
 							}
 						}
 					}
-				}
+
+          // calculate the above-the-fold time
+          if( aft )
+          {
+            CAFT aftEngine(msDone + 100);
+		        POSITION pos = progressData.GetHeadPosition();
+		        while( pos )
+		        {
+			        CProgressData data = progressData.GetNext(pos);
+			        if( data.img )
+                aftEngine.AddImage( data.img, data.ms );
+            }
+
+            bool confidence;
+            msAFT = 0;
+            aftEngine.Calculate(msAFT, confidence);
+          }
+
+          // delete the image data
+					POSITION pos = progressData.GetHeadPosition();
+					while( pos )
+					{
+		        CProgressData data = progressData.GetNext(pos);
+		        if( data.img )
+							data.img->Destroy();
+          }
+
+					// only save the result data if we did not fail because of what looks like a network connection problem
+					if( saveEverything || !(errorCode == 0x800C0005 && nRequest == 1 && nReqOther == 1) )
+						GenerateLabReport(saveEverything ? true : false, logFile);
+        }
 				
 				// Save out a list of urls from this page (if necessary) - used for crawling
 				SaveUrls();
@@ -948,7 +976,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 				_T("Bytes Out (Doc)\tBytes In (Doc)\tDNS Lookups (Doc)\tConnections (Doc)\t")
 				_T("Requests (Doc)\tOK Responses (Doc)\tRedirects (Doc)\tNot Modified (Doc)\tNot Found (Doc)\tOther Responses (Doc)\tCompression Score\t")
 				_T("Host\tIP Address\tETag Score\tFlagged Requests\tFlagged Connections\tMax Simultaneous Flagged Connections\t")
-				_T("Time to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked")
+				_T("Time to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\t")
+        _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)")
 				_T("\r\n");
 	}
 	else
@@ -965,7 +994,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
-										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d")
+										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
+                    _T("%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -977,7 +1007,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			out_doc, in_doc, nDns_doc, nConnect_doc, 
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc,
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
-			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt );
+			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
+      msAFT);
 	buff += result;
 }
 
@@ -3868,3 +3899,4 @@ void CPagetestReporting::cdnLookupThread(DWORD index)
 		IsCDN(host, w->peer, provider);
 	}
 }
+

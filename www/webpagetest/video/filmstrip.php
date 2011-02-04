@@ -73,6 +73,7 @@ $black = GetColor($im, 0, 0, 0);
 $white = GetColor($im, 255, 255, 255);
 $textColor = GetColor($im, 255, 255, 255);
 $colChanged = GetColor($im, 254,179,1);
+$colAFT = GetColor($im, 255,0,0);
 
 imagefilledrectangle($im, 0, 0, $width, $height, $black);
 
@@ -112,6 +113,7 @@ $top = $thumbTop;
 $thumb = null;
 foreach( $tests as &$test )
 {
+    $aft = (int)$test['aft'] / 100;
     $left = $thumbLeft;
     $top += $rowMargin;
     
@@ -155,6 +157,11 @@ foreach( $tests as &$test )
                 {
                     if( $lastThumb != $path )
                         $border = $colChanged;
+                    if( $aft && $frame >= $aft )
+                    {
+                        $aft = 0;
+                        $border = $colAFT;
+                    }
                     
                     // load the new thumbnail
                     if( $thumb )

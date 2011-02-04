@@ -172,6 +172,7 @@ void CPagetestBase::Reset(void)
 		basePage = 0;
 		layoutChanged.RemoveAll();
 		active = false;
+    capturingAFT = false;
 		url.Empty();
 		
 		optReport.Empty();

@@ -117,6 +117,7 @@ else
                 }
                 .thumb{ border: none; }
                 .thumbChanged{border: 3px solid #FEB301;}
+                .thumbAFT{border: 3px solid #FF0000;}
                 #createForm
                 {
                     width:100%;
@@ -274,6 +275,8 @@ function ScreenShotTable()
         $firstFrame = 0;
         foreach( $tests as &$test )
         {
+            $aft = (int)$test['aft'] / 100;
+            
             // figure out the height of the image
             $height = 0;
             if( $test['video']['width'] && $test['video']['height'] )
@@ -322,6 +325,11 @@ function ScreenShotTable()
                             if( !$firstFrame || $frameCount < $firstFrame )
                                 $firstFrame = $frameCount;
                             $class = 'thumbChanged';
+                        }
+                        if( $aft && $frame >= $aft )
+                        {
+                            $aft = 0;
+                            $class = 'thumbAFT';
                         }
                         echo " class=\"$class\"";
                         echo " width=\"$thumbSize\"";

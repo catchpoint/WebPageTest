@@ -4,10 +4,6 @@ require_once('optimization_detail.inc.php');
 $video = false;
 if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['video'] )
     $video = true;
-
-$aftWaiting = false;
-if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
-    $aftWaiting = true;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -39,7 +35,7 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
         // echo $locs . " : " . FitText($url_parts["host"] . $url_parts["path"] . $url_parts["query"],30); 
         ?>
         </title>
-        <?php if( !$test['test']['completeTime'] || $aftWaiting ) { ?>
+        <?php if( !$test['test']['completeTime'] ) { ?>
         <meta http-equiv="refresh" content="30">
         <?php } ?>
         <?php include ('head.inc'); ?>
@@ -53,7 +49,7 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
             ?>
             <div id="result">
             <?php 
-            if( !$test['test']['completeTime'] || $aftWaiting ) 
+            if( !$test['test']['completeTime'] ) 
             {
                 ?>
                 <p class="left">
@@ -172,6 +168,8 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         $cols = 3;
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             $cols++;
+                        if( $test['test']['aft'] )
+                            $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
@@ -183,6 +181,9 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         <th align="center" valign="middle">Load Time</th>
                         <th align="center" valign="middle">First Byte</th>
                         <th align="center" valign="middle">Start Render</th>
+                        <?php if( $test['test']['aft'] ) { ?>
+                        <th align="center" valign="middle">Above the Fold</th>
+                        <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>
                         <?php } ?>
@@ -203,6 +204,12 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         echo "</td><td id=\"fvLoadTime\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"fvTTFB\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['TTFB'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"fvStartRender\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['render'] / 1000.0, 3) . "s</td>\n";
+                        if( $test['test']['aft'] ) {
+                            $aft = number_format($pageData[$fvMedian][0]['aft'] / 1000.0, 1) . 's';
+                            if( !$pageData[$fvMedian][0]['aft'] )
+                                $aft = 'N/A';
+                            echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
+                        }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
 
@@ -224,6 +231,12 @@ if( $test['test']['aft'] && !gz_is_file("$testPath/aft.txt") )
                         echo "</td><td id=\"rvLoadTime\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"rvTTFB\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['TTFB'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"rvStartRender\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['render'] / 1000.0, 3) . "s</td>\n";
+                        if( $test['test']['aft'] ) {
+                            $aft = number_format($pageData[$rvMedian][1]['aft'] / 1000.0, 1);
+                            if( !$pageData[$rvMedian][1]['aft'] )
+                                $aft = 'N/A';
+                            echo "<td id=\"rvAFT\" class=\"even\" valign=\"middle\">$aft</th>";
+                        }
                         if((float)$pageData[$rvMedian][1]['domTime'] > 0.0)
                             echo "<td id=\"rvDomElement\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['domTime'] / 1000.0, 3) . "s</td>\n";
 

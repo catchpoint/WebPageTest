@@ -318,7 +318,7 @@ $loc = ParseLocations($locations);
                                 <br>
                                 <br>
                                 <?php
-                                if( $_GET['aft'] && strlen($settings['aft']) )
+                                if( $_GET['aft'] )
                                 {
                                     echo '<input type="checkbox" name="aft" id="aftCheck" class="checkbox before_label">';
                                     echo '<label for="aftCheck" class="auto_width">Measure Above-the-fold rendering time<br><small>(alpha)</small></label>';
@@ -397,7 +397,7 @@ $loc = ParseLocations($locations);
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=8"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=9"></script> 
     </body>
 </html>
 

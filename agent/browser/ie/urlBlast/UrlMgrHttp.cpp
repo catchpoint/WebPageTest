@@ -262,6 +262,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								context->runs = _ttol(value);
 							else if( !key.CompareNoCase(_T("Capture Video")) )
 								info.captureVideo = _ttol(value) != 0;
+							else if( !key.CompareNoCase(_T("aft")) )
+								info.aft = _ttol(value);
 							else if( !key.CompareNoCase(_T("bwIn")) )
 							{
 								info.bwIn = _ttol(value);

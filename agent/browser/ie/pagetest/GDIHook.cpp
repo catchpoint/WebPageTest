@@ -133,7 +133,7 @@ BOOL CGDIHook::RedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, 
 	if( _RedrawWindow )
 		ret = _RedrawWindow( hWnd, lprcUpdate, hrgnUpdate, flags );
 
-	if( dlg && dlg->active && !dlg->painted && !dlg->captureVideo )
+  if( dlg && (dlg->active || dlg->capturingAFT) && !dlg->painted && !dlg->captureVideo )
 	{
 		TCHAR className[1000] = {0};
 		GetClassName(hWnd, className, _countof(className));
@@ -157,7 +157,7 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
 	if( _BitBlt )
 		ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
 
-	if( dlg && dlg->active )
+  if( dlg && (dlg->active || dlg->capturingAFT) )
 	{
 		HWND hWnd = WindowFromDC(hdc);
 		if( hWnd == dlg->hBrowserWnd )

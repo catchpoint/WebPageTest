@@ -1024,6 +1024,8 @@ function CreateTest(&$test, $url, $batch = 0)
             $testFile .= "\r\ntcpdump=1";
         if( $test['video'] )
             $testFile .= "\r\nCapture Video=1";
+        if( $test['aft'] )
+            $testFile .= "\r\naft=1";
         if( $test['block'] )
         {
             $testFile .= "\r\nblock={$test['block']}";

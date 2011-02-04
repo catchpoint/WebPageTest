@@ -53,6 +53,7 @@ foreach($compTests as $t)
             
             if( !$test['run'] )
                 $test['run'] = GetMedianRun($test['pageData']);
+            $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
 
             $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
             if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )

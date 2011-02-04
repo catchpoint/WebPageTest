@@ -106,7 +106,8 @@ function loadPageData($file)
                                     'minify_total' => (int)$fields[66],
                                     'minify_savings' => (int)$fields[67],
                                     'image_total' => (int)$fields[68],
-                                    'image_savings' => (int)$fields[69]
+                                    'image_savings' => (int)$fields[69],
+                                    'aft' => (int)$fields[72]
                                 );
                     
                     $ret['date'] = strtotime($fields[0] . ' ' . $fields[1]);

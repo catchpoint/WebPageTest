@@ -134,6 +134,7 @@ public:
 	CRITICAL_SECTION			csBackground;
 	bool						active;			// are we currently timing anything
 	bool						available;		// Are we available to time?  Don't if the user hasn't closed the UI
+  bool            capturingAFT; // are we capturing AFT (if so we need to artifically extend the time)?
 	bool						processed;		// have the results been processed?
 	DWORD						abm;			// Activity measurement mode (0 = none, 1 = web 2.0, 2 = auto)
 	DWORD						currentDoc;		// what is the ID of the current document (to assign to objects)?
@@ -157,6 +158,7 @@ public:
 	CString						endRequest;		// request to force end
 	CAtlList<CString>			blockRequests;	// which requests to block
 	CString						basicAuth;		// basic auth login to use
+  DWORD           aft;          // above-the fold measurement enabled?
 	HWND						hMainWindow;	// main app window
 	HWND						hBrowserWindow;	// browser window
 	CString						userAgent;		// custom user agent string

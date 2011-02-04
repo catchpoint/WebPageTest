@@ -23,10 +23,6 @@ else
 
         $msLoad = microtime(true);
 
-        // load the AFT data
-        if( $test['test']['aft'] )
-            $aft = json_decode(gz_file_get_contents("$testPath/aft.txt"), true);
-        
         // if we don't have an url, try to get it from the page results
         if( !strlen($url) )
             $url = $pageData[1][0]['URL'];
@@ -75,8 +71,6 @@ else
                 $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
                 if( strlen($score) )
                     echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                if( $test['test']['aft'] )
-                    echo "<AFT>{$aft[$fvMedian][0]}</AFT>\n";
             }
             echo "</firstView>\n";
             
@@ -94,8 +88,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                        if( $test['test']['aft'] )
-                            echo "<AFT>{$aft[$rvMedian][1]}</AFT>\n";
                     }
                     echo "</repeatView>\n";
                 }
@@ -197,8 +189,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                        if( $test['test']['aft'] )
-                            echo "<AFT>{$aft[$i][1]}</AFT>\n";
                     }
                     echo "</results>\n";
 

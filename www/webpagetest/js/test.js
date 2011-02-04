@@ -69,6 +69,16 @@ function ValidateInput(form)
             ConnectionChanged();
         });
         
+        $("#aftCheck").change(function(){
+            if( $('#aftCheck').attr('checked') )
+                $('#videoCheck').attr('checked', true);
+        });
+
+        $("#videoCheck").change(function(){
+            if( !$('#videoCheck').attr('checked') )
+                $('#aftCheck').attr('checked', false);
+        });
+
         // make sure to select an intelligent default (in case the back button was hit)
         LocationChanged();
         

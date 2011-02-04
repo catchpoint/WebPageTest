@@ -4,13 +4,6 @@ include 'object_detail.inc';
 require_once('page_data.inc');
 require_once('waterfall.inc');
 $data = loadPageRunData($testPath, $run, $cached);
-$aft = 0;
-if( $test['test']['aft'] )
-{
-    $aftVals = json_decode(gz_file_get_contents("$testPath/aft.txt"), true);
-    if( isset($aftVals) && isset($aftVals[$run]) && isset($aftVals[$run][$cached]) )
-        $aft = $aftVals[$run][$cached];
-}
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -119,7 +112,7 @@ if( $test['test']['aft'] )
                         $cols = 4;
                         if((float)$data['domTime'] > 0.0)
                             $cols++;
-                        if( $aft )
+                        if( $test['test']['aft'] )
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
@@ -130,13 +123,11 @@ if( $test['test']['aft'] )
                         <th align="center" valign="middle">Load Time</th>
                         <th align="center" valign="middle">First Byte</th>
                         <th align="center" valign="middle">Start Render</th>
+                        <?php if( $test['test']['aft'] ) { ?>
+                        <th align="center" valign="middle">Above the Fold</th>
+                        <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
-                        <?php }
-                        if( $aft ) 
-                            {
-                        ?>
-                        <th align="center" valign="middle">AFT</th>
                         <?php } ?>
                         <th align="center" valign="middle">Result (error code)</th>
 
@@ -153,10 +144,14 @@ if( $test['test']['aft'] )
                         echo "<td id=\"LoadTime\" valign=\"middle\">" . number_format($data['loadTime'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"TTFB\" valign=\"middle\">" . number_format($data['TTFB'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
+                        if( $test['test']['aft'] ) {
+                            $aft = number_format($data['aft'] / 1000.0, 1) . 's';
+                            if( !$data['aft'] )
+                                $aft = 'N/A';
+                            echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
+                        }
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . number_format($data['domTime'] / 1000.0, 3) . "s</td>\n";
-                        if( $aft ) 
-                            echo "<td id=\"domTime\" valign=\"middle\">" . number_format( $aft / 1000.0, 3 ) . "s</td>\n";
                         echo "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
 
                         echo "<td id=\"docComplete\" class=\"border\" valign=\"middle\">" . number_format($data['docTime'] / 1000.0, 3) . "s</td>\n";
@@ -187,7 +182,10 @@ if( $test['test']['aft'] )
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#00FF00"></div></td><td>Time to First Byte</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#007BFF"></div></td><td>Content Download</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php if( true || (float)$data['domTime'] > 0.0 ) { ?>
+                        <?php if( $data['aft'] ) { ?>
+                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>
+                        <?php } ?>
+                        <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>

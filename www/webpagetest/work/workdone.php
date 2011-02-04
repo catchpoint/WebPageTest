@@ -198,11 +198,6 @@ else
                 // send the request (we don't care about the response)
                 file_get_contents($url, 0, $ctx);
             }
-            
-            // run the AFT processing for the current test (in the background)
-            // TODO - move the processing to the actual test machine
-            if( $test['test']['aft'] )
-                shell_exec("/usr/local/php5/bin/php -f ./work/aft.php '$id' > /dev/null &");
         }
     }
     else

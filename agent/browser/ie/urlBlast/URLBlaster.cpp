@@ -542,7 +542,7 @@ bool CURLBlaster::LaunchBrowser(void)
 					// wait for it to exit - give it up to double the timeout value
 					// TODO:  have urlManager specify the timeout
 					int multiple = 2;
-					if( info.runningScript )
+          if( info.runningScript || info.aft )
 						multiple = 10;
 					if( WaitForSingleObject(pi.hProcess, timeout * multiple * 1000) == WAIT_OBJECT_0 )
 					{
@@ -767,6 +767,8 @@ void CURLBlaster::ConfigurePagetest(void)
 			if( info.captureVideo )
 				val = 1;
 			RegSetValueEx(hKey, _T("Capture Video"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+
+		  RegSetValueEx(hKey, _T("AFT"), 0, REG_DWORD, (const LPBYTE)&info.aft, sizeof(info.aft));
 
 			RegDeleteValue(hKey, _T("Block"));
 			if( !info.block.IsEmpty() )

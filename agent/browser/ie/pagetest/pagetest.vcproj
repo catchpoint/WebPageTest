@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\aft.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\BrowserEvents.cpp"
 				>
 			</File>
@@ -307,6 +311,10 @@
 			>
 			<File
 				RelativePath=".\AboutDlg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\aft.h"
 				>
 			</File>
 			<File

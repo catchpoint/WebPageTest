@@ -36,6 +36,7 @@ public:
 		host.Empty();
     browser.Empty();
     tcpdump = false;
+    aft = 0;
     tcpdumpFile.Empty();
 	}
 	
@@ -73,6 +74,7 @@ public:
 	bool	ipfw;				// do we need to do a custom bandwidth?
   DWORD  tcpdump;   // packet capture?
   CString tcpdumpFile;
+  DWORD aft;        // above-the-fold time
 
 	DWORD	reserved;			// reserved for internal use
 	void *	context;			// contect information for internal use

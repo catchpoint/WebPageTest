@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REQUEST_ACTIVITY_TIMEOUT 30000
 #define FORCE_ACTIVITY_TIMEOUT 240000
 #define DOC_TIMEOUT 1000
+#define AFT_TIMEOUT 240000
 
 CTestState::CTestState(void):
 	hTimer(0)
@@ -250,6 +251,8 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("useBitBlt"), useBitBlt);
 					if( useBitBlt )
 						forceBlit = true;
+          aft = 0;
+					key.QueryDWORDValue(_T("AFT"), aft);
 
 					len = sizeof(buff) / sizeof(TCHAR);
 					customHost.Empty();
@@ -395,6 +398,8 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			EnterCriticalSection(&cs);
 			active = true;
 			available = false;
+      if( aft )
+        capturingAFT = true;
 			reportSt = NONE;
 			
 			// collect the starting TCP stats
@@ -426,110 +431,139 @@ void CTestState::CheckComplete()
 {
 	ATLTRACE(_T("[Pagetest] - Checking to see if the test is complete\n"));
 
-	if( active )
+	if( active || capturingAFT )
 	{
 		CString buff;
-		EnterCriticalSection(&cs);
-		
-		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
-
-		// has our timeout expired?
 		bool expired = false;
-		if( timeout && start )
-		{
-			DWORD elapsed =  (DWORD)((now - start) / freq);
-			if( elapsed > timeout )
-			{
-				buff.Format(_T("[Pagetest] - Test timed out (timout set to %d sec)\n"), timeout);
-				OutputDebugString(buff);
-				
-				expired = true;
-			}
-			else
-			{
-				ATLTRACE(_T("[Pagetest] - Elapsed test time: %d sec\n"), elapsed);
-			}
-		}
-		else
-		{
-			ATLTRACE(_T("[Pagetest] - Start time not logged yet\n"));
-		}
+    bool done = false;
 
-		LeaveCriticalSection(&cs);
+	  __int64 now;
+	  QueryPerformanceCounter((LARGE_INTEGER *)&now);
 
-		// see if the DOM element we're interested in appeared yet
-		CheckDOM();
+    // only do the request checking if we're actually active
+    if( active )
+    {
+      EnterCriticalSection(&cs);
+  		
+		  // has our timeout expired?
+		  if( timeout && start )
+		  {
+			  DWORD elapsed =  (DWORD)((now - start) / freq);
+			  if( elapsed > timeout )
+			  {
+				  buff.Format(_T("[Pagetest] - Test timed out (timout set to %d sec)\n"), timeout);
+				  OutputDebugString(buff);
+  				
+				  expired = true;
+			  }
+			  else
+			  {
+				  ATLTRACE(_T("[Pagetest] - Elapsed test time: %d sec\n"), elapsed);
+			  }
+		  }
+		  else
+		  {
+			  ATLTRACE(_T("[Pagetest] - Start time not logged yet\n"));
+		  }
 
-		// only exit if there isn't an outstanding doc or request
-		if( (lastRequest && !currentDoc) || expired || forceDone || errorCode )
-		{
-			bool done = forceDone || errorCode != 0;
+		  LeaveCriticalSection(&cs);
+
+		  // see if the DOM element we're interested in appeared yet
+		  CheckDOM();
+
+		  // only exit if there isn't an outstanding doc or request
+		  if( (lastRequest && !currentDoc) || expired || forceDone || errorCode )
+		  {
+			  done = forceDone || errorCode != 0;
+  			
+			  if( !done )
+			  {
+				  // count the number of open wininet requests
+				  EnterCriticalSection(&cs);
+				  openRequests = 0;
+				  POSITION pos = winInetRequestList.GetHeadPosition();
+				  while( pos )
+				  {
+					  CWinInetRequest * r = winInetRequestList.GetNext(pos);
+					  if( r && r->valid && !r->closed )
+						  openRequests++;
+				  }
+				  LeaveCriticalSection(&cs);
+
+
+				  ATLTRACE(_T("[Pagetest] - %d openRequests"), openRequests);
+
+				  // did the DOM element arrive yet (if we're looking for one?)
+				  if( (domElement || (domElementId.IsEmpty() && domRequest.IsEmpty())) && requiredRequests.IsEmpty() && !script_waitForJSDone )
+				  {
+					  // see if we are done (different logic if we're in abm mode or not)
+					  if( abm )
+					  {
+              DWORD elapsed = now > lastActivity && lastActivity ? (DWORD)((now - lastActivity ) / (freq / 1000)) : 0;
+              DWORD elapsedRequest = now > lastRequest && lastRequest ? (DWORD)((now - lastRequest ) / (freq / 1000)) : 0;
+						  if ( (!openRequests && elapsed > ACTIVITY_TIMEOUT) ||					// no open requests and it's been longer than 2 seconds since the last request
+							   (!openRequests && elapsedRequest > REQUEST_ACTIVITY_TIMEOUT) ||	// no open requests and it's been longer than 30 seconds since the last traffic on the wire
+							   (openRequests && elapsedRequest > FORCE_ACTIVITY_TIMEOUT) )	// open requests but it's been longer than 60 seconds since the last one (edge case) that touched the wire
+						  {
+							  done = true;
+							  OutputDebugString(_T("[Pagetest] ***** Measured as Web 2.0\n"));
+						  }
+					  }
+					  else
+					  {
+						  if( lastDoc )	// make sure we actually measured a document - shouldn't be possible to not be set but just to be safe
+						  {
+							  DWORD elapsed = (DWORD)((now - lastDoc) / (freq / 1000));
+							  if( elapsed > DOC_TIMEOUT )
+							  {
+								  done = true;
+								  OutputDebugString(_T("[Pagetest] ***** Measured as Web 1.0\n"));
+							  }
+						  }
+					  }
+				  }
+			  }
+			  else
+			  {
+				  buff.Format(_T("[Pagetest] - Force exit. Error code = %d (0x%08X)\n"), errorCode, errorCode);
+				  OutputDebugString(buff);
+			  }
+      }
+    }
+    else
+    {
+      // check to see if we are done capturing AFT video
+		  DWORD elapsed = (DWORD)((now - end) / (freq / 1000));
+		  if( elapsed > AFT_TIMEOUT )
+        done = true;
+    }
 			
-			if( !done )
-			{
-				// count the number of open wininet requests
-				EnterCriticalSection(&cs);
-				openRequests = 0;
-				POSITION pos = winInetRequestList.GetHeadPosition();
-				while( pos )
-				{
-					CWinInetRequest * r = winInetRequestList.GetNext(pos);
-					if( r && r->valid && !r->closed )
-						openRequests++;
-				}
-				LeaveCriticalSection(&cs);
+		if ( expired || done )
+		{
+      if( active && capturingAFT )
+      {
+        OutputDebugString(_T("[Pagetest] ***************** Data collection complete, continuing to capture video for AFT\n"));
 
+        // turn off regular data capture but keep capturing video
+        active = false;
+		    if( !end || abm )
+			    end = lastRequest;
 
-				ATLTRACE(_T("[Pagetest] - %d openRequests"), openRequests);
-
-				// did the DOM element arrive yet (if we're looking for one?)
-				if( (domElement || (domElementId.IsEmpty() && domRequest.IsEmpty())) && requiredRequests.IsEmpty() && !script_waitForJSDone )
-				{
-					// see if we are done (different logic if we're in abm mode or not)
-					if( abm )
-					{
-            DWORD elapsed = now > lastActivity && lastActivity ? (DWORD)((now - lastActivity ) / (freq / 1000)) : 0;
-            DWORD elapsedRequest = now > lastRequest && lastRequest ? (DWORD)((now - lastRequest ) / (freq / 1000)) : 0;
-						if ( (!openRequests && elapsed > ACTIVITY_TIMEOUT) ||					// no open requests and it's been longer than 2 seconds since the last request
-							 (!openRequests && elapsedRequest > REQUEST_ACTIVITY_TIMEOUT) ||	// no open requests and it's been longer than 30 seconds since the last traffic on the wire
-							 (openRequests && elapsedRequest > FORCE_ACTIVITY_TIMEOUT) )	// open requests but it's been longer than 60 seconds since the last one (edge case) that touched the wire
-						{
-							done = true;
-							OutputDebugString(_T("[Pagetest] ***** Measured as Web 2.0\n"));
-						}
-					}
-					else
-					{
-						if( lastDoc )	// make sure we actually measured a document - shouldn't be possible to not be set but just to be safe
-						{
-							DWORD elapsed = (DWORD)((now - lastDoc) / (freq / 1000));
-							if( elapsed > DOC_TIMEOUT )
-							{
-								done = true;
-								OutputDebugString(_T("[Pagetest] ***** Measured as Web 1.0\n"));
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				buff.Format(_T("[Pagetest] - Force exit. Error code = %d (0x%08X)\n"), errorCode, errorCode);
-				OutputDebugString(buff);
-			}
-			
-			if ( expired || done )
-			{
-				CString buff;
-				buff.Format(_T("[Pagetest] ***** Page Done\n")
-							_T("[Pagetest]          Document ended: %0.3f sec\n")
-							_T("[Pagetest]          Last Activity:  %0.3f sec\n")
-							_T("[Pagetest]          DOM Element:  %0.3f sec\n"),
-							!endDoc ? 0.0 : (double)(endDoc-start) / (double)freq,
-							!lastRequest ? 0.0 : (double)(lastRequest-start) / (double)freq,
-							!domElement ? 0.0 : (double)(domElement-start) / (double)freq);
-				OutputDebugString(buff);
+		    // get a screen shot of the fully loaded page
+		    if( saveEverything && !imgFullyLoaded.IsValid())
+			    GrabScreenShot(imgFullyLoaded);
+      }
+      else
+      {
+			  CString buff;
+			  buff.Format(_T("[Pagetest] ***** Page Done\n")
+						  _T("[Pagetest]          Document ended: %0.3f sec\n")
+						  _T("[Pagetest]          Last Activity:  %0.3f sec\n")
+						  _T("[Pagetest]          DOM Element:  %0.3f sec\n"),
+						  !endDoc ? 0.0 : (double)(endDoc-start) / (double)freq,
+						  !lastRequest ? 0.0 : (double)(lastRequest-start) / (double)freq,
+						  !domElement ? 0.0 : (double)(domElement-start) / (double)freq);
+			  OutputDebugString(buff);
 
         // see if we are combining multiple script steps (in which case we need to start again)
         if( runningScript && script_combineSteps && script_combineSteps != 1 && !script.IsEmpty() )
@@ -547,35 +581,35 @@ void CTestState::CheckComplete()
         }
         else
         {
-				  // keep track of the end time in case there wasn't a document
-				  if( !end || abm )
-					  end = lastRequest;
+			    // keep track of the end time in case there wasn't a document
+			    if( !end || abm )
+				    end = lastRequest;
 
-				  // put some text on the browser window to indicate we're done
-				  double sec = (start && end > start) ? (double)(end - start) / (double)freq: 0;
-				  if( !expired )
-					  reportSt = TIMER;
-				  else
-					  reportSt = QUIT_NOEND;
+			    // put some text on the browser window to indicate we're done
+			    double sec = (start && end > start) ? (double)(end - start) / (double)freq: 0;
+			    if( !expired )
+				    reportSt = TIMER;
+			    else
+				    reportSt = QUIT_NOEND;
 
-				  RepaintWaterfall();
+			    RepaintWaterfall();
 
-				  // kill the background timer
-				  if( hTimer )
-				  {
-					  DeleteTimerQueueTimer(NULL, hTimer, NULL);
-					  hTimer = 0;
-					  timeEndPeriod(1);
-				  }
+			    // kill the background timer
+			    if( hTimer )
+			    {
+				    DeleteTimerQueueTimer(NULL, hTimer, NULL);
+				    hTimer = 0;
+				    timeEndPeriod(1);
+			    }
 
-				  // get a screen shot of the fully loaded page
-				  if( saveEverything )
-					  GrabScreenShot(imgFullyLoaded);
+			    // get a screen shot of the fully loaded page
+			    if( saveEverything && !imgFullyLoaded.IsValid())
+				    GrabScreenShot(imgFullyLoaded);
 
-				  // write out any results (this will also kill the timer)
-				  FlushResults();
+			    // write out any results (this will also kill the timer)
+			    FlushResults();
         }
-			}
+      }
 		}
 	}
 }
@@ -736,10 +770,7 @@ void CTestState::CheckRender()
 -----------------------------------------------------------------------------*/
 void CTestState::CheckWindowPainted(HWND hWnd)
 {
-	if( hBrowserWnd )
-		hWnd = hBrowserWnd;
-
-	if( active && !painted && ::IsWindow(hWnd) )
+	if( active && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) )
 	{
 		__int64 now;
 		QueryPerformanceCounter((LARGE_INTEGER *)&now);
@@ -762,17 +793,17 @@ void CTestState::CheckWindowPainted(HWND hWnd)
 		// grab a screen shot of the window
 		HDC hDisplay = NULL;
 		HDC hSrc = NULL;
-		if( !captureVideo && !display.IsEmpty() )
+    if( (forceBlit || captureVideo || display.IsEmpty()) && hBrowserWnd && ::IsWindow(hBrowserWnd) )
+			hSrc = ::GetDC(hBrowserWnd);
+    else if( !display.IsEmpty() )
 			hDisplay = hSrc = CreateDC(display, display, NULL, NULL);
-		else
-			hSrc = ::GetDC(hWnd);
 		if( hSrc )
 		{
 			HDC hDC = CreateCompatibleDC(hSrc);
 			if( hDC )
 			{
 				CRect rect;
-				if( ::GetWindowRect(hWnd, rect) )
+				if( ::GetWindowRect(hBrowserWnd, rect) )
 				{
 					int w = rect.Width();
 					int h = rect.Height();
@@ -799,7 +830,7 @@ void CTestState::CheckWindowPainted(HWND hWnd)
 						if( forceBlit || captureVideo )
 							ok = BitBlt(hDC, 0, 0, w, h, hSrc, 0, 0, SRCCOPY);
 						else
-							ok = ::PrintWindow(hWnd, hDC, 0);
+							ok = ::PrintWindow(hBrowserWnd, hDC, 0);
 
 						if( ok )
 						{
@@ -859,7 +890,7 @@ void CTestState::CheckWindowPainted(HWND hWnd)
 			if( hDisplay )
 				DeleteDC(hDisplay);
 			else
-				::ReleaseDC(hWnd, hSrc);
+				::ReleaseDC(hBrowserWnd, hSrc);
 		}
 	}
 }
@@ -1014,7 +1045,7 @@ void CTestState::BackgroundTimer(void)
 
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER *)&now);
-	if( active )
+	if( active || capturingAFT )
 	{
 		CProgressData data;
 

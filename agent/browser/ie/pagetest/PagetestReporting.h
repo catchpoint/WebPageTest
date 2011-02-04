@@ -101,6 +101,7 @@ public:
 	double			tmBasePage;		// time to the base page being complete
 	int				reportSt;		// Done Reporting?
 	DWORD			basePageResult;	// result of the base page
+  DWORD     msAFT;      // AFT Time (if we're capturing it)
 
 	DWORD			nDns;			// number of DNS lookups
 	DWORD			nConnect;		// number of connects
