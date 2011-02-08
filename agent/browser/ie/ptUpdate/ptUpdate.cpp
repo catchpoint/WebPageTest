@@ -72,8 +72,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			FindClose(hFind);
 		}
 
-		// reboot to make sure everything is clean and starts up
-		Reboot();
+		// Start urlblast back up
+    lstrcpy( dstFile, dstPath );
+    lstrcat( dstFile, _T("urlblast.exe") );
+		if( (int)ShellExecute(NULL, NULL, dstFile, NULL, dstPath, SW_SHOWMINNOACTIVE) <= 32 )
+      Reboot();
 	}
 
 	return 0;
