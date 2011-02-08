@@ -15,6 +15,7 @@ private:
   DWORD width;
   DWORD height;
   DWORD * pixelChangeTime;
+  DWORD * firstPixelChangeTime;
   DWORD * pixelChangeCount;
   DWORD msEnd;
 

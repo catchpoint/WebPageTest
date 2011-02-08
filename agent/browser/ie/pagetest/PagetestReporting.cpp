@@ -294,6 +294,7 @@ void CPagetestReporting::FlushResults(void)
 					DWORD msDone = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
 					DWORD msRender = (DWORD)(tmStartRender * 1000.0);
 					DWORD msDom = (DWORD)(tmDOMElement * 1000.0);
+          DWORD msVideoDone = max(msDone, max(msDoc, max(msRender, msDom)));
 
           if( saveEverything && script_logData )
 					{
@@ -368,7 +369,7 @@ void CPagetestReporting::FlushResults(void)
 								progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
 
 							CProgressData data = progressData.GetNext(pos);
-							if( data.ms <= msDone + 100 )
+							if( data.ms <= msVideoDone + 100 )
 							{
 								CStringA buff;
 								buff.Format("%d,%d,%0.2f,%d\r\n", data.ms, data.bpsIn, data.cpu, data.mem );
@@ -427,14 +428,32 @@ void CPagetestReporting::FlushResults(void)
           // calculate the above-the-fold time
           if( aft )
           {
-            CAFT aftEngine(msDone + 100);
+            CAFT aftEngine(msVideoDone + 100);
 		        POSITION pos = progressData.GetHeadPosition();
+            DWORD msLast = 0;
 		        while( pos )
 		        {
 			        CProgressData data = progressData.GetNext(pos);
 			        if( data.img )
+              {
+                // see if we need to insert one of the static grabs before the next video frame
+                if( msDoc > msLast && msDoc <= data.ms )
+                  aftEngine.AddImage( &imgDocComplete, msDom );
+
+                if( msDone > msLast && msDone <= data.ms )
+                  aftEngine.AddImage( &imgFullyLoaded, msDone );
+
                 aftEngine.AddImage( data.img, data.ms );
+                msLast = data.ms;
+              }
             }
+
+            // see if we need to tack the event frames on the end
+            if( msDoc > msLast )
+              aftEngine.AddImage( &imgDocComplete, msDom );
+
+            if( msDone > msLast )
+              aftEngine.AddImage( &imgFullyLoaded, msDone );
 
             bool confidence;
             msAFT = 0;

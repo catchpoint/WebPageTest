@@ -8,6 +8,7 @@ CAFT::CAFT(DWORD testEndTime, DWORD earlyCutoff, DWORD pixelChangesThreshold):
   , width(0)
   , height(0)
   , pixelChangeTime(NULL)
+  , firstPixelChangeTime(NULL)
   , pixelChangeCount(NULL)
   , early_cutoff(earlyCutoff)
   , pixel_changes_threshold(pixelChangesThreshold)
@@ -21,6 +22,8 @@ CAFT::~CAFT(void)
 {
   if( pixelChangeTime )
     free( pixelChangeTime );
+  if( firstPixelChangeTime )
+    free( firstPixelChangeTime );
   if( pixelChangeCount )
     free( pixelChangeCount );
 }
@@ -51,7 +54,11 @@ void CAFT::AddImage( CxImage * img, DWORD ms )
             {
               pixelChangeCount[i]++;
               if( ms <= msEnd )
+              {
                 pixelChangeTime[i] = ms;
+                if( !firstPixelChangeTime[i] )
+                  firstPixelChangeTime[i] = ms;
+              }
               changeCount++;
             }
 
@@ -68,9 +75,11 @@ void CAFT::AddImage( CxImage * img, DWORD ms )
       height = img->GetHeight();
 
       pixelChangeTime = (DWORD *)malloc(width * height * sizeof(DWORD));
+      firstPixelChangeTime  = (DWORD *)malloc(width * height * sizeof(DWORD));
       pixelChangeCount = (DWORD *)malloc(width * height * sizeof(DWORD));
 
       memset(pixelChangeTime, 0, width * height * sizeof(DWORD));
+      memset(firstPixelChangeTime, 0, width * height * sizeof(DWORD));
       memset(pixelChangeCount, 0, width * height * sizeof(DWORD));
     }
 
@@ -88,6 +97,7 @@ bool CAFT::Calculate( DWORD &ms, bool &confident )
   if( lastImg )
   {
     DWORD latest_of_early = 0;
+    DWORD latest_of_first = 0;
     DWORD latest_of_static = 0;
     confident = true;
 
@@ -100,11 +110,16 @@ bool CAFT::Calculate( DWORD &ms, bool &confident )
       {
         DWORD changeCount = pixelChangeCount[i];
         DWORD lastChange = pixelChangeTime[i];
+        DWORD firstChange = firstPixelChangeTime[i];
+
+        // keep track of the first change time for each pixel
+        if( firstChange > latest_of_first && firstChange <= msEnd )
+          latest_of_first = firstChange;
 
         // see if this is a "stable" pixel
         if( changeCount < pixel_changes_threshold )
         {
-          if( lastChange > latest_of_static && lastChange < msEnd )
+          if( lastChange > latest_of_static && lastChange <= msEnd )
           {
             latest_of_static = lastChange;
             ATLTRACE(_T("[Pagetest] - Latest static updated to %d ms\n"), latest_of_static);
@@ -126,7 +141,7 @@ bool CAFT::Calculate( DWORD &ms, bool &confident )
     if( latest_of_static )
     {
       ret = true;
-      ms = latest_of_static;
+      ms = __max(latest_of_static, latest_of_first);
       ATLTRACE(_T("[Pagetest] - AFT Calculated: %d ms\n"), latest_of_static);
     }
   }
