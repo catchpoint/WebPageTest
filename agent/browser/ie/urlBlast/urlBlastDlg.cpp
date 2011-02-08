@@ -57,7 +57,6 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, browserHeight(768)
 	, debug(0)
 	, urlManager(log)
-	, topspeed(false)
 	, pipeIn(0)
 	, pipeOut(0)
 	, ec2(0)
@@ -537,11 +536,6 @@ void CurlBlastDlg::LoadSettings(void)
 	if( GetPrivateProfileString(_T("Configuration"), _T("dynaTrace"), _T(""), buff, _countof(buff), iniFile ) )
 		dynaTrace = buff;
 
-	// topspeed configuration
-	topspeed = false;
-	if( GetPrivateProfileInt(_T("Configuration"), _T("topspeed"), 0, iniFile) )
-		topspeed = true;
-	
 	if( GetPrivateProfileString(_T("Configuration"), _T("Log File"), _T("c:\\urlBlast"), buff, _countof(buff), iniFile ) )
 	{
 		logFile = buff;
@@ -1436,7 +1430,6 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			blaster->preLaunch		= preLaunch;
 			blaster->postLaunch		= postLaunch;
 			blaster->dynaTrace		= dynaTrace;
-			blaster->topspeed		= topspeed;
 			blaster->pipeIn			= pipeIn;
 			blaster->pipeOut		= pipeOut;
 			blaster->useBitBlt		= useBitBlt;

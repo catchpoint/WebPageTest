@@ -31,7 +31,6 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 , browserPID(0)
 , userSID(NULL)
 , log(logRef)
-, topspeed(false)
 , pipeIn(0)
 , pipeOut(0)
 , hDynaTrace(NULL)
@@ -819,32 +818,6 @@ bool CURLBlaster::ConfigureIE(void)
 			RegCloseKey(hKey);
 		}
 		
-		// Disable IE7  emulation for IE8
-		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
-		{
-			DWORD val = 8000;
-			RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
-		
-		// set up IE8 connection settings
-		if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPERSERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
-		{
-			DWORD val = 6;
-			if( info.connections )
-				val = info.connections;
-			RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
-		if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPER1_0SERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
-		{
-			DWORD val = 6;
-			if( info.connections )
-				val = info.connections;
-			RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
-
 		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\InformationBar"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
 		{
 			DWORD val = 0;
@@ -889,19 +862,8 @@ bool CURLBlaster::ConfigureIE(void)
 			RegSetValueEx(hKey, _T("WarnOnPost"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 			RegSetValueEx(hKey, _T("WarnOnPostRedirect"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 			RegSetValueEx(hKey, _T("WarnOnZoneCrossing"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("ProxyEnable"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			//RegSetValueEx(hKey, _T("ProxyEnable"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 			
-			if( info.connections )
-			{
-				RegSetValueEx(hKey, _T("MaxConnectionsPerServer"), 0, REG_DWORD, (const LPBYTE)&info.connections, sizeof(info.connections));
-				RegSetValueEx(hKey, _T("MaxConnectionsPer1_0Server"), 0, REG_DWORD, (const LPBYTE)&info.connections, sizeof(info.connections));
-			}
-			else
-			{
-				RegDeleteValue(hKey, _T("MaxConnectionsPerServer"));
-				RegDeleteValue(hKey, _T("MaxConnectionsPer1_0Server"));
-			}
-
 			RegCloseKey(hKey);
 		}
 
@@ -938,46 +900,6 @@ bool CURLBlaster::ConfigureIE(void)
 			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
 			RegCloseKey(hKey);
-		}
-
-		//  set up the browser to proxy through topspeed if we're configuured to (AOL-specific)
-		if( topspeed )
-		{
-			ret = false;
-
-			// get the proxy settings from the registry
-			if( RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\America Online\\All"), 0, KEY_READ, &hKey) == ERROR_SUCCESS )
-			{
-				CString proxy;
-				TCHAR buff[1024];
-				DWORD len = sizeof(buff);
-				if( RegQueryValueEx( hKey, _T("topspeed.proxy.http"), 0, 0, (LPBYTE)buff, &len) == ERROR_SUCCESS )
-					proxy = CString(_T("http=")) + buff;
-
-				len = sizeof(buff);
-				if( RegQueryValueEx( hKey, _T("topspeed.proxy.https"), 0, 0, (LPBYTE)buff, &len) == ERROR_SUCCESS )
-				{
-					if( !proxy.IsEmpty() )
-						proxy += _T(";");
-					proxy += CString(_T("https=")) + buff;
-				}
-
-				RegCloseKey( hKey );
-
-				if( !proxy.IsEmpty() )
-				{
-					log.Trace(_T("Setting proxy to %s"), (LPCTSTR)proxy);
-					if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
-					{
-						ret = true;
-
-						RegSetValueEx(hKey, _T("ProxyServer"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)proxy, (proxy.GetLength() + 1) * sizeof(TCHAR));
-						DWORD val = 1;
-						RegSetValueEx(hKey, _T("ProxyEnable"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-						RegCloseKey(hKey);
-					}
-				}
-			}
 		}
 	}
 
@@ -1029,7 +951,9 @@ void CURLBlaster::CloneRegKey(HKEY hSrc, HKEY hDest, LPCTSTR subKey)
 			nameLen = nameSize;
 			while( RegEnumKeyEx(src, index, name, &nameLen, 0, 0, 0, 0) == ERROR_SUCCESS )
 			{
-				CloneRegKey(src, dest, name);
+        // don't copy the search providers key, this can triggere IE messages
+        if( _tcsicmp(name, _T("SearchScopes")) )
+				  CloneRegKey(src, dest, name);
 				
 				index++;
 				nameLen = nameSize;

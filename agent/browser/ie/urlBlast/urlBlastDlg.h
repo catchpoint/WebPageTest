@@ -87,7 +87,6 @@ protected:
 	CString	password;
 	CString preLaunch;
 	CString postLaunch;
-	bool	topspeed;
 	int	browserWidth;
 	int browserHeight;
 	DWORD debug;

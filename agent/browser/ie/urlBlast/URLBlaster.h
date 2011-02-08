@@ -66,7 +66,6 @@ public:
 	CString preLaunch;
 	CString postLaunch;
 	CString dynaTrace;
-	bool	topspeed;
 	DWORD pipeIn;
 	DWORD pipeOut;
 	DWORD useBitBlt;
