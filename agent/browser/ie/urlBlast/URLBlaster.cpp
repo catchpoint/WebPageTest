@@ -6,6 +6,7 @@
 #include <Aclapi.h>
 #include <Lm.h>
 #include <WtsApi32.h>
+#include "TraceRoute.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -160,7 +161,21 @@ void CURLBlaster::ThreadProc(void)
 			// get the url to test
 			if(	GetUrl() )
 			{
-				if( !info.zipFileDir.IsEmpty() )
+        if( info.testType.GetLength() )
+        {
+          // running a custom test
+          do
+          {
+            if( !info.testType.CompareNoCase(_T("traceroute")) )
+            {
+              CTraceRoute tracert(info);
+              tracert.Run();
+            }
+
+            urlManager->UrlFinished(info);
+          }while( !info.done );
+        }
+        else if( !info.zipFileDir.IsEmpty() )
 				{
 					EncodeVideo();
 					urlManager->UrlFinished(info);

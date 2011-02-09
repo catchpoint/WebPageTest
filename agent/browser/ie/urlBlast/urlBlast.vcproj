@@ -239,6 +239,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\TraceRoute.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\urlBlast.cpp"
 				>
 			</File>
@@ -314,6 +318,10 @@
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TraceRoute.h"
 				>
 			</File>
 			<File
@@ -423,11 +431,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File

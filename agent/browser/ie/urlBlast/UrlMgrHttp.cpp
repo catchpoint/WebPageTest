@@ -264,6 +264,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								info.captureVideo = _ttol(value) != 0;
 							else if( !key.CompareNoCase(_T("aft")) )
 								info.aft = _ttol(value);
+							else if( !key.CompareNoCase(_T("type")) )
+                info.testType = value.Trim();
 							else if( !key.CompareNoCase(_T("bwIn")) )
 							{
 								info.bwIn = _ttol(value);
@@ -301,7 +303,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 					info.context = context;
 					context->currentRun = 1;
 					
-					if( info.url.Find(_T("://")) == -1 )
+          if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
 						info.url = CString(_T("http://")) + info.url;
 
 					if( info.eventText.IsEmpty() )						

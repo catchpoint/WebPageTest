@@ -61,6 +61,7 @@
         $test['aft'] = $req_aft;
         $test['tcpdump'] = $req_tcpdump;
         $test['sensitive'] = $req_sensitive;
+        $test['type'] = trim($req_type);
         
         // see if it is a batch test
         $test['batch'] = 0;
@@ -458,9 +459,7 @@ function ValidateParameters(&$test, $locations, &$error)
         if( !$maxruns )
             $maxruns = 10;
         
-        if( isset($test['agent']) && !strcasecmp($test['agent'], 'wptmonitor') && $settings['blockMonitor'] )
-            $error = 'WPT Monitor is not intended to be used against this instance of WebPagetest.';
-        elseif( !$test['batch'] )
+        if( !$test['batch'] )
             ValidateURL($test['url'], $error, $settings);
             
         if( !$error )
@@ -529,10 +528,6 @@ function ValidateParameters(&$test, $locations, &$error)
             if( $locations[$test['location']]['noscript'] && $test['priority'] )
                 $error = 'API Automation is currently disabled for that location.';
             
-            // see if we need to pick the default connectivity
-            if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-                $test['connectivity'] = 'DSL';
-                
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
                 $test['browser'] = $locations[$test['location']]['browserExe'];
@@ -544,27 +539,43 @@ function ValidateParameters(&$test, $locations, &$error)
             $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
             if( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
                 $error = "Invalid Location, please try submitting your test request again.";
-                
-            if( isset($test['connectivity']) )
+
+            if( strlen($test['type']) )
             {
-                $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
-                $connectivity = parse_ini_file('./settings/connectivity.ini', true);
-                if( isset($connectivity[$test['connectivity']]) )
+                if( $test['type'] == 'traceroute' )
                 {
-                    $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
-                    $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
-                    $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
-                    $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+                    // make sure we're just passing a host name
+                    $parts = parse_url($test['url']);
+                    $test['url'] = $parts['host'];
                 }
             }
-            
-            // adjust the latency for any last-mile latency at the location
-            if( isset($test['latency']) && $locations[$test['location']]['latency'] )
-                $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
+            else
+            {                
+                // see if we need to pick the default connectivity
+                if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
+                    $test['connectivity'] = 'DSL';
+                    
+                if( isset($test['connectivity']) )
+                {
+                    $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
+                    $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+                    if( isset($connectivity[$test['connectivity']]) )
+                    {
+                        $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
+                        $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
+                        $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
+                        $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+                    }
+                }
                 
-            // if the speed wasn't specified and there is one for the location, pass it on
-            if( !$test['speed'] && $locations[$test['location']]['speed'] )
-                $test['speed'] = $locations[$test['location']]['speed'];
+                // adjust the latency for any last-mile latency at the location
+                if( isset($test['latency']) && $locations[$test['location']]['latency'] )
+                    $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
+                    
+                // if the speed wasn't specified and there is one for the location, pass it on
+                if( !$test['speed'] && $locations[$test['location']]['speed'] )
+                    $test['speed'] = $locations[$test['location']]['speed'];
+            }
         }
     }
     elseif( !strlen($error) )
@@ -982,6 +993,8 @@ function CreateTest(&$test, $url, $batch = 0)
         $testInfo .= "uid={$test['uid']}\r\n";
     if( strlen($test['owner']) )
         $testInfo .= "owner={$test['owner']}\r\n";
+    if( strlen($test['type']) )
+        $testInfo .= "type={$test['type']}\r\n";
     if( strlen($test['industry']) && strlen($test['industry_page']) )
     {
         $testInfo .= "industry=\"{$test['industry']}\"\r\n";
@@ -1026,6 +1039,8 @@ function CreateTest(&$test, $url, $batch = 0)
             $testFile .= "\r\nCapture Video=1";
         if( $test['aft'] )
             $testFile .= "\r\naft=1";
+        if( strlen($test['type']) )
+            $testFile .= "\r\ntype={$test['type']}";
         if( $test['block'] )
         {
             $testFile .= "\r\nblock={$test['block']}";

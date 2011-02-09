@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>WebPagetest - Traceroute test result</title>
+        <?php
+            include ('head.inc');
+            include ('testStatus.inc');
+        ?>
+    </head>
+    <body>
+        <div class="page">
+            <?php
+            $tab = 'Test Result';
+            $nosubheader = true;
+            include 'header.inc';
+            ?>
+            <div class="translucent">
+                <h2>Traceroute to <?php echo $url;?></h2>
+                From: <?php echo $test['test']['location'];?><br>
+                <?php if( (int)$test['test']['runs'] > 1 ) echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>'; ?>
+                <br>
+                <div class="centered">
+                <?php
+                for( $run = 1; $run <= $test['test']['runs']; $run++ )
+                {
+                    echo "<br><h3>Run $run</h3>";
+                    DisplayTraceroute( $testPath, $run );
+                }
+                ?>
+                </div>
+            </div>
+            <?php include('footer.inc'); ?>
+        </div>
+    </body>
+</html>
+
+<?php
+/**
+* Output the data table for the traceroute
+* 
+* @param mixed $testPath
+* @param mixed $run
+*/
+function DisplayTraceroute( &$testPath, $run )
+{
+?>
+<table class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
+<?php
+    $rows = gz_file("$testPath/{$run}_traceroute.txt");
+    if( count($rows > 2) )
+    {
+        foreach($rows as $index => &$row)
+        {
+            $parseLine = str_replace(",", ", ", $row);
+            $fields = explode(",", $parseLine);
+            $data = array('hop' => trim($fields[0]),
+                            'addr' => trim($fields[1]),
+                            'time' => trim($fields[2]),
+                            'name' => trim($fields[3]));
+            
+            if( $index == 1 )
+            {
+                echo "<caption>Traceroute #$run to {$data['name']} ({$data['addr']})</caption>\n";
+                ?>
+                <thead>
+                <tr>
+                    <th>Hop</th>
+                    <th>Time (ms)</th>
+                    <th>IP Address</th>
+                    <th>FQDN</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+            }
+            elseif( $index > 1 )
+            {
+                echo "<tr>\n";
+                echo "<td>{$data['hop']}</td>\n";
+                echo "<td>{$data['time']}</td>\n";
+                echo "<td>{$data['addr']}</td>\n";
+                echo "<td>{$data['name']}</td>\n";
+                echo "</tr>\n";
+            }
+        }
+        echo "</tbody>\n";
+    }
+?>
+</table>
+<?php
+}
+
+?>

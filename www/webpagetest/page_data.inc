@@ -72,7 +72,8 @@ function loadPageData($file)
             // skip the header line
             if( $linenum > 0)
             {
-                $fields = explode("\t", $line);
+                $parseLine = str_replace("\t", "\t ", $line);
+                $fields = explode("\t", $parseLine);
                 if( count($fields) > 34 )
                 {
                     $ret = array(   'URL' => htmlspecialchars($fields[3]),

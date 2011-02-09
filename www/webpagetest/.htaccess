@@ -15,6 +15,7 @@
 RewriteEngine on
 #main pages
 RewriteRule ^about$ /about.php
+RewriteRule ^traceroute$ /traceroute.php
 
 #result paths
 RewriteRule ^result/([a-zA-Z0-9_]+)$ /result/$1/ [R] 

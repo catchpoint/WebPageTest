@@ -328,14 +328,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Pagetest"
-        "ProductCode" = "8:{02C9BA8D-C306-4199-8283-539B3B0D6DD0}"
-        "PackageCode" = "8:{44B639BE-5A86-4B8C-98F8-C6C0A711986A}"
+        "ProductCode" = "8:{402F616D-47B7-4FE9-A6A7-6A7790ADB151}"
+        "PackageCode" = "8:{6C34EBCD-9846-4A9E-A925-CEF7CFD064ED}"
         "UpgradeCode" = "8:{77AED9A6-A611-4676-A565-0A26C3A0F037}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:FALSE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:2.0.260"
+        "ProductVersion" = "8:2.0.261"
         "Manufacturer" = "8:WebPagetest LLC"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -849,7 +849,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_E15922F85E364956998A2A1642E730B3"
             {
-            "SourcePath" = "8:..\\Release\\pagetest.dll"
+            "SourcePath" = "8:..\\Debug\\pagetest.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_C27113003ABC4936B513F570EA15331E"

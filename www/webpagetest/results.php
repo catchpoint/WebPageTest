@@ -16,7 +16,12 @@ if( isset($test['test']) && $test['test']['batch'] )
 elseif( isset($test['testinfo']['cancelled']) )
     include 'testcancelled.inc';
 elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 )
-    include 'result.inc';
+{
+    if( $test['test']['type'] == 'traceroute' )
+        include 'resultTraceroute.inc';
+    else
+        include 'result.inc';
+}
 else
     include 'running.inc';
 ?>
