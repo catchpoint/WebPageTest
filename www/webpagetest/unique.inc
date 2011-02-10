@@ -11,18 +11,7 @@ function uniqueId()
     $file = fopen( $filename, "a+b",  false);
     if( $file )
     {
-        $ok = false;
-        $count = 0;
-        while( !$ok &&  $count < 500 )
-        {
-            $count++;
-            if( flock($file, LOCK_EX) )
-                $ok = true;
-            else
-                usleep(10000);
-        }
-
-        if( $ok )
+        if( flock($file, LOCK_EX) )
         {
             fseek($file, 0, SEEK_SET);
             $num = (int)fread($file, 100);

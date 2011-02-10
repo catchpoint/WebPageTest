@@ -60,10 +60,10 @@ void CTraceRoute::Run()
       IP_OPTION_INFORMATION options;
       DWORD count = 0;
 
-      int hop = 0;
+      int hop = 1;
       bool done = false;
       int sequentialFailures = 0;
-      while( hop < _maxHops && sequentialFailures < 3 && !done )
+      while( hop < _maxHops && sequentialFailures < 4 && !done )
       {
         memset(&options, 0, sizeof(options));
         options.Ttl = (UCHAR)hop;

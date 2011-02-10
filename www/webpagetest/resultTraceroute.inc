@@ -47,7 +47,7 @@ function DisplayTraceroute( &$testPath, $run )
 <table class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
 <?php
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
-    if( count($rows > 2) )
+    if( count($rows) > 2 )
     {
         foreach($rows as $index => &$row)
         {
@@ -58,29 +58,32 @@ function DisplayTraceroute( &$testPath, $run )
                             'time' => trim($fields[2]),
                             'name' => trim($fields[3]));
             
-            if( $index == 1 )
+            if( $data['hop'] > 0 )
             {
-                echo "<caption>Traceroute #$run to {$data['name']} ({$data['addr']})</caption>\n";
-                ?>
-                <thead>
-                <tr>
-                    <th>Hop</th>
-                    <th>Time (ms)</th>
-                    <th>IP Address</th>
-                    <th>FQDN</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php
-            }
-            elseif( $index > 1 )
-            {
-                echo "<tr>\n";
-                echo "<td>{$data['hop']}</td>\n";
-                echo "<td>{$data['time']}</td>\n";
-                echo "<td>{$data['addr']}</td>\n";
-                echo "<td>{$data['name']}</td>\n";
-                echo "</tr>\n";
+                if( $index == 1 )
+                {
+                    echo "<caption>Traceroute #$run to {$data['name']} ({$data['addr']})</caption>\n";
+                    ?>
+                    <thead>
+                    <tr>
+                        <th>Hop</th>
+                        <th>Time (ms)</th>
+                        <th>IP Address</th>
+                        <th>FQDN</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                }
+                elseif( $index > 1 )
+                {
+                    echo "<tr>\n";
+                    echo "<td>{$data['hop']}</td>\n";
+                    echo "<td>{$data['time']}</td>\n";
+                    echo "<td>{$data['addr']}</td>\n";
+                    echo "<td>{$data['name']}</td>\n";
+                    echo "</tr>\n";
+                }
             }
         }
         echo "</tbody>\n";

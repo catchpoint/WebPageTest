@@ -6,7 +6,7 @@
 
 <link rel="shortcut icon" href="/images/favicon.ico" type="image/vnd.microsoft.icon">
 <link rel="icon" href="/images/favicon.png" type="image/png">
-<link rel="stylesheet" href="<?php echo $GLOBALS['cdnPath']; ?>/pagestyle.css?v=30" type="text/css">
+<link rel="stylesheet" href="<?php echo $GLOBALS['cdnPath']; ?>/pagestyle.css?v=<?php echo VER_CSS;?>" type="text/css">
 
 <?php 
     // switch to the private install logo if we're not running on webpagetest

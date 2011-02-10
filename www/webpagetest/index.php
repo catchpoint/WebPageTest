@@ -86,7 +86,7 @@ $loc = ParseLocations($locations);
                                 {
                                     $selected = '';
                                     if( $location['checked'] )
-                                        $selected = 'SELECTED';
+                                        $selected = 'selected';
                                         
                                     echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                                 }
@@ -106,8 +106,8 @@ $loc = ParseLocations($locations);
                                 {
                                     $selected = '';
                                     if( $browser['selected'] )
-                                        $selected = ' selected';
-                                    echo "<option value=\"{$browser['key']}\"$selected>{$browser['label']}</option>\n";
+                                        $selected = 'selected';
+                                    echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
                                 }
                                 ?>
                             </select>
@@ -135,8 +135,8 @@ $loc = ParseLocations($locations);
                                     {
                                         $selected = '';
                                         if( $connection['selected'] )
-                                            $selected = ' selected';
-                                        echo "<option value=\"{$connection['key']}\"$selected>{$connection['label']}</option>\n";
+                                            $selected = 'selected';
+                                        echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
                                     }
                                     ?>
                                 </select>
@@ -354,7 +354,7 @@ $loc = ParseLocations($locations);
                         {
                             $selected = '';
                             if( $location['checked'] )
-                                $selected = 'SELECTED';
+                                $selected = 'selected';
                                 
                             echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                         }
@@ -388,7 +388,7 @@ $loc = ParseLocations($locations);
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=9"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
     </body>
 </html>
 

@@ -88,7 +88,9 @@ void CAFT::AddImage( CxImage * img, DWORD ms )
 }
 
 /*-----------------------------------------------------------------------------
-  Do all the calculations as each image is added
+  After all of the images have been added this will go through
+  and look for the latest change for any pixel that isn't considered
+  dynamic
 -----------------------------------------------------------------------------*/
 bool CAFT::Calculate( DWORD &ms, bool &confident )
 {
@@ -96,7 +98,6 @@ bool CAFT::Calculate( DWORD &ms, bool &confident )
 
   if( lastImg )
   {
-    DWORD latest_of_early = 0;
     DWORD latest_of_first = 0;
     DWORD latest_of_static = 0;
     confident = true;
@@ -126,16 +127,11 @@ bool CAFT::Calculate( DWORD &ms, bool &confident )
           }
 
           // did it stabilize early (used for the confidence)?
-          if( lastChange < early_cutoff )
-          {
-            if( lastChange > latest_of_early )
-              latest_of_early = lastChange;
-          }
-          else
+          if( lastChange >= early_cutoff )
             confident = false;
-
-          i++;
         }
+
+        i++;
       }
 
     if( latest_of_static )

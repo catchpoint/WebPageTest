@@ -46,172 +46,164 @@ if( !$done )
             $lockFile = fopen( $workDir . '/lock.dat', 'a+b',  false);
             if( $lockFile )
             {
-                $ok = false;
-                $count = 0;
-                while( !$ok &&  $count < 500 )
+                if( flock($lockFile, LOCK_EX) )
                 {
-                    $count++;
-                    if( flock($lockFile, LOCK_EX) )
-                        $ok = true;
-                    else
-                        usleep(10000);
-                }
-
-                // go through the backup directory and restore any that are over an hour old
-                // We prefix the files with an underscore to identify that they have been recovered 
-                // so we don't try to back them up
-                $backupDir = "$workDir/testing";
-                $backups = scandir($backupDir);
-                $now = time();
-                foreach( $backups as $file )
-                {
-                    if( is_file( "$backupDir/$file" ) )
-                    {
-                        $fileTime = filemtime("$backupDir/$file");
-                        if( $fileTime && $fileTime < $now )
-                        {
-                            $elapsed = $now - $fileTime;
-                            if( $elapsed > 3600 )
-                            {
-                                rename( "$backupDir/$file", "$workDir/_$file" );
-                                touch("$workDir/_$file");
-                            }
-                        }
-                    }
-                }
-                
-                // get a list of all of the files in the directory and store them indexed by filetime
-                $files = array();
-                $f = scandir($workDir);
-                foreach( $f as $file )
-                {
-                    $fileTime = filemtime("$workDir/$file");
-                    if( $fileTime && !isset($files[$fileTime]) )
-                        $files[$fileTime] = $file;
-                    else
-                        $files[] = $file;
-                }
-                
-                // sort it by time
-                ksort($files);
-                
-                $fileName;
-                $fileExt;
-                $testId;
-                
-                // loop through all of the possible extension types in priority order
-                $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
-                foreach( $priority as $ext )
-                {
-                    foreach( $files as $file )
-                    {
-                        if(is_file("$workDir/$file"))
-                        {
-                            $parts = pathinfo($file);
-                            if( !strcasecmp( $parts['extension'], $ext) )
-                            {
-                                $testId = trim(basename($file, ".$ext"), '_');
-                                $fileName = "$workDir/$file";
-                                $fileExt = $parts['extension'];
-                                break 2;
-                            }
-                        }
-                    }
-                }
-                
-                if( isset($fileName) && strlen($fileName) )
-                {
-                    $done = true;
-                    
-                    header('Content-type: text/plain');
-                    header("Cache-Control: no-cache, must-revalidate");
-                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-
-                    $testInfo = file_get_contents($fileName);
-
-                    // make a backup of the job file
-                    if( !is_dir($backupDir) )
-                        mkdir($backupDir, 0777, true);
-                    
-                    $fileBase = basename($fileName);
-                    if( $fileBase == trim($fileBase, '_') )
-                    {
-                        $backupFile = $backupDir . '/' . $fileBase;
-                        rename($fileName, $backupFile);
-                        touch($backupFile);
-                    }
-                    else
-                        unlink($fileName);
-
-                    // new-style files are totally self-contained
-                    // detect them and deal with the legacy files
-                    if( strncasecmp($testInfo, 'Test ID=', 8) )
-                        echo "Test ID=$testId\r\nurl=" . $testInfo;
-                    else
-                        echo $testInfo;
-                    
-                    $ok = true;
-                    
-                    // figure out the path to the results
-                    $testPath = './' . GetTestPath($testId);
-
-                    // flag the test with the start time
-                    $ini = file_get_contents("$testPath/testinfo.ini");
-                    $time = time();
-                    $start = "[test]\r\nstartTime=" . date("m/d/y G:i:s", $time);
-                    $out = str_replace('[test]', $start, $ini);
-                    file_put_contents("$testPath/testinfo.ini", $out);
-                    
-                    if( gz_is_file("$testPath/testinfo.json") )
-                    {
-                        $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                        $testInfoJson['started'] = $time;
-                        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-                    }
-                }
-                
-                // keep track of the last time this location reported in
-                if( !is_dir('./work/times') )
-                    mkdir('./work/times');
-                if( isset($tester) && strlen($tester) )
-                {
-                    // store the last time for each PC
-                    $times = json_decode(file_get_contents("./work/times/$location.tm"), true);
-                    if( !count($times) )
-                        $times = array();
-                        
-                    // store information about what the tester is currently doing
-                    if( !isset($times[$tester]) )
-                        $times[$tester] = array();
-                    elseif( !is_array($times[$tester]) )
-                    {
-                        unset($times[$tester]);
-                        $times[$tester] = array();
-                    }
-
+                    // go through the backup directory and restore any that are over an hour old
+                    // We prefix the files with an underscore to identify that they have been recovered 
+                    // so we don't try to back them up
+                    $backupDir = "$workDir/testing";
+                    $backups = scandir($backupDir);
                     $now = time();
-                    $times[$tester]['updated'] = $now;
-                    $times[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
-                    $times[$tester]['pc'] = $pc;
-                    $times[$tester]['ec2'] = $ec2;
-                    if( isset($testId) )
+                    foreach( $backups as $file )
                     {
-                        $times[$tester]['test'] = $testId;
-                        $times[$tester]['last'] = $now;
+                        if( is_file( "$backupDir/$file" ) )
+                        {
+                            $fileTime = filemtime("$backupDir/$file");
+                            if( $fileTime && $fileTime < $now )
+                            {
+                                $elapsed = $now - $fileTime;
+                                if( $elapsed > 3600 )
+                                {
+                                    rename( "$backupDir/$file", "$workDir/_$file" );
+                                    touch("$workDir/_$file");
+                                }
+                            }
+                        }
+                    }
+                    
+                    // get a list of all of the files in the directory and store them indexed by filetime
+                    $files = array();
+                    $f = scandir($workDir);
+                    foreach( $f as $file )
+                    {
+                        $fileTime = filemtime("$workDir/$file");
+                        if( $fileTime && !isset($files[$fileTime]) )
+                            $files[$fileTime] = $file;
+                        else
+                            $files[] = $file;
+                    }
+                    
+                    // sort it by time
+                    ksort($files);
+                    
+                    $fileName;
+                    $fileExt;
+                    $testId;
+                    
+                    // loop through all of the possible extension types in priority order
+                    $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
+                    foreach( $priority as $ext )
+                    {
+                        foreach( $files as $file )
+                        {
+                            if(is_file("$workDir/$file"))
+                            {
+                                $parts = pathinfo($file);
+                                if( !strcasecmp( $parts['extension'], $ext) )
+                                {
+                                    $testId = trim(basename($file, ".$ext"), '_');
+                                    $fileName = "$workDir/$file";
+                                    $fileExt = $parts['extension'];
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if( isset($fileName) && strlen($fileName) )
+                    {
+                        $done = true;
+                        
+                        header('Content-type: text/plain');
+                        header("Cache-Control: no-cache, must-revalidate");
+                        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+                        $testInfo = file_get_contents($fileName);
+
+                        // make a backup of the job file
+                        if( !is_dir($backupDir) )
+                            mkdir($backupDir, 0777, true);
+                        
+                        $fileBase = basename($fileName);
+                        if( $fileBase == trim($fileBase, '_') )
+                        {
+                            $backupFile = $backupDir . '/' . $fileBase;
+                            rename($fileName, $backupFile);
+                            touch($backupFile);
+                        }
+                        else
+                            unlink($fileName);
+
+                        // new-style files are totally self-contained
+                        // detect them and deal with the legacy files
+                        if( strncasecmp($testInfo, 'Test ID=', 8) )
+                            echo "Test ID=$testId\r\nurl=" . $testInfo;
+                        else
+                            echo $testInfo;
+                        
+                        $ok = true;
+                        
+                        // figure out the path to the results
+                        $testPath = './' . GetTestPath($testId);
+
+                        // flag the test with the start time
+                        $ini = file_get_contents("$testPath/testinfo.ini");
+                        $time = time();
+                        $start = "[test]\r\nstartTime=" . date("m/d/y G:i:s", $time);
+                        $out = str_replace('[test]', $start, $ini);
+                        file_put_contents("$testPath/testinfo.ini", $out);
+                        
+                        if( gz_is_file("$testPath/testinfo.json") )
+                        {
+                            $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                            $testInfoJson['started'] = $time;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
+                        }
+                    }
+                    
+                    // keep track of the last time this location reported in
+                    if( !is_dir('./work/times') )
+                        mkdir('./work/times');
+                    if( isset($tester) && strlen($tester) )
+                    {
+                        // store the last time for each PC
+                        $times = json_decode(file_get_contents("./work/times/$location.tm"), true);
+                        if( !count($times) )
+                            $times = array();
+                            
+                        // store information about what the tester is currently doing
+                        if( !isset($times[$tester]) )
+                            $times[$tester] = array();
+                        elseif( !is_array($times[$tester]) )
+                        {
+                            unset($times[$tester]);
+                            $times[$tester] = array();
+                        }
+
+                        $now = time();
+                        $times[$tester]['updated'] = $now;
+                        $times[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
+                        $times[$tester]['pc'] = $pc;
+                        $times[$tester]['ec2'] = $ec2;
+                        if( isset($testId) )
+                        {
+                            $times[$tester]['test'] = $testId;
+                            $times[$tester]['last'] = $now;
+                        }
+                        else
+                        {
+                            // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
+                            if( isset($times[$tester]['test']) && strlen($times[$tester]['test']) )
+                                $times[$tester]['last'] = $now;
+                                
+                            unset($times[$tester]['test']);
+                        }
+                        file_put_contents("./work/times/$location.tm", json_encode($times));
                     }
                     else
-                    {
-                        // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
-                        if( isset($times[$tester]['test']) && strlen($times[$tester]['test']) )
-                            $times[$tester]['last'] = $now;
-                            
-                        unset($times[$tester]['test']);
+                    {        
+                        touch( "./work/times/$location.tm" );
                     }
-                    file_put_contents("./work/times/$location.tm", json_encode($times));
-                }
-                else
-                {        
-                    touch( "./work/times/$location.tm" );
                 }
 
                 fclose($lockFile);
@@ -249,43 +241,35 @@ function GetVideoJob()
         $lockFile = fopen( $videoDir . '/lock.dat', 'a+b',  false);
         if( $lockFile )
         {
-            $ok = false;
-            $count = 0;
-            while( !$ok &&  $count < 500 )
+            if( flock($lockFile, LOCK_EX) )
             {
-                $count++;
-                if( flock($lockFile, LOCK_EX) )
-                    $ok = true;
-                else
-                    usleep(10000);
-            }
-                
-            // look for the first zip file
-            $dir = opendir($videoDir);
-            if( $dir )
-            {
-                $testFile = null;
-                while(!$testFile && $file = readdir($dir)) 
+                // look for the first zip file
+                $dir = opendir($videoDir);
+                if( $dir )
                 {
-                    $path = $videoDir . "/$file";
-                    if( is_file($path) && stripos($file, '.zip') )
-                        $testFile = $path;
-                }
-                
-                if( $testFile )
-                {
-                    header('Content-Type: application/zip');
-                    header("Cache-Control: no-cache, must-revalidate");
-                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-
-                    readfile_chunked($testFile);
-                    $ret = true;
+                    $testFile = null;
+                    while(!$testFile && $file = readdir($dir)) 
+                    {
+                        $path = $videoDir . "/$file";
+                        if( is_file($path) && stripos($file, '.zip') )
+                            $testFile = $path;
+                    }
                     
-                    // delete the test file
-                    unlink($testFile);
-                }
+                    if( $testFile )
+                    {
+                        header('Content-Type: application/zip');
+                        header("Cache-Control: no-cache, must-revalidate");
+                        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                closedir($dir);
+                        readfile_chunked($testFile);
+                        $ret = true;
+                        
+                        // delete the test file
+                        unlink($testFile);
+                    }
+
+                    closedir($dir);
+                }
             }
 
             fclose($lockFile);

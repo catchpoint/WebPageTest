@@ -23,7 +23,6 @@ public:
 		context = NULL;
 		testResult = 0;
 		runningScript = false;
-		speed = 0;
 		block.Empty();
 		basicAuth.Empty();
 		done = true;
@@ -60,7 +59,6 @@ public:
 	DWORD	connections;		    // number of parallel browser connections
 	bool	runningScript;	    // are we runnning a script?
 	CString	scriptFile;		    // location of the script file
-	DWORD	speed;				      // which speed (if any) to test?
 	CString block;				    // Requests to block
 	CString	basicAuth;		    // Auth string (user name:password)
 	bool	done;				        // done after this run

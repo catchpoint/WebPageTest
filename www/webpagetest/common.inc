@@ -7,6 +7,14 @@ if( $debug )
 umask(0);
 date_default_timezone_set('UTC');
 
+// constants
+define('VER_CSS', 30);          // version of the sitewide css file
+define('VER_JS', 8);            // version of the sitewide javascript file
+define('VER_JS_TEST', 9);       // version of the javascript specific to the test pages
+define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
+
+
+
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
 
@@ -525,18 +533,22 @@ function FilterLocations( &$locations )
     // second pass, remove any top-level locations whose sub-locations have all been removed
     foreach( $locations as $name => $loc )
     {
+        // top-level locations do not have the browser specified
+        // and "locations" is the uber-top-level grouping
         if( $name != 'locations' && !isset($loc['browser']) )
         {
-            $ok = false;
-            $newLoc = array();
-            $default = null;
+            $ok = false;        // default to deleting the location
+            $newLoc = array();  // new, filtered copy of the location
+            $default = null;    // the default location for the group
             
             // remove any of the child locations that don't exist
             $index = 0;
             foreach( $loc as $key => $val )
             {
+                // the sub-locations are identified with numeric keys (1, 2, 3)
                 if( is_numeric($key) )
                 {
+                    // check the location that is being referenced to see if it exists
                     if( isset($locations[$val]) )
                     {
                         $ok = true;

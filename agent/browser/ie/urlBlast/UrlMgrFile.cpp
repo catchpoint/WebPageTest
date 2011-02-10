@@ -163,8 +163,6 @@ bool CUrlMgrFile::GetNextUrl(CTestInfo &info)
 													info.ignoreSSL = _ttol(value);
 												else if( !key.CompareNoCase(_T("connections")) )
 													info.connections = _ttol(value);
-												else if( !key.CompareNoCase(_T("speed")) )
-													info.speed = _ttol(value);
 												else if( !key.CompareNoCase(_T("Harvest Links")) )
 													info.harvestLinks = _ttol(value) != 0;
 												else if( !key.CompareNoCase(_T("Harvest Cookies")) )

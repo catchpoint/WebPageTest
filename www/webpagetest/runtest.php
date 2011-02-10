@@ -35,7 +35,6 @@
         $test['runs'] = (int)$req_runs;
         $test['fvonly'] = (int)$req_fvonly;
         $test['connections'] = (int)$req_connections;
-        $test['speed'] = (int)$req_speed;
         $test['private'] = $req_private;
         $test['web10'] = $req_web10;
         $test['ignoreSSL'] = $req_ignoreSSL;
@@ -571,10 +570,6 @@ function ValidateParameters(&$test, $locations, &$error)
                 // adjust the latency for any last-mile latency at the location
                 if( isset($test['latency']) && $locations[$test['location']]['latency'] )
                     $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
-                    
-                // if the speed wasn't specified and there is one for the location, pass it on
-                if( !$test['speed'] && $locations[$test['location']]['speed'] )
-                    $test['speed'] = $locations[$test['location']]['speed'];
             }
         }
     }
@@ -815,30 +810,17 @@ function LogTest(&$test, $testId, $url)
         $video = 1;
     if( $file )
     {
-        // TODO: add a timeout to the locking loop
-        $ok = false;
-        $count = 0;
-        while( !$ok &&  $count < 500 )
-        {
-            $count++;
-            if( flock($file, LOCK_EX) )
-                $ok = true;
-            else
-                usleep(10000);
-        }
+        $ip = $_SERVER['REMOTE_ADDR'];
+        if( $test['ip'] && strlen($test['ip']) )
+            $ip = $test['ip'];
+        
+        $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
+        $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
+        $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}" . "\r\n";
 
-        if( $ok )
-        {            
-            $ip = $_SERVER['REMOTE_ADDR'];
-            if( $test['ip'] && strlen($test['ip']) )
-                $ip = $test['ip'];
-            
-            $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
-            $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
-            $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}" . "\r\n";
-            
+        // flock will block until we acquire the lock or the script times out and is killed
+        if( flock($file, LOCK_EX) )
             fwrite($file, $log);
-        }
         
         fclose($file);
     }
@@ -1027,8 +1009,6 @@ function CreateTest(&$test, $url, $batch = 0)
             $testFile .= "\r\nfvonly=1";
         if( $test['connections'] )
             $testFile .= "\r\nconnections={$test['connections']}";
-        if( $test['speed'] )
-            $testFile .= "\r\nspeed={$test['speed']}";
         if( $test['web10'] )
             $testFile .= "\r\nweb10=1";
         if( $test['ignoreSSL'] )

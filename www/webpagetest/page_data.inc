@@ -76,7 +76,7 @@ function loadPageData($file)
                 $fields = explode("\t", $parseLine);
                 if( count($fields) > 34 )
                 {
-                    $ret = array(   'URL' => htmlspecialchars($fields[3]),
+                    $ret = array(   'URL' => htmlspecialchars(trim($fields[3])),
                                     // 'loadTime' => (int)$fields[4],
                                     'loadTime' => (int)$fields[32],
                                     'TTFB' => (int)$fields[5],
@@ -111,7 +111,7 @@ function loadPageData($file)
                                     'aft' => (int)$fields[72]
                                 );
                     
-                    $ret['date'] = strtotime($fields[0] . ' ' . $fields[1]);
+                    $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 }
             }
         }

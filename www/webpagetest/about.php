@@ -19,12 +19,17 @@ include 'common.inc';
             ?>
             
             <div class="translucent">
-                <p>WebPagetest is a tool that was orginially developed by <a href="http://dev.aol.com/">AOL</a> for use internally and was open-sourced in 2008.  
-                The online version at <a href="http://www.webpagetest.org/">www.webpagetest.org</a> is an industry collaboration with various companies providing 
-                the testing infrastructure for testing your site from across the globe.</p>
-
                 <?php
-                echo '<p>If you are having any problems of just have questions about the site, please feel free to <a href="mailto:' . $settings['contact'] . '">contact us</a>.</p>';
+                if( is_file('settings/about.inc') )
+                    include('settings/about.inc');
+                else
+                {
+                ?>
+                <p>WebPagetest is a tool that was orginially developed by <a href="http://dev.aol.com/">AOL</a> for use internally and was open-sourced in 2008.
+                The software is available for <a href="http://www.webpagetest.org/forums/forumdisplay.php?fid=12">download</a> if you would like to run your own 
+                instance.</p>
+                <?php
+                }
                 ?>
             </div>
             

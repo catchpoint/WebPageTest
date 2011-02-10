@@ -25,7 +25,7 @@ if( $updateFeeds )
     if( $lockFile )
     {
         // make sure we're not trying to update the same feeds in parallel
-        if( flock($lockFile, LOCK_EX) )
+        if( flock($lockFile, LOCK_EX | LOCK_NB) )
         {
             // load the list of feeds
             require_once('./settings/feeds.inc');

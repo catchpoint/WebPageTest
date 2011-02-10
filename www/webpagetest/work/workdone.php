@@ -140,28 +140,20 @@ else
                 $lockFile = fopen( './video/dat/lock.dat', "a+b",  false);
                 if( $lockFile )
                 {
-                    $ok = false;
-                    $count = 0;
-                    while( !$ok &&  $count < 500 )
+                    if( flock($lockFile, LOCK_EX) )
                     {
-                        $count++;
-                        if( flock($lockFile, LOCK_EX) )
-                            $ok = true;
-                        else
-                            usleep(10000);
+                        // update the page in the industry list
+                        $ind;
+                        $data = file_get_contents('./video/dat/industry.dat');
+                        if( $data )
+                            $ind = json_decode($data, true);
+                        $update = array();
+                        $update['id'] = $id;
+                        $update['last_updated'] = $now;
+                        $ind[$ini['industry']][$ini['industry_page']] = $update;
+                        $data = json_encode($ind);
+                        file_put_contents('./video/dat/industry.dat', $data);
                     }
-
-                    // update the page in the industry list
-                    $ind;
-                    $data = file_get_contents('./video/dat/industry.dat');
-                    if( $data )
-                        $ind = json_decode($data, true);
-                    $update = array();
-                    $update['id'] = $id;
-                    $update['last_updated'] = $now;
-                    $ind[$ini['industry']][$ini['industry_page']] = $update;
-                    $data = json_encode($ind);
-                    file_put_contents('./video/dat/industry.dat', $data);
                         
                     fclose($lockFile);
                 }

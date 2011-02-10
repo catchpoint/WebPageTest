@@ -11,13 +11,11 @@ public:
   DWORD early_cutoff;
 
 private:
-  CxImage * lastImg;
-  DWORD width;
-  DWORD height;
-  DWORD * pixelChangeTime;
-  DWORD * firstPixelChangeTime;
-  DWORD * pixelChangeCount;
-  DWORD msEnd;
-
-  bool  determined;
+  CxImage * lastImg;            // stores the previos image in the sequence as images are submitted
+  DWORD width;                  // expected width of video images (all must be the same size)
+  DWORD height;                 // expected height of video images (all must be the same size)
+  DWORD * pixelChangeTime;      // For each pixel, the latest time the pixel changed (in ms)
+  DWORD * firstPixelChangeTime; // For each pixel, the first time it changed
+  DWORD * pixelChangeCount;     // For each pixel, the number of times it changed
+  DWORD msEnd;                  // The end time of the page measurement (only look for an AFT before this time)
 };
