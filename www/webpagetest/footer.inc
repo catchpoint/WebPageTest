@@ -21,7 +21,7 @@
                 $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'alt' => $entry['alt']);
         
         $count = count($sponsors);
-        if( $count )
+        if( $count && !$_GET['bare'] )
         {
             shuffle($sponsors);
             
@@ -54,7 +54,7 @@
         if( is_file('./cache/feeds.dat') )
             $feeds = json_decode(file_get_contents('./cache/feeds.dat'), true);
         
-        if( count($feeds) )
+        if( count($feeds) && !$_GET['bare'] )
         {
             echo '<table id="feeds"><tr>';
             

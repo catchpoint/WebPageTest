@@ -1,7 +1,7 @@
 <?php
     require_once('page_data.inc');
 
-    if( $supportsAuth )
+    if( $supportsAuth && !$_GET['bare'] )
     {
         echo '<div id="wptAuthBar">';
         if( isset($user) )
@@ -23,17 +23,20 @@
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
     <?php
-        // see if we have a location that the test was run from (for a custom ad)
-        $testLoc;
-        if( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
-            $testLoc = $test['test']['loc'];
-        elseif(isset($_COOKIE["cfg"]))
-            $testLoc = $_COOKIE["cfg"];
-        
-        if( strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
-            include("./custom/$testLoc/headerAd.inc");
-        elseif( is_file('./ads/header.inc') )
-            include('./ads/header.inc');
+        if( !$_GET['bare'] )
+        {
+            // see if we have a location that the test was run from (for a custom ad)
+            $testLoc;
+            if( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
+                $testLoc = $test['test']['loc'];
+            elseif(isset($_COOKIE["cfg"]))
+                $testLoc = $_COOKIE["cfg"];
+            
+            if( strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
+                include("./custom/$testLoc/headerAd.inc");
+            elseif( is_file('./ads/header.inc') )
+                include('./ads/header.inc');
+        }
     ?>
     </div>
 </div>
