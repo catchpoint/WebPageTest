@@ -637,7 +637,7 @@ function FixScript(&$script)
                     if( $comand !== false )
                     {
                         $newScript .= $command;
-                        $expected = ScriptParamaterCount($command);
+                        $expected = ScriptParameterCount($command);
                         if( $expected == 2 )
                         {
                             $target = strtok("\r\n");
