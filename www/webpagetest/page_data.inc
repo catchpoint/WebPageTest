@@ -84,6 +84,7 @@ function loadPageData($file)
                                     'bytesOutDoc' => (int)$fields[45],
                                     'bytesIn' => (int)$fields[8],
                                     'bytesInDoc' => (int)$fields[46],
+                                    'connections' => (int)$fields[10],
                                     'requests' => (int)$fields[11],
                                     'requestsDoc' => (int)$fields[49],
                                     'result' => (int)$fields[17],
