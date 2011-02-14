@@ -13,8 +13,6 @@ define('VER_JS', 8);            // version of the sitewide javascript file
 define('VER_JS_TEST', 9);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
-
-
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
 
@@ -538,7 +536,7 @@ function FilterLocations( &$locations )
             if( isset($loc['browser']) )
             {
                 // now check the times
-                $file = "./work/times/$name.tm";
+                $file = "./tmp/$name.tm";
                 if( is_file($file) )
                 {
                     $updated = filemtime($file);

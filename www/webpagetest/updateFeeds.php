@@ -1,13 +1,16 @@
 <?php
 
+if( !is_dir('./tmp') )
+    mkdir('./tmp', 0777);
+
 // this is designed to be run automatically by being included or by hitting the url so don't output anything
 $feedData = array();
 
 // only update the feeds every 15 minutes
 $updateFeeds = true;
-if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./cache/feeds.dat') )
+if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./tmp/feeds.dat') )
 {
-    $updated = filemtime('./cache/feeds.dat');
+    $updated = filemtime('./tmp/feeds.dat');
     $now = time();
     $elapsed = 0;
     if( $now > $updated )
@@ -19,9 +22,7 @@ if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./cache/feeds.dat') 
 
 if( $updateFeeds )
 {
-    if( !is_dir('./cache') )
-        mkdir('./cache', 0777);
-    $lockFile = fopen( './cache/feeds.lock', 'a+b',  false);
+    $lockFile = fopen( './tmp/feeds.lock', 'cb',  false);
     if( $lockFile )
     {
         // make sure we're not trying to update the same feeds in parallel
@@ -108,7 +109,7 @@ if( $updateFeeds )
             }
 
             // save out the feed data
-            file_put_contents('./cache/feeds.dat', json_encode($feedData));
+            file_put_contents('./tmp/feeds.dat', json_encode($feedData));
             fclose($lockFile);
         }
     }

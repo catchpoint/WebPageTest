@@ -43,9 +43,9 @@ else
         // update the location time
         if( strlen($location) )
         {
-            if( !is_dir('./work/times') )
-                mkdir('./work/times');
-            touch( "./work/times/$location.tm" );
+            if( !is_dir('./tmp') )
+                mkdir('./tmp');
+            touch( "./tmp/$location.tm" );
         }
         
         if( !isset($_FILES['file']) )

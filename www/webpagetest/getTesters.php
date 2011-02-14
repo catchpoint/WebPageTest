@@ -8,7 +8,7 @@ $locations = &LoadLocations();
 // get the backlog for each location
 foreach( $locations as $id => &$location )
 {
-    $locations[$id] = GetTesters("./work/times/$id.tm");
+    $locations[$id] = GetTesters("./tmp/$id.tm");
 }
 
 // kick out the data

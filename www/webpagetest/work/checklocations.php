@@ -13,16 +13,16 @@ BuildLocations($locations);
 
 $settings = parse_ini_file('./settings/settings.ini');
 
-$files = scandir('./work/times');
+$files = scandir('./tmp');
 foreach( $files as $file )
 {
-    if(is_file("./work/times/$file"))
+    if(is_file("./tmp/$file"))
     {
         $parts = pathinfo($file);
         if( !strcasecmp( $parts['extension'], 'tm') )
         {
             $loc = basename($file, ".tm");;
-            $fileName = "./work/times/$file";
+            $fileName = "./tmp/$file";
             
             $updated = filemtime($fileName);
             $now = time();

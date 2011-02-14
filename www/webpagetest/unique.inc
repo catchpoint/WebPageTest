@@ -6,8 +6,11 @@ function uniqueId()
 {
     $id = NULL;
     
+    if( !is_dir('./work/jobs') )
+        mkdir('./work/jobs', 0777, true);
+    
     // try locking the context file
-    $filename = "./settings/uniqueId.dat";
+    $filename = './work/jobs/uniqueId.dat';
     $file = fopen( $filename, "a+b",  false);
     if( $file )
     {

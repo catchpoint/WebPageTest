@@ -44,7 +44,7 @@ if( !$done )
                 mkdir($workDir, 0777, true);
                 
             // lock the working directory for the given location
-            $lockFile = fopen( $workDir . '/lock.dat', 'a+b',  false);
+            $lockFile = fopen( "./tmp/$location.lock", 'cb',  false);
             if( $lockFile )
             {
                 if( flock($lockFile, LOCK_EX) )
@@ -163,12 +163,12 @@ if( !$done )
                     }
                     
                     // keep track of the last time this location reported in
-                    if( !is_dir('./work/times') )
-                        mkdir('./work/times');
+                    if( !is_dir('./tmp') )
+                        mkdir('./tmp');
                     if( isset($tester) && strlen($tester) )
                     {
                         // store the last time for each PC
-                        $times = json_decode(file_get_contents("./work/times/$location.tm"), true);
+                        $times = json_decode(file_get_contents("./tmp/$location.tm"), true);
                         if( !count($times) )
                             $times = array();
                             
@@ -199,11 +199,11 @@ if( !$done )
                                 
                             unset($times[$tester]['test']);
                         }
-                        file_put_contents("./work/times/$location.tm", json_encode($times));
+                        file_put_contents("./tmp/$location.tm", json_encode($times));
                     }
                     else
                     {        
-                        touch( "./work/times/$location.tm" );
+                        touch( "./tmp/$location.tm" );
                     }
                 }
 
@@ -239,7 +239,7 @@ function GetVideoJob()
     if( is_dir($videoDir) )
     {
         // lock the directory
-        $lockFile = fopen( $videoDir . '/lock.dat', 'a+b',  false);
+        $lockFile = fopen( './tmp/video.lock', 'cb',  false);
         if( $lockFile )
         {
             if( flock($lockFile, LOCK_EX) )
