@@ -488,9 +488,9 @@ void CurlBlastDlg::LoadSettings(void)
 	GetModuleFileName(NULL, iniFile, _countof(iniFile));
 	lstrcpy( PathFindFileName(iniFile), _T("urlBlast.ini") );
 
-	startupDelay		= GetPrivateProfileInt(_T("Configuration"), _T("Startup Delay"), 1, iniFile) * 1000;
+	startupDelay		= GetPrivateProfileInt(_T("Configuration"), _T("Startup Delay"), 10, iniFile) * 1000;
 	threadCount			= GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
-	timeout				= GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 0, iniFile);
+	timeout				= GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
 	testType			= GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
 	rebootInterval		= GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), 0, iniFile);
 	clearCacheInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Cache Interval"), 0, iniFile);
