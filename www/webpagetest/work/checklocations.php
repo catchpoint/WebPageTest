@@ -1,23 +1,28 @@
 <?php
+chdir('..');
+include 'common.inc';
+
 // check and see if all of the locations have checked in within the last 30 minutes
 
 header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-$locations = parse_ini_file('../settings/locations.ini', true);
-$settings = parse_ini_file('../settings/settings.ini');
+$locations = parse_ini_file('./settings/locations.ini', true);
+BuildLocations($locations);
 
-$files = scandir('./times');
+$settings = parse_ini_file('./settings/settings.ini');
+
+$files = scandir('./work/times');
 foreach( $files as $file )
 {
-    if(is_file("./times/$file"))
+    if(is_file("./work/times/$file"))
     {
         $parts = pathinfo($file);
         if( !strcasecmp( $parts['extension'], 'tm') )
         {
             $loc = basename($file, ".tm");;
-            $fileName = "./times/$file";
+            $fileName = "./work/times/$file";
             
             $updated = filemtime($fileName);
             $now = time();

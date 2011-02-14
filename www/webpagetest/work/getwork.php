@@ -26,6 +26,7 @@ if( !$done )
     
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
 
     $workDir = $locations[$location]['localDir'];
     $locKey = $locations[$location]['key'];

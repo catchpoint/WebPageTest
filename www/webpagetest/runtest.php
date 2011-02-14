@@ -133,6 +133,8 @@
     {
         // load the location information
         $locations = parse_ini_file('./settings/locations.ini', true);
+        BuildLocations($locations);
+        
         $error = NULL;
         
         ValidateKey($test, $error);

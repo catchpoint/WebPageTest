@@ -198,6 +198,8 @@ function GetVideoPath($id, $find = false)
 function GetDefaultLocation()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
+    
     $def = $locations['locations']['default'];
     if( !$def )
         $def = $locations['locations']['1'];
@@ -493,19 +495,40 @@ function CountTests($path)
 }
 
 /**
+* Build the work queues and other dynamic information tied to the locations
+* 
+* @param mixed $locations
+*/
+function BuildLocations( &$locations )
+{
+    // build the path to the work queue dynamically
+    foreach( $locations as $name => &$loc )
+    {
+        if( isset($loc['browser']) )
+        {
+            $loc['localDir'] = "./work/jobs/$name";
+            if( !is_dir($loc['localDir']) )
+                mkdir($loc['localDir'], 0777, true);
+        }
+    }
+}
+
+/**
 * Remove any locations that appear to be offline
 * 
 * @param mixed $locations
 */
 function FilterLocations( &$locations )
 {
+    BuildLocations( $locations );
+    
     // drop the main index of any hidden locations so they don't show up in the map view
     foreach( $locations as $name => $loc )
     {
         if( $loc['hidden'] && !$_REQUEST['hidden'] )
             unset( $locations[$name] );
     }
-
+    
     // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
     if( !$_REQUEST['hidden'] && (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows'))
     {
@@ -514,6 +537,7 @@ function FilterLocations( &$locations )
         {
             if( isset($loc['browser']) )
             {
+                // now check the times
                 $file = "./work/times/$name.tm";
                 if( is_file($file) )
                 {

@@ -3,6 +3,8 @@ require_once('common.inc');
 require_once('page_data.inc');
 
 $locations = parse_ini_file('./settings/locations.ini', true);
+BuildLocations($locations);
+
 $testQueue = array();
 
 /**

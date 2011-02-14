@@ -30,6 +30,8 @@ else
 {
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
+    
     $settings = parse_ini_file('./settings/settings.ini');
 
     $locKey = $locations[$location]['key'];

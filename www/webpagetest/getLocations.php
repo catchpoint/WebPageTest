@@ -1,4 +1,5 @@
 <?php
+include 'common.inc';
 
 // load the locations
 $locations = &LoadLocations();
@@ -67,6 +68,7 @@ function LoadLocations()
 {
     $locations = array();
     $loc = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($loc);
     
     if( isset($loc['locations']['default']) )
         $default = $loc['locations']['default'];

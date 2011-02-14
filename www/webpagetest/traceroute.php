@@ -171,6 +171,7 @@ $loc = ParseLocations($locations);
 function LoadLocations()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
     
     FilterLocations( $locations );
     

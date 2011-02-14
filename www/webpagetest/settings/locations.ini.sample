@@ -9,7 +9,7 @@ label=Test Location
 
 [Test]
 browser=IE 7
+;browserExe=pagetest.exe
 latency=0
 label="Test Location"
-localDir=C:\Web Site\content\work\jobs\test
 key=TestKey123

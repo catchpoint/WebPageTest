@@ -3,7 +3,8 @@ header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
-include '../common.inc';
+chdir('..');
+include 'common.inc';
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
 $id = $_REQUEST['id'];
@@ -11,7 +12,8 @@ $id = $_REQUEST['id'];
 logMsg("\n\nImage received for test: $id, location: $location, key: $key\n");
 
 // load all of the locations
-$locations = parse_ini_file('../settings/locations.ini', true);
+$locations = parse_ini_file('./settings/locations.ini', true);
+BuildLocations($locations);
 
 $locKey = $locations[$location]['key'];
 if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") )
@@ -19,7 +21,7 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
     if( isset($_FILES['file']) )
     {
         $fileName = $_FILES['file']['name'];
-        $path = '../' . GetTestPath($id);
+        $path = './' . GetTestPath($id);
         
         // put each run of video data in it's own directory
         if( strpos($fileName, 'progress') )
@@ -39,7 +41,7 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
             }
         }
         logMsg(" Moving uploaded image '{$_FILES['file']['tmp_name']}' to '$path/$fileName'\n");
-        move_uploaded_file($_FILES['file']['tmp_name'], $path . "/$fileName");
+        move_uploaded_file($_FILES['file']['tmp_name'], "$path/$fileName");
     }
     else
         logMsg(" no uploaded file attached");
