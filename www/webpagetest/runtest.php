@@ -1009,8 +1009,6 @@ function CreateTest(&$test, $url, $batch = 0)
             $testFile .= "\r\nDOMElement={$test['domElement']}";
         if( $test['fvonly'] )
             $testFile .= "\r\nfvonly=1";
-        if( $test['connections'] )
-            $testFile .= "\r\nconnections={$test['connections']}";
         if( $test['web10'] )
             $testFile .= "\r\nweb10=1";
         if( $test['ignoreSSL'] )

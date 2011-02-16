@@ -3,8 +3,10 @@
 
 #include "stdafx.h"
 #include "wptdriver.h"
+#include "wpt_driver_core.h"
 
 #define MAX_LOADSTRING 100
+WptStatus * global_status = NULL;
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -13,15 +15,14 @@ TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
+HWND				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
-                     int       nCmdShow)
-{
+                     int       nCmdShow){
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -35,22 +36,38 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   MyRegisterClass(hInstance);
 
   // Perform application initialization:
-  if (!InitInstance (hInstance, nCmdShow))
-  {
+  HWND hWnd = InitInstance (hInstance, nCmdShow);
+  if (!hWnd){
     return FALSE;
   }
 
   hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WPTDRIVER));
 
+  // initialize winsock
+  WORD wVersionRequested = MAKEWORD(2, 2);
+  WSADATA wsaData;
+  WSAStartup(wVersionRequested, &wsaData);
+
+  // start up the actual core code
+  WptStatus status(hWnd);
+  global_status = &status;
+
+  WptDriverCore core(status);
+  core.Start();
+
   // Main message loop:
-  while (GetMessage(&msg, NULL, 0, 0))
-  {
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-    {
+  while (GetMessage(&msg, NULL, 0, 0)){
+    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)){
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
   }
+
+  core.Stop();
+
+  global_status = NULL;
+
+  WSACleanup();
 
   return (int) msg.wParam;
 }
@@ -61,14 +78,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //  FUNCTION: MyRegisterClass()
 //
 //  PURPOSE: Registers the window class.
-//
-//  COMMENTS:
-//
-//    This function and its usage are only necessary if you want this code
-//    to be compatible with Win32 systems prior to the 'RegisterClassEx'
-//    function that was added to Windows 95. It is important to call this function
-//    so that the application will get 'well formed' small icons associated
-//    with it.
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -101,7 +110,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    HWND hWnd;
 
@@ -110,15 +119,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-   if (!hWnd)
-   {
-      return FALSE;
+   if (hWnd){
+     ShowWindow(hWnd, nCmdShow);
+     UpdateWindow(hWnd);
    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-
-   return TRUE;
+   return hWnd;
 }
 
 //
@@ -131,60 +137,58 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY	- post a quit message and return
 //
 //
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+LRESULT CALLBACK WndProc( HWND hWnd, UINT message, 
+                          WPARAM wParam, LPARAM lParam){
   int wmId, wmEvent;
-  PAINTSTRUCT ps;
-  HDC hdc;
 
-  switch (message)
-  {
-  case WM_COMMAND:
-    wmId    = LOWORD(wParam);
-    wmEvent = HIWORD(wParam);
-    // Parse the menu selections:
-    switch (wmId)
-    {
-    case IDM_ABOUT:
-      DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+  switch (message){
+    case WM_COMMAND:
+      wmId    = LOWORD(wParam);
+      wmEvent = HIWORD(wParam);
+      // Parse the menu selections:
+      switch (wmId){
+        case IDM_ABOUT:
+          DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+          break;
+        case IDM_EXIT:
+          DestroyWindow(hWnd);
+          break;
+        default:
+          return DefWindowProc(hWnd, message, wParam, lParam);
+      }
       break;
-    case IDM_EXIT:
-      DestroyWindow(hWnd);
+    case WM_PAINT:
+      if( global_status )
+        global_status->OnPaint(hWnd);
       break;
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
+
+    case UWM_UPDATE_STATUS:
+      if( global_status )
+        global_status->OnUpdateStatus();
+      break;
+
     default:
       return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    break;
-  case WM_PAINT:
-    hdc = BeginPaint(hWnd, &ps);
-    // TODO: Add any drawing code here...
-    EndPaint(hWnd, &ps);
-    break;
-  case WM_DESTROY:
-    PostQuitMessage(0);
-    break;
-  default:
-    return DefWindowProc(hWnd, message, wParam, lParam);
   }
   return 0;
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam){
   UNREFERENCED_PARAMETER(lParam);
-  switch (message)
-  {
-  case WM_INITDIALOG:
-    return (INT_PTR)TRUE;
-
-  case WM_COMMAND:
-    if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-    {
-      EndDialog(hDlg, LOWORD(wParam));
+  switch (message){
+    case WM_INITDIALOG:
       return (INT_PTR)TRUE;
-    }
-    break;
+
+    case WM_COMMAND:
+      if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL){
+        EndDialog(hDlg, LOWORD(wParam));
+        return (INT_PTR)TRUE;
+      }
+      break;
   }
   return (INT_PTR)FALSE;
 }

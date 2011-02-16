@@ -1,0 +1,79 @@
+#include "StdAfx.h"
+#include "wpt_driver_core.h"
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+WptDriverCore::WptDriverCore(WptStatus &status):
+  _status(status)
+  ,_webpagetest(_settings, _status)
+  ,_exit(false)
+  ,_thread_handle(NULL){
+}
+
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+WptDriverCore::~WptDriverCore(void){
+}
+
+/*-----------------------------------------------------------------------------
+  Stub entry point for the background work thread
+-----------------------------------------------------------------------------*/
+static unsigned __stdcall ThreadProc( void* arg )
+{
+	WptDriverCore * core = (WptDriverCore *)arg;
+	if( core )
+    core->WorkThread();
+		
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::Start(void){
+  _status.Set(_T("Starting..."));
+
+  if( _settings.Load() ){
+    // start a background thread to do all of the actual test management
+    _thread_handle = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+  }else{
+    _status.Set(_T("Error loading settings from wptdriver.ini"));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::Stop(void){
+  _status.Set(_T("Stopping..."));
+
+  _exit = true;
+  if( _thread_handle ){
+    WaitForSingleObject(_thread_handle, EXIT_TIMEOUT);
+    CloseHandle(_thread_handle);
+    _thread_handle = NULL;
+  }
+
+  _status.Set(_T("Exiting..."));
+}
+
+/*-----------------------------------------------------------------------------
+  Main thread for processing work
+-----------------------------------------------------------------------------*/
+void WptDriverCore::WorkThread(void){
+
+  Sleep(_settings._startup_delay * SECONDS_TO_MS);
+
+  _status.Set(_T("Running..."));
+
+  while( !_exit ){
+    _status.Set(_T("Checking for work..."));
+
+    WptTest test;
+    if( _webpagetest.GetTest(test) ){
+      _status.Set(_T("Processing test..."));
+    }else{
+      _status.Set(_T("Waiting to check for work again..."));
+      Sleep(_settings._polling_delay * SECONDS_TO_MS);
+    }
+  }
+}
