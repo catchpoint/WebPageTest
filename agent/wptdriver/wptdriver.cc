@@ -95,7 +95,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
   wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
   wcex.lpszMenuName	= MAKEINTRESOURCE(IDC_WPTDRIVER);
   wcex.lpszClassName	= szWindowClass;
-  wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+  wcex.hIconSm		= LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_WPTDRIVER));
 
   return RegisterClassEx(&wcex);
 }
@@ -117,7 +117,7 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
 
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+      0, 0, 500, 100, NULL, NULL, hInstance, NULL);
 
    if (hWnd){
      ShowWindow(hWnd, nCmdShow);

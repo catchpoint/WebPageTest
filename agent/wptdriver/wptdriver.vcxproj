@@ -95,10 +95,13 @@
     <None Include="wptdriver.ini" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="mongoose\mongoose.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="test_server.h" />
     <ClInclude Include="webpagetest.h" />
+    <ClInclude Include="web_browser.h" />
     <ClInclude Include="wptdriver.h" />
     <ClInclude Include="wpt_driver_core.h" />
     <ClInclude Include="wpt_settings.h" />
@@ -106,11 +109,17 @@
     <ClInclude Include="wpt_test.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="mongoose\mongoose.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="test_server.cc" />
     <ClCompile Include="webpagetest.cc" />
+    <ClCompile Include="web_browser.cc" />
     <ClCompile Include="wptdriver.cc" />
     <ClCompile Include="wpt_driver_core.cc" />
     <ClCompile Include="wpt_settings.cc" />

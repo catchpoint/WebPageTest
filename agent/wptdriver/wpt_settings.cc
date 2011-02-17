@@ -55,5 +55,24 @@ bool WptSettings::Load(void)
   _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"), 
                 _timeout, iniFile);
 
+  // load the path to the browsers (just support one of each for right now)
+  if( GetPrivateProfileString(_T("browser"), _T("Chrome"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _browser_chrome = buff;
+    _browser_chrome.Trim(_T("\""));
+  }
+
+  if( GetPrivateProfileString(_T("browser"), _T("Firefox"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _browser_firefox = buff;
+    _browser_firefox.Trim(_T("\""));
+  }
+
+  if( GetPrivateProfileString(_T("browser"), _T("IE"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _browser_ie = buff;
+    _browser_ie.Trim(_T("\""));
+  }
+
   return ret;
 }

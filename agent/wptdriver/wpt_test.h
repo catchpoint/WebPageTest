@@ -7,6 +7,7 @@ public:
 
   void  Reset(void);
   bool  Load(CString& test);
+  CStringA ToJSON();
 
   CString _id;
   CString _url;
@@ -26,5 +27,8 @@ public:
   CString _browser;
   CString _basic_auth;
   CString _script;
+
+private:
+  CStringA JSONEscape(CString src);
 };
 

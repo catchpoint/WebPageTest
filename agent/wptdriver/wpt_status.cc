@@ -16,25 +16,25 @@ WptStatus::~WptStatus(void)
   Set the status message (thread safe) and update the UI
 -----------------------------------------------------------------------------*/
 void WptStatus::Set(const TCHAR * format, ...){
-	va_list args;
-	va_start( args, format );
+  va_list args;
+  va_start( args, format );
 
-	int len = _vsctprintf( format, args ) + 1;
-	if( len <= _countof(_tmp_buffer)) {
-			if( _vstprintf_s( _tmp_buffer, len, format, args ) > 0 )
-				_status = _tmp_buffer;
+  int len = _vsctprintf( format, args ) + 1;
+  if( len <= _countof(_tmp_buffer)) {
+      if( _vstprintf_s( _tmp_buffer, len, format, args ) > 0 )
+        _status = _tmp_buffer;
   } else {
-		TCHAR * buff = (TCHAR *)malloc( len * sizeof(TCHAR) );
-		if( buff )
-		{
-			if( _vstprintf_s( buff, len, format, args ) > 0 )
-				_status = buff;
+    TCHAR * buff = (TCHAR *)malloc( len * sizeof(TCHAR) );
+    if( buff )
+    {
+      if( _vstprintf_s( buff, len, format, args ) > 0 )
+        _status = buff;
 
-			free( buff );
-		}
-	}
+      free( buff );
+    }
+  }
 
-  OutputDebugString(_status);
+  OutputDebugString(_status + _T("\n"));
   PostMessage(_wnd, UWM_UPDATE_STATUS, 0, 0);
 }
 

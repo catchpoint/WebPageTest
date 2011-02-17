@@ -25,5 +25,9 @@ public:
   DWORD   _timeout;
   DWORD   _startup_delay;
   DWORD   _polling_delay;
-};
 
+  // browsers
+  CString _browser_chrome;
+  CString _browser_firefox;
+  CString _browser_ie;
+};

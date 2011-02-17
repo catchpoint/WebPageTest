@@ -101,3 +101,87 @@ bool WptTest::Load(CString& test){
 
   return ret;
 }
+
+/*-----------------------------------------------------------------------------
+  Create a JSON Encoding of the test data
+-----------------------------------------------------------------------------*/
+CStringA WptTest::ToJSON(){
+  CStringA buff;
+  CStringA json = "{";
+
+  buff.Format("\"id\":\"%s\"", (LPCSTR)JSONEscape(_id));
+  json += buff;
+
+  buff.Format(",\"url\":\"%s\"", (LPCSTR)JSONEscape(_url));
+  json += buff;
+
+  buff.Format(",\"runs\":%d", _runs);
+  json += buff;
+
+  buff.Format(",\"fv_only\":%s", _fv_only ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"end_at_doc_complete\":%s", _doc_complete ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"ignore_ssl_errors\":%s", _ignore_ssl ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"tcpdump\":%s", _tcpdump ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"video\":%s", _video ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"aft\":%s", _aft ? "true" : "false");
+  json += buff;
+
+  buff.Format(",\"test_type\":\"%s\"", (LPCSTR)JSONEscape(_type));
+  json += buff;
+
+  buff.Format(",\"block\":\"%s\"", (LPCSTR)JSONEscape(_block));
+  json += buff;
+
+  buff.Format(",\"bw_in\":%d", _bwIn);
+  json += buff;
+
+  buff.Format(",\"bw_out\":%d", _bwOut);
+  json += buff;
+
+  buff.Format(",\"latency\":%d", _latency);
+  json += buff;
+
+  buff.Format(",\"plr\":%0.3f", _plr);
+  json += buff;
+
+  buff.Format(",\"browser\":\"%s\"", (LPCSTR)JSONEscape(_browser));
+  json += buff;
+
+  buff.Format(",\"basic_auth\":\"%s\"", (LPCSTR)JSONEscape(_basic_auth));
+  json += buff;
+
+  buff.Format(",\"script\":\"%s\"", (LPCSTR)JSONEscape(_script));
+  json += buff;
+
+  json += _T("}");
+  return json;
+}
+
+/*-----------------------------------------------------------------------------
+  Escape the supplied string for JSON
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JSONEscape(CString src)
+{
+  CStringA dest = CT2A(src);
+  dest.Replace("\\", "\\\\");
+  dest.Replace("\"", "\\\"");
+  dest.Replace("'", "\\'");
+  dest.Replace("/", "\\/");
+  dest.Replace("\b", "\\b");
+  dest.Replace("\r", "\\r");
+  dest.Replace("\n", "\\n");
+  dest.Replace("\t", "\\t");
+  dest.Replace("\v", "\\v");
+  dest.Replace("\f", "\\f");
+  return dest;
+}

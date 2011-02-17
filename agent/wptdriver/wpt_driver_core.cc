@@ -1,11 +1,13 @@
 #include "StdAfx.h"
 #include "wpt_driver_core.h"
+#include "mongoose/mongoose.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptDriverCore::WptDriverCore(WptStatus &status):
   _status(status)
   ,_webpagetest(_settings, _status)
+  ,_test_server(_settings, _status)
   ,_exit(false)
   ,_thread_handle(NULL){
 }
@@ -63,6 +65,10 @@ void WptDriverCore::WorkThread(void){
 
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
 
+  _status.Set(_T("Starting Web Server..."));
+
+  _test_server.Start();
+
   _status.Set(_T("Running..."));
 
   while( !_exit ){
@@ -70,10 +76,23 @@ void WptDriverCore::WorkThread(void){
 
     WptTest test;
     if( _webpagetest.GetTest(test) ){
-      _status.Set(_T("Processing test..."));
+      _status.Set(_T("Launching browser..."));
+      WebBrowser browser(_settings, test);
+
+      // configure the internal web server with information about the test
+      _test_server.SetTest(&test);
+      _test_server.SetBrowser(&browser);
+
+      // launch the actual browser and wait for the test to complete
+      browser.RunAndWait();
+
+      _test_server.SetBrowser(NULL);
+      _test_server.SetTest(NULL);
     }else{
-      _status.Set(_T("Waiting to check for work again..."));
+      _status.Set(_T("Waiting for work..."));
       Sleep(_settings._polling_delay * SECONDS_TO_MS);
     }
   }
+
+  _test_server.Stop();
 }

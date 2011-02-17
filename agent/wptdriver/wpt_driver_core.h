@@ -16,5 +16,6 @@ private:
   WebPagetest _webpagetest;
   bool        _exit;
   HANDLE      _thread_handle;
+  TestServer  _test_server;
 };
 
