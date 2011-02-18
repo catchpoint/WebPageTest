@@ -1,0 +1,13 @@
+{
+  "name": "WPT Chrome Extension",
+  "version": "1.0",
+  "description": "WebPagetest Chrome Extension.",
+  "background_page": "background.html",
+  "browser_action": {
+    "default_title": "WPT Chrome Extension",
+    "default_icon": "wptextension.jpg"
+  },
+  "permissions": [
+    "tabs", "https://*/*", "http://*/*"
+  ]
+}

@@ -1,0 +1,147 @@
+<script>
+// Configuration and results are stored globally.
+window.iterations = 2;
+window.interval = 200;
+window.clearConnections = true;
+window.clearCache = true;
+window.results = {};
+window.results.data = new Array();
+window.testUrl = "http://www.google.com/";
+window.windowId = 0;
+
+var onlyBenchmark = new Benchmark();
+var benchmarkWindow = 0;
+
+run();
+
+function Benchmark() {
+  var runCount_ = 0;
+  var me_ = this;
+  var current_;
+  var initialRequestCount_;
+  var initialReadBytes_;
+  var initialWriteBytes_;
+  var url_;
+
+  // Start a test run
+  this.start = function(url) {
+    // Check if a run is already in progress.
+    if (me_.isRunning()) {
+      return;
+    }
+
+    console.log("Benchmark testing url: " + url);
+
+    runCount_ = window.iterations;
+
+    url_ = url;
+    }
+
+  // Is the benchmark currently in progress.
+  this.isRunning = function() {
+    return runCount_ > 0;
+  }
+
+  // The url which this benchmark is running.
+  this.url = function() { return url_; }
+
+  // Called when the test run completes.
+  this.finish = function() {
+    chrome.tabs.remove(benchmarkWindow.id);
+    benchmarkWindow = 0;
+  }
+
+  this.openNextPage = function() {
+    chrome.tabs.create({"url": me_.url(),"selected": true},
+                       function(tab) {
+                         benchmarkWindow = tab;
+                         // script.js only executes on tested pages
+                         // not the ones opened by the user.
+                         chrome.tabs.executeScript(tab.id, {file: "script.js"});
+                        });
+  }
+
+  this.prepareToOpenPage = function() {
+    // After the previous page is closed, this function will apply
+    // any settings needed to prepare for opening a new page.
+    // Note: the previous page must be closed, otherwie, the cache
+    // clearing and connection clearing may not be thorough.
+
+    if (window.clearCache) {
+      chrome.benchmarking.clearCache();
+    }
+
+    if (window.clearConnections) {
+      chrome.benchmarking.closeConnections();
+    }
+
+    chrome.benchmarking.enableSpdy(false);
+
+    // Go back to the browser so that tasks can run.
+    setTimeout(me_.openNextPage, window.interval);
+  }
+
+  this.closePage = function() {
+    chrome.tabs.remove(benchmarkWindow.id, function() {
+      me_.prepareToOpenPage();
+    });
+  }
+
+  // Run a single page in the benchmark
+  this.runPage = function() {
+    if (benchmarkWindow) {
+      // Close the existing benchmarkWindow tab gracefully.
+      chrome.tabs.getAllInWindow(null, function(all) {
+        for (var i = 0; i < all.length; i++) {
+          if (all[i].id == benchmarkWindow.id) {
+            me_.closePage();
+             return;
+          }; 
+        };
+        me_.prepareToOpenPage();
+      });
+    } else {
+      me_.prepareToOpenPage();
+    }
+  }
+
+  // Called when a page finishes loading.
+  this.pageFinished = function(load_times) {
+    var docLoadTime =
+    Math.round((load_times.finishDocumentLoadTime - load_times.startLoadTime) * 1000.0);
+    alert('page load time: ' + docLoadTime);
+    if (--runCount_ == 0) {
+      me_.finish();
+    }
+
+    // If there are more runs, schedule them
+    if (runCount_ > 0) {
+      if (window.clearConnections) {
+        chrome.benchmarking.closeConnections();
+      }
+      setTimeout(me_.runPage, 100);
+    }
+  }
+}
+
+chrome.extension.onConnect.addListener(function(port) {
+  port.onMessage.addListener(function(data) {
+    if (data.message == "load") {
+      var benchmark = onlyBenchmark;
+      if (benchmark != undefined && benchmark.isRunning()) {
+        benchmark.pageFinished(data.values);
+      }
+    }
+  });
+});
+
+function run() {
+  onlyBenchmark.start(testUrl);
+  onlyBenchmark.runPage();
+}
+
+// Run at startup
+chrome.windows.getCurrent(function(currentWindow) {
+  window.windowId = currentWindow.id;
+});
+</script>
