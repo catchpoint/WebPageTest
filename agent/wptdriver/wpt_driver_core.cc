@@ -23,11 +23,11 @@ WptDriverCore::~WptDriverCore(void){
 -----------------------------------------------------------------------------*/
 static unsigned __stdcall ThreadProc( void* arg )
 {
-	WptDriverCore * core = (WptDriverCore *)arg;
-	if( core )
+  WptDriverCore * core = (WptDriverCore *)arg;
+  if( core )
     core->WorkThread();
-		
-	return 0;
+    
+  return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -76,6 +76,7 @@ void WptDriverCore::WorkThread(void){
 
     WptTest test;
     if( _webpagetest.GetTest(test) ){
+      TestData data;
       _status.Set(_T("Launching browser..."));
       WebBrowser browser(_settings, test);
 
@@ -83,11 +84,28 @@ void WptDriverCore::WorkThread(void){
       _test_server.SetTest(&test);
       _test_server.SetBrowser(&browser);
 
-      // launch the actual browser and wait for the test to complete
-      browser.RunAndWait();
+      // loop over all of the test runs
+      for (test._run = 1; test._run <= test._runs; test._run++){
+        // Run the first view test
+        test._clear_cache = true;
+        browser.RunAndWait();
+
+        if( !test._fv_only ){
+          // run the repeat view test
+          test._clear_cache = false;
+          browser.RunAndWait();
+        }
+      }
 
       _test_server.SetBrowser(NULL);
       _test_server.SetTest(NULL);
+
+      bool uploaded = false;
+      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
+        uploaded = _webpagetest.TestDone(test, data);
+        if( !uploaded )
+          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+      }
     }else{
       _status.Set(_T("Waiting for work..."));
       Sleep(_settings._polling_delay * SECONDS_TO_MS);

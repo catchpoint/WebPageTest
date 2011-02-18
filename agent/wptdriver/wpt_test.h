@@ -9,6 +9,7 @@ public:
   bool  Load(CString& test);
   CStringA ToJSON();
 
+  // overall test settings
   CString _id;
   CString _url;
   int     _runs;
@@ -27,6 +28,10 @@ public:
   CString _browser;
   CString _basic_auth;
   CString _script;
+
+  // current state
+  int     _run;
+  bool    _clear_cache;
 
 private:
   CStringA JSONEscape(CString src);

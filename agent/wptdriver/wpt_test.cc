@@ -33,6 +33,8 @@ void WptTest::Reset(void){
   _browser.Empty();
   _basic_auth.Empty();
   _script.Empty();
+  _run = 0;
+  _clear_cache = true;
 }
 
 /*-----------------------------------------------------------------------------
@@ -161,6 +163,13 @@ CStringA WptTest::ToJSON(){
   json += buff;
 
   buff.Format(",\"script\":\"%s\"", (LPCSTR)JSONEscape(_script));
+  json += buff;
+
+  // current state
+  buff.Format(",\"run\":%d", _run);
+  json += buff;
+
+  buff.Format(",\"clear_cache\":%s", _clear_cache ? "true" : "false");
   json += buff;
 
   json += _T("}");

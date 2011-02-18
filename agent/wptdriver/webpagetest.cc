@@ -21,7 +21,7 @@ bool WebPagetest::GetTest(WptTest& test){
   bool ret = false;
 
   // build the url for the request
-  CString url = _settings._server + _T("?");
+  CString url = _settings._server + _T("work/getwork.php?");
   url += CString(_T("location=")) + _settings._location;
   if( _settings._key.GetLength() )
     url += CString(_T("key=")) + _settings._key;
@@ -29,6 +29,67 @@ bool WebPagetest::GetTest(WptTest& test){
   CString test_string = HttpGet(url);
   if( test_string.GetLength() ){
     ret = test.Load(test_string);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Send the test result back to the server
+-----------------------------------------------------------------------------*/
+bool WebPagetest::TestDone(WptTest& test, TestData& data){
+  bool ret = false;
+
+  CString headers;
+  CStringA form_data, footer;
+  DWORD content_length = 0;
+
+  if (data.BuildFormData(_settings, test, headers, footer, form_data, 
+                        content_length)) {
+    // use WinInet to do the POST (quite a few steps)
+    HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+              INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (internet) {
+      CString url = _settings._server + _T("work/workdone.php");
+      CString host, object;
+      unsigned short port;
+      if (CrackUrl(url, host, port, object)) {
+        HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
+                                            INTERNET_SERVICE_HTTP, 0, 0);
+        if (connect){
+          HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
+                                                NULL, NULL, NULL, 
+                                                INTERNET_FLAG_NO_CACHE_WRITE |
+                                                INTERNET_FLAG_NO_UI |
+                                                INTERNET_FLAG_PRAGMA_NOCACHE |
+                                                INTERNET_FLAG_RELOAD, NULL);
+          if (request){
+            if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
+                            HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE)) {
+              INTERNET_BUFFERS buffers;
+              memset( &buffers, 0, sizeof(buffers) );
+              buffers.dwStructSize = sizeof(buffers);
+              buffers.dwBufferTotal = content_length;
+              if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
+                DWORD bytes_written;
+                if (InternetWriteFile(request, (LPCSTR)form_data, 
+                                      form_data.GetLength(), &bytes_written)) {
+                  if (InternetWriteFile(request, (LPCSTR)footer, 
+                                        footer.GetLength(), &bytes_written)) {
+                    if (HttpEndRequest(request, NULL, 0, 0)) {
+                      ret = true;
+                    }
+                  }
+                }
+              }
+            }
+            InternetCloseHandle(request);
+          }
+          InternetCloseHandle(connect);
+        }
+      }
+      InternetCloseHandle(internet);
+    }
   }
 
   return ret;
@@ -79,7 +140,7 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
   TCHAR szHost[10000];
   TCHAR path[10000];
   TCHAR extra[10000];
-		
+    
   memset(szHost, 0, sizeof(szHost));
   memset(path, 0, sizeof(path));
   memset(extra, 0, sizeof(extra));
@@ -94,12 +155,12 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
 
   if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) ){
       ret = true;
-			host = szHost;
-			port = parts.nPort;
+      host = szHost;
+      port = parts.nPort;
       object = path;
       object += extra;
-			if( !port )
-				port = INTERNET_DEFAULT_HTTP_PORT;
+      if( !port )
+        port = INTERNET_DEFAULT_HTTP_PORT;
   }
   return ret;
 }

@@ -21,6 +21,7 @@
 #include <atlstr.h>
 
 // shared internal includes
+#include "test_data.h"
 #include "wpt_status.h"
 #include "wpt_settings.h"
 #include "wpt_test.h"
