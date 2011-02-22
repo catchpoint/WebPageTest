@@ -17,3 +17,6 @@ publishTo=www.webpagetest.org
 ; test options available
 enableSNS=0
 enableVideo=1
+
+; disable gzip compressing the result text files
+;nogzip=1

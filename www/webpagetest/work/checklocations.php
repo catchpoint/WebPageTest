@@ -32,7 +32,7 @@ foreach( $files as $file )
             $minutes = (int)($elapsed / 60);
             
             // if it has been over 60 minutes, send out a notification    
-            if( $minutes > 60 )
+            if( $minutes > 60 && array_key_exists($loc, $locations))
             {
                 // figure out who to notify
                 $to = $settings['notify'];

@@ -8,6 +8,11 @@ require_once('draw.inc');
 */
 function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options = null)
 {
+    $startRender = $pageData['render'];
+    $domElement = $pageData['domTime'];
+    $docComplete = $pageData['docTime'];
+    $aft = $pageData['aft'];
+
     $cpuHeight = 50;
     $bwHeight = 50;
     $requestList = FilterRequests($requests);
@@ -75,6 +80,16 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         foreach( $requestList as $index )
             if( $requests[$index]['endOffset'] > $range)
                 $range = (double)$requests[$index]['endOffset'];
+        
+        // check our various page milestones to make sure they are included in the range
+        if( $startRender > $range )
+            $range = $startRender;
+        if( $domElement > $range )
+            $range = $domElement;
+        if( $docComplete > $range )
+            $range = $docComplete;
+        if( $aft > $range )
+            $range = $aft;
     }
 
     // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart        
@@ -298,10 +313,6 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         $section = 'first ' . $run;
         if($cached == 1) 
             $section = 'repeat ' . $run;
-        $startRender = $pageData['render'];
-        $domElement = $pageData['domTime'];
-        $docComplete = $pageData['docTime'];
-        $aft = $pageData['aft'];
         $colStartRender = GetColor($im, 40, 188, 0);
         $colDomElement  = GetColor($im, 242, 131, 0);
         $colDocComplete = GetColor($im, 0, 0, 255);
@@ -328,7 +339,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
         }
         
-        if( $docComplete > 0 )
+        if( $docComplete > 0 && $docComplete <= $range )
         {
             if( $docComplete >= $range )
                 $docComplete = $range - 1;

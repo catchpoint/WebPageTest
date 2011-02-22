@@ -971,7 +971,7 @@ void CUrlMgrHttp::UploadImages(CTestInfo &info)
 	if( info.context )
 	{
     // go through the different file types we want to upload
-    TCHAR * extensions[] = {_T("*.jpg"), _T("*.dtas"), _T("*.cap"), _T("*.gz")};
+    TCHAR * extensions[] = {_T("*.jpg"), _T("*.png"), _T("*.dtas"), _T("*.cap"), _T("*.gz")};
     int extCount = _countof(extensions);
     for( int i = 0; i < extCount; i++ )
     {

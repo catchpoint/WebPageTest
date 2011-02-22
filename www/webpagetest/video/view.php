@@ -142,8 +142,8 @@ else
 
             if( $valid && $done )
             {
-                $width = 400;
-                $height = 300;
+                $width = 800;
+                $height = 600;
 
                 $hasThumb = false;
                 if( is_file("./$dir/video.png") )

@@ -308,13 +308,8 @@ $loc = ParseLocations($locations);
                                 <label for="videoCheck" class="auto_width">Capture Video</label>
                                 <br>
                                 <br>
-                                <?php
-                                if( $_GET['aft'] )
-                                {
-                                    echo '<input type="checkbox" name="aft" id="aftCheck" class="checkbox before_label">';
-                                    echo '<label for="aftCheck" class="auto_width">Measure Above-the-fold rendering time<br><small>(alpha)</small></label>';
-                                }
-                                ?>
+                                <input type="checkbox" name="aft" id="aftCheck" class="checkbox before_label">
+                                <label for="aftCheck" class="auto_width">Measure Above-the-fold rendering time<br><small>(experimental - be patient, each run takes at least 4 minutes)</small></label>
                             </div>
                             <?php } ?>
 

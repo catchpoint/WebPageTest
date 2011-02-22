@@ -86,33 +86,42 @@ BuildVideoScript($testPath, $videoPath);
                 
                 if( is_file($testPath . '/' . $run . $cachedText . '_screen_render.jpg') )
                 {
-                    echo '<br><br><h1>Start Render';
+                    echo '<br><br><a name="start_render"><h1>Start Render';
                     if( isset($pageRunData) && isset($pageRunData['render']) )
                         echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
-                    echo '</h1>';
+                    echo '</h1></a>';
                     echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_render.jpg">';
                 }
                 if( is_file($testPath . '/' . $run . $cachedText . '_screen_dom.jpg') )
                 {
-                    echo '<br><br><h1>DOM Element';
+                    echo '<br><br><a name="dom_element"><h1>DOM Element';
                     if( isset($pageRunData) && isset($pageRunData['domTime']) )
                         echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
-                    echo '</h1>';
+                    echo '</h1></a>';
                     echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_dom.jpg">';
                 }
                 if( is_file($testPath . '/' . $run . $cachedText . '_screen_doc.jpg') )
                 {
-                    echo '<br><br><h1>Document Complete';
+                    echo '<br><br><a name="doc_complete"><h1>Document Complete';
                     if( isset($pageRunData) && isset($pageRunData['docTime']) )
                         echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
-                    echo '</h1>';
+                    echo '</h1></a>';
                     echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_doc.jpg">';
+                }
+                if( is_file($testPath . '/' . $run . $cachedText . '_aft.png') )
+                {
+                    echo '<br><br><a name="aft"><h1>AFT Details';
+                    if( isset($pageRunData) && isset($pageRunData['aft']) )
+                        echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
+                    echo '</h1></a>';
+                    echo 'White = Static, Blue = Static (Late), Greet = AFT, Black = No Change, Red = Dynamic<br>';
+                    echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
                 }
                 
                 // display all of the status messages
                 if( count($messages) )
                 {
-                    echo "\n<br><br><h1>Status Messages</h1>\n";
+                    echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
                     echo "<table class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
                     foreach( $messages as $message )
                         echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";

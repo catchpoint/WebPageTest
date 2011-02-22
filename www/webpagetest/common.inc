@@ -360,14 +360,23 @@ function gz_file_get_contents($file)
 */
 function gz_file_put_contents($filename, &$data)
 {
+    global $settings;
     $ret = false;
     
-    $zip = gzopen("$filename.gz", 'wb9');
-    if( $zip !== false )
+    if( $settings['nogzip'] )
     {
-        if( gzwrite($zip, $data) )
+        if( file_put_contents($filename, $data) )
             $ret = true;
-        gzclose($zip);
+    }
+    else
+    {
+        $zip = gzopen("$filename.gz", 'wb9');
+        if( $zip !== false )
+        {
+            if( gzwrite($zip, $data) )
+                $ret = true;
+            gzclose($zip);
+        }
     }
     
     return $ret;
@@ -397,12 +406,16 @@ function gz_file($filename)
 */
 function gz_compress($filename)
 {
+    global $settings;
     $ret = false;
     
-    $data = file_get_contents($filename);
-    if( $data ){
-        $ret = gz_file_put_contents($filename, $data);
-        unset($data);
+    if( !$settings['nogzip'] )
+    {
+        $data = file_get_contents($filename);
+        if( $data ){
+            $ret = gz_file_put_contents($filename, $data);
+            unset($data);
+        }
     }
     
     return $ret;

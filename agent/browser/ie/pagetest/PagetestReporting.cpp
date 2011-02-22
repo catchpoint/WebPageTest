@@ -359,7 +359,48 @@ void CPagetestReporting::FlushResults(void)
 						// pre-process the video images (make sure they are all the correct sizes
 						PreProcessVideo();
 
-						// save out the progress data
+            // calculate the above-the-fold time
+            if( aft )
+            {
+              CAFT aftEngine(msVideoDone + 100);
+              aftEngine.SetCrop(0, 12, 12, 0);
+
+		          POSITION pos = progressData.GetHeadPosition();
+              DWORD msLast = 0;
+		          while( pos )
+		          {
+			          CProgressData data = progressData.GetNext(pos);
+			          if( data.img )
+                {
+                  // see if we need to insert one of the static grabs before the next video frame
+                  if( msRender > msLast && msRender <= data.ms )
+                    aftEngine.AddImage( &imgStartRender, msDom );
+                  if( msDoc > msLast && msDoc <= data.ms )
+                    aftEngine.AddImage( &imgDocComplete, msDom );
+                  if( msDone > msLast && msDone <= data.ms )
+                    aftEngine.AddImage( &imgFullyLoaded, msDone );
+
+                  aftEngine.AddImage( data.img, data.ms );
+                  msLast = data.ms;
+                }
+              }
+
+              // see if we need to tack the event frames on the end
+              if( msDoc > msLast )
+                aftEngine.AddImage( &imgDocComplete, msDom );
+
+              if( msDone > msLast )
+                aftEngine.AddImage( &imgFullyLoaded, msDone );
+
+              bool confidence;
+              msAFT = 0;
+              aftEngine.Calculate(msAFT, confidence, &imgAft);
+              imgAft.Save(logFile + _T("_aft.png"), CXIMAGE_FORMAT_PNG);
+              imgAft.Destroy();
+              msVideoDone = max(msVideoDone, msAFT);
+            }
+
+            // save out the progress data
 						EnterCriticalSection(&csBackground);
 						CStringA progress;
 						POSITION pos = progressData.GetHeadPosition();
@@ -398,6 +439,14 @@ void CPagetestReporting::FlushResults(void)
 						if( captureVideo )
 						{
 							CString buff;
+							if( imgStartRender.IsValid() && msRender )
+							{
+								buff.Format(_T("_progress_%04d.jpg"), msRender / 100);
+								imgStartRender.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
+								imgStartRender.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
+								imgStartRender.SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
+								imgStartRender.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
+							}
 							if( imgDOMElement.IsValid() && msDom )
 							{
 								buff.Format(_T("_progress_%04d.jpg"), msDom / 100);
@@ -423,41 +472,6 @@ void CPagetestReporting::FlushResults(void)
 								imgFullyLoaded.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
 							}
 						}
-					}
-
-          // calculate the above-the-fold time
-          if( aft )
-          {
-            CAFT aftEngine(msVideoDone + 100);
-		        POSITION pos = progressData.GetHeadPosition();
-            DWORD msLast = 0;
-		        while( pos )
-		        {
-			        CProgressData data = progressData.GetNext(pos);
-			        if( data.img )
-              {
-                // see if we need to insert one of the static grabs before the next video frame
-                if( msDoc > msLast && msDoc <= data.ms )
-                  aftEngine.AddImage( &imgDocComplete, msDom );
-
-                if( msDone > msLast && msDone <= data.ms )
-                  aftEngine.AddImage( &imgFullyLoaded, msDone );
-
-                aftEngine.AddImage( data.img, data.ms );
-                msLast = data.ms;
-              }
-            }
-
-            // see if we need to tack the event frames on the end
-            if( msDoc > msLast )
-              aftEngine.AddImage( &imgDocComplete, msDom );
-
-            if( msDone > msLast )
-              aftEngine.AddImage( &imgFullyLoaded, msDone );
-
-            bool confidence;
-            msAFT = 0;
-            aftEngine.Calculate(msAFT, confidence);
           }
 
           // delete the image data

@@ -75,6 +75,11 @@ function getConnections(&$requests, &$summary)
 */
 function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap, &$pageData, $options = null)
 {
+    $startRender = $pageData['render'];
+    $domElement = $pageData['domTime'];
+    $docComplete = $pageData['docTime'];
+    $aft = $pageData['aft'];
+
     $cpuHeight = 50;
     $bwHeight = 50;
     $width=$_REQUEST['width'];
@@ -121,6 +126,16 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
             foreach( $connection['requests'] as &$request )
                 if($request['endOffset'] > $range)
                     $range = (double)$request['endOffset'];
+
+        // check our various page milestones to make sure they are included in the range
+        if( $startRender > $range )
+            $range = $startRender;
+        if( $domElement > $range )
+            $range = $domElement;
+        if( $docComplete > $range )
+            $range = $docComplete;
+        if( $aft > $range )
+            $range = $aft;
     }
 
     // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart        
@@ -311,18 +326,23 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
         $section = 'first ' . $run;
         if($cached == 1) 
             $section = 'repeat ' . $run;
-        $startRender = $pageData['render'];
-        $domElement = $pageData['domTime'];
-        $docComplete = $pageData['docTime'];
         $colStartRender = GetColor($im, 40, 188, 0);
         $colDomElement  = GetColor($im, 242, 131, 0);
         $colDocComplete = GetColor($im, 0, 0, 255);
+        $colAFT = GetColor($im, 255, 0, 0);
         
         if( $startRender > 0 && $startRender <= $range )
         {
             $x = $left + (int)((double)$w * ((double)$startRender / $range));
             imageline($im, $x, 1, $x, $height - 1, $colStartRender);
             imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
+        }
+
+        if( $aft > 0 && $aft <= $range )
+        {
+            $x = $left + (int)((double)$w * ((double)$aft / $range));
+            imageline($im, $x, 1, $x, $height - 1, $colAFT);
+            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
         }
 
         if( $domElement > 0 && $domElement <= $range )
@@ -332,7 +352,7 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
             imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
         }
         
-        if( $docComplete > 0 )
+        if( $docComplete > 0 && $docComplete <= $range )
         {
             if( $docComplete >= $range )
                 $docComplete = $range - 1;

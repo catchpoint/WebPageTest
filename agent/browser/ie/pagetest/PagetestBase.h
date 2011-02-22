@@ -216,6 +216,7 @@ public:
 	CAtlList<CxImage *>	imgLayoutChange;
 	CxImage imgDocComplete;
 	CxImage imgFullyLoaded;
+  CxImage imgAft;
 	CAtlList<CProgressData> progressData;
 	
 	CAtlList<CBrowserTracker> browsers;

@@ -99,6 +99,10 @@ else
             MoveVideoFiles($testPath);
             BuildVideoScripts($testPath);
             
+            require_once 'page_data.inc';
+            $pageData = loadAllPageData($testPath);
+            $medianRun = GetMedianRun($pageData, 0);
+
             $test = file_get_contents("$testPath/testinfo.ini");
             $time = time();
             $now = date("m/d/y G:i:s", $time);
@@ -107,6 +111,8 @@ else
             if( !strpos($test, 'completeTime') )
             {
                 $complete = "[test]\r\ncompleteTime=$now";
+                if($medianRun)
+                    $complete .= "\r\nmedianRun=$medianRun";
                 $out = str_replace('[test]', $complete, $test);
                 file_put_contents("$testPath/testinfo.ini", $out);
             }
@@ -117,6 +123,7 @@ else
                 if( !isset($testInfo['completed']) )
                 {
                     $testInfo['completed'] = $time;
+                    $testInfo['medianRun'] = $medianRun;
                     gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                 }
             }
@@ -163,7 +170,7 @@ else
             
             // delete all of the videos except for the median run?
             if( $ini['median_video'] )
-                KeepMedianVideo($testPath);
+                KeepVideoForRun($testPath, $medianRun);
             
             // do any other post-processing (e-mail notification for example)
             if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )
@@ -275,11 +282,8 @@ function notify( $mailto, $from,  $id, $testPath, $host )
 * 
 * @param mixed $id
 */
-function KeepMedianVideo($testPath)
+function KeepVideoForRun($testPath, $run)
 {
-    require_once 'page_data.inc';
-    $pageData = loadAllPageData($testPath);
-    $run = GetMedianRun($pageData, 0);
     if( $run )
     {
         $dir = opendir($testPath);
