@@ -30,9 +30,10 @@
             echo '<div id="links">';
             echo'<table class="links"><tr>';
             $i = 0;
+            $remaining = $count;
             foreach( $sponsors as &$sponsor )
             {
-                if( $i >= $rowCount )
+                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4) )
                 {
                     $i = 1;
                     echo '</tr></table><table class="links"><tr>';
@@ -40,7 +41,7 @@
                 else
                     $i++;
 
-                $used++;                        
+                $remaining--;
                 echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img src=\"{$sponsor['logo']}\" alt=\"{$sponsor['alt']}\"></a></td>";
             }
             echo '</tr></table>';
