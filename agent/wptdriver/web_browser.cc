@@ -1,13 +1,16 @@
 #include "StdAfx.h"
 #include "web_browser.h"
 
+typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WebBrowser::WebBrowser(WptSettings& settings, WptTest& test):
+WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status):
   _settings(settings)
   ,_test(test)
-  ,_browser_process(NULL){
+  ,_status(status)
+  ,_browser_process(NULL)
+  ,_hook_dll(NULL){
 
   InitializeCriticalSection(&cs);
 }
@@ -41,9 +44,28 @@ bool WebBrowser::RunAndWait(){
 
     EnterCriticalSection(&cs);
     _browser_process = NULL;
-    if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, NULL, NULL, 
-                      &si, &pi)){
+    if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, 
+                      NULL, NULL, &si, &pi)){
       _browser_process = pi.hProcess;
+
+      // TODO: see if we can hook the process before it is fully launched
+      // otherwise there is no guarantee that our hook will be in place
+      // when we need it (though it's unlikely that it won't be)
+      WaitForInputIdle(pi.hProcess, 10000);
+
+      TCHAR hook_dll_path[MAX_PATH];
+      GetModuleFileName(NULL, hook_dll_path, _countof(hook_dll_path));
+      lstrcpy( PathFindFileName(hook_dll_path), _T("wpthook.dll") );
+      _hook_dll = LoadLibrary(hook_dll_path);
+      if (_hook_dll) {
+        LPINSTALLHOOK InstallHook = (LPINSTALLHOOK)GetProcAddress(_hook_dll,
+                                                        "_InstallHook@4");
+        if (InstallHook)
+          InstallHook(pi.dwThreadId);
+      }
+
+      // ok, let the browser continue running
+      ResumeThread(pi.hThread);
       CloseHandle(pi.hThread);
     }
     LeaveCriticalSection(&cs);
@@ -73,9 +95,10 @@ bool WebBrowser::Close(){
   bool ret = false;
 
   EnterCriticalSection(&cs);
+
+  // send close messages to all of the top-level windows associated with the
+  // browser process
   if( _browser_process ){
-    // send close messages to all of the top-level windows associated with the
-    // browser process
     DWORD browser_process_id = GetProcessId(_browser_process);
     HWND wnd = ::GetDesktopWindow();
 		wnd = ::GetWindow(wnd, GW_CHILD);
@@ -88,7 +111,12 @@ bool WebBrowser::Close(){
       wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
     }
   }
+  if (_hook_dll) {
+    FreeLibrary(_hook_dll);
+    _hook_dll = NULL;
+  }
   LeaveCriticalSection(&cs);
 
   return ret;
 }
+
