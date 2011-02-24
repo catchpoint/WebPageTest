@@ -56,7 +56,9 @@ void WINAPI InstallHook(DWORD thread_id){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptHook::WptHook(void){
+WptHook::WptHook(void):
+  _background_thread(NULL)
+  ,_message_window(NULL){
 }
 
 /*-----------------------------------------------------------------------------
@@ -66,6 +68,72 @@ WptHook::~WptHook(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+static unsigned __stdcall ThreadProc( void* arg )
+{
+	WptHook * wpthook = (WptHook *)arg;
+	if( wpthook )
+		wpthook->BackgroundThread();
+		
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptHook::Init(){
-  OutputDebugString(_T("[wpthook] Init()\n"));
+  ATLTRACE2(_T("[wpthook] Init()\n"));
+
+  _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+}
+
+/*-----------------------------------------------------------------------------
+	WndProc for the messaging window
+-----------------------------------------------------------------------------*/
+static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg, 
+                                                  WPARAM wParam, LPARAM lParam)
+{
+  ATLTRACE2(_T("[wpthook] WptHookWindowProc()\n"));
+	LRESULT ret = 0;
+
+  switch (uMsg){
+    case UWM_WPTHOOK_INIT:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - UWM_WPTHOOK_INIT\n"));
+        break;
+
+    default:
+	      ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
+  }
+	
+	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::BackgroundThread(){
+  ATLTRACE2(_T("[wpthook] BackgroundThread()\n"));
+
+  // create a hidden window for processing messages from wptdriver
+  const TCHAR * class_name = _T("wpthook");
+	WNDCLASS wndClass;
+	memset(&wndClass, 0, sizeof(wndClass));
+	wndClass.lpszClassName = class_name;
+	wndClass.lpfnWndProc = WptHookWindowProc;
+	wndClass.hInstance = global_dll_handle;
+	if( RegisterClass(&wndClass) )
+	{
+		_message_window = CreateWindow(class_name, class_name, WS_POPUP, 0, 0, 0, 
+                                    0, NULL, NULL, global_dll_handle, NULL);
+		if( _message_window )
+		{
+      PostMessage( _message_window, UWM_WPTHOOK_INIT, 0, 0);
+
+      MSG msg;
+      BOOL bRet;
+      while ( (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0 ){
+        if (bRet != -1){
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+        }
+      }
+		}
+	}
 }

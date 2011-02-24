@@ -7,6 +7,8 @@
 
 #include "targetver.h"
 
+#define INCL_WINSOCK_API_TYPEDEFS 1
+
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
 #include <windows.h>
@@ -16,8 +18,9 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
+#include <Ws2tcpip.h>
 
 #include <atlstr.h>
+#include <atlcoll.h>
 
-// TODO: reference additional headers your program requires here
+#include "wpthook.h"
