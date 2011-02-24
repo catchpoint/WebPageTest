@@ -3,7 +3,7 @@
 class TestServer
 {
 public:
-  TestServer(WptSettings &settings, WptStatus &status);
+  TestServer(WptSettings &settings, WptStatus &status, WptHook& hook);
   ~TestServer(void);
 
   bool Start(void);
@@ -17,6 +17,7 @@ public:
 private:
   WptSettings&      _settings;
   WptStatus&        _status;
+  WptHook&          _hook;
   struct mg_context *_mongoose_context;
   WptTest *         _test;
   WebBrowser *      _browser;

@@ -12,7 +12,14 @@ class WptHook
 public:
   WptHook(void);
   ~WptHook(void);
-  bool  Connect();
+
+  bool  Connect(DWORD timeout = 10000);
+  void  Disconnect();
+
+  LRESULT Start();
+  LRESULT Stop();
+  LRESULT OnNavigate();
+  LRESULT OnLoad();
 
 private:
   HWND  _wpthook_window;

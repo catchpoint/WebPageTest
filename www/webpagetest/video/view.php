@@ -212,7 +212,7 @@ else
             else
             {
             ?>
-            <h1>The requested video does not exist.</h1>
+            <h1>The requested video does not exist.  Please try creating it again and if the problem persists please contact us.</h1>
             <?php
             }
             ?>

@@ -96,8 +96,24 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 	LRESULT ret = 0;
 
   switch (uMsg){
-    case UWM_WPTHOOK_INIT:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - UWM_WPTHOOK_INIT\n"));
+    case WPT_INIT:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_INIT\n"));
+        break;
+
+    case WPT_START:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_START\n"));
+        break;
+
+    case WPT_STOP:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_STOP\n"));
+        break;
+
+    case WPT_ON_NAVIGATE:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_NAVIGATE\n"));
+        break;
+
+    case WPT_ON_LOAD:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
         break;
 
     default:
@@ -125,7 +141,7 @@ void WptHook::BackgroundThread(){
                                     0, NULL, NULL, global_dll_handle, NULL);
 		if( _message_window )
 		{
-      PostMessage( _message_window, UWM_WPTHOOK_INIT, 0, 0);
+      PostMessage( _message_window, WPT_INIT, 0, 0);
 
       MSG msg;
       BOOL bRet;

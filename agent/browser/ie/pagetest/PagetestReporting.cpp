@@ -3676,6 +3676,12 @@ void CPagetestReporting::PreProcessVideo()
 				if( (long)imgFullyLoaded.GetHeight() > videoSize.y )
 					videoSize.y = (long)imgFullyLoaded.GetHeight();
 			}
+			if( imgStartRender.IsValid() && (long)imgStartRender.GetWidth() > videoSize.x )
+			{
+				imgStartRender.Resample2(videoSize.x, (long)(((double)imgStartRender.GetWidth() / (double)videoSize.x) * (double)imgStartRender.GetHeight()) );
+				if( (long)imgStartRender.GetHeight() > videoSize.y )
+					videoSize.y = (long)imgStartRender.GetHeight();
+			}
 		}
 
 		// now that we have the correct dimensions, make all of the images the same size (pad with black)
@@ -3706,7 +3712,10 @@ void CPagetestReporting::PreProcessVideo()
 
 			if( imgFullyLoaded.IsValid() && ((long)imgFullyLoaded.GetWidth() != videoSize.x || (long)imgFullyLoaded.GetHeight() != videoSize.y) )
 				imgFullyLoaded.Expand(0, 0, videoSize.x - imgFullyLoaded.GetWidth(), videoSize.y - imgFullyLoaded.GetHeight(), black);
-		}
+
+			if( imgStartRender.IsValid() && ((long)imgStartRender.GetWidth() != videoSize.x || (long)imgStartRender.GetHeight() != videoSize.y) )
+				imgStartRender.Expand(0, 0, videoSize.x - imgStartRender.GetWidth(), videoSize.y - imgStartRender.GetHeight(), black);
+    }
 
 		// and finally, now that everything is the same size, reduce everything to quarter images to save space
 		pos = progressData.GetHeadPosition();
@@ -3724,7 +3733,10 @@ void CPagetestReporting::PreProcessVideo()
 
 		if( imgFullyLoaded.IsValid() )
 			imgFullyLoaded.Resample2(imgFullyLoaded.GetWidth() / 2, imgFullyLoaded.GetHeight() / 2);
-	}
+
+		if( imgStartRender.IsValid() )
+			imgStartRender.Resample2(imgStartRender.GetWidth() / 2, imgStartRender.GetHeight() / 2);
+  }
 }
 
 /*-----------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 WptDriverCore::WptDriverCore(WptStatus &status):
   _status(status)
   ,_webpagetest(_settings, _status)
-  ,_test_server(_settings, _status)
+  ,_test_server(_settings, _status, _hook)
   ,_exit(false)
   ,_thread_handle(NULL){
 }
@@ -78,7 +78,7 @@ void WptDriverCore::WorkThread(void){
     if( _webpagetest.GetTest(test) ){
       TestData data;
       _status.Set(_T("Launching browser..."));
-      WebBrowser browser(_settings, test, _status);
+      WebBrowser browser(_settings, test, _status, _hook);
 
       // configure the internal web server with information about the test
       _test_server.SetTest(&test);

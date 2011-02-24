@@ -1,7 +1,18 @@
 <?php
 chdir('..');
+$debug = false;
 include 'common.inc';
 set_time_limit(600);
+
+$location = $_GET['location'];
+$key = $_GET['key'];
+$pc = $_GET['pc'];
+$ec2 = $_GET['ec2'];
+$tester = null;
+if( isset($ec2) && strlen($ec2) )
+    $tester = $ec2;
+elseif( isset($pc) && strlen($pc) )
+    $tester = $pc;
 
 // see if there is an update
 $done = false;
@@ -14,16 +25,6 @@ if( !$done && $_GET['video'] )
 
 if( !$done )
 {
-    $location = $_GET['location'];
-    $key = $_GET['key'];
-    $pc = $_GET['pc'];
-    $ec2 = $_GET['ec2'];
-    $tester = null;
-    if( isset($ec2) && strlen($ec2) )
-        $tester = $ec2;
-    elseif( isset($pc) && strlen($pc) )
-        $tester = $pc;
-    
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
     BuildLocations($locations);
@@ -233,6 +234,9 @@ if( !$done )
 */
 function GetVideoJob()
 {
+    global $debug;
+    global $location;
+    global $tester;
     $ret = false;
     
     $videoDir = './work/video';
@@ -262,6 +266,7 @@ function GetVideoJob()
                         header("Cache-Control: no-cache, must-revalidate");
                         header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
+                        logMsg("Video job $testFile sent to $tester from $location");
                         readfile_chunked($testFile);
                         $ret = true;
                         

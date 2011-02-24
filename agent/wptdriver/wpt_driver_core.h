@@ -12,6 +12,7 @@ public:
 
 private:
   WptSettings _settings;
+  WptHook     _hook;
   WptStatus&  _status;
   WebPagetest _webpagetest;
   bool        _exit;

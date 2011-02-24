@@ -26,5 +26,6 @@
 #include "wpt_settings.h"
 #include "wpt_test.h"
 #include "webpagetest.h"
+#include "wpt_hook.h"
 #include "web_browser.h"
 #include "test_server.h"

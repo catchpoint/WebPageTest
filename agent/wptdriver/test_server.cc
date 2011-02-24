@@ -17,10 +17,12 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestServer::TestServer(WptSettings &settings, WptStatus &status):
+TestServer::TestServer(WptSettings &settings, WptStatus &status, 
+  WptHook& hook):
   _mongoose_context(NULL)
   ,_settings(settings)
   ,_status(status)
+  ,_hook(hook)
   ,_test(NULL)
   ,_browser(NULL){
   InitializeCriticalSection(&cs);
@@ -105,6 +107,7 @@ void TestServer::MongooseCallback(enum mg_event event,
     if (strcmp(request_info->uri, "/get_test") == 0) {
       if (_test){
         _status.Set(_T("Running test in browser..."));
+        _hook.Start();
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
                     _test->ToJSON());
       }else{
@@ -120,6 +123,10 @@ void TestServer::MongooseCallback(enum mg_event event,
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 
                     RESPONSE_ERROR_NOT_IMPLEMENTED_STR, "");
       }
+    } else if (strcmp(request_info->uri, "/on/load") == 0) {
+      _status.Set(_T("onLoad - waiting for test to complete..."));
+      _hook.OnLoad();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 

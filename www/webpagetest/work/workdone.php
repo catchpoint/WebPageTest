@@ -13,18 +13,22 @@ $id = $_REQUEST['id'];
 
 if( $_REQUEST['video'] )
 {
+    logMsg("Video file $id received from $location");
+    
+    $dir = './' . GetVideoPath($id);
     if( isset($_FILES['file']) )
     {
-        $dir = './' . GetVideoPath($id);
         $dest = $dir . '/video.mp4';
         move_uploaded_file($_FILES['file']['tmp_name'], $dest);
-    }
 
-    // update the ini file
-    $iniFile = $dir . '/video.ini';
-    $ini = file_get_contents($iniFile);
-    $ini .= 'completed=' . date('c') . "\r\n";
-    file_put_contents($iniFile, $ini);
+        // update the ini file
+        $iniFile = $dir . '/video.ini';
+        $ini = file_get_contents($iniFile);
+        $ini .= 'completed=' . date('c') . "\r\n";
+        file_put_contents($iniFile, $ini);
+    }
+    else
+        delTree($dir);
 }
 else
 {

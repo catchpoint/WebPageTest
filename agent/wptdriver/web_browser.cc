@@ -5,12 +5,13 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status):
+WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status,
+                        WptHook& hook):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
-  ,_hook_dll(NULL){
+  ,_hook(hook){
 
   InitializeCriticalSection(&cs);
 }
@@ -28,6 +29,7 @@ bool WebBrowser::RunAndWait(){
 
   CString cmdLine = _settings._browser_chrome.Trim(_T("\""));
   if( _settings._browser_chrome.GetLength() ){
+    HMODULE hook_dll = NULL;
     TCHAR cmdLine[MAX_PATH + 100];
     lstrcpy( cmdLine, CString(_T("\"")) + _settings._browser_chrome + 
         _T("\" --enable-benchmarking about:blank") );
@@ -48,17 +50,16 @@ bool WebBrowser::RunAndWait(){
                       NULL, NULL, &si, &pi)){
       _browser_process = pi.hProcess;
 
-      // TODO: see if we can hook the process before it is fully launched
-      // otherwise there is no guarantee that our hook will be in place
-      // when we need it (though it's unlikely that it won't be)
+      // let the browser start pumping messages, otherwise our hook won't 
+      // install
       WaitForInputIdle(pi.hProcess, 10000);
 
       TCHAR hook_dll_path[MAX_PATH];
       GetModuleFileName(NULL, hook_dll_path, _countof(hook_dll_path));
       lstrcpy( PathFindFileName(hook_dll_path), _T("wpthook.dll") );
-      _hook_dll = LoadLibrary(hook_dll_path);
-      if (_hook_dll) {
-        LPINSTALLHOOK InstallHook = (LPINSTALLHOOK)GetProcAddress(_hook_dll,
+      hook_dll = LoadLibrary(hook_dll_path);
+      if (hook_dll) {
+        LPINSTALLHOOK InstallHook = (LPINSTALLHOOK)GetProcAddress(hook_dll,
                                                         "_InstallHook@4");
         if (InstallHook)
           InstallHook(pi.dwThreadId);
@@ -67,21 +68,31 @@ bool WebBrowser::RunAndWait(){
       // ok, let the browser continue running
       ResumeThread(pi.hThread);
       CloseHandle(pi.hThread);
+
+      _hook.Connect();
     }
     LeaveCriticalSection(&cs);
 
+    // wait for the browser to finish
     if( _browser_process && 
         WaitForSingleObject(_browser_process, _settings._timeout * 
         SECONDS_TO_MS ) == WAIT_OBJECT_0 ){
       ret = true;
     }
 
+    // kill the browser if it is still running
     EnterCriticalSection(&cs);
+    _hook.Disconnect();
+
     if( _browser_process ){
       DWORD exit_code;
       if( GetExitCodeProcess(_browser_process, &exit_code) == STILL_ACTIVE )
         TerminateProcess(_browser_process, 0);
       CloseHandle(_browser_process);
+    }
+
+    if (hook_dll) {
+      FreeLibrary(hook_dll);
     }
     LeaveCriticalSection(&cs);
   }
@@ -110,10 +121,6 @@ bool WebBrowser::Close(){
         ::PostMessage(wnd,WM_CLOSE,0,0);
       wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
     }
-  }
-  if (_hook_dll) {
-    FreeLibrary(_hook_dll);
-    _hook_dll = NULL;
   }
   LeaveCriticalSection(&cs);
 

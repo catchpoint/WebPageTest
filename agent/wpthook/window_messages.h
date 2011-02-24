@@ -14,7 +14,7 @@ const UINT WPT_STOP   = WM_APP + 2;    // Stop Measurement (rare)
 const UINT WPT_ON_NAVIGATE  = WM_APP + 100; // Navigation start 
                                             // (implied with START)
 const UINT WPT_ON_LOAD      = WM_APP + 101; // onLoad event (DocumentComplete)
-const UINT WPT_ON_RENDER    = WM_APP + 102; // Initial Render (if available)
+
 
 // internal use
-const UINT UWM_WPTHOOK_INIT = WM_APP + 1000;  // internal - for initialization
+const UINT WPT_INIT = WM_APP + 1000;  // internal - for initialization

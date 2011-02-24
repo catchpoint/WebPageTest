@@ -2,7 +2,8 @@
 class WebBrowser
 {
 public:
-  WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status);
+  WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status, 
+              WptHook& hook);
   ~WebBrowser(void);
 
   bool RunAndWait();
@@ -14,9 +15,9 @@ private:
   WptSettings&  _settings;
   WptTest&      _test;
   WptStatus&    _status;
+  WptHook&      _hook;
 
   HANDLE        _browser_process;
-  HMODULE       _hook_dll;
 
   CRITICAL_SECTION  cs;
 };
