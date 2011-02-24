@@ -1,6 +1,6 @@
 [WebPagetest]
 url=http://staging.webpagetest.org/
-location=Dev_IE8
+location=Dev_Pat
 
 [browser]
 Chrome="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
