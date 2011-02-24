@@ -2,9 +2,6 @@
 #include "WsHook.h"
 #include "GDIHook.h"
 
-// message definitions
-const UINT UWM_WPTHOOK_INIT = WM_APP + 1;
-
 extern HINSTANCE global_dll_handle; // DLL handle
 
 class WptHook

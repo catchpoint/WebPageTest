@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "shared_mem.h"
 #include "wpthook.h"
+#include "window_messages.h"
 
 HINSTANCE global_dll_handle = NULL; // DLL handle
 WptHook * global_hook = NULL;
@@ -112,15 +113,15 @@ void WptHook::BackgroundThread(){
   ATLTRACE2(_T("[wpthook] BackgroundThread()\n"));
 
   // create a hidden window for processing messages from wptdriver
-  const TCHAR * class_name = _T("wpthook");
 	WNDCLASS wndClass;
 	memset(&wndClass, 0, sizeof(wndClass));
-	wndClass.lpszClassName = class_name;
+	wndClass.lpszClassName = wpthook_window_class;
 	wndClass.lpfnWndProc = WptHookWindowProc;
 	wndClass.hInstance = global_dll_handle;
 	if( RegisterClass(&wndClass) )
 	{
-		_message_window = CreateWindow(class_name, class_name, WS_POPUP, 0, 0, 0, 
+		_message_window = CreateWindow(wpthook_window_class, wpthook_window_class, 
+                                    WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, global_dll_handle, NULL);
 		if( _message_window )
 		{

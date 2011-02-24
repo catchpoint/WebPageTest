@@ -100,6 +100,7 @@
     <ClInclude Include="shared_mem.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="window_messages.h" />
     <ClInclude Include="wpthook.h" />
     <ClInclude Include="WsHook.h" />
   </ItemGroup>

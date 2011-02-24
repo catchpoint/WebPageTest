@@ -30,7 +30,7 @@ bool WebBrowser::RunAndWait(){
   if( _settings._browser_chrome.GetLength() ){
     TCHAR cmdLine[MAX_PATH + 100];
     lstrcpy( cmdLine, CString(_T("\"")) + _settings._browser_chrome + 
-        _T("\" about:blank") );
+        _T("\" --enable-benchmarking about:blank") );
 
     STARTUPINFO si;
     PROCESS_INFORMATION pi;

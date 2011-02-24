@@ -104,6 +104,7 @@
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
     <ClInclude Include="wptdriver.h" />
+    <ClInclude Include="wpt_hook.h" />
     <ClInclude Include="wpt_driver_core.h" />
     <ClInclude Include="wpt_settings.h" />
     <ClInclude Include="wpt_status.h" />
@@ -123,6 +124,7 @@
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
     <ClCompile Include="wptdriver.cc" />
+    <ClCompile Include="wpt_hook.cc" />
     <ClCompile Include="wpt_driver_core.cc" />
     <ClCompile Include="wpt_settings.cc" />
     <ClCompile Include="wpt_status.cc" />
