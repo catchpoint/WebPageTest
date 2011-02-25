@@ -60,6 +60,7 @@ void WINAPI InstallHook(DWORD thread_id){
 WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL){
+  _start.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -86,10 +87,23 @@ bool WptHook::OnMessage(UINT message){
         break;
 
     case WPT_ON_NAVIGATE:
+        QueryPerformanceCounter(&_start);
         ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_NAVIGATE\n"));
         break;
 
     case WPT_ON_LOAD:
+        if (_start.QuadPart){
+          LARGE_INTEGER end, freq;
+          QueryPerformanceCounter(&end);
+          QueryPerformanceFrequency(&freq);
+          freq.QuadPart /= 1000;
+          double elapsed = (double)(end.QuadPart - _start.QuadPart)
+                              / (double)freq.QuadPart;
+          CString buff;
+          buff.Format(_T("[wptdriver] - OnNavigate -> OnLoad = %0.3fms\n"), 
+                      elapsed);
+          OutputDebugString(buff);
+        }
         ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
 
         // for now we just tell the server that we're done

@@ -21,4 +21,5 @@ private:
   HANDLE    _background_thread;
   HWND      _message_window;
   WptDriver _driver;
+  LARGE_INTEGER _start;
 };
