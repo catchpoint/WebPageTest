@@ -1,31 +1,76 @@
 <script>
-window.testUrl = "http://www.google.com/";
-var benchmarkWindow = 0;
+var g_active=false;
+var g_tabId = -1;
 
-// Define the callback function.
-pageFinished = function(load_times) {
-  var docLoadTime = Math.round(
-    (load_times.finishDocumentLoadTime - load_times.startLoadTime) * 1000.0);
-  alert('page load time: ' + docLoadTime);
-  chrome.tabs.remove(benchmarkWindow.id, null);
+// navigate to the provided url
+function wptNavigate(url){
+  chrome.tabs.update(g_tabId, {"url":url}, function(tab) {
+    chrome.tabs.executeScript(tab.id, {file: "script.js"});
+  });
 }
+
+// execute a single task/script command
+function wptExecuteTask(task){
+  g_active = true;
+  if (task.action == "navigate")
+	wptNavigate(task.target);
+}
+
+// get the next task from the wptdriver
+function wptGetTask(){
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://127.0.0.1:8888/task", true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+	  var resp = JSON.parse(xhr.responseText);
+	  if (resp.statusCode == 200)
+		wptExecuteTask(resp.data);
+    }
+  }
+  xhr.send();
+}
+
+// notification that navigation started
+function wptOnNavigate(){
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
+  xhr.send();
+}
+
+// notification that the page loaded
+function wptOnLoad(){
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "http://127.0.0.1:8888/event/load", true);
+  xhr.send();
+}
+
+// if we start up on about:blank, try connecting to the wptdriver for work
+chrome.tabs.getSelected(null, function(tab){
+  if( tab.url == "about:blank" ){
+    g_tabId = tab.id;
+    setTimeout( "wptGetTask()", 1000 );
+  }
+});
+
+// install an onLoad handler for all tabs
+chrome.tabs.onUpdated.addListener(function(tabId, props) {
+  if (g_active){
+    if (props.status == "loading")
+	  wptOnNavigate();
+    if (props.status == "complete")
+	  wptOnLoad();
+  } else {
+    if (props.status == "complete" && props.url == "about:blank") {
+	  g_tabId = tabId;
+	  setTimeout( "wptGetTask()", 1000 );
+	}
+  }
+});
 
 // Add a listener for messages from script.js.
 chrome.extension.onConnect.addListener(function(port) {
   port.onMessage.addListener(function(data) {
-    if (data.message == "load") {
-      pageFinished(data.values);
-    }
   });
 });
 
-
-// Create a new tab with the test-url and inject script.js.
-chrome.tabs.create({"url": window.testUrl,"selected": true},
-function(tab) {
-  benchmarkWindow = tab;
-  // script.js only executes on tested pages
-  // not the ones opened by the user.
-  chrome.tabs.executeScript(tab.id, {file: "script.js"});
-});
 </script>
