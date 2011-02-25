@@ -25,27 +25,27 @@ LRESULT HookProc (
   OutputDebugString(_T("[wpthook] HookProc()\n"));
   if( !global_hook ){
     // increase our refcount so we don't get unloaded
-	  TCHAR dll_path[MAX_PATH]; 
-	  GetModuleFileName( global_dll_handle, dll_path, _countof(dll_path) );
+    TCHAR dll_path[MAX_PATH]; 
+    GetModuleFileName( global_dll_handle, dll_path, _countof(dll_path) );
     LoadLibrary( dll_path );
 
     // remove the message proc hook so we don't impact performance
-	  UnhookWindowsHookEx( shared_hook_handle );
+    UnhookWindowsHookEx( shared_hook_handle );
 
     // initialize our actual hook routine
     global_hook = new WptHook;
     global_hook->Init();
   }
 
-	return ::CallNextHookEx(shared_hook_handle, code, wParam, lParam);
+  return ::CallNextHookEx(shared_hook_handle, code, wParam, lParam);
 }
 
 /*-----------------------------------------------------------------------------
   Install the hook into the browser's message proc
 -----------------------------------------------------------------------------*/
 void WINAPI InstallHook(DWORD thread_id){
-	shared_hook_handle = SetWindowsHookEx( WH_CALLWNDPROC, (HOOKPROC)HookProc,
-								global_dll_handle, thread_id );
+  shared_hook_handle = SetWindowsHookEx( WH_CALLWNDPROC, (HOOKPROC)HookProc,
+                global_dll_handle, thread_id );
 
   if (!shared_hook_handle){
     DWORD err = GetLastError();
@@ -93,6 +93,7 @@ bool WptHook::OnMessage(UINT message){
         ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
 
         // for now we just tell the server that we're done
+        Sleep(2000);
         _driver.Done();
         break;
 
@@ -108,11 +109,11 @@ bool WptHook::OnMessage(UINT message){
 -----------------------------------------------------------------------------*/
 static unsigned __stdcall ThreadProc( void* arg )
 {
-	WptHook * wpthook = (WptHook *)arg;
-	if( wpthook )
-		wpthook->BackgroundThread();
-		
-	return 0;
+  WptHook * wpthook = (WptHook *)arg;
+  if( wpthook )
+    wpthook->BackgroundThread();
+    
+  return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -124,13 +125,13 @@ void WptHook::Init(){
 }
 
 /*-----------------------------------------------------------------------------
-	WndProc for the messaging window
+  WndProc for the messaging window
 -----------------------------------------------------------------------------*/
 static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg, 
                                                   WPARAM wParam, LPARAM lParam)
 {
   ATLTRACE2(_T("[wpthook] WptHookWindowProc()\n"));
-	LRESULT ret = 0;
+  LRESULT ret = 0;
 
   bool handled = false;
 
@@ -140,7 +141,7 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
   if (!handled)
     ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
 
-	return ret;
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -152,18 +153,18 @@ void WptHook::BackgroundThread(){
   _driver.Connect();
 
   // create a hidden window for processing messages from wptdriver
-	WNDCLASS wndClass;
-	memset(&wndClass, 0, sizeof(wndClass));
-	wndClass.lpszClassName = wpthook_window_class;
-	wndClass.lpfnWndProc = WptHookWindowProc;
-	wndClass.hInstance = global_dll_handle;
-	if( RegisterClass(&wndClass) )
-	{
-		_message_window = CreateWindow(wpthook_window_class, wpthook_window_class, 
+  WNDCLASS wndClass;
+  memset(&wndClass, 0, sizeof(wndClass));
+  wndClass.lpszClassName = wpthook_window_class;
+  wndClass.lpfnWndProc = WptHookWindowProc;
+  wndClass.hInstance = global_dll_handle;
+  if( RegisterClass(&wndClass) )
+  {
+    _message_window = CreateWindow(wpthook_window_class, wpthook_window_class, 
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, global_dll_handle, NULL);
-		if( _message_window )
-		{
+    if( _message_window )
+    {
       PostMessage( _message_window, WPT_INIT, 0, 0);
 
       MSG msg;
@@ -174,6 +175,6 @@ void WptHook::BackgroundThread(){
           DispatchMessage(&msg);
         }
       }
-		}
-	}
+    }
+  }
 }
