@@ -1,4 +1,25 @@
 #pragma once
+
+class ScriptCommand{
+public:
+  ScriptCommand(void):record(false){}
+  ScriptCommand(const ScriptCommand& src){*this = src;}
+  ~ScriptCommand(void){}
+  const ScriptCommand& operator =(const ScriptCommand& src){
+    command = src.command;
+    target = src.target;
+    value = src.value;
+    record = src.record;
+
+    return src;
+  }
+
+  CString command;
+  CString target;
+  CString value;
+  bool    record;
+};
+
 class WptTest
 {
 public:
@@ -8,6 +29,8 @@ public:
   void  Reset(void);
   bool  Load(CString& test);
   CStringA ToJSON();
+
+  bool  Start();
   bool  GetNextTask(CStringA& task, bool& record);
 
   // overall test settings
@@ -37,5 +60,7 @@ public:
 private:
   CStringA JSONEscape(CString src);
   CStringA EncodeTask(CString action, CString target, CString value);
+
+  CAtlList<ScriptCommand> _script_commands;
 };
 

@@ -19,6 +19,7 @@
 
 
 #include <atlstr.h>
+#include <atlcoll.h>
 
 // shared internal includes
 #include "test_data.h"

@@ -196,14 +196,38 @@ CStringA WptTest::JSONEscape(CString src)
 }
 
 /*-----------------------------------------------------------------------------
+  We are starting a new run, build up the script for the browser to execute
+-----------------------------------------------------------------------------*/
+bool WptTest::Start(){
+  bool ret = false;
+
+  // build up a new script
+  _script_commands.RemoveAll();
+
+  // just support URL navigating right now
+  if (_url.GetLength()){
+    ScriptCommand command;
+    command.command = _T("navigate");
+    command.target = _url;
+    command.record = true;
+
+    _script_commands.AddTail(command);
+
+    ret = true;
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTest::GetNextTask(CStringA& task, bool& record){
   bool ret = true;
 
-  if( _url.GetLength() ){
-    task = EncodeTask(_T("navigate"), _url, _T(""));
-    _url.Empty();
-    record = true;
+  if( !_script_commands.IsEmpty() ){
+    ScriptCommand command = _script_commands.RemoveHead();
+    task = EncodeTask(command.command, command.target, command.value);
+    record = command.record;
   } else {
     ret = false;
   }
