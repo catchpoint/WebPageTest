@@ -27,25 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // WsHook.cpp - Code for intercepting winsock API calls
 
 #include "StdAfx.h"
-#include ".\wshook.h"
+#include "hook_winsock.h"
 
 static CWsHook * pHook = NULL;
-
-void WinsockInstallHooks(void)
-{
-  if( !pHook )
-    pHook = new CWsHook();
-}
-
-void WinsockRemoveHooks(void)
-{
-  if( pHook )
-  {
-    delete pHook;
-    pHook = NULL;
-  }
-}
-
 
 /******************************************************************************
 *******************************************************************************

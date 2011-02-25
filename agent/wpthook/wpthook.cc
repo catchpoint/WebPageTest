@@ -69,6 +69,43 @@ WptHook::~WptHook(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool WptHook::OnMessage(UINT message){
+  bool ret = true;
+
+  switch (message){
+    case WPT_INIT:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_INIT\n"));
+        break;
+
+    case WPT_START:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_START\n"));
+        break;
+
+    case WPT_STOP:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_STOP\n"));
+        break;
+
+    case WPT_ON_NAVIGATE:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_NAVIGATE\n"));
+        break;
+
+    case WPT_ON_LOAD:
+        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
+
+        // for now we just tell the server that we're done
+        _driver.Done();
+        break;
+
+    default:
+        ret = false;
+        break;
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 static unsigned __stdcall ThreadProc( void* arg )
 {
 	WptHook * wpthook = (WptHook *)arg;
@@ -95,31 +132,14 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
   ATLTRACE2(_T("[wpthook] WptHookWindowProc()\n"));
 	LRESULT ret = 0;
 
-  switch (uMsg){
-    case WPT_INIT:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_INIT\n"));
-        break;
+  bool handled = false;
 
-    case WPT_START:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_START\n"));
-        break;
+  if (global_hook)
+    handled = global_hook->OnMessage(uMsg);
 
-    case WPT_STOP:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_STOP\n"));
-        break;
+  if (!handled)
+    ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
 
-    case WPT_ON_NAVIGATE:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_NAVIGATE\n"));
-        break;
-
-    case WPT_ON_LOAD:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
-        break;
-
-    default:
-	      ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
-  }
-	
 	return ret;
 }
 
@@ -127,6 +147,9 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 -----------------------------------------------------------------------------*/
 void WptHook::BackgroundThread(){
   ATLTRACE2(_T("[wpthook] BackgroundThread()\n"));
+
+  // connect to the server
+  _driver.Connect();
 
   // create a hidden window for processing messages from wptdriver
 	WNDCLASS wndClass;

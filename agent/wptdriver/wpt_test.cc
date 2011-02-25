@@ -194,3 +194,45 @@ CStringA WptTest::JSONEscape(CString src)
   dest.Replace("\f", "\\f");
   return dest;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptTest::GetNextTask(CStringA& task, bool& record){
+  bool ret = true;
+
+  if( _url.GetLength() ){
+    task = EncodeTask(_T("navigate"), _url, _T(""));
+    _url.Empty();
+    record = true;
+  } else {
+    ret = false;
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Create a JSON-encoded version of the task
+-----------------------------------------------------------------------------*/
+CStringA WptTest::EncodeTask(CString action, CString target, CString value){
+  CStringA json = "{";
+  CStringA buff;
+
+  if (action.GetLength()){
+    buff.Format("\"action\":\"%s\"", (LPCSTR)JSONEscape(action));
+    json += buff;
+  }
+
+  if (target.GetLength()){
+    buff.Format(",\"target\":\"%s\"", (LPCSTR)JSONEscape(target));
+    json += buff;
+  }
+
+  if (value.GetLength()){
+    buff.Format(",\"value\":\"%s\"", (LPCSTR)JSONEscape(value));
+    json += buff;
+  }
+
+  json += _T("}");
+  return json;
+}

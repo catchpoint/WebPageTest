@@ -107,25 +107,31 @@ void TestServer::MongooseCallback(enum mg_event event,
     if (strcmp(request_info->uri, "/get_test") == 0) {
       if (_test){
         _status.Set(_T("Running test in browser..."));
-        _hook.Start();
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
                     _test->ToJSON());
       }else{
         SendResponse(conn, request_info, RESPONSE_ERROR_NO_TEST, 
                     RESPONSE_ERROR_NO_TEST_STR, "");
       }
-    } else if (strcmp(request_info->uri, "/test_result") == 0) {
-      if (_browser){
-        _status.Set(_T("Test complete, closing browser..."));
-        _browser->Close();
-        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/task") == 0) {
+      if (_test){
+        CStringA task;
+        bool record = false;
+        _test->GetNextTask(task, record);
+        if (record)
+          _hook.Start(false);
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
       }else{
-        SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 
-                    RESPONSE_ERROR_NOT_IMPLEMENTED_STR, "");
+        SendResponse(conn, request_info, RESPONSE_ERROR_NO_TEST, 
+                    RESPONSE_ERROR_NO_TEST_STR, "");
       }
-    } else if (strcmp(request_info->uri, "/on/load") == 0) {
+    } else if (strcmp(request_info->uri, "/event/load") == 0) {
       _status.Set(_T("onLoad - waiting for test to complete..."));
       _hook.OnLoad();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
+      _status.Set(_T("onNavigate - waiting for test to complete..."));
+      _hook.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through

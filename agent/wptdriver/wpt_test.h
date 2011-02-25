@@ -8,6 +8,7 @@ public:
   void  Reset(void);
   bool  Load(CString& test);
   CStringA ToJSON();
+  bool  GetNextTask(CStringA& task, bool& record);
 
   // overall test settings
   CString _id;
@@ -35,5 +36,6 @@ public:
 
 private:
   CStringA JSONEscape(CString src);
+  CStringA EncodeTask(CString action, CString target, CString value);
 };
 

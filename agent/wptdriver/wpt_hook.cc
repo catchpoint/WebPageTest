@@ -40,44 +40,73 @@ void WptHook::Disconnect(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-LRESULT WptHook::Start(){
-  LRESULT ret = -1;
+bool WptHook::Start(bool async){
+  bool ret = false;
 
-  if (_wpthook_window)
-    ret = SendMessage(_wpthook_window, WPT_START, 0, 0);
-
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-LRESULT WptHook::Stop(){
-  LRESULT ret = -1;
-
-  if (_wpthook_window)
-    ret = SendMessage(_wpthook_window, WPT_STOP, 0, 0);
+  if (_wpthook_window){
+    if( async )
+      ret = PostMessage(_wpthook_window, WPT_START, 0, 0) != 0;
+    else{
+      DWORD result;
+      ret = SendMessageTimeout(_wpthook_window, WPT_START, 0, 0, 
+                                SMTO_BLOCK, 10000, &result) != 0;
+    }
+  }
 
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-LRESULT WptHook::OnNavigate(){
-  LRESULT ret = -1;
+bool WptHook::Stop(bool async){
+  bool ret = false;
 
-  if (_wpthook_window)
-    ret = SendMessage(_wpthook_window, WPT_ON_NAVIGATE, 0, 0);
+  if (_wpthook_window){
+    if( async )
+      ret = PostMessage(_wpthook_window, WPT_STOP, 0, 0) != 0;
+    else{
+      DWORD result;
+      ret = SendMessageTimeout(_wpthook_window, WPT_STOP, 0, 0, 
+                                SMTO_BLOCK, 10000, &result) != 0;
+    }
+  }
 
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-LRESULT WptHook::OnLoad(){
-  LRESULT ret = -1;
+bool WptHook::OnNavigate(bool async){
+  bool ret = false;
 
-  if (_wpthook_window)
-    ret = SendMessage(_wpthook_window, WPT_ON_LOAD, 0, 0);
+  if (_wpthook_window){
+    if( async )
+      ret = PostMessage(_wpthook_window, WPT_ON_NAVIGATE, 0, 0) != 0;
+    else{
+      DWORD result;
+      ret = SendMessageTimeout(_wpthook_window, WPT_ON_NAVIGATE, 0, 0, 
+                                SMTO_BLOCK, 10000, &result) != 0;
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptHook::OnLoad(bool async){
+  bool ret = false;
+
+  if (_wpthook_window){
+    if( async )
+      ret = PostMessage(_wpthook_window, WPT_ON_LOAD, 0, 0) != 0;
+    else{
+      DWORD result;
+      ret = SendMessageTimeout(_wpthook_window, WPT_ON_LOAD, 0, 0, 
+                                SMTO_BLOCK, 10000, &result) != 0;
+    }
+  }
+
 
   return ret;
 }

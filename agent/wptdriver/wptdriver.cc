@@ -11,7 +11,7 @@ WptStatus * global_status = NULL;
 // Global Variables:
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
-const TCHAR * szWindowClass = _T("wptdriver");	// the main window class name
+const TCHAR * szWindowClass = _T("wptdriver_wnd");// the main window class name
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);

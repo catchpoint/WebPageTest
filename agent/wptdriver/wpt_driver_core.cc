@@ -1,6 +1,10 @@
 #include "StdAfx.h"
 #include "wpt_driver_core.h"
 #include "mongoose/mongoose.h"
+#include "../wpthook/window_messages.h"
+
+WptDriverCore * global_core = NULL;
+extern HINSTANCE hInst;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -8,24 +12,43 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   _status(status)
   ,_webpagetest(_settings, _status)
   ,_test_server(_settings, _status, _hook)
+  ,_browser(NULL)
   ,_exit(false)
-  ,_thread_handle(NULL){
+  ,_work_thread(NULL)
+  ,_message_thread(NULL)
+  ,_message_window(NULL){
+  global_core = this;
+  InitializeCriticalSection(&cs);
 }
 
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptDriverCore::~WptDriverCore(void){
+  global_core = NULL;
+  DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
   Stub entry point for the background work thread
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall ThreadProc( void* arg )
+static unsigned __stdcall WorkThreadProc( void* arg )
 {
   WptDriverCore * core = (WptDriverCore *)arg;
   if( core )
     core->WorkThread();
+    
+  return 0;
+}
+
+/*-----------------------------------------------------------------------------
+  Stub entry point for the background message thread
+-----------------------------------------------------------------------------*/
+static unsigned __stdcall MessageThreadProc( void* arg )
+{
+  WptDriverCore * core = (WptDriverCore *)arg;
+  if( core )
+    core->MessageThread();
     
   return 0;
 }
@@ -37,7 +60,9 @@ void WptDriverCore::Start(void){
 
   if( _settings.Load() ){
     // start a background thread to do all of the actual test management
-    _thread_handle = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+    _message_thread = (HANDLE)_beginthreadex(0, 0, ::MessageThreadProc, this, 
+                                              0, 0);
+    _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
   }else{
     _status.Set(_T("Error loading settings from wptdriver.ini"));
   }
@@ -49,10 +74,17 @@ void WptDriverCore::Stop(void){
   _status.Set(_T("Stopping..."));
 
   _exit = true;
-  if( _thread_handle ){
-    WaitForSingleObject(_thread_handle, EXIT_TIMEOUT);
-    CloseHandle(_thread_handle);
-    _thread_handle = NULL;
+  if (_work_thread) {
+    WaitForSingleObject(_work_thread, EXIT_TIMEOUT);
+    CloseHandle(_work_thread);
+    _work_thread = NULL;
+  }
+  if (_message_thread) {
+    if (_message_window)
+      PostMessage(_message_window, WM_QUIT, 0, 0);
+    WaitForSingleObject(_message_thread, EXIT_TIMEOUT);
+    CloseHandle(_message_thread);
+    _message_thread = NULL;
   }
 
   _status.Set(_T("Exiting..."));
@@ -78,27 +110,35 @@ void WptDriverCore::WorkThread(void){
     if( _webpagetest.GetTest(test) ){
       TestData data;
       _status.Set(_T("Launching browser..."));
-      WebBrowser browser(_settings, test, _status, _hook);
+
+      EnterCriticalSection(&cs);
+      _browser = new WebBrowser(_settings, test, _status, _hook);
 
       // configure the internal web server with information about the test
       _test_server.SetTest(&test);
-      _test_server.SetBrowser(&browser);
+      _test_server.SetBrowser(_browser);
+      LeaveCriticalSection(&cs);
 
       // loop over all of the test runs
       for (test._run = 1; test._run <= test._runs; test._run++){
         // Run the first view test
         test._clear_cache = true;
-        browser.RunAndWait();
+        _browser->RunAndWait();
 
         if( !test._fv_only ){
           // run the repeat view test
           test._clear_cache = false;
-          browser.RunAndWait();
+          _browser->RunAndWait();
         }
       }
 
+      EnterCriticalSection(&cs);
       _test_server.SetBrowser(NULL);
       _test_server.SetTest(NULL);
+
+      delete _browser;
+      _browser = NULL;
+      LeaveCriticalSection(&cs);
 
       bool uploaded = false;
       for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
@@ -114,3 +154,78 @@ void WptDriverCore::WorkThread(void){
 
   _test_server.Stop();
 }
+
+/*-----------------------------------------------------------------------------
+	WndProc for the messaging window
+-----------------------------------------------------------------------------*/
+static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg, 
+                                                  WPARAM wParam, LPARAM lParam)
+{
+  ATLTRACE2(_T("[wptdriver] WptDriverWindowProc()\n"));
+	LRESULT ret = 0;
+
+  bool handled = false;
+
+  if (global_core)
+    handled = global_core->OnMessage(uMsg);
+
+  if (!handled)
+    ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
+
+	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Background window and thread for processing messages from the hook dll
+-----------------------------------------------------------------------------*/
+void WptDriverCore::MessageThread(void){
+  ATLTRACE2(_T("[wpthook] MessageThread()\n"));
+
+  // create a hidden window for processing messages from wptdriver
+	WNDCLASS wndClass;
+	memset(&wndClass, 0, sizeof(wndClass));
+	wndClass.lpszClassName = wptdriver_window_class;
+	wndClass.lpfnWndProc = WptDriverWindowProc;
+	wndClass.hInstance = hInst;
+	if( RegisterClass(&wndClass) )
+	{
+		_message_window = CreateWindow(wptdriver_window_class, 
+                                    wptdriver_window_class, 
+                                    WS_POPUP, 0, 0, 0, 
+                                    0, NULL, NULL, hInst, NULL);
+		if( _message_window )
+		{
+      MSG msg;
+      BOOL bRet;
+      while ( (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0 ){
+        if (bRet != -1){
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+        }
+      }
+		}
+	}
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::OnMessage(UINT message){
+  bool ret = true;
+
+  switch (message){
+    case WPT_HOOK_DONE:
+        ATLTRACE2(_T("[wptdriver] OnMessage() - WPT_HOOK_DONE\n"));
+        EnterCriticalSection(&cs);
+        if (_browser)
+          _browser->Close();
+        LeaveCriticalSection(&cs);
+        break;
+
+    default:
+        ret = false;
+        break;
+  }
+
+  return ret;
+}
+

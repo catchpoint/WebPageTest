@@ -93,7 +93,7 @@
     <ClInclude Include="distorm\src\textdefs.h" />
     <ClInclude Include="distorm\src\wstring.h" />
     <ClInclude Include="distorm\src\x86defs.h" />
-    <ClInclude Include="GDIHook.h" />
+    <ClInclude Include="hook_gdi.h" />
     <ClInclude Include="NCodeHook\NCodeHook.h" />
     <ClInclude Include="NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="NCodeHook\NCodeHookItem.h" />
@@ -102,7 +102,8 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="window_messages.h" />
     <ClInclude Include="wpthook.h" />
-    <ClInclude Include="WsHook.h" />
+    <ClInclude Include="hook_winsock.h" />
+    <ClInclude Include="wpt_driver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="distorm\include\mnemonics.c">
@@ -153,7 +154,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="GDIHook.cpp" />
+    <ClCompile Include="hook_gdi.cc" />
     <ClCompile Include="NCodeHook\NCodeHook.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -167,7 +168,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="wpthook.cc" />
-    <ClCompile Include="WsHook.cpp" />
+    <ClCompile Include="hook_winsock.cc" />
+    <ClCompile Include="wpt_driver.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

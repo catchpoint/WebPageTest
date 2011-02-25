@@ -1,6 +1,7 @@
 #pragma once
-#include "WsHook.h"
-#include "GDIHook.h"
+#include "hook_winsock.h"
+#include "hook_gdi.h"
+#include "wpt_driver.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
 
@@ -12,10 +13,12 @@ public:
 
   void Init();
   void BackgroundThread();
+  bool OnMessage(UINT message);
 
 private:
   CGDIHook  _gdi_hook;
   CWsHook   _winsock_hook;
   HANDLE    _background_thread;
   HWND      _message_window;
+  WptDriver _driver;
 };

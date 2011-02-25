@@ -25,24 +25,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "StdAfx.h"
-#include "GDIHook.h"
+#include "hook_gdi.h"
 
 static CGDIHook * pHook = NULL;
-
-void GDIInstallHooks(void)
-{
-  if( !pHook )
-    pHook = new CGDIHook();
-}
-
-void GDIRemoveHooks(void)
-{
-  if( pHook )
-  {
-    delete pHook;
-    pHook = NULL;
-  }
-}
 
 
 /******************************************************************************
