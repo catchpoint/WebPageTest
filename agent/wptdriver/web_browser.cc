@@ -67,11 +67,7 @@ bool WebBrowser::RunAndWait(){
             InstallHook(pi.dwThreadId);
         }
 
-        // ok, let the browser continue running
-        ResumeThread(pi.hThread);
         CloseHandle(pi.hThread);
-
-        _hook.Connect();
       }
       LeaveCriticalSection(&cs);
 

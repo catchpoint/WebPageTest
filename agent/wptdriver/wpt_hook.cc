@@ -43,6 +43,9 @@ void WptHook::Disconnect(){
 bool WptHook::Start(bool async){
   bool ret = false;
 
+  if (!_wpthook_window)
+    Connect();
+
   if (_wpthook_window){
     if( async )
       ret = PostMessage(_wpthook_window, WPT_START, 0, 0) != 0;
@@ -60,6 +63,9 @@ bool WptHook::Start(bool async){
 -----------------------------------------------------------------------------*/
 bool WptHook::Stop(bool async){
   bool ret = false;
+
+  if (!_wpthook_window)
+    Connect();
 
   if (_wpthook_window){
     if( async )
@@ -79,6 +85,9 @@ bool WptHook::Stop(bool async){
 bool WptHook::OnNavigate(bool async){
   bool ret = false;
 
+  if (!_wpthook_window)
+    Connect();
+
   if (_wpthook_window){
     if( async )
       ret = PostMessage(_wpthook_window, WPT_ON_NAVIGATE, 0, 0) != 0;
@@ -97,6 +106,9 @@ bool WptHook::OnNavigate(bool async){
 bool WptHook::OnLoad(bool async){
   bool ret = false;
 
+  if (!_wpthook_window)
+    Connect();
+
   if (_wpthook_window){
     if( async )
       ret = PostMessage(_wpthook_window, WPT_ON_LOAD, 0, 0) != 0;
@@ -106,7 +118,6 @@ bool WptHook::OnLoad(bool async){
                                 SMTO_BLOCK, 10000, &result) != 0;
     }
   }
-
 
   return ret;
 }
