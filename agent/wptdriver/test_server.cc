@@ -58,6 +58,7 @@ bool TestServer::Start(void){
 
   static const char *options[] = {
     "listening_ports", "127.0.0.1:8888",
+    "num_threads", "5",
     NULL
   };
 
@@ -127,7 +128,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       }
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       _status.Set(_T("onLoad - waiting for test to complete..."));
-      _hook.OnLoad();
+      _hook.OnLoad(false);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _status.Set(_T("onNavigate - waiting for test to complete..."));

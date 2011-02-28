@@ -59,6 +59,10 @@ void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
 
   if( _settings.Load() ){
+
+    // boost our priority
+    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+
     // start a background thread to do all of the actual test management
     _message_thread = (HANDLE)_beginthreadex(0, 0, ::MessageThreadProc, this, 
                                               0, 0);
@@ -156,13 +160,13 @@ void WptDriverCore::WorkThread(void){
 }
 
 /*-----------------------------------------------------------------------------
-	WndProc for the messaging window
+  WndProc for the messaging window
 -----------------------------------------------------------------------------*/
 static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg, 
                                                   WPARAM wParam, LPARAM lParam)
 {
   ATLTRACE2(_T("[wptdriver] WptDriverWindowProc()\n"));
-	LRESULT ret = 0;
+  LRESULT ret = 0;
 
   bool handled = false;
 
@@ -172,7 +176,7 @@ static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg,
   if (!handled)
     ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
 
-	return ret;
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -182,19 +186,19 @@ void WptDriverCore::MessageThread(void){
   ATLTRACE2(_T("[wpthook] MessageThread()\n"));
 
   // create a hidden window for processing messages from wptdriver
-	WNDCLASS wndClass;
-	memset(&wndClass, 0, sizeof(wndClass));
-	wndClass.lpszClassName = wptdriver_window_class;
-	wndClass.lpfnWndProc = WptDriverWindowProc;
-	wndClass.hInstance = hInst;
-	if( RegisterClass(&wndClass) )
-	{
-		_message_window = CreateWindow(wptdriver_window_class, 
+  WNDCLASS wndClass;
+  memset(&wndClass, 0, sizeof(wndClass));
+  wndClass.lpszClassName = wptdriver_window_class;
+  wndClass.lpfnWndProc = WptDriverWindowProc;
+  wndClass.hInstance = hInst;
+  if( RegisterClass(&wndClass) )
+  {
+    _message_window = CreateWindow(wptdriver_window_class, 
                                     wptdriver_window_class, 
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, hInst, NULL);
-		if( _message_window )
-		{
+    if( _message_window )
+    {
       MSG msg;
       BOOL bRet;
       while ( (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0 ){
@@ -203,8 +207,8 @@ void WptDriverCore::MessageThread(void){
           DispatchMessage(&msg);
         }
       }
-		}
-	}
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

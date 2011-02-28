@@ -19,42 +19,36 @@ function wptExecuteTask(task){
 
 // get the next task from the wptdriver
 function wptGetTask(){
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "http://127.0.0.1:8888/task", true);
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState == 4) {
-	  var resp = JSON.parse(xhr.responseText);
-	  if (resp.statusCode == 200)
-		wptExecuteTask(resp.data);
+  try{
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://127.0.0.1:8888/task", true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+	    var resp = JSON.parse(xhr.responseText);
+	    if (resp.statusCode == 200)
+          wptExecuteTask(resp.data);
+      }
     }
-  }
-  xhr.send();
+    xhr.send();
+  }catch(err){}
 }
 
 // notification that navigation started
 function wptOnNavigate(){
-  var d = new Date();
-  g_start = d.getTime();
-
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
-  xhr.send();
+  try{
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
+    xhr.send();
+  }catch(err){}
 }
 
 // notification that the page loaded
 function wptOnLoad(){
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "http://127.0.0.1:8888/event/load", true);
-  xhr.send();
-
-  var d = new Date();
-  var end = d.getTime();
-  if (g_start != 0){
-	var elapsed = end - g_start;
-	alert("Page Load time: " + elapsed + "ms");
-  } else {
-    alert("Start not set");
-  }
+  try{
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://127.0.0.1:8888/event/load", true);
+    xhr.send();
+  }catch(err){}
 }
 
 // if we start up on about:blank, try connecting to the wptdriver for work

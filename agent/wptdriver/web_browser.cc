@@ -50,6 +50,7 @@ bool WebBrowser::RunAndWait(){
       if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, 0, 
                         NULL, NULL, &si, &pi)){
         _browser_process = pi.hProcess;
+        SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
 
         // let the browser start pumping messages, otherwise our hook won't 
         // install
