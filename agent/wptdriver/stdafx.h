@@ -21,6 +21,8 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 
+#include <in6addr.h>
+
 // shared internal includes
 #include "test_data.h"
 #include "wpt_status.h"

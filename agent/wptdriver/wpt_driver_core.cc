@@ -3,6 +3,9 @@
 #include "mongoose/mongoose.h"
 #include "../wpthook/window_messages.h"
 
+const int pipeIn = 1;
+const int pipeOut = 2;
+
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
 
@@ -112,6 +115,10 @@ void WptDriverCore::WorkThread(void){
 
     WptTest test;
     if( _webpagetest.GetTest(test) ){
+	  // Setup network throttling.
+	  _status.Set(_T("Setting up network throttling..."));
+	  ConfigureIpfw(test);
+	  
       TestData data;
       _status.Set(_T("Launching browser..."));
 
@@ -150,6 +157,9 @@ void WptDriverCore::WorkThread(void){
         if( !uploaded )
           Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
+
+	  // Reset the network throttling at the end of the test.
+	  ResetIpfw();
     }else{
       _status.Set(_T("Waiting for work..."));
       Sleep(_settings._polling_delay * SECONDS_TO_MS);
@@ -158,6 +168,50 @@ void WptDriverCore::WorkThread(void){
 
   _test_server.Stop();
 }
+
+/*-----------------------------------------------------------------------------
+	Set up bandwidth throttling
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::ConfigureIpfw(WptTest& test)
+{
+	bool ret = false;
+	if( test._bwIn && test._bwOut )
+	{
+		// split the latency across directions
+		DWORD latency = test._latency / 2;
+
+		CString buff;
+		buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, %d ms latency, %0.2f plr"), test._bwIn, test._bwOut, test._latency, test._plr );
+		OutputDebugString(buff);
+
+		// create the inbound pipe
+		if( _ipfw.CreatePipe(pipeIn, test._bwIn * 1000, latency, test._plr / 100.0) )
+		{
+			// make up for odd values
+			if( test._latency % 2 )
+				latency++;
+
+			// create the outbound pipe
+			if( _ipfw.CreatePipe(pipeOut, test._bwOut * 1000, latency, test._plr / 100.0) )
+				ret = true;
+			else
+				_ipfw.CreatePipe(pipeIn, 0, 0, 0);
+		}
+	}
+	else
+		ret = true;
+	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+	Remove the bandwidth throttling
+-----------------------------------------------------------------------------*/
+void WptDriverCore::ResetIpfw(void)
+{
+	_ipfw.CreatePipe(pipeIn, 0, 0, 0);
+	_ipfw.CreatePipe(pipeOut, 0, 0, 0);
+}
+
 
 /*-----------------------------------------------------------------------------
   WndProc for the messaging window
