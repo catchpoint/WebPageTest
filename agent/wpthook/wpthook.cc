@@ -11,6 +11,7 @@ WptHook * global_hook = NULL;
 
 extern "C" {
 __declspec( dllexport ) void WINAPI InstallHook(DWORD thread_id);
+__declspec( dllexport ) void WINAPI SetResultsFileBase(const WCHAR * file_base);
 }
 
 /*-----------------------------------------------------------------------------
@@ -56,12 +57,20 @@ void WINAPI InstallHook(DWORD thread_id){
 }
 
 /*-----------------------------------------------------------------------------
+  Set the base file name to use for results files
+-----------------------------------------------------------------------------*/
+void WINAPI SetResultsFileBase(const WCHAR * file_base){
+  lstrcpyW(shared_results_file_base, file_base);
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
   ,_winsock_hook(_dns, _sockets){
   _start.QuadPart = 0;
+  _file_base = shared_results_file_base;
 }
 
 /*-----------------------------------------------------------------------------

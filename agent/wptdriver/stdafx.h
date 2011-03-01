@@ -20,8 +20,8 @@
 
 #include <atlstr.h>
 #include <atlcoll.h>
-
 #include <in6addr.h>
+#include "../wpthook/wpthook_dll.h"
 
 // shared internal includes
 #include "test_data.h"

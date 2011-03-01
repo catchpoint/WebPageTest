@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptdriver", "agent\wptdriver\wptdriver.vcxproj", "{54B58196-81BB-4572-8CFA-EED91F6A96CB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7DE37929-A397-4C9D-97CE-8800091BCB9D} = {7DE37929-A397-4C9D-97CE-8800091BCB9D}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wpthook", "agent\wpthook\wpthook.vcxproj", "{7DE37929-A397-4C9D-97CE-8800091BCB9D}"
 EndProject

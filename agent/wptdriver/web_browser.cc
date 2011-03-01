@@ -33,7 +33,7 @@ bool WebBrowser::RunAndWait(){
       HMODULE hook_dll = NULL;
       TCHAR cmdLine[MAX_PATH + 100];
       lstrcpy( cmdLine, CString(_T("\"")) + _settings._browser_chrome + 
-          _T("\" --new-window --no-first-run about:blank") );
+          _T("\" --new-window --no-proxy-server --no-first-run about:blank") );
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
@@ -55,18 +55,7 @@ bool WebBrowser::RunAndWait(){
         // let the browser start pumping messages, otherwise our hook won't 
         // install
         WaitForInputIdle(pi.hProcess, 10000);
-
-        TCHAR hook_dll_path[MAX_PATH];
-        GetModuleFileName(NULL, hook_dll_path, _countof(hook_dll_path));
-        lstrcpy( PathFindFileName(hook_dll_path), _T("wpthook.dll") );
-        hook_dll = LoadLibrary(hook_dll_path);
-        if (hook_dll) {
-          LPINSTALLHOOK InstallHook = (LPINSTALLHOOK)GetProcAddress(hook_dll,
-                                                          "_InstallHook@4");
-          if (InstallHook)
-            InstallHook(pi.dwThreadId);
-        }
-
+        InstallHook(pi.dwThreadId);
         CloseHandle(pi.hThread);
       }
       LeaveCriticalSection(&cs);
@@ -111,7 +100,7 @@ bool WebBrowser::Close(){
   if( _browser_process ){
     DWORD browser_process_id = GetProcessId(_browser_process);
     HWND wnd = ::GetDesktopWindow();
-		wnd = ::GetWindow(wnd, GW_CHILD);
+    wnd = ::GetWindow(wnd, GW_CHILD);
     while ( wnd )
     {
       DWORD pid;

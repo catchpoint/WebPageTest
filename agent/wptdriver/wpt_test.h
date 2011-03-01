@@ -35,6 +35,7 @@ public:
 
   // overall test settings
   CString _id;
+  CString _file_base;
   CString _url;
   int     _runs;
   bool    _fv_only;

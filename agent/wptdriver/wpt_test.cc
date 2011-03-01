@@ -204,6 +204,10 @@ bool WptTest::Start(){
   // build up a new script
   _script_commands.RemoveAll();
 
+  // set up the base file name
+  _file_base = _T("");
+  SetResultsFileBase(_file_base);
+
   // just support URL navigating right now
   if (_url.GetLength()){
     ScriptCommand command;

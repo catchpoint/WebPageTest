@@ -143,6 +143,20 @@ int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   return ret;
 }
 
+int WSAAPI WSASend_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
+              LPDWORD lpNumberOfBytesSent, DWORD dwFlags, 
+              LPWSAOVERLAPPED lpOverlapped,
+              LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+{
+  int ret = SOCKET_ERROR;
+  __try{
+    if( pHook )
+      ret = pHook->WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, 
+                           dwFlags, lpOverlapped, lpCompletionRoutine);
+  }__except(1){}
+  return ret;
+}
+
 /******************************************************************************
 *******************************************************************************
 **													                                    						 **
@@ -162,6 +176,8 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets):
   if (!pHook)
     pHook = this;
 
+  dns_override.InitHashTable(257);
+
   InitializeCriticalSection(&cs);
 
   // install the code hooks
@@ -177,6 +193,7 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets):
   _FreeAddrInfoW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoW", 
                                                            FreeAddrInfoW_Hook);
   _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
+  _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if( !_GetAddrInfoW )
@@ -310,10 +327,22 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags)
   return ret;
 }
 
-typedef struct {
-  ADDRINFOA			info;
-  struct sockaddr_in	addr; 
-} ADDRINFOA_ADDR;
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
+              LPDWORD lpNumberOfBytesSent, DWORD dwFlags, 
+              LPWSAOVERLAPPED lpOverlapped,
+              LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
+  int ret = SOCKET_ERROR;
+
+  ATLTRACE2(_T("[wpthook] CWsHook::WSASend\n"));
+
+  if( _WSASend )
+    ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+                    dwFlags, lpOverlapped, lpCompletionRoutine);
+
+  return ret;
+}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -323,17 +352,14 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
   int ret = WSAEINVAL;
   bool overrideDNS = false;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::getaddrinfo\n"));
   void * context = NULL;
   CString name = CA2T(pNodeName);
-/*
-  CAtlArray<DWORD> addresses;
-  if( dlg )
-    overrideDNS = dlg->DnsLookupStart( name, context, addresses );
-*/
+  CAtlArray<ADDRINFOA_ADDR> addresses;
+  bool override_dns = _dns.LookupStart( name, context, addresses );
+
   if( _getaddrinfo && !overrideDNS )
     ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
-/*  else if( overrideDNS )
+  else if( overrideDNS )
   {
     if( addresses.IsEmpty() )
       ret = EAI_NONAME;
@@ -343,48 +369,36 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
       ret = 0;
       DWORD count = addresses.GetCount();
 
-      ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR) * count);
+      ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
+                                                          * count);
       for( DWORD i = 0; i < count; i++ )
       {
-        memset( &result[i], 0, sizeof(ADDRINFOA_ADDR) );
-        result->info.ai_family = AF_INET;
-        result->info.ai_addrlen = sizeof(struct sockaddr_in);
-        result->info.ai_addr = (struct sockaddr *)&(result->addr);
-        result->addr.sin_family = AF_INET;
-        result->addr.sin_addr.S_un.S_addr = addresses[i];
+        memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
         if( i < count - 1 )
           result->info.ai_next = (PADDRINFOA)&result[i+1];
+        else
+          result->info.ai_next = NULL;
       }
-      addrInfo.AddTail(result);
+      dns_override.SetAt(result, result);
 
       *ppResult = (PADDRINFOA)result;
     }
   }
 
-  if( !ret && dlg && context )
+  if( !ret )
   {
     PADDRINFOA addr = *ppResult;
     while( addr )
     {
-      if( addr->ai_addrlen >= sizeof(struct sockaddr_in) && addr->ai_family == AF_INET )
-      {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        dlg->DnsLookupAddress(context, ipName->sin_addr);
-      }
-
+      _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
 
-    dlg->DnsLookupDone(context);
+    _dns.LookupDone(context);
   }
-*/
+
   return ret;
 }
-
-typedef struct {
-  ADDRINFOW			info;
-  struct sockaddr_in	addr; 
-} ADDRINFOW_ADDR;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -394,19 +408,14 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
   int ret = WSAEINVAL;
   bool overrideDNS = false;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::GetAddrInfoW\n"));
-
   void * context = NULL;
   CString name = CW2T(pNodeName);
-/*
-  CAtlArray<DWORD> addresses;
-  if( dlg && pNodeName )
-    overrideDNS = dlg->DnsLookupStart( name, context, addresses );
-*/
+  CAtlArray<ADDRINFOA_ADDR> addresses;
+  bool override_dns = _dns.LookupStart( name, context, addresses );
 
   if( _GetAddrInfoW && !overrideDNS )
     ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
-/*  else if( overrideDNS )
+  else if( overrideDNS )
   {
     if( addresses.IsEmpty() )
       ret = EAI_NONAME;
@@ -416,42 +425,33 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
       ret = 0;
       DWORD count = addresses.GetCount();
 
-      ADDRINFOW_ADDR * result = (ADDRINFOW_ADDR *)malloc(sizeof(ADDRINFOW_ADDR) * count);
+      ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
+                                                            * count);
       for( DWORD i = 0; i < count; i++ )
       {
-        memset( &result[i], 0, sizeof(ADDRINFOW_ADDR) );
-        result->info.ai_family = AF_INET;
-        result->info.ai_addrlen = sizeof(struct sockaddr_in);
-        result->info.ai_addr = (struct sockaddr *)&(result->addr);
-        result->addr.sin_family = AF_INET;
-        result->addr.sin_addr.S_un.S_addr = addresses[i];
+        memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
         if( i < count - 1 )
-          result->info.ai_next = (PADDRINFOW)&result[i+1];
+          result->info.ai_next = (PADDRINFOA)&result[i+1];
+        else
+          result->info.ai_next = NULL;
       }
-      addrInfo.AddTail(result);
+      dns_override.SetAt(result, result);
 
       *ppResult = (PADDRINFOW)result;
     }
   }
 
-  if( !ret && dlg && context )
+  if( !ret )
   {
-    PADDRINFOW addr = *ppResult;
+    PADDRINFOA addr = (PADDRINFOA)*ppResult;
     while( addr )
     {
-      if( addr->ai_addrlen >= sizeof(struct sockaddr_in) && addr->ai_family == AF_INET )
-      {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        dlg->DnsLookupAddress(context, ipName->sin_addr);
-      }
-
+      _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
 
-    dlg->DnsLookupDone(context);
+    _dns.LookupDone(context);
   }
-*/
-
   return ret;
 }
 
@@ -460,23 +460,12 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 -----------------------------------------------------------------------------*/
 void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo)
 {
-  ATLTRACE2(_T("[wpthook] CWsHook::freeaddrinfo\n"));
-
-  PADDRINFOA * mem = NULL;
-/*  EnterCriticalSection(&cs);
-  POSITION pos = addrInfo.GetHeadPosition();
-  while( !mem && pos )
-  {
-    POSITION oldPos = pos;
-    void * pAddr = addrInfo.GetNext(pos);
-    if( pAddr == pAddrInfo )
-    {
-      mem = (PADDRINFOA *)pAddr;
-      addrInfo.RemoveAt(oldPos);
-    }
-  }
+  void * mem = NULL;
+  EnterCriticalSection(&cs);
+  if (dns_override.Lookup(pAddrInfo, mem))
+    dns_override.RemoveKey(pAddrInfo);
   LeaveCriticalSection(&cs);
-*/
+
   if( mem )
     free(mem);
   else if(_freeaddrinfo)
@@ -488,23 +477,12 @@ void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo)
 -----------------------------------------------------------------------------*/
 void CWsHook::FreeAddrInfoW(PADDRINFOW pAddrInfo)
 {
-  ATLTRACE2(_T("[wpthook] CWsHook::FreeAddrInfoW\n"));
-
-  PADDRINFOW * mem = NULL;
-/*  EnterCriticalSection(&cs);
-  POSITION pos = addrInfo.GetHeadPosition();
-  while( !mem && pos )
-  {
-    POSITION oldPos = pos;
-    void * pAddr = addrInfo.GetNext(pos);
-    if( pAddr == pAddrInfo )
-    {
-      mem = (PADDRINFOW *)pAddr;
-      addrInfo.RemoveAt(oldPos);
-    }
-  }
+  void * mem = NULL;
+  EnterCriticalSection(&cs);
+  if (dns_override.Lookup(pAddrInfo, mem))
+    dns_override.RemoveKey(pAddrInfo);
   LeaveCriticalSection(&cs);
-*/
+
   if( mem )
     free(mem);
   else if(_FreeAddrInfoW)

@@ -57,11 +57,16 @@ public:
                 LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, 
                 LPWSAOVERLAPPED lpOverlapped, 
                 LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+  int   WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
+                LPDWORD lpNumberOfBytesSent, DWORD dwFlags, 
+                LPWSAOVERLAPPED lpOverlapped,
+                LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 private:
   NCodeHookIA32		  hook;
   CRITICAL_SECTION	cs;
-  CAtlList<void *>	addrInfo;
+  CAtlMap<void *, void *>	dns_override; // addresses that WE have alocated 
+                                        // in case of DNS overrides
 
   // winsock event tracking
   TrackDns&      _dns;
@@ -78,4 +83,5 @@ private:
   LPFN_FREEADDRINFO	  _freeaddrinfo;
   LPFN_FREEADDRINFOW	_FreeAddrInfoW;
   LPFN_WSARECV		    _WSARecv;
+  LPFN_WSASEND        _WSASend;
 };
