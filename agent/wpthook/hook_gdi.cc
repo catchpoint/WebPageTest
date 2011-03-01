@@ -122,7 +122,7 @@ BOOL CGDIHook::RedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
 {
   BOOL ret = FALSE;
 
-  ATLTRACE2(_T("[wpthook] CGDIHook::RedrawWindow\n"));
+//  ATLTRACE2(_T("[wpthook] CGDIHook::RedrawWindow\n"));
 
   if( _RedrawWindow )
     ret = _RedrawWindow( hWnd, lprcUpdate, hrgnUpdate, flags );
@@ -151,7 +151,7 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc,
 {
   BOOL ret = FALSE;
 
-  ATLTRACE2(_T("[wpthook] CGDIHook::BitBlt\n"));
+//  ATLTRACE2(_T("[wpthook] CGDIHook::BitBlt\n"));
 
   if( _BitBlt )
     ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
@@ -172,7 +172,7 @@ HDC	CGDIHook::BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 {
   HDC ret = NULL;
 
-  ATLTRACE2(_T("[wpthook] CGDIHook::BeginPaint\n"));
+//  ATLTRACE2(_T("[wpthook] CGDIHook::BeginPaint\n"));
 /*
   if( dlg )
     dlg->OnBeginPaint(hWnd);
@@ -189,7 +189,7 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
   BOOL ret = FALSE;
 
-  ATLTRACE2(_T("[wpthook] CGDIHook::EndPaint\n"));
+//  ATLTRACE2(_T("[wpthook] CGDIHook::EndPaint\n"));
 
   if( _EndPaint )
     ret = _EndPaint(hWnd, lpPaint);

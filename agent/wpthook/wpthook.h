@@ -22,4 +22,8 @@ private:
   HWND      _message_window;
   WptDriver _driver;
   LARGE_INTEGER _start;
+
+  // winsock event tracking
+  TrackDns      _dns;
+  TrackSockets  _sockets;
 };

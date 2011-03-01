@@ -32,7 +32,7 @@ function GetTestStatus($id)
                 $ret['location'] = $test['test']['loc'];
 
             // Ignore the cancelled tests.
-            if( is_file("$testPath/testinfo.json") )
+            if( gz_is_file("$testPath/testinfo.json") )
             {
               $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
               if( isset($testInfoJson['cancelled']) )

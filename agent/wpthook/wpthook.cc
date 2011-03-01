@@ -59,7 +59,8 @@ void WINAPI InstallHook(DWORD thread_id){
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
   _background_thread(NULL)
-  ,_message_window(NULL){
+  ,_message_window(NULL)
+  ,_winsock_hook(_dns, _sockets){
   _start.QuadPart = 0;
 }
 

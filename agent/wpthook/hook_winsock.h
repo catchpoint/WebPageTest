@@ -31,14 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include "ncodehook/NCodeHookInstantiation.h"
-
-void WinsockInstallHooks(void);
-void WinsockRemoveHooks(void);
+#include "track_dns.h"
+#include "track_sockets.h"
 
 class CWsHook
 {
 public:
-  CWsHook(void);
+  CWsHook(TrackDns& dns, TrackSockets& sockets);
   virtual ~CWsHook(void);
 
   // straight winsock hooks
@@ -46,7 +45,6 @@ public:
                    LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags);
   int		closesocket(SOCKET s);
   int		connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namelen);
-  int		bind(SOCKET s, const struct sockaddr FAR * name, IN int namelen);
   int		recv(SOCKET s, char FAR * buf, int len, int flags);
   int		send(SOCKET s, const char FAR * buf, int len, int flags);
   int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
@@ -65,10 +63,14 @@ private:
   CRITICAL_SECTION	cs;
   CAtlList<void *>	addrInfo;
 
+  // winsock event tracking
+  TrackDns&      _dns;
+  TrackSockets&  _sockets;
+
+  // pointers to the original implementations
   LPFN_WSASOCKETW		  _WSASocketW;
   LPFN_CLOSESOCKET	  _closesocket;
   LPFN_CONNECT		    _connect;
-  LPFN_BIND			      _bind;
   LPFN_RECV			      _recv;
   LPFN_SEND			      _send;
   LPFN_GETADDRINFO	  _getaddrinfo;

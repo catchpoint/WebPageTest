@@ -71,17 +71,6 @@ int WSAAPI connect_Hook(IN SOCKET s, const struct sockaddr FAR * name,
   return ret;
 }
 
-int WSAAPI bind_Hook(SOCKET s, const struct sockaddr FAR * name, 
-                                                                IN int namelen)
-{
-  int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->bind(s, name, namelen);
-  }__except(1){}
-  return ret;
-}
-
 int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
@@ -164,9 +153,11 @@ int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CWsHook::CWsHook(void):
+CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets):
   _getaddrinfo(NULL)
   , _freeaddrinfo(NULL)
+  , _dns(dns)
+  , _sockets(sockets)
 {
   if (!pHook)
     pHook = this;
@@ -179,7 +170,6 @@ CWsHook::CWsHook(void):
   _closesocket = hook.createHookByName("ws2_32.dll", "closesocket", 
                                                              closesocket_Hook);
   _connect = hook.createHookByName("ws2_32.dll", "connect", connect_Hook);
-  _bind = hook.createHookByName("ws2_32.dll", "bind", bind_Hook);
   _recv = hook.createHookByName("ws2_32.dll", "recv", recv_Hook);
   _send = hook.createHookByName("ws2_32.dll", "send", send_Hook);
   _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
@@ -214,16 +204,12 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 {
   SOCKET ret = INVALID_SOCKET;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::WSASocketW\n"));
-
   if( _WSASocketW )
   {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
 
-/*
-    if( ret != INVALID_SOCKET && dlg )
-      dlg->NewSocket(ret);
-*/
+    if( ret != INVALID_SOCKET )
+      _sockets.Create(ret);
   }
 
   return ret;
@@ -235,11 +221,7 @@ int CWsHook::closesocket(SOCKET s)
 {
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::WSASocketW\n"));
-/*
-  if( dlg )
-    dlg->CloseSocket(s);
-*/
+  _sockets.Close(s);
   if( _closesocket )
     ret = _closesocket(s);
 
@@ -253,38 +235,9 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
 {
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::connect\n"));
-/*
-  // we only care about IP sockets at this point
-  if( dlg && namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET)
-  {
-    struct sockaddr_in * ipName = (struct sockaddr_in *)name;
-    dlg->SocketConnect(s, ipName);
-  }
-*/
+  _sockets.Connect(s, name, namelen);
   if( _connect )
     ret = _connect(s, name, namelen);
-
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-int	CWsHook::bind(SOCKET s, const struct sockaddr FAR * name, IN int namelen)
-{
-  int ret = SOCKET_ERROR;
-
-  ATLTRACE2(_T("[wpthook] CWsHook::bind\n"));
-/*
-  // we only care about IP sockets at this point
-  if( dlg && namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET)
-  {
-    struct sockaddr_in * ipName = (struct sockaddr_in *)name;
-    dlg->SocketBind(s, ipName);
-  }
-*/
-  if( _bind )
-    ret = _bind(s, name, namelen);
 
   return ret;
 }

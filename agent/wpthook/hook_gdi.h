@@ -49,9 +49,6 @@ typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 **																			                                     **
 *******************************************************************************
 ******************************************************************************/
-void GDIInstallHooks(void);
-void GDIRemoveHooks(void);
-
 class CGDIHook
 {
 public:
