@@ -167,12 +167,12 @@ int WSAAPI WSASend_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets):
+CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _getaddrinfo(NULL)
   , _freeaddrinfo(NULL)
   , _dns(dns)
   , _sockets(sockets)
-{
+  , _test_state(test_state){
   if (!pHook)
     pHook = this;
 
@@ -221,6 +221,8 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 {
   SOCKET ret = INVALID_SOCKET;
 
+  _test_state.ActivityDetected();
+
   if( _WSASocketW )
   {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
@@ -238,6 +240,8 @@ int CWsHook::closesocket(SOCKET s)
 {
   int ret = SOCKET_ERROR;
 
+  _test_state.ActivityDetected();
+
   _sockets.Close(s);
   if( _closesocket )
     ret = _closesocket(s);
@@ -252,9 +256,13 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
 {
   int ret = SOCKET_ERROR;
 
+  _test_state.ActivityDetected();
+
   _sockets.Connect(s, name, namelen);
   if( _connect )
     ret = _connect(s, name, namelen);
+
+  _test_state.ActivityDetected();
 
   return ret;
 }
@@ -265,7 +273,9 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::recv\n"));
+  ATLTRACE2(_T("[wpthook] (%d) CWsHook::recv\n"), GetCurrentThreadId());
+
+  _test_state.ActivityDetected();
 
   if( _recv )
     ret = _recv(s, buf, len, flags);
@@ -285,7 +295,9 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 {
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::WSARecv\n"));
+  ATLTRACE2(_T("[wpthook] (%d) CWsHook::WSARecv\n"), GetCurrentThreadId());
+
+  _test_state.ActivityDetected();
 
   if( _WSARecv )
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, lpOverlapped, lpCompletionRoutine);
@@ -316,7 +328,9 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::send\n"));
+  ATLTRACE2(_T("[wpthook] (%d) CWsHook::send\n"), GetCurrentThreadId());
+
+  _test_state.ActivityDetected();
 /*
   if( dlg && len )
     dlg->SocketSend(s, len, (LPBYTE)buf );
@@ -335,7 +349,9 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
   int ret = SOCKET_ERROR;
 
-  ATLTRACE2(_T("[wpthook] CWsHook::WSASend\n"));
+  ATLTRACE2(_T("[wpthook] (%d) CWsHook::WSASend\n"), GetCurrentThreadId());
+
+  _test_state.ActivityDetected();
 
   if( _WSASend )
     ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
@@ -351,6 +367,8 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
+
+  _test_state.ActivityDetected();
 
   void * context = NULL;
   CString name = CA2T(pNodeName);
@@ -397,6 +415,8 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
     _dns.LookupDone(context);
   }
 
+  _test_state.ActivityDetected();
+
   return ret;
 }
 
@@ -407,6 +427,8 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
+
+  _test_state.ActivityDetected();
 
   void * context = NULL;
   CString name = CW2T(pNodeName);
@@ -452,6 +474,9 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 
     _dns.LookupDone(context);
   }
+
+  _test_state.ActivityDetected();
+
   return ret;
 }
 

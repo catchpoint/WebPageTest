@@ -54,6 +54,7 @@ bool WptSettings::Load(void)
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"), 
                 _timeout, iniFile);
+  SetTestTimeout(_timeout * SECONDS_TO_MS);
 
   // load the path to the browsers (just support one of each for right now)
   if( GetPrivateProfileString(_T("browser"), _T("Chrome"), _T(""), buff, 

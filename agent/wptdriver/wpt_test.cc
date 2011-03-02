@@ -208,6 +208,9 @@ bool WptTest::Start(){
   _file_base = _T("");
   SetResultsFileBase(_file_base);
 
+  // pass settings on to the hook dll
+  SetForceDocComplete(_doc_complete);
+
   // just support URL navigating right now
   if (_url.GetLength()){
     ScriptCommand command;

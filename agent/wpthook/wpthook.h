@@ -13,7 +13,7 @@ public:
 
   void Init();
   void BackgroundThread();
-  bool OnMessage(UINT message);
+  bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
 private:
   CGDIHook  _gdi_hook;
@@ -21,10 +21,11 @@ private:
   HANDLE    _background_thread;
   HWND      _message_window;
   WptDriver _driver;
-  LARGE_INTEGER _start;
   CString   _file_base;
 
   // winsock event tracking
   TrackDns      _dns;
   TrackSockets  _sockets;
+
+  TestState     _test_state;
 };

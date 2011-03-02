@@ -9,9 +9,11 @@
 HINSTANCE global_dll_handle = NULL; // DLL handle
 WptHook * global_hook = NULL;
 
+const UINT_PTR TIMER_DONE = 1;
+const DWORD TIMER_DONE_INTERVAL = 100;
+
 extern "C" {
 __declspec( dllexport ) void WINAPI InstallHook(DWORD thread_id);
-__declspec( dllexport ) void WINAPI SetResultsFileBase(const WCHAR * file_base);
 }
 
 /*-----------------------------------------------------------------------------
@@ -57,19 +59,12 @@ void WINAPI InstallHook(DWORD thread_id){
 }
 
 /*-----------------------------------------------------------------------------
-  Set the base file name to use for results files
------------------------------------------------------------------------------*/
-void WINAPI SetResultsFileBase(const WCHAR * file_base){
-  lstrcpyW(shared_results_file_base, file_base);
-}
-
-/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
-  ,_winsock_hook(_dns, _sockets){
-  _start.QuadPart = 0;
+  ,_test_state(shared_test_timeout, shared_test_force_on_load)
+  ,_winsock_hook(_dns, _sockets, _test_state){
   _file_base = shared_results_file_base;
 }
 
@@ -80,7 +75,7 @@ WptHook::~WptHook(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WptHook::OnMessage(UINT message){
+bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam){
   bool ret = true;
 
   switch (message){
@@ -89,7 +84,9 @@ bool WptHook::OnMessage(UINT message){
         break;
 
     case WPT_START:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_START\n"));
+        _test_state.Start();
+        SetTimer(_message_window, TIMER_DONE, 
+                                TIMER_DONE_INTERVAL, NULL);
         break;
 
     case WPT_STOP:
@@ -97,29 +94,18 @@ bool WptHook::OnMessage(UINT message){
         break;
 
     case WPT_ON_NAVIGATE:
-        QueryPerformanceCounter(&_start);
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_NAVIGATE\n"));
+        _test_state.OnNavigate();
         break;
 
     case WPT_ON_LOAD:
-        if (_start.QuadPart){
-          LARGE_INTEGER end, freq;
-          QueryPerformanceCounter(&end);
-          QueryPerformanceFrequency(&freq);
-          freq.QuadPart /= 1000;
-          double elapsed = (double)(end.QuadPart - _start.QuadPart)
-                              / (double)freq.QuadPart;
-          CString buff;
-          buff.Format(_T("[wptdriver] - OnNavigate -> OnLoad = %0.3fms\n"), 
-                      elapsed);
-          OutputDebugString(buff);
-        }
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_ON_LOAD\n"));
-
-        // for now we just tell the server that we're done
-        Sleep(2000);
-        _driver.Done();
+        _test_state.OnLoad();
         break;
+
+    case WM_TIMER:
+        if( _test_state.IsDone() ){
+          KillTimer(_message_window, TIMER_DONE);
+          _driver.Done();
+        }
 
     default:
         ret = false;
@@ -160,7 +146,7 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
   bool handled = false;
 
   if (global_hook)
-    handled = global_hook->OnMessage(uMsg);
+    handled = global_hook->OnMessage(uMsg, wParam, lParam);
 
   if (!handled)
     ret = DefWindowProc(hwnd, uMsg, wParam, lParam);

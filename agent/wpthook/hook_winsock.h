@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CWsHook
 {
 public:
-  CWsHook(TrackDns& dns, TrackSockets& sockets);
+  CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state);
   virtual ~CWsHook(void);
 
   // straight winsock hooks
@@ -63,6 +63,7 @@ public:
                 LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 private:
+  TestState&        _test_state;
   NCodeHookIA32		  hook;
   CRITICAL_SECTION	cs;
   CAtlMap<void *, void *>	dns_override; // addresses that WE have alocated 

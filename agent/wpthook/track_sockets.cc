@@ -41,7 +41,8 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     struct sockaddr_in * ipName = (struct sockaddr_in *)name;
 
     if (ipName->sin_addr.S_un.S_addr != LOCALHOST){
-      ATLTRACE2(_T("[wpthook] Connecting Socket to %d.%d.%d.%d - 0x%08X\n"),
+      ATLTRACE2(_T("[wpthook] (%d) Connecting Socket to %d.%d.%d.%d - 0x%08X\n"),
+        GetCurrentThreadId(),
         ipName->sin_addr.S_un.S_un_b.s_b1, 
         ipName->sin_addr.S_un.S_un_b.s_b2, 
         ipName->sin_addr.S_un.S_un_b.s_b3, 

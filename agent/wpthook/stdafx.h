@@ -23,4 +23,5 @@
 #include <atlstr.h>
 #include <atlcoll.h>
 
+#include "test_state.h"
 #include "wpthook.h"
