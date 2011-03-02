@@ -114,7 +114,7 @@ BuildVideoScript($testPath, $videoPath);
                     if( isset($pageRunData) && isset($pageRunData['aft']) )
                         echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
-                    echo 'White = Static, Blue = Static (Late), Greet = AFT, Black = No Change, Red = Dynamic<br>';
+                    echo 'White = Stabilized Early, Blue = Dynamic, Red = Static (late - failed AFT), Greet = AFT<br>';
                     echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
                 }
                 

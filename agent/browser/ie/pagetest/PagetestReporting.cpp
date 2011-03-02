@@ -362,7 +362,7 @@ void CPagetestReporting::FlushResults(void)
             // calculate the above-the-fold time
             if( aft )
             {
-              CAFT aftEngine(msVideoDone + 100);
+              CAFT aftEngine;
               aftEngine.SetCrop(0, 12, 12, 0);
 
 		          POSITION pos = progressData.GetHeadPosition();
