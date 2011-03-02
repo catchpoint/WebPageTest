@@ -86,6 +86,14 @@ if( $id )
         setcookie('tid', $id);
     
     $testPath = './' . GetTestPath($id);
+    // test if the testPath exists. If not, download from the remote storage.
+    if( !is_dir($testPath) )
+    {
+        logMsg("Download $testPath\n");
+        require_once('storage/storage.inc');
+        DownloadResults($id);
+    }
+
     $run = htmlspecialchars($_GET["run"]);
     if( !$run )
         $run = (int)1;
@@ -360,23 +368,14 @@ function gz_file_get_contents($file)
 */
 function gz_file_put_contents($filename, &$data)
 {
-    global $settings;
     $ret = false;
     
-    if( $settings['nogzip'] )
+    $zip = gzopen("$filename.gz", 'wb9');
+    if( $zip !== false )
     {
-        if( file_put_contents($filename, $data) )
+        if( gzwrite($zip, $data) )
             $ret = true;
-    }
-    else
-    {
-        $zip = gzopen("$filename.gz", 'wb9');
-        if( $zip !== false )
-        {
-            if( gzwrite($zip, $data) )
-                $ret = true;
-            gzclose($zip);
-        }
+        gzclose($zip);
     }
     
     return $ret;
@@ -406,16 +405,12 @@ function gz_file($filename)
 */
 function gz_compress($filename)
 {
-    global $settings;
     $ret = false;
     
-    if( !$settings['nogzip'] )
-    {
-        $data = file_get_contents($filename);
-        if( $data ){
-            $ret = gz_file_put_contents($filename, $data);
-            unset($data);
-        }
+    $data = file_get_contents($filename);
+    if( $data ){
+        $ret = gz_file_put_contents($filename, $data);
+        unset($data);
     }
     
     return $ret;

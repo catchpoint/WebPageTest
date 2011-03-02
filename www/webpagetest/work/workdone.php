@@ -203,6 +203,10 @@ else
                 // send the request (we don't care about the response)
                 file_get_contents($url, 0, $ctx);
             }
+            
+            // archive the test result
+            require_once('storage/storage.inc');
+            StoreResults($id);
         }
     }
     else
