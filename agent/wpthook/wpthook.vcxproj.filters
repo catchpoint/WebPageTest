@@ -1,0 +1,178 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Third-Party">
+      <UniqueIdentifier>{56e63e9d-1a75-439a-a7fd-5745b0b56f3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\NCodeHook">
+      <UniqueIdentifier>{8895b285-595b-46b0-9e29-2becbc9105e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\distorm">
+      <UniqueIdentifier>{df374626-a802-47b9-a3c7-f012594bbc0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\distorm\Source Files">
+      <UniqueIdentifier>{ccb776cd-e97b-4008-9618-1f349f064c7f}</UniqueIdentifier>
+      <Extensions>c;cpp;cc;cxx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared_mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpthook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHook.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHookInstantiation.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHookItem.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\config.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\decoder.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\instructions.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\insts.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\operands.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\prefix.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\textdefs.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\wstring.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\x86defs.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\include\distorm.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\include\mnemonics.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="window_messages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_winsock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_gdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="track_dns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="track_sockets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpthook_dll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpthook.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NCodeHook\NCodeHook.cpp">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClCompile>
+    <ClCompile Include="NCodeHook\NCodeHookItem.cpp">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\decoder.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\distorm.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\instructions.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\insts.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\include\mnemonics.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\operands.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\prefix.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\textdefs.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\wstring.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\x86defs.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_winsock.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_gdi.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_driver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="track_sockets.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="track_dns.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared_mem.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_state.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
