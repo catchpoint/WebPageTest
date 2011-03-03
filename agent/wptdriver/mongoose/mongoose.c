@@ -19,7 +19,9 @@
 // THE SOFTWARE.
 
 #if defined(_WIN32)
+#ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS // Disable deprecation warning in VS2005
+#endif
 #else
 #define _XOPEN_SOURCE 600 // For flockfile() on Linux
 #define _LARGEFILE_SOURCE // Enable 64-bit file offsets

@@ -42,6 +42,7 @@ void WptTest::Reset(void){
   _browser.Empty();
   _basic_auth.Empty();
   _script.Empty();
+  _logFile.Empty();
   _run = 0;
   _clear_cache = true;
 

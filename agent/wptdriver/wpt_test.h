@@ -54,6 +54,7 @@ public:
   CString _browser;
   CString _basic_auth;
   CString _script;
+  CString _logFile;
 
   // current state
   int     _run;

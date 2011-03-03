@@ -19,6 +19,7 @@
 
 #include <shlobj.h>
 #include <atlstr.h>
+#include <atltime.h>
 #include <atlcoll.h>
 #include <in6addr.h>
 #include "../wpthook/wpthook_dll.h"
