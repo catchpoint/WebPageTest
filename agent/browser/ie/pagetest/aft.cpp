@@ -168,23 +168,25 @@ bool CAFT::Calculate( DWORD &ms, bool &confident, CxImage * imgAft )
           if( few_changes )
           {
             // make sure the immediately surrounding pixels are also static
-            bool boundary_has_few_changes = true;
-            int x1 = max( x - 1, (int)crop.left);
-            int x2 = min( x + 1, (int)(width - crop.right));
-            int y1 = max( y - 1, (int)crop.bottom );
-            int y2 = min( y + 1, (int)(height - crop.top));
-            for( int yy = y1; yy <= y2; yy++ )
+            if( lastChange > latest_of_static )
             {
-              for( int xx = x1; xx <= x2; xx++ )
+              bool boundary_has_few_changes = true;
+              int x1 = max( x - 1, (int)crop.left);
+              int x2 = min( x + 1, (int)(width - crop.right));
+              int y1 = max( y - 1, (int)crop.bottom );
+              int y2 = min( y + 1, (int)(height - crop.top));
+              for( int yy = y1; yy <= y2; yy++ )
               {
-                int pixelOffest = (rowPixels * (yy - (int)crop.bottom)) + (xx - (int)crop.left);
-                if( pixelChangeCount[pixelOffest] >= pixel_changes_threshold )
-                  boundary_has_few_changes = false;
+                for( int xx = x1; xx <= x2; xx++ )
+                {
+                  int pixelOffest = (rowPixels * (yy - (int)crop.bottom)) + (xx - (int)crop.left);
+                  if( pixelOffest > 0 && 
+                      pixelOffest < (int)((width - crop.left - crop.right) * (height - crop.top - crop.bottom)) &&
+                      pixelChangeCount[pixelOffest] >= pixel_changes_threshold )
+                    boundary_has_few_changes = false;
+                }
               }
-            }
-            if( boundary_has_few_changes )
-            {
-              if( lastChange > latest_of_static )
+              if( boundary_has_few_changes )
               {
                 latest_of_static = lastChange;
                 ATLTRACE(_T("[Pagetest] - Latest static updated to %d ms\n"), latest_of_static);
