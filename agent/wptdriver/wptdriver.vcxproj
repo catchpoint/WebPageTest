@@ -105,6 +105,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test_data.h" />
     <ClInclude Include="test_server.h" />
+    <ClInclude Include="util.h" />
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
     <ClInclude Include="wptdriver.h" />
@@ -126,6 +127,7 @@
     </ClCompile>
     <ClCompile Include="test_data.cc" />
     <ClCompile Include="test_server.cc" />
+    <ClCompile Include="util.cc" />
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
     <ClCompile Include="wptdriver.cc" />

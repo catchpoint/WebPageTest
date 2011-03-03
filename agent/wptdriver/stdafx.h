@@ -17,7 +17,7 @@
 #include <memory.h>
 #include <tchar.h>
 
-
+#include <shlobj.h>
 #include <atlstr.h>
 #include <atlcoll.h>
 #include <in6addr.h>
@@ -32,3 +32,4 @@
 #include "wpt_hook.h"
 #include "web_browser.h"
 #include "test_server.h"
+#include "util.h"

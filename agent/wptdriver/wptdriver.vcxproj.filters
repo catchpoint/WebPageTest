@@ -37,6 +37,12 @@
     <ClCompile Include="wpt_hook.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ipfw.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -79,6 +85,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wpt_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipfw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipfw_int.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

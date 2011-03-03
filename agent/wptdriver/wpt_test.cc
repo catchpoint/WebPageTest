@@ -3,6 +3,15 @@
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void){
+  // figure out what our working diriectory is
+  TCHAR path[MAX_PATH];
+  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, path)) ) {
+    PathAppend(path, _T("webpagetest"));
+    CreateDirectory(path, NULL);
+    _directory = path;
+  }
+
   Reset();
 }
 
@@ -35,6 +44,9 @@ void WptTest::Reset(void){
   _script.Empty();
   _run = 0;
   _clear_cache = true;
+
+  if (_directory.GetLength() )
+    DeleteDirectory(_directory, false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -204,23 +216,27 @@ bool WptTest::Start(){
   // build up a new script
   _script_commands.RemoveAll();
 
-  // set up the base file name
-  _file_base = _T("");
-  SetResultsFileBase(_file_base);
+  if (_directory.GetLength() ) {
+    // set up the base file name for results files for this run
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
+    if (!_clear_cache)
+      _file_base += _T("_Cached");
+    SetResultsFileBase(_file_base);
 
-  // pass settings on to the hook dll
-  SetForceDocComplete(_doc_complete);
+    // pass settings on to the hook dll
+    SetForceDocComplete(_doc_complete);
 
-  // just support URL navigating right now
-  if (_url.GetLength()){
-    ScriptCommand command;
-    command.command = _T("navigate");
-    command.target = _url;
-    command.record = true;
+    // just support URL navigating right now
+    if (_url.GetLength()){
+      ScriptCommand command;
+      command.command = _T("navigate");
+      command.target = _url;
+      command.record = true;
 
-    _script_commands.AddTail(command);
+      _script_commands.AddTail(command);
 
-    ret = true;
+      ret = true;
+    }
   }
 
   return ret;

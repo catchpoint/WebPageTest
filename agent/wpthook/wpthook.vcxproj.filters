@@ -106,6 +106,9 @@
     <ClInclude Include="test_state.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -172,6 +175,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_state.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="results.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

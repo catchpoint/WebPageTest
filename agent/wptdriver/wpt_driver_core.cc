@@ -104,8 +104,9 @@ void WptDriverCore::WorkThread(void){
 
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
 
-  _status.Set(_T("Starting Web Server..."));
+  Init();  // do initialization and machine configuration
 
+  _status.Set(_T("Starting Web Server..."));
   _test_server.Start();
 
   _status.Set(_T("Running..."));
@@ -115,10 +116,10 @@ void WptDriverCore::WorkThread(void){
 
     WptTest test;
     if( _webpagetest.GetTest(test) ){
-	  // Setup network throttling.
-	  _status.Set(_T("Setting up network throttling..."));
-	  ConfigureIpfw(test);
-	  
+      // Setup network throttling.
+      _status.Set(_T("Setting up network throttling..."));
+      ConfigureIpfw(test);
+    
       TestData data;
       _status.Set(_T("Launching browser..."));
 
@@ -158,8 +159,8 @@ void WptDriverCore::WorkThread(void){
           Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
 
-	  // Reset the network throttling at the end of the test.
-	  ResetIpfw();
+      // Reset the network throttling at the end of the test.
+      ResetIpfw();
     }else{
       _status.Set(_T("Waiting for work..."));
       Sleep(_settings._polling_delay * SECONDS_TO_MS);
@@ -170,46 +171,100 @@ void WptDriverCore::WorkThread(void){
 }
 
 /*-----------------------------------------------------------------------------
-	Set up bandwidth throttling
+  Do any startup initialization (settings have already loaded)
 -----------------------------------------------------------------------------*/
-bool WptDriverCore::ConfigureIpfw(WptTest& test)
-{
-	bool ret = false;
-	if( test._bwIn && test._bwOut )
-	{
-		// split the latency across directions
-		DWORD latency = test._latency / 2;
+void WptDriverCore::Init(void){
 
-		CString buff;
-		buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, %d ms latency, %0.2f plr"), test._bwIn, test._bwOut, test._latency, test._plr );
-		OutputDebugString(buff);
+  // set the OS to not boost foreground processes
+  HKEY hKey;
+  if( SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\PriorityControl"), 0, KEY_SET_VALUE, &hKey)) )
+  {
+    DWORD val = 0x18;
+    RegSetValueEx(hKey, _T("Win32PrioritySeparation"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+    RegCloseKey(hKey);
+  }
+}
 
-		// create the inbound pipe
-		if( _ipfw.CreatePipe(pipeIn, test._bwIn * 1000, latency, test._plr / 100.0) )
-		{
-			// make up for odd values
-			if( test._latency % 2 )
-				latency++;
+typedef int (CALLBACK* DNSFLUSHPROC)();
 
-			// create the outbound pipe
-			if( _ipfw.CreatePipe(pipeOut, test._bwOut * 1000, latency, test._plr / 100.0) )
-				ret = true;
-			else
-				_ipfw.CreatePipe(pipeIn, 0, 0, 0);
-		}
-	}
-	else
-		ret = true;
-	return ret;
+/*-----------------------------------------------------------------------------
+  Empty the OS DNS cache
+-----------------------------------------------------------------------------*/
+void WptDriverCore::FlushDNS(void){
+  _status.Set(_T("Flushing DNS cache..."));
+
+  bool flushed = false;
+  HINSTANCE		hDnsDll;
+
+  hDnsDll = LoadLibrary(_T("dnsapi.dll"));
+  if( hDnsDll )
+  {
+    DNSFLUSHPROC pDnsFlushProc = (DNSFLUSHPROC)GetProcAddress(hDnsDll, 
+                                                      "DnsFlushResolverCache");
+    if( pDnsFlushProc )
+    {
+      int ret = pDnsFlushProc();
+      if( ret == ERROR_SUCCESS)
+      {
+        flushed = true;
+        _status.Set(_T("Successfully flushed the DNS resolved cache"));
+      }
+      else
+        _status.Set(_T("DnsFlushResolverCache returned %d"), ret);
+    }
+    else
+      _status.Set(_T("Failed to load dnsapi.dll"));
+
+    FreeLibrary(hDnsDll);
+  }
+  else
+    _status.Set(_T("Failed to load dnsapi.dll"));
+
+  if( !flushed )
+    LaunchProcess(_T("ipconfig.exe /flushdns"));
 }
 
 /*-----------------------------------------------------------------------------
-	Remove the bandwidth throttling
+  Set up bandwidth throttling
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::ConfigureIpfw(WptTest& test)
+{
+  bool ret = false;
+  if( test._bwIn && test._bwOut )
+  {
+    // split the latency across directions
+    DWORD latency = test._latency / 2;
+
+    CString buff;
+    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, %d ms latency, %0.2f plr"), test._bwIn, test._bwOut, test._latency, test._plr );
+    OutputDebugString(buff);
+
+    // create the inbound pipe
+    if( _ipfw.CreatePipe(pipeIn, test._bwIn * 1000, latency, test._plr / 100.0) )
+    {
+      // make up for odd values
+      if( test._latency % 2 )
+        latency++;
+
+      // create the outbound pipe
+      if( _ipfw.CreatePipe(pipeOut, test._bwOut * 1000, latency, test._plr / 100.0) )
+        ret = true;
+      else
+        _ipfw.CreatePipe(pipeIn, 0, 0, 0);
+    }
+  }
+  else
+    ret = true;
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WptDriverCore::ResetIpfw(void)
 {
-	_ipfw.CreatePipe(pipeIn, 0, 0, 0);
-	_ipfw.CreatePipe(pipeOut, 0, 0, 0);
+  _ipfw.CreatePipe(pipeIn, 0, 0, 0);
+  _ipfw.CreatePipe(pipeOut, 0, 0, 0);
 }
 
 

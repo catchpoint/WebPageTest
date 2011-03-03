@@ -97,6 +97,7 @@
     <ClInclude Include="NCodeHook\NCodeHook.h" />
     <ClInclude Include="NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="NCodeHook\NCodeHookItem.h" />
+    <ClInclude Include="results.h" />
     <ClInclude Include="shared_mem.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -167,6 +168,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="results.cc" />
     <ClCompile Include="shared_mem.cc" />
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
