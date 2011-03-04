@@ -239,6 +239,27 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 }
 
 /*-----------------------------------------------------------------------------
+	Protected formatting - crashes at times when running against amazon.com
+-----------------------------------------------------------------------------*/
+bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pagespeedResults, pagespeed::RuleFormatter * formatter)
+{
+  bool ret = false;
+
+  ATLTRACE(_T("[Pagetest] - PageSpeedFormatResults\n"));
+
+  __try
+  {
+    ret = engine.FormatResults(pagespeedResults, formatter);
+  }__except(EXCEPTION_EXECUTE_HANDLER)
+	{
+	}
+
+  ATLTRACE(_T("[Pagetest] - PageSpeedFormatResults Complete\n"));
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
 	OK, time to generate any results
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::FlushResults(void)
@@ -333,17 +354,21 @@ void CPagetestReporting::FlushResults(void)
 							std::vector<pagespeed::Rule*> rules;
 							PopulatePageSpeedRules(&rules);
 	
+						  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Initializing Page Speed engine\n"));
+
 							// Ownership of rules is transferred to the Engine instance.
 							pagespeed::Engine engine(&rules);
 							engine.Init();
 
-							std::ostringstream formattedResults;
+						  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Formatting Page Speed results\n"));
+
+              std::ostringstream formattedResults;
 							pagespeed::formatters::JsonFormatter formatter(&formattedResults, NULL);
-							if ( pagespeedResults && engine.FormatResults(*pagespeedResults, &formatter) )
+							if ( pagespeedResults && PageSpeedFormatResults(engine, *pagespeedResults, &formatter) )
 							{
-								DWORD written;
-								std::string pagespeedReport = formattedResults.str();
-								WriteFile(hFile, pagespeedReport.c_str(), pagespeedReport.size(), &written, 0);
+							  DWORD written;
+							  std::string pagespeedReport = formattedResults.str();
+							  WriteFile(hFile, pagespeedReport.c_str(), pagespeedReport.size(), &written, 0);
 							}
 							else
 							{
@@ -353,15 +378,18 @@ void CPagetestReporting::FlushResults(void)
 						}
 
 						// save out the status updates
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
 						SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
 						// save out the progress data (and video imaages)
 						// pre-process the video images (make sure they are all the correct sizes
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Processing video\n"));
 						PreProcessVideo();
 
             // calculate the above-the-fold time
             if( aft )
             {
+              ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Calculating AFT\n"));
               CAFT aftEngine;
               aftEngine.SetCrop(0, 12, 12, 0);
 

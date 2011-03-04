@@ -5,6 +5,7 @@
 #include "shared_mem.h"
 #include "wpthook.h"
 #include "window_messages.h"
+#include <Tlhelp32.h>
 
 HINSTANCE global_dll_handle = NULL; // DLL handle
 WptHook * global_hook = NULL;
@@ -13,7 +14,20 @@ const UINT_PTR TIMER_DONE = 1;
 const DWORD TIMER_DONE_INTERVAL = 100;
 
 extern "C" {
-__declspec( dllexport ) void WINAPI InstallHook(DWORD thread_id);
+__declspec( dllexport ) void __stdcall InstallHook(HANDLE process);
+__declspec( dllexport ) void __stdcall Initialize(void);
+}
+
+/*-----------------------------------------------------------------------------
+    Injected initialization routine
+-----------------------------------------------------------------------------*/
+void __stdcall Initialize(void){
+  OutputDebugString(_T("[wpthook] Initialize()\n"));
+
+  if( !global_hook ){
+    global_hook = new WptHook;
+    global_hook->Init();
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -43,18 +57,136 @@ LRESULT HookProc (
   return ::CallNextHookEx(shared_hook_handle, code, wParam, lParam);
 }
 
-/*-----------------------------------------------------------------------------
-  Install the hook into the browser's message proc
------------------------------------------------------------------------------*/
-void WINAPI InstallHook(DWORD thread_id){
-  shared_hook_handle = SetWindowsHookEx( WH_CALLWNDPROC, (HOOKPROC)HookProc,
-                global_dll_handle, thread_id );
+// function addresses in the target process
+typedef HMODULE(WINAPI * LPLOADLIBRARYW)(LPCWSTR lpLibFileName);
+typedef FARPROC(WINAPI * LPGETPROCADDRESS)(HMODULE hModule, LPCSTR lpProcName);
+typedef void(__stdcall * LPINITIALIZE)(void);
 
-  if (!shared_hook_handle){
-    DWORD err = GetLastError();
-    CString buff;
-    buff.Format(_T("[wpthook] Error installing hook: %d\n"), err);
-    OutputDebugString(buff);
+// all strings need to be passed in explicitly
+typedef struct {
+  WCHAR dll_path[MAX_PATH];
+  char init_routine[100];
+  LPLOADLIBRARYW    _LoadLibraryW;
+  LPGETPROCADDRESS  _GetProcAddress;
+} REMOTE_INFO;
+
+/*-----------------------------------------------------------------------------
+  Code injected into the remote process
+-----------------------------------------------------------------------------*/
+static DWORD WINAPI RemoteThreadProc(REMOTE_INFO * info) {
+  if (info && info->_LoadLibraryW && info->_GetProcAddress) {
+    HMODULE dll = info->_LoadLibraryW(info->dll_path);
+    if (dll){
+      LPINITIALIZE _Initialize = (LPINITIALIZE)info->_GetProcAddress(
+                                                    dll, info->init_routine);
+      if (_Initialize)
+        _Initialize();
+    }
+  }
+  return 0;
+}
+
+// This function marks the memory address after RemoteThreadProc.
+// int cbCodeSize = (PBYTE) AfterThreadFunc - (PBYTE) ThreadFunc.
+static void AfterThreadFunc (void)
+{
+}
+
+/*-----------------------------------------------------------------------------
+  Find the base address where the given dll is loaded
+-----------------------------------------------------------------------------*/
+LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll) {
+  LPBYTE base_address = NULL;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
+                                                        GetProcessId(process));
+  if (snap != INVALID_HANDLE_VALUE) {
+    // loop until we find the dll
+    MODULEENTRY32 module;
+    module.dwSize = sizeof(module);
+    if (Module32First(snap, &module)){
+      do {
+        if (!lstrcmpi(module.szModule, dll))
+          base_address = module.modBaseAddr;
+      } while(!base_address && Module32Next(snap, &module));
+    }
+    CloseHandle(snap);
+  }
+
+  return base_address;
+}
+
+/*-----------------------------------------------------------------------------
+  Figure out the address of the given function in the remote process
+-----------------------------------------------------------------------------*/
+LPBYTE GetRemoteFunction(HANDLE process, TCHAR * dll, TCHAR * fn){
+  LPBYTE remote_function = NULL;
+
+  // first, get the offset of the function from the dll base address in the 
+  // current process
+  HMODULE module = LoadLibrary(dll);
+  if (module){
+    LPBYTE base = GetDllBaseAddress(GetCurrentProcess(), dll);
+    if (base) {
+      LPBYTE addr = (LPBYTE)GetProcAddress(module, CT2A(fn));
+      if (addr > base) {
+        unsigned __int64 offset = addr - base;
+
+        // now find the base address of the dll in the remote process
+        LPBYTE remote_base = GetDllBaseAddress(process, dll);
+        if (remote_base)
+          remote_function = remote_base + offset;
+      }
+    }
+
+    FreeLibrary(module);
+  }
+
+  return remote_function;
+}
+
+/*-----------------------------------------------------------------------------
+  Inject our dll into the browser process
+-----------------------------------------------------------------------------*/
+void WINAPI InstallHook(HANDLE process){
+  REMOTE_INFO info;
+  lstrcpyA(info.init_routine, "_Initialize@0");
+
+  // get the addresses of the functions we need in the remote process
+  info._LoadLibraryW = (LPLOADLIBRARYW)GetRemoteFunction(
+                        process, _T("kernel32.dll"), _T("LoadLibraryW"));
+  info._GetProcAddress = (LPGETPROCADDRESS)GetRemoteFunction(
+                        process, _T("kernel32.dll"), _T("GetProcAddress"));
+
+  // copy the dll path to the remote process memory
+  if (GetModuleFileNameW(global_dll_handle, info.dll_path, 
+                          _countof(info.dll_path))){
+    WCHAR * remote_info = (WCHAR *)VirtualAllocEx(process, NULL, 
+                                 sizeof(info), MEM_COMMIT, PAGE_READWRITE);
+    if (remote_info) {
+      if (WriteProcessMemory(process, remote_info, &info, 
+                              sizeof(info), NULL) ) {
+
+        /// copy the remote thread code to theprocess
+        const int code_size = (LPBYTE)AfterThreadFunc-(LPBYTE)RemoteThreadProc;
+        DWORD * remote_code = (DWORD *)VirtualAllocEx( process, 0, code_size, 
+                                          MEM_COMMIT, PAGE_EXECUTE_READWRITE );
+        if (remote_code) {
+          if (WriteProcessMemory( process, remote_code, &RemoteThreadProc, 
+                                        code_size, NULL )) {
+            HANDLE remote_thread = CreateRemoteThread(process, NULL, 0, 
+                                  (LPTHREAD_START_ROUTINE)remote_code,
+                                    remote_info, 0 , NULL);
+            if (remote_thread) {
+              WaitForSingleObject(remote_thread, 120000);
+              CloseHandle( remote_thread );
+            }
+
+          }
+          VirtualFreeEx(process, remote_code, code_size, MEM_RELEASE);
+        }
+      }
+      VirtualFreeEx(process, remote_info, sizeof(info), MEM_RELEASE);
+    }
   }
 }
 
@@ -63,7 +195,7 @@ void WINAPI InstallHook(DWORD thread_id){
 WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
-  ,_test_state(shared_test_timeout, shared_test_force_on_load)
+  ,_test_state(shared_test_timeout, shared_test_force_on_load, _results)
   ,_winsock_hook(_dns, _sockets, _test_state){
   _file_base = shared_results_file_base;
 }
@@ -104,6 +236,7 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam){
     case WM_TIMER:
         if( _test_state.IsDone() ){
           KillTimer(_message_window, TIMER_DONE);
+          _results.Save();
           _driver.Done();
         }
 

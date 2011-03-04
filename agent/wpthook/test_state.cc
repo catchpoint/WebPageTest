@@ -6,12 +6,13 @@ const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestState::TestState(int test_timeout, bool end_on_load):
+TestState::TestState(int test_timeout, bool end_on_load, Results& results):
   _test_timeout(test_timeout)
   ,_active(false)
   ,_timeout(false)
   ,_pending_document(true)
-  ,_end_on_load(end_on_load){
+  ,_end_on_load(end_on_load)
+  ,_results(results){
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _first_activity.QuadPart = 0;
@@ -29,6 +30,7 @@ TestState::~TestState(void){
 -----------------------------------------------------------------------------*/
 void TestState::Start(){
   QueryPerformanceCounter(&_start);
+  _results.Reset();
   _timeout = false;
   _active = true;
 }
@@ -101,6 +103,11 @@ bool TestState::IsDone(){
       // the normal mode of waiting for 2 seconds of no network activity after
       // onLoad
       done = true;
+    }
+
+    if (done) {
+      _results._on_load_time = (int)elapsed_doc;
+      _results._activity_time = (int)elapsed_activity;
     }
   }
 

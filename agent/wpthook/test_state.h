@@ -3,7 +3,7 @@
 class TestState
 {
 public:
-  TestState(int test_timeout, bool end_on_load);
+  TestState(int test_timeout, bool end_on_load, Results& results);
   ~TestState(void);
 
   void Start();
@@ -25,4 +25,5 @@ private:
   bool  _timeout;
   bool  _end_on_load;
   bool  _pending_document;
+  Results&  _results;
 };

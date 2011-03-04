@@ -28,4 +28,5 @@ private:
   TrackSockets  _sockets;
 
   TestState     _test_state;
+  Results       _results;
 };
