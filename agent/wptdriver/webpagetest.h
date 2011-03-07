@@ -15,5 +15,12 @@ private:
   bool    ParseTest(CString& test_string, WptTest& test);
   bool    CrackUrl(CString url, CString &host, unsigned short &port, 
                     CString& object);
+  bool    BuildFormData(WptSettings& settings, WptTest& test, 
+                            bool done,
+                            CString file_name, DWORD file_size,
+                            CString& headers, CStringA& footer, 
+                            CStringA& form_data, DWORD& content_length);
+  bool    UploadFile(CString url, bool done, WptTest& test, CString file);
+  bool    CompressResults(CString directory, CString zip_file);
 };
 

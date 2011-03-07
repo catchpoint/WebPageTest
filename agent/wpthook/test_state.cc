@@ -105,9 +105,20 @@ bool TestState::IsDone(){
       done = true;
     }
 
+    // store the overall times in the results structure
     if (done) {
-      _results._on_load_time = (int)elapsed_doc;
-      _results._activity_time = (int)elapsed_activity;
+      _results._on_load_time = 0;
+      if (_on_load.QuadPart > _start.QuadPart)
+        _results._on_load_time = (int)((_on_load.QuadPart - _start.QuadPart)
+                                        / _ms_frequency.QuadPart);
+      _results._activity_time = 0;
+      if (_last_activity.QuadPart > _on_load.QuadPart) {
+        if (_last_activity.QuadPart > _start.QuadPart)
+          _results._activity_time = (int)((_last_activity.QuadPart - 
+                                    _start.QuadPart) / _ms_frequency.QuadPart);
+      } else {
+        _results._activity_time = _results._on_load_time;
+      }
     }
   }
 

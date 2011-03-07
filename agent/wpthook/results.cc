@@ -39,6 +39,7 @@ void Results::SavePageData(void){
     SetFilePointer( file, 0, 0, FILE_END );
 
     CStringA result;
+    CStringA buff;
 
     // build up the string of data fileds for the page result
 
@@ -51,7 +52,8 @@ void Results::SavePageData(void){
     // URL
     result += "\t";
     // Load Time (ms)
-    result += "\t";
+    buff.Format("%d\t", _on_load_time);
+    result += buff;
     // Time to First Byte (ms)
     result += "\t";
     // unused
@@ -87,7 +89,8 @@ void Results::SavePageData(void){
     // Packet Loss (out)
     result += "\t";
     // Activity Time(ms)
-    result += "\t";
+    buff.Format("%d\t", _activity_time);
+    result += buff;
     // Descriptor
     result += "\t";
     // Lab ID
@@ -103,7 +106,10 @@ void Results::SavePageData(void){
     // Pagetest Build
     result += "\t";
     // Measurement Type
-    result += "\t";
+    if (shared_test_force_on_load)
+      result += "1\t";
+    else
+      result += "2\t";
     // Experimental
     result += "0\t";
     // Doc Complete Time (ms)

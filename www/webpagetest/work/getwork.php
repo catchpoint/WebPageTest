@@ -200,6 +200,18 @@ if( !$done )
                                 
                             unset($times[$tester]['test']);
                         }
+                        
+                        // delete any testers in this location that haven't checked in in over an hour
+                        foreach( $times as $name => &$data )
+                        {
+                            if( $now > $data['updated'] )
+                            {
+                                $elapsed = $now - $data['updated'];
+                                if( $elapsed > 3600 )
+                                    unset( $times[$name] );
+                            }
+                        }
+                        
                         file_put_contents("./tmp/$location.tm", json_encode($times));
                     }
                     else
