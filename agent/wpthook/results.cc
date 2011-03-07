@@ -113,7 +113,8 @@ void Results::SavePageData(void){
     // Experimental
     result += "0\t";
     // Doc Complete Time (ms)
-    result += "\t";
+    buff.Format("%d\t", _on_load_time);
+    result += buff;
     // Event GUID
     result += "\t";
     // Time to DOM Element (ms)

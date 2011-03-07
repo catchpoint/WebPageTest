@@ -42,7 +42,7 @@ function csvFile($fileName, $includeHeader)
         {
             if( $linenum > 0 || $includeHeader )
             {
-                $line = trim($line);
+                $line = trim($line, "\r\n");
                 if( strlen($line) )
                 {
                     $line = str_replace('"', '""', $line);

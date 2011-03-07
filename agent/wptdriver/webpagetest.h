@@ -5,7 +5,7 @@ public:
   WebPagetest(WptSettings &settings, WptStatus &status);
   ~WebPagetest(void);
   bool GetTest(WptTest& test);
-  bool TestDone(WptTest& test, TestData& data);
+  bool TestDone(WptTest& test);
 
 private:
   WptSettings&  _settings;

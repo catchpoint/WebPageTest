@@ -120,7 +120,6 @@ void WptDriverCore::WorkThread(void){
       _status.Set(_T("Setting up network throttling..."));
       ConfigureIpfw(test);
     
-      TestData data;
       _status.Set(_T("Launching browser..."));
 
       EnterCriticalSection(&cs);
@@ -154,7 +153,7 @@ void WptDriverCore::WorkThread(void){
 
       bool uploaded = false;
       for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
-        uploaded = _webpagetest.TestDone(test, data);
+        uploaded = _webpagetest.TestDone(test);
         if( !uploaded )
           Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }

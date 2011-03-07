@@ -40,7 +40,7 @@ bool WebPagetest::GetTest(WptTest& test){
 /*-----------------------------------------------------------------------------
   Send the test result back to the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::TestDone(WptTest& test, TestData& data){
+bool WebPagetest::TestDone(WptTest& test){
   bool ret = true;
 
   // upload the large binary files individually (images, tcpdump, etc)

@@ -69,51 +69,47 @@ function loadPageData($file)
         // loop through each line in the file
         foreach($lines as $linenum => $line) 
         {
-            // skip the header line
-            if( $linenum > 0)
+            $parseLine = str_replace("\t", "\t ", $line);
+            $fields = explode("\t", $parseLine);
+            if( count($fields) > 34 && trim($fields[0]) != 'Date' )
             {
-                $parseLine = str_replace("\t", "\t ", $line);
-                $fields = explode("\t", $parseLine);
-                if( count($fields) > 34 )
-                {
-                    $ret = array(   'URL' => htmlspecialchars(trim($fields[3])),
-                                    // 'loadTime' => (int)$fields[4],
-                                    'loadTime' => (int)$fields[32],
-                                    'TTFB' => (int)$fields[5],
-                                    'bytesOut' => (int)$fields[7],
-                                    'bytesOutDoc' => (int)$fields[45],
-                                    'bytesIn' => (int)$fields[8],
-                                    'bytesInDoc' => (int)$fields[46],
-                                    'connections' => (int)$fields[10],
-                                    'requests' => (int)$fields[11],
-                                    'requestsDoc' => (int)$fields[49],
-                                    'result' => (int)$fields[17],
-                                    'render' => (int)$fields[18],
-                                    'fullyLoaded' => (int)$fields[22],
-                                    'cached' => (int)$fields[27],
-                                    'web' => (int)$fields[30],
-                                    'docTime' => (int)$fields[32],
-                                    'domTime' => (int)$fields[34],
-                                    'score_cache' => (int)$fields[36],
-                                    'score_cdn' => (int)$fields[37],
-                                    'score_gzip' => (int)$fields[39],
-                                    'score_cookies' => (int)$fields[40],
-                                    'score_keep-alive' => (int)$fields[41],
-                                    'score_minify' => (int)$fields[43],
-                                    'score_combine' => (int)$fields[44],
-                                    'score_compress' => (int)$fields[55],
-                                    'score_etags' => (int)$fields[58],
-                                    'gzip_total' => (int)$fields[64],
-                                    'gzip_savings' => (int)$fields[65],
-                                    'minify_total' => (int)$fields[66],
-                                    'minify_savings' => (int)$fields[67],
-                                    'image_total' => (int)$fields[68],
-                                    'image_savings' => (int)$fields[69],
-                                    'aft' => (int)$fields[72]
-                                );
-                    
-                    $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
-                }
+                $ret = array(   'URL' => htmlspecialchars(trim($fields[3])),
+                                // 'loadTime' => (int)$fields[4],
+                                'loadTime' => (int)$fields[32],
+                                'TTFB' => (int)$fields[5],
+                                'bytesOut' => (int)$fields[7],
+                                'bytesOutDoc' => (int)$fields[45],
+                                'bytesIn' => (int)$fields[8],
+                                'bytesInDoc' => (int)$fields[46],
+                                'connections' => (int)$fields[10],
+                                'requests' => (int)$fields[11],
+                                'requestsDoc' => (int)$fields[49],
+                                'result' => (int)$fields[17],
+                                'render' => (int)$fields[18],
+                                'fullyLoaded' => (int)$fields[22],
+                                'cached' => (int)$fields[27],
+                                'web' => (int)$fields[30],
+                                'docTime' => (int)$fields[32],
+                                'domTime' => (int)$fields[34],
+                                'score_cache' => (int)$fields[36],
+                                'score_cdn' => (int)$fields[37],
+                                'score_gzip' => (int)$fields[39],
+                                'score_cookies' => (int)$fields[40],
+                                'score_keep-alive' => (int)$fields[41],
+                                'score_minify' => (int)$fields[43],
+                                'score_combine' => (int)$fields[44],
+                                'score_compress' => (int)$fields[55],
+                                'score_etags' => (int)$fields[58],
+                                'gzip_total' => (int)$fields[64],
+                                'gzip_savings' => (int)$fields[65],
+                                'minify_total' => (int)$fields[66],
+                                'minify_savings' => (int)$fields[67],
+                                'image_total' => (int)$fields[68],
+                                'image_savings' => (int)$fields[69],
+                                'aft' => (int)$fields[72]
+                            );
+                
+                $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
             }
         }
     }
