@@ -45,9 +45,9 @@ function StoreResults($id)
                     $testInfo['archived'] = $storageProvider;
                     gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                 }
-            }         
-            unlink($zfile);
+            }
         }
+        unlink($zfile);
     }
     return 0;
 }
