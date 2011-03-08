@@ -31,9 +31,14 @@ foreach( $files as $file )
                 $elapsed = $now - $updated;
             $minutes = (int)($elapsed / 60);
             
-            // if it has been over 60 minutes, send out a notification    
-            if( $minutes > 60 && array_key_exists($loc, $locations))
+            // if it has been over 3 days, stop sending alerts and delete the file
+            if( $minutes > 4320 )
             {
+                unlink("./tmp/$file");
+            }
+            elseif( $minutes > 60 && array_key_exists($loc, $locations))
+            {
+                // if it has been over 60 minutes, send out a notification    
                 // figure out who to notify
                 $to = $settings['notify'];
                 if( $locations[$loc]['notify'] )

@@ -71,7 +71,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib  comsuppw.lib msimg32.lib winmm.lib Psapi.lib distormd.lib libcaresd.lib"
 				OutputFile="$(OutDir)\PageTest.exe"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="../pagetest/NCodeHook;&quot;../pagetest/c-ares/vc/cares/lib-debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"

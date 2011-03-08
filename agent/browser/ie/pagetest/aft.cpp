@@ -3,7 +3,7 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CAFT::CAFT(DWORD earlyCutoff, DWORD pixelChangesThreshold):
+CAFT::CAFT(DWORD minChanges, DWORD earlyCutoff, DWORD pixelChangesThreshold):
   lastImg(NULL)
   , width(0)
   , height(0)
@@ -11,12 +11,14 @@ CAFT::CAFT(DWORD earlyCutoff, DWORD pixelChangesThreshold):
   , firstPixelChangeTime(NULL)
   , pixelChangeCount(NULL)
   , early_cutoff(earlyCutoff)
+  , min_changes(minChanges)
   , pixel_changes_threshold(pixelChangesThreshold)
 {
   crop.top = 0;
   crop.left = 0;
   crop.bottom = 0;
   crop.right = 0;
+  early_cutoff *= 1000; // convert from seconds to ms
 }
 
 /*-----------------------------------------------------------------------------
@@ -53,30 +55,50 @@ void CAFT::AddImage( CxImage * img, DWORD ms )
       // go through each pixel and check for deltas from the previous image
       if( img->GetWidth() == width && img->GetHeight() == height )
       {
+        // count the changes first to make sure it exceeds the threshold
         DWORD changeCount = 0;
-
-        // this could be optimized instead of fetching each pixel individually
         DWORD i = 0;
         for( DWORD y = crop.bottom; y < height - crop.top; y++ )
+        {
           for( DWORD x = crop.left; x < width - crop.right; x++ )
           {
             RGBQUAD last = lastImg->GetPixelColor(x, y, false);
             RGBQUAD current = img->GetPixelColor(x, y, false);
-
             if( last.rgbBlue != current.rgbBlue || last.rgbGreen != current.rgbGreen || last.rgbRed != current.rgbRed )
-            {
-              pixelChangeCount[i]++;
-              pixelChangeTime[i] = ms;
-              if( !firstPixelChangeTime[i] )
-                firstPixelChangeTime[i] = ms;
-
               changeCount++;
-            }
-
             i++;
           }
+        }
 
-        ATLTRACE(_T("[Pagetest] - Adding video frame at %d ms, %d changes detected\n"), ms, changeCount);
+        if( changeCount > min_changes )
+        {
+          // this could be optimized instead of fetching each pixel individually
+          i = 0;
+          for( DWORD y = crop.bottom; y < height - crop.top; y++ )
+          {
+            for( DWORD x = crop.left; x < width - crop.right; x++ )
+            {
+              RGBQUAD last = lastImg->GetPixelColor(x, y, false);
+              RGBQUAD current = img->GetPixelColor(x, y, false);
+
+              if( last.rgbBlue != current.rgbBlue || last.rgbGreen != current.rgbGreen || last.rgbRed != current.rgbRed )
+              {
+                pixelChangeCount[i]++;
+                pixelChangeTime[i] = ms;
+                if( !firstPixelChangeTime[i] )
+                  firstPixelChangeTime[i] = ms;
+              }
+
+              i++;
+            }
+          }
+
+          ATLTRACE(_T("[Pagetest] - Adding video frame at %d ms, %d changes detected\n"), ms, changeCount);
+        }
+        else
+        {
+          ATLTRACE(_T("[Pagetest] - Adding video frame at %d ms, %d changes detected, below threshold of %d\n"), ms, changeCount, min_changes);
+        }
       }
     }
     else
@@ -116,7 +138,7 @@ bool CAFT::Calculate( DWORD &ms, bool &confident, CxImage * imgAft )
     confident = true;
     bool determined = true;
 
-    ATLTRACE(_T("[Pagetest] - Calculating AFT\n"));
+    ATLTRACE(_T("[Pagetest] - Calculating AFT.  Minimum Change Size: %d pixels, Early Cutoff: %d ms, Pixel Changes Threshold: %d\n"), min_changes, early_cutoff, pixel_changes_threshold);
 
     // create the image of the AFT algorithm
     if( imgAft )

@@ -68,7 +68,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib  comsuppwd.lib msimg32.lib winmm.lib Psapi.lib distormd.lib libcaresd.lib"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
-				LinkIncremental="0"
+				LinkIncremental="1"
 				AdditionalLibraryDirectories="ncodehook;&quot;c-ares/vc/cares/lib-debug&quot;"
 				MergedIDLBaseFileName="_Pagetest.idl"
 				GenerateDebugInformation="true"

@@ -783,6 +783,8 @@ void CURLBlaster::ConfigurePagetest(void)
 			RegSetValueEx(hKey, _T("Capture Video"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
 		  RegSetValueEx(hKey, _T("AFT"), 0, REG_DWORD, (const LPBYTE)&info.aft, sizeof(info.aft));
+		  RegSetValueEx(hKey, _T("aftMinChanges"), 0, REG_DWORD, (const LPBYTE)&info.aftMinChanges, sizeof(info.aftMinChanges));
+		  RegSetValueEx(hKey, _T("aftEarlyCutoff"), 0, REG_DWORD, (const LPBYTE)&info.aftEarlyCutoff, sizeof(info.aftEarlyCutoff));
 
 			RegDeleteValue(hKey, _T("Block"));
 			if( !info.block.IsEmpty() )

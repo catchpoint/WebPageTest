@@ -253,6 +253,10 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 						forceBlit = true;
           aft = 0;
 					key.QueryDWORDValue(_T("AFT"), aft);
+          aftEarlyCutoff = 25;
+					key.QueryDWORDValue(_T("aftEarlyCutoff"), aftEarlyCutoff);
+          aftMinChanges = 25;
+					key.QueryDWORDValue(_T("aftMinChanges"), aftMinChanges);
 
 					len = sizeof(buff) / sizeof(TCHAR);
 					customHost.Empty();

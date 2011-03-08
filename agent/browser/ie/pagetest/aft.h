@@ -1,7 +1,7 @@
 class CAFT
 {
 public:
-  CAFT(DWORD earlyCutoff = 25000, DWORD pixelChangesThreshold = 5);
+  CAFT(DWORD minChanges = 0, DWORD earlyCutoff = 25, DWORD pixelChangesThreshold = 5);
   ~CAFT(void);
 
   void SetCrop( DWORD top, DWORD right, DWORD bottom, DWORD left );
@@ -10,6 +10,7 @@ public:
 
   DWORD pixel_changes_threshold;
   DWORD early_cutoff;
+  DWORD min_changes;
 
 private:
   CxImage * lastImg;            // stores the previos image in the sequence as images are submitted

@@ -159,6 +159,8 @@ public:
 	CAtlList<CString>			blockRequests;	// which requests to block
 	CString						basicAuth;		// basic auth login to use
   DWORD           aft;          // above-the fold measurement enabled?
+  DWORD           aftMinChanges;
+  DWORD           aftEarlyCutoff;
 	HWND						hMainWindow;	// main app window
 	HWND						hBrowserWindow;	// browser window
 	CString						userAgent;		// custom user agent string

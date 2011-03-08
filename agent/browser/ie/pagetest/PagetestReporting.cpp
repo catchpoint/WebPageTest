@@ -390,7 +390,7 @@ void CPagetestReporting::FlushResults(void)
             if( aft )
             {
               ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Calculating AFT\n"));
-              CAFT aftEngine;
+              CAFT aftEngine(aftMinChanges, aftEarlyCutoff);
               aftEngine.SetCrop(0, 12, 12, 0);
 
 		          POSITION pos = progressData.GetHeadPosition();
@@ -402,9 +402,9 @@ void CPagetestReporting::FlushResults(void)
                 {
                   // see if we need to insert one of the static grabs before the next video frame
                   if( msRender > msLast && msRender <= data.ms )
-                    aftEngine.AddImage( &imgStartRender, msDom );
+                    aftEngine.AddImage( &imgStartRender, msRender );
                   if( msDoc > msLast && msDoc <= data.ms )
-                    aftEngine.AddImage( &imgDocComplete, msDom );
+                    aftEngine.AddImage( &imgDocComplete, msDoc );
                   if( msDone > msLast && msDone <= data.ms )
                     aftEngine.AddImage( &imgFullyLoaded, msDone );
 
@@ -415,8 +415,7 @@ void CPagetestReporting::FlushResults(void)
 
               // see if we need to tack the event frames on the end
               if( msDoc > msLast )
-                aftEngine.AddImage( &imgDocComplete, msDom );
-
+                aftEngine.AddImage( &imgDocComplete, msDoc );
               if( msDone > msLast )
                 aftEngine.AddImage( &imgFullyLoaded, msDone );
 

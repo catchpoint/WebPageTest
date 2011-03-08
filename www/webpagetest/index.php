@@ -308,8 +308,27 @@ $loc = ParseLocations($locations);
                                 <label for="videoCheck" class="auto_width">Capture Video</label>
                                 <br>
                                 <br>
-                                <input type="checkbox" name="aft" id="aftCheck" class="checkbox before_label">
-                                <label for="aftCheck" class="auto_width">Measure Above-the-fold rendering time<br><small>(experimental - be patient, each run takes at least 4 minutes)</small></label>
+                                <p>
+                                    <input type="checkbox" name="aft" id="aftCheck" class="checkbox before_label">
+                                    <label for="aftCheck" class="auto_width">Measure Above-the-fold rendering time (AFT)<br><small>(experimental - be patient, each run takes at least 4 minutes)</small></label>
+                                </p>
+                                <br>
+                                <br>
+                                <div id="aftSettings" class="hidden">
+                                    <p>
+                                        <label for="aftec" class="auto_width">AFT Cutoff</label>
+                                        <?php
+                                        $aftCutoff = (int)$settings['aftEarlyCutoff'];
+                                        if(!$aftCutoff)
+                                            $aftCutoff = 25;
+                                        ?>
+                                        <input id="aftec" type="text" name="aftec" class="text" style="width: 3em;" value="<?php echo (int)$settings['aftEarlyCutoff']; ?>"> Seconds
+                                    </p>
+                                    <p>
+                                        <label for="aftmc" class="auto_width">Ignore changes smaller than</label>
+                                        <input id="aftmc" type="text" name="aftmc" class="text" style="width: 3em;" value="<?php echo (int)$settings['aftMinChanges']; ?>"> Pixels
+                                    </p>
+                                </div>
                             </div>
                             <?php } ?>
 

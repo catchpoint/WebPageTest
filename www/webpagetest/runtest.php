@@ -58,6 +58,8 @@
         $test['callback'] = $req_callback;
         $test['agent'] = $req_agent;
         $test['aft'] = $req_aft;
+        $test['aftEarlyCutoff'] = (int)$req_aftec;
+        $test['aftMinChanges'] = (int)$req_aftmc;
         $test['tcpdump'] = $req_tcpdump;
         $test['sensitive'] = $req_sensitive;
         $test['type'] = trim($req_type);
@@ -512,6 +514,9 @@ function ValidateParameters(&$test, $locations, &$error)
             }
             else
                 $test['aft'] = 0;
+            
+            if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
+                $test['aftMinChanges'] = $settings['aftMinChanges'];
 
             // use the default location if one wasn't specified
             if( !strlen($test['location']) )
@@ -566,6 +571,9 @@ function ValidateParameters(&$test, $locations, &$error)
                         $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
                         $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+                        
+                        if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
+                            $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
                     }
                 }
                 
@@ -573,6 +581,9 @@ function ValidateParameters(&$test, $locations, &$error)
                 if( isset($test['latency']) && $locations[$test['location']]['latency'] )
                     $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
+            
+            if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
+                $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
         }
     }
     elseif( !strlen($error) )
@@ -1018,7 +1029,11 @@ function CreateTest(&$test, $url, $batch = 0)
         if( $test['video'] )
             $testFile .= "\r\nCapture Video=1";
         if( $test['aft'] )
+        {
             $testFile .= "\r\naft=1";
+            $testFile .= "\r\naftMinChanges={$test['aftMinChanges']}";
+            $testFile .= "\r\naftEarlyCutoff={$test['aftEarlyCutoff']}";
+        }
         if( strlen($test['type']) )
             $testFile .= "\r\ntype={$test['type']}";
         if( $test['block'] )
