@@ -31,8 +31,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include "ncodehook/NCodeHookInstantiation.h"
-#include "track_dns.h"
-#include "track_sockets.h"
+
+class TrackDns;
+class TrackSockets;
+class TestState;
+
+class WsaBuffTracker
+{
+public:
+  WsaBuffTracker():_buffers(NULL),_buffer_count(0){}
+  WsaBuffTracker(LPWSABUF buffers, DWORD buffer_count):
+      _buffers(buffers),_buffer_count(buffer_count){}
+  WsaBuffTracker(const WsaBuffTracker& src){*this = src;}
+  ~WsaBuffTracker(){}
+  const WsaBuffTracker& operator =(const WsaBuffTracker& src){
+    _buffers = src._buffers;
+    _buffer_count = src._buffer_count;
+    return src;
+  }
+  LPWSABUF _buffers;
+  DWORD    _buffer_count;
+};
 
 class CWsHook
 {
@@ -61,13 +80,20 @@ public:
                 LPDWORD lpNumberOfBytesSent, DWORD dwFlags, 
                 LPWSAOVERLAPPED lpOverlapped,
                 LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
+  BOOL  WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
+                LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags);
+
 
 private:
   TestState&        _test_state;
   NCodeHookIA32		  hook;
   CRITICAL_SECTION	cs;
-  CAtlMap<void *, void *>	dns_override; // addresses that WE have alocated 
-                                        // in case of DNS overrides
+
+  // addresses that WE have alocated in case of DNS overrides
+  CAtlMap<void *, void *>	dns_override; 
+
+  // memory buffers for overlapped receive operations
+  CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  recv_buffers;
 
   // winsock event tracking
   TrackDns&      _dns;
@@ -85,4 +111,5 @@ private:
   LPFN_FREEADDRINFOW	_FreeAddrInfoW;
   LPFN_WSARECV		    _WSARecv;
   LPFN_WSASEND        _WSASend;
+  LPFN_WSAGETOVERLAPPEDRESULT _WSAGetOverlappedResult;
 };

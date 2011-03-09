@@ -2,6 +2,11 @@
 #include "hook_winsock.h"
 #include "hook_gdi.h"
 #include "wpt_driver.h"
+#include "requests.h"
+#include "track_dns.h"
+#include "track_sockets.h"
+#include "test_state.h"
+#include "results.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
 
@@ -26,6 +31,7 @@ private:
   // winsock event tracking
   TrackDns      _dns;
   TrackSockets  _sockets;
+  Requests      _requests;
 
   TestState     _test_state;
   Results       _results;

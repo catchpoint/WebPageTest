@@ -1,5 +1,7 @@
 #pragma once
 
+class Requests;
+
 class SocketInfo
 {
 public:
@@ -22,17 +24,20 @@ public:
 class TrackSockets
 {
 public:
-  TrackSockets(void);
+  TrackSockets(Requests& requests);
   ~TrackSockets(void);
 
   void Create(SOCKET s);
   void Close(SOCKET s);
   void Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
+  void DataIn(SOCKET s, const char * data, unsigned long data_len);
+  void DataOut(SOCKET s, const char * data, unsigned long data_len);
 
 private:
   CRITICAL_SECTION cs;
-	DWORD	_nextSocketId;	// ID to assign to the next socket
+  Requests&                   _requests;
+  DWORD	_nextSocketId;	// ID to assign to the next socket
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo>  _socketInfo;
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+class Results;
+
 class TestState
 {
 public:
@@ -19,9 +21,10 @@ public:
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
 
+  bool  _active;
+
 private:
   int   _test_timeout; 
-  bool  _active;
   bool  _timeout;
   bool  _end_on_load;
   bool  _pending_document;

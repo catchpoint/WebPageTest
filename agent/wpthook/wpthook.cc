@@ -196,7 +196,10 @@ WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
   ,_test_state(shared_test_timeout, shared_test_force_on_load, _results)
-  ,_winsock_hook(_dns, _sockets, _test_state){
+  ,_winsock_hook(_dns, _sockets, _test_state)
+  ,_sockets(_requests)
+  ,_requests(_test_state)
+  ,_results(_test_state, _requests) {
   _file_base = shared_results_file_base;
 }
 

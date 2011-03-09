@@ -41,112 +41,108 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
 		// loop through each line in the file
 		foreach($lines as $linenum => &$line) 
 		{
-			// skip the header line
-			if( $linenum > 0)
+			$event = array();
+			
+			// tokenize the line
+			$parseLine = str_replace("\t", "\t ", $line);
+            $column = explode("\t", $parseLine);
+            if( count($column) )
 			{
-				$event = array();
-				
-				// tokenize the line
-				$parseLine = str_replace("\t", "\t ", $line);
-                $column = explode("\t", $parseLine);
-                if( count($column) )
-				{
-                    foreach( $columns as $columnNum => $key )
-                    {
-                        $col = $columnNum - 1;
-                        if( array_key_exists($col, $column) )
-                            $event[$key] = trim($column[$col]);
-                    }
-				}
-				
-				// Track the individual requests only (roll-up the connections and DNS lookups)
-				if( (int)$event[type] == 3 )
-				{
-                    // keep track of the full request time (as the offset gets adjusted down)
-                    if( $event['ttfb'] > 0 )
-                        $event['downloadOffset'] = $event['offset'] + $event['ttfb'];
-                        
-                    $event['endOffset'] = $event['offset'] + $event['loadTime'];
-                    $event['requestOffset'] = $event['offset'];
-
-                    if( $event['sslTime'] > 0 )
-                    {
-                        $event['offset'] -= $event['sslTime'];
-                        $event['sslOffset'] = $event['offset'];
-                    }
-                    
-					if( $socketTime && !$event['socketTime'] )
-						$event['socketTime'] = $socketTime;
-                    if( $event['socketTime'] > 0 )
-                    {
-						$event['offset'] -= $event['socketTime'];
-                        $event['socketOffset'] = $event['offset'];
-                    }
-
-                    if( $dnsTime && !$event['dnsTime'] )
-                        $event['dnsTime'] = $dnsTime;
-                    if( $event['dnsTime'] > 0 )
-                    {
-                        $event['offset'] -= $event['dnsTime'];
-                        $event['dnsOffset'] = $event['offset'];
-                    }
-                    
-                    $event['totalTime'] = $event['endOffset'] - $event['offset'];
-                    
-                    if( $event['offset'] < $start )
-                        $start = $event['offset'];
-					
-					unset($dnsTime);
-					unset($socketTime);
-					
-					if( $event['secure'] && $event['secure'] > 0)
-						$secure = true;
-					
-					// do the IP lookup
-					if( $geoip && $event['ipAddr'])
-					{
-						try
-						{
-							$location = $geoip->lookupLocation($event['ipAddr']);
-							if( $location)
-							{
-								$haveLocations = true;
-								$event['country'] = $location->countryName;
-								$event['countryCode'] = $location->countryCode3;
-								$event['city'] = $location->city;
-								$event['region'] = $location->region;
-								$event['lat'] = $location->latitude;
-								$event['long'] = $location->longitude;
-
-								$loc = '-';
-								if( $event['city'])
-								{
-									if ( $event['region'] && $event['countryCode'] == 'USA' )
-										$loc = $event['city'] . ', ' . $event['region'];
-									elseif( $event['country'])
-										$loc = $event['city'] . ', ' . $event['country'];
-								}
-								elseif ( $event['region'] )
-								{
-									if( $event['country'])
-										$loc = $event['region'] . ', ' . $event['country'];
-								}
-								elseif ( $event['country'] )
-									$loc = $event['country'];
-								$event['location'] = $loc;
-							}
-						}catch(Exception $e) {}
-					}
-					
-					// add this event to the requests list
-                    $event['index'] = count($requests);
-					$requests[] = $event;
-				}
-				else if( (int)$event[type] == 1 )
-					$dnsTime = $event['loadTime'];
-				else if( (int)$event[type] == 2 )
-					$socketTime = $event['loadTime'];
+                foreach( $columns as $columnNum => $key )
+                {
+                    $col = $columnNum - 1;
+                    if( array_key_exists($col, $column) )
+                        $event[$key] = trim($column[$col]);
+                }
 			}
+			
+			// Track the individual requests only (roll-up the connections and DNS lookups)
+			if( (int)$event['type'] == 3 )
+			{
+                // keep track of the full request time (as the offset gets adjusted down)
+                if( $event['ttfb'] > 0 )
+                    $event['downloadOffset'] = $event['offset'] + $event['ttfb'];
+                    
+                $event['endOffset'] = $event['offset'] + $event['loadTime'];
+                $event['requestOffset'] = $event['offset'];
+
+                if( $event['sslTime'] > 0 )
+                {
+                    $event['offset'] -= $event['sslTime'];
+                    $event['sslOffset'] = $event['offset'];
+                }
+                
+				if( $socketTime && !$event['socketTime'] )
+					$event['socketTime'] = $socketTime;
+                if( $event['socketTime'] > 0 )
+                {
+					$event['offset'] -= $event['socketTime'];
+                    $event['socketOffset'] = $event['offset'];
+                }
+
+                if( $dnsTime && !$event['dnsTime'] )
+                    $event['dnsTime'] = $dnsTime;
+                if( $event['dnsTime'] > 0 )
+                {
+                    $event['offset'] -= $event['dnsTime'];
+                    $event['dnsOffset'] = $event['offset'];
+                }
+                
+                $event['totalTime'] = $event['endOffset'] - $event['offset'];
+                
+                if( $event['offset'] < $start )
+                    $start = $event['offset'];
+				
+				unset($dnsTime);
+				unset($socketTime);
+				
+				if( $event['secure'] && $event['secure'] > 0)
+					$secure = true;
+				
+				// do the IP lookup
+				if( $geoip && $event['ipAddr'])
+				{
+					try
+					{
+						$location = $geoip->lookupLocation($event['ipAddr']);
+						if( $location)
+						{
+							$haveLocations = true;
+							$event['country'] = $location->countryName;
+							$event['countryCode'] = $location->countryCode3;
+							$event['city'] = $location->city;
+							$event['region'] = $location->region;
+							$event['lat'] = $location->latitude;
+							$event['long'] = $location->longitude;
+
+							$loc = '-';
+							if( $event['city'])
+							{
+								if ( $event['region'] && $event['countryCode'] == 'USA' )
+									$loc = $event['city'] . ', ' . $event['region'];
+								elseif( $event['country'])
+									$loc = $event['city'] . ', ' . $event['country'];
+							}
+							elseif ( $event['region'] )
+							{
+								if( $event['country'])
+									$loc = $event['region'] . ', ' . $event['country'];
+							}
+							elseif ( $event['country'] )
+								$loc = $event['country'];
+							$event['location'] = $loc;
+						}
+					}catch(Exception $e) {}
+				}
+				
+				// add this event to the requests list
+                $event['index'] = count($requests);
+				$requests[] = $event;
+			}
+			else if( (int)$event[type] == 1 )
+				$dnsTime = $event['loadTime'];
+			else if( (int)$event[type] == 2 )
+				$socketTime = $event['loadTime'];
 		}
         
         // load the raw headers if we have them

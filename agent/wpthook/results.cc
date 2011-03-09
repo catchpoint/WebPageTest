@@ -1,13 +1,16 @@
 #include "StdAfx.h"
 #include "results.h"
 #include "shared_mem.h"
+#include "requests.h"
 
 const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Results::Results(void){
+Results::Results(TestState& test_state, Requests& requests):
+  _requests(requests)
+  , _test_state(test_state) {
   _file_base = shared_results_file_base;
 }
 
@@ -27,6 +30,7 @@ void Results::Reset(void){
 -----------------------------------------------------------------------------*/
 void Results::Save(void){
   SavePageData();
+  SaveRequests();
 }
 
 /*-----------------------------------------------------------------------------
@@ -203,4 +207,167 @@ void Results::SavePageData(void){
 
     CloseHandle(file);
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveRequests(void) {
+  HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
+                            NULL, OPEN_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    SetFilePointer( file, 0, 0, FILE_END );
+    _requests.Lock();
+    POSITION pos = _requests._requests.GetHeadPosition();
+    int i = 0;
+    while (pos) {
+      Request * request = _requests._requests.GetNext(pos);
+      if (request && request->Process()) {
+        i++;
+        SaveRequest(file, request, i);
+      }
+    }
+    _requests.Unlock();
+    CloseHandle(file);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveRequest(HANDLE file, Request * request, int index) {
+  CStringA result;
+  CStringA buff;
+
+  // Date
+  result += "\t";
+  // Time
+  result += "\t";
+  // Event Name
+  result += "\t";
+  // IP Address
+  result += "\t";
+  // Action
+  result += "\t";
+  // Host
+  result += "\t";
+  // URL
+  result += "\t";
+  // Response Code
+  result += "200\t";
+  // Time to Load (ms)
+  buff.Format("%d\t", request->_ms_end - request->_ms_start);
+  result += buff;
+  // Time to First Byte (ms)
+  buff.Format("%d\t", request->_ms_first_byte - request->_ms_start);
+  result += buff;
+  // Start Time (ms)
+  buff.Format("%d\t", request->_ms_start);
+  result += buff;
+  // Bytes Out
+  result += "\t";
+  // Bytes In
+  result += "\t";
+  // Object Size
+  result += "\t";
+  // Cookie Size (out)
+  result += "\t";
+  // Cookie Count(out)
+  result += "\t";
+  // Expires
+  result += "\t";
+  // Cache Control
+  result += "\t";
+  // Content Type
+  result += "\t";
+  // Content Encoding
+  result += "\t";
+  // Transaction Type (3 = request - legacy reasons)
+  result += "3\t";
+  // Socket ID
+  buff.Format("%d\t", request->_socket_id);
+  result += buff;
+  // Document ID
+  result += "\t";
+  // End Time (ms)
+  buff.Format("%d\t", request->_ms_end);
+  result += buff;
+  // Descriptor
+  result += "\t";
+  // Lab ID
+  result += "\t";
+  // Dialer ID
+  result += "\t";
+  // Connection Type
+  result += "\t";
+  // Cached
+  result += "\t";
+  // Event URL
+  result += "\t";
+  // IEWatch Build
+  result += "\t";
+  // Measurement Type - (DWORD - 1 for web 1.0, 2 for web 2.0)
+  result += "\t";
+  // Experimental (DWORD)
+  result += "\t";
+  // Event GUID - (matches with Event GUID in object data) - Added in build 42
+  result += "\t";
+  // Sequence Number - Incremented for each record in the object data for a given page (starting at 0)
+  buff.Format("%d\t", index);
+  result += buff;
+  // Cache Score - -1 if N/A, 0 if it failed, 50 if it was warned, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Static CDN Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // GZIP Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Cookie Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Keep-Alive Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // DOCTYPE Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Minify Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Combine Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  result += "-1\t";
+  // Compression Score - -1 if N/A, 0 if it failed, 50 if it was warned, 100 if it passed (signed byte). Added in build 54
+  result += "-1\t";
+  // ETag Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 170
+  result += "-1\t";
+  // Flagged - Is this a flagged request (0 - no, 1 - yes) - Added in build 179
+  result += "0\t";
+  // Secure - Is this a secure request - https (0 - no, 1 - yes)? - Added in build 179
+  result += "0\t";
+  // DNS Time (ms) - Time for DNS lookup (-1 if N/A) - Added in build 179
+  result += "-1\t";
+  // Socket Connect time (ms) - Time for Socket connect (-1 if N/A) - Added in build 179
+  result += "-1\t";
+  // SSL time (ms) - Time for SSL handshake (-1 if N/A) - Added in build 179
+  result += "-1\t";
+  // Gzip Total Bytes - Total size of applicable resources for Gzip compression - Added in build 179
+  result += "0\t";
+  // Gzip Savings - Bytes saved through Gzip compression - Added in build 179
+  result += "0\t";
+  // Minify Total Bytes - Total size of applicable resources for Minification - Added in build 179
+  result += "0\t";
+  // Minify Savings - Bytes saved through Minification - Added in build 179
+  result += "0\t";
+  // Image Compression Total Bytes - Total size of applicable resources for image compression - Added in build 179
+  result += "0\t";
+  // Image Compression Savings - Bytes saved through image optimization - Added in build 179
+  result += "0\t";
+  // Cache Time (sec) - Time in seconds for the object to be cached (-1 if not present)
+  result += "-1\t";
+  // Real Start Time (ms) - This is the offset time when anything for the request started (dns lookup or socket connect) - Added in build 205
+  result += "\t";
+  // Full Time to Load (ms) - This is the full time for the given request, including any DNS or socket connect time - Added in build 205
+  result += "\t";
+  // Optimization Checked - 1 if the request was checked for optimization, 0 if not - Added in build 209
+  result += "0\t";
+  // CDN Provider - The CDN provider that the request was served from - Added in build 260 
+  result += "\t";
+
+  result += "\r\n";
+
+  DWORD written;
+  WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
 }

@@ -1,12 +1,14 @@
 #include "StdAfx.h"
 #include "track_sockets.h"
+#include "requests.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TrackSockets::TrackSockets(void):
-  _nextSocketId(1){
+TrackSockets::TrackSockets(Requests& requests):
+  _nextSocketId(1)
+  , _requests(requests){
   InitializeCriticalSection(&cs);
   _openSockets.InitHashTable(257);
   _socketInfo.InitHashTable(257);
@@ -27,6 +29,9 @@ void TrackSockets::Create(SOCKET s){
 -----------------------------------------------------------------------------*/
 void TrackSockets::Close(SOCKET s){
   EnterCriticalSection(&cs);
+  DWORD socket_id = 0;
+  if (_openSockets.Lookup(s, socket_id) && socket_id)
+    _requests.SocketClosed(socket_id);
   _openSockets.RemoveKey(s);
   LeaveCriticalSection(&cs);
 }
@@ -60,4 +65,44 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
       LeaveCriticalSection(&cs);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Look up the socket ID (or create one if it doesn't already exist)
+  and pass the data on to the request tracker
+-----------------------------------------------------------------------------*/
+void TrackSockets::DataIn(SOCKET s, const char * data, unsigned long data_len){
+  ATLTRACE(_T("[wptdriver] - TrackSockets::DataIn() %d bytes on socket %d"),
+            data_len, s);
+  EnterCriticalSection(&cs);
+  DWORD socket_id = 0;
+  _openSockets.Lookup(s, socket_id);
+  if (!socket_id) {
+    socket_id = _nextSocketId;
+    _openSockets.SetAt(s, socket_id);
+    _nextSocketId++;
+  }
+  LeaveCriticalSection(&cs);
+
+  _requests.DataIn(socket_id, data, data_len);
+}
+
+/*-----------------------------------------------------------------------------
+  Look up the socket ID (or create one if it doesn't already exist)
+  and pass the data on to the request tracker
+-----------------------------------------------------------------------------*/
+void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len){
+  ATLTRACE(_T("[wptdriver] - TrackSockets::DataOut() %d bytes on socket %d"),
+            data_len, s);
+  EnterCriticalSection(&cs);
+  DWORD socket_id = 0;
+  _openSockets.Lookup(s, socket_id);
+  if (!socket_id) {
+    socket_id = _nextSocketId;
+    _openSockets.SetAt(s, socket_id);
+    _nextSocketId++;
+  }
+  LeaveCriticalSection(&cs);
+
+  _requests.DataOut(socket_id, data, data_len);
 }

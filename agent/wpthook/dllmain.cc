@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
-#include "wpthook.h"
+
+extern HINSTANCE global_dll_handle; // DLL handle
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,

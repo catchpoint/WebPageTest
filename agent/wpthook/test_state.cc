@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "test_state.h"
+#include "results.h"
 
 const DWORD ACTIVITY_TIMEOUT = 2000;
 const DWORD ON_LOAD_GRACE_PERIOD = 1000;
@@ -29,6 +30,7 @@ TestState::~TestState(void){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Start(){
+  ATLTRACE2(_T("[wpthook] TestState::Start()\n"));
   QueryPerformanceCounter(&_start);
   _results.Reset();
   _timeout = false;

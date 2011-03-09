@@ -109,6 +109,12 @@
     <ClInclude Include="results.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="requests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -178,6 +184,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="results.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="request.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="requests.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
