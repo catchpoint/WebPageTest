@@ -1,4 +1,4 @@
-*/
+/*
 Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
 
@@ -76,6 +76,14 @@ int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags)
   return ret;
 }
 
+int WSAAPI select_Hook(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
+              fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
+  int ret = SOCKET_ERROR;
+  if( pHook )
+    ret = pHook->select(nfds, readfds, writefds, exceptfds, timeout);
+  return ret;
+}
+
 int WSAAPI send_Hook(SOCKET s, const char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
@@ -146,6 +154,22 @@ BOOL WSAAPI WSAGetOverlappedResult_Hook(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
   return ret;
 }
 
+int WSAAPI WSAEventSelect_Hook(SOCKET s, WSAEVENT hEventObject, 
+                                long lNetworkEvents) {
+  int ret = SOCKET_ERROR;
+  if (pHook)
+    ret = pHook->WSAEventSelect(s, hEventObject, lNetworkEvents);
+  return ret;
+}
+
+int WSAAPI WSAEnumNetworkEvents_Hook(SOCKET s, WSAEVENT hEventObject, 
+                            LPWSANETWORKEVENTS lpNetworkEvents) {
+  int ret = SOCKET_ERROR;
+  if (pHook)
+    ret = pHook->WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
+  return ret;
+}
+
 
 /******************************************************************************
 *******************************************************************************
@@ -179,6 +203,7 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _connect = hook.createHookByName("ws2_32.dll", "connect", connect_Hook);
   _recv = hook.createHookByName("ws2_32.dll", "recv", recv_Hook);
   _send = hook.createHookByName("ws2_32.dll", "send", send_Hook);
+  _select = hook.createHookByName("ws2_32.dll", "select", select_Hook);
   _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
                                                             GetAddrInfoW_Hook);
   _FreeAddrInfoW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoW", 
@@ -187,6 +212,10 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
   _WSAGetOverlappedResult = hook.createHookByName("ws2_32.dll", 
                         "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
+  _WSAEventSelect = hook.createHookByName("ws2_32.dll", 
+                        "WSAEventSelect", WSAEventSelect_Hook);
+  _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll", 
+                        "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if( !_GetAddrInfoW )
@@ -252,8 +281,11 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
   _test_state.ActivityDetected();
 
   _sockets.Connect(s, name, namelen);
-  if( _connect )
+  if (_connect)
     ret = _connect(s, name, namelen);
+
+  if (!ret)
+    _sockets.Connected(s);
 
   _test_state.ActivityDetected();
 
@@ -354,6 +386,19 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
+              fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
+  int ret = SOCKET_ERROR;
+  ATLTRACE(_T("[wpthook] select"));
+
+  if (_select)
+    ret = _select(nfds, readfds, writefds, exceptfds, timeout);
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                                const ADDRINFOA * pHints, PADDRINFOA * ppResult)
 {
@@ -403,9 +448,10 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
       _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
-
-    _dns.LookupDone(context);
   }
+
+  if (context)
+    _dns.LookupDone(context, ret);
 
   _test_state.ActivityDetected();
 
@@ -463,9 +509,10 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
       _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
-
-    _dns.LookupDone(context);
   }
+
+  if (context)
+    _dns.LookupDone(context, ret);
 
   _test_state.ActivityDetected();
 
@@ -529,6 +576,35 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
       }
     }
   }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject, 
+                                long lNetworkEvents) {
+  int ret = SOCKET_ERROR;
+  ATLTRACE(_T("[wpthook] WSAEventSelect for socket %d\n"), s);
+
+  if (_WSAEventSelect)
+    ret = _WSAEventSelect(s, hEventObject, lNetworkEvents);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
+                            LPWSANETWORKEVENTS lpNetworkEvents) {
+  int ret = SOCKET_ERROR;
+
+  if (_WSAEnumNetworkEvents)
+    ret = _WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
+
+  ATLTRACE(_T("[wpthook] WSAEnumNetworkEvents for socket %d\n"), s);
+
+  if (!ret && lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
+    _sockets.Connected(s);
 
   return ret;
 }

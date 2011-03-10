@@ -34,7 +34,8 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
                             43 => 'score_combine', 44 => 'score_compress', 45 => 'score_etags', 47 => 'secure', 
                             48 => 'dnsTime', 49 => 'socketTime', 50 => 'sslTime', 51 => 'gzip_total',
                             52 => 'gzip_save', 53 => 'minify_total', 54 => 'minify_save', 55 => 'image_total',
-                            56 => 'image_save', 57 => 'cache_time', 61 => 'cdn_provider'
+                            56 => 'image_save', 57 => 'cache_time', 61 => 'cdn_provider', 
+                            62 => 'dns_start', 63 => 'dns_end', 64 => 'connect_start', 65 => 'connect_end'
                         );
 		
 		// loop through each line in the file

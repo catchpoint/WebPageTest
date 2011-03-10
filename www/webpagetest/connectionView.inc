@@ -503,6 +503,22 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
                         drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colRequest);
                         $start = $end;
                     }
+
+                    // new-style DNS reporting
+                    if( $request['dns_end'] > 0 )
+                    {
+                        $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
+                        $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
+                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
+                    }
+
+                    // new-style connection reporting
+                    if( $request['connect_end'] > 0 )
+                    {
+                        $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
+                        $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
+                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
+                    }
                 }
                 $lastEnd = $xFullEnd;
             }

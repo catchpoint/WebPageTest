@@ -217,11 +217,22 @@ void Results::SaveRequests(void) {
   if (file != INVALID_HANDLE_VALUE) {
     SetFilePointer( file, 0, 0, FILE_END );
     _requests.Lock();
+    // first do all of the processing.  We want to do ALL of the processing
+    // before recording the results so we can include any socket connections
+    // or DNS lookups that are not associated with a request
     POSITION pos = _requests._requests.GetHeadPosition();
+    while (pos) {
+      Request * request = _requests._requests.GetNext(pos);
+      if (request)
+        request->Process();
+    }
+
+    // now record the results
+    pos = _requests._requests.GetHeadPosition();
     int i = 0;
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request && request->Process()) {
+      if (request && request->_processed) {
         i++;
         SaveRequest(file, request, i);
       }
@@ -264,21 +275,30 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
   buff.Format("%d\t", request->_ms_start);
   result += buff;
   // Bytes Out
-  result += "\t";
+  buff.Format("%d\t", request->_data_sent);
+  result += buff;
   // Bytes In
-  result += "\t";
+  buff.Format("%d\t", request->_data_received);
+  result += buff;
   // Object Size
-  result += "\t";
+  DWORD size = 0;
+  if (request->_data_received && 
+      request->_data_received > (DWORD)request->_in_header.GetLength())
+      size = request->_data_received - request->_in_header.GetLength();
+  buff.Format("%d\t", size);
+  result += buff;
   // Cookie Size (out)
   result += "\t";
   // Cookie Count(out)
   result += "\t";
   // Expires
-  result += "\t";
+  result += request->GetResponseHeader("expires") + "\t";
   // Cache Control
   result += request->GetResponseHeader("cache-control") + "\t";
   // Content Type
-  result += request->GetResponseHeader("content-type") + "\t";
+  int pos = 0;
+  result += request->GetResponseHeader("content-type").Tokenize(";", pos) 
+            + "\t";
   // Content Encoding
   result += request->GetResponseHeader("content-encoding") + "\t";
   // Transaction Type (3 = request - legacy reasons)
@@ -366,6 +386,18 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
   result += "0\t";
   // CDN Provider - The CDN provider that the request was served from - Added in build 260 
   result += "\t";
+  // DNS start
+  buff.Format("%d\t", request->_ms_dns_start);
+  result += buff;
+  // DNS end
+  buff.Format("%d\t", request->_ms_dns_end);
+  result += buff;
+  // connect start
+  buff.Format("%d\t", request->_ms_connect_start);
+  result += buff;
+  // connect end
+  buff.Format("%d\t", request->_ms_connect_end);
+  result += buff;
 
   result += "\r\n";
 

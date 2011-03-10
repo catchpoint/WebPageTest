@@ -1,14 +1,19 @@
 #include "StdAfx.h"
 #include "requests.h"
 #include "test_state.h"
+#include "track_dns.h"
+#include "track_sockets.h"
 
 const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ", "OPTIONS ",
                                "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Requests::Requests(TestState& test_state):
-  _test_state(test_state) {
+Requests::Requests(TestState& test_state, TrackSockets& sockets,
+                    TrackDns& dns):
+  _test_state(test_state)
+  , _sockets(sockets)
+  , _dns(dns) {
   _active_requests.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -119,7 +124,7 @@ bool Requests::IsHttpRequest(const char * data, unsigned long data_len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id) {
-  Request * request = new Request(_test_state, socket_id);
+  Request * request = new Request(_test_state, socket_id, _sockets, _dns);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
   return request;

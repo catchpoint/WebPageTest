@@ -2,11 +2,13 @@
 #include "request.h"
 
 class TestState;
+class TrackSockets;
+class TrackDns;
 
 class Requests
 {
 public:
-  Requests(TestState& test_state);
+  Requests(TestState& test_state, TrackSockets& sockets, TrackDns& dns);
   ~Requests(void);
 
   void SocketClosed(DWORD socket_id);
@@ -21,8 +23,10 @@ public:
   CAtlMap<DWORD, Request *> _active_requests; // requests indexed by socket
 
 private:
-  CRITICAL_SECTION cs;
-  TestState&       _test_state;
+  CRITICAL_SECTION  cs;
+  TestState&        _test_state;
+  TrackSockets&     _sockets;
+  TrackDns&         _dns;
 
   bool IsHttpRequest(const char * data, unsigned long data_len);
 

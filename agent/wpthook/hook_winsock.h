@@ -66,6 +66,8 @@ public:
   int		connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namelen);
   int		recv(SOCKET s, char FAR * buf, int len, int flags);
   int		send(SOCKET s, const char FAR * buf, int len, int flags);
+  int   select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
+                fd_set FAR * exceptfds, const struct timeval FAR * timeout);
   int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                               const ADDRINFOA * pHints, PADDRINFOA * ppResult);
   int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
@@ -82,7 +84,9 @@ public:
                 LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
   BOOL  WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
                 LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags);
-
+  int   WSAEventSelect(SOCKET s, WSAEVENT hEventObject, long lNetworkEvents);
+  int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
+                              LPWSANETWORKEVENTS lpNetworkEvents);
 
 private:
   TestState&        _test_state;
@@ -105,6 +109,7 @@ private:
   LPFN_CONNECT		    _connect;
   LPFN_RECV			      _recv;
   LPFN_SEND			      _send;
+  LPFN_SELECT         _select;
   LPFN_GETADDRINFO	  _getaddrinfo;
   LPFN_GETADDRINFOW	  _GetAddrInfoW;
   LPFN_FREEADDRINFO	  _freeaddrinfo;
@@ -112,4 +117,6 @@ private:
   LPFN_WSARECV		    _WSARecv;
   LPFN_WSASEND        _WSASend;
   LPFN_WSAGETOVERLAPPEDRESULT _WSAGetOverlappedResult;
+  LPFN_WSAEVENTSELECT _WSAEventSelect;
+  LPFN_WSAENUMNETWORKEVENTS _WSAEnumNetworkEvents;
 };

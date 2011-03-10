@@ -61,7 +61,7 @@ foreach($requests as $reqNum => $request)
 			if( $request['secure'] && $request['secure'] == 1)
 				$protocol = 'https://';
 			$url = $protocol . $request['host'] . $request['url'];
-      $displayurl = ShortenUrl($url);
+            $displayurl = ShortenUrl($url);
 			echo '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url .  '">' . $displayurl . '</a></td>';
 		}
 		else
@@ -79,6 +79,11 @@ foreach($requests as $reqNum => $request)
 
 		if( $request['dnsTime'] && (int)$request['dnsTime'] !== -1)
 			echo '<td class="reqDNS ' . $highlight . '">' . $request['dnsTime'] . ' ms</td>';
+        elseif( $request['dns_end'] > 0 )
+        {
+            $time = $request['dns_end'] - $request['dns_start'];
+            echo '<td class="reqDNS ' . $highlight . '">' . $time . ' ms</td>';
+        }
 		else
 			echo '<td class="reqDNS ' . $highlight . '">-</td>';
 
@@ -90,7 +95,14 @@ foreach($requests as $reqNum => $request)
 			elseif( $secure )
 				echo '<td class="reqSSL ' . $highlight . '">-</td>';
 		}
-		else
+		elseif( $request['connect_end'] > 0 )
+        {
+            $time = $request['connect_end'] - $request['connect_start'];
+            echo '<td class="reqSocket ' . $highlight . '">' . $time . ' ms</td>';
+            if( $secure )
+                echo '<td class="reqSSL ' . $highlight . '">-</td>';
+        }
+        else
 		{
 			echo '<td class="reqSocket ' . $highlight . '">-</td>';
 			if( $secure )

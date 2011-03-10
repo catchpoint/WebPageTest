@@ -1,25 +1,35 @@
 #include "StdAfx.h"
 #include "request.h"
 #include "test_state.h"
+#include "track_sockets.h"
+#include "track_dns.h"
 
 const DWORD MAX_DATA_TO_RETAIN = 1048576;  // 1MB
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Request::Request(TestState& test_state, DWORD socket_id):
+Request::Request(TestState& test_state, DWORD socket_id,
+                  TrackSockets& sockets, TrackDns& dns):
   _test_state(test_state)
   , _data_sent(0)
   ,_data_received(0)
   , _ms_start(0)
   , _ms_first_byte(0)
   , _ms_end(0)
+  , _ms_connect_start(0)
+  , _ms_connect_end(0)
+  , _ms_dns_start(0)
+  , _ms_dns_end(0)
   , _socket_id(socket_id)
   , _active(true)
   , _data_in(NULL)
   , _data_out(NULL)
   , _data_in_size(0)
   , _data_out_size(0)
-  , _result(-1) {
+  , _result(-1)
+  , _sockets(sockets)
+  , _dns(dns)
+  , _processed(false) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -126,9 +136,31 @@ bool Request::Process() {
     FindHeader(_data_out, _out_header);
     ProcessRequest();
     ProcessResponse();
+
+    // find the matching socket connect and DNS lookup (if they exist)
+    LONGLONG before = _start.QuadPart;
+    LONGLONG start, end;
+    CString host = CA2T(GetRequestHeader("host"));
+    if (_dns.Claim(host, before, start, end) && 
+        start > _test_state._start.QuadPart &&
+        end > _test_state._start.QuadPart) {
+      _ms_dns_start = (DWORD)((start - _test_state._start.QuadPart)
+                  / _test_state._ms_frequency.QuadPart);
+      _ms_dns_end = (DWORD)((end - _test_state._start.QuadPart)
+                  / _test_state._ms_frequency.QuadPart);
+    }
+    if (_sockets.ClaimConnect(_socket_id, before, start, end) && 
+        start > _test_state._start.QuadPart &&
+        end > _test_state._start.QuadPart) {
+      _ms_connect_start = (DWORD)((start - _test_state._start.QuadPart)
+                  / _test_state._ms_frequency.QuadPart);
+      _ms_connect_end = (DWORD)((end - _test_state._start.QuadPart)
+                  / _test_state._ms_frequency.QuadPart);
+    }
   }
   LeaveCriticalSection(&cs);
 
+  _processed = ret;
   return ret;
 }
 

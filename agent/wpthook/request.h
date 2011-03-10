@@ -1,6 +1,8 @@
 #pragma once
 
 class TestState;
+class TrackSockets;
+class TrackDns;
 
 class DataChunk
 {
@@ -52,7 +54,8 @@ typedef CAtlList<HeaderField> Fields;
 class Request
 {
 public:
-  Request(TestState& test_state, DWORD socket_id);
+  Request(TestState& test_state, DWORD socket_id, 
+          TrackSockets& sockets, TrackDns& dns);
   ~Request(void);
 
   void DataIn(const char * data, unsigned long data_len);
@@ -63,11 +66,16 @@ public:
   DWORD _data_sent;
   DWORD _data_received;
   DWORD _socket_id;
+  bool  _processed;
 
   // times (in ms from the test start)
-  DWORD _ms_start;
-  DWORD _ms_first_byte;
-  DWORD _ms_end;
+  int _ms_start;
+  int _ms_first_byte;
+  int _ms_end;
+  int _ms_connect_start;
+  int _ms_connect_end;
+  int _ms_dns_start;
+  int _ms_dns_end;
 
   // header data
   CStringA  _in_header;
@@ -81,9 +89,12 @@ public:
 
 private:
   TestState&    _test_state;
+  TrackSockets& _sockets;
+  TrackDns&     _dns;
   LARGE_INTEGER _start;
   LARGE_INTEGER _first_byte;
   LARGE_INTEGER _end;
+
   CRITICAL_SECTION cs;
   bool          _active;
   Fields    _in_fields;

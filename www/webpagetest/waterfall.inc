@@ -425,6 +425,11 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             $xStart = $left + (int)((double)$w * ((double)$start / $range));
             $xEnd = $left + (int)((double)$w * ((double)$end / $range));
             $xFullEnd = $xEnd;
+            $xLeftmost = $xStart;
+            if( $request['connect_end'] > 0 && $request['connect_start'] < $start )
+                $xLeftmost = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
+            if( $request['dns_end'] > 0 && $request['dns_start'] < $start )
+                $xLeftmost = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
             
             // put the text label next to the line
             $label = $request['totalTime'] . ' ms';
@@ -434,11 +439,11 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $label .= ' (Request Canceled)';
 
             $labelWidth = strlen($label) * $fontWidth;
-            $leftPixels = $xStart - $left;
+            $leftPixels = $xLeftmost - $left;
             $rightPixels = $width - $xEnd;
             $textPos = $xEnd + 5;
             if( $leftPixels > $rightPixels )
-                $textPos = $xStart - 5 - $labelWidth;
+                $textPos = $xLeftmost - 5 - $labelWidth;
             
             // erase the background behind the text
             $color = $white;
@@ -497,6 +502,22 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                     $xEnd = $xFullEnd - 1;  // allow for a sliver of content download in between stacked requests
                 drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colRequest);
                 $start = $end;
+            }
+            
+            // new-style DNS reporting
+            if( $request['dns_end'] > 0 )
+            {
+                $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
+                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
+            }
+
+            // new-style connection reporting
+            if( $request['connect_end'] > 0 )
+            {
+                $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
+                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
             }
         }
         
