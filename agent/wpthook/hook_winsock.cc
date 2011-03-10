@@ -1,4 +1,4 @@
-/*
+*/
 Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
 
@@ -46,20 +46,16 @@ SOCKET WSAAPI WSASocketW_Hook(int af, int type, int protocol,
                     LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags)
 {
   SOCKET ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
   return ret;
 }
 
 int WSAAPI closesocket_Hook(SOCKET s)
 {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->closesocket(s);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->closesocket(s);
   return ret;
 }
 
@@ -67,30 +63,24 @@ int WSAAPI connect_Hook(IN SOCKET s, const struct sockaddr FAR * name,
                                                                 IN int namelen)
 {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->connect(s, name, namelen);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->connect(s, name, namelen);
   return ret;
 }
 
 int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->recv(s, buf, len, flags);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->recv(s, buf, len, flags);
   return ret;
 }
 
 int WSAAPI send_Hook(SOCKET s, const char FAR * buf, int len, int flags)
 {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->send(s, buf, len, flags);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->send(s, buf, len, flags);
   return ret;
 }
 
@@ -98,10 +88,8 @@ int WSAAPI getaddrinfo_Hook(PCSTR pNodeName, PCSTR pServiceName,
                                const ADDRINFOA * pHints, PADDRINFOA * ppResult)
 {
   int ret = WSAEINVAL;
-  __try{
-    if( pHook )
-      ret = pHook->getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
   return ret;
 }
 
@@ -109,27 +97,21 @@ int WSAAPI GetAddrInfoW_Hook(PCWSTR pNodeName, PCWSTR pServiceName,
                                const ADDRINFOW * pHints, PADDRINFOW * ppResult)
 {
   int ret = WSAEINVAL;
-  __try{
-    if( pHook )
-      ret = pHook->GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
   return ret;
 }
 
 void WSAAPI freeaddrinfo_Hook(PADDRINFOA pAddrInfo)
 {
-  __try{
-    if( pHook )
-      pHook->freeaddrinfo(pAddrInfo);
-  }__except(1){}
+  if( pHook )
+    pHook->freeaddrinfo(pAddrInfo);
 }
 
 void WSAAPI FreeAddrInfoW_Hook(PADDRINFOW pAddrInfo)
 {
-  __try{
-    if( pHook )
-      pHook->FreeAddrInfoW(pAddrInfo);
-  }__except(1){}
+  if( pHook )
+    pHook->FreeAddrInfoW(pAddrInfo);
 }
 
 int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, 
@@ -138,11 +120,9 @@ int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                         LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, 
-                                   lpFlags, lpOverlapped, lpCompletionRoutine);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, 
+                                  lpFlags, lpOverlapped, lpCompletionRoutine);
   return ret;
 }
 
@@ -151,22 +131,18 @@ int WSAAPI WSASend_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  __try{
-    if( pHook )
-      ret = pHook->WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, 
-                           dwFlags, lpOverlapped, lpCompletionRoutine);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, 
+                          dwFlags, lpOverlapped, lpCompletionRoutine);
   return ret;
 }
 
 BOOL WSAAPI WSAGetOverlappedResult_Hook(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
               LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags) {
   BOOL ret = FALSE;
-  __try{
-    if( pHook )
-      ret = pHook->WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait,
-                                          lpdwFlags);
-  }__except(1){}
+  if( pHook )
+    ret = pHook->WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait,
+                                        lpdwFlags);
   return ret;
 }
 

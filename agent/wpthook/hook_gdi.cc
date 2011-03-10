@@ -42,10 +42,8 @@ BOOL __stdcall RedrawWindow_Hook(HWND hWnd, CONST RECT *lprcUpdate,
                                                    HRGN hrgnUpdate, UINT flags)
 {
   BOOL ret = FALSE;
-  __try{
-    if(pHook)
-      ret = pHook->RedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
-  }__except(1){}
+  if(pHook)
+    ret = pHook->RedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
   return ret;
 }
 
@@ -53,30 +51,24 @@ BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc,
                                                      int x1, int y1, DWORD rop)
 {
   BOOL ret = FALSE;
-  __try{
-    if(pHook)
-      ret = pHook->BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-  }__except(1){}
+  if(pHook)
+    ret = pHook->BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
   return ret;
 }
 
 HDC	__stdcall BeginPaint_Hook(HWND hWnd, LPPAINTSTRUCT lpPaint)
 {
   HDC ret = NULL;
-  __try{
-    if(pHook)
-      ret = pHook->BeginPaint(hWnd, lpPaint);
-  }__except(1){}
+  if(pHook)
+    ret = pHook->BeginPaint(hWnd, lpPaint);
   return ret;
 }
 
 BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
   BOOL ret = FALSE;
-  __try{
-    if(pHook)
-      ret = pHook->EndPaint(hWnd, lpPaint);
-  }__except(1){}
+  if(pHook)
+    ret = pHook->EndPaint(hWnd, lpPaint);
   return ret;
 }
 

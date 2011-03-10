@@ -246,13 +246,14 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
   // IP Address
   result += "\t";
   // Action
-  result += "\t";
+  result += request->_method + "\t";
   // Host
-  result += "\t";
+  result += request->GetRequestHeader("host") + "\t";
   // URL
-  result += "\t";
+  result += request->_object + "\t";
   // Response Code
-  result += "200\t";
+  buff.Format("%d\t", request->_result);
+  result += buff;
   // Time to Load (ms)
   buff.Format("%d\t", request->_ms_end - request->_ms_start);
   result += buff;
@@ -275,11 +276,11 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
   // Expires
   result += "\t";
   // Cache Control
-  result += "\t";
+  result += request->GetResponseHeader("cache-control") + "\t";
   // Content Type
-  result += "\t";
+  result += request->GetResponseHeader("content-type") + "\t";
   // Content Encoding
-  result += "\t";
+  result += request->GetResponseHeader("content-encoding") + "\t";
   // Transaction Type (3 = request - legacy reasons)
   result += "3\t";
   // Socket ID

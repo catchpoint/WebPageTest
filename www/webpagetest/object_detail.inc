@@ -3,7 +3,6 @@
 function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $checkLocations, $includeHeaders = false)
 {
 	$requests = array();
-    $start = 100000;
 	
 	$geoip;
     if( $checkLocations == true )
@@ -90,9 +89,6 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
                 
                 $event['totalTime'] = $event['endOffset'] - $event['offset'];
                 
-                if( $event['offset'] < $start )
-                    $start = $event['offset'];
-				
 				unset($dnsTime);
 				unset($socketTime);
 				
@@ -218,19 +214,6 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
         }
 	}
     
-    // go through all of the requests and shift the offset to 0
-    foreach($requests as &$request)
-    {
-        $request['offset'] -= $start;
-        $request['totalEndOffset'] -= $start;
-        $request['endOffset'] -= $start;
-        $request['downloadOffset'] -= $start;
-        $request['requestOffset'] -= $start;
-        $request['sslOffset'] -= $start;
-        $request['socketOffset'] -= $start;
-        $request['dnsOffset'] -= $start;
-    }
-	
 	return $requests;
 }
 
