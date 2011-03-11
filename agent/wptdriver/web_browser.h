@@ -12,6 +12,7 @@ public:
   bool RunAndWait();
   bool Close();
   void ClearCache();
+  void PositionWindow();
 
 private:
   void InjectDll();

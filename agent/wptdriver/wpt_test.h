@@ -30,7 +30,7 @@ public:
   bool  Load(CString& test);
   CStringA ToJSON();
 
-  bool  Start();
+  bool  Start(BrowserSettings * browser);
   bool  GetNextTask(CStringA& task, bool& record);
 
   // overall test settings

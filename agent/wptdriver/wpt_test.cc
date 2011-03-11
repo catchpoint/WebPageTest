@@ -211,7 +211,7 @@ CStringA WptTest::JSONEscape(CString src)
 /*-----------------------------------------------------------------------------
   We are starting a new run, build up the script for the browser to execute
 -----------------------------------------------------------------------------*/
-bool WptTest::Start(){
+bool WptTest::Start(BrowserSettings * browser){
   bool ret = false;
 
   // build up a new script
@@ -227,6 +227,10 @@ bool WptTest::Start(){
     // pass settings on to the hook dll
     SetForceDocComplete(_doc_complete);
     SetClearedCache(_clear_cache);
+    if (browser) {
+      SetBrowserFrame(browser->_frame_window);
+      SetBrowserWindow(browser->_browser_window);
+    }
 
     // just support URL navigating right now
     if (_url.GetLength()){

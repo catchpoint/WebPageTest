@@ -92,4 +92,16 @@ void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _cache.Trim(_T("\""));
     _cache.Replace(_T("%WPTDIR%"), wpt_directory);
   }
+
+  if( GetPrivateProfileString(browser, _T("frame_window"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _frame_window = buff;
+    _frame_window.Trim();
+  }
+
+  if( GetPrivateProfileString(browser, _T("browser_window"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _browser_window = buff;
+    _browser_window.Trim();
+  }
 }

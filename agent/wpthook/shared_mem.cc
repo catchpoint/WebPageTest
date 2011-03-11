@@ -8,6 +8,8 @@ WCHAR  shared_results_file_base[MAX_PATH] = {NULL};
 DWORD  shared_test_timeout = 120000;
 bool   shared_test_force_on_load = false;
 bool   shared_cleared_cache = false;
+WCHAR  shared_frame_window[200] = {NULL};
+WCHAR  shared_browser_window[200] = {NULL};
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -17,6 +19,10 @@ __declspec( dllexport ) void WINAPI SetResultsFileBase(const WCHAR * file_base);
 __declspec( dllexport ) void WINAPI SetTestTimeout(DWORD timeout);
 __declspec( dllexport ) void WINAPI SetForceDocComplete(bool force);
 __declspec( dllexport ) void WINAPI SetClearedCache(bool cleared_cache);
+__declspec( dllexport ) void WINAPI SetBrowserFrame(const WCHAR * 
+                                                                 frame_window);
+__declspec( dllexport ) void WINAPI SetBrowserWindow(const WCHAR * 
+                                                               browser_window);
 }
 
 /*-----------------------------------------------------------------------------
@@ -42,4 +48,16 @@ void WINAPI SetForceDocComplete(bool force){
 -----------------------------------------------------------------------------*/
 void WINAPI SetClearedCache(bool cleared_cache) {
   shared_cleared_cache = cleared_cache;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetBrowserFrame(const WCHAR * frame_window) {
+  lstrcpyW(shared_frame_window, frame_window);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetBrowserWindow(const WCHAR * browser_window) {
+  lstrcpyW(shared_browser_window, browser_window);
 }

@@ -23,6 +23,8 @@ public:
   CString _exe;
   CString _options;
   CString _cache;
+  CString _frame_window;
+  CString _browser_window;
 };
 
 // dynamic settings loaded from file

@@ -117,6 +117,8 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/task") == 0) {
       if (_test){
         CStringA task;
+        if (_browser)
+          _browser->PositionWindow();
         bool record = false;
         _test->GetNextTask(task, record);
         if (record)

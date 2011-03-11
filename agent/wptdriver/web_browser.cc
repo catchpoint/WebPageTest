@@ -28,7 +28,7 @@ WebBrowser::~WebBrowser(void){
 bool WebBrowser::RunAndWait(){
   bool ret = false;
 
-  if (_test.Start() ){
+  if (_test.Start(&_browser) ){
     if( _browser._exe.GetLength() ){
       HMODULE hook_dll = NULL;
       TCHAR cmdLine[4096];
@@ -47,7 +47,8 @@ bool WebBrowser::RunAndWait(){
       si.dwY = 0;
       si.dwXSize = 1024;
       si.dwYSize = 768;
-      si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE;
+      si.wShowWindow = SW_SHOWNORMAL;
+      si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
       EnterCriticalSection(&cs);
       _browser_process = NULL;
@@ -108,12 +109,19 @@ bool WebBrowser::Close(){
     DWORD browser_process_id = GetProcessId(_browser_process);
     HWND wnd = ::GetDesktopWindow();
     wnd = ::GetWindow(wnd, GW_CHILD);
+    TCHAR window_class[1024];
     while ( wnd )
     {
       DWORD pid;
       GetWindowThreadProcessId( wnd, &pid);
-      if ( pid == browser_process_id )
-        ::PostMessage(wnd,WM_CLOSE,0,0);
+      if ( pid == browser_process_id && IsWindowVisible(wnd) ) {
+        *window_class = NULL;
+        GetClassName(wnd, window_class, _countof(window_class));
+        if (!_browser._frame_window.GetLength() || 
+              _browser._frame_window == window_class) {
+          ::PostMessage(wnd,WM_CLOSE,0,0);
+        }
+      }
       wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
     }
   }
@@ -128,4 +136,32 @@ void WebBrowser::ClearCache() {
   if (_browser._cache.GetLength()) {
     DeleteDirectory(_browser._cache, false);
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WebBrowser::PositionWindow() {
+  EnterCriticalSection(&cs);
+  if( _browser_process ){
+    DWORD browser_process_id = GetProcessId(_browser_process);
+    HWND wnd = ::GetDesktopWindow();
+    wnd = ::GetWindow(wnd, GW_CHILD);
+    TCHAR window_class[1024];
+    while ( wnd )
+    {
+      DWORD pid;
+      GetWindowThreadProcessId( wnd, &pid);
+      if ( pid == browser_process_id && IsWindowVisible(wnd) ) {
+        *window_class = NULL;
+        GetClassName(wnd, window_class, _countof(window_class));
+        if (!_browser._frame_window.GetLength() || 
+              _browser._frame_window == window_class) {
+          ::ShowWindow(wnd, SW_RESTORE);
+          ::SetWindowPos(wnd, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
+        }
+      }
+      wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
+    }
+  }
+  LeaveCriticalSection(&cs);
 }
