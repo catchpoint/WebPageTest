@@ -199,7 +199,7 @@ WptHook::WptHook(void):
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns)
-  ,_results(_test_state, _requests)
+  ,_results(_test_state, _requests, _sockets)
   ,_dns(_test_state) {
   _file_base = shared_results_file_base;
 }

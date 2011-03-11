@@ -91,16 +91,24 @@ void TrackSockets::DataIn(SOCKET s, const char * data, unsigned long data_len){
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;
   _openSockets.Lookup(s, socket_id);
+  SocketInfo * info = NULL;
   if (!socket_id) {
     socket_id = _nextSocketId;
     _openSockets.SetAt(s, socket_id);
     _nextSocketId++;
   } else {
-    SocketInfo * info = NULL;
-    if (_socketInfo.Lookup(socket_id, info) && info )
-      if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
-        localhost = true;
+    _socketInfo.Lookup(socket_id, info);
   }
+  if (!info) {
+    info = new SocketInfo;
+    info->_id = socket_id;
+    info->_during_test = _test_state._active;
+    int len = sizeof(info->_addr);
+    getpeername(s, (sockaddr *)&info->_addr, &len);
+    _socketInfo.SetAt(info->_id, info);
+  }
+  if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
+    localhost = true;
   LeaveCriticalSection(&cs);
 
   if (!localhost )
@@ -119,19 +127,27 @@ void TrackSockets::DataOut(SOCKET s, const char * data,
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;
   _openSockets.Lookup(s, socket_id);
+  SocketInfo * info = NULL;
   if (!socket_id) {
     socket_id = _nextSocketId;
     _openSockets.SetAt(s, socket_id);
     _nextSocketId++;
   } else {
-    SocketInfo * info = NULL;
     if (_socketInfo.Lookup(socket_id, info) && info) {
-      if (!info->_connect_end.QuadPart)
+      if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart)
         QueryPerformanceCounter(&info->_connect_end);
-      if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
-        localhost = true;
     }
   }
+  if (!info) {
+    info = new SocketInfo;
+    info->_id = socket_id;
+    info->_during_test = _test_state._active;
+    int len = sizeof(info->_addr);
+    getpeername(s, (sockaddr *)&info->_addr, &len);
+    _socketInfo.SetAt(info->_id, info);
+  }
+  if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
+    localhost = true;
   LeaveCriticalSection(&cs);
 
   if (!localhost )
@@ -174,4 +190,17 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LONGLONG before,
   }
   LeaveCriticalSection(&cs);
   return claimed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
+  ULONG ret = 0;
+  EnterCriticalSection(&cs);
+  SocketInfo * info = NULL;
+  if (_socketInfo.Lookup(socket_id, info) && info) {
+    ret = info->_addr.sin_addr.S_un.S_addr;
+  }
+  LeaveCriticalSection(&cs);
+  return ret;
 }

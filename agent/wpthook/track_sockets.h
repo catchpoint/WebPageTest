@@ -40,6 +40,7 @@ public:
   void Reset();
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
                       LONGLONG& end);
+  ULONG GetPeerAddress(DWORD socket_id);
 
 private:
   CRITICAL_SECTION cs;

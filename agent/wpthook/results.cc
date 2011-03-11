@@ -2,15 +2,18 @@
 #include "results.h"
 #include "shared_mem.h"
 #include "requests.h"
+#include "track_sockets.h"
 
 const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Results::Results(TestState& test_state, Requests& requests):
+Results::Results(TestState& test_state, Requests& requests, 
+                  TrackSockets& sockets):
   _requests(requests)
-  , _test_state(test_state) {
+  , _test_state(test_state)
+  , _sockets(sockets) {
   _file_base = shared_results_file_base;
 }
 
@@ -255,6 +258,14 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
   // Event Name
   result += "\t";
   // IP Address
+  struct sockaddr_in addr;
+  addr.sin_addr.S_un.S_addr = _sockets.GetPeerAddress(request->_socket_id);
+  if (addr.sin_addr.S_un.S_addr) {
+    buff.Format("%d.%d.%d.%d", addr.sin_addr.S_un.S_un_b.s_b1, 
+      addr.sin_addr.S_un.S_un_b.s_b2, addr.sin_addr.S_un.S_un_b.s_b3, 
+      addr.sin_addr.S_un.S_un_b.s_b4);
+    result += buff;
+  }
   result += "\t";
   // Action
   result += request->_method + "\t";
