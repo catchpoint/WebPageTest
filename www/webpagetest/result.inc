@@ -276,7 +276,10 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                 <tr>
                     <th align="center" class="empty" valign="middle"></th>
                     <th align="center" valign="middle">Waterfall</th>
-                    <th align="center" valign="middle">Optimization Checklist</th>
+                    <?php
+                    if($pageData[$run][0]['optimization_checked'])
+                        echo '<th align="center" valign="middle">Optimization Checklist</th>';
+                    ?>
                     <th align="center" valign="middle">Screen Shot</th>
                     <?php if($video) { ?>
                     <th align="center" valign="middle">Video</th>
@@ -297,7 +300,10 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                             echo "<br><br><a href=\"/result/$id/{$run}.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                     ?></td>
                     <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/details/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_waterfall_thumb.png"></a></td>
-                    <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/performance_optimization/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_optimization_thumb.png"></a></td>
+                    <?php
+                    if($pageData[$run][0]['optimization_checked'])
+                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_optimization_thumb.png\"></a></td>\n";
+                    ?>
                     <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/screen_shot/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_screen_thumb.jpg"></a></td>
                     <?php if($video) { ?>
                     <td align="center" valign="middle">
@@ -331,7 +337,10 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                             echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                     ?></td>
                     <td align="center" class="even" valign="middle"><a href="/result/<?php echo "$id/$run/details/cached/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_Cached_waterfall_thumb.png"></a></td>
-                    <td align="center" class="even" valign="middle"><a href="/result/<?php echo "$id/$run/performance_optimization/cached/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_Cached_optimization_thumb.png"></a></td>
+                    <?php
+                    if($pageData[$run][0]['optimization_checked'])
+                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_optimization_thumb.png\"></a></td>\n";
+                    ?>
                     <td align="center" class="even" valign="middle"><a href="/result/<?php echo "$id/$run/screen_shot/cached/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_Cached_screen_thumb.jpg"></a></td>
                     <?php if($video) { ?>
                     <td align="center" valign="middle">

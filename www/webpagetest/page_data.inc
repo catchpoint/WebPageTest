@@ -106,6 +106,7 @@ function loadPageData($file)
                                 'minify_savings' => (int)$fields[67],
                                 'image_total' => (int)$fields[68],
                                 'image_savings' => (int)$fields[69],
+                                'optimization_checked' => (int)$fields[71],
                                 'aft' => (int)$fields[72]
                             );
                 

@@ -147,13 +147,15 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
                 $gradeRun = $medianRun;
         }
 
-        echo '<ul class="grades">';
         $grades = GetGrades($pageData[$gradeRun][0]);
-        
-        $optlink = "/result/$id/$gradeRun/performance_optimization/";
-        foreach( $grades as $check => &$grade )
-            echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
-        echo '</ul>';
+        if( count($grades) )
+        {
+            echo '<ul class="grades">';
+            $optlink = "/result/$id/$gradeRun/performance_optimization/";
+            foreach( $grades as $check => &$grade )
+                echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+            echo '</ul>';
+        }
 
         $shortUrl = str_replace('http://', '',  FitText($url, 120));
         echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br><a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a></h2>";
@@ -184,9 +186,11 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
             $cTxt = 'cached/';
 
         $tabs = array( 'Summary' => "/result/$id/",
-                    'Details' => "/result/$id/$run/details/$cTxt",
-                    'Performance Review' => "/result/$id/$run/performance_optimization/$cTxt"
+                    'Details' => "/result/$id/$run/details/$cTxt"
                     );
+                    
+        if( $pageData[$run][$cached]['optimization_checked'] )
+            $tabs['Performance Review'] = "/result/$id/$run/performance_optimization/$cTxt";
         
         $cTxt2 = '';
         if( $cached )
@@ -231,18 +235,20 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
 */
 function GetGrades(&$pageData)
 {
-    require_once('optimization_detail.inc.php');
-
-    $opt = getOptimizationGrades($pageData);
-
     $grades = array();
+    if($pageData['optimization_checked'])
+    {
+        require_once('optimization_detail.inc.php');
 
-    $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => 'Keep-alive Enabled');
-    $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => 'Compress Text');
-    $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => 'Compress Images');
-    $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => 'Cache Static Content');
-    $grades['combine_js_css_files'] = array( 'class' => $opt['combine']['class'], 'grade' => $opt['combine']['grade'], 'description' => 'Combine JS/CSS Files');
-    $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => 'Use of CDN');
+        $opt = getOptimizationGrades($pageData);
+
+        $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => 'Keep-alive Enabled');
+        $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => 'Compress Text');
+        $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => 'Compress Images');
+        $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => 'Cache Static Content');
+        $grades['combine_js_css_files'] = array( 'class' => $opt['combine']['class'], 'grade' => $opt['combine']['grade'], 'description' => 'Combine JS/CSS Files');
+        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => 'Use of CDN');
+    }
     
     return $grades;
 }

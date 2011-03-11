@@ -11,13 +11,21 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results):
   _test_timeout(test_timeout)
   ,_active(false)
   ,_timeout(false)
-  ,_pending_document(true)
+  ,_next_document(1)
+  ,_current_document(0)
+  ,_doc_requests(0)
+  ,_requests(0)
+  ,_doc_bytes_in(0)
+  ,_bytes_in(0)
+  ,_doc_bytes_out(0)
+  ,_bytes_out(0)
   ,_end_on_load(end_on_load)
   ,_results(results){
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _first_activity.QuadPart = 0;
   _last_activity.QuadPart = 0;
+  _first_byte.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
 }
@@ -35,6 +43,8 @@ void TestState::Start(){
   _results.Reset();
   _timeout = false;
   _active = true;
+  _current_document = _next_document;
+  _next_document++;
 }
 
 /*-----------------------------------------------------------------------------
@@ -53,7 +63,10 @@ void TestState::OnNavigate(){
   if (_active) {
     ATLTRACE2(_T("[wpthook] TestState::OnNavigate()\n"));
     _on_load.QuadPart = 0;
-    _pending_document = true;
+    if (!_current_document) {
+      _current_document = _next_document;
+      _next_document++;
+    }
   }
 }
 
@@ -63,7 +76,7 @@ void TestState::OnLoad(){
   if (_active) {
     ATLTRACE2(_T("[wpthook] TestState::OnLoad()\n"));
     QueryPerformanceCounter(&_on_load);
-    _pending_document = false;
+    _current_document = 0;
   }
 }
 
@@ -95,32 +108,16 @@ bool TestState::IsDone(){
       // the test timed out
       _timeout = true;
       done = true;
-    } else if (!_pending_document && _end_on_load &&
+    } else if (!_current_document && _end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD){
       // end 1 second after onLoad regardless of activity
       done = true;
-    } else if (!_pending_document && !_end_on_load &&
+    } else if (!_current_document && !_end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
                 elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
       // the normal mode of waiting for 2 seconds of no network activity after
       // onLoad
       done = true;
-    }
-
-    // store the overall times in the results structure
-    if (done) {
-      _results._on_load_time = 0;
-      if (_on_load.QuadPart > _start.QuadPart)
-        _results._on_load_time = (int)((_on_load.QuadPart - _start.QuadPart)
-                                        / _ms_frequency.QuadPart);
-      _results._activity_time = 0;
-      if (_last_activity.QuadPart > _on_load.QuadPart) {
-        if (_last_activity.QuadPart > _start.QuadPart)
-          _results._activity_time = (int)((_last_activity.QuadPart - 
-                                    _start.QuadPart) / _ms_frequency.QuadPart);
-      } else {
-        _results._activity_time = _results._on_load_time;
-      }
     }
   }
 

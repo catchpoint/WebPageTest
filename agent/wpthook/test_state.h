@@ -21,12 +21,21 @@ public:
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
 
+  LARGE_INTEGER _first_byte;
+  int _doc_requests;
+  int _requests;
+  int _doc_bytes_in;
+  int _bytes_in;
+  int _doc_bytes_out;
+  int _bytes_out;
+
   bool  _active;
+  int   _current_document;
 
 private:
   int   _test_timeout; 
   bool  _timeout;
   bool  _end_on_load;
-  bool  _pending_document;
+  int   _next_document;
   Results&  _results;
 };

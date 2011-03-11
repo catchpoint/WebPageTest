@@ -3,9 +3,11 @@
 #include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
+#include "test_state.h"
 
 const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
+const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -32,8 +34,8 @@ void Results::Reset(void){
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(void){
-  SavePageData();
   SaveRequests();
+  SavePageData();
 }
 
 /*-----------------------------------------------------------------------------
@@ -59,22 +61,34 @@ void Results::SavePageData(void){
     // URL
     result += "\t";
     // Load Time (ms)
-    buff.Format("%d\t", _on_load_time);
+    int on_load_time = 0;
+    if (_test_state._on_load.QuadPart > _test_state._start.QuadPart)
+      on_load_time = (int)((_test_state._on_load.QuadPart - 
+          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    buff.Format("%d\t", on_load_time);
     result += buff;
     // Time to First Byte (ms)
-    result += "\t";
+    int first_byte_time = 0;
+    if (_test_state._first_byte.QuadPart > _test_state._start.QuadPart)
+      first_byte_time = (int)((_test_state._first_byte.QuadPart - 
+          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    buff.Format("%d\t", first_byte_time);
+    result += buff;
     // unused
     result += "\t";
     // Bytes Out
-    result += "\t";
+    buff.Format("%d\t", _test_state._bytes_out);
+    result += buff;
     // Bytes In
-    result += "\t";
+    buff.Format("%d\t", _test_state._bytes_in);
+    result += buff;
     // DNS Lookups
     result += "\t";
     // Connections
     result += "\t";
     // Requests
-    result += "\t";
+    buff.Format("%d\t", _test_state._requests);
+    result += buff;
     // OK Responses
     result += "\t";
     // Redirects
@@ -96,7 +110,13 @@ void Results::SavePageData(void){
     // Packet Loss (out)
     result += "\t";
     // Activity Time(ms)
-    buff.Format("%d\t", _activity_time);
+    int activity_time = on_load_time;
+    if (_test_state._last_activity.QuadPart > _test_state._on_load.QuadPart) {
+      if (_test_state._last_activity.QuadPart > _test_state._start.QuadPart)
+        activity_time = (int)((_test_state._last_activity.QuadPart - 
+            _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    }
+    buff.Format("%d\t", activity_time);
     result += buff;
     // Descriptor
     result += "\t";
@@ -107,7 +127,10 @@ void Results::SavePageData(void){
     // Connection Type
     result += "\t";
     // Cached
-    result += "\t";
+    if (shared_cleared_cache)
+      result += "0\t";
+    else
+      result += "1\t";
     // Event URL
     result += "\t";
     // Pagetest Build
@@ -120,7 +143,7 @@ void Results::SavePageData(void){
     // Experimental
     result += "0\t";
     // Doc Complete Time (ms)
-    buff.Format("%d\t", _on_load_time);
+    buff.Format("%d\t", on_load_time);
     result += buff;
     // Event GUID
     result += "\t";
@@ -147,15 +170,18 @@ void Results::SavePageData(void){
     // Combine Score
     result += "-1\t";
     // Bytes Out (Doc)
-    result += "\t";
+    buff.Format("%d\t", _test_state._doc_bytes_out);
+    result += buff;
     // Bytes In (Doc)
-    result += "\t";
+    buff.Format("%d\t", _test_state._doc_bytes_in);
+    result += buff;
     // DNS Lookups (Doc)
     result += "\t";
     // Connections (Doc)
     result += "\t";
     // Requests (Doc)
-    result += "\t";
+    buff.Format("%d\t", _test_state._doc_requests);
+    result += buff;
     // OK Responses (Doc)
     result += "\t";
     // Redirects (Doc)
@@ -219,6 +245,10 @@ void Results::SaveRequests(void) {
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     SetFilePointer( file, 0, 0, FILE_END );
+
+    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
+                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+
     _requests.Lock();
     // first do all of the processing.  We want to do ALL of the processing
     // before recording the results so we can include any socket connections
@@ -237,17 +267,20 @@ void Results::SaveRequests(void) {
       Request * request = _requests._requests.GetNext(pos);
       if (request && request->_processed) {
         i++;
-        SaveRequest(file, request, i);
+        SaveRequest(file, headers_file, request, i);
       }
     }
     _requests.Unlock();
+    if (headers_file != INVALID_HANDLE_VALUE)
+      CloseHandle(headers_file);
     CloseHandle(file);
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequest(HANDLE file, Request * request, int index) {
+void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request, 
+                                                                   int index) {
   CStringA result;
   CStringA buff;
 
@@ -414,4 +447,17 @@ void Results::SaveRequest(HANDLE file, Request * request, int index) {
 
   DWORD written;
   WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
+
+  // write out the raw headers
+  if (headers != INVALID_HANDLE_VALUE) {
+    buff.Format("Request details:\r\nRequest %d:\r\nRequest Headers:\r\n", 
+                  index);
+    buff += request->_out_header;
+    buff.Trim("\r\n");
+    buff += "\r\nResponse Headers:\r\n";
+    buff += request->_in_header;
+    buff.Trim("\r\n");
+    buff += "\r\n";
+    WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
+  }
 }

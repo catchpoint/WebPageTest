@@ -33,6 +33,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
+  _document = _test_state._current_document;
   InitializeCriticalSection(&cs);
 
   ATLTRACE(_T("[wpthook] - new request on socket %d\n"), socket_id);
@@ -68,6 +69,8 @@ void Request::DataIn(const char * data, unsigned long data_len) {
       DataChunk chunk(data, data_len);
       _data_chunks_in.AddTail(chunk);
     }
+    if (!_document)
+      _document = _test_state._current_document;
   }
   LeaveCriticalSection(&cs);
 }
@@ -84,6 +87,8 @@ void Request::DataOut(const char * data, unsigned long data_len) {
       DataChunk chunk(data, data_len);
       _data_chunks_out.AddTail(chunk);
     }
+    if (!_document)
+      _document = _test_state._current_document;
   }
   LeaveCriticalSection(&cs);
 }
@@ -156,6 +161,20 @@ bool Request::Process() {
                   / _test_state._ms_frequency.QuadPart);
       _ms_connect_end = (DWORD)((end - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
+    }
+
+    // update the overall stats
+    if (!_test_state._first_byte.QuadPart && _result == 200 && 
+        _first_byte.QuadPart )
+      _test_state._first_byte.QuadPart = _first_byte.QuadPart;
+
+    _test_state._requests++;
+    _test_state._bytes_in += _data_received;
+    _test_state._bytes_out += _data_sent;
+    if (_document) {
+      _test_state._doc_requests++;
+      _test_state._doc_bytes_in += _data_received;
+      _test_state._doc_bytes_out += _data_sent;
     }
   }
   LeaveCriticalSection(&cs);

@@ -226,6 +226,7 @@ bool WptTest::Start(){
 
     // pass settings on to the hook dll
     SetForceDocComplete(_doc_complete);
+    SetClearedCache(_clear_cache);
 
     // just support URL navigating right now
     if (_url.GetLength()){
