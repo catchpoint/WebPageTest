@@ -116,10 +116,24 @@ void WptDriverCore::WorkThread(void){
 
     WptTest test;
     if( _webpagetest.GetTest(test) ){
-      // Setup network throttling.
-      _status.Set(_T("Setting up network throttling..."));
-      if (ConfigureIpfw(test)) {
+      if( !test._test_type.CompareNoCase(_T("traceroute")) )
+      {
+        // Calculate traceroute.
+        CTraceRoute trace_route(test);
+        // loop over all of the test runs
+        for (test._run = 1; test._run <= test._runs; test._run++) {
+          trace_route.Run();
+        }
+        bool uploaded = false;
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
+          uploaded = _webpagetest.TestDone(test);
+          if( !uploaded )
+            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+        }
+      }    
+      else if (ConfigureIpfw(test)) {
         _status.Set(_T("Launching browser..."));
+    
 
         EnterCriticalSection(&cs);
         _browser = new WebBrowser(_settings, test, _status, _hook, 

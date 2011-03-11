@@ -24,6 +24,11 @@ CTraceRoute::~CTraceRoute(void)
 -----------------------------------------------------------------------------*/
 void CTraceRoute::Run()
 {
+  if (!_test.Start()) {
+    OutputDebugString(_T("TraceRoute run failed to start."));
+    return;
+  }
+
   __int64 freq, start, end;
   QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
   freq = freq / 1000;
@@ -109,9 +114,9 @@ void CTraceRoute::Run()
     }
 
     // save out the result of the traceroute
-    if( _test._logFile.GetLength() )
+    if( _test._file_base.GetLength() )
     {
-      HANDLE hFile = CreateFile(_test._logFile + _T("_traceroute.txt"), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+      HANDLE hFile = CreateFile(_test._file_base + _T("_traceroute.txt"), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
       if( hFile != INVALID_HANDLE_VALUE )
       {
         DWORD written;

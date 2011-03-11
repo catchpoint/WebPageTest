@@ -33,7 +33,7 @@ void WptTest::Reset(void){
   _tcpdump = false;
   _video = false;
   _aft = false;
-  _type.Empty();
+  _test_type.Empty();
   _block.Empty();
   _bwIn = 0;
   _bwOut = 0;
@@ -42,7 +42,6 @@ void WptTest::Reset(void){
   _browser.Empty();
   _basic_auth.Empty();
   _script.Empty();
-  _logFile.Empty();
   _run = 0;
   _clear_cache = true;
 
@@ -86,7 +85,7 @@ bool WptTest::Load(CString& test){
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim()))
           _aft = true;
         else if (!key.CompareNoCase(_T("type")))
-          _type = value.Trim();
+          _test_type = value.Trim();
         else if (!key.CompareNoCase(_T("block")))
           _block = value.Trim();
         else if (!key.CompareNoCase(_T("bwIn")))
@@ -151,7 +150,7 @@ CStringA WptTest::ToJSON(){
   buff.Format(",\"aft\":%s", _aft ? "true" : "false");
   json += buff;
 
-  buff.Format(",\"test_type\":\"%s\"", (LPCSTR)JSONEscape(_type));
+  buff.Format(",\"test_type\":\"%s\"", (LPCSTR)JSONEscape(_test_type));
   json += buff;
 
   buff.Format(",\"block\":\"%s\"", (LPCSTR)JSONEscape(_block));
@@ -214,34 +213,41 @@ CStringA WptTest::JSONEscape(CString src)
 bool WptTest::Start(BrowserSettings * browser){
   bool ret = false;
 
-  // build up a new script
-  _script_commands.RemoveAll();
-
-  if (_directory.GetLength() ) {
-    // set up the base file name for results files for this run
+  if( !_test_type.CompareNoCase(_T("traceroute")) )
+  {
     _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
-    if (!_clear_cache)
-      _file_base += _T("_Cached");
-    SetResultsFileBase(_file_base);
+    ret = true;
+  }    
+  else {
+    // build up a new script
+    _script_commands.RemoveAll();
+    
+    if (_directory.GetLength() ) {
+      // set up the base file name for results files for this run
+      _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
+      if (!_clear_cache)
+        _file_base += _T("_Cached");
+      SetResultsFileBase(_file_base);
 
-    // pass settings on to the hook dll
-    SetForceDocComplete(_doc_complete);
+      // pass settings on to the hook dll
+      SetForceDocComplete(_doc_complete);
     SetClearedCache(_clear_cache);
     if (browser) {
       SetBrowserFrame(browser->_frame_window);
       SetBrowserWindow(browser->_browser_window);
     }
 
-    // just support URL navigating right now
-    if (_url.GetLength()){
-      ScriptCommand command;
-      command.command = _T("navigate");
-      command.target = _url;
-      command.record = true;
+      // just support URL navigating right now
+      if (_url.GetLength()){
+        ScriptCommand command;
+        command.command = _T("navigate");
+        command.target = _url;
+        command.record = true;
 
-      _script_commands.AddTail(command);
+        _script_commands.AddTail(command);
 
-      ret = true;
+        ret = true;
+      }
     }
   }
 

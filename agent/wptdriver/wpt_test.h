@@ -45,7 +45,7 @@ public:
   bool    _tcpdump;
   bool    _video;
   bool    _aft;
-  CString _type;
+  CString _test_type;
   CString _block;
   DWORD   _bwIn;
   DWORD   _bwOut;
@@ -54,8 +54,7 @@ public:
   CString _browser;
   CString _basic_auth;
   CString _script;
-  CString _logFile;
-
+  
   // current state
   int     _run;
   bool    _clear_cache;

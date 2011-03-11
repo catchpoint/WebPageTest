@@ -32,4 +32,6 @@
 #include "wpt_hook.h"
 #include "web_browser.h"
 #include "test_server.h"
+#include "TraceRoute.h"
+#include "WinPCap.h"
 #include "util.h"
