@@ -40,7 +40,15 @@
 
     // include the analytics code if it is appropriate
     if( !$noanalytics )
-        include('analytics.inc'); 
+        include('analytics.inc');
+        
+    // include a custom style if one exists
+    if( is_file('./settings/custom.css') )
+    {
+        echo '<style type="text/css">';
+        include('./settings/custom.css');
+        echo '</style>';
+    }
 
         
 function html2rgb($color)
