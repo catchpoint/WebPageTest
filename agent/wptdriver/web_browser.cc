@@ -6,12 +6,13 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status,
-                        WptHook& hook):
+                        WptHook& hook, BrowserSettings& browser):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
-  ,_hook(hook){
+  ,_hook(hook)
+  ,_browser(browser) {
 
   InitializeCriticalSection(&cs);
 }
@@ -28,12 +29,15 @@ bool WebBrowser::RunAndWait(){
   bool ret = false;
 
   if (_test.Start() ){
-    CString cmdLine = _settings._browser_chrome.Trim(_T("\""));
-    if( _settings._browser_chrome.GetLength() ){
+    if( _browser._exe.GetLength() ){
       HMODULE hook_dll = NULL;
-      TCHAR cmdLine[MAX_PATH + 100];
-      lstrcpy( cmdLine, CString(_T("\"")) + _settings._browser_chrome + 
-          _T("\" --new-window --no-proxy-server --no-first-run about:blank") );
+      TCHAR cmdLine[4096];
+      lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
+      if (_browser._options.GetLength() )
+        lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
+      lstrcat ( cmdLine, _T(" about:blank"));
+
+      _status.Set(_T("[wptdriver] Launching: %s\n"), cmdLine);
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
@@ -118,3 +122,10 @@ bool WebBrowser::Close(){
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WebBrowser::ClearCache() {
+  if (_browser._cache.GetLength()) {
+    DeleteDirectory(_browser._cache, false);
+  }
+}

@@ -56,24 +56,40 @@ bool WptSettings::Load(void)
                 _timeout, iniFile);
   SetTestTimeout(_timeout * SECONDS_TO_MS);
 
-  // load the path to the browsers (just support one of each for right now)
-  if( GetPrivateProfileString(_T("browser"), _T("Chrome"), _T(""), buff, 
-    _countof(buff), iniFile ) )  {
-    _browser_chrome = buff;
-    _browser_chrome.Trim(_T("\""));
-  }
-
-  if( GetPrivateProfileString(_T("browser"), _T("Firefox"), _T(""), buff, 
-    _countof(buff), iniFile ) )  {
-    _browser_firefox = buff;
-    _browser_firefox.Trim(_T("\""));
-  }
-
-  if( GetPrivateProfileString(_T("browser"), _T("IE"), _T(""), buff, 
-    _countof(buff), iniFile ) )  {
-    _browser_ie = buff;
-    _browser_ie.Trim(_T("\""));
-  }
+  // load the browser settings
+  _browser_chrome.Load(_T("chrome"), iniFile);
 
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
+  TCHAR buff[4096];
+
+  CString wpt_directory;
+  GetModuleFileName(NULL, buff, _countof(buff));
+  *PathFindFileName(buff) = NULL;
+  wpt_directory = buff;
+  wpt_directory.Trim(_T("\\"));
+
+  if( GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _exe = buff;
+    _exe.Trim(_T("\""));
+  }
+
+  if( GetPrivateProfileString(browser, _T("options"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _options = buff;
+    _options.Trim(_T("\""));
+    _options.Replace(_T("%WPTDIR%"), wpt_directory);
+  }
+
+  if( GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
+    _countof(buff), iniFile ) )  {
+    _cache = buff;
+    _cache.Trim(_T("\""));
+    _cache.Replace(_T("%WPTDIR%"), wpt_directory);
+  }
 }

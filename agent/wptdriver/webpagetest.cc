@@ -27,7 +27,7 @@ bool WebPagetest::GetTest(WptTest& test){
   CString url = _settings._server + _T("work/getwork.php?");
   url += CString(_T("location=")) + _settings._location;
   if( _settings._key.GetLength() )
-    url += CString(_T("key=")) + _settings._key;
+    url += CString(_T("&key=")) + _settings._key;
 
   CString test_string = HttpGet(url);
   if( test_string.GetLength() ){

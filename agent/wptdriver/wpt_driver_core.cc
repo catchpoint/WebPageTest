@@ -118,48 +118,51 @@ void WptDriverCore::WorkThread(void){
     if( _webpagetest.GetTest(test) ){
       // Setup network throttling.
       _status.Set(_T("Setting up network throttling..."));
-      ConfigureIpfw(test);
-    
-      _status.Set(_T("Launching browser..."));
+      if (ConfigureIpfw(test)) {
+        _status.Set(_T("Launching browser..."));
 
-      EnterCriticalSection(&cs);
-      _browser = new WebBrowser(_settings, test, _status, _hook);
+        EnterCriticalSection(&cs);
+        _browser = new WebBrowser(_settings, test, _status, _hook, 
+                                    _settings._browser_chrome);
 
-      // configure the internal web server with information about the test
-      _test_server.SetTest(&test);
-      _test_server.SetBrowser(_browser);
-      LeaveCriticalSection(&cs);
+        // configure the internal web server with information about the test
+        _test_server.SetTest(&test);
+        _test_server.SetBrowser(_browser);
+        LeaveCriticalSection(&cs);
 
-      // loop over all of the test runs
-      for (test._run = 1; test._run <= test._runs; test._run++){
-        // Run the first view test
-        test._clear_cache = true;
-        _browser->RunAndWait();
-
-        if( !test._fv_only ){
-          // run the repeat view test
-          test._clear_cache = false;
+        // loop over all of the test runs
+        for (test._run = 1; test._run <= test._runs; test._run++){
+          // Run the first view test
+          test._clear_cache = true;
+          _browser->ClearCache();
           _browser->RunAndWait();
+
+          if( !test._fv_only ){
+            // run the repeat view test
+            test._clear_cache = false;
+            _browser->RunAndWait();
+          }
         }
+        _browser->ClearCache();
+
+        EnterCriticalSection(&cs);
+        _test_server.SetBrowser(NULL);
+        _test_server.SetTest(NULL);
+
+        delete _browser;
+        _browser = NULL;
+        LeaveCriticalSection(&cs);
+
+        bool uploaded = false;
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
+          uploaded = _webpagetest.TestDone(test);
+          if( !uploaded )
+            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+        }
+
+        // Reset the network throttling at the end of the test.
+        ResetIpfw();
       }
-
-      EnterCriticalSection(&cs);
-      _test_server.SetBrowser(NULL);
-      _test_server.SetTest(NULL);
-
-      delete _browser;
-      _browser = NULL;
-      LeaveCriticalSection(&cs);
-
-      bool uploaded = false;
-      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
-        uploaded = _webpagetest.TestDone(test);
-        if( !uploaded )
-          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
-      }
-
-      // Reset the network throttling at the end of the test.
-      ResetIpfw();
     }else{
       _status.Set(_T("Waiting for work..."));
       Sleep(_settings._polling_delay * SECONDS_TO_MS);

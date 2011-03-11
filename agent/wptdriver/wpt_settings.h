@@ -13,6 +13,18 @@ const DWORD UPLOAD_RETRY_DELAY = 10;
 // conversions
 const DWORD SECONDS_TO_MS = 1000;
 
+class BrowserSettings
+{
+public:
+  BrowserSettings(){}
+  ~BrowserSettings(){}
+  void Load(const TCHAR * browser, const TCHAR * iniFile);
+
+  CString _exe;
+  CString _options;
+  CString _cache;
+};
+
 // dynamic settings loaded from file
 class WptSettings
 {
@@ -29,7 +41,5 @@ public:
   DWORD   _polling_delay;
 
   // browsers
-  CString _browser_chrome;
-  CString _browser_firefox;
-  CString _browser_ie;
+  BrowserSettings _browser_chrome;
 };

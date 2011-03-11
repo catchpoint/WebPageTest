@@ -225,6 +225,7 @@
     <None Include="zlib\zlib.vcxproj.filters">
       <Filter>Third-Party</Filter>
     </None>
+    <None Include="wptdriver.ini.sample" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

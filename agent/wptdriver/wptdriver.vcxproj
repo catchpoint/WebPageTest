@@ -61,10 +61,12 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\\"</Command>
+      <Command>copy /Y *.ini "$(outdir)\\"
+mkdir "$(outdir)\\extension"
+copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying ini file</Message>
+      <Message>Copying support files</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -87,16 +89,19 @@
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\\"</Command>
+      <Command>copy /Y *.ini "$(outdir)\\"
+mkdir "$(outdir)\\extension"
+copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying ini file</Message>
+      <Message>Copying support files</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="small.ico" />
     <None Include="wptdriver.ico" />
     <None Include="wptdriver.ini" />
+    <None Include="wptdriver.ini.sample" />
     <None Include="zlib\zlib.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>

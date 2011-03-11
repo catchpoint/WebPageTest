@@ -2,7 +2,7 @@
 url=http://staging.webpagetest.org/
 location=Dev_Pat
 
-[browser]
-Chrome="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-Firefox="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-IE="C:\Program Files (x86)\Internet Explorer\iexplore.exe"
+[chrome]
+exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+options="--load-extension=%WPTDIR%\extension --user-data-dir=%WPTDIR%\chrome_cache --new-window --no-proxy-server --no-first-run --no-default-browser-check"
+cache=%WPTDIR%\chrome_cache
