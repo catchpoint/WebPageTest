@@ -24,11 +24,6 @@ CTraceRoute::~CTraceRoute(void)
 -----------------------------------------------------------------------------*/
 void CTraceRoute::Run()
 {
-  if (!_test.Start()) {
-    OutputDebugString(_T("TraceRoute run failed to start."));
-    return;
-  }
-
   __int64 freq, start, end;
   QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
   freq = freq / 1000;

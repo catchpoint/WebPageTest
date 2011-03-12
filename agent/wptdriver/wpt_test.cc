@@ -207,6 +207,19 @@ CStringA WptTest::JSONEscape(CString src)
   return dest;
 }
 
+bool WptTest::SetFileBase() {
+  bool ret = false;
+  if (_directory.GetLength() ) {
+      // set up the base file name for results files for this run
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
+    if (!_clear_cache)
+      _file_base += _T("_Cached");
+    SetResultsFileBase(_file_base);
+    ret = true;
+  }
+  return ret;
+}
+
 /*-----------------------------------------------------------------------------
   We are starting a new run, build up the script for the browser to execute
 -----------------------------------------------------------------------------*/
@@ -223,11 +236,8 @@ bool WptTest::Start(BrowserSettings * browser){
     _script_commands.RemoveAll();
     
     if (_directory.GetLength() ) {
-      // set up the base file name for results files for this run
-      _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
-      if (!_clear_cache)
-        _file_base += _T("_Cached");
-      SetResultsFileBase(_file_base);
+      // TODO: We are doing this twice. Need to fix this.
+      SetFileBase();
 
       // pass settings on to the hook dll
       SetForceDocComplete(_doc_complete);

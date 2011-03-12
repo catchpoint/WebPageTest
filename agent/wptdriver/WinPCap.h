@@ -18,7 +18,7 @@ typedef int(__cdecl * PCAP_NEXT_EX)(pcap_t *, struct pcap_pkthdr **, const u_cha
 class CWinPCap
 {
 public:
-  CWinPCap(CLog &logRef);
+  CWinPCap();
   ~CWinPCap(void);
   void Initialize(void);
   bool StartCapture(CString file);
@@ -27,7 +27,6 @@ public:
   void CaptureThread(void);
 
 protected:
-  CLog	          &log;
   HANDLE          hCaptureThread;
   HANDLE          hCaptureStarted;
   bool            pcapLoaded;

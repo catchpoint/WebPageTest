@@ -122,6 +122,8 @@ void WptDriverCore::WorkThread(void){
         CTraceRoute trace_route(test);
         // loop over all of the test runs
         for (test._run = 1; test._run <= test._runs; test._run++) {
+          // Set the result file base.
+          test.SetFileBase();
           trace_route.Run();
         }
         bool uploaded = false;
@@ -132,8 +134,8 @@ void WptDriverCore::WorkThread(void){
         }
       }    
       else if (ConfigureIpfw(test)) {
-        _status.Set(_T("Launching browser..."));
-    
+
+        _status.Set(_T("Launching browser..."));   
 
         EnterCriticalSection(&cs);
         _browser = new WebBrowser(_settings, test, _status, _hook, 
@@ -146,16 +148,29 @@ void WptDriverCore::WorkThread(void){
 
         // loop over all of the test runs
         for (test._run = 1; test._run <= test._runs; test._run++){
+          // Set the result file base.
+          test.SetFileBase();
+
           // Run the first view test
           test._clear_cache = true;
           _browser->ClearCache();
+          if( test._tcpdump ) {
+            winpcap.StartCapture( test._file_base + _T(".cap") );
+          }
           _browser->RunAndWait();
+          if( test._tcpdump )
+            winpcap.StopCapture();
 
           if( !test._fv_only ){
             // run the repeat view test
             test._clear_cache = false;
+            if( test._tcpdump )
+              winpcap.StartCapture( test._file_base + _T("_Cached.cap") );
             _browser->RunAndWait();
+            if( test._tcpdump )
+              winpcap.StopCapture();
           }
+
         }
         _browser->ClearCache();
 
@@ -199,6 +214,9 @@ void WptDriverCore::Init(void){
     RegSetValueEx(hKey, _T("Win32PrioritySeparation"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
     RegCloseKey(hKey);
   }
+  
+  // Get WinPCap ready (install it if necessary)
+  winpcap.Initialize();
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();

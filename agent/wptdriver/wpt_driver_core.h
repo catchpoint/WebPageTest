@@ -20,6 +20,7 @@ private:
   WptStatus&  _status;
   WebPagetest _webpagetest;
   WebBrowser *_browser;
+  CWinPCap winpcap;
   CIpfw       _ipfw;
   bool        _exit;
   HANDLE      _work_thread;

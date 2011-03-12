@@ -31,6 +31,7 @@ public:
   CStringA ToJSON();
 
   bool  Start(BrowserSettings * browser);
+  bool  SetFileBase();
   bool  GetNextTask(CStringA& task, bool& record);
 
   // overall test settings

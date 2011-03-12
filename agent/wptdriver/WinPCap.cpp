@@ -4,9 +4,8 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CWinPCap::CWinPCap(CLog &logRef):
-  log(logRef)
-  ,pcapLoaded(false)
+CWinPCap::CWinPCap():
+  pcapLoaded(false)
   ,mustExit(false)
   ,hWinPCap(NULL)
   ,_pcap_lib_version(NULL)
@@ -43,10 +42,10 @@ CWinPCap::~CWinPCap(void)
 -----------------------------------------------------------------------------*/
 void CWinPCap::Initialize(void)
 {
-  log.Trace(_T("Initializing WinPCap"));
+  //log.Trace(_T("Initializing WinPCap"));
 
   if( !LoadWinPCap() ){
-    log.Trace(_T("Installing WinPCap"));
+    // log.Trace(_T("Installing WinPCap"));
 
     // try launching the current version of the installer from the same directory we are in
 	  TCHAR path[MAX_PATH];
@@ -62,23 +61,23 @@ void CWinPCap::Initialize(void)
 		  si.cb = sizeof(si);
 		  si.dwFlags = STARTF_USESHOWWINDOW;
 		  si.wShowWindow = SW_HIDE;
-		  log.Trace(_T("Executing '%s'"), (LPCTSTR)cmd);
+		  //log.Trace(_T("Executing '%s'"), (LPCTSTR)cmd);
 		  if( CreateProcess((LPCTSTR)exe, (LPTSTR)(LPCTSTR)cmd, 0, 0, FALSE, IDLE_PRIORITY_CLASS , 0, NULL, &si, &pi) )
 		  {
 			  WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);
 			  CloseHandle(pi.hThread);
 			  CloseHandle(pi.hProcess);
-			  log.Trace(_T("Successfully ran '%s'"), (LPCTSTR)cmd);
+			  //log.Trace(_T("Successfully ran '%s'"), (LPCTSTR)cmd);
 		  }
-		  else
-			  log.Trace(_T("Execution failed '%s'"), (LPCTSTR)cmd);
+		  //else
+			  //log.Trace(_T("Execution failed '%s'"), (LPCTSTR)cmd);
 	  }
     
     // now try connecting to it again
     LoadWinPCap();
   }
 
-  log.Trace(_T("Initializing WinPCap Complete"));
+  //log.Trace(_T("Initializing WinPCap Complete"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -118,11 +117,11 @@ bool CWinPCap::LoadWinPCap(void)
 
         pcapLoaded = true;
         const char * ver = _pcap_lib_version();
-        if( ver )
-          log.Trace(_T("Current WinPCap Version: %S"), ver);
+        //if( ver )
+          //log.Trace(_T("Current WinPCap Version: %S"), ver);
       }
     }else{
-      log.Trace(_T("WinPCap is not installed"));
+      //log.Trace(_T("WinPCap is not installed"));
     }
   }
 
@@ -169,7 +168,7 @@ bool CWinPCap::StopCapture()
 {
   bool ret = false;
 
-  log.Trace(_T("Stop Capture"));
+  //log.Trace(_T("Stop Capture"));
 
   if( pcapLoaded && hCaptureThread ){
     // stop the thread (give it a long time since it will also be 
@@ -207,8 +206,8 @@ void CWinPCap::CaptureThread(void)
           for(addr=d->addresses; addr && capDevice.IsEmpty(); addr=addr->next)
             if(addr->addr && addr->addr->sa_family == AF_INET){
               capDevice = d->name;
-              if( d->description )
-                log.Trace(_T("Capture Device: %S"), d->description);
+              //if( d->description )
+                // log.Trace(_T("Capture Device: %S"), d->description);
             }
         }
       }
@@ -254,7 +253,7 @@ void CWinPCap::CaptureThread(void)
 -----------------------------------------------------------------------------*/
 void CWinPCap::CompressCapture(void)
 {
-  log.Trace(_T("Compressing capture file"));
+  //log.Trace(_T("Compressing capture file"));
 
   bool ok = false;
 
@@ -277,5 +276,5 @@ void CWinPCap::CompressCapture(void)
   if( ok )
     DeleteFile(captureFile);
 
-  log.Trace(_T("Capture file compressed"));
+  //log.Trace(_T("Capture file compressed"));
 }
