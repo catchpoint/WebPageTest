@@ -29,14 +29,11 @@ public:
 class ScreenCapture
 {
 public:
-  ScreenCapture(void);
+  ScreenCapture();
   ~ScreenCapture(void);
-  void FindBrowserWindow();
-  void Capture(CapturedImage::TYPE type);
+  void Capture(HWND wnd, CapturedImage::TYPE type);
   bool GetImage(CapturedImage::TYPE type, CxImage& image);
 
-private:
-  HWND _browser_window;
   CAtlList<CapturedImage> _captured_images;
 };
 

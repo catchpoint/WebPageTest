@@ -17,7 +17,7 @@ __declspec( dllexport ) DWORD __stdcall RemoteThreadProc(void * thread_data);
 void __stdcall Initialize(void){
   OutputDebugString(_T("[wpthook] Initialize()\n"));
   #ifdef DEBUG
-  //MessageBox(NULL, _T("Attach Debugger"), _T("Attach Debugger"), MB_SYSTEMMODAL | MB_OK);
+  //MessageBox(NULL, _T("Attach"), _T("Debugger"), MB_SYSTEMMODAL | MB_OK);
   #endif
 
   if( !global_hook ){

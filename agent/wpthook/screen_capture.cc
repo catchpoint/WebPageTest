@@ -2,12 +2,11 @@
 #include "screen_capture.h"
 #include "shared_mem.h"
 #include "cximage/ximage.h"
-#include "../wptdriver/util.h"
+#include "test_state.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-ScreenCapture::ScreenCapture(void):
-  _browser_window(NULL) {
+ScreenCapture::ScreenCapture() {
 }
 
 /*-----------------------------------------------------------------------------
@@ -21,12 +20,9 @@ ScreenCapture::~ScreenCapture(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void ScreenCapture::Capture(CapturedImage::TYPE type) {
-  if (!_browser_window) {
-    FindBrowserWindow();
-  }
-  if (_browser_window) {
-    CapturedImage image(_browser_window, type);
+void ScreenCapture::Capture(HWND wnd, CapturedImage::TYPE type) {
+  if (wnd) {
+    CapturedImage image(wnd, type);
     _captured_images.AddTail(image);
   }
 }
@@ -46,21 +42,6 @@ bool ScreenCapture::GetImage(CapturedImage::TYPE type, CxImage& image) {
   return ret;
 }
 
-
-/*-----------------------------------------------------------------------------
-    Find the browser window that we are going to capture
------------------------------------------------------------------------------*/
-void ScreenCapture::FindBrowserWindow(void) {
-  _browser_window = NULL;
-  DWORD browser_process_id = GetCurrentProcessId();
-  HWND frame_window, document_window;
-  if (::FindBrowserWindow(browser_process_id, frame_window, document_window)) {
-    if (document_window)
-      _browser_window = document_window;
-    else
-      _browser_window = frame_window;
-  }
-}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

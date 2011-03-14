@@ -19,6 +19,7 @@ WptHook::WptHook(void):
   ,_test_state(shared_test_timeout, shared_test_force_on_load, _results,
                 _screen_capture)
   ,_winsock_hook(_dns, _sockets, _test_state)
+  ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns)
   ,_results(_test_state, _requests, _sockets, _screen_capture)
@@ -99,7 +100,6 @@ void WptHook::Init(){
 static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg, 
                                                   WPARAM wParam, LPARAM lParam)
 {
-  ATLTRACE2(_T("[wpthook] WptHookWindowProc()\n"));
   LRESULT ret = 0;
 
   bool handled = false;

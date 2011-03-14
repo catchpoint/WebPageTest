@@ -12,6 +12,7 @@ static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
 static const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
+static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const BYTE JPEG_VIDEO_QUALITY = 75;
@@ -50,7 +51,12 @@ void Results::Save(void){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveImages(void) {
+  // save the event-based images
   CxImage image;
+  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
+    SaveImage(image, _file_base + IMAGE_START_RENDER, true, 
+              JPEG_DEFAULT_QUALITY);
+  }
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
     SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, true, 
               JPEG_DEFAULT_QUALITY);
@@ -59,6 +65,8 @@ void Results::SaveImages(void) {
     SaveImage(image, _file_base + IMAGE_FULLY_LOADED, false, 
               JPEG_DEFAULT_QUALITY);
   }
+
+  // save out the video frames
 }
 
 /*-----------------------------------------------------------------------------
@@ -140,7 +148,12 @@ void Results::SavePageData(void){
     // Error Code
     result += "\t";
     // Time to Start Render (ms)
-    result += "\t";
+    int render_start_time = 0;
+    if (_test_state._render_start.QuadPart > _test_state._start.QuadPart)
+      render_start_time = (int)((_test_state._render_start.QuadPart - 
+          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    buff.Format("%d\t", render_start_time);
+    result += buff;
     // Segments Transmitted
     result += "\t";
     // Segments Retransmitted

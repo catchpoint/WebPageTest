@@ -194,7 +194,11 @@ void WptDriverCore::WorkThread(void){
       }
     }else{
       _status.Set(_T("Waiting for work..."));
-      Sleep(_settings._polling_delay * SECONDS_TO_MS);
+      int delay = _settings._polling_delay * SECONDS_TO_MS;
+      while (!_exit && delay > 0) {
+        Sleep(100);
+        delay -= 100;
+      }
     }
   }
 
@@ -308,7 +312,6 @@ void WptDriverCore::ResetIpfw(void)
 static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg, 
                                                   WPARAM wParam, LPARAM lParam)
 {
-  ATLTRACE2(_T("[wptdriver] WptDriverWindowProc()\n"));
   LRESULT ret = 0;
 
   bool handled = false;

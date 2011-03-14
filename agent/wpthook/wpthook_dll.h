@@ -7,4 +7,5 @@ __declspec( dllimport ) void WINAPI
 __declspec( dllimport ) void WINAPI SetTestTimeout(DWORD timeout);
 __declspec( dllimport ) void WINAPI SetForceDocComplete(bool force);
 __declspec( dllimport ) void WINAPI SetClearedCache(bool cleared_cache);
+__declspec( dllimport ) void WINAPI SetCaptureVideo(bool capture_video);
 }

@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "hook_gdi.h"
+#include "test_state.h"
 
 static CGDIHook * pHook = NULL;
 
@@ -38,29 +39,12 @@ static CGDIHook * pHook = NULL;
 *******************************************************************************
 ******************************************************************************/
 
-BOOL __stdcall RedrawWindow_Hook(HWND hWnd, CONST RECT *lprcUpdate, 
-                                                   HRGN hrgnUpdate, UINT flags)
-{
-  BOOL ret = FALSE;
-  if(pHook)
-    ret = pHook->RedrawWindow(hWnd, lprcUpdate, hrgnUpdate, flags);
-  return ret;
-}
-
 BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, 
                                                      int x1, int y1, DWORD rop)
 {
   BOOL ret = FALSE;
   if(pHook)
     ret = pHook->BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-  return ret;
-}
-
-HDC	__stdcall BeginPaint_Hook(HWND hWnd, LPPAINTSTRUCT lpPaint)
-{
-  HDC ret = NULL;
-  if(pHook)
-    ret = pHook->BeginPaint(hWnd, lpPaint);
   return ret;
 }
 
@@ -82,18 +66,14 @@ BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CGDIHook::CGDIHook(void)
-{
+CGDIHook::CGDIHook(TestState& test_state):
+  _test_state(test_state) {
   if (!pHook)
     pHook = this;
 
   ATLTRACE2(_T("[wpthook] CGDIHook::CGDIHook\n"));
 
-  _RedrawWindow = hook.createHookByName("user32.dll", "RedrawWindow", 
-                                                            RedrawWindow_Hook);
   _BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
-  _BeginPaint = hook.createHookByName("user32.dll", "BeginPaint", 
-                                                              BeginPaint_Hook);
   _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
 
   ATLTRACE2(_T("[wpthook] CGDIHook::CGDIHook Complete\n"));
@@ -101,99 +81,40 @@ CGDIHook::CGDIHook(void)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CGDIHook::~CGDIHook(void)
-{
+CGDIHook::~CGDIHook(void) {
   if( pHook == this )
     pHook = NULL;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::RedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
-                                                                    UINT flags)
-{
-  BOOL ret = FALSE;
-
-//  ATLTRACE2(_T("[wpthook] CGDIHook::RedrawWindow\n"));
-
-  if( _RedrawWindow )
-    ret = _RedrawWindow( hWnd, lprcUpdate, hrgnUpdate, flags );
-
-/*
-  if( dlg && (dlg->active || dlg->capturingAFT) && !dlg->painted && !dlg->captureVideo )
-  {
-    TCHAR className[1000] = {0};
-    GetClassName(hWnd, className, _countof(className));
-
-    if( !lstrcmp(className, _T("Internet Explorer_Server")) )
-    {
-      // check to see if anything has been drawn to the screen
-      dlg->CheckPaint(hWnd);
-    }
-  }
-*/
-
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, 
-                                                    int x1, int y1, DWORD rop)
-{
+                                              int x1, int y1, DWORD rop) {
   BOOL ret = FALSE;
 
-//  ATLTRACE2(_T("[wpthook] CGDIHook::BitBlt\n"));
+  HWND wnd = WindowFromDC(hdc);
 
   if( _BitBlt )
     ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-/*
-  if( dlg && (dlg->active || dlg->capturingAFT) )
-  {
-    HWND hWnd = WindowFromDC(hdc);
-    if( hWnd == dlg->hBrowserWnd )
-      dlg->windowUpdated = true;
+
+  if (_test_state._active && wnd == _test_state._document_window) {
+    ATLTRACE2(_T("[wpthook] CGDIHook::BitBlt - window: %08X, cx: %d, cy: %d, rop: %d\n"), wnd, cx, cy, rop);
+    _test_state._screen_updated = true;
   }
-*/
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-HDC	CGDIHook::BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
-{
-  HDC ret = NULL;
-
-//  ATLTRACE2(_T("[wpthook] CGDIHook::BeginPaint\n"));
-/*
-  if( dlg )
-    dlg->OnBeginPaint(hWnd);
-*/
-  if( _BeginPaint )
-    ret = _BeginPaint(hWnd, lpPaint);
 
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
-{
+BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   BOOL ret = FALSE;
-
-//  ATLTRACE2(_T("[wpthook] CGDIHook::EndPaint\n"));
 
   if( _EndPaint )
     ret = _EndPaint(hWnd, lpPaint);
 
-/*
-  if( dlg )
-  {
-    dlg->OnEndPaint(hWnd);
-    if( dlg->captureVideo && !dlg->painted && hWnd == dlg->hBrowserWnd)
-      dlg->CheckPaint(hWnd, true);
-  }
-*/
+  if (_test_state._active && hWnd == _test_state._document_window)
+    _test_state.CheckStartRender();
 
   return ret;
 }

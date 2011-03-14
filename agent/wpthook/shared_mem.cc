@@ -8,6 +8,7 @@ WCHAR  shared_results_file_base[MAX_PATH] = {NULL};
 DWORD  shared_test_timeout = 120000;
 bool   shared_test_force_on_load = false;
 bool   shared_cleared_cache = false;
+bool   shared_capture_video = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -17,6 +18,7 @@ __declspec( dllexport ) void WINAPI SetResultsFileBase(const WCHAR * file_base);
 __declspec( dllexport ) void WINAPI SetTestTimeout(DWORD timeout);
 __declspec( dllexport ) void WINAPI SetForceDocComplete(bool force);
 __declspec( dllexport ) void WINAPI SetClearedCache(bool cleared_cache);
+__declspec( dllexport ) void WINAPI SetCaptureVideo(bool capture_video);
 }
 
 /*-----------------------------------------------------------------------------
@@ -42,4 +44,10 @@ void WINAPI SetForceDocComplete(bool force){
 -----------------------------------------------------------------------------*/
 void WINAPI SetClearedCache(bool cleared_cache) {
   shared_cleared_cache = cleared_cache;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetCaptureVideo(bool capture_video) {
+  shared_capture_video = capture_video;
 }

@@ -242,6 +242,7 @@ bool WptTest::Start(BrowserSettings * browser){
       // pass settings on to the hook dll
       SetForceDocComplete(_doc_complete);
       SetClearedCache(_clear_cache);
+      SetCaptureVideo(_video);
 
       // just support URL navigating right now
       if (_url.GetLength()){

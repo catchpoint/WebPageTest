@@ -15,10 +15,13 @@ public:
   void OnNavigate();
   void OnLoad();
   bool IsDone();
+  void GrabVideoFrame(bool force = false);
+  void CheckStartRender();
 
   // times
   LARGE_INTEGER _start;
   LARGE_INTEGER _on_load;
+  LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
@@ -34,6 +37,10 @@ public:
   bool  _active;
   int   _current_document;
 
+  HWND  _frame_window;
+  HWND  _document_window;
+  bool  _screen_updated;
+
 private:
   int   _test_timeout; 
   bool  _timeout;
@@ -41,4 +48,6 @@ private:
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;
+
+  void FindBrowserWindow(void);
 };
