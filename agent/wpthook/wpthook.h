@@ -7,6 +7,7 @@
 #include "track_sockets.h"
 #include "test_state.h"
 #include "results.h"
+#include "screen_capture.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
 
@@ -35,4 +36,5 @@ private:
 
   TestState     _test_state;
   Results       _results;
+  ScreenCapture _screen_capture;
 };
