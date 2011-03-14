@@ -6,5 +6,3 @@ location=Dev_Pat
 exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 options="--load-extension=%WPTDIR%\extension --user-data-dir=%WPTDIR%\chrome_cache --new-window --no-proxy-server --no-first-run --no-default-browser-check"
 cache=%WPTDIR%\chrome_cache
-frame_window=Chrome_WidgetWin_0
-browser_window=Chrome_RenderWidgetHostHWND

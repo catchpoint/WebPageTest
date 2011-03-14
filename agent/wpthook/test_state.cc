@@ -1,13 +1,15 @@
 #include "StdAfx.h"
 #include "test_state.h"
 #include "results.h"
+#include "screen_capture.h"
 
 const DWORD ACTIVITY_TIMEOUT = 2000;
 const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestState::TestState(int test_timeout, bool end_on_load, Results& results):
+TestState::TestState(int test_timeout, bool end_on_load, Results& results,
+                      ScreenCapture& screen_capture):
   _test_timeout(test_timeout)
   ,_active(false)
   ,_timeout(false)
@@ -20,7 +22,8 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results):
   ,_doc_bytes_out(0)
   ,_bytes_out(0)
   ,_end_on_load(end_on_load)
-  ,_results(results){
+  ,_results(results)
+  ,_screen_capture(screen_capture) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _first_activity.QuadPart = 0;
@@ -77,6 +80,7 @@ void TestState::OnLoad(){
     ATLTRACE2(_T("[wpthook] TestState::OnLoad()\n"));
     QueryPerformanceCounter(&_on_load);
     _current_document = 0;
+    _screen_capture.Capture(CapturedImage::DOCUMENT_COMPLETE);
   }
 }
 
@@ -119,6 +123,9 @@ bool TestState::IsDone(){
       // onLoad
       done = true;
     }
+
+    if (done)
+      _screen_capture.Capture(CapturedImage::FULLY_LOADED);
   }
 
   return done;

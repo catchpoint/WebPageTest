@@ -241,11 +241,7 @@ bool WptTest::Start(BrowserSettings * browser){
 
       // pass settings on to the hook dll
       SetForceDocComplete(_doc_complete);
-    SetClearedCache(_clear_cache);
-    if (browser) {
-      SetBrowserFrame(browser->_frame_window);
-      SetBrowserWindow(browser->_browser_window);
-    }
+      SetClearedCache(_clear_cache);
 
       // just support URL navigating right now
       if (_url.GetLength()){

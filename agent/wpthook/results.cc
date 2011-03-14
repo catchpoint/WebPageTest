@@ -4,18 +4,26 @@
 #include "requests.h"
 #include "track_sockets.h"
 #include "test_state.h"
+#include "screen_capture.h"
+#include "cximage/ximage.h"
 
-const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
-const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
-const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
+static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
+static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
+static const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
+static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
+static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
+
+static const BYTE JPEG_DEFAULT_QUALITY = 30;
+static const BYTE JPEG_VIDEO_QUALITY = 75;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Results::Results(TestState& test_state, Requests& requests, 
-                  TrackSockets& sockets):
+                  TrackSockets& sockets, ScreenCapture& screen_capture):
   _requests(requests)
   , _test_state(test_state)
-  , _sockets(sockets) {
+  , _sockets(sockets)
+  , _screen_capture(screen_capture) {
   _file_base = shared_results_file_base;
 }
 
@@ -36,6 +44,36 @@ void Results::Reset(void){
 void Results::Save(void){
   SaveRequests();
   SavePageData();
+  SaveImages();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveImages(void) {
+  CxImage image;
+  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
+    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, true, 
+              JPEG_DEFAULT_QUALITY);
+  }
+  if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, false, 
+              JPEG_DEFAULT_QUALITY);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveImage(CxImage& image, CString file, 
+                          bool shrink, BYTE quality) {
+  if (image.IsValid()) {
+    if (shrink)
+      image.Resample2(image.GetWidth() / 2, image.GetHeight() / 2);
+
+    image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
+    image.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
+    image.SetJpegQuality((BYTE)quality);
+    image.Save(file, CXIMAGE_FORMAT_JPG);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -461,3 +499,4 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
     WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
   }
 }
+

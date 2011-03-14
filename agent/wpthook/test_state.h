@@ -1,11 +1,13 @@
 #pragma once
 
 class Results;
+class ScreenCapture;
 
 class TestState
 {
 public:
-  TestState(int test_timeout, bool end_on_load, Results& results);
+  TestState(int test_timeout, bool end_on_load, Results& results,
+            ScreenCapture& screen_capture);
   ~TestState(void);
 
   void Start();
@@ -38,4 +40,5 @@ private:
   bool  _end_on_load;
   int   _next_document;
   Results&  _results;
+  ScreenCapture& _screen_capture;
 };

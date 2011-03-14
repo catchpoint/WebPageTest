@@ -68,12 +68,19 @@ bool WebBrowser::RunAndWait(){
       }
       LeaveCriticalSection(&cs);
 
-      // wait for the browser to finish
+      // wait for the browser to finish (infinite timeout if we are debugging)
+      #ifdef DEBUG
       if( _browser_process && 
-          WaitForSingleObject(_browser_process, _settings._timeout * 
+          WaitForSingleObject(_browser_process, INFINITE ) == WAIT_OBJECT_0 ){
+        ret = true;
+      }
+      #else
+      if( _browser_process && 
+          WaitForSingleObject(_browser_process, _settings._timeout * 2 *
           SECONDS_TO_MS ) == WAIT_OBJECT_0 ){
         ret = true;
       }
+      #endif
 
       // kill the browser if it is still running
       EnterCriticalSection(&cs);
@@ -107,22 +114,9 @@ bool WebBrowser::Close(){
   // browser process
   if( _browser_process ){
     DWORD browser_process_id = GetProcessId(_browser_process);
-    HWND wnd = ::GetDesktopWindow();
-    wnd = ::GetWindow(wnd, GW_CHILD);
-    TCHAR window_class[1024];
-    while ( wnd )
-    {
-      DWORD pid;
-      GetWindowThreadProcessId( wnd, &pid);
-      if ( pid == browser_process_id && IsWindowVisible(wnd) ) {
-        *window_class = NULL;
-        GetClassName(wnd, window_class, _countof(window_class));
-        if (!_browser._frame_window.GetLength() || 
-              _browser._frame_window == window_class) {
-          ::PostMessage(wnd,WM_CLOSE,0,0);
-        }
-      }
-      wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
+    HWND frame_window, document_window;
+    if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {
+      ::PostMessage(frame_window,WM_CLOSE,0,0);
     }
   }
   LeaveCriticalSection(&cs);
@@ -144,23 +138,11 @@ void WebBrowser::PositionWindow() {
   EnterCriticalSection(&cs);
   if( _browser_process ){
     DWORD browser_process_id = GetProcessId(_browser_process);
-    HWND wnd = ::GetDesktopWindow();
-    wnd = ::GetWindow(wnd, GW_CHILD);
-    TCHAR window_class[1024];
-    while ( wnd )
-    {
-      DWORD pid;
-      GetWindowThreadProcessId( wnd, &pid);
-      if ( pid == browser_process_id && IsWindowVisible(wnd) ) {
-        *window_class = NULL;
-        GetClassName(wnd, window_class, _countof(window_class));
-        if (!_browser._frame_window.GetLength() || 
-              _browser._frame_window == window_class) {
-          ::ShowWindow(wnd, SW_RESTORE);
-          ::SetWindowPos(wnd, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
-        }
-      }
-      wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
+    HWND frame_window, document_window;
+    if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {
+      ::ShowWindow(frame_window, SW_RESTORE);
+      ::SetWindowPos(frame_window, HWND_TOPMOST, 0, 0, 1024, 768, 
+                      SWP_NOACTIVATE);
     }
   }
   LeaveCriticalSection(&cs);
