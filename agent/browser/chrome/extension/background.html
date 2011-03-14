@@ -1,7 +1,18 @@
 <script>
+var STARTUP_DELAY = 5000;
 var g_active=false;
 var g_tabId = -1;
 var g_start = 0;
+
+// on startup, kick off our testing
+setTimeout( "wptStartup()", STARTUP_DELAY );
+
+function wptStartup() {
+	chrome.tabs.getSelected(null, function(tab){
+		g_tabId = tab.id;
+		wptGetTask();
+	});
+}
 
 // navigate to the provided url
 function wptNavigate(url){
@@ -51,14 +62,6 @@ function wptOnLoad(){
   }catch(err){}
 }
 
-// if we start up on about:blank, try connecting to the wptdriver for work
-chrome.tabs.getSelected(null, function(tab){
-  if( tab.url == "about:blank" ){
-    g_tabId = tab.id;
-    setTimeout( "wptGetTask()", 1000 );
-  }
-});
-
 // install an onLoad handler for all tabs
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
   if (g_active){
@@ -66,11 +69,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
 	  wptOnNavigate();
     if (props.status == "complete")
 	  wptOnLoad();
-  } else {
-    if (props.status == "complete" && props.url == "about:blank") {
-	  g_tabId = tabId;
-	  setTimeout( "wptGetTask()", 1000 );
-	}
   }
 });
 
