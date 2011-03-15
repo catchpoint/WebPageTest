@@ -29,7 +29,9 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
   ,_document_window(NULL)
-  ,_screen_updated(false) {
+  ,_screen_updated(false)
+  ,_render_check_thread(NULL)
+  ,_exit(false) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _render_start.QuadPart = 0;
@@ -38,11 +40,29 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   _first_byte.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
+  _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::~TestState(void){
+  if (_render_check_thread) {
+    _exit = true;
+    SetEvent(_check_render_event);
+    WaitForSingleObject(_render_check_thread, INFINITE);
+    CloseHandle(_render_check_thread);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+static unsigned __stdcall RenderCheckThread( void* arg )
+{
+  TestState * test_state = (TestState *)arg;
+  if( test_state )
+    test_state->RenderCheckThread();
+    
+  return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -57,6 +77,10 @@ void TestState::Start(){
   _current_document = _next_document;
   _next_document++;
   FindBrowserWindow();  // the document window may not be available yet
+  _exit = false;
+  ResetEvent(_check_render_event);
+  _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
+                                                                   this, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -136,8 +160,16 @@ bool TestState::IsDone(){
       done = true;
     }
 
-    if (done)
+    if (done) {
       _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
+      if (_render_check_thread) {
+        _exit = true;
+        SetEvent(_check_render_event);
+        WaitForSingleObject(_render_check_thread, INFINITE);
+        CloseHandle(_render_check_thread);
+        _render_check_thread = NULL;
+      }
+    }
   }
 
   return done;
@@ -172,58 +204,66 @@ void TestState::GrabVideoFrame(bool force) {
     See if anything has been rendered to the screen
 -----------------------------------------------------------------------------*/
 void TestState::CheckStartRender() {
-  if (!_render_start.QuadPart && _screen_updated && _document_window) {
-    ATLTRACE(_T("[wpthook] TestState::CheckStartRender\n"));
-    _screen_updated = false;
-    LARGE_INTEGER now;
-    QueryPerformanceCounter((LARGE_INTEGER *)&now);
+  if (!_render_start.QuadPart && _screen_updated && _document_window)
+    SetEvent(_check_render_event);
+}
 
-    // grab a screen shot
-    bool found = false;
-    CapturedImage captured_img(_document_window, CapturedImage::START_RENDER);
-    CxImage img;
-    if (captured_img.Get(img)) {
-      int bpp = img.GetBpp();
-      if (bpp >= 15) {
-        int height = img.GetHeight();
-        int width = img.GetWidth();
-        // 24-bit gets a fast-path where we can just compare full rows
-        if (bpp <= 24 ) {
-          DWORD row_bytes = 3 * width;
-          char * white = (char *)malloc(row_bytes);
-          if (white) {
-            memset(white, 0xFFFFFFFF, row_bytes);
-            for (int row = 0; row < height && !found; row++) {
-              char * image_bytes = (char *)img.GetBits(row);
-              if (memcmp(image_bytes, white, row_bytes))
-                found = true;
+/*-----------------------------------------------------------------------------
+    Background thread to check to see if rendering has started
+    (this way we don't block the browser itself)
+-----------------------------------------------------------------------------*/
+void TestState::RenderCheckThread() {
+  while (!_render_start.QuadPart && !_exit) {
+    WaitForSingleObject(_check_render_event, INFINITE);
+    if (!_exit) {
+      _screen_capture.Lock();
+      _screen_updated = false;
+      LARGE_INTEGER now;
+      QueryPerformanceCounter((LARGE_INTEGER *)&now);
+
+      // grab a screen shot
+      bool found = false;
+      CapturedImage captured_img(_document_window, CapturedImage::START_RENDER);
+      CxImage img;
+      if (captured_img.Get(img)) {
+        int bpp = img.GetBpp();
+        if (bpp >= 15) {
+          int height = img.GetHeight();
+          int width = img.GetWidth();
+          // 24-bit gets a fast-path where we can just compare full rows
+          if (bpp <= 24 ) {
+            DWORD row_bytes = 3 * width;
+            char * white = (char *)malloc(row_bytes);
+            if (white) {
+              memset(white, 0xFFFFFFFF, row_bytes);
+              for (int row = 0; row < height && !found; row++) {
+                char * image_bytes = (char *)img.GetBits(row);
+                if (memcmp(image_bytes, white, row_bytes))
+                  found = true;
+              }
+              free (white);
             }
-            free (white);
-          }
-        } else {
-          for (int row = 0; row < height && !found; row++) {
-            for (int x = 0; x < width && !found; x++) {
-              RGBQUAD pixel = img.GetPixelColor(x, row, false);
-              if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
-                  pixel.rgbGreen != 255)
-                found = true;
+          } else {
+            for (int row = 0; row < height && !found; row++) {
+              for (int x = 0; x < width && !found; x++) {
+                RGBQUAD pixel = img.GetPixelColor(x, row, false);
+                if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
+                    pixel.rgbGreen != 255)
+                  found = true;
+              }
             }
           }
         }
       }
+
+      if (found) {
+        _render_start.QuadPart = now.QuadPart;
+        _screen_capture._captured_images.AddTail(captured_img);
+      }
+      else
+        captured_img.Free();
+
+      _screen_capture.Unlock();
     }
-
-    if (found) {
-      _render_start.QuadPart = now.QuadPart;
-      _screen_capture._captured_images.AddTail(captured_img);
-    }
-    else
-      captured_img.Free();
-
-    LARGE_INTEGER end;
-    QueryPerformanceCounter((LARGE_INTEGER *)&end);
-    DWORD elapsed = (DWORD)((end.QuadPart - now.QuadPart) / _ms_frequency.QuadPart);
-
-    ATLTRACE(_T("[wpthook] TestState::CheckStartRender - %d ms\n"), elapsed);
   }
 }

@@ -17,6 +17,7 @@ public:
   bool IsDone();
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();
+  void RenderCheckThread();
 
   // times
   LARGE_INTEGER _start;
@@ -48,6 +49,9 @@ private:
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;
+  HANDLE _render_check_thread;
+  bool  _exit;
+  HANDLE _check_render_event;
 
   void FindBrowserWindow(void);
 };

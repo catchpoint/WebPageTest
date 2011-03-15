@@ -33,7 +33,12 @@ public:
   ~ScreenCapture(void);
   void Capture(HWND wnd, CapturedImage::TYPE type);
   bool GetImage(CapturedImage::TYPE type, CxImage& image);
+  void Lock();
+  void Unlock();
 
   CAtlList<CapturedImage> _captured_images;
+
+private:
+  CRITICAL_SECTION cs;
 };
 

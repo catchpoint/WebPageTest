@@ -7,23 +7,29 @@
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 ScreenCapture::ScreenCapture() {
+  InitializeCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 ScreenCapture::~ScreenCapture(void) {
+  EnterCriticalSection(&cs);
   while (!_captured_images.IsEmpty()) {
     CapturedImage& image = _captured_images.RemoveHead();
     image.Free();
   }
+  LeaveCriticalSection(&cs);
+  DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void ScreenCapture::Capture(HWND wnd, CapturedImage::TYPE type) {
   if (wnd) {
+    EnterCriticalSection(&cs);
     CapturedImage image(wnd, type);
     _captured_images.AddTail(image);
+    LeaveCriticalSection(&cs);
   }
 }
 
@@ -32,16 +38,29 @@ void ScreenCapture::Capture(HWND wnd, CapturedImage::TYPE type) {
 bool ScreenCapture::GetImage(CapturedImage::TYPE type, CxImage& image) {
   bool ret = false;
   image.Destroy();
+  EnterCriticalSection(&cs);
   POSITION pos = _captured_images.GetHeadPosition();
   while (pos && !ret) {
     CapturedImage& captured_image = _captured_images.GetNext(pos);
     if (captured_image._type == type)
       ret = captured_image.Get(image);
   }
+  LeaveCriticalSection(&cs);
 
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ScreenCapture::Lock() {
+  EnterCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ScreenCapture::Unlock() {
+  LeaveCriticalSection(&cs);
+}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
