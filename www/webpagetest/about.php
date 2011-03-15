@@ -25,7 +25,7 @@ include 'common.inc';
                 else
                 {
                 ?>
-                <p>WebPagetest is a tool that was orginially developed by <a href="http://dev.aol.com/">AOL</a> for use internally and was open-sourced in 2008.
+                <p>WebPagetest is a tool that was orginally developed by <a href="http://dev.aol.com/">AOL</a> for use internally and was open-sourced in 2008.
                 The software is available for <a href="http://www.webpagetest.org/forums/forumdisplay.php?fid=12">download</a> if you would like to run your own 
                 instance.</p>
                 <?php
