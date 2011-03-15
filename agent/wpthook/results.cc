@@ -66,7 +66,88 @@ void Results::SaveImages(void) {
               JPEG_DEFAULT_QUALITY);
   }
 
-  // save out the video frames
+  SaveVideo();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveVideo(void) {
+  _screen_capture.Lock();
+  CxImage * last_image = NULL;
+  DWORD width, height;
+  CString file_name;
+  POSITION pos = _screen_capture._captured_images.GetHeadPosition();
+  while (pos) {
+    CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
+    CxImage * img = new CxImage;
+    if (image.Get(*img)) {
+      DWORD image_time = 0;
+      if (image._capture_time.QuadPart > _test_state._start.QuadPart)
+        image_time = (DWORD)((image._capture_time.QuadPart - 
+          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+      // we save the frames in increments of 100ms (for now anyway)
+      // round it to the closest interval
+      image_time = ((image_time + 50) / 100);
+      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      if (last_image) {
+        RGBQUAD black = {0,0,0,0};
+        if (img->GetWidth() > width)
+          img->Crop(0, 0, img->GetWidth() - width, 0);
+        if (img->GetHeight() > height)
+          img->Crop(0, 0, 0, img->GetHeight() - height);
+        if (img->GetWidth() < width)
+          img->Expand(0, 0, width - img->GetWidth(), 0, black);
+        if (img->GetHeight() < height)
+          img->Expand(0, 0, 0, height - img->GetHeight(), black);
+        if (ImagesAreDifferent(last_image, img)) {
+          file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+                            image_time);
+          SaveImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+        }
+      } else {
+        width = img->GetWidth();
+        height = img->GetHeight();
+        // always save the first image at time zero
+        file_name = _file_base + _T("_progress_0000.jpg");
+        SaveImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+      }
+
+      if (last_image)
+        delete last_image;
+      last_image = img;
+    }
+    else
+      delete img;
+  }
+
+  _screen_capture.Unlock();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
+  bool different = false;
+  if (img1 && img2 && img1->GetWidth() == img2->GetWidth() && 
+      img1->GetHeight() == img2->GetHeight() && 
+      img1->GetBpp() == img2->GetBpp()) {
+      if (img1->GetBpp() >= 15) {
+        DWORD pixel_bytes = 3;
+        if (img1->GetBpp() == 32)
+          pixel_bytes = 4;
+        DWORD width = img1->GetWidth();
+        DWORD height = img1->GetHeight();
+        DWORD row_length = width * pixel_bytes;
+        for (DWORD row = 0; row < height && !different; row++) {
+          BYTE * r1 = img1->GetBits(row);
+          BYTE * r2 = img2->GetBits(row);
+          if (r1 && r2 && memcmp(r1, r2, row_length))
+            different = true;
+        }
+      }
+  }
+  else
+    different = true;
+  return different;
 }
 
 /*-----------------------------------------------------------------------------

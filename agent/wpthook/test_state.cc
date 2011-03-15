@@ -5,9 +5,12 @@
 #include "shared_mem.h"
 #include "../wptdriver/util.h"
 #include "cximage/ximage.h"
+#include <Mmsystem.h>
 
 const DWORD ACTIVITY_TIMEOUT = 2000;
 const DWORD ON_LOAD_GRACE_PERIOD = 1000;
+const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
+const DWORD DATA_COLLECTION_INTERVAL = 100;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -31,27 +34,28 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_document_window(NULL)
   ,_screen_updated(false)
   ,_render_check_thread(NULL)
-  ,_exit(false) {
+  ,_exit(false)
+  ,_data_timer(NULL)
+  ,_last_data_ms(0)
+  ,_video_capture_count(0) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _render_start.QuadPart = 0;
   _first_activity.QuadPart = 0;
   _last_activity.QuadPart = 0;
   _first_byte.QuadPart = 0;
+  _last_video_time.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+  InitializeCriticalSection(&_data_cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::~TestState(void){
-  if (_render_check_thread) {
-    _exit = true;
-    SetEvent(_check_render_event);
-    WaitForSingleObject(_render_check_thread, INFINITE);
-    CloseHandle(_render_check_thread);
-  }
+  Done();
+  DeleteCriticalSection(&_data_cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -63,6 +67,14 @@ static unsigned __stdcall RenderCheckThread( void* arg )
     test_state->RenderCheckThread();
     
   return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
+{
+  if( lpParameter )
+    ((TestState *)lpParameter)->CollectData();
 }
 
 /*-----------------------------------------------------------------------------
@@ -81,6 +93,10 @@ void TestState::Start(){
   ResetEvent(_check_render_event);
   _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
                                                                    this, 0, 0);
+  timeBeginPeriod(1);
+  CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
+        DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
+  CollectData();
 }
 
 /*-----------------------------------------------------------------------------
@@ -161,18 +177,35 @@ bool TestState::IsDone(){
     }
 
     if (done) {
-      _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
-      if (_render_check_thread) {
-        _exit = true;
-        SetEvent(_check_render_event);
-        WaitForSingleObject(_render_check_thread, INFINITE);
-        CloseHandle(_render_check_thread);
-        _render_check_thread = NULL;
-      }
+      Done();
     }
   }
 
   return done;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::Done(void) {
+  if (_active) {
+    _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
+
+    // kill the timer that was collecting periodic data (cpu, video, etc)
+    if (_data_timer) {
+      DeleteTimerQueueTimer(NULL, _data_timer, NULL);
+      _data_timer = NULL;
+      timeEndPeriod(1);
+    }
+
+    // clean up the background thread that was doing the timer checks
+    if (_render_check_thread) {
+      _exit = true;
+      SetEvent(_check_render_event);
+      WaitForSingleObject(_render_check_thread, INFINITE);
+      CloseHandle(_render_check_thread);
+      _render_check_thread = NULL;
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -194,9 +227,32 @@ void TestState::FindBrowserWindow(void) {
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
   if (_active && _document_window && shared_capture_video) {
-    if (force || (_screen_updated && _render_start.QuadPart))
-      _screen_updated = false;
-      _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
+    if (force || (_screen_updated && _render_start.QuadPart)) {
+      // use a falloff on the resolution with which we capture video
+      bool grab_video = false;
+      LARGE_INTEGER now;
+      QueryPerformanceCounter(&now);
+      if (!_last_video_time.QuadPart)
+        grab_video = true;
+      else {
+        DWORD interval = DATA_COLLECTION_INTERVAL;
+        if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
+          interval *= 50;
+        else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
+          interval *= 10;
+        LARGE_INTEGER min_time;
+        min_time.QuadPart = _last_video_time.QuadPart + 
+                              (interval * _ms_frequency.QuadPart);
+        if (now.QuadPart >= min_time.QuadPart)
+          grab_video = true;
+      }
+      if (grab_video) {
+        _screen_updated = false;
+        _last_video_time.QuadPart = now.QuadPart;
+        _video_capture_count++;
+        _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
+      }
+    }
   }
 }
 
@@ -266,4 +322,27 @@ void TestState::RenderCheckThread() {
       _screen_capture.Unlock();
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+    See if anything has been rendered to the screen
+-----------------------------------------------------------------------------*/
+void TestState::CollectData() {
+  EnterCriticalSection(&_data_cs);
+  if (_active) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    DWORD ms = 0;
+    if (now.QuadPart > _start.QuadPart)
+      ms = (DWORD)((now.QuadPart - _start.QuadPart) / _ms_frequency.QuadPart);
+    // round it to the closest interval
+    ms = ((DWORD)((ms + (DATA_COLLECTION_INTERVAL / 2)) / 
+                  DATA_COLLECTION_INTERVAL)) * DATA_COLLECTION_INTERVAL;
+    if (ms != _last_data_ms || !_last_data_ms) {
+      _last_data_ms = ms;
+      GrabVideoFrame();
+    }
+
+  }
+  LeaveCriticalSection(&_data_cs);
 }
