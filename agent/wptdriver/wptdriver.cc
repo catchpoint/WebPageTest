@@ -54,6 +54,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   WptDriverCore core(status);
   core.Start();
 
+  // Minimize the WPT window.
+  ShowWindow(hWnd, SW_SHOWMINIMIZED);
+
   // Main message loop:
   while (GetMessage(&msg, NULL, 0, 0)){
     if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)){
