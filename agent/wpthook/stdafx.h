@@ -4,7 +4,7 @@
 //
 
 #pragma once
-
+#define PSAPI_VERSION 1
 #include "targetver.h"
 
 #define INCL_WINSOCK_API_TYPEDEFS 1
