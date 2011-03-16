@@ -293,8 +293,10 @@ void CPagetestReporting::FlushResults(void)
 			// generate the GUID to use for this event
 			GenerateGUID();
 
-			ProcessResults();
-			LogError();
+      if (script_logData) {
+			  ProcessResults();
+			  LogError();
+      }
 
 			ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Results Processed\n"));
 
@@ -1834,8 +1836,7 @@ void CPagetestReporting::CheckGzip(CString &buff)
 				&& mime.Find(_T("xml")) == -1 
 				&& w->linkedRequest
 				&& w->fromNet
-				&& (!w->secure || (ieMajorVer && ieMajorVer < 8))	// can't check gzip for IE8 and later (yet)
-			  )
+				&& !w->secure )
 			{
 				CString enc = w->response.contentEncoding;
 				enc.MakeLower();
