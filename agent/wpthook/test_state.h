@@ -3,6 +3,27 @@
 class Results;
 class ScreenCapture;
 
+class CProgressData
+{
+public:
+  CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0){}
+  CProgressData(const CProgressData& src){*this = src;}
+  ~CProgressData(){       }
+  const CProgressData& operator =(const CProgressData& src)
+  {
+    ms = src.ms;
+    bpsIn = src.bpsIn;
+    cpu = src.cpu;
+    mem = src.mem;
+    return src;
+  }
+  
+  DWORD           ms;             // milliseconds since start
+  DWORD           bpsIn;          // inbound bandwidth
+  double          cpu;            // CPU utilization
+  DWORD           mem;            // Working set size (in KB)
+};
+
 class TestState
 {
 public:
@@ -18,6 +39,7 @@ public:
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();
   void RenderCheckThread();
+  void CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now);
   void CollectData();
 
   // times
@@ -35,6 +57,7 @@ public:
   int _bytes_in;
   int _doc_bytes_out;
   int _bytes_out;
+  int _last_bytes_in;
 
   bool  _active;
   int   _current_document;
@@ -57,8 +80,13 @@ private:
 
   // tracking of the periodic data capture
   DWORD _last_data_ms;
+  LARGE_INTEGER _last_real_time;
+	unsigned __int64 _last_process_time;
   DWORD _video_capture_count;
   LARGE_INTEGER     _last_video_time;
+  // CPU, memory and BwIn information.
+  CAtlList<CProgressData> progressData;
+
   CRITICAL_SECTION  _data_cs;
 
   void Done();

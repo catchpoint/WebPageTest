@@ -27,6 +27,7 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_bytes_in(0)
   ,_doc_bytes_out(0)
   ,_bytes_out(0)
+  ,_last_bytes_in(0)
   ,_end_on_load(end_on_load)
   ,_results(results)
   ,_screen_capture(screen_capture)
@@ -37,6 +38,7 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_exit(false)
   ,_data_timer(NULL)
   ,_last_data_ms(0)
+  ,_last_process_time(0)
   ,_video_capture_count(0) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
@@ -44,6 +46,7 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   _first_activity.QuadPart = 0;
   _last_activity.QuadPart = 0;
   _first_byte.QuadPart = 0;
+  _last_real_time.QuadPart = 0;
   _last_video_time.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -325,7 +328,68 @@ void TestState::RenderCheckThread() {
 }
 
 /*-----------------------------------------------------------------------------
-    See if anything has been rendered to the screen
+    Collect the periodic system stats like cpu/memory/bandwidth.
+-----------------------------------------------------------------------------*/
+void TestState::CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now) {
+  CProgressData data;
+  data.ms = ms_from_start;
+  DWORD msElapsed = 0;
+  if( data.ms > _last_data_ms )
+    msElapsed = data.ms - _last_data_ms;
+  DWORD elapsed = 0;
+  if( now.QuadPart > _last_real_time.QuadPart && _last_real_time.QuadPart)
+    elapsed = (DWORD) ((now.QuadPart - _last_real_time.QuadPart) / _ms_frequency.QuadPart);
+  _last_real_time = now;
+  // figure out the bandwidth
+  if( _last_bytes_in )
+    data.bpsIn = (_bytes_in - _last_bytes_in) * 800;   // * 100 for the interval and * 8 for Bytes->bits
+  _last_bytes_in = _bytes_in;
+
+  // calculate CPU utilization
+  FILETIME create, ex, kernel, user;
+  if( GetProcessTimes(GetCurrentProcess(), &create, &ex, &kernel, &user) )
+  {
+    ULARGE_INTEGER k, u;
+    k.LowPart = kernel.dwLowDateTime;
+    k.HighPart = kernel.dwHighDateTime;
+    u.LowPart = user.dwLowDateTime;
+    u.HighPart = user.dwHighDateTime;
+    unsigned __int64 cpuTime = k.QuadPart + u.QuadPart;
+    if( _last_process_time && cpuTime >= _last_process_time && elapsed > 0.0)
+    {
+      double delta = (double)(cpuTime - _last_process_time) / (double)10000000; // convert it to seconds of CPU time
+      data.cpu = min((double)delta / elapsed, 1.0) * 100.0;
+    }
+    _last_process_time = cpuTime;
+  }
+  // get the memory use (working set - task-manager style)
+  PROCESS_MEMORY_COUNTERS mem;
+  mem.cb = sizeof(mem);
+  if( GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem)) )
+    data.mem = mem.WorkingSetSize / 1024;
+
+  // interpolate across multiple time periods
+  if( msElapsed > 100 )
+  {
+    DWORD chunks = msElapsed / 100;
+    for( DWORD i = 1; i < chunks; i++ )
+    {
+      CProgressData d;
+      d.ms = _last_data_ms + (i * 100);
+      d.cpu = data.cpu;               // CPU time was already spread over the period
+      d.bpsIn = data.bpsIn / chunks;  // split bandwidth evenly across the time slices
+      d.mem = data.mem;               // just assign them all the same memory use (could interpolate but probably not worth it)
+      progressData.AddTail(d);
+    }
+    data.bpsIn /= chunks;   // bandwidth is the only measure in the main chunk that needs to be adjusted
+  }
+  progressData.AddTail(data);
+}
+
+/*-----------------------------------------------------------------------------
+  Collect various performance data and screen capture.
+    - See if anything has been rendered to the screen
+    - Collect the CPU/memory/BW information
 -----------------------------------------------------------------------------*/
 void TestState::CollectData() {
   EnterCriticalSection(&_data_cs);
@@ -341,8 +405,8 @@ void TestState::CollectData() {
     if (ms != _last_data_ms || !_last_data_ms) {
       _last_data_ms = ms;
       GrabVideoFrame();
+      CollectSystemStats(ms, now);
     }
-
   }
   LeaveCriticalSection(&_data_cs);
 }

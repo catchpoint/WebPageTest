@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <memory.h>
+#include <Psapi.h>
 #include <tchar.h>
 #include <Ws2tcpip.h>
 
