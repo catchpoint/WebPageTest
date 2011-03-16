@@ -199,7 +199,7 @@ else
                 <?php include('footer.inc'); ?>
             </div>
 
-            <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/compare.js"></script> 
+            <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/compare.js?v=4"></script> 
             <script type="text/javascript">
                 <?php echo "var maxCompare = $maxCompare;"; ?>
             </script>

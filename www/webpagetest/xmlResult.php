@@ -119,8 +119,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                        if( $test['test']['aft'] )
-                            echo "<AFT>{$aft[$i][0]}</AFT>\n";
                     }
                     echo "</results>\n";
 

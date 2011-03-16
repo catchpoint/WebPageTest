@@ -2,7 +2,7 @@ function ValidateInput(form)
 {
     var ret = false;
     
-    var count = $("#createForm :checked").size();
+    var count = $('input:checked[name="t[]"]').size();
     if( count > 0 )
     {
         if( count <= maxCompare )
