@@ -32,6 +32,7 @@ private:
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
   void SaveImages(void);
   void SaveVideo(void);
+  void SaveProgressData(void);
   void SaveImage(CxImage& image, CString file, bool shrink, BYTE quality);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
 };

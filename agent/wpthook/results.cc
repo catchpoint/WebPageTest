@@ -10,6 +10,7 @@
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
 static const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
+static const TCHAR * PROGRESS_DATA_FILE = _T("_progress.csv");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
@@ -46,6 +47,33 @@ void Results::Save(void){
   SaveRequests();
   SavePageData();
   SaveImages();
+  SaveProgressData();
+}
+
+
+
+/*-----------------------------------------------------------------------------
+  Save the cpu, memory and bandwidth progress data during the test.
+-----------------------------------------------------------------------------*/
+void Results::SaveProgressData(void) {
+  CStringA progress;
+  POSITION pos = _test_state._progress_data.GetHeadPosition();
+  while( pos )
+  {
+    if( progress.IsEmpty() )
+      progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
+    CProgressData data = _test_state._progress_data.GetNext(pos);
+    CStringA buff;
+    buff.Format("%d,%d,%0.2f,%d\r\n", data.ms, data.bpsIn, data.cpu, data.mem );
+    progress += buff;
+  }
+  HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+  if( hFile != INVALID_HANDLE_VALUE )
+  {
+    DWORD dwBytes;
+    WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
+    CloseHandle(hFile);
+  }
 }
 
 /*-----------------------------------------------------------------------------

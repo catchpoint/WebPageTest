@@ -379,11 +379,11 @@ void TestState::CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now) {
       d.cpu = data.cpu;               // CPU time was already spread over the period
       d.bpsIn = data.bpsIn / chunks;  // split bandwidth evenly across the time slices
       d.mem = data.mem;               // just assign them all the same memory use (could interpolate but probably not worth it)
-      progressData.AddTail(d);
+      _progress_data.AddTail(d);
     }
     data.bpsIn /= chunks;   // bandwidth is the only measure in the main chunk that needs to be adjusted
   }
-  progressData.AddTail(data);
+  _progress_data.AddTail(data);
 }
 
 /*-----------------------------------------------------------------------------
