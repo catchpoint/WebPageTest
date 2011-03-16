@@ -11,6 +11,7 @@ const DWORD ACTIVITY_TIMEOUT = 2000;
 const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 const DWORD DATA_COLLECTION_INTERVAL = 100;
+const DWORD START_RENDER_MARGIN = 30;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -284,27 +285,33 @@ void TestState::RenderCheckThread() {
       bool found = false;
       CapturedImage captured_img(_document_window, CapturedImage::START_RENDER);
       CxImage img;
-      if (captured_img.Get(img)) {
+      if (captured_img.Get(img) && 
+          img.GetWidth() > START_RENDER_MARGIN * 2 &&
+          img.GetHeight() > START_RENDER_MARGIN * 2) {
         int bpp = img.GetBpp();
         if (bpp >= 15) {
           int height = img.GetHeight();
           int width = img.GetWidth();
           // 24-bit gets a fast-path where we can just compare full rows
           if (bpp <= 24 ) {
-            DWORD row_bytes = 3 * width;
+            DWORD row_bytes = 3 * (width - (START_RENDER_MARGIN * 2));
             char * white = (char *)malloc(row_bytes);
             if (white) {
               memset(white, 0xFFFFFFFF, row_bytes);
-              for (int row = 0; row < height && !found; row++) {
-                char * image_bytes = (char *)img.GetBits(row);
+              for (DWORD row = START_RENDER_MARGIN; 
+                    row < height - START_RENDER_MARGIN && !found; row++) {
+                char * image_bytes = (char *)img.GetBits(row) 
+                                      + START_RENDER_MARGIN;
                 if (memcmp(image_bytes, white, row_bytes))
                   found = true;
               }
               free (white);
             }
           } else {
-            for (int row = 0; row < height && !found; row++) {
-              for (int x = 0; x < width && !found; x++) {
+            for (DWORD row = START_RENDER_MARGIN; 
+                    row < height - START_RENDER_MARGIN && !found; row++) {
+              for (DWORD x = START_RENDER_MARGIN; 
+                    x < width - START_RENDER_MARGIN && !found; x++) {
                 RGBQUAD pixel = img.GetPixelColor(x, row, false);
                 if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
                     pixel.rgbGreen != 255)
