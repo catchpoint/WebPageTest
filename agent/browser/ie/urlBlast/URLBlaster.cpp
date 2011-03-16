@@ -42,6 +42,7 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
 	hClearedCache = CreateEvent(0, TRUE, FALSE, NULL );
 	hRun = CreateEvent(0, TRUE, FALSE, NULL );
+  testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 	srand(GetTickCount());
 }
 
@@ -70,6 +71,7 @@ CURLBlaster::~CURLBlaster(void)
 	CloseHandle( hMustExit );
 	CloseHandle( hClearedCache );
 	CloseHandle( hRun );
+  CloseHandle( testingMutex );
 	EnterCriticalSection(&cs);
 	if( userSID )
 	{
@@ -159,6 +161,7 @@ void CURLBlaster::ThreadProc(void)
 		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT )
 		{
 			// get the url to test
+      WaitForSingleObject(testingMutex, INFINITE);
 			if(	GetUrl() )
 			{
         if( info.testType.GetLength() )
@@ -201,9 +204,13 @@ void CURLBlaster::ThreadProc(void)
 						urlManager->UrlFinished(info);
 					}while( !info.done );
 				}
+        ReleaseMutex(testingMutex);
 			}
 			else
+      {
+        ReleaseMutex(testingMutex);
 				Sleep(500 + (rand() % 500));
+      }
 		}
 	}
 }

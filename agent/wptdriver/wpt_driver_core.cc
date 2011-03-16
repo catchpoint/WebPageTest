@@ -22,6 +22,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_message_window(NULL){
   global_core = this;
   InitializeCriticalSection(&cs);
+  _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 }
 
 
@@ -30,6 +31,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
 WptDriverCore::~WptDriverCore(void){
   global_core = NULL;
   DeleteCriticalSection(&cs);
+  CloseHandle(_testing_mutex);
 }
 
 /*-----------------------------------------------------------------------------
@@ -112,6 +114,7 @@ void WptDriverCore::WorkThread(void){
   _status.Set(_T("Running..."));
 
   while( !_exit ){
+    WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for work..."));
 
     WptTest test;
@@ -161,6 +164,8 @@ void WptDriverCore::WorkThread(void){
           if( test._tcpdump )
             winpcap.StopCapture();
 
+          _webpagetest.UploadIncrementalResults(test);
+
           if( !test._fv_only ){
             // run the repeat view test
             test._clear_cache = false;
@@ -169,6 +174,8 @@ void WptDriverCore::WorkThread(void){
             _browser->RunAndWait();
             if( test._tcpdump )
               winpcap.StopCapture();
+
+            _webpagetest.UploadIncrementalResults(test);
           }
 
         }
@@ -192,7 +199,9 @@ void WptDriverCore::WorkThread(void){
         // Reset the network throttling at the end of the test.
         ResetIpfw();
       }
+      ReleaseMutex(_testing_mutex);
     }else{
+      ReleaseMutex(_testing_mutex);
       _status.Set(_T("Waiting for work..."));
       int delay = _settings._polling_delay * SECONDS_TO_MS;
       while (!_exit && delay > 0) {

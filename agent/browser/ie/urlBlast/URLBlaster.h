@@ -94,6 +94,7 @@ protected:
 	CString eventName;
 	HANDLE hDynaTrace;
   CWinPCap  winpcap;
+  HANDLE testingMutex;
 	
 	// directories
 	CString	profile;

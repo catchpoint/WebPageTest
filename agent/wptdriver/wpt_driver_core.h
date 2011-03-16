@@ -28,6 +28,7 @@ private:
   HWND        _message_window;
   TestServer  _test_server;
   CRITICAL_SECTION  cs;
+  HANDLE      _testing_mutex;
 
   bool ConfigureIpfw(WptTest& test);
   void ResetIpfw(void);
