@@ -38,9 +38,35 @@ bool WebPagetest::GetTest(WptTest& test){
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WebPagetest::UploadIncrementalResults(WptTest& test) {
+  bool ret = true;
+
+  ret = UploadImages(test);
+  if (ret) {
+    ret = UploadData(test, false);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
   Send the test result back to the server
 -----------------------------------------------------------------------------*/
 bool WebPagetest::TestDone(WptTest& test){
+  bool ret = true;
+
+  ret = UploadImages(test);
+  if (ret) {
+    ret = UploadData(test, true);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool  WebPagetest::UploadImages(WptTest& test) {
   bool ret = true;
 
   // upload the large binary files individually (images, tcpdump, etc)
@@ -66,16 +92,24 @@ bool WebPagetest::TestDone(WptTest& test){
     }
   }
 
-  // upload the actual test data
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WebPagetest::UploadData(WptTest& test, bool done) {
+  bool ret = false;
+
+  CString file = NO_FILE;
+  CString dir = test._directory + CString(_T("\\"));
+  ret = CompressResults(dir, dir + _T("results.zip"));
   if (ret) {
-    CString file = NO_FILE;
-    // compress the remaining files
-    ret = CompressResults(dir, dir + _T("results.zip"));
-    if (ret) {
-      file = dir + _T("results.zip");
-    }
-    url = _settings._server + _T("work/workdone.php");
-    ret = UploadFile(url, true, test, file);
+    file = dir + _T("results.zip");
+  }
+
+  if (ret || done) {
+    CString url = _settings._server + _T("work/workdone.php");
+    ret = UploadFile(url, done, test, file);
   }
 
   return ret;
