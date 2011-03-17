@@ -1,3 +1,30 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
 #include "StdAfx.h"
 #include "web_browser.h"
 
@@ -19,17 +46,17 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WebBrowser::~WebBrowser(void){
+WebBrowser::~WebBrowser(void) {
   DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait(){
+bool WebBrowser::RunAndWait() {
   bool ret = false;
 
-  if (_test.Start(&_browser) ){
-    if( _browser._exe.GetLength() ){
+  if (_test.Start(&_browser)) {
+    if (_browser._exe.GetLength()) {
       HMODULE hook_dll = NULL;
       TCHAR cmdLine[4096];
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
@@ -53,7 +80,7 @@ bool WebBrowser::RunAndWait(){
       EnterCriticalSection(&cs);
       _browser_process = NULL;
       if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, CREATE_SUSPENDED, 
-                        NULL, NULL, &si, &pi)){
+                        NULL, NULL, &si, &pi)) {
         _browser_process = pi.hProcess;
 
         ResumeThread(pi.hThread);
@@ -86,7 +113,7 @@ bool WebBrowser::RunAndWait(){
       EnterCriticalSection(&cs);
       _hook.Disconnect();
 
-      if( _browser_process ){
+      if (_browser_process) {
         DWORD exit_code;
         if( GetExitCodeProcess(_browser_process, &exit_code) == STILL_ACTIVE )
           TerminateProcess(_browser_process, 0);
@@ -112,7 +139,7 @@ bool WebBrowser::Close(){
 
   // send close messages to all of the top-level windows associated with the
   // browser process
-  if( _browser_process ){
+  if (_browser_process) {
     DWORD browser_process_id = GetProcessId(_browser_process);
     HWND frame_window, document_window;
     if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {
@@ -136,7 +163,7 @@ void WebBrowser::ClearCache() {
 -----------------------------------------------------------------------------*/
 void WebBrowser::PositionWindow() {
   EnterCriticalSection(&cs);
-  if( _browser_process ){
+  if (_browser_process) {
     DWORD browser_process_id = GetProcessId(_browser_process);
     HWND frame_window, document_window;
     if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {

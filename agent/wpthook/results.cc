@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 #include "results.h"
 #include "shared_mem.h"
@@ -31,19 +59,19 @@ Results::Results(TestState& test_state, Requests& requests,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Results::~Results(void){
+Results::~Results(void) {
 }
 
 /*-----------------------------------------------------------------------------
   Reset the current test results
 -----------------------------------------------------------------------------*/
-void Results::Reset(void){
+void Results::Reset(void) {
 }
 
 /*-----------------------------------------------------------------------------
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
-void Results::Save(void){
+void Results::Save(void) {
   SaveRequests();
   SavePageData();
   SaveImages();
@@ -535,60 +563,60 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += "\t";
   // Event GUID - (matches with Event GUID in object data) - Added in build 42
   result += "\t";
-  // Sequence Number - Incremented for each record in the object data for a given page (starting at 0)
+  // Sequence Number - Incremented for each record in the object data
   buff.Format("%d\t", index);
   result += buff;
-  // Cache Score - -1 if N/A, 0 if it failed, 50 if it was warned, 100 if it passed (signed byte). Added in build 51
+  // Cache Score
   result += "-1\t";
-  // Static CDN Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // Static CDN Score
   result += "-1\t";
-  // GZIP Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // GZIP Score
   result += "-1\t";
-  // Cookie Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // Cookie Score
   result += "-1\t";
-  // Keep-Alive Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // Keep-Alive Score
   result += "-1\t";
-  // DOCTYPE Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // DOCTYPE Score
   result += "-1\t";
-  // Minify Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // Minify Score
   result += "-1\t";
-  // Combine Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 51
+  // Combine Score
   result += "-1\t";
-  // Compression Score - -1 if N/A, 0 if it failed, 50 if it was warned, 100 if it passed (signed byte). Added in build 54
+  // Compression Score
   result += "-1\t";
-  // ETag Score - -1 if N/A, 0 if it failed, 100 if it passed (signed byte). Added in build 170
+  // ETag Score
   result += "-1\t";
-  // Flagged - Is this a flagged request (0 - no, 1 - yes) - Added in build 179
+  // Flagged
   result += "0\t";
-  // Secure - Is this a secure request - https (0 - no, 1 - yes)? - Added in build 179
+  // Secure
   result += "0\t";
-  // DNS Time (ms) - Time for DNS lookup (-1 if N/A) - Added in build 179
+  // DNS Time (ms)
   result += "-1\t";
-  // Socket Connect time (ms) - Time for Socket connect (-1 if N/A) - Added in build 179
+  // Socket Connect time (ms)
   result += "-1\t";
-  // SSL time (ms) - Time for SSL handshake (-1 if N/A) - Added in build 179
+  // SSL time (ms)
   result += "-1\t";
-  // Gzip Total Bytes - Total size of applicable resources for Gzip compression - Added in build 179
+  // Gzip Total Bytes
   result += "0\t";
-  // Gzip Savings - Bytes saved through Gzip compression - Added in build 179
+  // Gzip Savings
   result += "0\t";
-  // Minify Total Bytes - Total size of applicable resources for Minification - Added in build 179
+  // Minify Total Bytes
   result += "0\t";
-  // Minify Savings - Bytes saved through Minification - Added in build 179
+  // Minify Savings
   result += "0\t";
-  // Image Compression Total Bytes - Total size of applicable resources for image compression - Added in build 179
+  // Image Compression Total Bytes
   result += "0\t";
-  // Image Compression Savings - Bytes saved through image optimization - Added in build 179
+  // Image Compression Savings
   result += "0\t";
-  // Cache Time (sec) - Time in seconds for the object to be cached (-1 if not present)
+  // Cache Time (sec)
   result += "-1\t";
-  // Real Start Time (ms) - This is the offset time when anything for the request started (dns lookup or socket connect) - Added in build 205
+  // Real Start Time (ms)
   result += "\t";
-  // Full Time to Load (ms) - This is the full time for the given request, including any DNS or socket connect time - Added in build 205
+  // Full Time to Load (ms)
   result += "\t";
-  // Optimization Checked - 1 if the request was checked for optimization, 0 if not - Added in build 209
+  // Optimization Checked
   result += "0\t";
-  // CDN Provider - The CDN provider that the request was served from - Added in build 260 
+  // CDN Provider
   result += "\t";
   // DNS start
   buff.Format("%d\t", request->_ms_dns_start);

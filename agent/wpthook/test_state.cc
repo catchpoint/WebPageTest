@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 #include "test_state.h"
 #include "results.h"
@@ -57,15 +85,14 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestState::~TestState(void){
+TestState::~TestState(void) {
   Done();
   DeleteCriticalSection(&_data_cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall RenderCheckThread( void* arg )
-{
+static unsigned __stdcall RenderCheckThread( void* arg ) {
   TestState * test_state = (TestState *)arg;
   if( test_state )
     test_state->RenderCheckThread();
@@ -75,15 +102,14 @@ static unsigned __stdcall RenderCheckThread( void* arg )
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
-{
+void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
   if( lpParameter )
     ((TestState *)lpParameter)->CollectData();
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::Start(){
+void TestState::Start() {
   ATLTRACE2(_T("[wpthook] TestState::Start()\n"));
   QueryPerformanceCounter(&_start);
   _results.Reset();
@@ -105,7 +131,7 @@ void TestState::Start(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::ActivityDetected(){
+void TestState::ActivityDetected() {
   if (_active) {
     QueryPerformanceCounter(&_last_activity);
     if (!_first_activity.QuadPart)
@@ -115,7 +141,7 @@ void TestState::ActivityDetected(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::OnNavigate(){
+void TestState::OnNavigate() {
   if (_active) {
     ATLTRACE2(_T("[wpthook] TestState::OnNavigate()\n"));
     FindBrowserWindow();
@@ -130,7 +156,7 @@ void TestState::OnNavigate(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::OnLoad(){
+void TestState::OnLoad() {
   if (_active) {
     ATLTRACE2(_T("[wpthook] TestState::OnLoad()\n"));
     QueryPerformanceCounter(&_on_load);
@@ -142,7 +168,7 @@ void TestState::OnLoad(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TestState::IsDone(){
+bool TestState::IsDone() {
   bool done = false;
 
   if (_active){
@@ -283,7 +309,7 @@ void TestState::RenderCheckThread() {
 
       // grab a screen shot
       bool found = false;
-      CapturedImage captured_img(_document_window, CapturedImage::START_RENDER);
+      CapturedImage captured_img(_document_window,CapturedImage::START_RENDER);
       CxImage img;
       if (captured_img.Get(img) && 
           img.GetWidth() > START_RENDER_MARGIN * 2 &&

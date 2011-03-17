@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "stdafx.h"
 #include "wpthook.h"
 #include "shared_mem.h"
@@ -14,7 +42,7 @@ __declspec( dllexport ) DWORD __stdcall RemoteThreadProc(void * thread_data);
 /*-----------------------------------------------------------------------------
     Injected initialization routine
 -----------------------------------------------------------------------------*/
-void __stdcall Initialize(void){
+void __stdcall Initialize(void) {
   OutputDebugString(_T("[wpthook] Initialize()\n"));
   #ifdef DEBUG
   //MessageBox(NULL, _T("Attach"), _T("Debugger"), MB_SYSTEMMODAL | MB_OK);
@@ -45,7 +73,7 @@ LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll) {
     // loop until we find the dll
     MODULEENTRY32 module;
     module.dwSize = sizeof(module);
-    if (Module32First(snap, &module)){
+    if (Module32First(snap, &module)) {
       do {
         if (!lstrcmpi(module.szModule, dll))
           base_address = module.modBaseAddr;
@@ -66,7 +94,7 @@ LPBYTE GetRemoteFunction(HANDLE process, TCHAR * dll, TCHAR * fn){
   // first, get the offset of the function from the dll base address in the 
   // current process
   HMODULE module = LoadLibrary(dll);
-  if (module){
+  if (module) {
     LPBYTE base = GetDllBaseAddress(GetCurrentProcess(), dll);
     if (base) {
       LPBYTE addr = (LPBYTE)GetProcAddress(module, CT2A(fn));
@@ -123,7 +151,7 @@ bool LoadRemoteDll(HANDLE process) {
 /*-----------------------------------------------------------------------------
   Inject our dll into the browser process
 -----------------------------------------------------------------------------*/
-void WINAPI InstallHook(HANDLE process){
+void WINAPI InstallHook(HANDLE process) {
   if (LoadRemoteDll(process)) {
     // code is loaded remotely, figure out the function offset and run the init
     LPBYTE fn_RemoteThreadProc = GetRemoteFunction(process, _T("wpthook.dll"), 

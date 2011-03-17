@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 #include "test_server.h"
 #include "mongoose/mongoose.h"
@@ -42,7 +70,7 @@ static void *MongooseCallbackStub(enum mg_event event,
                            const struct mg_request_info *request_info) {
   void *processed = "yes";
 
-  if( _global_test_server )
+  if (_global_test_server)
     _global_test_server->MongooseCallback(event, conn, request_info);
 
   return processed;
@@ -63,7 +91,7 @@ bool TestServer::Start(void){
   };
 
   _mongoose_context = mg_start(&MongooseCallbackStub, options);
-  if( _mongoose_context )
+  if (_mongoose_context)
     ret = true;
 
   return ret;
@@ -73,7 +101,7 @@ bool TestServer::Start(void){
   Stop the local HTTP server
 -----------------------------------------------------------------------------*/
 void TestServer::Stop(void){
-  if( _mongoose_context ){
+  if (_mongoose_context) {
     mg_stop(_mongoose_context);
     _mongoose_context = NULL;
   }
@@ -160,9 +188,9 @@ void TestServer::SendResponse(struct mg_connection *conn,
   CStringA request_id;
 
   // process the query parameters
-  if( request_info->query_string ){
+  if (request_info->query_string) {
     size_t query_len = strlen(request_info->query_string);
-    if( query_len ){
+    if (query_len) {
       char param[1024];
       const char *qs = request_info->query_string;
 
@@ -186,7 +214,7 @@ void TestServer::SendResponse(struct mg_connection *conn,
     "Content-Type: application/json\r\n"
     "\r\n";
 
-  if( !callback.IsEmpty() )
+  if (!callback.IsEmpty())
     response += callback + "(";
 
   // now the standard REST container
@@ -194,18 +222,18 @@ void TestServer::SendResponse(struct mg_connection *conn,
   buff.Format("{\"statusCode\":%d,\"statusText\":\"%s\"", response_code, 
     (LPCSTR)response_code_string);
   response += buff;
-  if( request_id.GetLength() )
+  if (request_id.GetLength())
     response += CStringA(",\"requestId\":\"") + request_id + "\"";
 
   // and the actual data
-  if( response_data.GetLength() ){
+  if (response_data.GetLength()) {
     response += ",\"data\":";
     response += response_data;
   }
 
   // close it out
   response += "}";
-  if( !callback.IsEmpty() )
+  if (!callback.IsEmpty())
     response += ");";
 
   // and finally, send it

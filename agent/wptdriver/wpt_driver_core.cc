@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 #include "wpt_driver_core.h"
 #include "mongoose/mongoose.h"
@@ -28,7 +56,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptDriverCore::~WptDriverCore(void){
+WptDriverCore::~WptDriverCore(void) {
   global_core = NULL;
   DeleteCriticalSection(&cs);
   CloseHandle(_testing_mutex);
@@ -37,8 +65,7 @@ WptDriverCore::~WptDriverCore(void){
 /*-----------------------------------------------------------------------------
   Stub entry point for the background work thread
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall WorkThreadProc( void* arg )
-{
+static unsigned __stdcall WorkThreadProc(void* arg) {
   WptDriverCore * core = (WptDriverCore *)arg;
   if( core )
     core->WorkThread();
@@ -49,8 +76,7 @@ static unsigned __stdcall WorkThreadProc( void* arg )
 /*-----------------------------------------------------------------------------
   Stub entry point for the background message thread
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall MessageThreadProc( void* arg )
-{
+static unsigned __stdcall MessageThreadProc(void* arg) {
   WptDriverCore * core = (WptDriverCore *)arg;
   if( core )
     core->MessageThread();
@@ -79,7 +105,7 @@ void WptDriverCore::Start(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptDriverCore::Stop(void){
+void WptDriverCore::Stop(void) {
   _status.Set(_T("Stopping..."));
 
   _exit = true;
@@ -102,17 +128,12 @@ void WptDriverCore::Stop(void){
 /*-----------------------------------------------------------------------------
   Main thread for processing work
 -----------------------------------------------------------------------------*/
-void WptDriverCore::WorkThread(void){
-
+void WptDriverCore::WorkThread(void) {
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
-
   Init();  // do initialization and machine configuration
-
   _status.Set(_T("Starting Web Server..."));
   _test_server.Start();
-
   _status.Set(_T("Running..."));
-
   while( !_exit ){
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for work..."));
@@ -130,16 +151,14 @@ void WptDriverCore::WorkThread(void){
           trace_route.Run();
         }
         bool uploaded = false;
-        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
           uploaded = _webpagetest.TestDone(test);
           if( !uploaded )
             Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
         }
       }    
       else if (ConfigureIpfw(test)) {
-
         _status.Set(_T("Launching browser..."));   
-
         EnterCriticalSection(&cs);
         _browser = new WebBrowser(_settings, test, _status, _hook, 
                                     _settings._browser_chrome);
@@ -149,9 +168,7 @@ void WptDriverCore::WorkThread(void){
         _test_server.SetBrowser(_browser);
         LeaveCriticalSection(&cs);
 
-        // loop over all of the test runs
         for (test._run = 1; test._run <= test._runs; test._run++){
-          // Set the result file base.
           test.SetFileBase();
 
           // Run the first view test
@@ -190,17 +207,15 @@ void WptDriverCore::WorkThread(void){
         LeaveCriticalSection(&cs);
 
         bool uploaded = false;
-        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded; count++ ) {
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
           uploaded = _webpagetest.TestDone(test);
           if( !uploaded )
             Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
         }
-
-        // Reset the network throttling at the end of the test.
         ResetIpfw();
       }
       ReleaseMutex(_testing_mutex);
-    }else{
+    } else {
       ReleaseMutex(_testing_mutex);
       _status.Set(_T("Waiting for work..."));
       int delay = _settings._polling_delay * SECONDS_TO_MS;
@@ -218,13 +233,14 @@ void WptDriverCore::WorkThread(void){
   Do any startup initialization (settings have already loaded)
 -----------------------------------------------------------------------------*/
 void WptDriverCore::Init(void){
-
   // set the OS to not boost foreground processes
   HKEY hKey;
-  if( SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\PriorityControl"), 0, KEY_SET_VALUE, &hKey)) )
-  {
+  if (SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+      _T("SYSTEM\\CurrentControlSet\\Control\\PriorityControl"), 0, 
+      KEY_SET_VALUE, &hKey))) {
     DWORD val = 0x18;
-    RegSetValueEx(hKey, _T("Win32PrioritySeparation"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+    RegSetValueEx(hKey, _T("Win32PrioritySeparation"), 0, REG_DWORD, 
+                  (LPBYTE)&val, sizeof(val));
     RegCloseKey(hKey);
   }
   
@@ -237,64 +253,55 @@ typedef int (CALLBACK* DNSFLUSHPROC)();
 /*-----------------------------------------------------------------------------
   Empty the OS DNS cache
 -----------------------------------------------------------------------------*/
-void WptDriverCore::FlushDNS(void){
+void WptDriverCore::FlushDNS(void) {
   _status.Set(_T("Flushing DNS cache..."));
 
   bool flushed = false;
   HINSTANCE		hDnsDll;
 
   hDnsDll = LoadLibrary(_T("dnsapi.dll"));
-  if( hDnsDll )
-  {
+  if (hDnsDll) {
     DNSFLUSHPROC pDnsFlushProc = (DNSFLUSHPROC)GetProcAddress(hDnsDll, 
                                                       "DnsFlushResolverCache");
-    if( pDnsFlushProc )
-    {
+    if (pDnsFlushProc) {
       int ret = pDnsFlushProc();
-      if( ret == ERROR_SUCCESS)
-      {
+      if (ret == ERROR_SUCCESS) {
         flushed = true;
         _status.Set(_T("Successfully flushed the DNS resolved cache"));
-      }
-      else
+      } else
         _status.Set(_T("DnsFlushResolverCache returned %d"), ret);
-    }
-    else
+    } else
       _status.Set(_T("Failed to load dnsapi.dll"));
 
     FreeLibrary(hDnsDll);
-  }
-  else
+  } else
     _status.Set(_T("Failed to load dnsapi.dll"));
 
-  if( !flushed )
+  if (!flushed)
     LaunchProcess(_T("ipconfig.exe /flushdns"));
 }
 
 /*-----------------------------------------------------------------------------
   Set up bandwidth throttling
 -----------------------------------------------------------------------------*/
-bool WptDriverCore::ConfigureIpfw(WptTest& test)
-{
+bool WptDriverCore::ConfigureIpfw(WptTest& test) {
   bool ret = false;
-  if( test._bwIn && test._bwOut )
-  {
+  if (test._bwIn && test._bwOut) {
     // split the latency across directions
     DWORD latency = test._latency / 2;
 
     CString buff;
-    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, %d ms latency, %0.2f plr"), test._bwIn, test._bwOut, test._latency, test._plr );
+    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, ")
+                _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
+                test._latency, test._plr );
     OutputDebugString(buff);
 
-    // create the inbound pipe
-    if( _ipfw.CreatePipe(pipeIn, test._bwIn * 1000, latency, test._plr / 100.0) )
-    {
+    if (_ipfw.CreatePipe(pipeIn, test._bwIn*1000, latency,test._plr/100.0)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
 
-      // create the outbound pipe
-      if( _ipfw.CreatePipe(pipeOut, test._bwOut * 1000, latency, test._plr / 100.0) )
+      if (_ipfw.CreatePipe(pipeOut, test._bwOut*1000,latency,test._plr/100.0))
         ret = true;
       else
         _ipfw.CreatePipe(pipeIn, 0, 0, 0);
@@ -308,8 +315,7 @@ bool WptDriverCore::ConfigureIpfw(WptTest& test)
 /*-----------------------------------------------------------------------------
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
-void WptDriverCore::ResetIpfw(void)
-{
+void WptDriverCore::ResetIpfw(void) {
   _ipfw.CreatePipe(pipeIn, 0, 0, 0);
   _ipfw.CreatePipe(pipeOut, 0, 0, 0);
 }
@@ -319,45 +325,36 @@ void WptDriverCore::ResetIpfw(void)
   WndProc for the messaging window
 -----------------------------------------------------------------------------*/
 static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg, 
-                                                  WPARAM wParam, LPARAM lParam)
-{
+                                               WPARAM wParam, LPARAM lParam) {
   LRESULT ret = 0;
-
   bool handled = false;
-
   if (global_core)
     handled = global_core->OnMessage(uMsg);
-
   if (!handled)
     ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
-
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
   Background window and thread for processing messages from the hook dll
 -----------------------------------------------------------------------------*/
-void WptDriverCore::MessageThread(void){
-  ATLTRACE2(_T("[wpthook] MessageThread()\n"));
-
+void WptDriverCore::MessageThread(void) {
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;
   memset(&wndClass, 0, sizeof(wndClass));
   wndClass.lpszClassName = wptdriver_window_class;
   wndClass.lpfnWndProc = WptDriverWindowProc;
   wndClass.hInstance = hInst;
-  if( RegisterClass(&wndClass) )
-  {
+  if (RegisterClass(&wndClass)) {
     _message_window = CreateWindow(wptdriver_window_class, 
                                     wptdriver_window_class, 
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, hInst, NULL);
-    if( _message_window )
-    {
+    if (_message_window) {
       MSG msg;
       BOOL bRet;
-      while ( (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0 ){
-        if (bRet != -1){
+      while ((bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
+        if (bRet != -1) {
           TranslateMessage(&msg);
           DispatchMessage(&msg);
         }
@@ -368,10 +365,10 @@ void WptDriverCore::MessageThread(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WptDriverCore::OnMessage(UINT message){
+bool WptDriverCore::OnMessage(UINT message) {
   bool ret = true;
 
-  switch (message){
+  switch (message) {
     case WPT_HOOK_DONE:
         ATLTRACE2(_T("[wptdriver] OnMessage() - WPT_HOOK_DONE\n"));
         EnterCriticalSection(&cs);

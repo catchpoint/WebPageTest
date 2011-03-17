@@ -1,8 +1,36 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::WptTest(void){
+WptTest::WptTest(void) {
   // figure out what our working diriectory is
   TCHAR path[MAX_PATH];
   if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE,
@@ -17,13 +45,13 @@ WptTest::WptTest(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::~WptTest(void){
+WptTest::~WptTest(void) {
 }
 
 /*-----------------------------------------------------------------------------
   Reset everything to their default values
 -----------------------------------------------------------------------------*/
-void WptTest::Reset(void){
+void WptTest::Reset(void) {
   _id.Empty();
   _url.Empty();
   _runs = 1;
@@ -52,7 +80,7 @@ void WptTest::Reset(void){
 /*-----------------------------------------------------------------------------
   Parse the test settings from a string
 -----------------------------------------------------------------------------*/
-bool WptTest::Load(CString& test){
+bool WptTest::Load(CString& test) {
   bool ret = false;
 
   Reset();
@@ -119,7 +147,7 @@ bool WptTest::Load(CString& test){
 /*-----------------------------------------------------------------------------
   Create a JSON Encoding of the test data
 -----------------------------------------------------------------------------*/
-CStringA WptTest::ToJSON(){
+CStringA WptTest::ToJSON() {
   CStringA buff;
   CStringA json = "{";
 
@@ -191,8 +219,7 @@ CStringA WptTest::ToJSON(){
 /*-----------------------------------------------------------------------------
   Escape the supplied string for JSON
 -----------------------------------------------------------------------------*/
-CStringA WptTest::JSONEscape(CString src)
-{
+CStringA WptTest::JSONEscape(CString src) {
   CStringA dest = CT2A(src);
   dest.Replace("\\", "\\\\");
   dest.Replace("\"", "\\\"");
@@ -223,19 +250,17 @@ bool WptTest::SetFileBase() {
 /*-----------------------------------------------------------------------------
   We are starting a new run, build up the script for the browser to execute
 -----------------------------------------------------------------------------*/
-bool WptTest::Start(BrowserSettings * browser){
+bool WptTest::Start(BrowserSettings * browser) {
   bool ret = false;
 
-  if( !_test_type.CompareNoCase(_T("traceroute")) )
-  {
+  if (!_test_type.CompareNoCase(_T("traceroute"))) {
     _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
     ret = true;
-  }    
-  else {
+  } else {
     // build up a new script
     _script_commands.RemoveAll();
     
-    if (_directory.GetLength() ) {
+    if (_directory.GetLength()) {
       // TODO: We are doing this twice. Need to fix this.
       SetFileBase();
 
@@ -245,7 +270,7 @@ bool WptTest::Start(BrowserSettings * browser){
       SetCaptureVideo(_video);
 
       // just support URL navigating right now
-      if (_url.GetLength()){
+      if (_url.GetLength()) {
         ScriptCommand command;
         command.command = _T("navigate");
         command.target = _url;
@@ -263,10 +288,10 @@ bool WptTest::Start(BrowserSettings * browser){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WptTest::GetNextTask(CStringA& task, bool& record){
+bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = true;
 
-  if( !_script_commands.IsEmpty() ){
+  if (!_script_commands.IsEmpty()) {
     ScriptCommand command = _script_commands.RemoveHead();
     task = EncodeTask(command.command, command.target, command.value);
     record = command.record;
@@ -280,21 +305,21 @@ bool WptTest::GetNextTask(CStringA& task, bool& record){
 /*-----------------------------------------------------------------------------
   Create a JSON-encoded version of the task
 -----------------------------------------------------------------------------*/
-CStringA WptTest::EncodeTask(CString action, CString target, CString value){
+CStringA WptTest::EncodeTask(CString action, CString target, CString value) {
   CStringA json = "{";
   CStringA buff;
 
-  if (action.GetLength()){
+  if (action.GetLength()) {
     buff.Format("\"action\":\"%s\"", (LPCSTR)JSONEscape(action));
     json += buff;
   }
 
-  if (target.GetLength()){
+  if (target.GetLength()) {
     buff.Format(",\"target\":\"%s\"", (LPCSTR)JSONEscape(target));
     json += buff;
   }
 
-  if (value.GetLength()){
+  if (value.GetLength()) {
     buff.Format(",\"value\":\"%s\"", (LPCSTR)JSONEscape(value));
     json += buff;
   }

@@ -1,11 +1,38 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #pragma once
 
 class TestState;
 class TrackSockets;
 class TrackDns;
 
-class DataChunk
-{
+class DataChunk {
 public:
   DataChunk():_data(NULL),_data_len(0){}
   DataChunk(const char * data, DWORD data_len):_data(NULL),_data_len(0) {
@@ -17,7 +44,7 @@ public:
   }
   DataChunk(const DataChunk& src){*this = src;}
   ~DataChunk(){}
-  const DataChunk& operator =(const DataChunk& src){
+  const DataChunk& operator =(const DataChunk& src) {
     _data = src._data;
     _data_len = src._data_len;
     return src;
@@ -33,13 +60,12 @@ public:
   DWORD   _data_len;
 };
 
-class HeaderField
-{
+class HeaderField {
 public:
   HeaderField(){}
   HeaderField(const HeaderField& src){*this = src;}
   ~HeaderField(){}
-  const HeaderField& operator=(const HeaderField& src){
+  const HeaderField& operator=(const HeaderField& src) {
     _field = src._field;
     _value = src._value;
     return src;
@@ -51,8 +77,7 @@ public:
 
 typedef CAtlList<HeaderField> Fields;
 
-class Request
-{
+class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, 
           TrackSockets& sockets, TrackDns& dns);

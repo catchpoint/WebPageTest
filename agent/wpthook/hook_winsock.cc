@@ -1,28 +1,30 @@
-/*
-Redistribution and use in source and binary forms, with or without modification, 
-are permitted provided that the following conditions are met:
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice, 
-    this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright notice, 
-    this list of conditions and the following disclaimer in the documentation 
-    and/or other materials provided with the distribution.
-    * Neither the name of the company nor the names of its contributors may be 
-    used to endorse or promote products derived from this software without 
-    specific prior written permission.
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
 
 // WsHook.cpp - Code for intercepting winsock API calls
 
@@ -43,35 +45,31 @@ static CWsHook * pHook = NULL;
 ******************************************************************************/
 
 SOCKET WSAAPI WSASocketW_Hook(int af, int type, int protocol, 
-                    LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags)
-{
+                  LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
   return ret;
 }
 
-int WSAAPI closesocket_Hook(SOCKET s)
-{
+int WSAAPI closesocket_Hook(SOCKET s) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->closesocket(s);
   return ret;
 }
 
 int WSAAPI connect_Hook(IN SOCKET s, const struct sockaddr FAR * name, 
-                                                                IN int namelen)
-{
+                                                              IN int namelen) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->connect(s, name, namelen);
   return ret;
 }
 
-int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags)
-{
+int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->recv(s, buf, len, flags);
   return ret;
 }
@@ -79,56 +77,50 @@ int WSAAPI recv_Hook(SOCKET s, char FAR * buf, int len, int flags)
 int WSAAPI select_Hook(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
               fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->select(nfds, readfds, writefds, exceptfds, timeout);
   return ret;
 }
 
-int WSAAPI send_Hook(SOCKET s, const char FAR * buf, int len, int flags)
-{
+int WSAAPI send_Hook(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->send(s, buf, len, flags);
   return ret;
 }
 
 int WSAAPI getaddrinfo_Hook(PCSTR pNodeName, PCSTR pServiceName, 
-                               const ADDRINFOA * pHints, PADDRINFOA * ppResult)
-{
+                             const ADDRINFOA * pHints, PADDRINFOA * ppResult) {
   int ret = WSAEINVAL;
-  if( pHook )
+  if (pHook)
     ret = pHook->getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
   return ret;
 }
 
 int WSAAPI GetAddrInfoW_Hook(PCWSTR pNodeName, PCWSTR pServiceName, 
-                               const ADDRINFOW * pHints, PADDRINFOW * ppResult)
-{
+                             const ADDRINFOW * pHints, PADDRINFOW * ppResult) {
   int ret = WSAEINVAL;
-  if( pHook )
+  if (pHook)
     ret = pHook->GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
   return ret;
 }
 
-void WSAAPI freeaddrinfo_Hook(PADDRINFOA pAddrInfo)
-{
-  if( pHook )
+void WSAAPI freeaddrinfo_Hook(PADDRINFOA pAddrInfo) {
+  if (pHook)
     pHook->freeaddrinfo(pAddrInfo);
 }
 
-void WSAAPI FreeAddrInfoW_Hook(PADDRINFOW pAddrInfo)
-{
-  if( pHook )
+void WSAAPI FreeAddrInfoW_Hook(PADDRINFOW pAddrInfo) {
+  if (pHook)
     pHook->FreeAddrInfoW(pAddrInfo);
 }
 
 int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, 
                         LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, 
                         LPWSAOVERLAPPED lpOverlapped, 
-                        LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
+                      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, 
                                   lpFlags, lpOverlapped, lpCompletionRoutine);
   return ret;
@@ -139,7 +131,7 @@ int WSAAPI WSASend_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  if( pHook )
+  if (pHook)
     ret = pHook->WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent, 
                           dwFlags, lpOverlapped, lpCompletionRoutine);
   return ret;
@@ -148,7 +140,7 @@ int WSAAPI WSASend_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 BOOL WSAAPI WSAGetOverlappedResult_Hook(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
               LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags) {
   BOOL ret = FALSE;
-  if( pHook )
+  if (pHook)
     ret = pHook->WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait,
                                         lpdwFlags);
   return ret;
@@ -186,7 +178,7 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   , _freeaddrinfo(NULL)
   , _dns(dns)
   , _sockets(sockets)
-  , _test_state(test_state){
+  , _test_state(test_state) {
   if (!pHook)
     pHook = this;
 
@@ -218,18 +210,17 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
                         "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
-  if( !_GetAddrInfoW )
+  if (!_GetAddrInfoW)
     _getaddrinfo = hook.createHookByName("ws2_32.dll", "getaddrinfo", 
                                                              getaddrinfo_Hook);
-  if( !_FreeAddrInfoW )
+  if (!_FreeAddrInfoW)
     _freeaddrinfo = hook.createHookByName("ws2_32.dll", "freeaddrinfo", 
                                                             freeaddrinfo_Hook);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CWsHook::~CWsHook(void)
-{
+CWsHook::~CWsHook(void) {
   if( pHook == this )
     pHook = NULL;
 
@@ -239,73 +230,52 @@ CWsHook::~CWsHook(void)
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 SOCKET CWsHook::WSASocketW(int af, int type, int protocol, 
-                    LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags)
-{
+                  LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = INVALID_SOCKET;
-
   _test_state.ActivityDetected();
-
-  if( _WSASocketW )
-  {
+  if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
-
     if( ret != INVALID_SOCKET )
       _sockets.Create(ret);
   }
-
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int CWsHook::closesocket(SOCKET s)
-{
+int CWsHook::closesocket(SOCKET s) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   _sockets.Close(s);
-  if( _closesocket )
+  if (_closesocket)
     ret = _closesocket(s);
-
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, 
-                                                                IN int namelen)
-{
+                                                              IN int namelen) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   _sockets.Connect(s, name, namelen);
   if (_connect)
     ret = _connect(s, name, namelen);
-
   if (!ret)
     _sockets.Connected(s);
-
   _test_state.ActivityDetected();
-
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags)
-{
+int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   if( _recv )
     ret = _recv(s, buf, len, flags);
-
   if( ret > 0 && !flags && buf && len )
     _sockets.DataIn(s, buf, ret);
-
   return ret;
 }
 
@@ -314,16 +284,12 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags)
 int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, 
                      LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, 
                      LPWSAOVERLAPPED lpOverlapped, 
-                     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
+                     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-
   if (ret != SOCKET_ERROR && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
         && *lpNumberOfBytesRecvd && !lpOverlapped && !lpCompletionRoutine) {
     DWORD bytes = *lpNumberOfBytesRecvd;
@@ -348,18 +314,13 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags)
-{
+int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   if (len)
     _sockets.DataOut(s, buf, len);
-
   if( _send )
     ret = _send(s, buf, len, flags);
-
   return ret;
 }
 
@@ -368,19 +329,15 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags)
 int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPDWORD lpNumberOfBytesSent, DWORD dwFlags, 
               LPWSAOVERLAPPED lpOverlapped,
-              LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine){
+              LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-
   _test_state.ActivityDetected();
-
   for (DWORD i = 0; i < dwBufferCount; i++)
     if (lpBuffers[i].len && lpBuffers[i].buf)
       _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len);
-
   if (_WSASend)
     ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                     dwFlags, lpOverlapped, lpCompletionRoutine);
-
   return ret;
 }
 
@@ -389,24 +346,18 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
               fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
   int ret = SOCKET_ERROR;
-  ATLTRACE(_T("[wpthook] select"));
-
   if (_select)
     ret = _select(nfds, readfds, writefds, exceptfds, timeout);
-
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
-                               const ADDRINFOA * pHints, PADDRINFOA * ppResult)
-{
+                             const ADDRINFOA * pHints, PADDRINFOA * ppResult) {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
-
   _test_state.ActivityDetected();
-
   void * context = NULL;
   CString name = CA2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
@@ -414,20 +365,16 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 
   if( _getaddrinfo && !overrideDNS )
     ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
-  else if( overrideDNS )
-  {
+  else if( overrideDNS ) {
     if( addresses.IsEmpty() )
       ret = EAI_NONAME;
-    else
-    {
+    else {
       // build the response structure with the addresses we looked up
       ret = 0;
       DWORD count = addresses.GetCount();
-
       ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
                                                           * count);
-      for( DWORD i = 0; i < count; i++ )
-      {
+      for (DWORD i = 0; i < count; i++) {
         memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
         if( i < count - 1 )
           result->info.ai_next = (PADDRINFOA)&result[i+1];
@@ -440,11 +387,9 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
     }
   }
 
-  if( !ret )
-  {
+  if (!ret) {
     PADDRINFOA addr = *ppResult;
-    while( addr )
-    {
+    while (addr) {
       _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
@@ -461,34 +406,27 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
-                               const ADDRINFOW * pHints, PADDRINFOW * ppResult)
-{
+                             const ADDRINFOW * pHints, PADDRINFOW * ppResult) {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
-
   _test_state.ActivityDetected();
-
   void * context = NULL;
   CString name = CW2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
   bool override_dns = _dns.LookupStart( name, context, addresses );
 
-  if( _GetAddrInfoW && !overrideDNS )
+  if (_GetAddrInfoW && !overrideDNS)
     ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
-  else if( overrideDNS )
-  {
-    if( addresses.IsEmpty() )
+  else if (overrideDNS) { 
+    if (addresses.IsEmpty())
       ret = EAI_NONAME;
-    else
-    {
+    else {
       // build the response structure with the addresses we looked up
       ret = 0;
       DWORD count = addresses.GetCount();
-
       ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
                                                             * count);
-      for( DWORD i = 0; i < count; i++ )
-      {
+      for (DWORD i = 0; i < count; i++) {
         memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
         if( i < count - 1 )
           result->info.ai_next = (PADDRINFOA)&result[i+1];
@@ -501,11 +439,9 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
     }
   }
 
-  if( !ret )
-  {
+  if (!ret) {
     PADDRINFOA addr = (PADDRINFOA)*ppResult;
-    while( addr )
-    {
+    while (addr) {
       _dns.LookupAddress(context, addr);
       addr = addr->ai_next;
     }
@@ -522,8 +458,7 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 /*-----------------------------------------------------------------------------
   Free the descriptor if it is one that we allocated, otherwise pass it through
 -----------------------------------------------------------------------------*/
-void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo)
-{
+void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo) {
   void * mem = NULL;
   EnterCriticalSection(&cs);
   if (dns_override.Lookup(pAddrInfo, mem))

@@ -26,43 +26,43 @@ typedef unsigned long long	int u_int64_t;
 // driver interface IOCTL's
 #define FILE_DEVICE_IPFW		0x00654324
 #define IP_FW_BASE_CTL			0x840
-#define IP_FW_SETSOCKOPT \
-	CTL_CODE(FILE_DEVICE_IPFW, IP_FW_BASE_CTL + 1, METHOD_BUFFERED, FILE_WRITE_DATA)
-#define IP_FW_GETSOCKOPT \
-	CTL_CODE(FILE_DEVICE_IPFW, IP_FW_BASE_CTL + 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define IP_FW_SETSOCKOPT CTL_CODE(FILE_DEVICE_IPFW, IP_FW_BASE_CTL + 1, \
+                                  METHOD_BUFFERED, FILE_WRITE_DATA)
+#define IP_FW_GETSOCKOPT CTL_CODE(FILE_DEVICE_IPFW, IP_FW_BASE_CTL + 2, \
+                                  METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 // ipfw commands
 #define _IPFW_SOCKOPT_BASE	100	/* 40 on freebsd */
 enum ipfw_msg_type {
-	IP_FW_TABLE_ADD		= _IPFW_SOCKOPT_BASE,
-	IP_FW_TABLE_DEL,
-	IP_FW_TABLE_FLUSH,
-	IP_FW_TABLE_GETSIZE,
-	IP_FW_TABLE_LIST,
-	IP_FW_DYN_GET,		/* new addition */
+  IP_FW_TABLE_ADD		= _IPFW_SOCKOPT_BASE,
+  IP_FW_TABLE_DEL,
+  IP_FW_TABLE_FLUSH,
+  IP_FW_TABLE_GETSIZE,
+  IP_FW_TABLE_LIST,
+  IP_FW_DYN_GET,		/* new addition */
 
-	/* IP_FW3 and IP_DUMMYNET3 are the new API */
-	IP_FW3			= _IPFW_SOCKOPT_BASE + 8,
-	IP_DUMMYNET3,
+  /* IP_FW3 and IP_DUMMYNET3 are the new API */
+  IP_FW3			= _IPFW_SOCKOPT_BASE + 8,
+  IP_DUMMYNET3,
 
-	IP_FW_ADD		= _IPFW_SOCKOPT_BASE + 10,
-	IP_FW_DEL,
-	IP_FW_FLUSH,
-	IP_FW_ZERO,
-	IP_FW_GET,
-	IP_FW_RESETLOG,
+  IP_FW_ADD		= _IPFW_SOCKOPT_BASE + 10,
+  IP_FW_DEL,
+  IP_FW_FLUSH,
+  IP_FW_ZERO,
+  IP_FW_GET,
+  IP_FW_RESETLOG,
 
-	IP_FW_NAT_CFG,
-	IP_FW_NAT_DEL,
-	IP_FW_NAT_GET_CONFIG,
-	IP_FW_NAT_GET_LOG,
+  IP_FW_NAT_CFG,
+  IP_FW_NAT_DEL,
+  IP_FW_NAT_GET_CONFIG,
+  IP_FW_NAT_GET_LOG,
 
-	IP_DUMMYNET_CONFIGURE,
-	IP_DUMMYNET_DEL	,
-	IP_DUMMYNET_FLUSH,
-	/* 63 is missing */
-	IP_DUMMYNET_GET		= _IPFW_SOCKOPT_BASE + 24,
-	_IPFW_SOCKOPT_END
+  IP_DUMMYNET_CONFIGURE,
+  IP_DUMMYNET_DEL	,
+  IP_DUMMYNET_FLUSH,
+  /* 63 is missing */
+  IP_DUMMYNET_GET		= _IPFW_SOCKOPT_BASE + 24,
+  _IPFW_SOCKOPT_END
 };
 
 enum sopt_dir { SOPT_GET, SOPT_SET };
@@ -85,18 +85,18 @@ struct sockopt {
  * _flags is used in the kernel to store tcp flags for dynamic rules.
  */
 struct ipfw_flow_id {
-	uint32_t	dst_ip;
-	uint32_t	src_ip;
-	uint16_t	dst_port;
-	uint16_t	src_port;
-	uint8_t	fib;
-	uint8_t	proto;
-	uint8_t		_flags;	/* protocol-specific flags */
-	uint8_t		addr_type; /* 4=ip4, 6=ip6, 1=ether ? */
-	struct in6_addr dst_ip6;
-	struct in6_addr src_ip6;
-	uint32_t	flow_id6;
-	uint32_t	extra; /* queue/pipe or frag_id */
+  uint32_t	dst_ip;
+  uint32_t	src_ip;
+  uint16_t	dst_port;
+  uint16_t	src_port;
+  uint8_t	fib;
+  uint8_t	proto;
+  uint8_t		_flags;	/* protocol-specific flags */
+  uint8_t		addr_type; /* 4=ip4, 6=ip6, 1=ether ? */
+  struct in6_addr dst_ip6;
+  struct in6_addr src_ip6;
+  uint32_t	flow_id6;
+  uint32_t	extra; /* queue/pipe or frag_id */
 };
 
 /*
@@ -119,10 +119,10 @@ struct ipfw_flow_id {
 #define	DN_MAX_ID	0x10000
 
 struct dn_id {
-	uint16_t	len;	/* total obj len including this header */
-	uint8_t		type;
-	uint8_t		subtype;
-	uint32_t	id;	/* generic id */
+  uint16_t	len;	/* total obj len including this header */
+  uint8_t		type;
+  uint8_t		subtype;
+  uint32_t	id;	/* generic id */
 };
 
 /*
@@ -131,66 +131,66 @@ struct dn_id {
  * entries with the exception of DN_LAST
  */
 enum {
-	DN_NONE = 0,
-	DN_LINK = 1,
-	DN_FS,
-	DN_SCH,
-	DN_SCH_I,
-	DN_QUEUE,
-	DN_DELAY_LINE,
-	DN_PROFILE,
-	DN_FLOW,		/* struct dn_flow */
-	DN_TEXT,		/* opaque text is the object */
+  DN_NONE = 0,
+  DN_LINK = 1,
+  DN_FS,
+  DN_SCH,
+  DN_SCH_I,
+  DN_QUEUE,
+  DN_DELAY_LINE,
+  DN_PROFILE,
+  DN_FLOW,		/* struct dn_flow */
+  DN_TEXT,		/* opaque text is the object */
 
-	DN_CMD_CONFIG = 0x80,	/* objects follow */
-	DN_CMD_DELETE,		/* subtype + list of entries */
-	DN_CMD_GET,		/* subtype + list of entries */
-	DN_CMD_FLUSH,
-	/* for compatibility with FreeBSD 7.2/8 */
-	DN_COMPAT_PIPE,
-	DN_COMPAT_QUEUE,
-	DN_GET_COMPAT,
+  DN_CMD_CONFIG = 0x80,	/* objects follow */
+  DN_CMD_DELETE,		/* subtype + list of entries */
+  DN_CMD_GET,		/* subtype + list of entries */
+  DN_CMD_FLUSH,
+  /* for compatibility with FreeBSD 7.2/8 */
+  DN_COMPAT_PIPE,
+  DN_COMPAT_QUEUE,
+  DN_GET_COMPAT,
 
-	/* special commands for emulation of sysctl variables */
-	DN_SYSCTL_GET,
-	DN_SYSCTL_SET,
+  /* special commands for emulation of sysctl variables */
+  DN_SYSCTL_GET,
+  DN_SYSCTL_SET,
 
-	DN_LAST,
+  DN_LAST,
 };
  
 enum { /* subtype for schedulers, flowset and the like */
-	DN_SCHED_UNKNOWN = 0,
-	DN_SCHED_FIFO = 1,
-	DN_SCHED_WF2QP = 2,
-	/* others are in individual modules */
+  DN_SCHED_UNKNOWN = 0,
+  DN_SCHED_FIFO = 1,
+  DN_SCHED_WF2QP = 2,
+  /* others are in individual modules */
 };
 
 enum {	/* user flags */
-	DN_HAVE_MASK	= 0x0001,	/* fs or sched has a mask */
-	DN_NOERROR	= 0x0002,	/* do not report errors */
-	DN_QHT_HASH	= 0x0004,	/* qht is a hash table */
-	DN_QSIZE_BYTES	= 0x0008,	/* queue size is in bytes */
-	DN_HAS_PROFILE	= 0x0010,	/* a link has a profile */
-	DN_IS_RED	= 0x0020,
-	DN_IS_GENTLE_RED= 0x0040,
-	DN_PIPE_CMD	= 0x1000,	/* pipe config... */
+  DN_HAVE_MASK	= 0x0001,	/* fs or sched has a mask */
+  DN_NOERROR	= 0x0002,	/* do not report errors */
+  DN_QHT_HASH	= 0x0004,	/* qht is a hash table */
+  DN_QSIZE_BYTES	= 0x0008,	/* queue size is in bytes */
+  DN_HAS_PROFILE	= 0x0010,	/* a link has a profile */
+  DN_IS_RED	= 0x0020,
+  DN_IS_GENTLE_RED= 0x0040,
+  DN_PIPE_CMD	= 0x1000,	/* pipe config... */
 };
 
 /*
  * link template.
  */
 struct dn_link {
-	struct dn_id oid;
+  struct dn_id oid;
 
-	/*
-	 * Userland sets bw and delay in bits/s and milliseconds.
-	 * The kernel converts this back and forth to bits/tick and ticks.
-	 * XXX what about burst ?
-	 */
-	int32_t		link_nr;
-	int		bandwidth;	/* bit/s or bits/tick.   */
-	int		delay;		/* ms and ticks */
-	uint64_t	burst;		/* scaled. bits*Hz  XXX */
+  /*
+   * Userland sets bw and delay in bits/s and milliseconds.
+   * The kernel converts this back and forth to bits/tick and ticks.
+   * XXX what about burst ?
+   */
+  int32_t		link_nr;
+  int		bandwidth;	/* bit/s or bits/tick.   */
+  int		delay;		/* ms and ticks */
+  uint64_t	burst;		/* scaled. bits*Hz  XXX */
 };
 
 /*
@@ -200,32 +200,32 @@ struct dn_link {
  * specific parameters (weight, quantum and so on).
  */
 struct dn_fs {
-	struct dn_id oid;
-	uint32_t fs_nr;	/* the flowset number */
-	uint32_t flags;	/* userland flags */
-	int qsize;	/* queue size in slots or bytes */
-	int32_t plr;	/* PLR, pkt loss rate (2^31-1 means 100%) */
-	uint32_t buckets;	/* buckets used for the queue hash table */
+  struct dn_id oid;
+  uint32_t fs_nr;	/* the flowset number */
+  uint32_t flags;	/* userland flags */
+  int qsize;	/* queue size in slots or bytes */
+  int32_t plr;	/* PLR, pkt loss rate (2^31-1 means 100%) */
+  uint32_t buckets;	/* buckets used for the queue hash table */
 
-	struct ipfw_flow_id flow_mask;
-	uint32_t sched_nr;	/* the scheduler we attach to */
-	/* generic scheduler parameters. Leave them at -1 if unset.
-	 * Now we use 0: weight, 1: lmax, 2: priority
-	 */
-	int par[4];
+  struct ipfw_flow_id flow_mask;
+  uint32_t sched_nr;	/* the scheduler we attach to */
+  /* generic scheduler parameters. Leave them at -1 if unset.
+   * Now we use 0: weight, 1: lmax, 2: priority
+   */
+  int par[4];
 
-	/* RED/GRED parameters.
-	 * weight and probabilities are in the range 0..1 represented
-	 * in fixed point arithmetic with SCALE_RED decimal bits.
-	 */
+  /* RED/GRED parameters.
+   * weight and probabilities are in the range 0..1 represented
+   * in fixed point arithmetic with SCALE_RED decimal bits.
+   */
 #define SCALE_RED		16
 #define SCALE(x)		( (x) << SCALE_RED )
 #define SCALE_VAL(x)		( (x) >> SCALE_RED )
 #define SCALE_MUL(x,y)		( ( (x) * (y) ) >> SCALE_RED )
-	int w_q ;		/* queue weight (scaled) */
-	int max_th ;		/* maximum threshold for queue (scaled) */
-	int min_th ;		/* minimum threshold for queue (scaled) */
-	int max_p ;		/* maximum value for p_b (scaled) */
+  int w_q ;		/* queue weight (scaled) */
+  int max_th ;		/* maximum threshold for queue (scaled) */
+  int min_th ;		/* minimum threshold for queue (scaled) */
+  int max_p ;		/* maximum value for p_b (scaled) */
 
 };
 
@@ -234,14 +234,14 @@ struct dn_fs {
  * sched_mask and buckets.
  */
 struct dn_sch {
-	struct dn_id	oid;
-	uint32_t	sched_nr; /* N, scheduler number */
-	uint32_t	buckets; /* number of buckets for the instances */
-	uint32_t	flags;	/* have_mask, ... */
+  struct dn_id	oid;
+  uint32_t	sched_nr; /* N, scheduler number */
+  uint32_t	buckets; /* number of buckets for the instances */
+  uint32_t	flags;	/* have_mask, ... */
 
-	char name[16];	/* null terminated */
-	/* mask to select the appropriate scheduler instance */
-	struct ipfw_flow_id sched_mask; /* M */
+  char name[16];	/* null terminated */
+  /* mask to select the appropriate scheduler instance */
+  struct ipfw_flow_id sched_mask; /* M */
 };
 
 /* A delay profile is attached to a link.
@@ -249,15 +249,15 @@ struct dn_sch {
  */
 #define	ED_MAX_SAMPLES_NO	1024
 struct dn_profile {
-	struct dn_id	oid;
-	/* fields to simulate a delay profile */
+  struct dn_id	oid;
+  /* fields to simulate a delay profile */
 #define ED_MAX_NAME_LEN         32
-	char		name[ED_MAX_NAME_LEN];
-	int		link_nr;
-	int		loss_level;
-	int		bandwidth;	// XXX use link bandwidth?
-	int		samples_no;	/* actual length of samples[] */
-	int samples[ED_MAX_SAMPLES_NO]; /* may be shorter */
+  char		name[ED_MAX_NAME_LEN];
+  int		link_nr;
+  int		loss_level;
+  int		bandwidth;	// XXX use link bandwidth?
+  int		samples_no;	/* actual length of samples[] */
+  int samples[ED_MAX_SAMPLES_NO]; /* may be shorter */
 };
 
 
@@ -274,18 +274,18 @@ per flow) with configurable size and queue management policy,
 and passes flows to a scheduler:
 
                  (flow_mask|sched_mask)  sched_mask
-	 +---------+   weight Wx  +-------------+
+   +---------+   weight Wx  +-------------+
          |         |->-[flow]-->--|             |-+
     -->--| QUEUE x |   ...        |             | |
          |         |->-[flow]-->--| SCHEDuler N | |
-	 +---------+              |             | |
-	     ...                  |             +--[LINK N]-->--
-	 +---------+   weight Wy  |             | +--[LINK N]-->--
+   +---------+              |             | |
+       ...                  |             +--[LINK N]-->--
+   +---------+   weight Wy  |             | +--[LINK N]-->--
          |         |->-[flow]-->--|             | |
     -->--| QUEUE y |   ...        |             | |
          |         |->-[flow]-->--|             | |
-	 +---------+              +-------------+ |
-	                            +-------------+
+   +---------+              +-------------+ |
+                              +-------------+
 
 Many QUEUE objects can connect to the same scheduler, each
 QUEUE object can have its own set of parameters.

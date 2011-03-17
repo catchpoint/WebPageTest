@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 #include "StdAfx.h"
 #include "webpagetest.h"
 #include <Wininet.h>
@@ -9,28 +37,28 @@ static const TCHAR * NO_FILE = _T("");
 -----------------------------------------------------------------------------*/
 WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   _settings(settings)
-  ,_status(status){
+  ,_status(status) {
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WebPagetest::~WebPagetest(void){
+WebPagetest::~WebPagetest(void) {
 }
 
 /*-----------------------------------------------------------------------------
   Fetch a test from the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::GetTest(WptTest& test){
+bool WebPagetest::GetTest(WptTest& test) {
   bool ret = false;
 
   // build the url for the request
   CString url = _settings._server + _T("work/getwork.php?");
   url += CString(_T("location=")) + _settings._location;
-  if( _settings._key.GetLength() )
+  if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
 
   CString test_string = HttpGet(url);
-  if( test_string.GetLength() ){
+  if (test_string.GetLength()) {
     ret = test.Load(test_string);
   }
 
@@ -295,8 +323,10 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTest& test,
 
   CStringA boundary = "----------ThIs_Is_tHe_bouNdaRY";
   GUID guid;
-  if( SUCCEEDED(CoCreateGuid(&guid)) )
-    boundary.Format("----------%08X%04X%04X%X%X%X%X%X%X%X%X",guid.Data1, guid.Data2, guid.Data3, guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+  if (SUCCEEDED(CoCreateGuid(&guid)))
+    boundary.Format("----------%08X%04X%04X%X%X%X%X%X%X%X%X",guid.Data1, 
+      guid.Data2,guid.Data3,guid.Data4[0],guid.Data4[1],guid.Data4[2], 
+      guid.Data4[3],guid.Data4[4],guid.Data4[5],guid.Data4[6],guid.Data4[7]);
   
   headers = CString("Content-Type: multipart/form-data; boundary=") + 
               CString(CA2T(boundary)) + _T("\r\n");
@@ -307,7 +337,7 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTest& test,
   form_data += CStringA(CT2A(settings._location)) + "\r\n";
 
   // key
-  if( settings._key.GetLength() ){
+  if (settings._key.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"key\"\r\n\r\n";
     form_data += CStringA(CT2A(settings._key)) + "\r\n";
@@ -363,16 +393,16 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
           CString file_path = directory + fd.cFileName;
           if( file_path.CompareNoCase(zip_file) ) {
             HANDLE new_file = CreateFile(file_path, GENERIC_READ, 
-                                        FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+                                      FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
             if (new_file != INVALID_HANDLE_VALUE) {
               DWORD size = GetFileSize(new_file, 0);
               if (size) {
                 BYTE * mem = (BYTE *)malloc(size);
                 if (mem) {
                   DWORD bytes;
-                  if (ReadFile(new_file, mem, size, &bytes, 0) && size == bytes){
+                  if (ReadFile(new_file,mem,size,&bytes, 0) && size == bytes) {
                     if (!zipOpenNewFileInZip(file, CT2A(fd.cFileName), 0, 0, 0, 
-                                     0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION )) {
+                                     0, 0, 0,Z_DEFLATED,Z_BEST_COMPRESSION )) {
                       zipWriteInFileInZip(file, mem, size);
                       zipCloseFileInZip(file);
                     }

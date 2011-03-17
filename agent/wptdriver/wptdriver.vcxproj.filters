@@ -31,9 +31,6 @@
     <ClCompile Include="web_browser.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_data.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="wpt_hook.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -41,15 +38,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ipfw.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TraceRoute.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WinPCap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Log.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="zlib\adler32.c">
@@ -103,6 +91,15 @@
     <ClCompile Include="zlib\contrib\minizip\zip.c">
       <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="log.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="traceroute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winpcap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -141,9 +138,6 @@
     <ClInclude Include="web_browser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="test_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="wpt_hook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -154,15 +148,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ipfw_int.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TraceRoute.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WinPCap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="zlib\crc32.h">
@@ -212,6 +197,15 @@
     </ClInclude>
     <ClInclude Include="zlib\zlib.h">
       <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="traceroute.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

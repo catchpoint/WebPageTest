@@ -1,3 +1,31 @@
+/******************************************************************************
+Copyright (c) 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, 
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the <ORGANIZATION> nor the names of its contributors 
+    may be used to endorse or promote products derived from this software 
+    without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************/
+
 // wptdriver.cpp : Defines the entry point for the application.
 //
 
@@ -22,7 +50,7 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
-                     int       nCmdShow){
+                     int       nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
@@ -36,7 +64,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
   // Perform application initialization:
   HWND hWnd = InitInstance (hInstance, nCmdShow);
-  if (!hWnd){
+  if (!hWnd) {
     return FALSE;
   }
 
@@ -54,23 +82,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   WptDriverCore core(status);
   core.Start();
 
-  // Minimize the WPT window.
-  ShowWindow(hWnd, SW_SHOWMINIMIZED);
-
   // Main message loop:
-  while (GetMessage(&msg, NULL, 0, 0)){
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)){
+  while (GetMessage(&msg, NULL, 0, 0)) {
+    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
   }
 
   core.Stop();
-
   global_status = NULL;
-
   WSACleanup();
-
   return (int) msg.wParam;
 }
 
@@ -81,8 +103,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 //
 //  PURPOSE: Registers the window class.
 //
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
+ATOM MyRegisterClass(HINSTANCE hInstance) {
   WNDCLASSEX wcex;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
@@ -112,8 +133,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //        In this function, we save the instance handle in a global variable and
 //        create and display the main program window.
 //
-HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
+HWND InitInstance(HINSTANCE hInstance, int nCmdShow) {
    HWND hWnd;
 
    hInst = hInstance; // Store instance handle in our global variable
@@ -121,8 +141,8 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
    hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       0, 0, 500, 100, NULL, NULL, hInstance, NULL);
 
-   if (hWnd){
-     ShowWindow(hWnd, nCmdShow);
+   if (hWnd) {
+     ShowWindow(hWnd, SW_SHOWMINNOACTIVE);
      UpdateWindow(hWnd);
    }
 
@@ -140,15 +160,15 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 LRESULT CALLBACK WndProc( HWND hWnd, UINT message, 
-                          WPARAM wParam, LPARAM lParam){
+                          WPARAM wParam, LPARAM lParam) {
   int wmId, wmEvent;
 
-  switch (message){
+  switch (message) {
     case WM_COMMAND:
       wmId    = LOWORD(wParam);
       wmEvent = HIWORD(wParam);
       // Parse the menu selections:
-      switch (wmId){
+      switch (wmId) {
         case IDM_ABOUT:
           DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
           break;
@@ -179,7 +199,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message,
 }
 
 // Message handler for about box.
-INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam){
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
   UNREFERENCED_PARAMETER(lParam);
   switch (message){
     case WM_INITDIALOG:
