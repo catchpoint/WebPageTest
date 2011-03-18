@@ -1,0 +1,213 @@
+<settings>
+  <margins>0</margins>
+  <text_size>10</text_size>
+
+  <plot_area>
+    <border_color>E2E2E2</border_color>
+  </plot_area>
+
+  <scroller>
+    <enabled>true</enabled>
+    <!--<height>50</height>-->
+    <graph_data_source>close</graph_data_source>
+    <bg_color>ffffff,E2E2E2</bg_color>
+    <resize_button_color>FF0000</resize_button_color>
+  </scroller>
+
+  <export_as_image>
+    <file>lib/amcharts/amline/export.php</file>
+  </export_as_image>
+  <connect>true</connect>
+  <link_target>_blank</link_target>
+  <redraw>true</redraw>
+  <legend>
+    <max_columns>5</max_columns>
+    <text_size>10</text_size>
+    <align>center</align>
+    <spacing>5</spacing>
+  </legend>
+  <colors>#0000CD, #A52A2A, #458B00, #8B4513, #2A0CD0, #00008B, #68228B, #8470FF, #8B0000, #8FBC8F,
+    #8B7500,#333333,#990000
+  </colors>
+  <preloader_on_reload>true</preloader_on_reload>
+  <decimals_separator>.</decimals_separator>
+    <thousands_separator>,</thousands_separator>
+    <digits_after_decimal>3</digits_after_decimal>
+    <precision>3</precision>
+<data><chart>
+<series>
+<value xid="1299610800">03/08 19:00</value>
+<value xid="1299614400">03/08 20:00</value>
+<value xid="1299618000">03/08 21:00</value>
+<value xid="1299621600">03/08 22:00</value>
+<value xid="1299625200">03/08 23:00</value>
+<value xid="1299628800">03/09 00:00</value>
+<value xid="1299632400">03/09 01:00</value>
+<value xid="1299636000">03/09 02:00</value>
+<value xid="1299639600">03/09 03:00</value>
+<value xid="1299643200">03/09 04:00</value>
+<value xid="1299646800">03/09 05:00</value>
+<value xid="1299650400">03/09 06:00</value>
+<value xid="1299654000">03/09 07:00</value>
+<value xid="1299657600">03/09 08:00</value>
+<value xid="1299661200">03/09 09:00</value>
+<value xid="1299664800">03/09 10:00</value>
+<value xid="1299668400">03/09 11:00</value>
+<value xid="1299672000">03/09 12:00</value>
+<value xid="1299675600">03/09 13:00</value>
+<value xid="1299679200">03/09 14:00</value>
+<value xid="1299682800">03/09 15:00</value>
+<value xid="1299686400">03/09 16:00</value>
+<value xid="1299690000">03/09 17:00</value>
+<value xid="1299693600">03/09 18:00</value>
+<value xid="1299697200">03/09 19:00</value>
+<value xid="1299700800">03/09 20:00</value>
+<value xid="1299704400">03/09 21:00</value>
+<value xid="1299708000">03/09 22:00</value>
+<value xid="1299711600">03/09 23:00</value>
+<value xid="1299715200">03/10 00:00</value>
+<value xid="1299718800">03/10 01:00</value>
+<value xid="1299722400">03/10 02:00</value>
+<value xid="1299726000">03/10 03:00</value>
+<value xid="1299729600">03/10 04:00</value>
+<value xid="1299733200">03/10 05:00</value>
+<value xid="1299736800">03/10 06:00</value>
+<value xid="1299740400">03/10 07:00</value>
+<value xid="1299744000">03/10 08:00</value>
+<value xid="1299747600">03/10 09:00</value>
+<value xid="1299751200">03/10 10:00</value>
+<value xid="1299754800">03/10 11:00</value>
+<value xid="1299758400">03/10 12:00</value>
+<value xid="1299762000">03/10 13:00</value>
+<value xid="1299765600">03/10 14:00</value>
+<value xid="1299769200">03/10 15:00</value>
+<value xid="1299772800">03/10 16:00</value>
+<value xid="1299776400">03/10 17:00</value>
+<value xid="1299780000">03/10 18:00</value>
+<value xid="1299783600">03/10 19:00</value>
+<value xid="1299787200">03/10 20:00</value>
+<value xid="1299790800">03/10 21:00</value>
+<value xid="1299794400">03/10 22:00</value>
+<value xid="1299798000">03/10 23:00</value>
+<value xid="1299801600">03/11 00:00</value>
+<value xid="1299805200">03/11 01:00</value>
+<value xid="1299808800">03/11 02:00</value>
+<value xid="1299812400">03/11 03:00</value>
+<value xid="1299816000">03/11 04:00</value>
+<value xid="1299819600">03/11 05:00</value>
+<value xid="1299823200">03/11 06:00</value>
+<value xid="1299826800">03/11 07:00</value>
+<value xid="1299830400">03/11 08:00</value>
+<value xid="1299834000">03/11 09:00</value>
+<value xid="1299837600">03/11 10:00</value>
+<value xid="1299841200">03/11 11:00</value>
+<value xid="1299844800">03/11 12:00</value>
+<value xid="1299848400">03/11 13:00</value>
+<value xid="1299852000">03/11 14:00</value>
+<value xid="1299855600">03/11 15:00</value>
+<value xid="1299859200">03/11 16:00</value>
+<value xid="1299862800">03/11 17:00</value>
+<value xid="1299866400">03/11 18:00</value>
+<value xid="1299870000">03/11 19:00</value>
+<value xid="1299873600">03/11 20:00</value>
+<value xid="1299877200">03/11 21:00</value>
+<value xid="1299880800">03/11 22:00</value>
+<value xid="1299884400">03/11 23:00</value>
+<value xid="1299888000">03/12 00:00</value>
+<value xid="1299891600">03/12 01:00</value>
+<value xid="1299895200">03/12 02:00</value>
+<value xid="1299898800">03/12 03:00</value>
+<value xid="1299902400">03/12 04:00</value>
+<value xid="1299906000">03/12 05:00</value>
+<value xid="1299909600">03/12 06:00</value>
+<value xid="1299913200">03/12 07:00</value>
+<value xid="1299916800">03/12 08:00</value>
+<value xid="1299920400">03/12 09:00</value>
+<value xid="1299924000">03/12 10:00</value>
+<value xid="1299927600">03/12 11:00</value>
+<value xid="1299931200">03/12 12:00</value>
+<value xid="1299934800">03/12 13:00</value>
+<value xid="1299938400">03/12 14:00</value>
+<value xid="1299942000">03/12 15:00</value>
+<value xid="1299945600">03/12 16:00</value>
+<value xid="1299949200">03/12 17:00</value>
+<value xid="1299952800">03/12 18:00</value>
+<value xid="1299956400">03/12 19:00</value>
+<value xid="1299960000">03/12 20:00</value>
+<value xid="1299963600">03/12 21:00</value>
+<value xid="1299967200">03/12 22:00</value>
+<value xid="1299970800">03/12 23:00</value>
+<value xid="1299974400">03/13 00:00</value>
+<value xid="1299978000">03/13 01:00</value>
+<value xid="1299981600">03/13 02:00</value>
+<value xid="1299985200">03/13 03:00</value>
+<value xid="1299988800">03/13 04:00</value>
+<value xid="1299992400">03/13 05:00</value>
+<value xid="1299996000">03/13 06:00</value>
+<value xid="1299999600">03/13 07:00</value>
+<value xid="1300003200">03/13 08:00</value>
+<value xid="1300006800">03/13 09:00</value>
+<value xid="1300010400">03/13 10:00</value>
+<value xid="1300014000">03/13 11:00</value>
+<value xid="1300017600">03/13 12:00</value>
+<value xid="1300021200">03/13 13:00</value>
+<value xid="1300024800">03/13 14:00</value>
+<value xid="1300028400">03/13 15:00</value>
+<value xid="1300032000">03/13 16:00</value>
+<value xid="1300035600">03/13 17:00</value>
+<value xid="1300039200">03/13 18:00</value>
+<value xid="1300042800">03/13 19:00</value>
+<value xid="1300046400">03/13 20:00</value>
+<value xid="1300050000">03/13 21:00</value>
+<value xid="1300053600">03/13 22:00</value>
+<value xid="1300057200">03/13 23:00</value>
+<value xid="1300060800">03/14 00:00</value>
+<value xid="1300064400">03/14 01:00</value>
+<value xid="1300068000">03/14 02:00</value>
+<value xid="1300071600">03/14 03:00</value>
+<value xid="1300075200">03/14 04:00</value>
+<value xid="1300078800">03/14 05:00</value>
+<value xid="1300082400">03/14 06:00</value>
+<value xid="1300086000">03/14 07:00</value>
+<value xid="1300089600">03/14 08:00</value>
+<value xid="1300093200">03/14 09:00</value>
+<value xid="1300096800">03/14 10:00</value>
+<value xid="1300100400">03/14 11:00</value>
+<value xid="1300104000">03/14 12:00</value>
+<value xid="1300107600">03/14 13:00</value>
+<value xid="1300111200">03/14 14:00</value>
+<value xid="1300114800">03/14 15:00</value>
+<value xid="1300118400">03/14 16:00</value>
+<value xid="1300122000">03/14 17:00</value>
+<value xid="1300125600">03/14 18:00</value>
+<value xid="1300129200">03/14 19:00</value>
+<value xid="1300132800">03/14 20:00</value>
+<value xid="1300136400">03/14 21:00</value>
+<value xid="1300140000">03/14 22:00</value>
+<value xid="1300143600">03/14 23:00</value>
+<value xid="1300147200">03/15 00:00</value>
+<value xid="1300150800">03/15 01:00</value>
+<value xid="1300154400">03/15 02:00</value>
+<value xid="1300158000">03/15 03:00</value>
+<value xid="1300161600">03/15 04:00</value>
+<value xid="1300165200">03/15 05:00</value>
+<value xid="1300168800">03/15 06:00</value>
+<value xid="1300172400">03/15 07:00</value>
+<value xid="1300176000">03/15 08:00</value>
+<value xid="1300179600">03/15 09:00</value>
+<value xid="1300183200">03/15 10:00</value>
+<value xid="1300186800">03/15 11:00</value>
+<value xid="1300190400">03/15 12:00</value>
+<value xid="1300194000">03/15 13:00</value>
+<value xid="1300197600">03/15 14:00</value>
+<value xid="1300201200">03/15 15:00</value>
+<value xid="1300204800">03/15 16:00</value>
+<value xid="1300208400">03/15 17:00</value>
+<value xid="1300212000">03/15 18:00</value>
+<value xid="1300215600">03/15 19:00</value>
+</series>
+<graphs>
+<graph title="Change Notes" gid="0">
+</graph>
+</graphs>
+</chart></data></settings>

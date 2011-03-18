@@ -1,0 +1,36 @@
+<settings>
+  <margins>0</margins>
+  <text_size>10</text_size>
+
+  <plot_area>
+    <border_color>E2E2E2</border_color>
+  </plot_area>
+
+  <scroller>
+    <enabled>true</enabled>
+    <!--<height>50</height>-->
+    <graph_data_source>close</graph_data_source>
+    <bg_color>ffffff,E2E2E2</bg_color>
+    <resize_button_color>FF0000</resize_button_color>
+  </scroller>
+
+  <export_as_image>
+    <file>lib/amcharts/amline/export.php</file>
+  </export_as_image>
+  <connect>true</connect>
+  <link_target>_blank</link_target>
+  <redraw>true</redraw>
+  <legend>
+    <max_columns>5</max_columns>
+    <text_size>10</text_size>
+    <align>center</align>
+    <spacing>5</spacing>
+  </legend>
+  <colors>#0000CD, #A52A2A, #458B00, #8B4513, #2A0CD0, #00008B, #68228B, #8470FF, #8B0000, #8FBC8F,
+    #8B7500,#333333,#990000
+  </colors>
+  <preloader_on_reload>true</preloader_on_reload>
+  <decimals_separator>.</decimals_separator>
+    <thousands_separator>,</thousands_separator>
+    <digits_after_decimal>3</digits_after_decimal>
+    <precision>3</precision>
