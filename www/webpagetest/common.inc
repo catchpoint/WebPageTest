@@ -8,8 +8,8 @@ umask(0);
 date_default_timezone_set('UTC');
 
 // constants
-define('VER_CSS', 30);          // version of the sitewide css file
-define('VER_JS', 8);            // version of the sitewide javascript file
+define('VER_CSS', 31);          // version of the sitewide css file
+define('VER_JS', 9);            // version of the sitewide javascript file
 define('VER_JS_TEST', 12);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
@@ -24,6 +24,11 @@ $cdnPath = '';
 if( isset($settings['cdn']) )
     $cdnPath = $settings['cdn'];
 $GLOBALS['cdnPath'] = $cdnPath;
+
+$tz_offset = null;
+if( isset($_COOKIE['tzo']) )
+    $tz_offset = (int)$_COOKIE['tzo'];
+SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
 $supportsAuth = false;
@@ -79,6 +84,7 @@ $id = htmlspecialchars($_GET["test"]);
 if( !$id )
     $id = $_COOKIE['tid'];
 
+$testLabel = '';    
 if( $id )
 {
     // set the test ID cookie (session cookie) if we're looking at a different test
@@ -106,8 +112,13 @@ if( $id )
         $test = parse_ini_file("$testPath/testinfo.ini",true);
         touch("$testPath/testinfo.ini");
     }
+    $testDate = null;
     if( gz_is_file("$testPath/testinfo.json") )
+    {
         $test['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        if (isset($test['testinfo']) && isset($test['testinfo']['completed']))
+            $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
+    }
     if( gz_is_file("$testPath/url.txt") )
         $url = htmlspecialchars(gz_file_get_contents("$testPath/url.txt"));
     if( gz_is_file("$testPath/dom.txt") )
@@ -116,6 +127,26 @@ if( $id )
         $login = htmlspecialchars(gz_file_get_contents("$testPath/login.txt"));
     if( gz_is_file("$testPath/block.txt") )
         $blockString = htmlspecialchars(gz_file_get_contents("$testPath/block.txt"));
+
+    // build a common label to add to the title of each of the results pages
+    if( isset($test["test"]) && isset($test["test"]["location"]) )
+    {
+        $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]); 
+        $locscitypos =  strpos($locs, ",");
+        if ($locscitypos)
+            $locs = substr($locs,0,strpos($locs, ","));
+        $url_temp = $url;
+        if (substr($url,0,7) == 'http://')
+            $url_temp = substr($url,7);
+        elseif (substr($url,0,8) == 'https://')
+            $url_temp = substr($url,8);
+        $label = htmlspecialchars(gz_file_get_contents("$testPath/label.txt"));
+        if ($label)
+            $label = $label . " : ";
+        $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
+        if( isset($testDate) && strlen($testDate) )
+            $testLabel .= " - $testDate";
+    }
 }
 
 /**
@@ -168,6 +199,56 @@ function GetTestPath($id)
             $testPath = "results/{$settings['olddir']}/$id";
     }
     return $testPath;
+}
+
+/**
+* Set the php locale based on the browser's accept-languages header
+* (if one exists) - only works on linux for now
+*/
+function SetLocaleFromBrowser()
+{
+  $langs = generate_languages();
+  foreach ($langs as $lang)
+  {
+    if (strlen($lang > 2))
+      $lang = substr($lang['lang'], 0, 3) . strtoupper(substr($lang['lang'], 3, 2));
+    if (setlocale(LC_TIME, $lang['lang']) !== FALSE)
+      break;   // it worked!
+  }
+}
+
+function generate_languages()
+{
+  $rawlangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+  $langs = array();
+  foreach ($rawlangs as $rawlang)
+  {
+    $parts = explode(';', $rawlang);
+    if (count($parts) == 1)
+      $qual = 1;                        // no q-factor
+    else
+    {
+      $qual = explode('=', $parts[1]);
+      if (count($qual) == 2)
+        $qual = (float)$qual[1];        // q-factor
+      else
+        $qual = 1;                      // ill-formed q-f
+    }
+    $langs[] = array('lang' => trim($parts[0]), 'q' => $qual);
+  }
+  usort($langs, 'lang_compare_quality');
+  return $langs;
+}
+
+// this function sorts by q-factors, putting highest first.
+function lang_compare_quality($in_a, $in_b)
+{
+  if ($in_a['q'] > $in_b['q'])
+    return -1;
+  else if ($in_a['q'] < $in_b['q'])
+    return 1;
+  else
+    return 0;
 }
 
 /**

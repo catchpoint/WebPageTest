@@ -91,7 +91,7 @@ else
 		        <table class="history" border="0" cellpadding="5px" cellspacing="0">
 			        <tr>
                         <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
-				        <th>Date/Time (EST)</th>
+				        <th>Date/Time</th>
 				        <th>From</th>
                         <?php
                         if( $includeip )
@@ -143,7 +143,7 @@ else
 							        {
 								        switch($column)
 								        {
-									        case 1: $date = $token; break;
+									        case 1: $date = strtotime($token); break;
                                             case 2: $ip = $token; break;
 									        case 5: $guid = $token; break;
 									        case 6: $url = htmlspecialchars($token); break;
@@ -183,15 +183,14 @@ else
                                     if( $ok )
                                     {
                                         $rowCount++;
-							            $newDate = new DateTime($date, new DateTimeZone('GMT'));
-							            $newDate->setTimezone(new DateTimeZone('EST'));
+                                        $newDate = strftime('%x %X', $date + ($tz_offset * 60));
 							            
                                         if( $csv )
                                         {
                                             // only track local tests
                                             if( strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6) )
                                             {
-                                                echo '"' . $newDate->format("Y/m/d H:i:s") . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '"' . "\r\n";
+                                                echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '"' . "\r\n";
                                                 // flush every 30 rows of data
                                                 if( $rowCount % 30 == 0 )
                                                 {
@@ -210,7 +209,7 @@ else
 							                echo '<td class="date">';
                                             if( $private )
                                                 echo '<b>';
-                                            echo $newDate->format("Y/m/d H:i:s");
+                                            echo $newDate;
                                             if( $private )
                                                 echo '</b>';
                                             echo '</td>';

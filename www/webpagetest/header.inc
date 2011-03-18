@@ -41,9 +41,7 @@
     </div>
 </div>
 
-<div id="nav_bkg">
-<ul id="nav" class="cufon-dincond_black">
-    <?php
+<div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
         if( $id )
             $resultUrl = "/result/$id/";
             
@@ -86,44 +84,12 @@
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
-    ?>
-</ul>
+?></ul>
 </div>
     
 <div id="main">
     <div class="level_2">
         <div class="content-wrap">
-
-            <div id="addThisContainer">
-                <?php
-                if( !strcasecmp('Test Result', $tab) && !$nosubheader &&
-                    (isset($test['test']) && isset($test['test']['completeTime'])) )
-                {
-                    if( !isset($pageData) )
-                        $pageData = loadAllPageData($testPath);
-                    
-                    $gradeRun = 1;
-                    if( $run )
-                        $gradeRun = $run;
-                    else
-                    {
-                        $medianRun = GetMedianRun($pageData, 0);
-                        if( $medianRun )
-                            $gradeRun = $medianRun;
-                    }
-
-                    if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
-                    {
-                        $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
-                        if( strlen($score) )
-                            echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed Score</a>: <b>$score/100</b></span>";
-                    }
-                    
-                    echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
-                }
-                ?>
-            </div>
-        
             <div class="content">
 
             
@@ -147,31 +113,72 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
                 $gradeRun = $medianRun;
         }
 
-        $grades = GetGrades($pageData[$gradeRun][0]);
-        if( count($grades) )
-        {
-            echo '<ul class="grades">';
-            $optlink = "/result/$id/$gradeRun/performance_optimization/";
-            foreach( $grades as $check => &$grade )
-                echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
-            echo '</ul>';
-        }
+        echo '<div id="header_container">';
+        echo '<div id="optimization">';
+            echo '<div id="optimization_header">';
+            if( !strcasecmp('Test Result', $tab) && !$nosubheader &&
+                (isset($test['test']) && isset($test['test']['completeTime'])) )
+            {
+                if( !isset($pageData) )
+                    $pageData = loadAllPageData($testPath);
+                
+                $gradeRun = 1;
+                if( $run )
+                    $gradeRun = $run;
+                else
+                {
+                    $medianRun = GetMedianRun($pageData, 0);
+                    if( $medianRun )
+                        $gradeRun = $medianRun;
+                }
 
-        $shortUrl = str_replace('http://', '',  FitText($url, 120));
-        echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br><a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a></h2>";
+                if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
+                {
+                    $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
+                    if( strlen($score) )
+                        echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed Score</a>: <b>$score/100</b></span>";
+                }
+                
+                echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
+            }
+            echo '</div>';
+            echo '<div id="grades">';
+                $grades = GetGrades($pageData[$gradeRun][0]);
+                if( count($grades) )
+                {
+                    echo '<ul class="grades">';
+                    $optlink = "/result/$id/$gradeRun/performance_optimization/";
+                    foreach( $grades as $check => &$grade )
+                        echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                    echo '</ul>';
+                }
+            echo '</div>';
+        echo '</div>';
         
-        echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
+        echo '<div id="header_data">';
+            $shortUrl = str_replace('http://', '',  FitText($url, 120));
+            echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br><a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a></h2>";
+            
+            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
+            if (isset($test['testinfo']) && isset($test['testinfo']['completed']))
+            {
+                $completed = (int)$test['testinfo']['completed'] + ($tz_offset * 60);
+                $time = strftime('%x %X', $completed);
+                echo "<span class=\"jsdate\" date=\"{$test['testinfo']['completed']}\">$time</span><br>\n";
+            }
 
-        if( $dom ) 
-            echo 'DOM Element: <b>' . $dom . '</b><br>';
-        if( (int)$test['test']['authenticated'] == 1)
-            echo '<b>Authenticated: ' . $login . '</b><br>';
-        if( (int)$test['test']['connections'] !== 0)
-             echo '<b>' . $test[test][connections] . ' Browser connections</b><br>';
-        if( $test['test']['script'] ) 
-            echo '<b>Scripted test</b><br>';
-        if( strlen($blockString) )
-            echo "Blocked: <b>$blockString</b><br>";
+            if( $dom ) 
+                echo 'DOM Element: <b>' . $dom . '</b><br>';
+            if( (int)$test['test']['authenticated'] == 1)
+                echo '<b>Authenticated: ' . $login . '</b><br>';
+            if( (int)$test['test']['connections'] !== 0)
+                 echo '<b>' . $test[test][connections] . ' Browser connections</b><br>';
+            if( $test['test']['script'] ) 
+                echo '<b>Scripted test</b><br>';
+            if( strlen($blockString) )
+                echo "Blocked: <b>$blockString</b><br>";
+        echo '</div>';
+        echo '</div>';
         
         echo '<div id="test_results-container">';
 

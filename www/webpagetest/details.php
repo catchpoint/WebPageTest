@@ -8,7 +8,7 @@ $data = loadPageRunData($testPath, $run, $cached);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest - Test Details</title>
+        <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
         <?php include ('head.inc'); ?>
         <style type="text/css">
         div.bar {

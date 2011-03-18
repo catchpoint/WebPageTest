@@ -5,7 +5,7 @@ require_once('optimization_detail.inc.php');
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest - Optimization Check Results</title>
+        <title>WebPagetest Optimization Check Results<?php echo $testLabel; ?></title>
         <?php include ('head.inc'); ?>
         <style type="text/css">
             td.nowrap {white-space:nowrap;}

@@ -8,33 +8,7 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-                <title>WebPagetest - 
-        <?php 
-		// $url_parts = parse_url($url); 
-        $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]); 
-        $locscitypos =  strpos($locs, ",");
-        if ($locscitypos)  {
-            $locs = substr($locs,0,strpos($locs, ","));
-        }
-        
-        $url_temp = $url;
-        if (substr($url,0,7) == 'http://') {
-            $url_temp = substr($url,7);
-        }
-        else {
-            if (substr($url,0,8) == 'https://') {
-                $url_temp = substr($url,8);
-            }
-        }
-        $label =    htmlspecialchars(gz_file_get_contents("$testPath/label.txt"));
-        if ($label) {
-            $label = $label . " : ";
-        }
-        $title = FitText($locs . ' : ' . $label . $url_temp, 40);
-        echo $title;
-        // echo $locs . " : " . FitText($url_parts["host"] . $url_parts["path"] . $url_parts["query"],30); 
-        ?>
-        </title>
+        <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
         <?php if( !$test['test']['completeTime'] ) { ?>
         <meta http-equiv="refresh" content="30">
         <?php } ?>

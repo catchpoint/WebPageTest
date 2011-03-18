@@ -9,7 +9,7 @@ $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLoc
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest - Page Images</title>
+        <title>WebPagetest Page Images<?php echo $testLabel; ?></title>
         <?php include ('head.inc'); ?>
         <style type="text/css">
         .images td

@@ -552,8 +552,29 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
 
 /** Webpagetest-specific code */
 (function($) {
+    // store the time zone offset in a cookie
+    try {
+        var tz_date = new Date()
+        var tz_offset = -tz_date.getTimezoneOffset();
+        tz_date.setTime(tz_date.getTime()+(730*24*60*60*1000));
+        var tz_expires = "; expires="+tz_date.toGMTString();
+        document.cookie = 'tzo=' + tz_offset + tz_expires + '; path=/';
+    } catch(e){}
+    
+    // display any dates on the page in local time
+    try {
+        $('.jsdate').each(function(){
+            var js_date = $(this).attr('date') * 1000;
+            if (js_date) {
+                var d = new Date(js_date);
+                $(this).text(d.toLocaleString());
+            }
+        });
+    } catch(e){}
+})(jQuery);
+
+(function($) {
     $(document).ready(function() {
-        
         // Advanced Settings toggle
         $('#advanced_settings').click(function() {
             $(this).toggleClass('extended');
@@ -642,3 +663,4 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
         }
     });
 })(jQuery);
+
