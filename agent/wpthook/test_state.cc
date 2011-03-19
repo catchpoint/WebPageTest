@@ -390,11 +390,14 @@ void TestState::CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now) {
     unsigned __int64 cpuTime = k.QuadPart + u.QuadPart;
     if( _last_process_time && cpuTime >= _last_process_time && elapsed > 0.0)
     {
-      double delta = (double)(cpuTime - _last_process_time) / (double)10000000; // convert it to seconds of CPU time
-      data.cpu = min((double)delta / elapsed, 1.0) * 100.0;
+       // convert it to milli-seconds of CPU delta time
+      double delta = (double)(cpuTime - _last_process_time) / (double)10000;
+      ATLTRACE2(_T("[wpthook] TestState::CollectSystemStats - cpu-delta elapsed: %f %d \n"), delta, elapsed);
+      data.cpu = min((double)delta / (double)elapsed, 1.0) * 100.0;
     }
     _last_process_time = cpuTime;
   }
+
   // get the memory use (working set - task-manager style)
   PROCESS_MEMORY_COUNTERS mem;
   mem.cb = sizeof(mem);

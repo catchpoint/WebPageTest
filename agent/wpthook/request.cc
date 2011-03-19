@@ -99,6 +99,11 @@ void Request::DataIn(const char * data, unsigned long data_len) {
     }
     if (!_document)
       _document = _test_state._current_document;
+
+    // Track for BW statistics.
+    _test_state._bytes_in += data_len;
+    if (_document)
+      _test_state._doc_bytes_in += data_len;
   }
   LeaveCriticalSection(&cs);
 }
@@ -107,7 +112,7 @@ void Request::DataIn(const char * data, unsigned long data_len) {
 -----------------------------------------------------------------------------*/
 void Request::DataOut(const char * data, unsigned long data_len) {
   ATLTRACE(_T("[wpthook] - Request::DataOut() - %d bytes\n"), data_len);
-
+  
   EnterCriticalSection(&cs);
   if (_active) {
     _data_sent += data_len;
@@ -117,6 +122,11 @@ void Request::DataOut(const char * data, unsigned long data_len) {
     }
     if (!_document)
       _document = _test_state._current_document;
+    
+    // Track BW statistics.
+    _test_state._bytes_out += data_len;
+    if (_document)
+      _test_state._doc_bytes_out += data_len;
   }
   LeaveCriticalSection(&cs);
 }
@@ -197,12 +207,8 @@ bool Request::Process() {
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
 
     _test_state._requests++;
-    _test_state._bytes_in += _data_received;
-    _test_state._bytes_out += _data_sent;
     if (_document) {
       _test_state._doc_requests++;
-      _test_state._doc_bytes_in += _data_received;
-      _test_state._doc_bytes_out += _data_sent;
     }
   }
   LeaveCriticalSection(&cs);
