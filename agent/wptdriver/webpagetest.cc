@@ -29,7 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "webpagetest.h"
 #include <Wininet.h>
+#include <Wincrypt.h>
+#include <Shellapi.h>
 #include "zlib/contrib/minizip/zip.h"
+#include "zlib/contrib/minizip/unzip.h"
+#include "util.h"
 
 static const TCHAR * NO_FILE = _T("");
 
@@ -37,7 +41,37 @@ static const TCHAR * NO_FILE = _T("");
 -----------------------------------------------------------------------------*/
 WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   _settings(settings)
-  ,_status(status) {
+  ,_status(status)
+  ,_version(0)
+  ,_exit(false) {
+  // get the version number of the binary (for software updates)
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(NULL, file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    if (infoSize) {
+      LPBYTE pVersion = new BYTE[infoSize];
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
+          _version = LOWORD(info->dwFileVersionLS);
+      }
+
+      delete [] pVersion;
+    }
+  }
+  // get the computer name (and escape it)
+  TCHAR name[MAX_COMPUTERNAME_LENGTH + 1];
+  DWORD len = _countof(name);
+  name[0] = 0;
+  if (GetComputerName(name, &len) && lstrlen(name)) {
+    TCHAR escaped[INTERNET_MAX_URL_LENGTH];
+    len = _countof(escaped);
+    if ((UrlEscape(name, escaped, &len, URL_ESCAPE_SEGMENT_ONLY | 
+                      URL_ESCAPE_PERCENT) == S_OK) && lstrlen(escaped))
+      _computer_name = escaped;
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -56,10 +90,21 @@ bool WebPagetest::GetTest(WptTest& test) {
   url += CString(_T("location=")) + _settings._location;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
+  if (_version) {
+    CString buff;
+    buff.Format(_T("&software=wpt&ver=%d"), _version);
+    url += buff;
+  }
+  if (_computer_name.GetLength())
+    url += CString(_T("&pc=")) + _computer_name;
 
-  CString test_string = HttpGet(url);
-  if (test_string.GetLength()) {
-    ret = test.Load(test_string);
+  CString test_string, zip_file;
+  if (HttpGet(url, test, test_string, zip_file)) {
+    if (test_string.GetLength()) {
+      ret = test.Load(test_string);
+    } else if (zip_file.GetLength()) {
+      ret = ProcessZipFile(zip_file, test);
+    }
   }
 
   return ret;
@@ -146,29 +191,49 @@ bool WebPagetest::UploadData(WptTest& test, bool done) {
 /*-----------------------------------------------------------------------------
   Perform a http GET operation and return the body as a string
 -----------------------------------------------------------------------------*/
-CString WebPagetest::HttpGet(CString url){
-  CString result;
+bool WebPagetest::HttpGet(CString url, WptTest& test, CString& test_string,
+                          CString& zip_file) {
+  bool result = false;
 
   // Use WinInet to make the request
   HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    HINTERNET file = InternetOpenUrl(internet, url, NULL, 0, 
+    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
                                 INTERNET_FLAG_NO_UI | 
                                 INTERNET_FLAG_PRAGMA_NOCACHE | 
                                 INTERNET_FLAG_RELOAD, NULL);
-    if (file) {
-      char buff[4097];
-      DWORD bytes_read;
-      while( InternetReadFile(file, buff, sizeof(buff) - 1, &bytes_read) && 
-              bytes_read){
-        // NULL-terminate it and add it to our response string
-        buff[bytes_read] = 0;
-        result += CA2T(buff);
+    if (http_request) {
+      TCHAR mime_type[1024] = TEXT("\0");
+      DWORD len = _countof(mime_type);
+      if (HttpQueryInfo(http_request,HTTP_QUERY_CONTENT_TYPE, mime_type, 
+                          &len, NULL)) {
+        result = true;
+        bool is_zip = false;
+        char buff[4097];
+        DWORD bytes_read, bytes_written;
+        HANDLE file = INVALID_HANDLE_VALUE;
+        if (!lstrcmpi(mime_type, _T("application/zip"))) {
+          zip_file = test._directory + _T("\\wpt.zip");
+          file = CreateFile(zip_file,GENERIC_WRITE,0,0,CREATE_ALWAYS,0,NULL);
+          is_zip = true;
+        }
+        while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
+                &bytes_read) && bytes_read) {
+          if (is_zip) {
+            WriteFile(file, buff, bytes_read, &bytes_written, 0);
+          } else {
+            // NULL-terminate it and add it to our response string
+            buff[bytes_read] = 0;
+            test_string += CA2T(buff);
+          }
+        }
+        if (file != INVALID_HANDLE_VALUE)
+          CloseHandle(file);
       }
-      InternetCloseHandle(file);
+      InternetCloseHandle(http_request);
     }
     InternetCloseHandle(internet);
   }
@@ -420,6 +485,151 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
       FindClose(find_handle);
     }
     zipClose(file, 0);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WebPagetest::ProcessZipFile(CString zip_file, WptTest& test) {
+  bool ret = false;
+
+  bool update = false;
+  unzFile zip_file_handle = unzOpen(CT2A(zip_file));
+  if (zip_file_handle) {
+    if (unzGoToFirstFile(zip_file_handle) == UNZ_OK) {
+      CStringA dir = CStringA(CT2A(test._directory)) + "\\";
+      DWORD len = 4096;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        do {
+          char file_name[MAX_PATH];
+          unz_file_info info;
+          if (unzGetCurrentFileInfo(zip_file_handle, &info, (char *)&file_name,
+              _countof(file_name), 0, 0, 0, 0) == UNZ_OK) {
+              CStringA dest_file_name = dir + file_name;
+
+            if( !lstrcmpiA(file_name, "wptupdate.exe") )
+              update = true;
+
+            // make sure the directory exists
+            char szDir[MAX_PATH];
+            lstrcpyA(szDir, (LPCSTR)dest_file_name);
+            *PathFindFileNameA(szDir) = 0;
+            if( lstrlenA(szDir) > 3 )
+              SHCreateDirectoryExA(NULL, szDir, NULL);
+
+            HANDLE dest_file = CreateFileA(dest_file_name, GENERIC_WRITE, 0, 
+                                          NULL, CREATE_ALWAYS, 0, 0);
+            if (dest_file != INVALID_HANDLE_VALUE) {
+              if (unzOpenCurrentFile(zip_file_handle) == UNZ_OK) {
+                int bytes = 0;
+                DWORD written;
+                do {
+                  bytes = unzReadCurrentFile(zip_file_handle, buff, len);
+                  if( bytes > 0 )
+                    WriteFile(dest_file, buff, bytes, &written, 0);
+                } while( bytes > 0 );
+                unzCloseCurrentFile(zip_file_handle);
+              }
+              CloseHandle( dest_file );
+            }
+          }
+        } while (unzGoToNextFile(zip_file_handle) == UNZ_OK);
+
+        free(buff);
+      }
+    }
+
+    unzClose(zip_file_handle);
+  }
+
+  DeleteFile(zip_file);
+
+  if (update) {
+    InstallUpdate(test._directory);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WebPagetest::InstallUpdate(CString dir) {
+  bool ret = false;
+
+  // validate all of the files
+  HCRYPTPROV crypto = 0;
+  bool ok = false;
+  if (CryptAcquireContext(&crypto, NULL, NULL, PROV_RSA_FULL, 
+                          CRYPT_VERIFYCONTEXT)) {
+    TCHAR valid_hash[100];
+    TCHAR file_hash[100];
+    BYTE buff[4096];
+    DWORD bytes = 0;
+    ok = true;
+    WIN32_FIND_DATA fd;
+    HANDLE find_handle = FindFirstFile(dir + _T("\\*.*"), &fd);
+    if( find_handle != INVALID_HANDLE_VALUE ) {
+      do {
+        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && 
+              lstrcmpi(fd.cFileName, _T("wptupdate.ini"))) {
+          ok = false;
+
+          // Check the file has against the ini file (all files need hashes)
+          *valid_hash = 0;
+          if (GetPrivateProfileString(_T("md5"), fd.cFileName, _T(""), 
+                      valid_hash, _countof(valid_hash), 
+                      dir + _T("\\wptupdate.ini"))) {
+            HCRYPTHASH crypto_hash = 0;
+            if (CryptCreateHash(crypto, CALG_MD5, 0, 0, &crypto_hash)) {
+              HANDLE file = CreateFile( dir + CString(_T("\\")) + fd.cFileName,
+                        GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+              if (file != INVALID_HANDLE_VALUE) {
+                ok = true;
+                while (ReadFile(file, buff, sizeof(buff), &bytes, 0) && bytes)
+                  if (!CryptHashData(crypto_hash, buff, bytes, 0))
+                    ok = false;
+
+                if (ok) {
+                  BYTE hash[16];
+                  DWORD len = 16;
+                  if (CryptGetHashParam(crypto_hash, HP_HASHVAL, 
+                                        hash, &len, 0)) {
+                    wsprintf(file_hash, _T("%02X%02X%02X%02X%02X%02X%02X%02X")
+                              _T("%02X%02X%02X%02X%02X%02X%02X%02X"),
+                        hash[0], hash[1], hash[2], hash[3], hash[4], hash[5], 
+                        hash[6], hash[7], hash[8], hash[9], hash[10], hash[11],
+                        hash[12], hash[13], hash[14], hash[15]);
+
+                    if (lstrcmpi(file_hash, valid_hash))
+                      ok = false;
+                  } else
+                    ok = false;
+                }
+
+                CloseHandle(file);
+              }
+              CryptDestroyHash(crypto_hash);
+            }
+          }
+        }
+      } while (ok && FindNextFile(find_handle, &fd));
+      FindClose(find_handle);
+    }
+
+    CryptReleaseContext(crypto,0);
+  }
+
+  if (ok) {
+    // prevent executing multiple updates in case something goes wrong
+    _version = 0;
+    ShellExecute(NULL,NULL,dir+_T("\\wptupdate.exe"),NULL,dir,SW_SHOWNORMAL);
+
+    // wait for up to 2 minutes for the update process to close us
+    for (int i = 0; i < 1200 && !_exit; i++)
+      Sleep(100);
   }
 
   return ret;

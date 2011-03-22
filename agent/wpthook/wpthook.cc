@@ -36,8 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 WptHook * global_hook = NULL;
 
-const UINT_PTR TIMER_DONE = 1;
-const DWORD TIMER_DONE_INTERVAL = 100;
+static const UINT_PTR TIMER_DONE = 1;
+static const DWORD TIMER_DONE_INTERVAL = 100;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

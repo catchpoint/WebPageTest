@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_driver_core.h"
 #include "mongoose/mongoose.h"
 #include "../wpthook/window_messages.h"
+#include "zlib/contrib/minizip/unzip.h"
 
 const int pipeIn = 1;
 const int pipeOut = 2;
@@ -109,6 +110,7 @@ void WptDriverCore::Stop(void) {
   _status.Set(_T("Stopping..."));
 
   _exit = true;
+  _webpagetest._exit = true;
   if (_work_thread) {
     WaitForSingleObject(_work_thread, EXIT_TIMEOUT);
     CloseHandle(_work_thread);
@@ -243,7 +245,9 @@ void WptDriverCore::Init(void){
                   (LPBYTE)&val, sizeof(val));
     RegCloseKey(hKey);
   }
-  
+
+  ExtractZipFiles();
+
   // Get WinPCap ready (install it if necessary)
   winpcap.Initialize();
 }
@@ -385,3 +389,81 @@ bool WptDriverCore::OnMessage(UINT message) {
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::ExtractZipFiles() {
+  TCHAR src_path[MAX_PATH];
+  GetModuleFileName(NULL, src_path, MAX_PATH);
+  *PathFindFileName(src_path) = 0;
+  CString src = src_path;
+
+  WIN32_FIND_DATA fd;
+  HANDLE find_handle = FindFirstFile(src + _T("*.zip"), &fd);
+  if (find_handle != INVALID_HANDLE_VALUE) {
+    do {
+      if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        if (ExtractZipFile(src + fd.cFileName))
+          DeleteFile(src + fd.cFileName);
+      }
+    } while( FindNextFile(find_handle, &fd) );
+    FindClose(find_handle);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::ExtractZipFile(CString file) {
+  bool ret = false;
+
+  unzFile zip_file_handle = unzOpen(CT2A(file));
+  if (zip_file_handle) {
+    ret = true;
+    if (unzGoToFirstFile(zip_file_handle) == UNZ_OK) {
+      TCHAR path[MAX_PATH];
+      lstrcpy(path, (LPCTSTR)file);
+      *PathFindFileName(path) = 0;
+      CStringA dir = CT2A(path);
+      DWORD len = 4096;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        do {
+          char file_name[MAX_PATH];
+          unz_file_info info;
+          if (unzGetCurrentFileInfo(zip_file_handle, &info, (char *)&file_name,
+              _countof(file_name), 0, 0, 0, 0) == UNZ_OK) {
+              CStringA dest_file_name = dir + file_name;
+
+            // make sure the directory exists
+            char szDir[MAX_PATH];
+            lstrcpyA(szDir, (LPCSTR)dest_file_name);
+            *PathFindFileNameA(szDir) = 0;
+            if( lstrlenA(szDir) > 3 )
+              SHCreateDirectoryExA(NULL, szDir, NULL);
+
+            HANDLE dest_file = CreateFileA(dest_file_name, GENERIC_WRITE, 0, 
+                                          NULL, CREATE_ALWAYS, 0, 0);
+            if (dest_file != INVALID_HANDLE_VALUE) {
+              if (unzOpenCurrentFile(zip_file_handle) == UNZ_OK) {
+                int bytes = 0;
+                DWORD written;
+                do {
+                  bytes = unzReadCurrentFile(zip_file_handle, buff, len);
+                  if( bytes > 0 )
+                    WriteFile( dest_file, buff, bytes, &written, 0);
+                } while( bytes > 0 );
+                unzCloseCurrentFile(zip_file_handle);
+              }
+              CloseHandle( dest_file );
+            }
+          }
+        } while (unzGoToNextFile(zip_file_handle) == UNZ_OK);
+
+        free(buff);
+      }
+    }
+
+    unzClose(zip_file_handle);
+  }
+
+  return ret;
+}

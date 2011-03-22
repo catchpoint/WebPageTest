@@ -60,5 +60,7 @@ private:
   void ResetIpfw(void);
   void Init(void);
   void FlushDNS(void);
+  void ExtractZipFiles();
+  bool ExtractZipFile(CString file);
 };
 

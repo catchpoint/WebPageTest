@@ -35,22 +35,29 @@ public:
   bool UploadIncrementalResults(WptTest& test);
   bool TestDone(WptTest& test);
 
+  bool _exit;
+
 private:
   WptSettings&  _settings;
   WptStatus&    _status;
+  DWORD         _version;
+  CString       _computer_name;
 
-  CString HttpGet(CString url);
-  bool    ParseTest(CString& test_string, WptTest& test);
-  bool    CrackUrl(CString url, CString &host, unsigned short &port, 
+  bool HttpGet(CString url, WptTest& test, CString& test_string, 
+                CString& zip_file);
+  bool ParseTest(CString& test_string, WptTest& test);
+  bool CrackUrl(CString url, CString &host, unsigned short &port, 
                     CString& object);
-  bool    BuildFormData(WptSettings& settings, WptTest& test, 
+  bool BuildFormData(WptSettings& settings, WptTest& test, 
                             bool done,
                             CString file_name, DWORD file_size,
                             CString& headers, CStringA& footer, 
                             CStringA& form_data, DWORD& content_length);
-  bool    UploadFile(CString url, bool done, WptTest& test, CString file);
-  bool    CompressResults(CString directory, CString zip_file);
-  bool    UploadImages(WptTest& test);
-  bool    UploadData(WptTest& test, bool done);
+  bool UploadFile(CString url, bool done, WptTest& test, CString file);
+  bool CompressResults(CString directory, CString zip_file);
+  bool UploadImages(WptTest& test);
+  bool UploadData(WptTest& test, bool done);
+  bool ProcessZipFile(CString zip_file, WptTest& test);
+  bool InstallUpdate(CString dir);
 };
 

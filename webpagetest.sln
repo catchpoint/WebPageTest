@@ -8,6 +8,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptdriver", "agent\wptdrive
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wpthook", "agent\wpthook\wpthook.vcxproj", "{7DE37929-A397-4C9D-97CE-8800091BCB9D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptupdate", "agent\wptupdate\wptupdate.vcxproj", "{9A00AE26-2C4E-49ED-AA0D-E8A6BDA23FF2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -22,6 +24,10 @@ Global
 		{7DE37929-A397-4C9D-97CE-8800091BCB9D}.Debug|Win32.Build.0 = Debug|Win32
 		{7DE37929-A397-4C9D-97CE-8800091BCB9D}.Release|Win32.ActiveCfg = Release|Win32
 		{7DE37929-A397-4C9D-97CE-8800091BCB9D}.Release|Win32.Build.0 = Release|Win32
+		{9A00AE26-2C4E-49ED-AA0D-E8A6BDA23FF2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9A00AE26-2C4E-49ED-AA0D-E8A6BDA23FF2}.Debug|Win32.Build.0 = Debug|Win32
+		{9A00AE26-2C4E-49ED-AA0D-E8A6BDA23FF2}.Release|Win32.ActiveCfg = Release|Win32
+		{9A00AE26-2C4E-49ED-AA0D-E8A6BDA23FF2}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

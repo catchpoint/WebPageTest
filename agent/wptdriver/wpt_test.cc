@@ -33,11 +33,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 WptTest::WptTest(void) {
   // figure out what our working diriectory is
   TCHAR path[MAX_PATH];
-  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE,
+  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
                                 NULL, SHGFP_TYPE_CURRENT, path)) ) {
     PathAppend(path, _T("webpagetest"));
     CreateDirectory(path, NULL);
     _directory = path;
+    DeleteDirectory(_directory, false);
   }
 
   Reset();

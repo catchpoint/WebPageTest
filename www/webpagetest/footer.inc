@@ -12,44 +12,7 @@
     </div>
 </div>
 
-    <?php
-        // display the sponsor logos across the bottom of the page
-        $sponsors = array();
-        $s = parse_ini_file('./settings/sponsors.ini', true);
-        foreach( $s as &$entry )
-            if( strlen($entry['logo']) )
-                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'alt' => $entry['alt']);
-        
-        $count = count($sponsors);
-        if( $count && !$_GET['bare'] )
-        {
-            shuffle($sponsors);
-            
-            $rows = ceil((float)$count / 5.0);
-            $rowCount = ceil((float)$count / (float)$rows);
-            echo '<div id="links">';
-            echo'<table class="links"><tr>';
-            $i = 0;
-            $remaining = $count;
-            foreach( $sponsors as &$sponsor )
-            {
-                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4) )
-                {
-                    $i = 1;
-                    echo '</tr></table><table class="links"><tr>';
-                }
-                else
-                    $i++;
-
-                $remaining--;
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img src=\"{$sponsor['logo']}\" alt=\"{$sponsor['alt']}\"></a></td>";
-            }
-            echo '</tr></table>';
-            echo '</div>';
-        }
-    ?>
-    <div class="cleared"></div>
-    
+   
     <?php
         $feeds = null;
         if( is_file('./tmp/feeds.dat') )
@@ -111,6 +74,45 @@
         }
     ?>
 
+    <?php
+        // display the sponsor logos across the bottom of the page
+        $sponsors = array();
+        $s = parse_ini_file('./settings/sponsors.ini', true);
+        foreach( $s as &$entry )
+            if( strlen($entry['logo']) )
+                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'alt' => $entry['alt']);
+        
+        $count = count($sponsors);
+        if( $count && !$_GET['bare'] )
+        {
+            echo '<div id="sponsor_header">WebPagetest Partners</div>';
+            shuffle($sponsors);
+            
+            $rows = ceil((float)$count / 5.0);
+            $rowCount = ceil((float)$count / (float)$rows);
+            echo '<div id="links">';
+            echo'<table class="links"><tr>';
+            $i = 0;
+            $remaining = $count;
+            foreach( $sponsors as &$sponsor )
+            {
+                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4) )
+                {
+                    $i = 1;
+                    echo '</tr></table><table class="links"><tr>';
+                }
+                else
+                    $i++;
+
+                $remaining--;
+                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img src=\"{$sponsor['logo']}\" alt=\"{$sponsor['alt']}\"></a></td>";
+            }
+            echo '</tr></table>';
+            echo '</div>';
+        }
+    ?>
+    <div class="cleared"></div>
+    
     <script type="text/javascript">
     function showFeeds(column)
     {

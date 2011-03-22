@@ -17,6 +17,8 @@
     {
         $path = './' . GetTestPath(trim($_POST['resubmit']));
         $test = json_decode(gz_file_get_contents("$path/testinfo.json"), true);
+        unset($test['completed']);
+        unset($test['started']);
     }
     
     // pull in the test parameters

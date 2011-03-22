@@ -67,7 +67,8 @@ void WptStatus::Set(const TCHAR * format, ...) {
   Called from the main thread to update the title
 -----------------------------------------------------------------------------*/
 void WptStatus::OnUpdateStatus(void) {
-  SendMessage(_wnd, WM_SETTEXT, 0, (LPARAM)(const TCHAR *)_status);
+  SendMessage(_wnd, WM_SETTEXT, 0, 
+              (LPARAM)(const TCHAR *)(_status + _T(" - wptdriver")));
   InvalidateRect(_wnd, NULL, TRUE);
 }
 
