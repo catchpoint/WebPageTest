@@ -64,7 +64,6 @@ public:
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();
   void RenderCheckThread();
-  void CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now);
   void CollectData();
 
   // times
@@ -108,8 +107,9 @@ private:
 
   // tracking of the periodic data capture
   DWORD _last_data_ms;
-  LARGE_INTEGER _last_real_time;
-  unsigned __int64 _last_process_time;
+  ULARGE_INTEGER _last_cpu_idle;
+  ULARGE_INTEGER _last_cpu_kernel;
+  ULARGE_INTEGER _last_cpu_user;
   DWORD _video_capture_count;
   LARGE_INTEGER     _last_video_time;
 
@@ -117,4 +117,5 @@ private:
 
   void Done();
   void FindBrowserWindow(void);
+  void CollectSystemStats(DWORD ms_from_start);
 };

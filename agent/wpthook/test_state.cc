@@ -35,11 +35,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
 
-const DWORD ACTIVITY_TIMEOUT = 2000;
-const DWORD ON_LOAD_GRACE_PERIOD = 1000;
-const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
-const DWORD DATA_COLLECTION_INTERVAL = 100;
-const DWORD START_RENDER_MARGIN = 30;
+static const DWORD ACTIVITY_TIMEOUT = 2000;
+static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
+static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
+static const DWORD DATA_COLLECTION_INTERVAL = 100;
+static const DWORD START_RENDER_MARGIN = 30;
+static const DWORD MS_IN_SEC = 1000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -67,7 +68,6 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_exit(false)
   ,_data_timer(NULL)
   ,_last_data_ms(0)
-  ,_last_process_time(0)
   ,_video_capture_count(0) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
@@ -75,10 +75,12 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   _first_activity.QuadPart = 0;
   _last_activity.QuadPart = 0;
   _first_byte.QuadPart = 0;
-  _last_real_time.QuadPart = 0;
   _last_video_time.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
+  _last_cpu_idle.QuadPart = 0;
+  _last_cpu_kernel.QuadPart = 0;
+  _last_cpu_user.QuadPart = 0;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
 }
@@ -363,39 +365,43 @@ void TestState::RenderCheckThread() {
 /*-----------------------------------------------------------------------------
     Collect the periodic system stats like cpu/memory/bandwidth.
 -----------------------------------------------------------------------------*/
-void TestState::CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now) {
+void TestState::CollectSystemStats(DWORD ms_from_start) {
   CProgressData data;
   data.ms = ms_from_start;
   DWORD msElapsed = 0;
   if( data.ms > _last_data_ms )
     msElapsed = data.ms - _last_data_ms;
-  DWORD elapsed = 0;
-  if( now.QuadPart > _last_real_time.QuadPart && _last_real_time.QuadPart)
-    elapsed = (DWORD) ((now.QuadPart - _last_real_time.QuadPart) / _ms_frequency.QuadPart);
-  _last_real_time = now;
+
   // figure out the bandwidth
-  if( _last_bytes_in )
-    data.bpsIn = (_bytes_in - _last_bytes_in) * 800;   // * 100 for the interval and * 8 for Bytes->bits
+  if (msElapsed) {
+    double bits = (_bytes_in - _last_bytes_in) * 8;
+    double sec = (double)msElapsed / (double)MS_IN_SEC;
+    data.bpsIn = (DWORD)(bits / sec);
+  }
   _last_bytes_in = _bytes_in;
 
   // calculate CPU utilization
-  FILETIME create, ex, kernel, user;
-  if( GetProcessTimes(GetCurrentProcess(), &create, &ex, &kernel, &user) )
-  {
-    ULARGE_INTEGER k, u;
-    k.LowPart = kernel.dwLowDateTime;
-    k.HighPart = kernel.dwHighDateTime;
-    u.LowPart = user.dwLowDateTime;
-    u.HighPart = user.dwHighDateTime;
-    unsigned __int64 cpuTime = k.QuadPart + u.QuadPart;
-    if( _last_process_time && cpuTime >= _last_process_time && elapsed > 0.0)
-    {
-       // convert it to milli-seconds of CPU delta time
-      double delta = (double)(cpuTime - _last_process_time) / (double)10000;
-      ATLTRACE2(_T("[wpthook] TestState::CollectSystemStats - cpu-delta elapsed: %f %d \n"), delta, elapsed);
-      data.cpu = min((double)delta / (double)elapsed, 1.0) * 100.0;
+  FILETIME idle_time, kernel_time, user_time;
+  if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+    ULARGE_INTEGER k, u, i;
+    k.LowPart = kernel_time.dwLowDateTime;
+    k.HighPart = kernel_time.dwHighDateTime;
+    u.LowPart = user_time.dwLowDateTime;
+    u.HighPart = user_time.dwHighDateTime;
+    i.LowPart = idle_time.dwLowDateTime;
+    i.HighPart = idle_time.dwHighDateTime;
+    if(_last_cpu_idle.QuadPart && _last_cpu_kernel.QuadPart && 
+      _last_cpu_user.QuadPart) {
+      __int64 idle = i.QuadPart - _last_cpu_idle.QuadPart;
+      __int64 kernel = k.QuadPart - _last_cpu_kernel.QuadPart;
+      __int64 user = u.QuadPart - _last_cpu_user.QuadPart;
+      int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
+                                    / (kernel + user));
+      data.cpu = max(min(cpu_utilization, 100), 0);
     }
-    _last_process_time = cpuTime;
+    _last_cpu_idle.QuadPart = i.QuadPart;
+    _last_cpu_kernel.QuadPart = k.QuadPart;
+    _last_cpu_user.QuadPart = u.QuadPart;
   }
 
   // get the memory use (working set - task-manager style)
@@ -412,12 +418,11 @@ void TestState::CollectSystemStats(DWORD ms_from_start, LARGE_INTEGER now) {
     {
       CProgressData d;
       d.ms = _last_data_ms + (i * 100);
-      d.cpu = data.cpu;               // CPU time was already spread over the period
-      d.bpsIn = data.bpsIn / chunks;  // split bandwidth evenly across the time slices
-      d.mem = data.mem;               // just assign them all the same memory use (could interpolate but probably not worth it)
+      d.cpu = data.cpu;
+      d.bpsIn = data.bpsIn;
+      d.mem = data.mem;
       _progress_data.AddTail(d);
     }
-    data.bpsIn /= chunks;   // bandwidth is the only measure in the main chunk that needs to be adjusted
   }
   _progress_data.AddTail(data);
 }
@@ -439,9 +444,9 @@ void TestState::CollectData() {
     ms = ((DWORD)((ms + (DATA_COLLECTION_INTERVAL / 2)) / 
                   DATA_COLLECTION_INTERVAL)) * DATA_COLLECTION_INTERVAL;
     if (ms != _last_data_ms || !_last_data_ms) {
-      _last_data_ms = ms;
       GrabVideoFrame();
-      CollectSystemStats(ms, now);
+      CollectSystemStats(ms);
+      _last_data_ms = ms;
     }
   }
   LeaveCriticalSection(&_data_cs);
