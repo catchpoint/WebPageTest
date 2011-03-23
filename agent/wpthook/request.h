@@ -92,7 +92,6 @@ public:
   DWORD _data_received;
   DWORD _socket_id;
   bool  _processed;
-  int   _document;
 
   // times (in ms from the test start)
   int _ms_start;

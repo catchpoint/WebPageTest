@@ -56,4 +56,5 @@ private:
                     DWORD response_code,
                     CStringA response_code_string,
                     CStringA response_data);
+  DWORD ParseLoadTime(CStringA query_string);
 };

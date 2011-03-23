@@ -158,10 +158,14 @@ void TestState::OnNavigate() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::OnLoad() {
+void TestState::OnLoad(DWORD load_time) {
   if (_active) {
-    ATLTRACE2(_T("[wpthook] TestState::OnLoad()\n"));
-    QueryPerformanceCounter(&_on_load);
+    ATLTRACE2(_T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
+    if (load_time)
+      _on_load.QuadPart = _start.QuadPart + 
+                          (_ms_frequency.QuadPart * load_time);
+    else
+      QueryPerformanceCounter(&_on_load);
     _current_document = 0;
     _screen_capture.Capture(_document_window, 
                                   CapturedImage::DOCUMENT_COMPLETE);

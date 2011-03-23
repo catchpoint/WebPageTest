@@ -131,15 +131,14 @@ bool WptHook::OnNavigate(bool async) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WptHook::OnLoad(bool async) {
+bool WptHook::OnLoad(DWORD load_time, bool async) {
   bool ret = false;
 
   if (!_wpthook_window)
     Connect();
-
   if (_wpthook_window) {
     if (async)
-      ret = PostMessage(_wpthook_window, WPT_ON_LOAD, 0, 0) != 0;
+      ret = PostMessage(_wpthook_window, WPT_ON_LOAD, load_time, 0) != 0;
     else {
       DWORD result;
       ret = SendMessageTimeout(_wpthook_window, WPT_ON_LOAD, 0, 0, 

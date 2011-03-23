@@ -42,7 +42,7 @@ public:
   bool Start(bool async = true);
   bool Stop(bool async = true);
   bool OnNavigate(bool async = true);
-  bool OnLoad(bool async = true);
+  bool OnLoad(DWORD load_time, bool async = true);
 
 private:
   HWND  _wpthook_window;

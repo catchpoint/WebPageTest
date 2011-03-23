@@ -85,7 +85,7 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         break;
 
     case WPT_ON_LOAD:
-        _test_state.OnLoad();
+        _test_state.OnLoad(wParam);
         break;
 
     case WM_TIMER:

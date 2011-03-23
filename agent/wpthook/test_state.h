@@ -59,7 +59,7 @@ public:
   void Start();
   void ActivityDetected();
   void OnNavigate();
-  void OnLoad();
+  void OnLoad(DWORD load_time);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();

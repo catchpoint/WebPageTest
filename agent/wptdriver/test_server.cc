@@ -162,7 +162,8 @@ void TestServer::MongooseCallback(enum mg_event event,
       }
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       _status.Set(_T("onLoad - waiting for test to complete..."));
-      _hook.OnLoad();
+      DWORD load_time = ParseLoadTime(request_info->query_string);
+      _hook.OnLoad(load_time);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _status.Set(_T("onNavigate - waiting for test to complete..."));
@@ -240,4 +241,27 @@ void TestServer::SendResponse(struct mg_connection *conn,
 
   // and finally, send it
   mg_printf(conn, "%s", (LPCSTR)response);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+DWORD TestServer::ParseLoadTime(CStringA query_string) {
+  DWORD load_time = 0;
+  int pos = 0;
+  CStringA token = query_string.Tokenize("&", pos);
+  while (pos >= 0 && !load_time) {
+    int split = token.Find('=');
+    if (split > 0) {
+      CStringA key = token.Left(split).Trim();
+      CStringA value = token.Mid(split + 1).Trim();
+      if (!key.CompareNoCase("load_time")) {
+        load_time = atoi(value);
+        ATLTRACE(_T("[wptdriver] Page load time from extension: %dms"), 
+                load_time);
+      }
+    }
+    token = query_string.Tokenize("&", pos);
+  }
+
+  return load_time;
 }
