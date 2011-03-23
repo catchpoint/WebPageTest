@@ -167,8 +167,6 @@ void TestState::OnLoad(DWORD load_time) {
     else
       QueryPerformanceCounter(&_on_load);
     _current_document = 0;
-    _screen_capture.Capture(_document_window, 
-                                  CapturedImage::DOCUMENT_COMPLETE);
   }
 }
 

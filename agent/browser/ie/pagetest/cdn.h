@@ -12,7 +12,7 @@ CDN_PROVIDER cdnList[] = {
 	{".panthercdn.com", _T("Panther")},
 	{".simplecdn.net", _T("Simple CDN")},
 	{".instacontent.net", _T("Mirror Image")},
-	{".footprint.net", _T("Footprint.net")},
+	{".footprint.net", _T("Level 3")},
 	{".ay1.b.yahoo.com", _T("Yahoo")},
 	{".yimg.", _T("Yahoo")},
 	{".google.", _T("Google")},
