@@ -22,6 +22,8 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 .progress {min-width: 100; min-height: 100; background: url(images/progress.gif) norepeat center middle; }
 .arrow {  border-style: dashed; border-color: transparent; border-width: 0.53em; display: -moz-inline-box; display: inline-block; height: 0; line-height: 0; position: relative; vertical-align: middle; width: 0; }
 
+.arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
+
 #optimization {float:right; width:414px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}
 #header_data {float:left; width: 510px; overflow-x: hidden;}

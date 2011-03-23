@@ -191,6 +191,9 @@ $data = loadPageRunData($testPath, $run, $cached);
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                         <td style="vertical-align:middle;"><div style="background-color:#FFFF00">3xx result</div></td>
                         <td style="vertical-align:middle;"><div style="background-color:#FF0000">4xx+ result</div></td>
+                        <?php if( $settings['enable_google_csi'] ) { ?>
+                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
+                        <?php } ?>
                     </tr>
                 </table>
                 <br>
@@ -206,8 +209,12 @@ $data = loadPageRunData($testPath, $run, $cached);
                             $title = $index . ': ' . $entry['url'];
                             echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
                         }
-                        else
+                        elseif( $entry['url'] !== NULL )
+                        {
                             echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+                        }
+                        elseif( $entry['csi'] !== NULL )
+                            echo '<area nohref="nohref" alt="' . $entry['csi'] . '" title="' . $entry['csi'] . '" shape=POLYGON coords="' . $entry['coords'] . '">' . "\n";
                     }
                 ?>
                 </map>

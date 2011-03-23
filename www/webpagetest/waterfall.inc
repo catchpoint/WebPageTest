@@ -8,6 +8,8 @@ require_once('draw.inc');
 */
 function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options = null)
 {
+    global $settings;
+    
     $startRender = $pageData['render'];
     $domElement = $pageData['domTime'];
     $docComplete = $pageData['docTime'];
@@ -90,6 +92,17 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             $range = $docComplete;
         if( $aft > $range )
             $range = $aft;
+    }
+
+    // Get CSI info
+    if( 1 == $settings['enable_google_csi'] )
+    {
+        require_once('./google/google_lib.inc');
+        $filter = array();
+        if( 1 == $settings['enable_google_csi_filter'] )
+            $filter = array( 'prt' => 1, 'ol' => 1, 'aft' => 1 );
+        $csiParams = ParseCsiInfo($options['id'], $options['path'], $options['run'], $options['cached'], false);
+        $csiInfo = TailorRtParamsForVisualization($csiParams, $filter);
     }
 
     // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart        
@@ -317,7 +330,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         $colDomElement  = GetColor($im, 242, 131, 0);
         $colDocComplete = GetColor($im, 0, 0, 255);
         $colAFT = GetColor($im, 255, 0, 0);
-        
+        $colCsi = GetColor($im, 105, 0, 158);
+
         if( $startRender > 0 && $startRender <= $range )
         {
             $x = $left + (int)((double)$w * ((double)$startRender / $range));
@@ -347,7 +361,30 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
             imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
         }
-        
+
+        // draw the csi metrics
+        if( null != $csiInfo )
+        {
+            foreach( $csiInfo as $name => $value )
+            {
+                $triangleCoord = array(-3, 0,
+                                       0, 8,
+                                       3, 0
+                                      );
+                                
+                if( $value > 0 && $value <= $range )
+                {
+                    $x = $left + (int)((double)$w * ((double)$value / $range));
+                    for( $i = 0; $i < 3; $i++) {
+                        $triangleCoord[$i*2] += $x;
+                        $triangleCoord[$i*2+1] += $rowHeight + 1;
+                    }
+                    imagefilledpolygon($im, $triangleCoord, 3, $colCsi);
+                    imageline($im, $x, $rowHeight + 1, $x, $height - 1, $colCsi);
+                }
+            }
+        }       
+
         // put the url label in
         $x = 4;
         $y = 2 + $rowHeight;
@@ -522,6 +559,30 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         }
         
         $y += $rowHeight;
+    }
+
+    // Save CSI entries
+    if( $imageMap )
+    {
+        if( 1 == $settings['enable_google_csi'] )
+        {
+            foreach ( $csiInfo as $name => $value )
+            {
+                $entry = array();
+                $entry['csi'] = "$name: $value";
+                $x = $left + (int)((double)$w * ((double)$value / $range));
+                $triangleCoord = array(-3, 0,
+                                       0, 8,
+                                       3, 0
+                                      );
+                for( $i = 0; $i < 3; $i++) {
+                    $triangleCoord[$i*2] += $x;
+                    $triangleCoord[$i*2+1] += $rowHeight + 1;
+                }
+                $entry['coords'] = implode(",", $triangleCoord);
+                $map[] = $entry;
+            }
+        }
     }
 
     if( !$imageMap && $requestsAfter )

@@ -11,6 +11,7 @@ chdir('..');
 include 'common.inc';
 // Include for parsing the http requests from a run.
 include 'object_detail.inc';
+require_once('google/google_lib.inc');
 
 // Fill the required variables.
 $runs = $test['test']['runs'];
@@ -63,44 +64,9 @@ function OutputCsvHeaders($filename)
  */
 function ParseCsiForRun($id, $testPath, $run, $cached)
 {
-	// Secure and haveLocations are not used but required by getRequests function.
-	$secure;
-	$haveLocations;
-	$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-	foreach ( $requests as &$request )
-	{
-		// Parse the individual url parts.
-		$url_parts = parse_url('http://' . $request['host'] . $request['url']);
-		if ( $url_parts['path'] == '/csi' ) 
-		{
-			$csi_query = $url_parts['query'];
-			parse_str($csi_query, $params);
-			foreach ( $params as $param_name => $param_value )
-			{
-				if ( $param_name == 'rt' || $param_name == 'it'
-					|| $param_name == 'irt' ) 
-				{
-					ParseSubParams($params, $param_name);
-				}
-			}
-			OutputCsvFromParams($id, $run, $cached, $params);
-		}
-	}
+        $params = ParseCsiInfo($id, $testPath, $run, $cached, true);
+	OutputCsvFromParams($id, $run, $cached, $params);
 }
-
-/***
- * Parse the parameters embedded in query params as comma-separated pairs.
- */
-function ParseSubParams(&$params, $combined_pairs)
-{
-	$combined_pair_list = split(',', $params[$combined_pairs]);
-	foreach ($combined_pair_list as $item)
-	{
-		$pair = split('\.', $item);
-		$params[$pair[0]] = $pair[1];
-	}
-}
-
 
 /***
  * Function to output the values from the params map/array in csv format.
