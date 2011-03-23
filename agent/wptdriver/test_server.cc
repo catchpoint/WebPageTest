@@ -135,6 +135,8 @@ void TestServer::MongooseCallback(enum mg_event event,
   if (event == MG_NEW_REQUEST) {
     ATLTRACE(_T("[wptdriver] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri));
+    ATLTRACE(_T("[wptdriver] HTTP Query String: %s\n"), 
+                    (LPCTSTR)CA2T(request_info->query_string));
     if (strcmp(request_info->uri, "/get_test") == 0) {
       if (_test){
         _status.Set(_T("Running test in browser..."));
