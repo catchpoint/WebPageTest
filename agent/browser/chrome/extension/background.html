@@ -3,7 +3,6 @@ var STARTUP_DELAY = 5000;
 var g_active=false;
 var g_tabId = -1;
 var g_start = 0;
-var load_time = 0;
 
 // on startup, kick off our testing
 setTimeout( "wptStartup()", STARTUP_DELAY );
@@ -18,9 +17,6 @@ function wptStartup() {
 // navigate to the provided url
 function wptNavigate(url){
   chrome.tabs.update(g_tabId, {"url":url}, function(tab) {
-    // TODO: Remove the following alert.
-    alert('');
-    chrome.tabs.executeScript(tab.id, {file: "script.js"});
   });
 }
 
@@ -57,7 +53,7 @@ function wptOnNavigate(){
 }
 
 // notification that the page loaded
-function wptOnLoad(){
+function wptOnLoad(load_time){
   try{
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://127.0.0.1:8888/event/load?load_time="+load_time, true);
@@ -70,25 +66,18 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
   if (g_active){
     if (props.status == "loading")
       wptOnNavigate();
-    // TODO: Remove the "complete" status action since we are now depending 
-    // on the chrome's webtiming values instead.
-    // if (props.status == "complete")
-	  // wptOnLoad();
+    if (props.status == "complete") {
+	  // get the navigation timings from the page
+	  chrome.tabs.executeScript(tabId, {file: "script.js"});
+	}
   }
 });
-
-// Page Finished call from the page.
-function pageFinished(load_times) {
-  load_time = Math.round(
-    (load_times.finishDocumentLoadTime - load_times.startLoadTime) * 1000.0);
-  wptOnLoad();
-}
 
 // Add a listener for messages from script.js.
 chrome.extension.onConnect.addListener(function(port) {
   port.onMessage.addListener(function(data) {
     if (data.message == "load") {
-      pageFinished(data.values);
+      wptOnLoad(data.load_time);
     }    
   });
 });
