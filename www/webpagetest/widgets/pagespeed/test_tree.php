@@ -6,7 +6,7 @@
 <body>
 <div id="pagespeed"></div>
 <?php
-    echo "<script type=\"text/javascript\" src=\"tree?test={$_GET['test']}&amp;div=pagespeed\"></script>\n";
+    echo "<script type=\"text/javascript\" src=\"tree.php?test={$_GET['test']}&amp;div=pagespeed\"></script>\n";
 ?>
 </body>
 </html>

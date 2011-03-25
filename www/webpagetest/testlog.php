@@ -113,138 +113,145 @@ else
 				        $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
 				        
 				        // load the log file into an array of lines
-				        $lines = file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-				        if( $lines)
+                        $ok = true;
+                        $file = file_get_contents($fileName);
+                        if($filterstr) {
+                            $ok = false;
+                            if(stristr($file, $filterstr))
+                                $ok=true;
+                        }
+                        $lines = explode("\n", $file);
+                        unset($file);
+				        if(count($lines) && $ok)
 				        {
 					        // walk through them backwards
 					        $records = array_reverse($lines);
 					        foreach($records as $line)
 					        {
-						        $date = NULL;
-						        $location = NULL;
-						        $url = NULL;
-						        $guid = NULL;
-                                $ip = NULL;
-                                $testUID = NULL;
-                                $testUser = NULL;
-                                $private = false;
-                                $video = false;
-                                $label = NULL;
-						        
-						        // tokenize the line
-						        $parseLine = str_replace("\t", "\t ", $line);
-						        $token = strtok($parseLine, "\t");
-						        $column = 0;
-						        while($token)
-						        {
-							        $column++;
-							        $token = trim($token);
-							        if( strlen($token) > 0)
-							        {
-								        switch($column)
-								        {
-									        case 1: $date = strtotime($token); break;
-                                            case 2: $ip = $token; break;
-									        case 5: $guid = $token; break;
-									        case 6: $url = htmlspecialchars($token); break;
-									        case 7: $location = $token; break;
-                                            case 8: $private = ($token == '1' ); break;
-                                            case 9: $testUID = $token; break;
-                                            case 10: $testUser = $token; break;
-                                            case 11: $video = ($token == '1'); break;
-                                            case 12: $label = htmlspecialchars($token); break;
-								        }
-							        }
-							        
-							        // on to the next token
-							        $token = strtok("\t");
-						        }
-						        
-						        if( $date && $location && $url && $guid)
-						        {
-                                    $ok = true;
-                                    if($filterstr)
-                                    {
-                                        $urlLower = strtolower($line);
-                                        if( !strstr($urlLower, $filterstr) )
-                                            $ok = false;
-                                    }
-                                    
-                                    // see if it is supposed to be filtered out
-                                    if( $private && !$includePrivate && (!$uid  || $uid != $testUID))
-                                        $ok = false;
-                                        
-                                    if( $onlyVideo and !$video )
-                                        $ok = false;
-                                        
-                                    if( isset($uid) && !$all && $uid != $testUID )
-                                        $ok = false;
-                                    
-                                    if( $ok )
-                                    {
-                                        $rowCount++;
-                                        $newDate = strftime('%x %X', $date + ($tz_offset * 60));
+                                $ok = true;
+                                if($filterstr && stristr($line, $filterstr) === false)
+                                    $ok = false;
+                                
+                                if ($ok)
+                                {                                
+						            $date = NULL;
+						            $location = NULL;
+						            $url = NULL;
+						            $guid = NULL;
+                                    $ip = NULL;
+                                    $testUID = NULL;
+                                    $testUser = NULL;
+                                    $private = false;
+                                    $video = false;
+                                    $label = NULL;
+						            
+						            // tokenize the line
+						            $parseLine = str_replace("\t", "\t ", $line);
+						            $token = strtok($parseLine, "\t");
+						            $column = 0;
+						            while($token)
+						            {
+							            $column++;
+							            $token = trim($token);
+							            if( strlen($token) > 0)
+							            {
+								            switch($column)
+								            {
+									            case 1: $date = strtotime($token); break;
+                                                case 2: $ip = $token; break;
+									            case 5: $guid = $token; break;
+									            case 6: $url = htmlspecialchars($token); break;
+									            case 7: $location = $token; break;
+                                                case 8: $private = ($token == '1' ); break;
+                                                case 9: $testUID = $token; break;
+                                                case 10: $testUser = $token; break;
+                                                case 11: $video = ($token == '1'); break;
+                                                case 12: $label = htmlspecialchars($token); break;
+								            }
+							            }
 							            
-                                        if( $csv )
+							            // on to the next token
+							            $token = strtok("\t");
+						            }
+						            
+						            if( $date && $location && $url && $guid)
+						            {
+                                        // see if it is supposed to be filtered out
+                                        if( $private && !$includePrivate && (!$uid  || $uid != $testUID))
+                                            $ok = false;
+                                            
+                                        if( $onlyVideo and !$video )
+                                            $ok = false;
+                                            
+                                        if( isset($uid) && !$all && $uid != $testUID )
+                                            $ok = false;
+                                        
+                                        if( $ok )
                                         {
-                                            // only track local tests
-                                            if( strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6) )
+                                            $rowCount++;
+                                            $newDate = strftime('%x %X', $date + ($tz_offset * 60));
+							                
+                                            if( $csv )
                                             {
-                                                echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '"' . "\r\n";
-                                                // flush every 30 rows of data
+                                                // only track local tests
+                                                if( strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6) )
+                                                {
+                                                    echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '"' . "\r\n";
+                                                    // flush every 30 rows of data
+                                                    if( $rowCount % 30 == 0 )
+                                                    {
+                                                        flush();
+                                                        ob_flush();
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                echo '<tr>';
+                                                echo '<td>';
+                                                if( isset($guid) && $video )
+                                                    echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\">";
+                                                echo '</td>';
+							                    echo '<td class="date">';
+                                                if( $private )
+                                                    echo '<b>';
+                                                echo $newDate;
+                                                if( $private )
+                                                    echo '</b>';
+                                                echo '</td>';
+							                    echo '<td class="location">' . $location;
+                                                if( $video )
+                                                    echo ' (video)';
+                                                echo '</td>';
+                                                if($includeip)
+                                                    echo '<td class="ip">' . $ip . '</td>';
+                                                
+                                                if( $admin )
+                                                {
+                                                    if( isset($testUID) )
+                                                        echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
+                                                    else
+                                                        echo '<td class="uid"></td>';
+                                                }
+                                                    
+                                                $link = "/result/$guid/";
+                                                if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
+                                                    $link = $guid;
+                                                    
+                                                $labelTxt = $label;
+                                                if( strlen($labelTxt) > 30 )
+                                                    $labelTxt = substr($labelTxt, 0, 27) . '...';
+                                                echo "<td title=\"$label\" class=\"label\"><a href=\"$link\">$labelTxt</a></td>";
+                                                
+							                    echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
+                                                
+                                                // split the tables every 30 rows so the browser doesn't wait for ALL the results
                                                 if( $rowCount % 30 == 0 )
                                                 {
+                                                    echo '</table><table class="history" border="0" cellpadding="5px" cellspacing="0">';
                                                     flush();
                                                     ob_flush();
                                                 }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            echo '<tr>';
-                                            echo '<td>';
-                                            if( isset($guid) && $video )
-                                                echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\">";
-                                            echo '</td>';
-							                echo '<td class="date">';
-                                            if( $private )
-                                                echo '<b>';
-                                            echo $newDate;
-                                            if( $private )
-                                                echo '</b>';
-                                            echo '</td>';
-							                echo '<td class="location">' . $location;
-                                            if( $video )
-                                                echo ' (video)';
-                                            echo '</td>';
-                                            if($includeip)
-                                                echo '<td class="ip">' . $ip . '</td>';
-                                            
-                                            if( $admin )
-                                            {
-                                                if( isset($testUID) )
-                                                    echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
-                                                else
-                                                    echo '<td class="uid"></td>';
-                                            }
-                                                
-                                            $link = "/result/$guid/";
-                                            if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
-                                                $link = $guid;
-                                                
-                                            $labelTxt = $label;
-                                            if( strlen($labelTxt) > 30 )
-                                                $labelTxt = substr($labelTxt, 0, 27) . '...';
-                                            echo "<td title=\"$label\" class=\"label\"><a href=\"$link\">$labelTxt</a></td>";
-                                            
-							                echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
-                                            
-                                            // split the tables every 30 rows so the browser doesn't wait for ALL the results
-                                            if( $rowCount % 30 == 0 )
-                                            {
-                                                echo '</table><table class="history" border="0" cellpadding="5px" cellspacing="0">';
-                                                flush();
-                                                ob_flush();
                                             }
                                         }
                                     }

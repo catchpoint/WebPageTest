@@ -4,7 +4,7 @@
 * 
 * @param mixed $file
 */
-function PageSpeedTreeHTML($file) {
+function PageSpeedTreeHTML($file, $docRoot = '') {
     $html = '';
     $pagespeed_data = gz_file_get_contents($file);
     $pagespeed = json_decode($pagespeed_data, true);
@@ -14,6 +14,7 @@ function PageSpeedTreeHTML($file) {
     }
     if( $pagespeed )
     {
+        $html .= '<div class="pagespeed_container">';
         // build an array of the scores to sort
         $scores = array();
         $total = 0;
@@ -48,7 +49,7 @@ function PageSpeedTreeHTML($file) {
                 $color = 'pagespeed_score-red';
             elseif( $score < 80 )
                 $color = 'pagespeed_score-yellow';
-            $img = "<img src=\"/images/cleardot.gif\" class=\"pagespeed_score pagespeed_score-icon $color\">";
+            $img = "<img src=\"$docRoot/images/cleardot.gif\" class=\"pagespeed_score pagespeed_score-icon $color\">";
             
             $last = '';
             if( $current == $count )
@@ -73,7 +74,7 @@ function PageSpeedTreeHTML($file) {
                 
             $html .= '</li>';
         }
-        $html .= '</ul>';
+        $html .= '</ul></div>';
     }
     
     return $html;

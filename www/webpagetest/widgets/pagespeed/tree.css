@@ -1,3 +1,4 @@
+.pagespeed_container {font-family: Arial,Helvetica,sans-serif; font-size: 12px; line-height: 1em; color: #222222;}
 .pagespeed_score{background-image:url("images/scoreIcon.png")}
 .pagespeed_score-red{background-position:0 0}
 .pagespeed_score-yellow{background-position:-14px 0}
@@ -6,7 +7,8 @@
 .pagespeed_score-icon{display:inline; vertical-align:middle;height:14px;width:14px; }
 
 /*tree view for pagespeed*/
-.pagespeed_treeview, .pagespeed_treeview ul { padding: 0; margin: 0; list-style: none; }
+.pagespeed_treeview, .pagespeed_treeview ul { padding: 0; margin: 0; list-style: none;}
+.pagespeed_treeview a {color: #000000;}
 .pagespeed_treeview ul { background-color: white; margin-top: 4px; }
 .pagespeed_treeview .hitarea { background: url(images/treeview-default.gif) -64px -25px no-repeat; height: 16px; width: 16px; margin-left: -20px; float: left; cursor: pointer; }
 /* fix for IE6 */

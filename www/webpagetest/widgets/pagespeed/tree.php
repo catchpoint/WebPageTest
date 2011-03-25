@@ -25,7 +25,7 @@ $div = $_REQUEST['div'];
 if (strlen($testPath) && strlen($div)) {
     // inject the css file into the document dynamically
     $base_path = 'http://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    $css = "$base_path/tree.css";
+    $css = "$base_path/tree.css?v=2";
     echo "var pagespeed_tree_css=document.createElement('link');\n";
     echo "pagespeed_tree_css.setAttribute('rel', 'stylesheet');\n";
     echo "pagespeed_tree_css.setAttribute('type', 'text/css');\n";
@@ -43,7 +43,7 @@ if (strlen($testPath) && strlen($div)) {
             $run = 1;
     }
 
-    $html = PageSpeedTreeHTML("$testPath/$run{$cachedText}_pagespeed.txt");
+    $html = PageSpeedTreeHTML("$testPath/$run{$cachedText}_pagespeed.txt", $base_path);
     $html = str_replace("'", "\\'", $html);
     echo "document.getElementById('$div').innerHTML = '$html';";
 }
