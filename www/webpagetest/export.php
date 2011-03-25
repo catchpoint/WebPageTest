@@ -34,7 +34,16 @@ if( isset($testPath) )
     $result = BuildResult($pageData);
 
     // spit it out as json
-    header('Content-disposition: attachment; filename=pagetest.har');
+    $filename = '';
+    if (@strlen($url))
+    {
+        $parts = parse_url($url);
+        $filename = $parts['host'];
+    }
+    if (!strlen($filename))
+        $filename = "pagetest";
+    $filename .= ".$id.har";
+    header("Content-disposition: attachment; filename=$filename");
     header('Content-type: application/json');
 
     if( $_GET['php'] )
