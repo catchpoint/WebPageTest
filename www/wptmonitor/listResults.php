@@ -127,8 +127,7 @@
     }
   try
   {
-    $q = Doctrine_Query::create()->from('WPTResult r, r.WPTJob j');
-//            ->where('r.WPTJobFolderId'->orderBy($orderBy);
+    $q = Doctrine_Query::create()->from('WPTResult r, r.WPTJob j')->orderBy($orderBy);
 
     if ($folderIds) {
       $q->whereIn('r.WPTJob.WPTJobFolderId', $folderIds);
