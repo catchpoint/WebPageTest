@@ -47,7 +47,7 @@
       $_SESSION['jobsFolderId'] = $folderId;
     }
     if (!$_SESSION['jobsFolderId']){
-      $_SESSION['jobsFolderId'] = -1;
+      $_SESSION['jobsFolderId'] = getRootFolderForUser($user_id,'WPTJob');
     }
     $folderId = $_SESSION['jobsFolderId'];
     $smarty->assign('folderId',$_SESSION['jobsFolderId']);
