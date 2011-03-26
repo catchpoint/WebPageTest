@@ -232,13 +232,13 @@
       href="?orderBy=AvgFirstViewFullyLoadedTime&orderByDir={$orderResultsByDirectionInv}">{if $orderResultsByDirection eq "ASC"}
     <img width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
   </a>{/if}</th>
-  <th style="opacity:0.7;background-color:#fdf5e6;" align="right"><a
+  <th style="opacity:0.7;background-color:#dcdcdc;" align="right"><a
       href="?orderBy=AvgFirstViewFullyLoadedRequests">{if $orderResultsBy eq "AvgFirstViewFullyLoadedRequests"}
   <b>{/if}Req</a>{if $orderResultsBy eq "AvgFirstViewFullyLoadedRequests"}</b><a
       href="?orderBy=AvgFirstViewFullyLoadedRequests&orderByDir={$orderResultsByDirectionInv}">{if $orderResultsByDirection eq "ASC"}
     <img width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
   </a>{/if}</th>
-  <th style="opacity:0.7;background-color:#fdf5e6;" align="right"><a
+  <th style="opacity:0.7;background-color:#dcdcdc;" align="right"><a
       href="?orderBy=AvgFirstViewFullyLoadedBytesIn">{if $orderResultsBy eq "AvgFirstViewFullyLoadedBytesIn"}
   <b>{/if}Bytes</a>{if $orderResultsBy eq "AvgFirstViewFullyLoadedBytesIn"}</b><a
       href="?orderBy=AvgFirstViewFullyLoadedBytesIn&orderByDir={$orderResultsByDirectionInv}">{if $orderResultsByDirection eq "ASC"}
@@ -321,6 +321,7 @@
     <hr>{$res.AvgRepeatViewFullyLoadedBytesIn/1000|number_format}K
   </td>
 </tr>
+{if ($showResultsThumbs eq 'true' || $showWaterfallThumbs eq 'true') && $res.Status != 100}
 <tr class="monitoringJobRow {$eo}">
   <td colspan="19">
     <table>
@@ -341,6 +342,7 @@
     </table>
   </td>
 </tr>
+{/if}
 {/foreach}
 <tr>
   <td colspan="25">

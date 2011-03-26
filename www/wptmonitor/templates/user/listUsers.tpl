@@ -41,7 +41,6 @@
               <th align="left">Email</th>
               <th align="right">Max Jobs</th>
               <th>Super Admin</th>
-              <th>Read Only</th>
               <th>Actions</th>
             </tr>
             {foreach from=$result item=res}
@@ -55,7 +54,6 @@
                 <td align="left">{$res.EmailAddress}</td>
                 <td align="right">{$res.MaxJobsPerMonth}</td>
                 <td align="center">{if $res.IsSuperAdmin}Yes{else}No{/if}</td>
-                <td align="center">{if $res.Type eq 1}Yes{else}No{/if}</td>
                   <td>
                     <table>
                       <tr>

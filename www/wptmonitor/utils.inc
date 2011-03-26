@@ -203,7 +203,73 @@ function getLocationThreshold($host, $location) {
   $q->free(true);
   return $queueThreshold;
 }
+function getCurrentRunRateInfo(){
+  $runRateInfo = array();
+  $userTable= Doctrine_Core::getTable('User');
+    $q = Doctrine_Query::create()
+    ->select('u.Username')
+    ->from('User u')
+    ->orderBy('u.Username');
+  $users = $q->fetchArray();
+  foreach($users as $user){
+    $runRateInfo['users'][] = $user['Username'];
+  }
 
+  $q = Doctrine_Query::create()->select('j.UserId, SUM(j.Runs * 60/j.Frequency) as runrate')
+      ->from('WPTJob j')
+      ->where('j.Active = ?',true)
+      ->orderBy('j.UserId')
+      ->groupBy('j.UserId');
+  $result = $q->fetchArray();
+  $totalRunRate = 0;
+  $runRatePerUser = array();
+  foreach($result as $res){
+    $totalRunRate += $res['runrate'];
+    $user = $userTable->find($res['UserId']);
+    $runRatePerUser[$user['Username']] = $res['runrate'];
+  }
+  $runRateInfo['runRatePerUser'] = $runRatePerUser;
+  $runRateInfo['hourlyRunRate'] = $totalRunRate;
+
+  // Active Jobs per User
+  $q = Doctrine_Query::create()->select('j.UserId, COUNT(j.UserId) as jobCount')
+      ->from('WPTJob j')
+      ->where('j.Active = ?',true)
+      ->orderBy('j.UserId')
+      ->groupBy('j.UserId');
+  $result = $q->fetchArray();
+
+  $activeJobsPerUser= array();
+  foreach($result as $res){
+    $user = $userTable->find($res['UserId']);
+    $activeJobsPerUser[$user['Username']] = $res['jobCount'];
+  }
+  $runRateInfo['activeJobsPerUser'] = $activeJobsPerUser;
+  // All jobs per user
+
+  $q = Doctrine_Query::create()->select('j.UserId, COUNT(j.UserId) as jobCount')
+      ->from('WPTJob j')
+      ->orderBy('j.UserId')
+      ->groupBy('j.UserId');
+  $result = $q->fetchArray();
+
+  $jobsPerUser= array();
+  foreach($result as $res){
+    $user = $userTable->find($res['UserId']);
+    $jobsPerUser[$user['Username']] = $res['jobCount'];
+  }
+  $runRateInfo['jobsPerUser'] = $jobsPerUser;
+
+  $q = Doctrine_Query::create()->from('WPTJob j');
+  $runRateInfo['totalJobs'] = $q->count();
+
+  $q = Doctrine_Query::create()->from('WPTJob j')
+      ->where('j.Active = ?',true);
+  $runRateInfo['totalActiveJobs']= $q->count();
+
+  $q->free(true);
+  return $runRateInfo;
+}
 function getLocationInformation($host = null) {
   if ($host == null) {
     $q = Doctrine_Query::create()->from('WPTHost h')->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
@@ -230,6 +296,7 @@ function getLocationInformation($host = null) {
       $location['host'] = $host['Label'];
       $location['hostURL'] = $host['HostURL'];
       $location['id'] = $loc->id;
+      $id = $loc->id;
       $location['Label'] = $loc->Label;
       $location['Browser'] = $loc->Browser;
       $location['PendingTests'] = $loc->PendingTests->Total;
@@ -242,9 +309,21 @@ function getLocationInformation($host = null) {
       if (!$location['YellowLimit'] = $loc['QueueThresholdYellowLimit']) {
         $location['YellowLimit'] = 30;
       }
-      $locations[] = $location;
+      $locations["'".$id."'"] = $location;
     }
   }
+  $q = Doctrine_Query::create()->select('j.Location, SUM(j.Runs * 60/j.Frequency) as runrate')
+      ->from('WPTJob j')
+      ->where('j.Active = ?',true)
+      ->groupBy('j.Location');
+
+  $result = $q->fetchArray();
+
+  foreach ($result as $res){
+    $locations["'".$res['Location']."'"]['runRate'] = $res['runrate'];
+  }
+
+
   return $locations;
 }
 
