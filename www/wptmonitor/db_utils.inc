@@ -6,11 +6,13 @@ function deleteRecord($table, $column, $id) {
   $t = Doctrine_Core::getTable($table);
   $record = $t->find($id);
 
-  $folderId = $record[$table . 'FolderId'];
-
-  if (!hasPermission($table, $folderId, PERMISSION_CREATE_DELETE)) {
-    echo 'Invalid Permission';
-    exit;
+  // Results are not contained in folders
+  if ( $table != "WPTResult"){
+    $folderId = $record[$table . 'FolderId'];
+    if (!hasPermission($table, $folderId, PERMISSION_CREATE_DELETE)) {
+      echo 'Invalid Permission';
+      exit;
+    }
   }
 
   try
