@@ -188,11 +188,16 @@
               </th>
               <th colspan="6" align="center">Actions</th>
             </tr>
+            {assign var="hasUpdatePermission"       value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
+            {assign var="hasExecutePermission"      value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_EXECUTE)}
+            {assign var="hasCreateDeletePermission" value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+            {assign var="hasOwnerPermission"        value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_OWNER)}
+            {assign var="hasReadPermission"         value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_READ)}
             {foreach from=$result item=res}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">
                 <td>
-                {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
+                {if $hasUpdatePermission}
                 <a title="Toggle Active/Inactive" href=toggleJobActive.php?job_id[]={$res.Id}&state={$res.Active}>{/if}
                 {if $res.Active}
                   <img src="img/playing.png" width="20" height="20">
@@ -216,7 +221,7 @@
                 <td align="right">
                   <table>
                     <tr>
-                    {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
+                    {if $hasUpdatePermission}
                       <form action="editJob.php">
                         <input type="hidden" name="id" value="{$res.Id}">
                         <input type="hidden" name="folderId" value="{$res.WPTJobFolderId}">
@@ -225,7 +230,7 @@
                         </td>
                       </form>
                     {/if}
-                    {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                    {if $hasCreateDeletePermission}
                       <form action="deleteJob.php" name="deleteJob" onsubmit="return confirm('Confirm Deletion')">
                         <input type="hidden" name="id" value="{$res.Id}">
                         <td style="padding:1px">
@@ -233,7 +238,7 @@
                         </td>
                       </form>
                     {/if}
-                    {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                    {if $hasCreateDeletePermission}
                       <form action="copyJob.php" name="copyJob" onsubmit="return confirm('Confirm Copy')">
                         <input type="hidden" name="id" value="{$res.Id}">
                         <input type="hidden" name="folderId" value="{$res.WPTJobFolderId}">
@@ -243,7 +248,7 @@
                       </form>
                     {/if}
                       <td style="padding:1px">
-                      {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_READ)}
+                      {if $hasReadPermission}
                         <form action="flashGraph.php">
                           <input class="actionIcon" type="image" src="img/graph_icon.png" title="Graph" value="Graph"/>
                           <input type="hidden" name="fields[]" value=FV_Doc>
@@ -255,7 +260,7 @@
                       {/if}
                       </td>
                       <td style="padding:1px">
-                      {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_EXECUTE)}
+                      {if $hasExecutePermission}
                         <form action="processJob.php">
                           <input type="hidden" name=force value=on>
                           <input type="hidden" name=priority value=1>
@@ -277,14 +282,14 @@
                 <table width="100%" border="0">
                   <tr>
                     <td align="left" nowrap="true">
-                  {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_EXECUTE)}
+                  {if $hasExecutePermission}
                       <input onclick="processJobs();" type="submit" value="Execute Job(s)">
                   {/if}
-                  {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
+                  {if $hasUpdatePermission}
                       <input onclick="toggleJobActive();" type="submit" value="Toggle Active">
                   {/if}
                       <input onclick="compareFilmstrips();" type="button" value="Compare Filmstrips">
-                    {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_OWNER)}
+                    {if $hasOwnerPermission}
                       <p><form name="moveJobsToFolderForm">
                         <input type="button" value="Move to folder" onclick="moveJobsToFolder()">
                         <select name="folderId">
@@ -294,7 +299,7 @@
                     {/if}
                     </td>
                     <td align="right" valign="top">
-                    {if hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                    {if $hasCreateDeletePermission}
                       <form action="editJob.php">
                         <input type="hidden" name="folderId" value="{$folderId}">
                         <input type="submit" value="Add New Monitoring Job">
