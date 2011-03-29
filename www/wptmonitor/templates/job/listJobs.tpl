@@ -209,8 +209,10 @@
                 <td colspan="2" nowrap="true">
                 {if $folderId eq -1}<a href=listJobs.php?folderId={$res.WPTJobFolder.id}>{$res.WPTJobFolder.Label}</a> <br>{/if}
                   <a href=listResults.php?folderId={$res.WPTJobFolderId}&filterField=WPTJob.Id&filterValue={$res.Id}>{$res.Label|truncate:60}</a><br>
-                  {if hasPermission("WPTScript",$res.WPTScript.WPTScriptFolderId, $smarty.const.PERMISSION_UPDATE)}
-                  <a href=editScript.php?id={$res.WPTScript.Id}>{/if}{$res.WPTScript.Label|truncate:60}</a></td>
+                  {*{if hasPermission("WPTScript",$res.WPTScript.WPTScriptFolderId, $smarty.const.PERMISSION_UPDATE)}*}
+                  <a href=editScript.php?id={$res.WPTScript.Id}>
+                  {*{/if}*}
+                  {$res.WPTScript.Label|truncate:60}</a></td>
                 <td>{$res.Host}<br>{$res.Location}</td>
                 <td align="right">{$res.Frequency}</td>
                 <td align="right">{$res.Runs}{if !$res.FirstViewOnly}R{/if}</td>
