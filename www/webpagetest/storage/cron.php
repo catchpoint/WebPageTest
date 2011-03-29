@@ -30,7 +30,7 @@ function CronProcess($path, $maxAllowedAge)
             else
             {
                 $info = parse_ini_file($file, true);
-                if( isset($info['completeTime']) )
+                if( isset($info['test']['completeTime']) )
                 {
                     // Deal with the pre-existing test results. Upload them into
                     // remote storage.
