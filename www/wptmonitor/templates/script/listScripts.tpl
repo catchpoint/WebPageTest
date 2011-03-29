@@ -36,6 +36,12 @@
   {/literal}
 </head>
 <body>
+{assign var="hasUpdatePermission"       value=hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_UPDATE)}
+{assign var="hasExecutePermission"      value=hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_EXECUTE)}
+{assign var="hasCreateDeletePermission" value=hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+{assign var="hasOwnerPermission"        value=hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_OWNER)}
+{assign var="hasReadPermission"         value=hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_READ)}
+
 <div class="page">
   {include file='header.tpl'}{include file='navbar.tpl'}
   <div id="main">
@@ -102,7 +108,7 @@
                 <td align="right">
                   <table>
                     <tr>
-                      {if hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_UPDATE)}
+                      {if $hasUpdatePermission}
                       <form action="editScript.php">
                         <input type="hidden" name="id" value="{$res.Id}">
                         <input type="hidden" name="folderId" value="{$res.WPTScriptFolderId}">
@@ -111,7 +117,7 @@
                         </td>
                       </form>
                       {/if}
-                      {if hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                      {if $hasCreateDeletePermission}
                       <form action="deleteScript.php" name="deleteScript" onsubmit="return confirm('Confirm Deletion')">
                         <input type="hidden" name="id" value="{$res.Id}">
                         <input type="hidden" name="folderId" value="{$res.WPTScriptFolderId}">
@@ -120,7 +126,7 @@
                                                        src="img/delete_icon.png" value="Del"></td>
                       </form>
                       {/if}
-                      {if hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                      {if $hasCreateDeletePermission}
                       <form action="copyScript.php" name="copyScript" onsubmit="return confirm('Confirm Copy')"><input
                           type="hidden" name="id" value="{$res.Id}">
                         <td style="padding:1px"><input class="actionIcon" type="image" src="img/copy_icon.png"
@@ -137,7 +143,7 @@
                 <table width="100%" border="0">
                   <tr>
                     <td align="left" nowrap="true">
-                      {if hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_OWNER)}
+                      {if $hasOwnerPermission}
                       <form name="moveScriptsToFolderForm">
                         <input type="button" value="Move to folder" onclick="moveScriptsToFolder()">
                         <select name="folderId">
@@ -150,7 +156,7 @@
                 </table>
               </td>
               <td colspan="" align="right" style="padding:.5em;">
-                {if hasPermission("WPTScript",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+                {if $hasCreateDeletePermission}
                 <form action="editScript.php">
                   <input type="hidden" name="folderId" value="{$folderId}"> 
                   <input type="submit" value="Add New Script">
