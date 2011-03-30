@@ -105,7 +105,7 @@
                     $i++;
 
                 $remaining--;
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img src=\"{$sponsor['logo']}\" alt=\"{$sponsor['alt']}\"></a></td>";
+                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img class=\"lazy\" imgsrc=\"{$sponsor['logo']}\" src=\"{$GLOBALS['cdnPath']}/images/cleardot.gif\" alt=\"{$sponsor['alt']}\"></a></td>";
             }
             echo '</tr></table>';
             echo '</div>';
