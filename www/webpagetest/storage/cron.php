@@ -5,7 +5,7 @@ require_once('common.inc');
 
 // Set the max age of a test result since last access to 1 week
 $maxAllowedAge = 7 * 24 * 60 * 60;
-CronProcess('./results', $maxAllowedAge);
+CronProcess('./results/', $maxAllowedAge);
 
 
 function CronProcess($path, $maxAllowedAge)
@@ -13,9 +13,9 @@ function CronProcess($path, $maxAllowedAge)
     $file = $path . 'testinfo.ini';
     if( is_file($file) )
     {
-        if( gz_is_file("$path/testinfo.json") )
+        if( gz_is_file($path . 'testinfo.json') )
         {
-            $testInfo = json_decode(gz_file_get_contents("$path/testinfo.json"), true);
+            $testInfo = json_decode(gz_file_get_contents($path . 'testinfo.json'), true);
             if( isset($testInfo['archived']) )
             {        
                 $currentTime = time();
@@ -37,6 +37,10 @@ function CronProcess($path, $maxAllowedAge)
                     require_once('storage/storage.inc');
                     $id = $info['test']['id'];
                     StoreResults($id);
+                    // StoreResults always generates zipped testinfo.json. We
+                    // delete the unzipped version if there is here.
+                    if( is_file($path . 'testinfo.json') )
+                        unlink($path . 'testinfo.json');
                     echo "test $id is uploaded.\r\n";
                 }
             }
