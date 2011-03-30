@@ -55,6 +55,7 @@ Results::Results(TestState& test_state, Requests& requests,
   , _sockets(sockets)
   , _screen_capture(screen_capture) {
   _file_base = shared_results_file_base;
+  ATLTRACE(_T("[wpthook] - Results base file: %s"), (LPCTSTR)_file_base);
 }
 
 /*-----------------------------------------------------------------------------

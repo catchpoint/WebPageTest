@@ -27,6 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "wpt_test.h"
+#include <ShlObj.h>
+#include "util.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -38,7 +41,10 @@ WptTest::WptTest(void) {
     PathAppend(path, _T("webpagetest"));
     CreateDirectory(path, NULL);
     _directory = path;
-    DeleteDirectory(_directory, false);
+
+    lstrcat(path, _T("_data"));
+    CreateDirectory(path, NULL);
+    _test_file = CString(path) + _T("\\test.dat");
   }
 
   Reset();
@@ -73,9 +79,6 @@ void WptTest::Reset(void) {
   _script.Empty();
   _run = 0;
   _clear_cache = true;
-
-  if (_directory.GetLength() )
-    DeleteDirectory(_directory, false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -83,6 +86,8 @@ void WptTest::Reset(void) {
 -----------------------------------------------------------------------------*/
 bool WptTest::Load(CString& test) {
   bool ret = false;
+
+  ATLTRACE(_T("WptTest::Load()\n"));
 
   Reset();
 
@@ -138,6 +143,8 @@ bool WptTest::Load(CString& test) {
 
     line = test.Tokenize(_T("\r\n"), linePos);
   }
+
+  ATLTRACE(_T("WptTest::Load() - Loaded test %s\n"), (LPCTSTR)_id);
 
   if( _id.GetLength() )
     ret = true;
@@ -235,62 +242,12 @@ CStringA WptTest::JSONEscape(CString src) {
   return dest;
 }
 
-bool WptTest::SetFileBase() {
-  bool ret = false;
-  if (_directory.GetLength() ) {
-      // set up the base file name for results files for this run
-    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
-    if (!_clear_cache)
-      _file_base += _T("_Cached");
-    SetResultsFileBase(_file_base);
-    ret = true;
-  }
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  We are starting a new run, build up the script for the browser to execute
------------------------------------------------------------------------------*/
-bool WptTest::Start(BrowserSettings * browser) {
-  bool ret = false;
-
-  if (!_test_type.CompareNoCase(_T("traceroute"))) {
-    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
-    ret = true;
-  } else {
-    // build up a new script
-    _script_commands.RemoveAll();
-    
-    if (_directory.GetLength()) {
-      // TODO: We are doing this twice. Need to fix this.
-      SetFileBase();
-
-      // pass settings on to the hook dll
-      SetForceDocComplete(_doc_complete);
-      SetClearedCache(_clear_cache);
-      SetCaptureVideo(_video);
-
-      // just support URL navigating right now
-      if (_url.GetLength()) {
-        ScriptCommand command;
-        command.command = _T("navigate");
-        command.target = _url;
-        command.record = true;
-
-        _script_commands.AddTail(command);
-
-        ret = true;
-      }
-    }
-  }
-
-  return ret;
-}
-
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = true;
+
+  ATLTRACE(_T("[wpthook] - WptTest::GetNextTask\n"));
 
   if (!_script_commands.IsEmpty()) {
     ScriptCommand command = _script_commands.RemoveHead();
@@ -328,3 +285,4 @@ CStringA WptTest::EncodeTask(CString action, CString target, CString value) {
   json += _T("}");
   return json;
 }
+

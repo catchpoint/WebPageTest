@@ -51,14 +51,12 @@ public:
 class WptTest {
 public:
   WptTest(void);
-  ~WptTest(void);
+  virtual ~WptTest(void);
 
   void  Reset(void);
-  bool  Load(CString& test);
+  virtual bool  Load(CString& test);
   CStringA ToJSON();
 
-  bool  Start(BrowserSettings * browser);
-  bool  SetFileBase();
   bool  GetNextTask(CStringA& task, bool& record);
 
   // overall test settings
@@ -82,12 +80,13 @@ public:
   CString _browser;
   CString _basic_auth;
   CString _script;
+  CString _test_file;
   
   // current state
   int     _run;
   bool    _clear_cache;
 
-private:
+protected:
   CStringA JSONEscape(CString src);
   CStringA EncodeTask(CString action, CString target, CString value);
 

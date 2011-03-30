@@ -45,13 +45,15 @@ WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
   ,_test_state(shared_test_timeout, shared_test_force_on_load, _results,
-                _screen_capture)
+                _screen_capture, _test)
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns)
   ,_results(_test_state, _requests, _sockets, _screen_capture)
-  ,_dns(_test_state) {
+  ,_dns(_test_state)
+  ,_done(false)
+  ,_test_server(*this, _test) {
   _file_base = shared_results_file_base;
 }
 
@@ -62,37 +64,37 @@ WptHook::~WptHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WptHook::Start() {
+  _test_state.Start();
+  SetTimer(_message_window, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::OnLoad(DWORD load_time) {
+  _test_state.OnLoad(load_time);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::OnNavigate() {
+  _test_state.OnNavigate();
+}
+
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
   bool ret = true;
 
   switch (message){
-    case WPT_INIT:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_INIT\n"));
-        break;
-
-    case WPT_START:
-        _test_state.Start();
-        SetTimer(_message_window, TIMER_DONE, 
-                                TIMER_DONE_INTERVAL, NULL);
-        break;
-
-    case WPT_STOP:
-        ATLTRACE2(_T("[wpthook] WptHookWindowProc() - WPT_STOP\n"));
-        break;
-
-    case WPT_ON_NAVIGATE:
-        _test_state.OnNavigate();
-        break;
-
-    case WPT_ON_LOAD:
-        _test_state.OnLoad(wParam);
-        break;
-
     case WM_TIMER:
         if (_test_state.IsDone()) {
           KillTimer(_message_window, TIMER_DONE);
           _results.Save();
-          _driver.Done();
+          _done = true;
+          if (_test_state._frame_window)
+            ::PostMessage(_test_state._frame_window,WM_CLOSE,0,0);
         }
 
     default:
@@ -139,8 +141,8 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 void WptHook::BackgroundThread() {
   ATLTRACE2(_T("[wpthook] BackgroundThread()\n"));
 
-  // connect to the server
-  _driver.Connect();
+  _test.LoadFromFile();
+  _test_server.Start();
 
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;
@@ -153,11 +155,9 @@ void WptHook::BackgroundThread() {
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, global_dll_handle, NULL);
     if (_message_window) {
-      PostMessage( _message_window, WPT_INIT, 0, 0);
-
       MSG msg;
       BOOL bRet;
-      while ((bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
+      while (!_done && (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
         if (bRet != -1) {
           TranslateMessage(&msg);
           DispatchMessage(&msg);
@@ -165,4 +165,6 @@ void WptHook::BackgroundThread() {
       }
     }
   }
+
+  _test_server.Stop();
 }

@@ -22,16 +22,7 @@
     <ClCompile Include="wpt_test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mongoose\mongoose.c">
-      <Filter>Third-Party\Mongoose</Filter>
-    </ClCompile>
-    <ClCompile Include="test_server.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="web_browser.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wpt_hook.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="util.cc">
@@ -100,6 +91,9 @@
     <ClCompile Include="winpcap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wpt_test_driver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -129,16 +123,7 @@
     <ClInclude Include="wpt_status.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mongoose\mongoose.h">
-      <Filter>Third-Party\Mongoose</Filter>
-    </ClInclude>
-    <ClInclude Include="test_server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="web_browser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="wpt_hook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="util.h">
@@ -207,6 +192,9 @@
     <ClInclude Include="winpcap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="wpt_test_driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="small.ico">
@@ -232,10 +220,6 @@
     </Filter>
     <Filter Include="Third-Party">
       <UniqueIdentifier>{1a451f93-d49f-4b58-945e-6529be20f380}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Third-Party\Mongoose">
-      <UniqueIdentifier>{125b41e4-afde-4179-98f4-e817e40ab6ef}</UniqueIdentifier>
-      <ParseFiles>true</ParseFiles>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{ed1face4-e056-4fc9-a4c0-70e27b58510e}</UniqueIdentifier>

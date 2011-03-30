@@ -82,7 +82,7 @@ WebPagetest::~WebPagetest(void) {
 /*-----------------------------------------------------------------------------
   Fetch a test from the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::GetTest(WptTest& test) {
+bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
   // build the url for the request
@@ -112,7 +112,7 @@ bool WebPagetest::GetTest(WptTest& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadIncrementalResults(WptTest& test) {
+bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
   ret = UploadImages(test);
@@ -126,7 +126,7 @@ bool WebPagetest::UploadIncrementalResults(WptTest& test) {
 /*-----------------------------------------------------------------------------
   Send the test result back to the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::TestDone(WptTest& test){
+bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
   ret = UploadImages(test);
@@ -139,7 +139,7 @@ bool WebPagetest::TestDone(WptTest& test){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool  WebPagetest::UploadImages(WptTest& test) {
+bool  WebPagetest::UploadImages(WptTestDriver& test) {
   bool ret = true;
 
   // upload the large binary files individually (images, tcpdump, etc)
@@ -170,7 +170,7 @@ bool  WebPagetest::UploadImages(WptTest& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadData(WptTest& test, bool done) {
+bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   bool ret = false;
 
   CString file = NO_FILE;
@@ -191,7 +191,7 @@ bool WebPagetest::UploadData(WptTest& test, bool done) {
 /*-----------------------------------------------------------------------------
   Perform a http GET operation and return the body as a string
 -----------------------------------------------------------------------------*/
-bool WebPagetest::HttpGet(CString url, WptTest& test, CString& test_string,
+bool WebPagetest::HttpGet(CString url, WptTestDriver& test, CString& test_string,
                           CString& zip_file) {
   bool result = false;
 
@@ -244,7 +244,7 @@ bool WebPagetest::HttpGet(CString url, WptTest& test, CString& test_string,
 /*-----------------------------------------------------------------------------
   Upload an individual file from a result set
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadFile(CString url, bool done, WptTest& test, 
+bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test, 
                                                                  CString file){
   bool ret = false;
 
@@ -376,7 +376,7 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
 /*-----------------------------------------------------------------------------
   Build the form data for a POST (with an optional file)
 -----------------------------------------------------------------------------*/
-bool WebPagetest::BuildFormData(WptSettings& settings, WptTest& test, 
+bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
                             bool done,
                             CString file_name, DWORD file_size,
                             CString& headers, CStringA& footer, 
@@ -492,7 +492,7 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebPagetest::ProcessZipFile(CString zip_file, WptTest& test) {
+bool WebPagetest::ProcessZipFile(CString zip_file, WptTestDriver& test) {
   bool ret = false;
 
   bool update = false;

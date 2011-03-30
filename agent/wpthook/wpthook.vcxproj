@@ -85,6 +85,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\wptdriver\wpt_test.h" />
     <ClInclude Include="cximage\stdint.h" />
     <ClInclude Include="cximage\xfile.h" />
     <ClInclude Include="cximage\ximabmp.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="jpeg\jpeglib.h" />
     <ClInclude Include="jpeg\jversion.h" />
     <ClInclude Include="jpeg\transupp.h" />
+    <ClInclude Include="mongoose\mongoose.h" />
     <ClInclude Include="NCodeHook\NCodeHook.h" />
     <ClInclude Include="NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="NCodeHook\NCodeHookItem.h" />
@@ -145,6 +147,7 @@
     <ClInclude Include="shared_mem.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="test_server.h" />
     <ClInclude Include="test_state.h" />
     <ClInclude Include="track_dns.h" />
     <ClInclude Include="track_sockets.h" />
@@ -152,10 +155,11 @@
     <ClInclude Include="wpthook.h" />
     <ClInclude Include="hook_winsock.h" />
     <ClInclude Include="wpthook_dll.h" />
-    <ClInclude Include="wpt_driver.h" />
+    <ClInclude Include="wpt_test_hook.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\wptdriver\util.cc" />
+    <ClCompile Include="..\wptdriver\wpt_test.cc" />
     <ClCompile Include="cximage\tif_xfile.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -758,6 +762,10 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;WPTHOOK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;WPTHOOK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="mongoose\mongoose.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="NCodeHook\NCodeHook.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -775,12 +783,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="test_server.cc" />
     <ClCompile Include="test_state.cc" />
     <ClCompile Include="track_dns.cc" />
     <ClCompile Include="track_sockets.cc" />
     <ClCompile Include="wpthook.cc" />
     <ClCompile Include="hook_winsock.cc" />
-    <ClCompile Include="wpt_driver.cc" />
+    <ClCompile Include="wpt_test_hook.cc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wpthook.rc" />

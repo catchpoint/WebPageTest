@@ -32,22 +32,19 @@ class BrowserSettings;
 
 class WebBrowser {
 public:
-  WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status, 
-              WptHook& hook, BrowserSettings& browser);
+  WebBrowser(WptSettings& settings, WptTestDriver& test, WptStatus &status, 
+              BrowserSettings& browser);
   ~WebBrowser(void);
 
   bool RunAndWait();
-  bool Close();
   void ClearCache();
-  void PositionWindow();
 
 private:
   void InjectDll();
 
-  WptSettings&  _settings;
-  WptTest&      _test;
-  WptStatus&    _status;
-  WptHook&      _hook;
+  WptSettings&    _settings;
+  WptTestDriver&  _test;
+  WptStatus&      _status;
   BrowserSettings& _browser;
 
   HANDLE        _browser_process;

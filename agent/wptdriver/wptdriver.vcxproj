@@ -110,22 +110,20 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
     <ClInclude Include="ipfw.h" />
     <ClInclude Include="ipfw_int.h" />
     <ClInclude Include="log.h" />
-    <ClInclude Include="mongoose\mongoose.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="test_server.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="traceroute.h" />
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
     <ClInclude Include="winpcap.h" />
     <ClInclude Include="wptdriver.h" />
-    <ClInclude Include="wpt_hook.h" />
     <ClInclude Include="wpt_driver_core.h" />
     <ClInclude Include="wpt_settings.h" />
     <ClInclude Include="wpt_status.h" />
     <ClInclude Include="wpt_test.h" />
+    <ClInclude Include="wpt_test_driver.h" />
     <ClInclude Include="zlib\contrib\minizip\crypt.h" />
     <ClInclude Include="zlib\contrib\minizip\ioapi.h" />
     <ClInclude Include="zlib\contrib\minizip\iowin32.h" />
@@ -146,26 +144,21 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
   <ItemGroup>
     <ClCompile Include="ipfw.cc" />
     <ClCompile Include="log.cc" />
-    <ClCompile Include="mongoose\mongoose.c">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="test_server.cc" />
     <ClCompile Include="util.cc" />
     <ClCompile Include="traceroute.cpp" />
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
     <ClCompile Include="winpcap.cpp" />
     <ClCompile Include="wptdriver.cc" />
-    <ClCompile Include="wpt_hook.cc" />
     <ClCompile Include="wpt_driver_core.cc" />
     <ClCompile Include="wpt_settings.cc" />
     <ClCompile Include="wpt_status.cc" />
     <ClCompile Include="wpt_test.cc" />
+    <ClCompile Include="wpt_test_driver.cc" />
     <ClCompile Include="zlib\adler32.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>

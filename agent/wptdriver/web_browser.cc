@@ -32,13 +32,12 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WebBrowser::WebBrowser(WptSettings& settings, WptTest& test, WptStatus &status,
-                        WptHook& hook, BrowserSettings& browser):
+WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
+                        WptStatus &status, BrowserSettings& browser):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
-  ,_hook(hook)
   ,_browser(browser) {
 
   InitializeCriticalSection(&cs);
@@ -55,7 +54,7 @@ WebBrowser::~WebBrowser(void) {
 bool WebBrowser::RunAndWait() {
   bool ret = false;
 
-  if (_test.Start(&_browser)) {
+  if (_test.Start()) {
     if (_browser._exe.GetLength()) {
       HMODULE hook_dll = NULL;
       TCHAR cmdLine[4096];
@@ -111,8 +110,6 @@ bool WebBrowser::RunAndWait() {
 
       // kill the browser if it is still running
       EnterCriticalSection(&cs);
-      _hook.Disconnect();
-
       if (_browser_process) {
         DWORD exit_code;
         if( GetExitCodeProcess(_browser_process, &exit_code) == STILL_ACTIVE )
@@ -132,45 +129,8 @@ bool WebBrowser::RunAndWait() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::Close(){
-  bool ret = false;
-
-  EnterCriticalSection(&cs);
-
-  // send close messages to all of the top-level windows associated with the
-  // browser process
-  if (_browser_process) {
-    DWORD browser_process_id = GetProcessId(_browser_process);
-    HWND frame_window, document_window;
-    if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {
-      ::PostMessage(frame_window,WM_CLOSE,0,0);
-    }
-  }
-  LeaveCriticalSection(&cs);
-
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 void WebBrowser::ClearCache() {
   if (_browser._cache.GetLength()) {
     DeleteDirectory(_browser._cache, false);
   }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WebBrowser::PositionWindow() {
-  EnterCriticalSection(&cs);
-  if (_browser_process) {
-    DWORD browser_process_id = GetProcessId(_browser_process);
-    HWND frame_window, document_window;
-    if (FindBrowserWindow(browser_process_id, frame_window, document_window)) {
-      ::ShowWindow(frame_window, SW_RESTORE);
-      ::SetWindowPos(frame_window, HWND_TOPMOST, 0, 0, 1024, 768, 
-                      SWP_NOACTIVATE);
-    }
-  }
-  LeaveCriticalSection(&cs);
 }

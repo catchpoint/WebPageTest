@@ -55,11 +55,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // shared internal includes
 #include "wpt_status.h"
 #include "wpt_settings.h"
-#include "wpt_test.h"
+#include "wpt_test_driver.h"
 #include "webpagetest.h"
-#include "wpt_hook.h"
 #include "web_browser.h"
-#include "test_server.h"
 #include "TraceRoute.h"
 #include "WinPCap.h"
 #include "util.h"

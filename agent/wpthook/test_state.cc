@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wptdriver/util.h"
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
+#include "wpt_test_hook.h"
 
 static const DWORD ACTIVITY_TIMEOUT = 2000;
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
@@ -45,7 +46,7 @@ static const DWORD MS_IN_SEC = 1000;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(int test_timeout, bool end_on_load, Results& results,
-                      ScreenCapture& screen_capture):
+                      ScreenCapture& screen_capture, WptTestHook &test):
   _test_timeout(test_timeout)
   ,_active(false)
   ,_timeout(false)
@@ -68,7 +69,8 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   ,_exit(false)
   ,_data_timer(NULL)
   ,_last_data_ms(0)
-  ,_video_capture_count(0) {
+  ,_video_capture_count(0)
+  ,_test(test) {
   _start.QuadPart = 0;
   _on_load.QuadPart = 0;
   _render_start.QuadPart = 0;
@@ -121,6 +123,11 @@ void TestState::Start() {
   _current_document = _next_document;
   _next_document++;
   FindBrowserWindow();  // the document window may not be available yet
+
+  // position the browser window
+  ::ShowWindow(_frame_window, SW_RESTORE);
+  ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
+
   _exit = false;
   ResetEvent(_check_render_event);
   _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
@@ -164,8 +171,11 @@ void TestState::OnLoad(DWORD load_time) {
     if (load_time)
       _on_load.QuadPart = _start.QuadPart + 
                           (_ms_frequency.QuadPart * load_time);
-    else
+    else {
       QueryPerformanceCounter(&_on_load);
+      _screen_capture.Capture(_document_window, 
+                                    CapturedImage::DOCUMENT_COMPLETE);
+    }
     _current_document = 0;
   }
 }
@@ -260,7 +270,7 @@ void TestState::FindBrowserWindow(void) {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && shared_capture_video) {
+  if (_active && _document_window && _test._video) {
     if (force || (_screen_updated && _render_start.QuadPart)) {
       // use a falloff on the resolution with which we capture video
       bool grab_video = false;

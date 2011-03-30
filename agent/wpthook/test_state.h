@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Results;
 class ScreenCapture;
+class WptTestHook;
 
 class CProgressData {
 public:
@@ -53,7 +54,7 @@ public:
 class TestState {
 public:
   TestState(int test_timeout, bool end_on_load, Results& results,
-            ScreenCapture& screen_capture);
+            ScreenCapture& screen_capture, WptTestHook &test);
   ~TestState(void);
 
   void Start();
@@ -89,6 +90,8 @@ public:
   HWND  _frame_window;
   HWND  _document_window;
   bool  _screen_updated;
+
+  WptTestHook& _test;
   
   // CPU, memory and BwIn information.
   CAtlList<CProgressData> _progress_data;

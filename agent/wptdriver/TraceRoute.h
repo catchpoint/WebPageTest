@@ -30,12 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class CTraceRoute {
 public:
-  CTraceRoute(WptTest &test, int maxHops = 30, DWORD timeout = 1000);
+  CTraceRoute(WptTestDriver &test, int maxHops = 30, DWORD timeout = 1000);
   ~CTraceRoute(void);
   void Run();
 
 private:
-  WptTest& _test;
+  WptTestDriver& _test;
   int _maxHops;
   DWORD _timeout;
 };

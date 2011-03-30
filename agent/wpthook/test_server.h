@@ -28,23 +28,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-/******************************************************************************
-*   WptHook - For sending messages to the code hooked into the browser
-******************************************************************************/
-class WptHook {
+class WptHook;
+class WptTestHook;
+
+class TestServer
+{
 public:
-  WptHook(void);
-  ~WptHook(void);
+  TestServer(WptHook& hook, WptTestHook &test);
+  ~TestServer(void);
 
-  bool  Connect(DWORD timeout = 10000);
-  void  Disconnect();
-
-  bool Start(bool async = true);
-  bool Stop(bool async = true);
-  bool OnNavigate(bool async = true);
-  bool OnLoad(DWORD load_time, bool async = true);
+  bool Start(void);
+  void Stop(void);
+  void MongooseCallback(enum mg_event event,
+                        struct mg_connection *conn,
+                        const struct mg_request_info *request_info);
 
 private:
-  HWND  _wpthook_window;
-};
+  WptHook&          _hook;
+  struct mg_context *_mongoose_context;
+  WptTestHook&      _test;
+  CRITICAL_SECTION  cs;
 
+  void SendResponse(struct mg_connection *conn,
+                    const struct mg_request_info *request_info,
+                    DWORD response_code,
+                    CStringA response_code_string,
+                    CStringA response_data);
+  DWORD ParseLoadTime(CStringA query_string);
+};

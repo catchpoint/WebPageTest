@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CTraceRoute::CTraceRoute(WptTest &test, int maxHops, DWORD timeout):
+CTraceRoute::CTraceRoute(WptTestDriver &test, int maxHops, DWORD timeout):
   _test(test)
   , _maxHops(maxHops)
   , _timeout(timeout) {

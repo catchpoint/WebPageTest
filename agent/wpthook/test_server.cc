@@ -28,7 +28,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "test_server.h"
+#include "wpthook.h"
+#include "wpt_test_hook.h"
 #include "mongoose/mongoose.h"
+#include "wpt_test_hook.h"
 
 static TestServer * _global_test_server = NULL;
 
@@ -45,14 +48,10 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestServer::TestServer(WptSettings &settings, WptStatus &status, 
-  WptHook& hook):
+TestServer::TestServer(WptHook& hook, WptTestHook &test):
   _mongoose_context(NULL)
-  ,_settings(settings)
-  ,_status(status)
   ,_hook(hook)
-  ,_test(NULL)
-  ,_browser(NULL){
+  ,_test(test) {
   InitializeCriticalSection(&cs);
 }
 
@@ -109,22 +108,6 @@ void TestServer::Stop(void){
 }
 
 /*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestServer::SetTest(WptTest * test){
-  EnterCriticalSection(&cs);
-  _test = test;
-  LeaveCriticalSection(&cs);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestServer::SetBrowser(WebBrowser * browser){
-  EnterCriticalSection(&cs);
-  _browser = browser;
-  LeaveCriticalSection(&cs);
-}
-
-/*-----------------------------------------------------------------------------
   We received a request that we need to respond to
 -----------------------------------------------------------------------------*/
 void TestServer::MongooseCallback(enum mg_event event,
@@ -138,35 +121,20 @@ void TestServer::MongooseCallback(enum mg_event event,
     ATLTRACE(_T("[wptdriver] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string));
     if (strcmp(request_info->uri, "/get_test") == 0) {
-      if (_test){
-        _status.Set(_T("Running test in browser..."));
-        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
-                    _test->ToJSON());
-      }else{
-        SendResponse(conn, request_info, RESPONSE_ERROR_NO_TEST, 
-                    RESPONSE_ERROR_NO_TEST_STR, "");
-      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
+                  _test.ToJSON());
     } else if (strcmp(request_info->uri, "/task") == 0) {
-      if (_test){
-        CStringA task;
-        if (_browser)
-          _browser->PositionWindow();
-        bool record = false;
-        _test->GetNextTask(task, record);
-        if (record)
-          _hook.Start(false);
-        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
-      }else{
-        SendResponse(conn, request_info, RESPONSE_ERROR_NO_TEST, 
-                    RESPONSE_ERROR_NO_TEST_STR, "");
-      }
+      CStringA task;
+      bool record = false;
+      _test.GetNextTask(task, record);
+      if (record)
+        _hook.Start();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
-      _status.Set(_T("onLoad - waiting for test to complete..."));
       DWORD load_time = ParseLoadTime(request_info->query_string);
       _hook.OnLoad(load_time);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
-      _status.Set(_T("onNavigate - waiting for test to complete..."));
       _hook.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {

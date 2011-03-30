@@ -29,13 +29,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "hook_winsock.h"
 #include "hook_gdi.h"
-#include "wpt_driver.h"
 #include "requests.h"
 #include "track_dns.h"
 #include "track_sockets.h"
 #include "test_state.h"
 #include "results.h"
 #include "screen_capture.h"
+#include "test_server.h"
+#include "wpt_test_hook.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
 
@@ -48,13 +49,18 @@ public:
   void BackgroundThread();
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
+  // extension actions
+  void Start();
+  void OnLoad(DWORD load_time);
+  void OnNavigate();
+
 private:
   CGDIHook  _gdi_hook;
   CWsHook   _winsock_hook;
   HANDLE    _background_thread;
   HWND      _message_window;
-  WptDriver _driver;
   CString   _file_base;
+  bool      _done;
 
   // winsock event tracking
   TrackDns      _dns;
@@ -64,4 +70,6 @@ private:
   TestState     _test_state;
   Results       _results;
   ScreenCapture _screen_capture;
+  TestServer    _test_server;
+  WptTestHook   _test;
 };

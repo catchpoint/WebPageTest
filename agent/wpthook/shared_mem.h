@@ -35,4 +35,4 @@ extern WCHAR  shared_results_file_base[MAX_PATH];
 extern DWORD  shared_test_timeout;
 extern bool   shared_test_force_on_load;
 extern bool   shared_cleared_cache;
-extern bool   shared_capture_video;
+extern DWORD  shared_current_run;

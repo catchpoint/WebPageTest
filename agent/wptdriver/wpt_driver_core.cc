@@ -28,8 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "wpt_driver_core.h"
-#include "mongoose/mongoose.h"
-#include "../wpthook/window_messages.h"
 #include "zlib/contrib/minizip/unzip.h"
 
 const int pipeIn = 1;
@@ -43,14 +41,10 @@ extern HINSTANCE hInst;
 WptDriverCore::WptDriverCore(WptStatus &status):
   _status(status)
   ,_webpagetest(_settings, _status)
-  ,_test_server(_settings, _status, _hook)
   ,_browser(NULL)
   ,_exit(false)
-  ,_work_thread(NULL)
-  ,_message_thread(NULL)
-  ,_message_window(NULL){
+  ,_work_thread(NULL) {
   global_core = this;
-  InitializeCriticalSection(&cs);
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 }
 
@@ -59,7 +53,6 @@ WptDriverCore::WptDriverCore(WptStatus &status):
 -----------------------------------------------------------------------------*/
 WptDriverCore::~WptDriverCore(void) {
   global_core = NULL;
-  DeleteCriticalSection(&cs);
   CloseHandle(_testing_mutex);
 }
 
@@ -75,17 +68,6 @@ static unsigned __stdcall WorkThreadProc(void* arg) {
 }
 
 /*-----------------------------------------------------------------------------
-  Stub entry point for the background message thread
------------------------------------------------------------------------------*/
-static unsigned __stdcall MessageThreadProc(void* arg) {
-  WptDriverCore * core = (WptDriverCore *)arg;
-  if( core )
-    core->MessageThread();
-    
-  return 0;
-}
-
-/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
@@ -96,8 +78,6 @@ void WptDriverCore::Start(void){
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
     // start a background thread to do all of the actual test management
-    _message_thread = (HANDLE)_beginthreadex(0, 0, ::MessageThreadProc, this, 
-                                              0, 0);
     _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
   }else{
     _status.Set(_T("Error loading settings from wptdriver.ini"));
@@ -116,13 +96,6 @@ void WptDriverCore::Stop(void) {
     CloseHandle(_work_thread);
     _work_thread = NULL;
   }
-  if (_message_thread) {
-    if (_message_window)
-      PostMessage(_message_window, WM_QUIT, 0, 0);
-    WaitForSingleObject(_message_thread, EXIT_TIMEOUT);
-    CloseHandle(_message_thread);
-    _message_thread = NULL;
-  }
 
   _status.Set(_T("Exiting..."));
 }
@@ -133,14 +106,12 @@ void WptDriverCore::Stop(void) {
 void WptDriverCore::WorkThread(void) {
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
   Init();  // do initialization and machine configuration
-  _status.Set(_T("Starting Web Server..."));
-  _test_server.Start();
   _status.Set(_T("Running..."));
   while( !_exit ){
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for work..."));
 
-    WptTest test;
+    WptTestDriver test;
     if( _webpagetest.GetTest(test) ){
       if( !test._test_type.CompareNoCase(_T("traceroute")) )
       {
@@ -160,26 +131,19 @@ void WptDriverCore::WorkThread(void) {
         }
       }    
       else if (ConfigureIpfw(test)) {
-        _status.Set(_T("Launching browser..."));   
-        EnterCriticalSection(&cs);
-        _browser = new WebBrowser(_settings, test, _status, _hook, 
-                                    _settings._browser_chrome);
-
-        // configure the internal web server with information about the test
-        _test_server.SetTest(&test);
-        _test_server.SetBrowser(_browser);
-        LeaveCriticalSection(&cs);
+        _status.Set(_T("Starting test..."));   
+        WebBrowser browser(_settings, test, _status,_settings._browser_chrome);
 
         for (test._run = 1; test._run <= test._runs; test._run++){
           test.SetFileBase();
 
           // Run the first view test
           test._clear_cache = true;
-          _browser->ClearCache();
+          browser.ClearCache();
           if( test._tcpdump ) {
             winpcap.StartCapture( test._file_base + _T(".cap") );
           }
-          _browser->RunAndWait();
+          browser.RunAndWait();
           if( test._tcpdump )
             winpcap.StopCapture();
 
@@ -190,7 +154,7 @@ void WptDriverCore::WorkThread(void) {
             test._clear_cache = false;
             if( test._tcpdump )
               winpcap.StartCapture( test._file_base + _T("_Cached.cap") );
-            _browser->RunAndWait();
+            browser.RunAndWait();
             if( test._tcpdump )
               winpcap.StopCapture();
 
@@ -198,15 +162,7 @@ void WptDriverCore::WorkThread(void) {
           }
 
         }
-        _browser->ClearCache();
-
-        EnterCriticalSection(&cs);
-        _test_server.SetBrowser(NULL);
-        _test_server.SetTest(NULL);
-
-        delete _browser;
-        _browser = NULL;
-        LeaveCriticalSection(&cs);
+        browser.ClearCache();
 
         bool uploaded = false;
         for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
@@ -227,8 +183,6 @@ void WptDriverCore::WorkThread(void) {
       }
     }
   }
-
-  _test_server.Stop();
 }
 
 /*-----------------------------------------------------------------------------
@@ -288,7 +242,7 @@ void WptDriverCore::FlushDNS(void) {
 /*-----------------------------------------------------------------------------
   Set up bandwidth throttling
 -----------------------------------------------------------------------------*/
-bool WptDriverCore::ConfigureIpfw(WptTest& test) {
+bool WptDriverCore::ConfigureIpfw(WptTestDriver& test) {
   bool ret = false;
   if (test._bwIn && test._bwOut) {
     // split the latency across directions
@@ -324,70 +278,6 @@ void WptDriverCore::ResetIpfw(void) {
   _ipfw.CreatePipe(pipeOut, 0, 0, 0);
 }
 
-
-/*-----------------------------------------------------------------------------
-  WndProc for the messaging window
------------------------------------------------------------------------------*/
-static LRESULT CALLBACK WptDriverWindowProc(HWND hwnd, UINT uMsg, 
-                                               WPARAM wParam, LPARAM lParam) {
-  LRESULT ret = 0;
-  bool handled = false;
-  if (global_core)
-    handled = global_core->OnMessage(uMsg);
-  if (!handled)
-    ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Background window and thread for processing messages from the hook dll
------------------------------------------------------------------------------*/
-void WptDriverCore::MessageThread(void) {
-  // create a hidden window for processing messages from wptdriver
-  WNDCLASS wndClass;
-  memset(&wndClass, 0, sizeof(wndClass));
-  wndClass.lpszClassName = wptdriver_window_class;
-  wndClass.lpfnWndProc = WptDriverWindowProc;
-  wndClass.hInstance = hInst;
-  if (RegisterClass(&wndClass)) {
-    _message_window = CreateWindow(wptdriver_window_class, 
-                                    wptdriver_window_class, 
-                                    WS_POPUP, 0, 0, 0, 
-                                    0, NULL, NULL, hInst, NULL);
-    if (_message_window) {
-      MSG msg;
-      BOOL bRet;
-      while ((bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
-        if (bRet != -1) {
-          TranslateMessage(&msg);
-          DispatchMessage(&msg);
-        }
-      }
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-bool WptDriverCore::OnMessage(UINT message) {
-  bool ret = true;
-
-  switch (message) {
-    case WPT_HOOK_DONE:
-        ATLTRACE2(_T("[wptdriver] OnMessage() - WPT_HOOK_DONE\n"));
-        EnterCriticalSection(&cs);
-        if (_browser)
-          _browser->Close();
-        LeaveCriticalSection(&cs);
-        break;
-
-    default:
-        ret = false;
-        break;
-  }
-
-  return ret;
-}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

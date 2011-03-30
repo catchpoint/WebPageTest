@@ -31,9 +31,9 @@ class WebPagetest {
 public:
   WebPagetest(WptSettings &settings, WptStatus &status);
   ~WebPagetest(void);
-  bool GetTest(WptTest& test);
-  bool UploadIncrementalResults(WptTest& test);
-  bool TestDone(WptTest& test);
+  bool GetTest(WptTestDriver& test);
+  bool UploadIncrementalResults(WptTestDriver& test);
+  bool TestDone(WptTestDriver& test);
 
   bool _exit;
 
@@ -43,21 +43,21 @@ private:
   DWORD         _version;
   CString       _computer_name;
 
-  bool HttpGet(CString url, WptTest& test, CString& test_string, 
+  bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
                 CString& zip_file);
-  bool ParseTest(CString& test_string, WptTest& test);
+  bool ParseTest(CString& test_string, WptTestDriver& test);
   bool CrackUrl(CString url, CString &host, unsigned short &port, 
                     CString& object);
-  bool BuildFormData(WptSettings& settings, WptTest& test, 
+  bool BuildFormData(WptSettings& settings, WptTestDriver& test, 
                             bool done,
                             CString file_name, DWORD file_size,
                             CString& headers, CStringA& footer, 
                             CStringA& form_data, DWORD& content_length);
-  bool UploadFile(CString url, bool done, WptTest& test, CString file);
+  bool UploadFile(CString url, bool done, WptTestDriver& test, CString file);
   bool CompressResults(CString directory, CString zip_file);
-  bool UploadImages(WptTest& test);
-  bool UploadData(WptTest& test, bool done);
-  bool ProcessZipFile(CString zip_file, WptTest& test);
+  bool UploadImages(WptTestDriver& test);
+  bool UploadData(WptTestDriver& test, bool done);
+  bool ProcessZipFile(CString zip_file, WptTestDriver& test);
   bool InstallUpdate(CString dir);
 };
 
