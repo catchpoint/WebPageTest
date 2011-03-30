@@ -126,73 +126,11 @@ $loc = ParseLocations($locations);
                         echo '<div id="advanced_settings-container" class="hidden">';
                     }
                     ?>
-                        <ul class="input_fields">
-                            <li>
-                                <label for="connection">Connection</label>
-                                <select name="location" id="connection">
-                                    <?php
-                                    foreach( $loc['connections'] as $key => &$connection )
-                                    {
-                                        $selected = '';
-                                        if( $connection['selected'] )
-                                            $selected = 'selected';
-                                        echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
-                                    }
-                                    ?>
-                                </select>
-                                <br>
-                                <table class="configuration hidden" id="bwTable">
-                                    <tr>
-                                        <th>BW Down</th>
-                                        <th>BW Up</th>
-                                        <th>Latency</th>
-                                        <th>Packet Loss</th>
-                                    </tr>
-                                    <tr>
-                                        <?php
-                                            echo '<td class="value"><input id="bwDown" type="text" name="bwDown" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['down'] . '"> Kbps</td>';
-                                            echo '<td class="value"><input id="bwUp" type="text" name="bwUp" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['up'] . '"> Kbps</td>';
-                                            echo '<td class="value"><input id="latency" type="text" name="latency" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['latency'] . '"> ms</td>';
-                                            echo '<td class="value"><input id="plr" type="text" name="plr" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['plr'] . '"> %</td>';
-                                        ?>
-                                    </tr>
-                                </table>
-                            </li>
-                            <li>
-                                <label for="number_of_tests">
-                                    Number of Tests to Run<br>
-                                    <small>Up to <?php echo $settings['maxruns']; ?></small>
-                                </label>
-                                <?php
-                                $runs = (int)$_COOKIE["runs"];
-                                if( $runs < 1 || $runs > $settings['maxruns'] )
-                                    $runs = 1;
-                                ?>
-                                <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
-                            </li>
-                            <li>
-                                <label for="viewBoth">
-                                    Repeat View
-                                </label>
-                                <?php
-                                $fvOnly = (int)$_COOKIE["testOptions"] & 2;
-                                ?>
-                                <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
-                                <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
-                            </li>
-                            <li>
-                                <label for="keep_test_private">Keep Test Private</label>
-                                <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if( ((int)$_COOKIE["testOptions"] & 1) || $_REQUEST['hidden'] ) echo " checked=checked"; ?>>
-                            </li>
-                            <li>
-                                <label for="label">Label</label>
-                                <input type="text" name="label" id="label">
-                            </li>
-                        </ul>
 
                         <div id="test_subbox-container">
                             <ul class="ui-tabs-nav">
                                 <li><a href="#test-settings">Test Settings</a></li>
+                                <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
@@ -204,6 +142,71 @@ $loc = ParseLocations($locations);
                                 <?php } ?>
                             </ul>
                             <div id="test-settings" class="test_subbox">
+                                <ul class="input_fields">
+                                    <li>
+                                        <label for="connection">Connection</label>
+                                        <select name="location" id="connection">
+                                            <?php
+                                            foreach( $loc['connections'] as $key => &$connection )
+                                            {
+                                                $selected = '';
+                                                if( $connection['selected'] )
+                                                    $selected = 'selected';
+                                                echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
+                                            }
+                                            ?>
+                                        </select>
+                                        <br>
+                                        <table class="configuration hidden" id="bwTable">
+                                            <tr>
+                                                <th>BW Down</th>
+                                                <th>BW Up</th>
+                                                <th>Latency</th>
+                                                <th>Packet Loss</th>
+                                            </tr>
+                                            <tr>
+                                                <?php
+                                                    echo '<td class="value"><input id="bwDown" type="text" name="bwDown" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['down'] . '"> Kbps</td>';
+                                                    echo '<td class="value"><input id="bwUp" type="text" name="bwUp" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['up'] . '"> Kbps</td>';
+                                                    echo '<td class="value"><input id="latency" type="text" name="latency" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['latency'] . '"> ms</td>';
+                                                    echo '<td class="value"><input id="plr" type="text" name="plr" style="width:3em; text-align: right;" value="' . $loc['bandwidth']['plr'] . '"> %</td>';
+                                                ?>
+                                            </tr>
+                                        </table>
+                                    </li>
+                                    <li>
+                                        <label for="number_of_tests">
+                                            Number of Tests to Run<br>
+                                            <small>Up to <?php echo $settings['maxruns']; ?></small>
+                                        </label>
+                                        <?php
+                                        $runs = (int)$_COOKIE["runs"];
+                                        if( $runs < 1 || $runs > $settings['maxruns'] )
+                                            $runs = 1;
+                                        ?>
+                                        <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                    </li>
+                                    <li>
+                                        <label for="viewBoth">
+                                            Repeat View
+                                        </label>
+                                        <?php
+                                        $fvOnly = (int)$_COOKIE["testOptions"] & 2;
+                                        ?>
+                                        <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
+                                        <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
+                                    </li>
+                                    <li>
+                                        <label for="keep_test_private">Keep Test Private</label>
+                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if( ((int)$_COOKIE["testOptions"] & 1) || $_REQUEST['hidden'] ) echo " checked=checked"; ?>>
+                                    </li>
+                                    <li>
+                                        <label for="label">Label</label>
+                                        <input type="text" name="label" id="label">
+                                    </li>
+                                </ul>
+                            </div>
+                            <div id="advanced-settings" class="test_subbox">
                                 <ul class="input_fields">
                                     <li>
                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">

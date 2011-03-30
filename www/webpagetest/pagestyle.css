@@ -76,7 +76,7 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 .test_box.ui-tabs-hide {display: none;}
 
 .test_box {clear: both;padding: 20px;background-color: #292929;}
-.input_fields {overflow: hidden;margin: 0 0 10px;}
+.input_fields {overflow: hidden;margin: 0;}
 .input_fields li {overflow: hidden;margin: 0 0 20px; vertical-align: middle;}
 .test_box label {float: left;display: block;width: 150px;margin-right: 20px;line-height: 1.2em;font-weight: bold;}
 .test_box label small {font-weight: normal;}
