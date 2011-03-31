@@ -9,9 +9,15 @@ date_default_timezone_set('UTC');
 
 // constants
 define('VER_CSS', 34);          // version of the sitewide css file
-define('VER_JS', 10);            // version of the sitewide javascript file
+define('VER_JS', 11);            // version of the sitewide javascript file
 define('VER_JS_TEST', 12);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
+
+$tempDir = realpath('./tmp');
+if (!is_dir($tempDir))
+    mkdir($tempDir, 0777, true);
+$tempDir .= '/';
+define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');

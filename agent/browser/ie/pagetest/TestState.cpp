@@ -47,7 +47,6 @@ CTestState::CTestState(void):
 	,lastProcessTime(0)
 	,lastTime(0)
 	,windowUpdated(true)
-	,hBrowserWnd(NULL)
 	,imageCount(0)
 	,lastImageTime(0)
 	,lastRealTime(0)
@@ -247,10 +246,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("Check Optimizations"), checkOpt);
 					ignoreSSL = 0;
 					key.QueryDWORDValue(_T("ignoreSSL"), ignoreSSL);
-					DWORD useBitBlt = 0;
-					key.QueryDWORDValue(_T("useBitBlt"), useBitBlt);
-					if( useBitBlt )
-						forceBlit = true;
           aft = 0;
 					key.QueryDWORDValue(_T("AFT"), aft);
           aftEarlyCutoff = 25;
@@ -554,8 +549,8 @@ void CTestState::CheckComplete()
 			    end = lastRequest;
 
 		    // get a screen shot of the fully loaded page
-		    if( saveEverything && !imgFullyLoaded.IsValid())
-			    GrabScreenShot(imgFullyLoaded);
+		    if( saveEverything )
+          screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
       }
       else
       {
@@ -607,8 +602,8 @@ void CTestState::CheckComplete()
 			    }
 
 			    // get a screen shot of the fully loaded page
-			    if( saveEverything && !imgFullyLoaded.IsValid())
-				    GrabScreenShot(imgFullyLoaded);
+			    if( saveEverything )
+				    screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
 
 			    // write out any results (this will also kill the timer)
 			    FlushResults();
@@ -703,68 +698,7 @@ void CTestState::CheckDOM(void)
 			OutputDebugString(buff);
 			
 			if( saveEverything )
-				GrabScreenShot(imgDOMElement);
-		}
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Check to see if the UI started rendering yet
------------------------------------------------------------------------------*/
-void CTestState::CheckRender()
-{
-	if( !startRender )
-	{
-		// only check the last browser window opened
-		CBrowserTracker tracker = browsers.GetTail();
-		if( tracker.threadId == GetCurrentThreadId() && tracker.browser )
-		{
-			READYSTATE rs;
-			if( SUCCEEDED(tracker.browser->get_ReadyState(&rs)) && (rs == READYSTATE_INTERACTIVE || rs == READYSTATE_COMPLETE))
-			{
-				CComPtr<IDispatch> spDoc;
-				if( SUCCEEDED(tracker.browser->get_Document(&spDoc)) && spDoc )
-				{
-					CComQIPtr<IHTMLDocument2> doc = spDoc;
-					CComQIPtr<IHTMLDocument3> doc3 = spDoc;
-					CComPtr<IHTMLElement> body;
-					if( doc && SUCCEEDED(doc->get_body(&body)) )
-					{
-						CComQIPtr<IHTMLElement2> body2 = body;
-						if( body2 )
-						{
-							long width = 0;
-							long height = 0;
-							body2->get_scrollWidth(&width);
-							body2->get_scrollHeight(&height);
-							
-							CComPtr<IHTMLElement> docElement;
-							if( doc3 && SUCCEEDED(doc3->get_documentElement(&docElement)) )
-							{
-								CComQIPtr<IHTMLElement2> docElement2 = docElement;
-								if( docElement2 )
-								{
-									long w2 = 0;
-									long h2 = 0;
-									docElement2->get_scrollWidth(&w2);
-									docElement2->get_scrollHeight(&h2);
-									
-									width += w2;
-									height += h2;
-								}
-							}
-							
-							if( width && height )
-							{
-								QueryPerformanceCounter((LARGE_INTEGER *)&startRender);
-								CString buff;
-								buff.Format(_T("[Pagetest] * Render Start : %dx%d\n"), width, height);
-								OutputDebugString(buff);
-							}
-						}
-					}
-				}
-			}
+        screenCapture.Capture(hBrowserWnd, CapturedImage::DOM_ELEMENT);
 		}
 	}
 }
@@ -776,126 +710,67 @@ void CTestState::CheckWindowPainted(HWND hWnd)
 {
 	if( active && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) )
 	{
+		// grab a screen shot of the window
+    screenCapture.Lock();
+    windowUpdated = false;
 		__int64 now;
 		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+    const DWORD START_RENDER_MARGIN = 30;
 
-		CString display;
-		int i = 0;
-		while( i >= 0 && display.IsEmpty() )
-		{
-			DISPLAY_DEVICE device;
-			device.cb = sizeof(device);
-			if( EnumDisplayDevices(NULL, i, &device, 0) )
-			{
-				if( device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE )
-					display = device.DeviceName;
-				i++;
-			}
-			else
-				i = -1;
-		}
-		// grab a screen shot of the window
-		HDC hDisplay = NULL;
-		HDC hSrc = NULL;
-    if( (forceBlit || captureVideo || display.IsEmpty()) && hBrowserWnd && ::IsWindow(hBrowserWnd) )
-			hSrc = ::GetDC(hBrowserWnd);
-    else if( !display.IsEmpty() )
-			hDisplay = hSrc = CreateDC(display, display, NULL, NULL);
-		if( hSrc )
-		{
-			HDC hDC = CreateCompatibleDC(hSrc);
-			if( hDC )
-			{
-				CRect rect;
-				if( ::GetWindowRect(hBrowserWnd, rect) )
-				{
-					int w = rect.Width();
-					int h = rect.Height();
+    // grab a screen shot
+    CapturedImage captured_img(hBrowserWnd,CapturedImage::START_RENDER);
+    captured_img._capture_time.QuadPart = now;
+    CxImage img;
+    if (captured_img.Get(img) && 
+        img.GetWidth() > START_RENDER_MARGIN * 2 &&
+        img.GetHeight() > START_RENDER_MARGIN * 2) 
+    {
+      int bpp = img.GetBpp();
+      if (bpp >= 15) 
+      {
+        int height = img.GetHeight();
+        int width = img.GetWidth();
+        // 24-bit gets a fast-path where we can just compare full rows
+        if (bpp <= 24 ) 
+        {
+          DWORD row_bytes = 3 * (width - (START_RENDER_MARGIN * 2));
+          char * white = (char *)malloc(row_bytes);
+          if (white) 
+          {
+            memset(white, 0xFFFFFFFF, row_bytes);
+            for (DWORD row = START_RENDER_MARGIN; row < height - START_RENDER_MARGIN && !painted; row++) 
+            {
+              char * image_bytes = (char *)img.GetBits(row) + START_RENDER_MARGIN;
+              if (memcmp(image_bytes, white, row_bytes))
+                painted = true;
+            }
+            free (white);
+          }
+        } 
+        else 
+        {
+          for (DWORD row = START_RENDER_MARGIN; row < height - START_RENDER_MARGIN && !painted; row++) 
+          {
+            for (DWORD x = START_RENDER_MARGIN; x < width - START_RENDER_MARGIN && !painted; x++) 
+            {
+              RGBQUAD pixel = img.GetPixelColor(x, row, false);
+              if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || pixel.rgbGreen != 255)
+                painted = true;
+            }
+          }
+        }
+      }
+    }
 
-					// create an in-memory DIB
-					BITMAPINFO bi;
-					memset(&bi, 0, sizeof(bi));
-					bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-					bi.bmiHeader.biWidth = w;
-					bi.bmiHeader.biHeight = h;
-					bi.bmiHeader.biPlanes = 1;
-					bi.bmiHeader.biBitCount = 24;
-					bi.bmiHeader.biCompression = BI_RGB;
-					BYTE *pbBitmap;
-					HBITMAP hBitmap = CreateDIBSection(hDC, &bi, DIB_RGB_COLORS,(void**)&pbBitmap, NULL, 0);
-					if (hBitmap)
-					{
-						int margin = 5;		// skip the drop border
-						int rMargin = 30;	// skip the scroll bar
-						
-						HBITMAP hBitmapOld = (HBITMAP)SelectObject(hDC, hBitmap);
-						
-						BOOL ok = FALSE;
-						if( forceBlit || captureVideo )
-							ok = BitBlt(hDC, 0, 0, w, h, hSrc, 0, 0, SRCCOPY);
-						else
-							ok = ::PrintWindow(hBrowserWnd, hDC, 0);
+    if (painted) {
+			startRender = now;
+			OutputDebugString(_T("[Pagetest] * Render Start (Painted)"));
+      screenCapture._captured_images.AddTail(captured_img);
+    }
+    else
+      captured_img.Free();
 
-						if( ok )
-						{
-							// scan for any non-white pixels
-							bool found = false;
-							DWORD * row = (DWORD *)pbBitmap;
-							DWORD rowCount = (w * 3) / sizeof(DWORD);
-							DWORD rowLen = rowCount;
-							if( (w * 3) % sizeof(DWORD) )
-								rowLen++;
-							
-							// add the top and bottom margins
-							row  += margin * rowLen;
-							h -= margin * 2;
-							
-							// go through one row at a time
-							while( !found && h > 0 )
-							{
-								DWORD * p = row + ((margin * 3) / sizeof(DWORD));
-								DWORD count = rowCount - (((margin + rMargin) * 3) / sizeof(DWORD));
-
-								while( !found && count > 0 )
-								{
-									if( *p ^ 0xFFFFFFFF )
-										found = true;
-
-									count--;
-									p++;
-								}
-								
-								// on to the next row
-								h--;
-								row += rowLen;
-							}
-							
-							if( found )
-							{
-								painted = true;
-								windowUpdated = true;
-								startRender = now;
-
-								OutputDebugString(_T("[Pagetest] * Render Start (Painted)"));
-
-								// Save the screen shot (just the window is fine so we don't double-grab)
-								if( saveEverything )
-									imgStartRender.CreateFromHBITMAP(hBitmap);
-							}
-						}
-							
-						SelectObject(hDC, hBitmapOld);
-						DeleteObject(hBitmap);
-					}
-				}
-				DeleteDC(hDC);
-			}
-			
-			if( hDisplay )
-				DeleteDC(hDisplay);
-			else
-				::ReleaseDC(hBrowserWnd, hSrc);
-		}
+    screenCapture.Unlock();
 	}
 }
 
@@ -1018,7 +893,7 @@ void CTestState::StartMeasuring(void)
 		}
 
 		// move the window to the top if we are capturing video frames
-		if( (forceBlit || captureVideo) && hBrowserWnd && ::IsWindow(hBrowserWnd) )
+		if( hBrowserWnd && ::IsWindow(hBrowserWnd) )
 		{
 			::SetWindowPos(hBrowserWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 			::UpdateWindow(hBrowserWnd);
@@ -1122,7 +997,7 @@ void CTestState::BackgroundTimer(void)
 			}
 
 			bool grabImage = false;
-			if( captureVideo && windowUpdated && hBrowserWnd && IsWindow(hBrowserWnd) )
+			if( (painted || !lastImageTime) && captureVideo && windowUpdated && hBrowserWnd && IsWindow(hBrowserWnd) )
 			{
 				// see what time increment we are in
 				// we go from 0.1 second to 1 second to 5 second intervals
@@ -1139,38 +1014,14 @@ void CTestState::BackgroundTimer(void)
 
 			if( grabImage )
 			{
-				windowUpdated = false;
-
 				ATLTRACE(_T("[Pagetest] - Grabbing video frame : %d ms\n"), data.ms);
-
-				// grab a screen shot of the window
-				HDC src = GetDC(hBrowserWnd);
-				if( src )
-				{
-					HDC dc = CreateCompatibleDC(src);
-					if( dc )
-					{
-						CRect rect;
-						GetWindowRect(hBrowserWnd, &rect);
-						data.hBitmap = CreateCompatibleBitmap(src, rect.Width(), rect.Height()); 
-						if( data.hBitmap )
-						{
-							HBITMAP hOriginal = (HBITMAP)SelectObject(dc, data.hBitmap);
-							if( BitBlt(dc, 0, 0, rect.Width(), rect.Height(), src, 0, 0, SRCCOPY | CAPTUREBLT) )
-							{
-								imageCount++;
-								lastImageTime = data.ms;
-								if( !lastImageTime )
-									lastImageTime = 1;
-							}
-
-							SelectObject(dc, hOriginal);
-						}
-						DeleteDC(dc);
-					}
-					ReleaseDC(hBrowserWnd, src);
-				}
-			}
+				windowUpdated = false;
+        screenCapture.Capture(hBrowserWnd, CapturedImage::VIDEO);
+				imageCount++;
+				lastImageTime = data.ms;
+				if( !lastImageTime )
+					lastImageTime = 1;
+      }
 
 			progressData.AddTail(data);
 			lastTime = data.ms;
@@ -1179,21 +1030,3 @@ void CTestState::BackgroundTimer(void)
 
 	LeaveCriticalSection(&csBackground);
 }
-
-/*-----------------------------------------------------------------------------
-	Put a lock around when the window is being painnted so we don't get partial grabs
------------------------------------------------------------------------------*/
-void CTestState::OnBeginPaint(HWND hWnd)
-{
-//	if( hBrowserWnd && hWnd == hBrowserWnd )
-//		EnterCriticalSection(&csBackground);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void CTestState::OnEndPaint(HWND hWnd)
-{
-//	if( hBrowserWnd && hWnd == hBrowserWnd )
-//		LeaveCriticalSection(&csBackground);
-}
-

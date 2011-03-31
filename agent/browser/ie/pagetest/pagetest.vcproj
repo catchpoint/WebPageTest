@@ -248,6 +248,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\screen_capture.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\ScriptEngine.cpp"
 				>
 			</File>
@@ -363,6 +367,10 @@
 			</File>
 			<File
 				RelativePath=".\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\screen_capture.h"
 				>
 			</File>
 			<File

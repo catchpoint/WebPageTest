@@ -27,34 +27,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
-#include "ipfw.h"
 
-class WptDriverCore {
+class CxImage;
+
+class CapturedImage {
 public:
-  WptDriverCore(WptStatus &status);
-  ~WptDriverCore(void);
+  typedef enum {
+    VIDEO,
+    START_RENDER,
+    DOCUMENT_COMPLETE,
+    FULLY_LOADED,
+    DOM_ELEMENT,
+    UNKNOWN
+  } TYPE;
 
-  void Start(void);
-  void Stop(void);
-  void WorkThread(void);
+  CapturedImage();
+  CapturedImage(const CapturedImage& src){*this = src;}
+  CapturedImage(HWND wnd, TYPE type);
+  ~CapturedImage();
+  const CapturedImage& operator =(const CapturedImage& src);
+  void Free();
+  bool Get(CxImage& image);
 
-private:
-  WptSettings _settings;
-  WptStatus&  _status;
-  WebPagetest _webpagetest;
-  WebBrowser *_browser;
-  CWinPCap winpcap;
-  CIpfw       _ipfw;
-  bool        _exit;
-  HANDLE      _work_thread;
-  HANDLE      _testing_mutex;
-
-  bool ConfigureIpfw(WptTestDriver& test);
-  void ResetIpfw(void);
-  void Init(void);
-  void FlushDNS(void);
-  void ExtractZipFiles();
-  bool ExtractZipFile(CString file);
-  void DownloadSymbols(CString directory);
+  HBITMAP       _bitmap_handle;
+  LARGE_INTEGER _capture_time;
+  TYPE          _type;
 };
 
+class ScreenCapture {
+public:
+  ScreenCapture();
+  ~ScreenCapture(void);
+  void Capture(HWND wnd, CapturedImage::TYPE type);
+  bool GetImage(CapturedImage::TYPE type, CxImage& image);
+  void Lock();
+  void Unlock();
+  void Free();
+
+  CAtlList<CapturedImage> _captured_images;
+
+private:
+  CRITICAL_SECTION cs;
+};

@@ -204,6 +204,8 @@ void WptDriverCore::Init(void){
 
   // Get WinPCap ready (install it if necessary)
   winpcap.Initialize();
+
+  DownloadSymbols(_settings._browser_chrome._directory);
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();
@@ -356,4 +358,29 @@ bool WptDriverCore::ExtractZipFile(CString file) {
   }
 
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Download the debug symbols for Chrome so they will be ready when 
+  the browser needs them
+-----------------------------------------------------------------------------*/
+void WptDriverCore::DownloadSymbols(CString directory) {
+  _status.Set(_T("Downloading debug symbols..."));
+
+  ATLTRACE(_T("[wptdriver] - Downloading debug symbols in %s\n"), 
+              (LPCTSTR)directory);
+  WIN32_FIND_DATA fd;
+  HANDLE find = FindFirstFile(directory + _T("\\*.*"), &fd);
+  if (find != INVALID_HANDLE_VALUE) {
+    do {
+      if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName, _T("..")) )
+          DownloadSymbols(directory + CString(_T("\\")) + fd.cFileName);
+      } else if (!lstrcmpi(fd.cFileName, _T("chrome.dll"))) {
+        ATLTRACE(_T("[wptdriver] - Downloading debug symbols for %s\n"), 
+                  fd.cFileName);
+      }
+    } while (FindNextFile(find, &fd));
+    FindClose(find);
+  }
 }

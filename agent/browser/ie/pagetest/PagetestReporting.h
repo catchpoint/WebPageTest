@@ -130,7 +130,6 @@ public:
 	CString			cookiesFile;	// location where we should save the cookies out to
 	DWORD			saveEverything;	// Do we save out a waterfall image, reports and everything we have?
 	DWORD			captureVideo;	// do we save out the images necessary to construct a video?
-	bool			forceBlit;		// do we need to force using bitblt (IE9 doesn't support the PrintWindow method)?
 	DWORD			checkOpt;		// Do we run the optimization checks?
 	CString			somEventName;	// name for the current web test
 	MIB_TCPSTATS	tcpStatsStart;	// TCP stats at the start of the document
@@ -219,8 +218,11 @@ protected:
 private:
 	void SaveUrls(void);
 	void GetLinks(CComQIPtr<IHTMLDocument2> &doc, CAtlList<CStringA> &urls);
-	void SaveProgressImage(CxImage &img, CString file, bool resize=true);
+	void SaveProgressImage(CxImage &img, CString file, bool resize=true, BYTE quality = JPEG_DEFAULT_QUALITY);
 	void SaveStatusUpdates(CString file);
-	void PreProcessVideo();
 	void SortEvents();
+  DWORD CalculateAFT();
+  void SaveVideo(DWORD endTime);
+  bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
 };
+

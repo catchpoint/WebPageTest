@@ -317,6 +317,14 @@
 		<Filter
 			Name="Pagetest"
 			>
+			<File
+				RelativePath="..\pagetest\screen_capture.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\pagetest\screen_capture.h"
+				>
+			</File>
 			<Filter
 				Name="Source Files"
 				>

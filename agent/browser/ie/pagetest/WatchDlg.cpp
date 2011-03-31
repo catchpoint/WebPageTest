@@ -1839,7 +1839,6 @@ LRESULT CWatchDlg::OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	if( active )
 	{
 		CheckReadyState();
-		CheckRender();
 		CheckDOM();
 		CheckComplete();
 	}
@@ -2394,112 +2393,27 @@ bool CWatchDlg::GrabScreenShot(CxImage &img)
 		FindBrowserControl(hWnd, hWnd);
 		if( hWnd && ::IsWindow(hWnd) )
 		{
-			if( (forceBlit || captureVideo) && hBrowserWnd && ::IsWindow(hBrowserWnd) )
+			HDC src = ::GetDC(hBrowserWnd);
+			if( src )
 			{
-				// grab the screen shots the same way we grab the video for consistency
-				// TODO: Instead of having 2 copies of the code just create a shared function
-				HDC src = ::GetDC(hBrowserWnd);
-				if( src )
+				HDC dc = CreateCompatibleDC(src);
+				if( dc )
 				{
-					HDC dc = CreateCompatibleDC(src);
-					if( dc )
+					CRect rect;
+					::GetWindowRect(hBrowserWnd, &rect);
+					HBITMAP hBitmap = CreateCompatibleBitmap(src, rect.Width(), rect.Height()); 
+					if( hBitmap )
 					{
-						CRect rect;
-						::GetWindowRect(hBrowserWnd, &rect);
-						HBITMAP hBitmap = CreateCompatibleBitmap(src, rect.Width(), rect.Height()); 
-						if( hBitmap )
-						{
-							HBITMAP hOriginal = (HBITMAP)SelectObject(dc, hBitmap);
-							if( BitBlt(dc, 0, 0, rect.Width(), rect.Height(), src, 0, 0, SRCCOPY) )
-								img.CreateFromHBITMAP(hBitmap);
+						HBITMAP hOriginal = (HBITMAP)SelectObject(dc, hBitmap);
+						if( BitBlt(dc, 0, 0, rect.Width(), rect.Height(), src, 0, 0, SRCCOPY) )
+							img.CreateFromHBITMAP(hBitmap);
 
-							SelectObject(dc, hOriginal);
-							DeleteObject(hBitmap);
-						}
-						DeleteDC(dc);
+						SelectObject(dc, hOriginal);
+						DeleteObject(hBitmap);
 					}
-					::ReleaseDC(hBrowserWnd, src);
+					DeleteDC(dc);
 				}
-			}
-			else
-			{
-				CString display;
-				int i = 0;
-				while( i >= 0 && display.IsEmpty() )
-				{
-					DISPLAY_DEVICE device;
-					device.cb = sizeof(device);
-					if( EnumDisplayDevices(NULL, i, &device, 0) )
-					{
-						if( device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE )
-							display = device.DeviceName;
-						i++;
-					}
-					else
-						i = -1;
-				}
-				OutputDebugString(display);
-				HDC hSrc = NULL;
-				if( !display.IsEmpty() )
-					hSrc = CreateDC(display, display, NULL, NULL);
-				if( !hSrc )
-					hSrc = ::GetDC(hWnd);
-				if( hSrc )
-				{
-					HDC hDC = CreateCompatibleDC(hSrc);
-					if( hDC )
-					{
-						CRect rect;
-						if( ::GetWindowRect(hWnd, rect) )
-						{
-							// create an in-memory DIB
-							BITMAPINFO bi;
-							memset(&bi, 0, sizeof(bi));
-							bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
-							bi.bmiHeader.biWidth = rect.Width();
-							bi.bmiHeader.biHeight = rect.Height();
-							bi.bmiHeader.biPlanes = 1;
-							bi.bmiHeader.biBitCount = 24;
-							bi.bmiHeader.biCompression = BI_RGB;
-							BYTE *pbBitmap;
-							HBITMAP hBitmap = CreateDIBSection(hDC, &bi, DIB_RGB_COLORS,(void**)&pbBitmap, NULL, 0);
-							if( hBitmap )
-							{
-								HBITMAP oldBitmap = (HBITMAP)SelectObject(hDC, hBitmap);
-								
-								if( ::PrintWindow(hWnd, hDC, 0) )
-								{
-									if( img.CreateFromHBITMAP(hBitmap) )
-									{
-										ret = true;
-
-										// crop it down to just the client area
-										CRect rcClient;
-										if( ::GetClientRect(hWnd, rcClient) )
-										{
-											POINT pt;
-											pt.x = pt.y = 0;
-											if( ::ClientToScreen(hWnd, &pt) )
-											{
-												pt.x -= rect.left;
-												pt.y -= rect.top;
-												img.Crop( pt.x, pt.y, pt.x + rcClient.Width(), pt.y + rcClient.Height());
-											}
-										}
-									}
-									else
-										img.Destroy();
-								}
-									
-								SelectObject(hDC, oldBitmap);
-								DeleteObject(hBitmap);
-							}
-						}
-						DeleteDC(hDC);
-					}
-					
-					::ReleaseDC(hWnd, hSrc);
-				}
+				::ReleaseDC(hBrowserWnd, src);
 			}
 		}
 	}

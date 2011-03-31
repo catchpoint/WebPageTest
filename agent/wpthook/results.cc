@@ -177,6 +177,9 @@ void Results::SaveVideo(void) {
       delete img;
   }
 
+  if (last_image)
+    delete last_image;
+
   _screen_capture.Unlock();
 }
 

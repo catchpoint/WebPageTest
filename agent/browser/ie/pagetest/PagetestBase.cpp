@@ -46,7 +46,7 @@ CPagetestBase::CPagetestBase(void):
 	, processed(false)
 	, basePageRedirects(0)
 	, hMainWindow(NULL)
-	, hBrowserWindow(NULL)
+	, hBrowserWnd(NULL)
 	, ieMajorVer(0)
 	, ignoreSSL(0)
 {
@@ -103,29 +103,8 @@ CPagetestBase::~CPagetestBase(void)
 -----------------------------------------------------------------------------*/
 void CPagetestBase::DeleteImages(void)
 {
-	imgStartRender.Destroy();
-	imgDOMElement.Destroy();
-	imgDocComplete.Destroy();
-	imgFullyLoaded.Destroy();
-	
-	while( !imgLayoutChange.IsEmpty() )
-	{
-		CxImage * img = imgLayoutChange.RemoveHead();
-		if( img )
-			delete img;
-	}
-
-	EnterCriticalSection(&csBackground);
-	while( !progressData.IsEmpty() )
-	{
-		CProgressData data = progressData.RemoveHead();
-		if( data.img )
-			delete data.img;
-
-		if( data.hBitmap )
-			DeleteObject(data.hBitmap);
-	}
-	LeaveCriticalSection(&csBackground);
+  screenCapture.Free();
+  progressData.RemoveAll();
 }
 
 /*-----------------------------------------------------------------------------

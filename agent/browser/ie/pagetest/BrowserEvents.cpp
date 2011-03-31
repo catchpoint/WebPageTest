@@ -193,7 +193,7 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 
 		// grab a screen shot of the document complete event
 		if( saveEverything )
-			GrabScreenShot(imgDocComplete);
+      screenCapture.Capture(hBrowserWnd, CapturedImage::DOCUMENT_COMPLETE);
 
 		// update the waterfall
 		RepaintWaterfall();

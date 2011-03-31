@@ -80,7 +80,7 @@ void CPageTestExeView::OnInitialUpdate()
 	if( dlg )
 	{
 		dlg->hMainWindow = *(AfxGetApp()->m_pMainWnd);
-		dlg->hBrowserWindow = m_hWnd;
+		dlg->hBrowserWnd = m_hWnd;
 		
 		if( m_pBrowserApp )
 			dlg->AddBrowser(m_pBrowserApp);

@@ -66,7 +66,6 @@ CPagetestReporting::CPagetestReporting(void):
 	, includeObjectData(1)
 	, saveEverything(0)
 	, captureVideo(0)
-	, forceBlit(false)
 	, screenShotErrors(0)
 	, checkOpt(1)
 	, totalFlagged(0)
@@ -113,22 +112,6 @@ CPagetestReporting::CPagetestReporting(void):
 			}
 
 			free( pVersion );
-		}
-	}
-
-	// see if we need to use BitBlt for screen grabs (IE9 doesn't work with PrintWindow)
-	// TODO: figure out a better way to get screen captures for IE9
-	CRegKey key;
-	if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
-	{
-		TCHAR buff[1024];
-		ULONG len;
-		len = _countof(buff);
-		if( SUCCEEDED(key.QueryStringValue(_T("Version"), buff, &len)) )
-		{
-			DWORD ver = _ttol(buff);
-			if( ver >= 9 )
-				forceBlit = true;
 		}
 	}
 }
@@ -309,10 +292,6 @@ void CPagetestReporting::FlushResults(void)
 				{
 					ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Generating Lab Report\n"));
 
-					// save a screen shot if it was an error
-					if( screenShotErrors && errorCode && errorCode != 99999 )
-						SaveProgressImage(imgFullyLoaded, logFile + CString(_T("_")) + guid + _T(".jpg"), false);
-
 					DWORD msDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
 					DWORD msDone = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
 					DWORD msRender = (DWORD)(tmStartRender * 1000.0);
@@ -328,12 +307,17 @@ void CPagetestReporting::FlushResults(void)
 						ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Images\n"));
 							
 						// write out the screen shot
-						SaveProgressImage(imgFullyLoaded, logFile+step+_T("_screen.jpg"), false);
+            CxImage image;
+            if( screenCapture.GetImage(CapturedImage::FULLY_LOADED, image) )
+						  SaveProgressImage(image, logFile+step+_T("_screen.jpg"), false);
 						
 						// save out the other screen shots we have gathered
-						SaveProgressImage(imgStartRender, logFile+step+_T("_screen_render.jpg"));
-						SaveProgressImage(imgDOMElement, logFile+step+_T("_screen_dom.jpg"));
-						SaveProgressImage(imgDocComplete, logFile+step+_T("_screen_doc.jpg"));
+            if( screenCapture.GetImage(CapturedImage::START_RENDER, image) )
+						  SaveProgressImage(image, logFile+step+_T("_screen_render.jpg"));
+            if( screenCapture.GetImage(CapturedImage::DOM_ELEMENT, image) )
+						  SaveProgressImage(image, logFile+step+_T("_screen_dom.jpg"));
+            if( screenCapture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image) )
+						  SaveProgressImage(image, logFile+step+_T("_screen_doc.jpg"));
 
 						ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Reports\n"));
 						
@@ -383,51 +367,14 @@ void CPagetestReporting::FlushResults(void)
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
 						SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
-						// save out the progress data (and video imaages)
-						// pre-process the video images (make sure they are all the correct sizes
-            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Processing video\n"));
-						PreProcessVideo();
-
-            // calculate the above-the-fold time
             if( aft )
             {
-              ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Calculating AFT\n"));
-              CAFT aftEngine(aftMinChanges, aftEarlyCutoff);
-              aftEngine.SetCrop(0, 12, 12, 0);
-
-		          POSITION pos = progressData.GetHeadPosition();
-              DWORD msLast = 0;
-		          while( pos )
-		          {
-			          CProgressData data = progressData.GetNext(pos);
-			          if( data.img )
-                {
-                  // see if we need to insert one of the static grabs before the next video frame
-                  if( msRender > msLast && msRender <= data.ms )
-                    aftEngine.AddImage( &imgStartRender, msRender );
-                  if( msDoc > msLast && msDoc <= data.ms )
-                    aftEngine.AddImage( &imgDocComplete, msDoc );
-                  if( msDone > msLast && msDone <= data.ms )
-                    aftEngine.AddImage( &imgFullyLoaded, msDone );
-
-                  aftEngine.AddImage( data.img, data.ms );
-                  msLast = data.ms;
-                }
-              }
-
-              // see if we need to tack the event frames on the end
-              if( msDoc > msLast )
-                aftEngine.AddImage( &imgDocComplete, msDoc );
-              if( msDone > msLast )
-                aftEngine.AddImage( &imgFullyLoaded, msDone );
-
-              bool confidence;
-              msAFT = 0;
-              aftEngine.Calculate(msAFT, confidence, &imgAft);
-              imgAft.Save(logFile + _T("_aft.png"), CXIMAGE_FORMAT_PNG);
-              imgAft.Destroy();
+              msAFT = CalculateAFT();
               msVideoDone = max(msVideoDone, msAFT);
             }
+
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
+            SaveVideo(msVideoDone);
 
             // save out the progress data
 						EnterCriticalSection(&csBackground);
@@ -444,16 +391,6 @@ void CPagetestReporting::FlushResults(void)
 								CStringA buff;
 								buff.Format("%d,%d,%0.2f,%d\r\n", data.ms, data.bpsIn, data.cpu, data.mem );
 								progress += buff;
-
-								// save out the image if we have one
-								if( captureVideo && data.img )
-								{
-									buff.Format("_progress_%04d.jpg", data.ms / 100);
-									data.img->SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-									data.img->SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-									data.img->SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
-									data.img->Save(logFile+step+CA2T(buff), CXIMAGE_FORMAT_JPG);
-								}
 							}
 						}
 						LeaveCriticalSection(&csBackground);
@@ -464,53 +401,10 @@ void CPagetestReporting::FlushResults(void)
 							WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
 							CloseHandle(hFile);
 						}
-						// save out the milestone images in the progress format
-						if( captureVideo )
-						{
-							CString buff;
-							if( imgStartRender.IsValid() && msRender )
-							{
-								buff.Format(_T("_progress_%04d.jpg"), msRender / 100);
-								imgStartRender.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-								imgStartRender.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-								imgStartRender.SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
-								imgStartRender.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
-							}
-							if( imgDOMElement.IsValid() && msDom )
-							{
-								buff.Format(_T("_progress_%04d.jpg"), msDom / 100);
-								imgDOMElement.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-								imgDOMElement.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-								imgDOMElement.SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
-								imgDOMElement.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
-							}
-							if( imgDocComplete.IsValid() && msDoc )
-							{
-								buff.Format(_T("_progress_%04d.jpg"), msDoc / 100);
-								imgDocComplete.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-								imgDocComplete.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-								imgDocComplete.SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
-								imgDocComplete.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
-							}
-							if( imgFullyLoaded.IsValid() && msDone )
-							{
-								buff.Format(_T("_progress_%04d.jpg"), msDone / 100);
-								imgFullyLoaded.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-								imgFullyLoaded.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-								imgFullyLoaded.SetJpegQuality((BYTE)JPEG_VIDEO_QUALITY);
-								imgFullyLoaded.Save(logFile+step+buff, CXIMAGE_FORMAT_JPG);
-							}
-						}
           }
 
           // delete the image data
-					POSITION pos = progressData.GetHeadPosition();
-					while( pos )
-					{
-		        CProgressData data = progressData.GetNext(pos);
-		        if( data.img )
-							data.img->Destroy();
-          }
+          screenCapture.Free();
 
 					// only save the result data if we did not fail because of what looks like a network connection problem
 					if( saveEverything || !(errorCode == 0x800C0005 && nRequest == 1 && nReqOther == 1) )
@@ -3549,7 +3443,7 @@ void CPagetestReporting::SaveCookies()
 /*-----------------------------------------------------------------------------
 	Save out one of the intermediate screen shots
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resize)
+void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resize, BYTE quality)
 {
 	if( img.IsValid() )
 	{
@@ -3562,7 +3456,7 @@ void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resi
 		// save it out
 		img2.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
 		img2.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-		img2.SetJpegQuality((BYTE)JPEG_DEFAULT_QUALITY);
+		img2.SetJpegQuality(quality);
 		img2.Save(file, CXIMAGE_FORMAT_JPG);
 	}
 }
@@ -3597,174 +3491,6 @@ void CPagetestReporting::SaveStatusUpdates(CString file)
 			CloseHandle(hFile);
 		}
 	}
-}
-
-/*-----------------------------------------------------------------------------
-	Make sure all of the video frames are the same size
------------------------------------------------------------------------------*/
-void CPagetestReporting::PreProcessVideo()
-{
-	if( captureVideo )
-	{
-		// de-dupe the video frames (eliminate frames that are identical to previous frames)
-		CxImage * last = NULL;
-		CxImage * current = NULL;
-		POSITION oldPos;
-		POSITION pos = progressData.GetHeadPosition();
-		while( pos )
-		{
-			oldPos = pos;
-			CProgressData& data = progressData.GetNext(pos);
-			if( data.hBitmap )
-			{
-				data.img = new CxImage();
-				if( data.img->CreateFromHBITMAP(data.hBitmap) )
-				{
-					DeleteObject(data.hBitmap);
-					data.hBitmap = NULL;
-
-					bool match = false;
-					if( last )
-					{
-						current = data.img;
-						if( last->GetWidth() == current->GetWidth() && 
-							last->GetHeight() == current->GetHeight() &&
-							last->GetBpp() == current->GetBpp())
-						{
-							DWORD width = last->GetWidth();
-							DWORD height = last->GetHeight();
-							DWORD row = 0;
-							if( last->GetBpp() >= 15 )
-							{
-								DWORD pixelBytes = 3;
-								if( last->GetBpp() == 32 )
-									pixelBytes = 4;
-								DWORD compLen = width * pixelBytes;
-
-								// default to a match unless we find otherwise
-								match = true;
-
-								while( match && row < height )
-								{
-									BYTE * r1 = last->GetBits(row);
-									BYTE * r2 = current->GetBits(row);
-									if( r1 && r2 && memcmp(r1, r2, compLen) )
-										match = false;
-
-									row++;
-								}
-							}
-						}
-					}
-
-					if( match )
-					{
-						delete data.img;
-						data.img = NULL;
-						progressData.RemoveAt(oldPos);
-					}
-					else
-						last = data.img;
-				}
-			}
-		}
-
-		// figure out the size of the video frames
-		CPoint videoSize(0,0);
-		pos = progressData.GetHeadPosition();
-		while( pos )
-		{
-			CProgressData data = progressData.GetNext(pos);
-			if( data.img )
-			{
-				if( (long)data.img->GetWidth() > videoSize.x )
-					videoSize.x = (long)data.img->GetWidth();
-				if( (long)data.img->GetHeight() > videoSize.y )
-					videoSize.y = (long)data.img->GetHeight();
-			}
-		}
-
-		if( videoSize.x )
-		{
-			if( imgDOMElement.IsValid() && (long)imgDOMElement.GetWidth() > videoSize.x )
-			{
-				imgDOMElement.Resample2(videoSize.x, (long)(((double)imgDOMElement.GetWidth() / (double)videoSize.x) * (double)imgDOMElement.GetHeight()) );
-				if( (long)imgDOMElement.GetHeight() > videoSize.y )
-					videoSize.y = (long)imgDOMElement.GetHeight();
-			}
-			if( imgDocComplete.IsValid() && (long)imgDocComplete.GetWidth() > videoSize.x )
-			{
-				imgDocComplete.Resample2(videoSize.x, (long)(((double)imgDocComplete.GetWidth() / (double)videoSize.x) * (double)imgDocComplete.GetHeight()) );
-				if( (long)imgDocComplete.GetHeight() > videoSize.y )
-					videoSize.y = (long)imgDocComplete.GetHeight();
-			}
-			if( imgFullyLoaded.IsValid() && (long)imgFullyLoaded.GetWidth() > videoSize.x )
-			{
-				imgFullyLoaded.Resample2(videoSize.x, (long)(((double)imgFullyLoaded.GetWidth() / (double)videoSize.x) * (double)imgFullyLoaded.GetHeight()) );
-				if( (long)imgFullyLoaded.GetHeight() > videoSize.y )
-					videoSize.y = (long)imgFullyLoaded.GetHeight();
-			}
-			if( imgStartRender.IsValid() && (long)imgStartRender.GetWidth() > videoSize.x )
-			{
-				imgStartRender.Resample2(videoSize.x, (long)(((double)imgStartRender.GetWidth() / (double)videoSize.x) * (double)imgStartRender.GetHeight()) );
-				if( (long)imgStartRender.GetHeight() > videoSize.y )
-					videoSize.y = (long)imgStartRender.GetHeight();
-			}
-		}
-
-		// now that we have the correct dimensions, make all of the images the same size (pad with black)
-		if( videoSize.x && videoSize.y )
-		{
-			RGBQUAD black;
-			black.rgbRed = 0;
-			black.rgbGreen = 0;
-			black.rgbBlue = 0;
-			black.rgbReserved = 0;
-
-			pos = progressData.GetHeadPosition();
-			while( pos )
-			{
-				CProgressData data = progressData.GetNext(pos);
-				if( data.img )
-				{
-					if( (long)data.img->GetWidth() != videoSize.x || (long)data.img->GetHeight() != videoSize.y )
-						data.img->Expand(0, 0, videoSize.x - data.img->GetWidth(), videoSize.y - data.img->GetHeight(), black);
-				}
-			}
-
-			if( imgDOMElement.IsValid() && ((long)imgDOMElement.GetWidth() != videoSize.x || (long)imgDOMElement.GetHeight() != videoSize.y) )
-				imgDOMElement.Expand(0, 0, videoSize.x - imgDOMElement.GetWidth(), videoSize.y - imgDOMElement.GetHeight(), black);
-
-			if( imgDocComplete.IsValid() && ((long)imgDocComplete.GetWidth() != videoSize.x || (long)imgDocComplete.GetHeight() != videoSize.y) )
-				imgDocComplete.Expand(0, 0, videoSize.x - imgDocComplete.GetWidth(), videoSize.y - imgDocComplete.GetHeight(), black);
-
-			if( imgFullyLoaded.IsValid() && ((long)imgFullyLoaded.GetWidth() != videoSize.x || (long)imgFullyLoaded.GetHeight() != videoSize.y) )
-				imgFullyLoaded.Expand(0, 0, videoSize.x - imgFullyLoaded.GetWidth(), videoSize.y - imgFullyLoaded.GetHeight(), black);
-
-			if( imgStartRender.IsValid() && ((long)imgStartRender.GetWidth() != videoSize.x || (long)imgStartRender.GetHeight() != videoSize.y) )
-				imgStartRender.Expand(0, 0, videoSize.x - imgStartRender.GetWidth(), videoSize.y - imgStartRender.GetHeight(), black);
-    }
-
-		// and finally, now that everything is the same size, reduce everything to quarter images to save space
-		pos = progressData.GetHeadPosition();
-		while( pos )
-		{
-			CProgressData data = progressData.GetNext(pos);
-			if( data.img )
-				data.img->Resample2(data.img->GetWidth() / 2, data.img->GetHeight() / 2);
-		}
-		if( imgDOMElement.IsValid() )
-			imgDOMElement.Resample2(imgDOMElement.GetWidth() / 2, imgDOMElement.GetHeight() / 2);
-
-		if( imgDocComplete.IsValid() )
-			imgDocComplete.Resample2(imgDocComplete.GetWidth() / 2, imgDocComplete.GetHeight() / 2);
-
-		if( imgFullyLoaded.IsValid() )
-			imgFullyLoaded.Resample2(imgFullyLoaded.GetWidth() / 2, imgFullyLoaded.GetHeight() / 2);
-
-		if( imgStartRender.IsValid() )
-			imgStartRender.Resample2(imgStartRender.GetWidth() / 2, imgStartRender.GetHeight() / 2);
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -3973,3 +3699,153 @@ void CPagetestReporting::cdnLookupThread(DWORD index)
 	}
 }
 
+/*-----------------------------------------------------------------------------
+	Calculate the AFT
+-----------------------------------------------------------------------------*/
+DWORD CPagetestReporting::CalculateAFT()
+{
+  DWORD msAFT = 0;
+  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Calculating AFT\n"));
+  CAFT aftEngine(aftMinChanges, aftEarlyCutoff);
+  aftEngine.SetCrop(0, 12, 12, 0);
+
+  screenCapture.Lock();
+  CxImage * last_image = NULL;
+  CString file_name;
+  POSITION pos = screenCapture._captured_images.GetHeadPosition();
+  while (pos) 
+  {
+    CapturedImage& image = screenCapture._captured_images.GetNext(pos);
+    DWORD image_time = 0;
+    if (image._capture_time.QuadPart > start)
+      image_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
+    CxImage * img = new CxImage;
+    if (image.Get(*img)) 
+    {
+      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      if (last_image) 
+      {
+        if (ImagesAreDifferent(last_image, img)) 
+        {
+          aftEngine.AddImage( img, image_time );
+        }
+      } 
+      else 
+        aftEngine.AddImage( img, image_time );
+
+      if (last_image)
+        delete last_image;
+      last_image = img;
+    }
+    else
+      delete img;
+  }
+
+  bool confidence;
+  CxImage imgAft;
+  aftEngine.Calculate(msAFT, confidence, &imgAft);
+  imgAft.Save(logFile + _T("_aft.png"), CXIMAGE_FORMAT_PNG);
+
+  if (last_image)
+    delete last_image;
+  screenCapture.Unlock();
+
+  return msAFT;
+}
+
+/*-----------------------------------------------------------------------------
+	Save out the video
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveVideo(DWORD endTime)
+{
+  screenCapture.Lock();
+  CxImage * last_image = NULL;
+  CString file_name;
+  POSITION pos = screenCapture._captured_images.GetHeadPosition();
+  while (pos) 
+  {
+    CapturedImage& image = screenCapture._captured_images.GetNext(pos);
+    DWORD image_time = 0;
+    if (image._capture_time.QuadPart > start)
+      image_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
+
+    if (image_time <= endTime + 100) 
+    {
+      // we save the frames in increments of 100ms, round it to the closest interval
+      image_time = ((image_time + 50) / 100);
+      CxImage * img = new CxImage;
+      if (image.Get(*img)) 
+      {
+        img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+        if (last_image) 
+        {
+          if (ImagesAreDifferent(last_image, img)) {
+            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
+            SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+          }
+        } 
+        else 
+        {
+          // always save the first image at time zero
+          file_name = logFile + _T("_progress_0000.jpg");
+          SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+        }
+
+        if (last_image)
+          delete last_image;
+        last_image = img;
+      }
+      else
+        delete img;
+    }
+  }
+  if (last_image)
+    delete last_image;
+  screenCapture.Unlock();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CPagetestReporting::ImagesAreDifferent(CxImage * img1, CxImage* img2) 
+{
+  bool different = true;
+
+  if (img1 && img2 && img1->GetBpp() == img2->GetBpp())
+  {
+    // first, make them both the size of img1
+    DWORD width = img1->GetWidth();
+    DWORD height = img1->GetHeight();
+    RGBQUAD black = {0,0,0,0};
+    if (img2->GetWidth() > width)
+      img2->Crop(0, 0, img2->GetWidth() - width, 0);
+    if (img2->GetHeight() > height)
+      img2->Crop(0, 0, 0, img2->GetHeight() - height);
+    if (img2->GetWidth() < width)
+      img2->Expand(0, 0, width - img2->GetWidth(), 0, black);
+    if (img2->GetHeight() < height)
+      img2->Expand(0, 0, 0, height - img2->GetHeight(), black);
+
+    if (img1->GetWidth() == img2->GetWidth() && img1->GetHeight() == img2->GetHeight()) 
+    {
+      different = false;
+      if (img1->GetBpp() >= 15) 
+      {
+        DWORD pixel_bytes = 3;
+        if (img1->GetBpp() == 32)
+          pixel_bytes = 4;
+        DWORD width = img1->GetWidth();
+        DWORD height = img1->GetHeight();
+        DWORD row_length = width * pixel_bytes;
+        for (DWORD row = 0; row < height && !different; row++) 
+        {
+          BYTE * r1 = img1->GetBits(row);
+          BYTE * r2 = img2->GetBits(row);
+          if (r1 && r2 && memcmp(r1, r2, row_length))
+            different = true;
+        }
+      }
+    }
+  }
+
+  return different;
+}

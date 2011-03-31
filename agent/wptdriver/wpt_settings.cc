@@ -101,6 +101,11 @@ void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _countof(buff), iniFile )) {
     _exe = buff;
     _exe.Trim(_T("\""));
+
+    lstrcpy(buff, _exe);
+    *PathFindFileName(buff) = NULL;
+    _directory = buff;
+    _directory.Trim(_T("/\\"));
   }
 
   if (GetPrivateProfileString(browser, _T("options"), _T(""), buff, 

@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atlhost.h>
 #include "SocketInfo.h"
 #include "TrackedEvent.h"
+#include "screen_capture.h"
 #ifndef PAGETEST_EXE
 #include "WebPagetestDOM.h"
 #endif
@@ -71,13 +72,11 @@ public:
 class CProgressData
 {
 public:
-	CProgressData(void):img(NULL),hBitmap(NULL),ms(0),bpsIn(0),cpu(0.0),mem(0){}
+	CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0){}
 	CProgressData(const CProgressData& src){*this = src;}
 	~CProgressData(){	}
 	const CProgressData& operator =(const CProgressData& src)
 	{
-		img = src.img;
-		hBitmap =  src.hBitmap;
 		ms = src.ms;
 		bpsIn = src.bpsIn;
 		cpu = src.cpu;
@@ -87,11 +86,9 @@ public:
 	}
 
 	DWORD		ms;			// milliseconds since start
-	DWORD		bpsIn;		// inbound bandwidth
-	double		cpu;		// CPU utilization
+	DWORD		bpsIn;	// inbound bandwidth
+	double  cpu;		// CPU utilization
 	DWORD		mem;		// Working set size (in KB)
-	HBITMAP		hBitmap;	// progress image as a bitmap
-	CxImage	*	img;		// progress image
 };
 
 class CStatusUpdate
@@ -162,7 +159,7 @@ public:
   DWORD           aftMinChanges;
   DWORD           aftEarlyCutoff;
 	HWND						hMainWindow;	// main app window
-	HWND						hBrowserWindow;	// browser window
+	HWND		        hBrowserWnd;
 	CString						userAgent;		// custom user agent string
 	CAtlArray<struct in_addr>	dnsServers;		// DNS servers to use for lookups (if overriding the default)
 
@@ -213,12 +210,7 @@ public:
 	int etagScore;
 	
 	// screen shots of various stages
-	CxImage imgStartRender;
-	CxImage imgDOMElement;
-	CAtlList<CxImage *>	imgLayoutChange;
-	CxImage imgDocComplete;
-	CxImage imgFullyLoaded;
-  CxImage imgAft;
+  ScreenCapture screenCapture;
 	CAtlList<CProgressData> progressData;
 	
 	CAtlList<CBrowserTracker> browsers;

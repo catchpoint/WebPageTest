@@ -41,18 +41,14 @@ public:
 	virtual void DoStartup(CString& szUrl, bool initializeDoc = false);
 	virtual void CheckComplete();
 	virtual void CheckReadyState(void);
-	virtual void CheckRender();							// Check to see if the UI started rendering yet (old-style)
 	virtual void CheckWindowPainted(HWND hWnd);			// check to see if anything was drawn to the screen
 	virtual void StartMeasuring(void);
 	virtual void BackgroundTimer(void);
-	virtual void OnBeginPaint(HWND hWnd);
-	virtual void OnEndPaint(HWND hWnd);
 	
 	READYSTATE	currentState;
 	virtual void Reset(void);
 	bool		painted;
 	bool		windowUpdated;
-	HWND		hBrowserWnd;
 	HANDLE		hTimer;
 	DWORD		lastBytes;
 	DWORD		lastTime;

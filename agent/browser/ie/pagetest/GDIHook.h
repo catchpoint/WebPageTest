@@ -39,9 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************
 ******************************************************************************/
 
-typedef BOOL(__stdcall * LPREDRAWWINDOW)(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
 typedef BOOL(__stdcall * LPBITBLT)( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
-typedef HDC(__stdcall * LPBEGINPAINT)(HWND hWnd, LPPAINTSTRUCT lpPaint);
 typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 /******************************************************************************
@@ -60,16 +58,12 @@ public:
 	CGDIHook(void);
 	~CGDIHook(void);
 	
-	BOOL	RedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate, UINT flags);
 	BOOL	BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
-	HDC		BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 	BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 private:
 	NCodeHookIA32	hook;
 
-	LPREDRAWWINDOW	_RedrawWindow;
 	LPBITBLT		_BitBlt;
-	LPBEGINPAINT	_BeginPaint;
 	LPENDPAINT		_EndPaint;
 };

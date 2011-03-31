@@ -574,11 +574,9 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
 })(jQuery);
 
 (function($) {
-    $(window).load(function() {
-        // dynamically show the partner logos after onload
-        $('img.lazy').each(function(){
-            $(this).attr('src',$(this).attr('imgsrc'));
-        });
+    // dynamically show the partner logos which should put them after most page content
+    $('img.lazy').each(function(){
+        $(this).attr('src',$(this).attr('imgsrc'));
     });
 })(jQuery);
     
