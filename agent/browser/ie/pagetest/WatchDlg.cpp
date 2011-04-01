@@ -1839,6 +1839,7 @@ LRESULT CWatchDlg::OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 	if( active )
 	{
 		CheckReadyState();
+    CheckPaint(hBrowserWnd);
 		CheckDOM();
 		CheckComplete();
 	}

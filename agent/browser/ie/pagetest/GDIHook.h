@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 typedef BOOL(__stdcall * LPBITBLT)( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
-typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 /******************************************************************************
 *******************************************************************************
@@ -59,11 +58,9 @@ public:
 	~CGDIHook(void);
 	
 	BOOL	BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop);
-	BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 
 private:
 	NCodeHookIA32	hook;
 
 	LPBITBLT		_BitBlt;
-	LPENDPAINT		_EndPaint;
 };

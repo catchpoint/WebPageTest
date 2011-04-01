@@ -68,16 +68,6 @@ BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, i
 	return ret;
 }
 
-BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
-{
-	BOOL ret = FALSE;
-	__try{
-		if(pHook)
-			ret = pHook->EndPaint(hWnd, lpPaint);
-	}__except(1){}
-	return ret;
-}
-
 /******************************************************************************
 *******************************************************************************
 **																			 **
@@ -91,7 +81,6 @@ BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 CGDIHook::CGDIHook(void)
 {
 	_BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
-	_EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -115,23 +104,11 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
 	{
 		HWND hWnd = WindowFromDC(hdc);
 		if( hWnd == dlg->hBrowserWnd )
+    {
 			dlg->windowUpdated = true;
+		  dlg->CheckPaint(hWnd);
+    }
 	}
-
-	return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
-{
-	BOOL ret = FALSE;
-
-	if( _EndPaint )
-		ret = _EndPaint(hWnd, lpPaint);
-
-	if( dlg && !dlg->painted && hWnd == dlg->hBrowserWnd )
-		dlg->CheckPaint(hWnd, true);
 
 	return ret;
 }
