@@ -927,15 +927,14 @@ void CTestState::BackgroundTimer(void)
 	if( active || capturingAFT )
 	{
 		CProgressData data;
+    data.sampleTime = now;
 
 		DWORD ms = 0;
 		if( start && now > start )
 			ms = (DWORD)((now - start) / msFreq);
 
 		// round to the closest 100ms
-		data.ms = (ms / 100) * 100;
-		if( ms % 100 >= 50 )
-			data.ms += 100;
+		data.ms = ((ms + 50) / 100) * 100;
 
 		// don't re-do everything if we get a burst of timer callbacks
 		if( data.ms != lastTime || !lastTime )
@@ -950,10 +949,8 @@ void CTestState::BackgroundTimer(void)
 			lastRealTime = now;
 
 			// figure out the bandwidth
-			if( lastBytes )
-				data.bpsIn = lastBytes * 800;	// * 100 for the interval and * 8 for Bytes->bits
-			lastBytes = bwBytesIn;
-			bwBytesIn = 0;
+      double bits = (bwBytesIn - lastBytes) * 8;
+      data.bpsIn = (DWORD)(bits / elapsed);
 
 			// calculate CPU utilization
 			FILETIME create, ex, kernel, user;
@@ -1026,6 +1023,7 @@ void CTestState::BackgroundTimer(void)
 			progressData.AddTail(data);
 			lastTime = data.ms;
 		}
+		lastBytes = bwBytesIn;
 	}
 
 	LeaveCriticalSection(&csBackground);

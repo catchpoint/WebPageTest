@@ -68,11 +68,10 @@ public:
 	READYSTATE				state;
 };
 
-// MAKE SURE to explicitly delete the images or it will leak
 class CProgressData
 {
 public:
-	CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0){}
+	CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0),sampleTime(0){}
 	CProgressData(const CProgressData& src){*this = src;}
 	~CProgressData(){	}
 	const CProgressData& operator =(const CProgressData& src)
@@ -81,11 +80,13 @@ public:
 		bpsIn = src.bpsIn;
 		cpu = src.cpu;
 		mem = src.mem;
+    sampleTime = src.sampleTime;
 
 		return src;
 	}
 
 	DWORD		ms;			// milliseconds since start
+  __int64 sampleTime;
 	DWORD		bpsIn;	// inbound bandwidth
 	double  cpu;		// CPU utilization
 	DWORD		mem;		// Working set size (in KB)

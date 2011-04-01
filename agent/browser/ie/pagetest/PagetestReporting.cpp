@@ -294,9 +294,10 @@ void CPagetestReporting::FlushResults(void)
 
 					DWORD msDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
 					DWORD msDone = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
+          msDone = max(msDoc, msDone);
 					DWORD msRender = (DWORD)(tmStartRender * 1000.0);
 					DWORD msDom = (DWORD)(tmDOMElement * 1000.0);
-          DWORD msVideoDone = max(msDone, max(msDoc, max(msRender, msDom)));
+          DWORD msVideoDone = max(msDone, max(msRender, msDom));
 
           if( saveEverything && script_logData )
 					{
@@ -386,10 +387,11 @@ void CPagetestReporting::FlushResults(void)
 								progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
 
 							CProgressData data = progressData.GetNext(pos);
-							if( data.ms <= msVideoDone + 100 )
+              DWORD ms = data.sampleTime < start ? 0 : (DWORD)((data.sampleTime - start)/msFreq);
+              if( ms <= msVideoDone + 100 )
 							{
 								CStringA buff;
-								buff.Format("%d,%d,%0.2f,%d\r\n", data.ms, data.bpsIn, data.cpu, data.mem );
+								buff.Format("%d,%d,%0.2f,%d\r\n", ms, data.bpsIn, data.cpu, data.mem );
 								progress += buff;
 							}
 						}
@@ -742,8 +744,9 @@ void CPagetestReporting::ProcessResults(void)
 		end = lastRequest;
 
 	tmDoc = endDoc < start ? 0 : ((double)(endDoc - start)) / (double)freq;
-	tmLoad = end < start ? 0 : ((double)(end - start)) / (double)freq;
 	tmActivity = lastRequest < start ? 0 : ((double)(lastRequest - start)) / (double)freq;
+  tmLoad = tmActivity = max(tmActivity, tmDoc);
+  tmLastActivity = tmActivity;
 
 	if( (!errorCode || errorCode == 99999) && (tmDoc > timeout * 1000 || tmLastActivity > timeout * 1000) )
 		errorCode = 99997;
@@ -891,9 +894,10 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 	buff.Empty();
 	
 	// page-level calculations
-	DWORD msLoad = end < start ? 0 : (DWORD)((end - start)/msFreq);
 	DWORD msLoadDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
+	DWORD msLoad = msLoadDoc;
 	DWORD msActivity = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
+  msActivity = max(msActivity, msLoad);
 	DWORD msTTFB = firstByte < start ? 0 : (DWORD)((firstByte - start)/msFreq);
 	DWORD msStartRender = (DWORD)(tmStartRender * 1000.0);
 	DWORD msDomElement = (DWORD)(tmDOMElement * 1000.0);
@@ -978,9 +982,10 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 	if( includeObjectData_Now )
 	{
 		// page-level calculations (included as the first row in the object data)
-		DWORD msLoad = end < start ? 0 : (DWORD)((end - start)/msFreq);
 		DWORD msLoadDoc = endDoc < start ? 0 : (DWORD)((endDoc - start)/msFreq);
+		DWORD msLoad = msLoadDoc;
 		DWORD msActivity = lastRequest < start ? 0 : (DWORD)((lastRequest - start)/msFreq);
+    msActivity = max(msActivity, msLoad);
 		DWORD msTTFB = firstByte < start ? 0 : (DWORD)((firstByte - start)/msFreq);
 		DWORD msStartRender = (DWORD)(tmStartRender * 1000.0);
 		DWORD sequence = 0;
