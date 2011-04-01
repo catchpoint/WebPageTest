@@ -815,6 +815,49 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 			}
 		}
 
+    // add any custom headers
+    POSITION pos = headersAdd.GetHeadPosition();
+    while(pos)
+    {
+      CString h = headersAdd.GetNext(pos);
+      if( h.GetLength() )
+      {
+        h = h + _T("\r\n");
+        HttpAddRequestHeaders( hRequest, h, h.GetLength(), HTTP_ADDREQ_FLAG_ADD );
+      }
+    }
+
+    // override any headers specified
+    pos = headersSet.GetHeadPosition();
+    while(pos)
+    {
+      CString h = headersSet.GetNext(pos);
+      if( h.GetLength() )
+      {
+        h = h + _T("\r\n");
+        HttpAddRequestHeaders( hRequest, h, h.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+
+        // remove the header if it is passed in in the current headers
+        int i = h.Find(_T(':'));
+        if( i > 0 )
+        {
+          CString key = h.Left(i).Trim();
+          do
+          {
+            i = headers.Find(key);
+            if( i >= 0 )
+            {
+              int e = headers.Find(_T('\n'), i);
+              if( e > i)
+                headers = headers.Left(i) + headers.Mid(e + 1);
+              else
+                headers = headers.Left(i);
+            }
+          }while(i >= 0);
+        }
+      }
+    }
+
 		EnterCriticalSection(&cs);
 		CWinInetRequest * r = NULL;
 		winInetRequests.Lookup(hRequest, r);

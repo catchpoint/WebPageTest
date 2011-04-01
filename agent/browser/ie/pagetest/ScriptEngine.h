@@ -145,6 +145,8 @@ public:
 	CString	script_basicAuth;
 	CAtlList<CDNSEntry>			dnsOverride;		// List of DNS addresses to override
 	CAtlList<CDNSName>			dnsNameOverride;	// List of DNS names to override
+  CAtlList<CString>       headersAdd;       // list of headers to add
+  CAtlList<CString>       headersSet;       // list of headers to set/override
 
 protected:
 	bool LoadScript(CString file);

@@ -627,6 +627,22 @@ void CScriptEngine::ContinueScript(bool reset)
 				if( InternetSetCookie(item.target.Trim(), NULL, item.value) )
 					err = false;
 			}
+			else if( !item.command.CompareNoCase(_T("setHeader")) )
+			{
+        headersSet.AddTail(item.target.Trim());
+				err = false;
+			}
+			else if( !item.command.CompareNoCase(_T("addHeader")) )
+			{
+        headersAdd.AddTail(item.target.Trim());
+				err = false;
+			}
+			else if( !item.command.CompareNoCase(_T("resetHeaders")) )
+			{
+        headersAdd.RemoveAll();
+        headersSet.RemoveAll();
+				err = false;
+			}
 			else if( !item.command.CompareNoCase(_T("setDNS")) )
 			{
 				CDNSEntry entry(item.target.Trim(), item.value.Trim());
