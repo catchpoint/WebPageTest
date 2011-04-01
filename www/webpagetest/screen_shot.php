@@ -66,12 +66,7 @@ BuildVideoScript($testPath, $videoPath);
                 if($cached == 1)
                     $cachedText='_Cached';
             ?>
-            <h1>Fully Loaded
-            <?php
-            if( isset($pageRunData) && isset($pageRunData['fullyLoaded']) )
-                echo ' (' . number_format($pageRunData['fullyLoaded'] / 1000.0, 3) . '  sec)';
-            ?>
-            </h1>
+            <h1>Fully Loaded</h1>
 		    <a href="<?php echo substr($testPath, 1) . '/' . $run . $cachedText; ?>_screen.jpg">
             <img class="center" alt="Screen Shot" src="<?php echo "{$GLOBALS['cdnPath']}/thumbnail.php?width=930&test=$id&run=$run&file=$run{$cachedText}_screen.jpg"; ?>">
             </a>

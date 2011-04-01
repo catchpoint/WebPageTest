@@ -321,7 +321,6 @@ function delTree($dir)
    
     if( is_dir($dir) ) 
         rmdir( $dir );
-   
 } 
 
 /**
