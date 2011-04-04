@@ -533,60 +533,60 @@ function getPermissionLevel($table, $folderId){
 }
 // Permission Functions
 function hasPermission($table, $folderId, $permissionLevel) {
-  if ( $permissionLevel >= getPermissionLevel($table,$folderId)) {
-    return true;
-  } else {
-    return false;
-  }
-//  try {
-//    $status = false;
-//    // See if user is the owner first
-//    $userId = getCurrentUserId();
-//
-//    $folderTable = Doctrine_Core::getTable($table . 'Folder');
-//
-//    $q = Doctrine_Query::create()
-//        ->select('f.Label, j.Label')
-//        ->from($table . 'Folder' . ' f')
-//        ->leftJoin('f.' . $table . ' j');
-//
-//    $treeObject = $folderTable->getTree();
-//    $treeObject->setBaseQuery($q);
-//
-//    $tree = $treeObject->fetchTree(array('root_id' => $userId));
-//
-//    $treeObject->resetBaseQuery();
-//
-//    if ($tree) {
-//      foreach ($tree as $node) {
-//        if ($node['id'] == $folderId) {
-//          if ($userId == $node['root_id']) {
-//            // User owns this folder so return true for all permission checks.
-//            $status = true;
-//          }
-//        }
-//      }
-//    }
-//    //else {
-//    if (!$status){
-//      $q = Doctrine_Query::create()->from('Share s')
-//          ->where('s.ShareWithUserId = ?', $userId)
-//          ->andWhere('s.TheTableName =?', $table)
-//          ->andWhere('s.TableItemId = ?', $folderId);
-//      $result = $q->fetchOne();
-//      $q->free(true);
-//      if ($result['Permissions'] >= $permissionLevel) {
-//        $status= true;
-//      } else {
-//        $status= false;
-//      }
-//    }
-//  } catch (Exception $e) {
-//    error_log("[WPTMonitor] Failed while Checking permission on Shares. message: " . $e->getMessage());
-//    echo $e->getMessage();
-//    exit;
+//  if ( $permissionLevel >= getPermissionLevel($table,$folderId)) {
+//    return true;
+//  } else {
+//    return false;
 //  }
-//  return $status;
+  try {
+    $status = false;
+    // See if user is the owner first
+    $userId = getCurrentUserId();
+
+    $folderTable = Doctrine_Core::getTable($table . 'Folder');
+
+    $q = Doctrine_Query::create()
+        ->select('f.Label, j.Label')
+        ->from($table . 'Folder' . ' f')
+        ->leftJoin('f.' . $table . ' j');
+
+    $treeObject = $folderTable->getTree();
+    $treeObject->setBaseQuery($q);
+
+    $tree = $treeObject->fetchTree(array('root_id' => $userId));
+
+    $treeObject->resetBaseQuery();
+
+    if ($tree) {
+      foreach ($tree as $node) {
+        if ($node['id'] == $folderId) {
+          if ($userId == $node['root_id']) {
+            // User owns this folder so return true for all permission checks.
+            $status = true;
+          }
+        }
+      }
+    }
+    //else {
+    if (!$status){
+      $q = Doctrine_Query::create()->from('Share s')
+          ->where('s.ShareWithUserId = ?', $userId)
+          ->andWhere('s.TheTableName =?', $table)
+          ->andWhere('s.TableItemId = ?', $folderId);
+      $result = $q->fetchOne();
+      $q->free(true);
+      if ($result['Permissions'] >= $permissionLevel) {
+        $status= true;
+      } else {
+        $status= false;
+      }
+    }
+  } catch (Exception $e) {
+    error_log("[WPTMonitor] Failed while Checking permission on Shares. message: " . $e->getMessage());
+    echo $e->getMessage();
+    exit;
+  }
+  return $status;
 }
 
 ?>
