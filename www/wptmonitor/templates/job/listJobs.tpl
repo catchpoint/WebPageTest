@@ -178,7 +178,6 @@
               </th>
               <th align="right">Runs</th>
               <th align="right">Total</th>
-              <th align="right">Alerts</th>
               <th align="right">
                 <a title="LastRun in minutes" href="?orderBy=LastRun">{if $orderJobsBy eq "LastRun"}<b>{/if}
                   Last</a>{if $orderJobsBy eq "LastRun"}</b><a
@@ -188,11 +187,6 @@
               </th>
               <th colspan="6" align="center">Actions</th>
             </tr>
-            {assign var="hasUpdatePermission"       value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
-            {assign var="hasExecutePermission"      value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_EXECUTE)}
-            {assign var="hasCreateDeletePermission" value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
-            {assign var="hasOwnerPermission"        value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_OWNER)}
-            {assign var="hasReadPermission"         value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_READ)}
             {foreach from=$result item=res}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">
@@ -217,7 +211,6 @@
                 <td align="right">{$res.Frequency}</td>
                 <td align="right">{$res.Runs}{if !$res.FirstViewOnly}R{/if}</td>
                 <td align="right">{$res.ResultCount}</td>
-                <td align="right">{$res.WPTJob_Alert|@sizeof}</td>
                 {*<td>calc</td>*}
                 <td align="right">{$res.Lastrun|date_format:"%D"}<br>{$res.Lastrun|date_format:"%H:%M"}</td>
                 <td align="right">

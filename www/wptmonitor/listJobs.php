@@ -4,7 +4,7 @@
   include_once 'utils.inc';
   include_once 'db_utils.inc';
   $user_id = getCurrentUserId();
-
+$timingStart = current_seconds();
   try
   {
     // Handle filter settings
@@ -87,7 +87,7 @@
 
     $selectFields = 'j.Active, j.Id, j.Label, j.Host, j.Location, j.Frequency, j.LastRun, a.Id, COUNT(r.Id) AS ResultCount, f.Label';
 
-    $q = Doctrine_Query::create()->select($selectFields)->from('WPTJob j, j.WPTResult r, j.WPTJob_Alert a, j.WPTJobFolder f')
+    $q = Doctrine_Query::create()->select($selectFields)->from('WPTJob j, j.WPTResult r')
                                 ->orderBy($orderJobsBy)
                                 ->groupBy('j.Id');
 
@@ -106,15 +106,12 @@
 
       $pager = new Doctrine_Pager($q, $jobsCurrentPage, $resultsPerPage);
       $result = $pager->execute();
-      $alertTable = Doctrine_Core::getTable('WPTJob_Alert');
-      $alertCount = array();
 
       $folderTree = getFolderTree($user_id,'WPTJob');
       $shares = getFolderShares($user_id,'WPTJob');
       $smarty->assign('folderTree',$folderTree);
       $smarty->assign('shares',$shares);
 
-      $smarty->assign('alertCount',$alertCount);
       $smarty->assign('jobsFilterField',$jobsFilterField);
       $smarty->assign('jobsFilterValue',$jobsFilterValue);
       $smarty->assign('currentPage', $jobsCurrentPage);
@@ -125,10 +122,34 @@
     error_log("[WPTMonitor] Failed while Listing jobs: " . $wptResultId . " message: " . $e->getMessage());
     print 'Exception : ' . $e->getMessage();
   }
+
   $q->free(true);
   unset($result);
   unset($pager);
   unset($share);
-  $smarty->display('job/listJobs.tpl');
+  $hasReadPermission = false;
+  $hasUpdatePermission = false;
+  $hasCreateDeletePermission = false;
+  $hasExecutePermission = false;
+  $hasOwnerPermission = false;
 
+  $folderPermissionLevel = getPermissionLevel('WPTJob',$folderId);
+  if ($folderPermissionLevel >= 0)
+      $hasReadPermission = true;
+  if ($folderPermissionLevel >= 1)
+      $hasUpdatePermission = true;
+  if ($folderPermissionLevel >= 2)
+      $hasCreateDeletePermission = true;
+  if ($folderPermissionLevel >= 4)
+      $hasExecutePermission = true;
+  if ($folderPermissionLevel >= -9)
+      $hasOwnerPermission = true;
+
+  $smarty->assign('hasReadPermission',$hasReadPermission);
+  $smarty->assign('hasUpdatePermission',$hasUpdatePermission);
+  $smarty->assign('hasCreateDeletePermission',$hasCreateDeletePermission);
+  $smarty->assign('hasExecutePermission',$hasExecutePermission);
+  $smarty->assign('hasOwnerPermission',$hasOwnerPermission);
+
+  $smarty->display('job/listJobs.tpl');
 ?>
