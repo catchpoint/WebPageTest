@@ -7,6 +7,7 @@ if( $debug )
 umask(0);
 date_default_timezone_set('UTC');
 
+
 // constants
 define('VER_CSS', 34);          // version of the sitewide css file
 define('VER_JS', 11);            // version of the sitewide javascript file

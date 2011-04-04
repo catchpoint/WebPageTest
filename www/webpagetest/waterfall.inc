@@ -367,6 +367,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         {
             foreach( $csiInfo as $name => $value )
             {
+		if ($name == 'srt')
+		    continue;
                 $triangleCoord = array(-3, 0,
                                        0, 8,
                                        3, 0
@@ -568,8 +570,10 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         {
             foreach ( $csiInfo as $name => $value )
             {
+		if ($name == 'srt')
+		    continue;
                 $entry = array();
-                $entry['csi'] = "$name: $value";
+                $entry['csi'] = "srt + $name: $value";
                 $x = $left + (int)((double)$w * ((double)$value / $range));
                 $triangleCoord = array(-3, 0,
                                        0, 8,
