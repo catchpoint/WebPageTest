@@ -85,7 +85,8 @@ function getFolderTree($userId, $table) {
 
 function getRootFolderForUser($userId, $table) {
   $treeObject = Doctrine_Core::getTable($table.'Folder')->getTree();
-  $folderTree = $treeObject->fetchTree(array('root_id' => $userId));
+//  $folderTree = $treeObject->fetchTree(array('root_id' => $userId));
+  $folderTree = getFolderTree($userId, $table);
   return $folderTree[0]['id'];
 }
 

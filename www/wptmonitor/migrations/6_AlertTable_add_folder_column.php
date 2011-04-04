@@ -5,7 +5,7 @@ class UpdateAlert extends Doctrine_Migration_Base
 {
     public function up()
     {
-     //   $this->addColumn('Alert', 'AlertFolderId', 'integer', 8);
+        $this->addColumn('Alert', 'AlertFolderId', 'integer', 8);
 
     }
 

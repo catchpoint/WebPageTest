@@ -5,7 +5,7 @@ class UpdateChangeNote extends Doctrine_Migration_Base
 {
     public function up()
     {
-//        $this->addColumn('ChangeNote', 'ChangeNoteFolderId', 'integer', 8);
+        $this->addColumn('ChangeNote', 'ChangeNoteFolderId', 'integer', 8);
 
     }
 
