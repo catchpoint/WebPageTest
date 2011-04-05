@@ -241,13 +241,12 @@ public:
 	virtual void	AddBrowser(CComPtr<IWebBrowser2> browser);
 	virtual void	RemoveBrowser(CComPtr<IWebBrowser2> browser);
 	virtual void	SaveImage(BOOL drawWaterfall, LPCTSTR fileName = NULL) = 0;
-	virtual void	SaveScreenShot(CString fileName, DWORD quality = 0) = 0;
-	virtual bool	GrabScreenShot(CxImage &img) = 0;
 	virtual void	FlushResults(void) = 0;
 	virtual void	LogError(bool scriptError = false) = 0;
 	virtual void	TestComplete(void) = 0;
 	virtual void	StartMeasuring(void) = 0;
-	virtual bool	FindBrowserControl(HWND hParent, HWND &hBrowser) = 0;
+  bool FindBrowserWindow();
+  HWND FindBrowserDocument(HWND parent_window);
 	
 	typedef enum{
 		equal = 0,

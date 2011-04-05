@@ -41,7 +41,7 @@ public:
 	virtual void DoStartup(CString& szUrl, bool initializeDoc = false);
 	virtual void CheckComplete();
 	virtual void CheckReadyState(void);
-	virtual void CheckWindowPainted(HWND hWnd);			// check to see if anything was drawn to the screen
+	virtual void CheckWindowPainted();			// check to see if anything was drawn to the screen
 	virtual void StartMeasuring(void);
 	virtual void BackgroundTimer(void);
 	

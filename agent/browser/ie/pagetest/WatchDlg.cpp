@@ -667,32 +667,19 @@ void CWatchDlg::ResizeWindow(void)
 	    key.DeleteValue(_T("Window Width"));
 	    key.DeleteValue(_T("Window Height"));
 
-		key.Close();
-	    if( height && width )
-	    {
-			if( !browsers.IsEmpty() )
+		  key.Close();
+	    if( height && width && hMainWindow && ::IsWindow(hMainWindow) )
 			{
-				CBrowserTracker tracker = browsers.GetHead();
-				if( tracker.browser && tracker.threadId == GetCurrentThreadId() )
-				{
-					HWND hWnd = hMainWindow;
-					if( !hWnd )
-						tracker.browser->get_HWND((SHANDLE_PTR *)&hWnd);
-					if( hWnd && ::IsWindow(hWnd) )
-					{
-						targetWidth = width;
-						targetHeight = height;
+				targetWidth = width;
+				targetHeight = height;
 
-						// take over the wndproc
-						if( !originalWndProc )
-							originalWndProc = (WNDPROC)::SetWindowLongPtr(hWnd, GWL_WNDPROC, (LONG)wndProc);
+				// take over the wndproc
+				//if( !originalWndProc )
+				//	originalWndProc = (WNDPROC)::SetWindowLongPtr(hMainWindow, GWL_WNDPROC, (LONG)wndProc);
 
-						::ShowWindow(hWnd, SW_RESTORE);	// make sure it is not maximized
-						::SetWindowPos(hWnd, NULL, left, top, width, height, SWP_NOACTIVATE | SWP_NOZORDER);
-					}
-				}
+				::ShowWindow(hMainWindow, SW_RESTORE);	// make sure it is not maximized
+				::SetWindowPos(hMainWindow, HWND_TOPMOST, left, top, width, height, SWP_NOACTIVATE);
 			}
-	    }
 	}
 }
 
@@ -1807,59 +1794,15 @@ void CWatchDlg::CheckStuff(void)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CWatchDlg::CheckPaint(HWND hWnd, bool immediate)
-{
-	EnterCriticalSection(&cs);
-
-	if( immediate )
-		CheckWindowPainted(hWnd);
-	else if( !pendingCheckPaint )
-	{
-		// post messages to all of the thread windows
-		POSITION pos = threadWindows.GetStartPosition();
-		while( pos )
-		{
-			HWND hBrowserWnd = threadWindows.GetNextValue(pos);
-			if( hBrowserWnd && ::IsWindow(hBrowserWnd) )
-			{
-				pendingCheckPaint = true;
-				::PostMessage(hBrowserWnd, UWM_CHECK_PAINT, (WPARAM)hWnd, 0);
-			}
-		}
-	}
-
-	LeaveCriticalSection(&cs);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 LRESULT CWatchDlg::OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
 	// see if the readystate changed or if our DOM elements are available yet
 	if( active )
 	{
 		CheckReadyState();
-    CheckPaint(hBrowserWnd);
 		CheckDOM();
 		CheckComplete();
 	}
-	
-	return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-LRESULT CWatchDlg::OnCheckPaint(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
-{
-	EnterCriticalSection(&cs);
-	
-	// prevent a bunch of sequential checks from queueing up
-	pendingCheckPaint = false;
-
-	HWND hWnd = (HWND)wParam;
-	CheckWindowPainted(hWnd);
-
-	LeaveCriticalSection(&cs);
 	
 	return 0;
 }
@@ -2374,73 +2317,6 @@ void CWatchDlg::SaveImage(BOOL drawWaterfall, LPCTSTR fileName)
 }
 
 /*-----------------------------------------------------------------------------
-	Save a screen shot of the page
------------------------------------------------------------------------------*/
-bool CWatchDlg::GrabScreenShot(CxImage &img)
-{
-	bool ret = false;
-
-	// make sure there isn't an existing image
-	img.Destroy();
-
-	// only check the last browser window opened
-	CBrowserTracker tracker = browsers.GetTail();
-	if( tracker.browser )
-	{
-		// look for the browser control (screen shots can be blank in IE if you capture the frame and the desktop is locked)
-		HWND hWnd = hMainWindow;
-		if( !hWnd )
-			tracker.browser->get_HWND((SHANDLE_PTR *)&hWnd);
-		FindBrowserControl(hWnd, hWnd);
-		if( hWnd && ::IsWindow(hWnd) )
-		{
-			HDC src = ::GetDC(hBrowserWnd);
-			if( src )
-			{
-				HDC dc = CreateCompatibleDC(src);
-				if( dc )
-				{
-					CRect rect;
-					::GetWindowRect(hBrowserWnd, &rect);
-					HBITMAP hBitmap = CreateCompatibleBitmap(src, rect.Width(), rect.Height()); 
-					if( hBitmap )
-					{
-						HBITMAP hOriginal = (HBITMAP)SelectObject(dc, hBitmap);
-						if( BitBlt(dc, 0, 0, rect.Width(), rect.Height(), src, 0, 0, SRCCOPY) )
-							img.CreateFromHBITMAP(hBitmap);
-
-						SelectObject(dc, hOriginal);
-						DeleteObject(hBitmap);
-					}
-					DeleteDC(dc);
-				}
-				::ReleaseDC(hBrowserWnd, src);
-			}
-		}
-	}
-
-	return ret;
-}
-
-/*-----------------------------------------------------------------------------
-	Save a screen shot of the page
------------------------------------------------------------------------------*/
-void CWatchDlg::SaveScreenShot(CString fileName, DWORD quality)
-{
-	if( !quality )
-		quality = JPEG_DEFAULT_QUALITY;
-		
-	CxImage img;
-	if( GrabScreenShot(img) )
-	{
-		img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-		img.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-		img.SetJpegQuality((BYTE)quality);
-		img.Save(fileName + _T(".jpg"), CXIMAGE_FORMAT_JPG);
-	}
-}
-
-/*-----------------------------------------------------------------------------
 	Export the waterfall as a png
 -----------------------------------------------------------------------------*/
 LRESULT CWatchDlg::OnFileExportWaterfall(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
@@ -2510,33 +2386,4 @@ LRESULT CWatchDlg::OnHelpQuickstartguide(WORD /*wNotifyCode*/, WORD /*wID*/, HWN
 {
 	ShellExecute(m_hWnd, _T("open"), _T("http://pagetest.wiki.sourceforge.net/Quick+Start+Guide"), NULL, NULL, SW_SHOWNORMAL);
 	return 0;
-}
-
-/*-----------------------------------------------------------------------------
-	Recursively find the web browser control
------------------------------------------------------------------------------*/
-bool CWatchDlg::FindBrowserControl(HWND hParent, HWND &hBrowser)
-{
-	bool ret = false;
-
-	HWND hWnd = ::GetWindow(hParent, GW_CHILD);
-	while( !ret && hWnd )
-	{
-		TCHAR className[1000] = {0};
-		GetClassName(hWnd, className, _countof(className));
-		if( !lstrcmp(className, _T("Internet Explorer_Server")) )
-		{
-			ret = true;
-			hBrowser = hWnd;
-		}
-		
-		// see if the window has any child windows
-		if( !ret )
-			ret = FindBrowserControl(hWnd, hBrowser);
-			
-		// on to the next window
-		hWnd = ::GetWindow(hWnd, GW_HWNDNEXT);
-	}
-	
-	return ret;
 }

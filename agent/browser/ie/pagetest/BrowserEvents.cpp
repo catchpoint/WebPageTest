@@ -200,6 +200,7 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 	}
 	else if(szUrl == _T("about:blank"))
 	{
+    FindBrowserWindow();
 		ResizeWindow();
 
 		// reset the UI on an about:blank navigation		

@@ -270,11 +270,6 @@ LRESULT CALLBACK ThreadWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		BOOL handled = FALSE;
 		ret = dlg->OnCheckStuff(uMsg, wParam, lParam, handled);
 	}
-	else if( uMsg == UWM_CHECK_PAINT && dlg )
-	{
-		BOOL handled = FALSE;
-		ret = dlg->OnCheckPaint(uMsg, wParam, lParam, handled);
-	}
 	else if( uMsg == UWM_DESTROY )
 		DestroyWindow(hwnd);
 	else
@@ -292,6 +287,9 @@ void CPagetestBase::AddBrowser(CComPtr<IWebBrowser2> browser)
 
 	EnterCriticalSection(&cs);
 	browsers.AddTail(tracker);
+
+  if( !hMainWindow )
+    browser->get_HWND((LONG *)&hMainWindow);
 	
 	// create a window for the thread if necessary
 	HWND hWnd = NULL;
@@ -676,4 +674,67 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString &tag, CSt
 	}
 	
 	return result;
+}
+
+/*-----------------------------------------------------------------------------
+  Find what we assume is the browser document window:
+  Largest child window that:
+  - Is visible
+  - Takes > 50% of the parent window's space
+  - Recursively checks the largest child
+-----------------------------------------------------------------------------*/
+HWND CPagetestBase::FindBrowserDocument(HWND parent_window) 
+{
+  HWND document_window = NULL;
+  RECT rect;
+  DWORD biggest_child = 0;
+
+  if (GetWindowRect(parent_window, &rect)) 
+  {
+    DWORD parent_pixels = abs(rect.right - rect.left) * abs(rect.top - rect.bottom);
+    DWORD cutoff = parent_pixels / 2;
+    if (parent_pixels) 
+    {
+      HWND child = GetWindow(parent_window, GW_CHILD);
+      while (child) 
+      {
+        if (IsWindowVisible(child) && GetWindowRect(child, &rect)) 
+        {
+          DWORD child_pixels = abs(rect.right - rect.left) * abs(rect.top - rect.bottom);
+          if (child_pixels > biggest_child && child_pixels > cutoff) 
+          {
+            document_window = child;
+            biggest_child = child_pixels;
+          }
+        }
+        child = GetWindow(child, GW_HWNDNEXT);
+      }
+    }
+  }
+
+  if (document_window) 
+  {
+    HWND child_window = FindBrowserDocument(document_window);
+    if (child_window)
+      document_window = child_window;
+  }
+
+  return document_window;
+}
+
+/*-----------------------------------------------------------------------------
+  Find the top-level and document windows for the browser
+-----------------------------------------------------------------------------*/
+bool CPagetestBase::FindBrowserWindow() 
+{
+  bool found = false;
+  hBrowserWnd = NULL;
+
+  if (hMainWindow) 
+    hBrowserWnd = FindBrowserDocument(hMainWindow);
+
+  if (hBrowserWnd)
+    found = true;
+
+  return found;
 }

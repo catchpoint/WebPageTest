@@ -68,6 +68,26 @@ BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, i
 	return ret;
 }
 
+BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+{
+	BOOL ret = FALSE;
+	__try{
+		if(pHook)
+			ret = pHook->EndPaint(hWnd, lpPaint);
+	}__except(1){}
+	return ret;
+}
+
+int __stdcall ReleaseDC_Hook(HWND hWnd, HDC hDC)
+{
+  int ret = 0;
+	__try{
+		if(pHook)
+      ret = pHook->ReleaseDC(hWnd, hDC);
+	}__except(1){}
+  return ret;
+}
+
 /******************************************************************************
 *******************************************************************************
 **																			 **
@@ -81,6 +101,8 @@ BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, i
 CGDIHook::CGDIHook(void)
 {
 	_BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
+	_EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+	_ReleaseDC = hook.createHookByName("user32.dll", "ReleaseDC", ReleaseDC_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -104,11 +126,38 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
 	{
 		HWND hWnd = WindowFromDC(hdc);
 		if( hWnd == dlg->hBrowserWnd )
-    {
 			dlg->windowUpdated = true;
-		  dlg->CheckPaint(hWnd);
-    }
 	}
 
 	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
+{
+	BOOL ret = FALSE;
+
+	if( _EndPaint )
+		ret = _EndPaint(hWnd, lpPaint);
+
+	if( dlg && !dlg->painted && dlg->windowUpdated && hWnd == dlg->hBrowserWnd )
+    dlg->CheckWindowPainted();
+
+	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
+{
+  int ret = 0;
+
+  if( _ReleaseDC )
+    ret = _ReleaseDC(hWnd, hDC);
+
+	if( dlg && !dlg->painted && dlg->windowUpdated && hWnd == dlg->hBrowserWnd )
+    dlg->CheckWindowPainted();
+
+  return ret;
 }

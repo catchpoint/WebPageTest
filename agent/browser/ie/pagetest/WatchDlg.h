@@ -97,7 +97,6 @@ public:
 		, hBottom(0)
 		, lastCheck(0)
 		, started(false)
-		, pendingCheckPaint(false)
 		{
 		// open up the registry key for settings
 		settings.Create(HKEY_CURRENT_USER, _T("Software\\AOL\\Pagetest"));
@@ -122,7 +121,6 @@ BEGIN_MSG_MAP(CWatchDlg)
 	MESSAGE_HANDLER(UWM_REPAINT_WATERFALL, OnRepaintWaterfall)
 	MESSAGE_HANDLER(UWM_RESET_UI, OnResetUI)
 	MESSAGE_HANDLER(UWM_CHECK_STUFF, OnCheckStuff)
-	MESSAGE_HANDLER(UWM_CHECK_PAINT, OnCheckPaint)
 	NOTIFY_HANDLER(IDC_WATERFALL, NM_CUSTOMDRAW, OnNMCustomdrawWaterfall)
 	NOTIFY_HANDLER(IDC_WATERFALL, TVN_SELCHANGING, OnTvnSelchangingWaterfall)
 	NOTIFY_HANDLER(IDC_WATERFALL, TVN_SELCHANGED, OnTvnSelchangedWaterfall)
@@ -165,7 +163,6 @@ public:
 	LRESULT OnRepaintWaterfall(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnResetUI(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
-	LRESULT OnCheckPaint(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	
 	virtual void Create(void);
 	void Destroy(void);
@@ -188,11 +185,8 @@ public:
 	virtual void DrawItemWaterfall(CTrackedEvent * e, HDC hDC, CRect &rect);
 	virtual void DrawItemChecklist(CTrackedEvent * e, HDC hDC, CRect &rect);
 	virtual void SaveImage(BOOL drawWaterfall, LPCTSTR fileName = NULL);
-	virtual void SaveScreenShot(CString fileName, DWORD quality = 0);
-	virtual bool GrabScreenShot(CxImage &img);
 	virtual void TestComplete(void);
 	virtual void UpdateWaterfall(bool now = false);
-	virtual bool FindBrowserControl(HWND hParent, HWND &hBrowser);
 	
 	// drawing stuff
 	void LineVert(HDC hDC, int x, int y0, int y1)
@@ -249,7 +243,6 @@ public:
 	HTREEITEM hBottom;
 	__int64 lastCheck;
 	bool	started;
-	bool	pendingCheckPaint;
 
 	CTrackedEvent *			selectedItem;
 	CAtlList<CDetailsDlg *>	detailsDialogs;
@@ -257,7 +250,6 @@ public:
 	virtual void GetItemText(CTrackedEvent * e, CString &text, bool includeIndex = false);
 	virtual void RepaintWaterfall(DWORD minInterval = 100);
 	virtual void CheckStuff(void);
-	virtual void CheckPaint(HWND hWnd, bool immediate = false);
 	virtual void EnableUI(void);
 	LRESULT OnTvnSelchangingWaterfall(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);
 	LRESULT OnTvnSelchangedWaterfall(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& /*bHandled*/);

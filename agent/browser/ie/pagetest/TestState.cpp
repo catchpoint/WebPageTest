@@ -706,9 +706,9 @@ void CTestState::CheckDOM(void)
 /*-----------------------------------------------------------------------------
 	Check to see if anything was drawn to the screen
 -----------------------------------------------------------------------------*/
-void CTestState::CheckWindowPainted(HWND hWnd)
+void CTestState::CheckWindowPainted()
 {
-	if( active && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) )
+	if( active && windowUpdated && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) )
 	{
 		// grab a screen shot of the window
     screenCapture.Lock();
@@ -883,24 +883,13 @@ void CTestState::StartMeasuring(void)
 		lastRealTime = 0;
 		windowUpdated = true;	// force an initial screen shot
 
-		// get the handle for the browser window we're going too be watching (and screen shotting)
-		hBrowserWnd = hMainWindow;
-		if( !hBrowserWnd )
-		{
-			CBrowserTracker tracker = browsers.GetTail();
-			if( tracker.browser )
-				tracker.browser->get_HWND((SHANDLE_PTR *)&hBrowserWnd);
-		}
-
-		// move the window to the top if we are capturing video frames
-		if( hBrowserWnd && ::IsWindow(hBrowserWnd) )
-		{
-			::SetWindowPos(hBrowserWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-			::UpdateWindow(hBrowserWnd);
-		}
-
 		// now find just the browser control
-		FindBrowserControl(hBrowserWnd, hBrowserWnd);
+		FindBrowserWindow();
+    if( hMainWindow )
+    {
+			::SetWindowPos(hMainWindow, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+			::UpdateWindow(hMainWindow);
+    }
 
 		timeBeginPeriod(1);
 		CreateTimerQueueTimer(&hTimer, NULL, ::BackgroundTimer, this, 100, 100, WT_EXECUTEDEFAULT);
