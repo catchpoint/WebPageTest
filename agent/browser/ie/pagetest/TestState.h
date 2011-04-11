@@ -54,7 +54,9 @@ public:
 	DWORD		lastTime;
 	DWORD		imageCount;
 	DWORD		lastImageTime;
-	unsigned __int64 lastProcessTime;
+	unsigned __int64 lastCpuIdle;
+	unsigned __int64 lastCpuUser;
+	unsigned __int64 lastCpuKernel;
 	__int64 lastRealTime;
 	bool		cacheCleared;
 

@@ -60,6 +60,7 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, pipeIn(0)
 	, pipeOut(0)
 	, ec2(0)
+  , useCurrentAccount(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
@@ -318,10 +319,13 @@ void CurlBlastDlg::DoStartup(void)
 		}
 	}
 
+	status.SetWindowText(_T("Configuring Dummynet..."));
+  ConfigureDummynet();
+	
 	// disable the DNS cache
 	status.SetWindowText(_T("Disabling DNS cache..."));
 	DisableDNSCache();
-	
+
 	// set the OS to not boost foreground processes
 	HKEY hKey;
 	if( SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\PriorityControl"), 0, KEY_SET_VALUE, &hKey)) )
@@ -508,6 +512,7 @@ void CurlBlastDlg::LoadSettings(void)
 	pipeIn				= GetPrivateProfileInt(_T("Configuration"), _T("pipe in"), 1, iniFile);
 	pipeOut				= GetPrivateProfileInt(_T("Configuration"), _T("pipe out"), 2, iniFile);
 	ec2					= GetPrivateProfileInt(_T("Configuration"), _T("ec2"), 0, iniFile);
+  useCurrentAccount = GetPrivateProfileInt(_T("Configuration"), _T("Use Current Account"), 0, iniFile);;
 
 	log.debug = debug;
 
@@ -1441,6 +1446,9 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			// hand an address to the thread to use (hand them out backwards)
 			if( !addresses.IsEmpty() )
 				blaster->ipAddress = addresses[addresses.GetCount() - i - 1];
+
+      if( useCurrentAccount )
+        blaster->hProfile = HKEY_CURRENT_USER;
 				
 			blaster->Start(i+1);
 		}
@@ -1669,4 +1677,33 @@ bool CurlBlastDlg::GetUrlText(CString url, CString &response)
 	log.Trace(_T("EC2 '%s' -> '%s'"), (LPCTSTR)url, (LPCTSTR)response);
 
 	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+	Run ipfw.cmd if it exists in the dummynet folder below our current directory
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::ConfigureDummynet()
+{
+	TCHAR dir[MAX_PATH];
+	if( GetModuleFileName(NULL, dir, _countof(dir)) )
+	{
+    *PathFindFileName(dir) = 0;
+    lstrcat(dir, _T("dummynet\\"));
+
+    TCHAR command[1024];
+    wsprintf(command, _T("cmd /C \"%sipfw.cmd\""), dir);
+
+    log.Trace(_T("Running %s in %s"), command, dir);
+	  STARTUPINFO si;
+	  memset(&si, 0, sizeof(si));
+	  si.cb = sizeof(si);
+  	
+	  PROCESS_INFORMATION pi;
+	  if( CreateProcess(NULL, command, 0, 0, FALSE, 0, 0, dir, &si, &pi) )
+	  {
+		  WaitForSingleObject(pi.hProcess, INFINITE);
+		  CloseHandle(pi.hThread);
+		  CloseHandle(pi.hProcess);
+	  }
+  }
 }

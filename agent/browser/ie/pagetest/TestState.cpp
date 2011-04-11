@@ -44,7 +44,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 CTestState::CTestState(void):
 	hTimer(0)
 	,lastBytes(0)
-	,lastProcessTime(0)
+	,lastCpuIdle(0)
+  ,lastCpuKernel(0)
+  ,lastCpuUser(0)
 	,lastTime(0)
 	,windowUpdated(true)
 	,imageCount(0)
@@ -550,7 +552,10 @@ void CTestState::CheckComplete()
 
 		    // get a screen shot of the fully loaded page
 		    if( saveEverything )
+        {
+          FindBrowserWindow();
           screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
+        }
       }
       else
       {
@@ -603,7 +608,10 @@ void CTestState::CheckComplete()
 
 			    // get a screen shot of the fully loaded page
 			    if( saveEverything )
+          {
+            FindBrowserWindow();
 				    screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
+          }
 
 			    // write out any results (this will also kill the timer)
 			    FlushResults();
@@ -698,7 +706,10 @@ void CTestState::CheckDOM(void)
 			OutputDebugString(buff);
 			
 			if( saveEverything )
+      {
+        FindBrowserWindow();
         screenCapture.Capture(hBrowserWnd, CapturedImage::DOM_ELEMENT);
+      }
 		}
 	}
 }
@@ -876,7 +887,9 @@ void CTestState::StartMeasuring(void)
 	if( !hTimer && saveEverything && (!runningScript || script_logData) )
 	{
 		lastBytes = 0;
-		lastProcessTime = 0;
+		lastCpuIdle = 0;
+		lastCpuKernel = 0;
+		lastCpuUser = 0;
 		lastTime = 0;
 		imageCount = 0;
 		lastImageTime = 0;
@@ -906,6 +919,7 @@ void CTestState::BackgroundTimer(void)
 {
 	// queue up a message in case we're having timer problems
 	CheckStuff();
+  FindBrowserWindow();
 
 	// timer will only be running while we're active
 	EnterCriticalSection(&csBackground);
@@ -942,21 +956,27 @@ void CTestState::BackgroundTimer(void)
       data.bpsIn = (DWORD)(bits / elapsed);
 
 			// calculate CPU utilization
-			FILETIME create, ex, kernel, user;
-			if( GetProcessTimes(GetCurrentProcess(), &create, &ex, &kernel, &user) )
+			FILETIME idle, kernel, user;
+			if( GetSystemTimes( &idle, &kernel, &user) )
 			{
-				ULARGE_INTEGER k, u;
+				ULARGE_INTEGER k, u, i;
 				k.LowPart = kernel.dwLowDateTime;
 				k.HighPart = kernel.dwHighDateTime;
 				u.LowPart = user.dwLowDateTime;
 				u.HighPart = user.dwHighDateTime;
-				unsigned __int64 cpuTime = k.QuadPart + u.QuadPart;
-				if( lastProcessTime && cpuTime >= lastProcessTime && elapsed > 0.0)
+				i.LowPart = idle.dwLowDateTime;
+				i.HighPart = idle.dwHighDateTime;
+				if( lastCpuIdle || lastCpuKernel || lastCpuUser )
 				{
-					double delta = (double)(cpuTime - lastProcessTime) / (double)10000000; // convert it to seconds of CPU time
-					data.cpu = min((double)delta / elapsed, 1.0) * 100.0;
+          __int64 idle = i.QuadPart - lastCpuIdle;
+          __int64 kernel = k.QuadPart - lastCpuKernel;
+          __int64 user = u.QuadPart - lastCpuUser;
+          int cpu_utilization = (int)((((kernel + user) - idle) * 100) / (kernel + user));
+          data.cpu = max(min(cpu_utilization, 100), 0);
 				}
-				lastProcessTime = cpuTime;
+        lastCpuIdle = i.QuadPart;
+        lastCpuKernel = k.QuadPart;
+        lastCpuUser = u.QuadPart;
 			}
 
 			// get the memory use (working set - task-manager style)

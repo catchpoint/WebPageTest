@@ -62,7 +62,7 @@ CURLBlaster::~CURLBlaster(void)
 	
 	if( hLogonToken )
 	{
-		if( hProfile )
+		if( hProfile && hProfile != HKEY_CURRENT_USER )
 			UnloadUserProfile( hLogonToken, hProfile );
 
 		CloseHandle( hLogonToken );
@@ -98,27 +98,44 @@ static unsigned __stdcall ThreadProc( void* arg )
 bool CURLBlaster::Start(int userIndex)
 {
 	bool ret = false;
-	
-	// store off which user this worker belongs to
-	index = userIndex;
-	userName.Format(_T("%s%d"), (LPCTSTR)accountBase, index);
+
+	TCHAR path[MAX_PATH];
+  if( hProfile )
+  {
+    TCHAR name[1024];
+    DWORD len = _countof(name);
+    if( GetUserName(name, &len) )
+    {
+      userName = name;
+
+      if( SHGetSpecialFolderPath(NULL, path, CSIDL_PROFILE, FALSE))
+        profile = path;
+    }
+  }
+  else
+  {
+	  // store off which user this worker belongs to
+	  index = userIndex;
+	  userName.Format(_T("%s%d"), (LPCTSTR)accountBase, index);
+	  DWORD len = _countof(path);
+    profile = CString(_T("C:\\Documents and Settings"));
+	  if( GetProfilesDirectory(path, &len) )
+		  profile = path;
+	  profile += _T("\\");
+	  profile += userName;
+  }
 	
 	info.userName = userName;
 	
 	// default directories
-	TCHAR path[MAX_PATH];
-	DWORD len = _countof(path);
-	CString profiles = _T("C:\\Documents and Settings");
-	if( GetProfilesDirectory(path, &len) )
-		profiles = path;
-	profiles += _T("\\");
-		
-	profile = profiles + userName;
-	cookies = profile + _T("\\Cookies");
-	history = profile + _T("\\Local Settings\\History");
-	tempFiles = profile + _T("\\Local Settings\\Temporary Internet Files");
-	silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
-	flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
+  if( profile.GetLength() )
+  {
+	  cookies = profile + _T("\\Cookies");
+	  history = profile + _T("\\Local Settings\\History");
+	  tempFiles = profile + _T("\\Local Settings\\Temporary Internet Files");
+	  silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
+	  flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
+  }
 
   // Get WinPCap ready (install it if necessary)
   winpcap.Initialize();
@@ -221,162 +238,167 @@ bool CURLBlaster::DoUserLogon(void)
 {
 	bool ret = false;
 	
-	log.Trace(_T("Logging on user:%s, password:%s"), (LPCTSTR)userName, (LPCTSTR)password);
-	
-	// create the account if it doesn't exist
-	USER_INFO_0 * userInfo = NULL;
-	if( !NetUserGetInfo( NULL, userName, 0, (LPBYTE *)&userInfo ) )
-		NetApiBufferFree(userInfo);
-	else
-	{
-		USER_INFO_1 info;
-		memset(&info, 0, sizeof(info));
-		wchar_t name[1000];
-		wchar_t pw[PWLEN];
-		lstrcpyW(name, CT2W(userName));
-		lstrcpyW(pw, CT2W(password));
-		
-		info.usri1_name = name;
-		info.usri1_password = pw;
-		info.usri1_priv = USER_PRIV_USER;
-		info.usri1_comment = L"UrlBlast testing user account";
-		info.usri1_flags = UF_SCRIPT | UF_DONT_EXPIRE_PASSWD;
+  if( hProfile )
+    ret = true;
+  else
+  {
+	  log.Trace(_T("Logging on user:%s, password:%s"), (LPCTSTR)userName, (LPCTSTR)password);
+  	
+	  // create the account if it doesn't exist
+	  USER_INFO_0 * userInfo = NULL;
+	  if( !NetUserGetInfo( NULL, userName, 0, (LPBYTE *)&userInfo ) )
+		  NetApiBufferFree(userInfo);
+	  else
+	  {
+		  USER_INFO_1 info;
+		  memset(&info, 0, sizeof(info));
+		  wchar_t name[1000];
+		  wchar_t pw[PWLEN];
+		  lstrcpyW(name, CT2W(userName));
+		  lstrcpyW(pw, CT2W(password));
+  		
+		  info.usri1_name = name;
+		  info.usri1_password = pw;
+		  info.usri1_priv = USER_PRIV_USER;
+		  info.usri1_comment = L"UrlBlast testing user account";
+		  info.usri1_flags = UF_SCRIPT | UF_DONT_EXPIRE_PASSWD;
 
-		if( !NetUserAdd(NULL, 1, (LPBYTE)&info, NULL) )
-		{
-			CString msg;
-			msg.Format(_T("Created user account '%s'"), (LPCTSTR)userName);
-			log.LogEvent(event_Info, 0, msg);
-			
-			// hide the account from the welcome screen
-			HKEY hKey;
-			if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
-			{
-				DWORD val = 0;
-				RegSetValueEx(hKey, userName, 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-				RegCloseKey(hKey);
-			}
-		}
-		else
-		{
-			CString msg;
-			msg.Format(_T("Failed to create user account '%s'"), (LPCTSTR)userName);
-			log.LogEvent(event_Error, 0, msg);
-		}
-	}
-	
-	// log the user on
-	if( LogonUser(userName, NULL, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &hLogonToken) )
-	{
-		TCHAR szUserName[100];
-		lstrcpy( szUserName, (LPCTSTR)userName);
+		  if( !NetUserAdd(NULL, 1, (LPBYTE)&info, NULL) )
+		  {
+			  CString msg;
+			  msg.Format(_T("Created user account '%s'"), (LPCTSTR)userName);
+			  log.LogEvent(event_Info, 0, msg);
+  			
+			  // hide the account from the welcome screen
+			  HKEY hKey;
+			  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+			  {
+				  DWORD val = 0;
+				  RegSetValueEx(hKey, userName, 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+				  RegCloseKey(hKey);
+			  }
+		  }
+		  else
+		  {
+			  CString msg;
+			  msg.Format(_T("Failed to create user account '%s'"), (LPCTSTR)userName);
+			  log.LogEvent(event_Error, 0, msg);
+		  }
+	  }
+  	
+	  // log the user on
+	  if( LogonUser(userName, NULL, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, &hLogonToken) )
+	  {
+		  TCHAR szUserName[100];
+		  lstrcpy( szUserName, (LPCTSTR)userName);
 
-		// get the SID for the account
-		EnterCriticalSection(&cs);
-		TOKEN_USER * user = NULL;
-		DWORD userLen = 0;
-		DWORD len = 0;
-		GetTokenInformation(hLogonToken, TokenUser, &user, userLen, &len);
-		if( len )
-		{
-			user = (TOKEN_USER *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-			userLen = len;
-			if( user )
-			{
-				if( GetTokenInformation(hLogonToken, TokenUser, user, userLen, &len) )
-				{
-					if( user->User.Sid && IsValidSid(user->User.Sid) )
-					{
-						len = GetLengthSid(user->User.Sid);
-						userSID = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
-						if( userSID )
-							CopySid(len, userSID, user->User.Sid);
-					}
-				}
-				HeapFree(GetProcessHeap(), 0, (LPVOID)user);
+		  // get the SID for the account
+		  EnterCriticalSection(&cs);
+		  TOKEN_USER * user = NULL;
+		  DWORD userLen = 0;
+		  DWORD len = 0;
+		  GetTokenInformation(hLogonToken, TokenUser, &user, userLen, &len);
+		  if( len )
+		  {
+			  user = (TOKEN_USER *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+			  userLen = len;
+			  if( user )
+			  {
+				  if( GetTokenInformation(hLogonToken, TokenUser, user, userLen, &len) )
+				  {
+					  if( user->User.Sid && IsValidSid(user->User.Sid) )
+					  {
+						  len = GetLengthSid(user->User.Sid);
+						  userSID = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+						  if( userSID )
+							  CopySid(len, userSID, user->User.Sid);
+					  }
+				  }
+				  HeapFree(GetProcessHeap(), 0, (LPVOID)user);
 
-			}
-		}
-		LeaveCriticalSection(&cs);
-		
-		log.Trace(_T("Logon ok, loading user profile"));
-		
-		// load their profile
-		PROFILEINFO userProfile;
-		memset( &userProfile, 0, sizeof(userProfile) );
-		userProfile.dwSize = sizeof(userProfile);
-		userProfile.lpUserName = szUserName;
+			  }
+		  }
+		  LeaveCriticalSection(&cs);
+  		
+		  log.Trace(_T("Logon ok, loading user profile"));
+  		
+		  // load their profile
+		  PROFILEINFO userProfile;
+		  memset( &userProfile, 0, sizeof(userProfile) );
+		  userProfile.dwSize = sizeof(userProfile);
+		  userProfile.lpUserName = szUserName;
 
-		if( LoadUserProfile( hLogonToken, &userProfile ) )
-		{
-			hProfile = userProfile.hProfile;
-			
-			log.Trace(_T("Profile loaded, locating profile directory"));
-			
-			// close the IE settings from the main OS user to the URLBlast user
-			CloneIESettings();
+		  if( LoadUserProfile( hLogonToken, &userProfile ) )
+		  {
+			  hProfile = userProfile.hProfile;
+  			
+			  log.Trace(_T("Profile loaded, locating profile directory"));
+  			
+			  // close the IE settings from the main OS user to the URLBlast user
+			  CloneIESettings();
 
-			// figure out where their directories are
-			TCHAR path[MAX_PATH];
-			DWORD len = _countof(path);
-			if( GetUserProfileDirectory(hLogonToken, path, &len) )
-			{
-				profile = path;
-				
-				HKEY hKey;
-				if( SUCCEEDED(RegOpenKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"), 0, KEY_READ, &hKey)) )
-				{
-					len = _countof(path);
-					if( SUCCEEDED(RegQueryValueEx(hKey, _T("Cookies"), 0, 0, (LPBYTE)path, &len)) )
-						cookies = path;
+			  // figure out where their directories are
+			  TCHAR path[MAX_PATH];
+			  DWORD len = _countof(path);
+			  if( GetUserProfileDirectory(hLogonToken, path, &len) )
+			  {
+				  profile = path;
+  				
+				  HKEY hKey;
+				  if( SUCCEEDED(RegOpenKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders"), 0, KEY_READ, &hKey)) )
+				  {
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Cookies"), 0, 0, (LPBYTE)path, &len)) )
+						  cookies = path;
 
-					len = _countof(path);
-					if( SUCCEEDED(RegQueryValueEx(hKey, _T("History"), 0, 0, (LPBYTE)path, &len)) )
-						history = path;
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("History"), 0, 0, (LPBYTE)path, &len)) )
+						  history = path;
 
-					len = _countof(path);
-					if( SUCCEEDED(RegQueryValueEx(hKey, _T("Cache"), 0, 0, (LPBYTE)path, &len)) )
-						tempFiles = path;
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Cache"), 0, 0, (LPBYTE)path, &len)) )
+						  tempFiles = path;
 
-					len = _countof(path);
-					if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local AppData"), 0, 0, (LPBYTE)path, &len)) )
-					{
-						silverlight = path;
-						silverlight += _T("\\Microsoft\\Silverlight");
-					}
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local AppData"), 0, 0, (LPBYTE)path, &len)) )
+					  {
+						  silverlight = path;
+						  silverlight += _T("\\Microsoft\\Silverlight");
+					  }
 
-					len = _countof(path);
-					if( SUCCEEDED(RegQueryValueEx(hKey, _T("AppData"), 0, 0, (LPBYTE)path, &len)) )
-					{
-						flash = path;
-						flash += _T("\\Macromedia\\Flash Player\\#SharedObjects");
-					}
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("AppData"), 0, 0, (LPBYTE)path, &len)) )
+					  {
+						  flash = path;
+						  flash += _T("\\Macromedia\\Flash Player\\#SharedObjects");
+					  }
 
-					cookies.Replace(_T("%USERPROFILE%"), profile);
-					history.Replace(_T("%USERPROFILE%"), profile);
-					tempFiles.Replace(_T("%USERPROFILE%"), profile);
-					silverlight.Replace(_T("%USERPROFILE%"), profile);
-					flash.Replace(_T("%USERPROFILE%"), profile);
-					
-					RegCloseKey(hKey);
-				}
-			}
-			
-			ret = true;
-		}
-	}
-	else
-	{
-		log.Trace(_T("Logon failed: %d"), GetLastError());
-		CString msg;
-		msg.Format(_T("Logon failed for '%s'"), (LPCTSTR)userName);
-		log.LogEvent(event_Error, 0, msg);
-	}
+					  cookies.Replace(_T("%USERPROFILE%"), profile);
+					  history.Replace(_T("%USERPROFILE%"), profile);
+					  tempFiles.Replace(_T("%USERPROFILE%"), profile);
+					  silverlight.Replace(_T("%USERPROFILE%"), profile);
+					  flash.Replace(_T("%USERPROFILE%"), profile);
+  					
+					  RegCloseKey(hKey);
+				  }
+			  }
+  			
+			  ret = true;
+		  }
+	  }
+	  else
+	  {
+		  log.Trace(_T("Logon failed: %d"), GetLastError());
+		  CString msg;
+		  msg.Format(_T("Logon failed for '%s'"), (LPCTSTR)userName);
+		  log.LogEvent(event_Error, 0, msg);
+	  }
 
-	if( ret )
-		log.Trace(_T("DoUserLogon successful for %s"), (LPCTSTR)userName);
-	else
-		log.Trace(_T("DoUserLogon failed for %s"), (LPCTSTR)userName);
+	  if( ret )
+		  log.Trace(_T("DoUserLogon successful for %s"), (LPCTSTR)userName);
+	  else
+		  log.Trace(_T("DoUserLogon failed for %s"), (LPCTSTR)userName);
+  }
 	
 	return ret;
 }
@@ -549,7 +571,19 @@ bool CURLBlaster::LaunchBrowser(void)
 				
 				// launch internet explorer as our user
 				EnterCriticalSection(&cs);
-				if( CreateProcessWithLogonW(CT2W((LPCTSTR)userName), NULL, CT2W((LPCTSTR)password), 0, CT2W(exe), CT2W(commandLine), 0, NULL, NULL, &si, &pi) )
+        bool ok = false;
+        if( hProfile == HKEY_CURRENT_USER )
+        {
+				  if( CreateProcess(CT2W(exe), CT2W(commandLine), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi) )
+            ok = true;
+        }
+        else
+        {
+				  if( CreateProcessWithLogonW(CT2W((LPCTSTR)userName), NULL, CT2W((LPCTSTR)password), 0, CT2W(exe), CT2W(commandLine), 0, NULL, NULL, &si, &pi) )
+            ok = true;
+        }
+
+        if( ok )
 				{
 					// keep track of the process ID for the browser we care about
 					browserPID = pi.dwProcessId;
@@ -925,7 +959,15 @@ bool CURLBlaster::ConfigureIE(void)
 
 			RegCloseKey(hKey);
 		}
-	}
+
+    // configure Chrome Frame to be the default renderer (if it is installed)
+		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Google\\ChromeFrame"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		{
+			DWORD val = 1;
+			RegSetValueEx(hKey, _T("IsDefaultRenderer"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			RegCloseKey(hKey);
+		}
+  }
 
 	return ret;
 }
@@ -1126,7 +1168,7 @@ void CURLBlaster::KillProcs()
 	
 	WTS_PROCESS_INFO * proc = NULL;
 	DWORD count = 0;
-	if( WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count) )
+	if( hProfile != HKEY_CURRENT_USER && WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count) )
 	{
 		for( DWORD i = 0; i < count; i++ )
 		{

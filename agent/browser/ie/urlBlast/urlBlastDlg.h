@@ -96,6 +96,7 @@ protected:
 	SECURITY_DESCRIPTOR SD;
 	CString dynaTrace;
 	int ec2;
+  int useCurrentAccount;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;
@@ -114,4 +115,5 @@ protected:
 	void SetupScreen(void);
 	void GetEC2Config();
 	bool GetUrlText(CString url, CString &response);
+  void ConfigureDummynet();
 };

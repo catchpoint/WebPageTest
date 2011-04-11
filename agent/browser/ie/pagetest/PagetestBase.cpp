@@ -430,7 +430,8 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString &tag, CSt
 			if( SUCCEEDED(tracker.browser->get_Document(&spDoc)) && spDoc )
 			{
 				CComQIPtr<IHTMLDocument2> doc = spDoc;
-				result = FindDomElementByAttribute(tag, attribute, value, op, doc);
+        if( doc )
+				  result = FindDomElementByAttribute(tag, attribute, value, op, doc);
 			}
 		}
 	}
@@ -735,6 +736,8 @@ bool CPagetestBase::FindBrowserWindow()
 
   if (hBrowserWnd)
     found = true;
+
+  ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X\n"), hBrowserWnd);
 
   return found;
 }

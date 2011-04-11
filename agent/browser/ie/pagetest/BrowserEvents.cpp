@@ -128,7 +128,7 @@ void CBrowserEvents::NavigateComplete(CComPtr<IWebBrowser2> browser, CString & s
 	  {
 		  CComQIPtr<IHTMLDocument2> doc = spDoc;
 	    CComPtr<IHTMLWindow2> spWindow;
-      if( SUCCEEDED(doc->get_parentWindow(&spWindow)) && spWindow )
+      if( doc && SUCCEEDED(doc->get_parentWindow(&spWindow)) && spWindow )
       {
         CComQIPtr<IDispatchEx> spWndEx = spWindow;
         if( spWndEx )
@@ -193,7 +193,10 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 
 		// grab a screen shot of the document complete event
 		if( saveEverything )
+    {
+      FindBrowserWindow();
       screenCapture.Capture(hBrowserWnd, CapturedImage::DOCUMENT_COMPLETE);
+    }
 
 		// update the waterfall
 		RepaintWaterfall();

@@ -374,7 +374,7 @@ void CPagetestReporting::FlushResults(void)
               msVideoDone = max(msVideoDone, msAFT);
             }
 
-            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video up to %d ms\n"), msVideoDone);
             SaveVideo(msVideoDone);
 
             // save out the progress data
@@ -3116,70 +3116,72 @@ void CPagetestReporting::SaveUrls(void)
 				if( SUCCEEDED(tracker.browser->get_Document(&spDoc)) && spDoc )
 				{
 					CComQIPtr<IHTMLDocument2> doc = spDoc;
-					
-					// get the collection of links on the main document
-					GetLinks( doc, urls);
+          if( doc )
+          {
+					  // get the collection of links on the main document
+					  GetLinks( doc, urls);
 
-					// walk all of the frames on the document using OLE
-					// this is a little complicated because we need to bypass cross site scripting security
-					CComQIPtr<IOleContainer> ole(doc);
-					if(ole)
-					{
-						CComPtr<IEnumUnknown> objects;
+					  // walk all of the frames on the document using OLE
+					  // this is a little complicated because we need to bypass cross site scripting security
+					  CComQIPtr<IOleContainer> ole(doc);
+					  if(ole)
+					  {
+						  CComPtr<IEnumUnknown> objects;
 
-						// Get an enumerator for the frames
-						if( SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) && objects )
-						{
-							IUnknown* pUnk;
-							ULONG uFetched;
+						  // Get an enumerator for the frames
+						  if( SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) && objects )
+						  {
+							  IUnknown* pUnk;
+							  ULONG uFetched;
 
-							// Enumerate all the frames
-							while( S_OK == objects->Next(1, &pUnk, &uFetched) )
-							{
-								// QI for IWebBrowser here to see if we have an embedded browser
-								CComQIPtr<IWebBrowser2> browser(pUnk);
-								pUnk->Release();
+							  // Enumerate all the frames
+							  while( S_OK == objects->Next(1, &pUnk, &uFetched) )
+							  {
+								  // QI for IWebBrowser here to see if we have an embedded browser
+								  CComQIPtr<IWebBrowser2> browser(pUnk);
+								  pUnk->Release();
 
-								if (browser)
-								{
-									CComPtr<IDispatch> disp;
-									if( SUCCEEDED(browser->get_Document(&disp)) && disp )
-									{
-										CComQIPtr<IHTMLDocument2> frameDoc(disp);
-										if (frameDoc)
-											GetLinks( frameDoc, urls);
-									}
-								}
-							}
-						}
-					}			
+								  if (browser)
+								  {
+									  CComPtr<IDispatch> disp;
+									  if( SUCCEEDED(browser->get_Document(&disp)) && disp )
+									  {
+										  CComQIPtr<IHTMLDocument2> frameDoc(disp);
+										  if (frameDoc)
+											  GetLinks( frameDoc, urls);
+									  }
+								  }
+							  }
+						  }
+					  }			
 
-					// walk all of the frames on the document using native support (OLE doesn't seem to grab them all)
-					CComPtr<IHTMLFramesCollection2> frames;
-					if( SUCCEEDED(doc->get_frames(&frames)) && frames )
-					{
-						// for each frame, walk all of the elements in the frame
-						long count = 0;
-						if( SUCCEEDED(frames->get_length(&count)) )
-						{
-							for( long i = 0; i < count; i++ )
-							{
-								_variant_t index = i;
-								_variant_t varFrame;
-								
-								if( SUCCEEDED(frames->item(&index, &varFrame)) )
-								{
-									CComQIPtr<IHTMLWindow2> window(varFrame);
-									if( window )
-									{
-										CComQIPtr<IHTMLDocument2> frameDoc;
-										if( SUCCEEDED(window->get_document(&frameDoc)) && frameDoc )
-											GetLinks( frameDoc, urls);
-									}
-								}
-							}
-						}
-					}
+					  // walk all of the frames on the document using native support (OLE doesn't seem to grab them all)
+					  CComPtr<IHTMLFramesCollection2> frames;
+					  if( SUCCEEDED(doc->get_frames(&frames)) && frames )
+					  {
+						  // for each frame, walk all of the elements in the frame
+						  long count = 0;
+						  if( SUCCEEDED(frames->get_length(&count)) )
+						  {
+							  for( long i = 0; i < count; i++ )
+							  {
+								  _variant_t index = i;
+								  _variant_t varFrame;
+  								
+								  if( SUCCEEDED(frames->item(&index, &varFrame)) )
+								  {
+									  CComQIPtr<IHTMLWindow2> window(varFrame);
+									  if( window )
+									  {
+										  CComQIPtr<IHTMLDocument2> frameDoc;
+										  if( SUCCEEDED(window->get_document(&frameDoc)) && frameDoc )
+											  GetLinks( frameDoc, urls);
+									  }
+								  }
+							  }
+						  }
+					  }
+          }
 				}
 			}
 		}
