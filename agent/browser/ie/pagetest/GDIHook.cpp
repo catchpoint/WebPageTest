@@ -125,6 +125,8 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
   if( dlg && (dlg->active || dlg->capturingAFT) )
 	{
 		HWND hWnd = WindowFromDC(hdc);
+    ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X\n"), hWnd);
+
 		if( hWnd == dlg->hBrowserWnd )
 			dlg->windowUpdated = true;
 	}
