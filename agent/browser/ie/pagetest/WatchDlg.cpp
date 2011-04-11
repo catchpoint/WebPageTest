@@ -78,6 +78,7 @@ const double scale[] = {1, 2, 5};
 -----------------------------------------------------------------------------*/
 LRESULT CWatchDlg::OnInitDialog(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+  hGDINotifyWindow = m_hWnd;
 	CAxDialogImpl<CWatchDlg>::OnInitDialog(uMsg, wParam, lParam, bHandled);
 	bHandled = TRUE;
 
@@ -1804,6 +1805,16 @@ LRESULT CWatchDlg::OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
 		CheckComplete();
 	}
 	
+	return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+LRESULT CWatchDlg::OnCheckPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+{
+	if( active && !painted )
+    CheckWindowPainted();
+
 	return 0;
 }
 

@@ -109,6 +109,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "protobuf_lite", "pagetest\P
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "pagetest\PageSpeed\third_party\zlib\zlib.vcproj", "{8423AF0D-4B88-4EBF-94E1-E4D00D00E21C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptghook", "wptghook\wptghook.vcproj", "{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -724,6 +726,24 @@ Global
 		{8423AF0D-4B88-4EBF-94E1-E4D00D00E21C}.Release|Win32.ActiveCfg = Release|Win32
 		{8423AF0D-4B88-4EBF-94E1-E4D00D00E21C}.Release|Win32.Build.0 = Release|Win32
 		{8423AF0D-4B88-4EBF-94E1-E4D00D00E21C}.Release|x64.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Debug|Win32.Build.0 = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Debug|x64.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Debug|Win32.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Debug|Win32.Build.0 = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Debug|x64.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Release|Win32.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Release|Win32.Build.0 = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.DLL Release|x64.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Debug|Win32.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Debug|Win32.Build.0 = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Debug|x64.ActiveCfg = Debug|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Release|Win32.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Release|Win32.Build.0 = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.LIB Release|x64.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|Win32.ActiveCfg = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|Win32.Build.0 = Release|Win32
+		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

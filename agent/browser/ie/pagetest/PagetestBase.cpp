@@ -49,6 +49,11 @@ CPagetestBase::CPagetestBase(void):
 	, hBrowserWnd(NULL)
 	, ieMajorVer(0)
 	, ignoreSSL(0)
+  , _SetGDIWindow(NULL)
+  , _SetGDIWindowUpdated(NULL)
+  , _GDIWindowUpdated(NULL)
+  , windowUpdated(false)
+  , hGDINotifyWindow(NULL)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 	msFreq = freq / (__int64)1000;
@@ -80,6 +85,20 @@ CPagetestBase::CPagetestBase(void):
 
 		key.Close();
 	}
+
+  // connect to the global GDI hook if it is present
+	TCHAR hookDll[MAX_PATH];
+	if( GetModuleFileName(reinterpret_cast<HMODULE>(&__ImageBase), hookDll, _countof(hookDll)) )
+  {
+    lstrcpy(PathFindFileName(hookDll), _T("wptghook.dll"));
+    HMODULE hHookDll = LoadLibrary(hookDll);
+    if (hHookDll)
+    {
+      _SetGDIWindow = (SETGDIWINDOW)GetProcAddress(hHookDll, "_SetGDIWindow@12");
+      _SetGDIWindowUpdated = (SETGDIWINDOWUPDATED)GetProcAddress(hHookDll, "_SetGDIWindowUpdated@4");
+      _GDIWindowUpdated = (GDIWINDOWUPDATED)GetProcAddress(hHookDll, "_GDIWindowUpdated@0");
+    }
+  }
 
   // Instantiate the DOM interface that we're going to attach to the DOM for script to interact
   #ifndef PAGETEST_EXE
@@ -735,9 +754,40 @@ bool CPagetestBase::FindBrowserWindow()
     hBrowserWnd = FindBrowserDocument(hMainWindow);
 
   if (hBrowserWnd)
+  {
     found = true;
+    if( _SetGDIWindow )
+      _SetGDIWindow(hBrowserWnd, hGDINotifyWindow, UWM_CHECK_PAINT);
+  }
 
-  ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X\n"), hBrowserWnd);
+  TCHAR wndClass[1024];
+  if( GetClassName(hBrowserWnd, wndClass, _countof(wndClass)) )
+  {
+    ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X - %s\n"), hBrowserWnd, wndClass);
+  }
+  else
+  {
+    ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X\n"), hBrowserWnd);
+  }
 
   return found;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool  CPagetestBase::BrowserWindowUpdated()
+{
+  bool ret = windowUpdated;
+  if (_GDIWindowUpdated)
+    ret = _GDIWindowUpdated();
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  CPagetestBase::SetBrowserWindowUpdated(bool updated)
+{
+  windowUpdated = updated;
+  if (_SetGDIWindowUpdated)
+    _SetGDIWindowUpdated(updated);
 }

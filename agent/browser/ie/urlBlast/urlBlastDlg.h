@@ -97,6 +97,7 @@ protected:
 	CString dynaTrace;
 	int ec2;
   int useCurrentAccount;
+  HMODULE hHookDll;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;
@@ -116,4 +117,6 @@ protected:
 	void GetEC2Config();
 	bool GetUrlText(CString url, CString &response);
   void ConfigureDummynet();
+  void InstallSystemGDIHook();
+  void RemoveSystemGDIHook();
 };

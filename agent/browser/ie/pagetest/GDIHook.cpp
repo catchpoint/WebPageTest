@@ -125,10 +125,25 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
   if( dlg && (dlg->active || dlg->capturingAFT) )
 	{
 		HWND hWnd = WindowFromDC(hdc);
-    ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X\n"), hWnd);
+    if( hWnd )
+    {
+      TCHAR wndClass[1024];
+      if( GetClassName(hWnd, wndClass, _countof(wndClass)) )
+      {
+        ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X - %s\n"), hWnd, wndClass);
+      }
+      else
+      {
+        ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X\n"), hWnd);
+      }
 
-		if( hWnd == dlg->hBrowserWnd )
-			dlg->windowUpdated = true;
+		  if( hWnd == dlg->hBrowserWnd )
+        dlg->SetBrowserWindowUpdated(true);
+    }
+    else
+    {
+      ATLTRACE(_T("[pagetest] - BitBlt() - Not a window\n"));
+    }
 	}
 
 	return ret;
@@ -143,7 +158,7 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 	if( _EndPaint )
 		ret = _EndPaint(hWnd, lpPaint);
 
-	if( dlg && !dlg->painted && dlg->windowUpdated && hWnd == dlg->hBrowserWnd )
+  if( dlg && !dlg->painted && hWnd == dlg->hBrowserWnd && dlg->BrowserWindowUpdated() )
     dlg->CheckWindowPainted();
 
 	return ret;
@@ -158,7 +173,7 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
   if( _ReleaseDC )
     ret = _ReleaseDC(hWnd, hDC);
 
-	if( dlg && !dlg->painted && dlg->windowUpdated && hWnd == dlg->hBrowserWnd )
+	if( dlg && !dlg->painted && hWnd == dlg->hBrowserWnd && dlg->BrowserWindowUpdated() )
     dlg->CheckWindowPainted();
 
   return ret;

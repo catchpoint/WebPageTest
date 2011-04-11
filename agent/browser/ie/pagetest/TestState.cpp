@@ -48,7 +48,6 @@ CTestState::CTestState(void):
   ,lastCpuKernel(0)
   ,lastCpuUser(0)
 	,lastTime(0)
-	,windowUpdated(true)
 	,imageCount(0)
 	,lastImageTime(0)
 	,lastRealTime(0)
@@ -69,7 +68,7 @@ void CTestState::Reset(void)
 	EnterCriticalSection(&cs);
 	currentState = READYSTATE_UNINITIALIZED;
 	painted = false;
-	windowUpdated = true;
+	SetBrowserWindowUpdated(true);
 	LeaveCriticalSection(&cs);
 }
 
@@ -719,11 +718,11 @@ void CTestState::CheckDOM(void)
 -----------------------------------------------------------------------------*/
 void CTestState::CheckWindowPainted()
 {
-	if( active && windowUpdated && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) )
+	if( active && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) && BrowserWindowUpdated() )
 	{
 		// grab a screen shot of the window
     screenCapture.Lock();
-    windowUpdated = false;
+    SetBrowserWindowUpdated(false);
 		__int64 now;
 		QueryPerformanceCounter((LARGE_INTEGER *)&now);
     const DWORD START_RENDER_MARGIN = 30;
@@ -894,7 +893,7 @@ void CTestState::StartMeasuring(void)
 		imageCount = 0;
 		lastImageTime = 0;
 		lastRealTime = 0;
-		windowUpdated = true;	// force an initial screen shot
+		SetBrowserWindowUpdated(true);
 
 		// now find just the browser control
 		FindBrowserWindow();
@@ -1003,7 +1002,7 @@ void CTestState::BackgroundTimer(void)
 			}
 
 			bool grabImage = false;
-			if( (painted || !lastImageTime) && captureVideo && windowUpdated && hBrowserWnd && IsWindow(hBrowserWnd) )
+			if( (painted || !lastImageTime) && captureVideo && hBrowserWnd && IsWindow(hBrowserWnd) && BrowserWindowUpdated() )
 			{
 				// see what time increment we are in
 				// we go from 0.1 second to 1 second to 5 second intervals
@@ -1021,7 +1020,7 @@ void CTestState::BackgroundTimer(void)
 			if( grabImage )
 			{
 				ATLTRACE(_T("[Pagetest] - Grabbing video frame : %d ms\n"), data.ms);
-				windowUpdated = false;
+				SetBrowserWindowUpdated(false);
         screenCapture.Capture(hBrowserWnd, CapturedImage::VIDEO);
 				imageCount++;
 				lastImageTime = data.ms;

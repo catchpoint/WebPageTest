@@ -48,7 +48,6 @@ public:
 	READYSTATE	currentState;
 	virtual void Reset(void);
 	bool		painted;
-	bool		windowUpdated;
 	HANDLE		hTimer;
 	DWORD		lastBytes;
 	DWORD		lastTime;

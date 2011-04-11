@@ -61,6 +61,7 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, pipeOut(0)
 	, ec2(0)
   , useCurrentAccount(0)
+  , hHookDll(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
@@ -234,6 +235,8 @@ void CurlBlastDlg::OnClose()
 	// shut down the url manager
 	urlManager.Stop();
 
+  RemoveSystemGDIHook();
+
 	crashLog = NULL;
 	
 	CDialog::OnOK();
@@ -318,6 +321,8 @@ void CurlBlastDlg::DoStartup(void)
 			FreeLibrary(hPagetest);
 		}
 	}
+
+  InstallSystemGDIHook();
 
 	status.SetWindowText(_T("Configuring Dummynet..."));
   ConfigureDummynet();
@@ -1705,5 +1710,39 @@ void CurlBlastDlg::ConfigureDummynet()
 		  CloseHandle(pi.hThread);
 		  CloseHandle(pi.hProcess);
 	  }
+  }
+}
+
+typedef void (__stdcall * WPTGHOOK_INSTALLHOOK)(void);
+typedef void (__stdcall * WPTGHOOK_REMOVEHOOK)(void);
+
+/*-----------------------------------------------------------------------------
+	See if wptghook.dll is present and install the system-wide hook if it is
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::InstallSystemGDIHook()
+{
+  TCHAR dll[MAX_PATH];
+  if( GetModuleFileName(NULL, dll, _countof(dll)) )
+  {
+    lstrcpy(PathFindFileName(dll), _T("wptghook.dll"));
+    hHookDll = LoadLibrary(dll);
+    if (hHookDll)
+    {
+      WPTGHOOK_INSTALLHOOK _installHook = (WPTGHOOK_INSTALLHOOK)GetProcAddress(hHookDll, "_InstallHook@0");
+      if( _installHook )
+        _installHook();
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::RemoveSystemGDIHook()
+{
+  if (hHookDll)
+  {
+    WPTGHOOK_REMOVEHOOK _removeHook = (WPTGHOOK_REMOVEHOOK)GetProcAddress(hHookDll, "_RemoveHook@0");
+    if( _removeHook )
+      _removeHook();
   }
 }

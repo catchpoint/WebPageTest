@@ -38,8 +38,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WebPagetestDOM.h"
 #endif
 
+#define UWM_UPDATE_WATERFALL	(WM_APP + 2)
+#define UWM_REPAINT_WATERFALL	(WM_APP + 3)
+#define UWM_RESET_UI			(WM_APP + 4)
+#define UWM_CHECK_STUFF			(WM_APP + 5)
+#define UWM_DESTROY				(WM_APP + 6)
+#define UWM_CHECK_PAINT			(WM_USER + 8)
+
 #define JPEG_DEFAULT_QUALITY 30
 #define JPEG_VIDEO_QUALITY 75
+
+typedef void (__stdcall * SETGDIWINDOW)(HWND hWnd, HWND hNotify, UINT msgNotify);
+typedef void (__stdcall * SETGDIWINDOWUPDATED)(bool);
+typedef bool (__stdcall * GDIWINDOWUPDATED)(void);
 
 typedef enum {
 	END,
@@ -222,6 +233,12 @@ public:
   CComObject<CWebPagetestDOM>	* webpagetestDom;
   #endif
 
+  // global GDI hooking
+  SETGDIWINDOW        _SetGDIWindow;
+  SETGDIWINDOWUPDATED _SetGDIWindowUpdated;
+  GDIWINDOWUPDATED    _GDIWindowUpdated;
+  HWND                hGDINotifyWindow;
+
 	SECURITY_ATTRIBUTES nullDacl;
 	SECURITY_DESCRIPTOR SD;
 
@@ -247,6 +264,8 @@ public:
 	virtual void	StartMeasuring(void) = 0;
   bool FindBrowserWindow();
   HWND FindBrowserDocument(HWND parent_window);
+  bool  BrowserWindowUpdated();
+  void  SetBrowserWindowUpdated(bool updated);
 	
 	typedef enum{
 		equal = 0,
@@ -257,4 +276,7 @@ public:
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString attrVal);	// combined attribute and value separated by '
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString &tag, CString &attribute, CString &value, attrOperator &op);
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString &tag, CString &attribute, CString &value, attrOperator &op, CComPtr<IHTMLDocument2> doc);
+
+protected:
+  bool windowUpdated;
 };

@@ -36,13 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "teststate.h"
 #include "detailsdlg.h"
 
-#define UWM_UPDATE_WATERFALL	(WM_APP + 2)
-#define UWM_REPAINT_WATERFALL	(WM_APP + 3)
-#define UWM_RESET_UI			(WM_APP + 4)
-#define UWM_CHECK_STUFF			(WM_APP + 5)
-#define UWM_DESTROY				(WM_APP + 6)
-#define UWM_CHECK_PAINT			(WM_APP + 8)
-
 // CWatchDlg
 class CWatchDlg : 
 	public CAxDialogImpl<CWatchDlg>
@@ -121,6 +114,7 @@ BEGIN_MSG_MAP(CWatchDlg)
 	MESSAGE_HANDLER(UWM_REPAINT_WATERFALL, OnRepaintWaterfall)
 	MESSAGE_HANDLER(UWM_RESET_UI, OnResetUI)
 	MESSAGE_HANDLER(UWM_CHECK_STUFF, OnCheckStuff)
+  MESSAGE_HANDLER(UWM_CHECK_PAINT, OnCheckPaint)
 	NOTIFY_HANDLER(IDC_WATERFALL, NM_CUSTOMDRAW, OnNMCustomdrawWaterfall)
 	NOTIFY_HANDLER(IDC_WATERFALL, TVN_SELCHANGING, OnTvnSelchangingWaterfall)
 	NOTIFY_HANDLER(IDC_WATERFALL, TVN_SELCHANGED, OnTvnSelchangedWaterfall)
@@ -163,6 +157,7 @@ public:
 	LRESULT OnRepaintWaterfall(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnResetUI(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	LRESULT OnCheckStuff(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
+	LRESULT OnCheckPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 	
 	virtual void Create(void);
 	void Destroy(void);
