@@ -156,6 +156,14 @@ HRESULT CIEHook::RemoveHooks(void)
 		
 	CWatchDlg::DestroyDlg();	
 
+  if( m_spChromeFrame )
+  {
+    CComVariant dummy(static_cast<IDispatch*>(NULL));
+    m_spChromeFrame->put_onload(dummy);
+    m_spChromeFrame->put_onloaderror(dummy);
+    m_spChromeFrame.Release();
+  }
+
 	m_spWebBrowser2.Release();
 	
 	ATLASSERT(SUCCEEDED(hr));
@@ -174,31 +182,38 @@ STDMETHODIMP_(void) CIEHook::OnBeforeNavigate2( IDispatch *pDisp, VARIANT * url,
 	if( TargetFrameName )
 		szFrameName = *TargetFrameName;
 		
-    // Is this for the top frame window?
-    // Check COM identity: compare IUnknown interface pointers.
-    IUnknown* pUnkBrowser = NULL;
-    IUnknown* pUnkDisp = NULL;
-    if( SUCCEEDED( m_spWebBrowser2->QueryInterface(IID_IUnknown, (void**)&pUnkBrowser) ) )
+  // Is this for the top frame window?
+  // Check COM identity: compare IUnknown interface pointers.
+  IUnknown* pUnkBrowser = NULL;
+  IUnknown* pUnkDisp = NULL;
+  if( SUCCEEDED( m_spWebBrowser2->QueryInterface(IID_IUnknown, (void**)&pUnkBrowser) ) )
+  {
+    if( SUCCEEDED( pDisp->QueryInterface(IID_IUnknown, (void**)&pUnkDisp) ) )
     {
-        if( SUCCEEDED( pDisp->QueryInterface(IID_IUnknown, (void**)&pUnkDisp) ) )
-        {
-			if( dlg )
-			{
-				if (pUnkBrowser == pUnkDisp)
-				{
-					ATLTRACE(_T("[Pagetest] - OnBeforeNavigate2 - url = %s\n"), (LPCTSTR)szUrl);
-					dlg->BeforeNavigate(szUrl);
-				}
-				else
-				{
-					ATLTRACE(_T("[Pagetest] - OnBeforeNavigate2 : starting frame - frame(0x%08x) = %s, url = %s\n"), pUnkDisp, (LPCTSTR)szFrameName, (LPCTSTR)szUrl);
-				}
-			}
-			
-            pUnkDisp->Release();
-        }
-        pUnkBrowser->Release();
+		  if( dlg )
+		  {
+			  if (pUnkBrowser == pUnkDisp)
+			  {
+				  ATLTRACE(_T("[Pagetest] - OnBeforeNavigate2 - url = %s\n"), (LPCTSTR)szUrl);
+          if( m_spChromeFrame )
+          {
+            CComVariant dummy(static_cast<IDispatch*>(NULL));
+            m_spChromeFrame->put_onload(dummy);
+            m_spChromeFrame->put_onloaderror(dummy);
+            m_spChromeFrame.Release();
+          }
+				  dlg->BeforeNavigate(szUrl);
+			  }
+			  else
+			  {
+				  ATLTRACE(_T("[Pagetest] - OnBeforeNavigate2 : starting frame - frame(0x%08x) = %s, url = %s\n"), pUnkDisp, (LPCTSTR)szFrameName, (LPCTSTR)szUrl);
+			  }
+		  }
+		
+      pUnkDisp->Release();
     }
+    pUnkBrowser->Release();
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -225,7 +240,9 @@ STDMETHODIMP_(void) CIEHook::OnDocumentComplete( IDispatch *pDisp, VARIANT * url
 					CString buff;
 					buff.Format(_T("[Pagetest] * Document Complete (main frame) - url = %s\n"), (LPCTSTR)szUrl);
 					OutputDebugString(buff);
-					dlg->DocumentComplete(szUrl);
+
+          if( !AttachChromeFrame() )
+            dlg->DocumentComplete(szUrl);
 				}
 				else
 				{
@@ -277,13 +294,8 @@ STDMETHODIMP_(void) CIEHook::OnNavigateComplete( IDispatch *pDisp, VARIANT * url
 					CString buff;
 					buff.Format(_T("[Pagetest] * OnNavigateComplete (main frame) - url = %s\n"), (LPCTSTR)szUrl);
 					OutputDebugString(buff);
-					dlg->NavigateComplete(m_spWebBrowser2, szUrl);
-				}
-				else
-				{
-					CString buff;
-					buff.Format(_T("[Pagetest] * OnNavigateComplete (frame 0x%08x) - url = %s\n"), pUnkDisp, (LPCTSTR)szUrl);
-					OutputDebugString(buff);
+
+          dlg->NavigateComplete(m_spWebBrowser2, szUrl);
 				}
 			}
 
@@ -432,4 +444,72 @@ STDMETHODIMP_(void) CIEHook::OnStatusTextChange( BSTR bstrStatus )
 	CString status(bstrStatus);
 	if( dlg )
 		dlg->StatusUpdate(status);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CIEHook::AttachChromeFrame()
+{
+  bool ret = false;
+
+  // see if we are running Chrome Frame
+  if( !m_spChromeFrame )
+  {
+    CComPtr<IDispatch> spDoc;
+    if( SUCCEEDED(m_spWebBrowser2->get_Document(&spDoc)) && spDoc )
+      m_spChromeFrame = spDoc;
+  }
+  
+  if (m_spChromeFrame)
+  {
+    CComVariant onloaderror(onloaderror_.ToDispatch());
+    CComVariant onload(onload_.ToDispatch());
+    if( SUCCEEDED(m_spChromeFrame->put_onload(onload)) &&
+        SUCCEEDED(m_spChromeFrame->put_onloaderror(onloaderror)) )
+    {
+      OutputDebugString(_T("[Pagetest] Attached to Chrome Frame onload notification"));
+      dlg->ChromeFrame(m_spChromeFrame);
+      ret = true;
+    }
+    else
+      OutputDebugString(_T("[Pagetest] Failed to Attach to Chrome Frame onload notification"));
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+HRESULT CIEHook::OnLoad(const VARIANT* param) 
+{
+  if (dlg)
+  {
+    CString url(param->bstrVal);
+
+    CString buff;
+		buff.Format(_T("[Pagetest] * Chrome Frame OnLoad - url = %s\n"), (LPCTSTR)url);
+		OutputDebugString(buff);
+
+    dlg->DocumentComplete(url);
+  }
+
+  return S_OK;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+HRESULT CIEHook::OnLoadError(const VARIANT* param) 
+{
+  if (dlg)
+  {
+    CString url(param->bstrVal);
+
+    CString buff;
+		buff.Format(_T("[Pagetest] * Chrome Frame OnLoadError - url = %s\n"), (LPCTSTR)url);
+		OutputDebugString(buff);
+
+    dlg->DocumentComplete(url, 99995);
+  }
+
+  return S_OK;
 }

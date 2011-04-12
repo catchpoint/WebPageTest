@@ -625,65 +625,68 @@ void CTestState::CheckComplete()
 -----------------------------------------------------------------------------*/
 void CTestState::CheckReadyState(void)
 {
-	// figure out the old state (first non-complete browser window)
-	EnterCriticalSection(&cs);
-	READYSTATE oldState = READYSTATE_COMPLETE;
-	POSITION pos = browsers.GetHeadPosition();
-	while( pos && oldState == READYSTATE_COMPLETE )
-	{
-		CBrowserTracker tracker = browsers.GetNext(pos);
-		if( tracker.state != READYSTATE_COMPLETE )
-			oldState = tracker.state;
-	}
-	
-	// update the state for all browsers in this thread
-	CAtlList<CComPtr<IWebBrowser2>> browsers2;
-	pos = browsers.GetHeadPosition();
-	while( pos )
-	{
-		POSITION oldPos = pos;
-		CBrowserTracker tracker = browsers.GetNext(pos);
-		if(tracker.browser && tracker.threadId == GetCurrentThreadId())
-			tracker.browser->get_ReadyState(&(browsers.GetAt(oldPos).state));
-	}
+  if (!m_spChromeFrame)
+  {
+	  // figure out the old state (first non-complete browser window)
+	  EnterCriticalSection(&cs);
+	  READYSTATE oldState = READYSTATE_COMPLETE;
+	  POSITION pos = browsers.GetHeadPosition();
+	  while( pos && oldState == READYSTATE_COMPLETE )
+	  {
+		  CBrowserTracker tracker = browsers.GetNext(pos);
+		  if( tracker.state != READYSTATE_COMPLETE )
+			  oldState = tracker.state;
+	  }
+  	
+	  // update the state for all browsers in this thread
+	  CAtlList<CComPtr<IWebBrowser2>> browsers2;
+	  pos = browsers.GetHeadPosition();
+	  while( pos )
+	  {
+		  POSITION oldPos = pos;
+		  CBrowserTracker tracker = browsers.GetNext(pos);
+		  if(tracker.browser && tracker.threadId == GetCurrentThreadId())
+			  tracker.browser->get_ReadyState(&(browsers.GetAt(oldPos).state));
+	  }
 
-	// see what the new state is
-	READYSTATE newState = READYSTATE_COMPLETE;
-	pos = browsers.GetHeadPosition();
-	while( pos && newState == READYSTATE_COMPLETE )
-	{
-		CBrowserTracker tracker = browsers.GetNext(pos);
-		if( tracker.state != READYSTATE_COMPLETE )
-			newState = tracker.state;
-	}
-	LeaveCriticalSection(&cs);
+	  // see what the new state is
+	  READYSTATE newState = READYSTATE_COMPLETE;
+	  pos = browsers.GetHeadPosition();
+	  while( pos && newState == READYSTATE_COMPLETE )
+	  {
+		  CBrowserTracker tracker = browsers.GetNext(pos);
+		  if( tracker.state != READYSTATE_COMPLETE )
+			  newState = tracker.state;
+	  }
+	  LeaveCriticalSection(&cs);
 
-	if( newState != oldState )
-	{
-		currentState = newState;
-		CString state;
-		switch(currentState)
-		{
-			case READYSTATE_UNINITIALIZED: state = "Uninitialized"; break;
-			case READYSTATE_LOADING: state = "Loading"; break;
-			case READYSTATE_LOADED: state = "Loaded"; break;
-			case READYSTATE_INTERACTIVE: state = "Interactive"; break;
-			case READYSTATE_COMPLETE: 
-					{
-						state = "Complete"; 
-						
-						// force a DocumentComplete in case we never got notified
-						if( active && currentDoc )
-							DocumentComplete(url);
-					}
-					break;
-			default: state = "Unknown"; break;
-		}
-		
-		CString buff;
-		buff.Format(_T("[Pagetest] * Browser ReadyState changed to %s\n"), (LPCTSTR)state);
-		OutputDebugString(buff);
-	}
+	  if( newState != oldState )
+	  {
+		  currentState = newState;
+		  CString state;
+		  switch(currentState)
+		  {
+			  case READYSTATE_UNINITIALIZED: state = "Uninitialized"; break;
+			  case READYSTATE_LOADING: state = "Loading"; break;
+			  case READYSTATE_LOADED: state = "Loaded"; break;
+			  case READYSTATE_INTERACTIVE: state = "Interactive"; break;
+			  case READYSTATE_COMPLETE: 
+					  {
+						  state = "Complete"; 
+  						
+						  // force a DocumentComplete in case we never got notified
+						  if( active && currentDoc )
+							  DocumentComplete(url);
+					  }
+					  break;
+			  default: state = "Unknown"; break;
+		  }
+  		
+		  CString buff;
+		  buff.Format(_T("[Pagetest] * Browser ReadyState changed to %s\n"), (LPCTSTR)state);
+		  OutputDebugString(buff);
+	  }
+  }
 }
 
 

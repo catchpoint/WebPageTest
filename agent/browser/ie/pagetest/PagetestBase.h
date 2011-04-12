@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef PAGETEST_EXE
 #include "WebPagetestDOM.h"
 #endif
+#include "chrome_tab_h.h"
 
 #define UWM_UPDATE_WATERFALL	(WM_APP + 2)
 #define UWM_REPAINT_WATERFALL	(WM_APP + 3)
@@ -226,6 +227,7 @@ public:
 	CAtlList<CProgressData> progressData;
 	
 	CAtlList<CBrowserTracker> browsers;
+  CComPtr<IChromeFrame> m_spChromeFrame;
 	//CComQIPtr<IWebBrowser2, &IID_IWebBrowser2> m_spWebBrowser2;
 
   // DOM interface (for Javascript calling out)
@@ -266,6 +268,7 @@ public:
   HWND FindBrowserDocument(HWND parent_window);
   bool  BrowserWindowUpdated();
   void  SetBrowserWindowUpdated(bool updated);
+	void	ChromeFrame(CComPtr<IChromeFrame> chromeFrame);
 	
 	typedef enum{
 		equal = 0,

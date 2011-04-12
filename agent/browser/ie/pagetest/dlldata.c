@@ -20,11 +20,13 @@ extern "C"   {
 #endif
 
 EXTERN_PROXY_FILE( _Pagetest )
+EXTERN_PROXY_FILE( chrome_tab )
 
 
 PROXYFILE_LIST_START
 /* Start of list */
   REFERENCE_PROXY_FILE( _Pagetest ),
+  REFERENCE_PROXY_FILE( chrome_tab ),
 /* End of list */
 PROXYFILE_LIST_END
 

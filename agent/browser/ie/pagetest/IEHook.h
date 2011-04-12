@@ -36,6 +36,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WsHook.h"
 #include "WinInetHook.h"
 #include "GDIHook.h"
+#include "chrome_tab_h.h"
+
+// Chrome Frame callback helper
+// Callback description for onload, onloaderror, onmessage
+static _ATL_FUNC_INFO g_single_param = {CC_STDCALL, VT_EMPTY, 1, {VT_VARIANT}};
+// Simple class that forwards the callbacks.
+template <typename T>
+class DispCallback
+    : public IDispEventSimpleImpl<1, DispCallback<T>, &IID_IDispatch> {
+ public:
+  typedef HRESULT (T::*Method)(const VARIANT* param);
+
+  DispCallback(T* owner, Method method) : owner_(owner), method_(method) {
+  }
+
+  BEGIN_SINK_MAP(DispCallback)
+    SINK_ENTRY_INFO(1, IID_IDispatch, DISPID_VALUE, OnCallback, &g_single_param)
+  END_SINK_MAP()
+
+  virtual ULONG STDMETHODCALLTYPE AddRef() {
+    return owner_->AddRef();
+  }
+  virtual ULONG STDMETHODCALLTYPE Release() {
+    return owner_->Release();
+  }
+
+  STDMETHOD(OnCallback)(VARIANT param) {
+    return (owner_->*method_)(&param);
+  }
+
+  IDispatch* ToDispatch() {
+    return reinterpret_cast<IDispatch*>(this);
+  }
+
+  T* owner_;
+  Method method_;
+};
 
 // IIEHook
 [
@@ -68,8 +105,10 @@ class ATL_NO_VTABLE CIEHook :
    	public IIEHook
 {
 public:
-	CIEHook()
-	{
+  CIEHook():
+      onloaderror_(this, &CIEHook::OnLoadError)
+      , onload_(this, &CIEHook::OnLoad)
+  {
 	}
 
 	DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -108,14 +147,22 @@ public:
 	STDMETHOD_(HRESULT,QueryStatus)(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText);
 	STDMETHOD_(HRESULT,Exec)(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdExecOpt, VARIANT *pvaIn, VARIANT *pvaOut);
 
+  // Chrome Frame Callbacks
+  HRESULT OnLoad(const VARIANT* param);
+  HRESULT OnLoadError(const VARIANT* param);
+  DispCallback<CIEHook> onloaderror_;
+  DispCallback<CIEHook> onload_;
+
 private:
 	// Smart pointer to browser
 	CComQIPtr<IWebBrowser2, &IID_IWebBrowser2> m_spWebBrowser2;
+	CComQIPtr<IChromeFrame, &IID_IChromeFrame> m_spChromeFrame;
 	
 	CComPtr<IClassFactory> m_spCFHTTP;
 	CComPtr<IClassFactory> m_spCFHTTPS;
 	void InstallHooks(void);
 	HRESULT RemoveHooks(void);
 	bool BlockPopups();
+  bool AttachChromeFrame();
 };
 

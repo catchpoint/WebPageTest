@@ -200,6 +200,8 @@ void CPagetestBase::Reset(void)
 		statusUpdates.RemoveAll();
 		DeleteImages();
 
+    m_spChromeFrame.Release();
+
 	}__except(EXCEPTION_EXECUTE_HANDLER)
 	{
 	}
@@ -790,4 +792,11 @@ void  CPagetestBase::SetBrowserWindowUpdated(bool updated)
   windowUpdated = updated;
   if (_SetGDIWindowUpdated)
     _SetGDIWindowUpdated(updated);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CPagetestBase::ChromeFrame(CComPtr<IChromeFrame> chromeFrame)
+{
+  m_spChromeFrame = chromeFrame;
 }
