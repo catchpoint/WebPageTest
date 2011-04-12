@@ -136,7 +136,7 @@
               </tr>
             {/foreach}
             <tr>
-              <td colspan="7" valign="top">
+              <td colspan="6" valign="top">
                 <table width="100%" border="0">
                   <tr>
                     <td align="left" nowrap="true">
