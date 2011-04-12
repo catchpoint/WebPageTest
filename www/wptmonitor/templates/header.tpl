@@ -4,7 +4,7 @@
 color: white;
 height: 18px;
 text-align: right;
-width: 980px;
+width: 1100px;
 }
 #wptAuthBar a {
 color: white;
