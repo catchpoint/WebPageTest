@@ -90,7 +90,7 @@
               <strong>{/if}MultiStep</strong></a></td>
               <td align="center"><a href="?orderBy=Validate">{if $orderScriptsBy eq "Validate"}<strong>{/if}
                 Validate</strong></a></td>
-              <td colspan="5" align="center">Actions</td>
+              <td align="center">Actions</td>
             </tr>
             {foreach from=$result item=res}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
