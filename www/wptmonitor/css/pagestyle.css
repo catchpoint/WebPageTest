@@ -15,7 +15,7 @@ input, select, textarea {color: #444;font-family: Arial, Helvetica, sans-serif;f
 input.checkbox, input.radio {margin: 0 10px 0 0;}
 textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 
-.page {width: 1005px;margin: 0 auto;}
+.page {width: 1100px;margin: 0 auto;}
 .centered {text-align: center;}
 .left {text-align: left;}
 .cleared {display: block;clear: both;}
