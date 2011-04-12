@@ -64,7 +64,6 @@
                   <option></option>
                   <option {if $scriptsFilterField eq 'Label'} selected="true"{/if}>Label</option>
                   <option {if $scriptsFilterField eq 'URL'} selected="true"{/if}>URL</option>
-                  <option {if $scriptsFilterField eq 'Description'} selected="true"{/if}>Description</option>
                 </select>
                   <input type="text" name="scriptsFilterValue" value="{$scriptsFilterValue}">
                   <input type="submit" value="Filter">
@@ -87,7 +86,6 @@
                 <a href="?orderBy=Label">{if $orderScriptsBy eq "Label"}<strong>{/if}Label</strong></a>
               </td>
               <td><a href="?orderBy=URL">{if $orderScriptsBy eq "URL"}<strong>{/if}URL</strong></a></td>
-              <td colspan="1">Description</td>
               <td colspan="1" align="center"><a href="?orderBy=MultiStep">{if $orderScriptsBy eq "MultiStep"}
               <strong>{/if}MultiStep</strong></a></td>
               <td align="center"><a href="?orderBy=Validate">{if $orderScriptsBy eq "Validate"}<strong>{/if}
@@ -102,7 +100,6 @@
                   {if $folderId eq -1}<a href=listScripts.php?folderId={$res.WPTScriptFolder.id}>{$res.WPTScriptFolder.Label}</a><br>{/if}
                   {$res.Label}</td>
                 <td>{$res.URL|truncate:60}</td>
-                <td valign="top">{$res.Description|truncate:40}</td>
                 <td align="center">{if $res.MultiStep}Yes{else}No{/if}</td>
                 <td align="center">{if $res.Validate}Yes{else}No{/if}</td>
                 <td align="right">
