@@ -102,13 +102,11 @@ void CWinInetRequest::Process(void)
 		if( linkedRequest )
 		{
 			CSocketRequest * r = (CSocketRequest *)linkedRequest;
-			ATLTRACE(_T("[Pagetest] - Checking linked event 0x%p\n"), r);
 
 			// copy the ignore setting over
 			r->ignore = ignore;
 			
 			// in case we couldn't decode the winsock native headers, feed it wininet headers (like for SSL)
-			ATLTRACE(_T("[Pagetest] - Processing response (pass 1)\n"));
 			r->response.Process();
 			if( r->response.len > 4 && r->response.buff && memcmp(r->response.buff, "HTTP", 4))
 			{
@@ -133,8 +131,28 @@ void CWinInetRequest::Process(void)
 			// use the bytes from the socket
 			in = r->in;
 			out = r->out;
-		}
-	}
+
+      // if this is a secure request, see if it looks like it is gzipped
+      if( secure )
+      {
+        DWORD headerLen = inHeaders.GetLength();
+        if( in >= headerLen && bodyLen )
+        {
+          DWORD wireBodyLen = in - headerLen;
+          if( wireBodyLen < bodyLen )
+          {
+            // tack on a fake transfer-encoding header since wininet stripped it out
+            response.contentEncoding = _T("gzip");
+            int pos = inHeaders.Find(_T("\r\n\r\n"));
+            if( pos >= 0 )
+              inHeaders = inHeaders.Left(pos) + _T("\r\nContent-Encoding: gzip\r\n\r\n");
+            else
+              inHeaders += _T("Content-Encoding: gzip\r\n");
+          }
+        }
+      }
+    }
+  }
 
 	if( !result && !closed )
 		result = 9999;

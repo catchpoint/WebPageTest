@@ -348,6 +348,14 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							EnterCriticalSection(&cs);
 							winInetThreadSends.SetAt(GetCurrentThreadId(), r);
 							LeaveCriticalSection(&cs);
+
+              // zero out the bytes on the linked socket if we have one and this is a secure request
+              // (to get rid of the actual ssl negotiation)
+              if( r->secure && r->linkedRequest )
+							{
+								((CSocketRequest *)r->linkedRequest)->in = 0;
+								((CSocketRequest *)r->linkedRequest)->out = 0;;
+							}
 							
 							ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - INTERNET_STATUS_SENDING_REQUEST, socket %d\n"), GetCurrentThreadId(), r->hRequest, r->socketId);
 						}
@@ -362,6 +370,13 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							
 							// clean up the mapping of the request that was sending on this thread
 							winInetThreadSends.RemoveKey(GetCurrentThreadId());
+
+              // zero out the bytes in on the linked socket if we have one and this is a secure request
+              // (to get rid of the actual ssl negotiation)
+              if( r->secure && r->linkedRequest )
+							{
+								((CSocketRequest *)r->linkedRequest)->in = 0;
+							}
 
 							LeaveCriticalSection(&cs);
 
@@ -938,6 +953,10 @@ void CWinInetEvents::linkSocketRequestSend(CSocketRequest * r)
 		w->peer.sin_addr.S_un.S_un_b.s_b4 = r->ipAddress[3];
 		w->peer.sin_port = r->port;
 		w->socketId = r->socketId;
+
+    // zero out the bytes-in
+    r->in = 0;
+    w->in = 0;
 	}
 	LeaveCriticalSection(&cs);
 }
