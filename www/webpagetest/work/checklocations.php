@@ -36,7 +36,7 @@ foreach( $files as $file )
             {
                 unlink("./tmp/$file");
             }
-            elseif( $minutes > 60 && array_key_exists($loc, $locations))
+            elseif( $minutes > 60 && array_key_exists($loc, $locations) && !$locations[$loc]['hidden'])
             {
                 // if it has been over 60 minutes, send out a notification    
                 // figure out who to notify

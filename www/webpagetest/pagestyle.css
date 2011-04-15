@@ -13,6 +13,7 @@ input, select, textarea {color: #444;font-family: Arial, Helvetica, sans-serif;f
 input.checkbox, input.radio {margin: 0 10px 0 0;}
 textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 
+h2 .small {font-weight:normal; font-size: 12px;}
 .page {width: 980px;margin: 0 auto;}
 .centered {text-align: center;}
 .left {text-align: left;}
@@ -73,6 +74,7 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 #test_box-container .ui-tabs-nav li a {display: block;height: inherit;color: #fff;padding: 0 20px 0 32px;text-decoration: none;font-weight: bold;background: no-repeat 8px 6px;}
 #test_box-container .ui-tabs-nav li.analytical_review a {background-image: url(images/test_box-container-ui-tabs-nav-li-analytical_review-a-bkg.png);}
 #test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
+#test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(images/miniphonelogo.png);}
 .test_box.ui-tabs-hide {display: none;}
 
 .test_box {clear: both;padding: 20px;background-color: #292929;}
@@ -141,6 +143,10 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 #footnote { margin-top:30px; background-color: #e2e2e2; color: #000; padding: 10px; }
 #footnote a {color: #000;}
 
+/* Mobile */
+#mobile_options { float: left; width: 300px; }
+#mobile_logo { margin-top: 100px; float: right; width: 270px; height: 59px;}
+#mobile_test a {color: #fff;}
 
 #start_test-container {float: left;padding: 28px 0 0 21px;background: url(images/start_test-container-bkg.png) no-repeat left 40px;}
 .start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(images/start_test-bkg.png);border: none;}
@@ -177,15 +183,16 @@ textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 #tooltip {z-index: 99;position: absolute;padding: 5px;background-color: #eee;border: 1px solid #aaa;}
 
 /*Status page*/
-#statusImg {margin-left: auto; margin-right: auto; width: 600px; }
-#statusImg .statusImg {float: left; width: 150px; height: 193px; margin: 10px 25px; overflow: hidden; background-image: url(images/status.png?v=2); background-repeat: no-repeat;}
-#statusWaiting {background-position: 0px -193px;}
-#statusWaiting.enabled {background-position: 0px 0px;}
-#statusTesting {background-position: -150px -193px;}
-#statusTesting.enabled {background-position: -150px 0px;}
-#statusDone {background-position: -300px -193px;}
-#statusDone.enabled {background-position: -300px 0px;}
+#statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
 #statusText {font-size: 16px; font-weight: bold; float:none; clear:both; width: 100%; text-align: center; padding: 15px 10px 20px; }
+#runningHeader p{float:left; width:400px;}
+#runningHeader h3{text-align: left; padding: 0; float:left;}
+#runningHeader form{float: right;}
+.tip {width: 600px; border-collapse: collapse; border: 1px solid black; margin-left:auto; margin-right:auto; margin-bottom: 1em;}
+.tip th{background-color: #007; color: white; text-align: left; padding: 2px 5px; border: 1px solid black; }
+.tip td{background-color: #eee; padding: 1em;}
+.tip a{color: #00b; text-decoration:none;}
+.tip_note {display: block; float: right;}
 
 /* Sponsors */
 #links {clear: both; width: 980px; }

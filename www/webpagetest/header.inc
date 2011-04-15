@@ -27,7 +27,9 @@
         {
             // see if we have a location that the test was run from (for a custom ad)
             $testLoc;
-            if( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
+            if( isset($adLoc) )
+                $testLoc = $adLoc;
+            elseif( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
                 $testLoc = $test['test']['loc'];
             elseif(isset($_COOKIE["cfg"]))
                 $testLoc = $_COOKIE["cfg"];
