@@ -21,6 +21,7 @@
             <th align="left">Label</th>
             <th align="left">Browser</th>
             <th align="right">Run Rate *</th>
+            <th align="right">Testers</th>
             <th align="right">In Queue</th>
             <th align="right">High</th>
             <th align="right">Low</th>
@@ -37,6 +38,7 @@
                 <td>{$location.Label}</td>
                 <td>{$location.Browser}</td>
                 <td align="right">{$location.runRate}</td>
+                <td align="right">{$location.AgentCount}</td>
                 <td align="right">{$location.PendingTests}</td>
                 <td align="right">{$location.PendingTestsHighPriority}</td>
                 <td align="right">{$location.PendingTestsLowPriority}</td>
@@ -73,6 +75,40 @@
             </tr>
           </table>
           <br>
+          <br>
+          <h2 class="cufon-dincond_black">Tester Status</h2>
+          <table class="pretty" style="border-collapse:collapse" width="100%">
+            <thead>
+              <th></th>
+              <th align="right">Tester</th>
+              <th align="center">PC</th>
+              <th align="right">EC2 Instance</th>
+              <th align="right">IP</th>
+              <th align="right">Busy</th>
+              <th align="right">Last Check</th>
+              <th align="right">Last Work</th>
+            </thead>
+            {foreach from=$testers item=tester}
+              <tr><td colspan="8" nowrap="true" bgcolor="#f5f5dc"><h4 style="font-size: medium;">{$tester.id}</h4></td></tr>
+                {foreach from=$tester.Agents item=agent}
+                  {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
+                  {assign value="#98fb98" var="bgcolor"}
+
+                  <tr class="{$eo}">
+                    <td></td>
+                    <td align="right">{$agent.index}</td>
+                    <td align="center">{$agent.pc}</td>
+                    <td align="right">{$agent.ec2}</td>
+                    <td align="right">{$agent.ip}</td>
+                    <td align="right">{$agent.busy}</td>
+                    <td align="right">{$agent.elapsed}</td>
+                    <td align="right">{$agent.last}</td>
+                  </tr>
+                {/foreach}
+            {/foreach}
+          </table>
+          <br>
+
           <h4>* Run rates are per hour.</h4>
         </div>
       </div>

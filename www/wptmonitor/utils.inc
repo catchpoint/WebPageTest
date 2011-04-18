@@ -271,7 +271,60 @@ function getCurrentRunRateInfo(){
   $q->free(true);
   return $runRateInfo;
 }
+function getTestersInformation($host = null){
+  if ($host == null) {
+    $q = Doctrine_Query::create()->from('WPTHost h')->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
+    $hosts = $q->fetchArray();
+    $q->free(true);
+  } else {
+    $q = Doctrine_Query::create()->from('WPTHost h')
+        ->where('h.HostURL = ?', $host)->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
+    $host = $q->fetchOne();
+    $hosts[] = $host;
+  }
+  $testerInformation = array();
+  foreach( $hosts as $host){
+    $testerInfo = array();
+    $resultXml = file_get_contents($host['HostURL'] . "/getTesters.php?f=xml");
+    if (!$resultXml) {
+      logOutput("[ERROR] [getTestersInformation] Failed to retrieve testers information");
+    }
+    $xml = new SimpleXMLElement($resultXml);
+    
+    foreach ($xml->data->location as $loc) {
+      $id = $loc->id;
+      $cnt = 0;
+      $agents = array();
+      if ( $loc->testers->tester ){
+        foreach ($loc->testers->tester as $tester){
+          $t = array();
+          $t['id'] = $id;
+          $t['index'] = $tester->index;
+          $t['pc'] = $tester->pc;
+          $t['ec2'] = $tester->ec2;
+          $t['ip'] = $tester->ip;
+          $t['elapsed'] = $tester->elapsed;
+          $t['last'] = $tester->last;
+          $t['busy'] = $tester->busy;
+          if ($tester->elapsed < 20){
+            $cnt++;
+          }
+          $agents[] = $t;
+        }
+      }
+      $testerInfo['AgentCount']= $cnt;
+      $testerInfo['XML'] = $loc;
+      $testerInfo['Agents'] = $agents;
+      $testerInfo['id'] = $id;
+      $testerInformation['"'.$id.'"'] = $testerInfo;
+    }
+  }
+
+  return $testerInformation;
+}
+
 function getLocationInformation($host = null) {
+  $testerInformation = getTestersInformation($host);
   if ($host == null) {
     $q = Doctrine_Query::create()->from('WPTHost h')->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
     $hosts = $q->fetchArray();
@@ -303,6 +356,7 @@ function getLocationInformation($host = null) {
       $location['PendingTests'] = $loc->PendingTests->Total;
       $location['PendingTestsHighPriority'] = $loc->PendingTests->HighPriority;
       $location['PendingTestsLowPriority'] = $loc->PendingTests->LowPriority;
+      $location['AgentCount'] = $testerInformation['"'.$id.'"']['AgentCount'];
       $loc = $locationTable->findOneByLocation($loc->id);
       if (!$location['GreenLimit'] = $loc['QueueThresholdGreenLimit']) {
         $location['GreenLimit'] = 15;
