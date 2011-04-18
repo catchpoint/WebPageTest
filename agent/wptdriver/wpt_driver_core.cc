@@ -29,9 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "wpt_driver_core.h"
 #include "zlib/contrib/minizip/unzip.h"
+#include <Wtsapi32.h>
 
-const int pipeIn = 1;
-const int pipeOut = 2;
+const int PIPE_IN = 1;
+const int PIPE_OUT = 2;
+const TCHAR * BROWSERS[] = {_T("chrome.exe"), _T("iexplore.exe")};
 
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
@@ -107,70 +109,34 @@ void WptDriverCore::WorkThread(void) {
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
   Init();  // do initialization and machine configuration
   _status.Set(_T("Running..."));
-  while( !_exit ){
+  while (!_exit) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for work..."));
 
     WptTestDriver test;
-    if( _webpagetest.GetTest(test) ){
-      if( !test._test_type.CompareNoCase(_T("traceroute")) )
-      {
-        // Calculate traceroute.
-        CTraceRoute trace_route(test);
-        // loop over all of the test runs
-        for (test._run = 1; test._run <= test._runs; test._run++) {
-          // Set the result file base.
-          test.SetFileBase();
-          trace_route.Run();
-        }
-        bool uploaded = false;
-        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-          uploaded = _webpagetest.TestDone(test);
-          if( !uploaded )
-            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
-        }
-      }    
-      else if (ConfigureIpfw(test)) {
-        _status.Set(_T("Starting test..."));   
-        WebBrowser browser(_settings, test, _status,_settings._browser_chrome);
-
-        for (test._run = 1; test._run <= test._runs; test._run++){
-          test.SetFileBase();
-
-          // Run the first view test
-          test._clear_cache = true;
-          browser.ClearCache();
-          if( test._tcpdump ) {
-            winpcap.StartCapture( test._file_base + _T(".cap") );
+    if (_webpagetest.GetTest(test)) {
+      _status.Set(_T("Starting test..."));   
+      if (!TracerouteTest(test)) {
+        if (ConfigureIpfw(test)) {
+          WebBrowser browser(_settings, test, _status,
+                              _settings._browser_chrome);
+          for (test._run = 1; test._run <= test._runs; test._run++) {
+            test._clear_cache = true;
+            BrowserTest(test, browser);
+            if (!test._fv_only) {
+              test._clear_cache = false;
+              BrowserTest(test, browser);
+            }
           }
-          browser.RunAndWait();
-          if( test._tcpdump )
-            winpcap.StopCapture();
-
-          _webpagetest.UploadIncrementalResults(test);
-
-          if( !test._fv_only ){
-            // run the repeat view test
-            test._clear_cache = false;
-            if( test._tcpdump )
-              winpcap.StartCapture( test._file_base + _T("_Cached.cap") );
-            browser.RunAndWait();
-            if( test._tcpdump )
-              winpcap.StopCapture();
-
-            _webpagetest.UploadIncrementalResults(test);
-          }
-
+          ResetIpfw();
         }
-        browser.ClearCache();
+      }
 
-        bool uploaded = false;
-        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-          uploaded = _webpagetest.TestDone(test);
-          if( !uploaded )
-            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
-        }
-        ResetIpfw();
+      bool uploaded = false;
+      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
+        uploaded = _webpagetest.TestDone(test);
+        if( !uploaded )
+          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
       ReleaseMutex(_testing_mutex);
     } else {
@@ -183,6 +149,47 @@ void WptDriverCore::WorkThread(void) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Check to see if it is a traceroute test and run it
+  returns true if it was a traceroute test
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
+  bool ret = false;
+
+  if (!test._test_type.CompareNoCase(_T("traceroute"))) {
+    ret = true;
+    CTraceRoute trace_route(test);
+    for (test._run = 1; test._run <= test._runs; test._run++) {
+      test.SetFileBase();
+      trace_route.Run();
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Run a single iteration of a browser test (first or repeat view)
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
+  bool ret = false;
+
+  test.SetFileBase();
+  if (test._clear_cache)
+    browser.ClearCache();
+  if (test._tcpdump)
+    _winpcap.StartCapture( test._file_base + _T(".cap") );
+
+  ret = browser.RunAndWait();
+
+  if (test._tcpdump)
+    _winpcap.StopCapture();
+  KillBrowsers();
+  _webpagetest.UploadIncrementalResults(test);
+
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -203,7 +210,9 @@ void WptDriverCore::Init(void){
   ExtractZipFiles();
 
   // Get WinPCap ready (install it if necessary)
-  winpcap.Initialize();
+  _winpcap.Initialize();
+
+  KillBrowsers();
 
   DownloadSymbols(_settings._browser_chrome._directory);
 }
@@ -256,15 +265,15 @@ bool WptDriverCore::ConfigureIpfw(WptTestDriver& test) {
                 test._latency, test._plr );
     OutputDebugString(buff);
 
-    if (_ipfw.CreatePipe(pipeIn, test._bwIn*1000, latency,test._plr/100.0)) {
+    if (_ipfw.CreatePipe(PIPE_IN, test._bwIn*1000, latency,test._plr/100.0)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
 
-      if (_ipfw.CreatePipe(pipeOut, test._bwOut*1000,latency,test._plr/100.0))
+      if (_ipfw.CreatePipe(PIPE_OUT, test._bwOut*1000,latency,test._plr/100.0))
         ret = true;
       else
-        _ipfw.CreatePipe(pipeIn, 0, 0, 0);
+        _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
     }
   }
   else
@@ -276,8 +285,8 @@ bool WptDriverCore::ConfigureIpfw(WptTestDriver& test) {
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WptDriverCore::ResetIpfw(void) {
-  _ipfw.CreatePipe(pipeIn, 0, 0, 0);
-  _ipfw.CreatePipe(pipeOut, 0, 0, 0);
+  _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
+  _ipfw.CreatePipe(PIPE_OUT, 0, 0, 0);
 }
 
 
@@ -382,5 +391,38 @@ void WptDriverCore::DownloadSymbols(CString directory) {
       }
     } while (FindNextFile(find, &fd));
     FindClose(find);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Kill any rogue browser processes that didn't go away on their own
+  This is disabled in debug mode to make it easier to develop
+-----------------------------------------------------------------------------*/
+void WptDriverCore::KillBrowsers() {
+  if (!_settings._debug) {
+	  WTS_PROCESS_INFO * proc = NULL;
+	  DWORD count = 0;
+    DWORD browser_count = _countof(BROWSERS);
+	  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc,&count)) {
+		  for (DWORD i = 0; i < count; i++) {
+        bool terminate = false;
+
+        for (DWORD browser = 0; browser < browser_count && !terminate; 
+              browser++) {
+          TCHAR * process = PathFindFileName(proc[i].pProcessName);
+			    if (!lstrcmpi(process, BROWSERS[browser]) )
+            terminate = true;
+        }
+
+        if (terminate) {
+				  HANDLE process_handle = OpenProcess(PROCESS_TERMINATE, FALSE, 
+                                                proc[i].ProcessId);
+				  if (process_handle) {
+					  TerminateProcess(process_handle, 0);
+					  CloseHandle(process_handle);
+				  }
+        }
+      }
+    }
   }
 }

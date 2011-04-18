@@ -1,6 +1,7 @@
 [WebPagetest]
 url=http://staging.webpagetest.org/
 location=Dev_Pat
+;debug=1
 
 [chrome]
 exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"

@@ -35,7 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 WptSettings::WptSettings(void):
   _timeout(DEFAULT_TEST_TIMEOUT)
   ,_startup_delay(DEFAULT_STARTUP_DELAY)
-  ,_polling_delay(DEFAULT_POLLING_DELAY) {
+  ,_polling_delay(DEFAULT_POLLING_DELAY)
+  ,_debug(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -75,6 +76,10 @@ bool WptSettings::Load(void) {
 
   if (_server.GetLength() && _location.GetLength())
     ret = true;
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("Debug"), 0, iniFile)) {
+    _debug = true;
+  }
 
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"),_timeout, iniFile);

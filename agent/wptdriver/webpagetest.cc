@@ -85,6 +85,8 @@ WebPagetest::~WebPagetest(void) {
 bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
+  DeleteDirectory(test._directory, false);
+
   // build the url for the request
   CString url = _settings._server + _T("work/getwork.php?");
   url += CString(_T("location=")) + _settings._location;
@@ -156,8 +158,6 @@ bool  WebPagetest::UploadImages(WptTestDriver& test) {
         if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
           CString file = dir + fd.cFileName;
           ret = UploadFile(url, false, test, file);
-          if (ret)
-            DeleteFile(file);
         }
       } while (ret && FindNextFile(find_handle, &fd));
 
@@ -332,6 +332,9 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
   if (file_handle != INVALID_HANDLE_VALUE) {
     CloseHandle( file_handle );
   }
+
+  if (ret)
+    DeleteFile(file);
 
   return ret;
 }

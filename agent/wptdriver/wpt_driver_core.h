@@ -43,18 +43,21 @@ private:
   WptStatus&  _status;
   WebPagetest _webpagetest;
   WebBrowser *_browser;
-  CWinPCap winpcap;
+  CWinPCap    _winpcap;
   CIpfw       _ipfw;
   bool        _exit;
   HANDLE      _work_thread;
   HANDLE      _testing_mutex;
 
   bool ConfigureIpfw(WptTestDriver& test);
+  bool TracerouteTest(WptTestDriver& test);
+  bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   void ResetIpfw(void);
   void Init(void);
   void FlushDNS(void);
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
   void DownloadSymbols(CString directory);
+  void KillBrowsers();
 };
 
