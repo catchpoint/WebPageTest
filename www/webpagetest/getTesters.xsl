@@ -5,11 +5,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:template match="/">
   <html>
-  <style type="text/css">
-  th,td{text-align:center; padding: 0px 20px;}
-  .tester{text-align: left;}
-  .header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}
-  </style>
+  <head>
+      <meta http-equiv="refresh" content="15" />
+      <style type="text/css">
+      th,td{text-align:center; padding: 0px 20px;}
+      .tester{text-align: left;}
+      .header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}
+      </style>
+  </head>
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">

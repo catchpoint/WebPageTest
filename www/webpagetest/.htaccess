@@ -181,7 +181,3 @@ AddType text/javascript .js
 
 # Additional mime types
 AddType application/dtas dtas
-
-# referrer blocking
-RewriteCond %{HTTP_REFERER} mzschwartz\.com [NC]
-RewriteRule .* - [F]

@@ -5,10 +5,13 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:template match="/">
   <html>
-  <style type="text/css">
-  th,td{text-align:center; padding: 0px 20px;}
-  .location{text-align: left;}
-  </style>
+  <head>
+      <meta http-equiv="refresh" content="15" />
+      <style type="text/css">
+      th,td{text-align:center; padding: 0px 20px;}
+      .location{text-align: left;}
+      </style>
+  </head>
   <body>
     <table id="locations">
       <tr>
