@@ -454,16 +454,16 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
           $latency = 50;
           $plr = 0;
 
-          if ( $row['WPTBandwidthDown'] != 1)
+          if ( $row['WPTBandwidthDown'])
             $bwDown = $row['WPTBandwidthDown'];
 
-          if ( $row['WPTBandwidthUp']!= 1)
+          if ( $row['WPTBandwidthUp'])
             $bwUp = $row['WPTBandwidthUp'];
 
-          if ( $row['WPTBandwidthLatency']!= 1)
+          if ( $row['WPTBandwidthLatency'])
             $latency = $row['WPTBandwidthLatency'];
 
-          if ( $row['WPTBandwidthPacketLoss']!= 1)
+          if ( $row['WPTBandwidthPacketLoss'])
             $plr = $row['WPTBandwidthPacketLoss'];
 
           $format = "xml";
@@ -514,6 +514,11 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
           $wptResult['ValidationType'] = $script['ValidationType'];
           $wptResult['ValidationMarkAs'] = $script['ValidationMarkAs'];
           $wptResult['ValidationMarkAsElse'] = $script['ValidationMarkAsElse'];
+          $wptResult['WPTBandwidthDown'] = $bwDown;
+          $wptResult['WPTBandwidthUp'] = $bwUp;
+          $wptResult['WPTBandwidthLatency'] = $latency;
+          $wptResult['WPTBandwidthPacketLoss'] = $plr;
+
           $wptResult->save();
           $r = $jobTable->find($id);
           $r['Lastrun'] = $dte;

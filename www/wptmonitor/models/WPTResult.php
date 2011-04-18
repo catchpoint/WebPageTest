@@ -79,7 +79,10 @@ class WPTResult extends Doctrine_Record
 //    $this->hasColumn('AvgRepeatViewScoreCombine', 'integer', 4);
 //    $this->hasColumn('AvgRepeatViewScoreCompress', 'integer', 4);
 //    $this->hasColumn('AvgRepeatViewScoreEtags', 'integer', 4);
-     
+    $this->hasColumn('WPTBandwidthDown', 'integer', 8);
+    $this->hasColumn('WPTBandwidthUp', 'integer', 8);
+    $this->hasColumn('WPTBandwidthLatency', 'integer', 8);
+    $this->hasColumn('WPTBandwidthPacketLoss', 'integer', 8);
 
     $this->index('wptresult_index_wptjobid', array(
       'fields' => array('WPTJobId')

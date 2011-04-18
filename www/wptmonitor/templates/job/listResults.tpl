@@ -149,7 +149,14 @@
 </table>
 <table id="monitoringJobList" class="pretty" width="100%">
 <tr>
-  <th colspan="7"></th>
+  <th colspan="5"></th>
+  <th align="right" style="padding-bottom:0%;vertical-align:bottom;">
+    BWDown<br>BWUp
+  </th>
+  <th align="right" style="padding-bottom:0%;vertical-align:bottom;">
+    Latency<br>Pkt Loss
+  </th>
+
   <th align="left" style="padding-bottom:0%;vertical-align:bottom;">
     <a href="?orderBy=RunLabel">{if $orderResultsBy eq "RunLabel"}<b>{/if}
       RunLabel</a>{if $orderResultsBy eq "RunLabel"}</b><a
@@ -181,15 +188,14 @@
 <tr>
   <th align="left" colspan="4"></th>
   <th><input type="checkbox" id="toggleAllDisplayedResults"></th>
-  <th>
+  <th align="right">
     <a title="WPT Remote Agent Dialer ID" href="?orderBy=DialerId">{if $orderResultsBy eq "DialerId"}
     <b>{/if}Agent</a>{if $orderResultsBy eq "DialerId"}</b><a
       href="?orderBy=DialerId&orderByDir={$orderResultsByDirectionInv}">{if $orderResultsByDirection eq "ASC"}
     <img width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
-  </a>{/if}</th>
-  <th>
-    Valid
+  </a>{/if}
   </th>
+  <th align="right">Valid</th>
   <th align="left">
     <a href="?orderBy=Status">{if $orderResultsBy eq "Status"}<b>{/if}
       Status</a>{if $orderResultsBy eq "Status"}</b><a
@@ -279,8 +285,8 @@
          href={$res.WPTHost}{$wptResultURL}{$res.WPTResultId}><img src="img/favicon.ico" width="17"
                                                                    title="Show WPT Result"></a></td>
   <td><input type="checkbox" name="selectedResult" id="selectedResult" value="{$res.Id}"></td>
-  <td>{$res.DialerId}</td>
-  <td>
+  <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.WPTBandwidthDown}<br>{$res.WPTBandwidthUp}<br>{$res.DialerId}</td>
+  <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.WPTBandwidthLatency}<br>{$res.WPTBandwidthPacketLoss}<br>
     {if $res.ValidationState eq 1}<img title="{$res.Id} - Valid Result" src=img/Valid.png>
     {elseif $res.ValidationState eq 2}<img title="{$res.Id} - Invalid Result" src=img/Invalid.png>
     {elseif $res.ValidationState eq 3}<img title="{$res.Id} - Needs Review" src=img/NeedsReview.png>
