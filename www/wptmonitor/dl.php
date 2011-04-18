@@ -20,7 +20,7 @@
   foreach ($infos as $info)
   {
     $id = $info["id"];
-    $resultXml = file_get_contents("http://wpt.mtvly.com/xmlResult/$id/");
+    $resultXml = file_get_contents(getBaseURL()."/xmlResult/$id/");
     $ix = strrpos($id, "_") + 1;
     $shortId = substr($id, $ix);
     $resultLabel = file_get_contents("/var/www/html/results/$reportDate/$shortId/label.txt");

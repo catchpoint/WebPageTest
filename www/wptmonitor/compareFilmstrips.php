@@ -17,6 +17,6 @@
     $job = $q->fetchOne();
     $tests .= $job['WPTResultId']."-r:1-c:0";
   }
-  $location = "http://wpt.mtvly.com/video/compare.php?tests=".$tests;
+  $location = getBaseURL()."/video/compare.php?tests=".$tests;
   header("Location: ".$location);
   ?>

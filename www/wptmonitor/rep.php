@@ -35,7 +35,7 @@ foreach ($infos as $info)
 {
   $id = $info["id"];
   $date = substr($info["date"],2);
-  $resultXml = file_get_contents("http://wpt.mtvly.com/xmlResult/$id/");
+  $resultXml = file_get_contents(getBaseURL()."/xmlResult/$id/");
   if ( !$resultXml ){
     continue;
   }
