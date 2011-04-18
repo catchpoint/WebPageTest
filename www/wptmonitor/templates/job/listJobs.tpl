@@ -169,21 +169,21 @@
                   width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
               </a>{/if}
               </th>
-              <th>
+              <th align="right" style="padding-bottom:0%;vertical-align:top;">
                 <a title="Frequency in minutes" href="?orderBy=Frequency">{if $orderJobsBy eq "Frequency"}<b>{/if}
                   Freq</a>{if $orderJobsBy eq "Frequency"}</b><a
                   href="?orderBy=Frequency&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}
                 <img width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
-              </a>{/if}
+              </a>{/if}<br>BWDown
               </th>
-              <th align="right">Runs</th>
-              <th align="right">Total</th>
+              <th align="right">Runs<br>BWUp</th>
+              <th align="right">Total<br>Latency</th>
               <th align="right">
                 <a title="LastRun in minutes" href="?orderBy=LastRun">{if $orderJobsBy eq "LastRun"}<b>{/if}
                   Last</a>{if $orderJobsBy eq "LastRun"}</b><a
                   href="?orderBy=LastRun&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}<img
                   width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
-              </a>{/if}
+              </a>{/if}<br>PKT Loss
               </th>
               <th colspan="6" align="center">Actions</th>
             </tr>
@@ -208,11 +208,11 @@
                   {*{/if}*}
                   {$res.WPTScript.Label|truncate:60}</a></td>
                 <td>{$res.Host}<br>{$res.Location}</td>
-                <td align="right">{$res.Frequency}</td>
-                <td align="right">{$res.Runs}{if !$res.FirstViewOnly}R{/if}</td>
-                <td align="right">{$res.ResultCount}</td>
+                <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.Frequency}<br>{$res.WPTBandwidthDown}</td>
+                <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.Runs}{if !$res.FirstViewOnly}R{/if}<br>{$res.WPTBandwidthUp}</td>
+                <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.ResultCount}<br>{$res.WPTBandwidthLatency}</td>
                 {*<td>calc</td>*}
-                <td align="right">{$res.Lastrun|date_format:"%D"}<br>{$res.Lastrun|date_format:"%H:%M"}</td>
+                <td align="right" nowrap="true" style="padding-bottom:0%;vertical-align:top;">{$res.Lastrun|date_format:"%D"} {$res.Lastrun|date_format:"%H:%M"}<br>{$res.WPTBandwidthPacketLoss}</td>
                 <td align="right">
                   <table>
                     <tr>
