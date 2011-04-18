@@ -297,19 +297,19 @@ function getTestersInformation($host = null){
       $agents = array();
       if ( $loc->testers->tester ){
         foreach ($loc->testers->tester as $tester){
-          $t = array();
-          $t['id'] = $id;
-          $t['index'] = $tester->index;
-          $t['pc'] = $tester->pc;
-          $t['ec2'] = $tester->ec2;
-          $t['ip'] = $tester->ip;
-          $t['elapsed'] = $tester->elapsed;
-          $t['last'] = $tester->last;
-          $t['busy'] = $tester->busy;
-          if ($tester->elapsed < 20){
-            $cnt++;
+          if ($tester->elapsed < 60){
+            $t = array();
+            $t['id'] = $id;
+            $t['index'] = $tester->index;
+            $t['pc'] = $tester->pc;
+            $t['ec2'] = $tester->ec2;
+            $t['ip'] = $tester->ip;
+            $t['elapsed'] = $tester->elapsed;
+            $t['last'] = $tester->last;
+            $t['busy'] = $tester->busy;
+              $cnt++;
+            $agents[] = $t;
           }
-          $agents[] = $t;
         }
       }
       $testerInfo['AgentCount']= $cnt;
