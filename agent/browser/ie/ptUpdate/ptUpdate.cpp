@@ -61,7 +61,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 					lstrcat( srcFile, fd.cFileName );
 					if( lstrcmpi(srcFile, thisProc) )
 					{
+            // special-case ipfw.cmd
 						lstrcpy( dstFile, dstPath );
+            if( !lstrcmpi(fd.cFileName, L"ipfw.cmd") )
+						  lstrcat( dstFile, L"dummynet\\" );
 						lstrcat( dstFile, fd.cFileName );
 						CopyFile(srcFile, dstFile, FALSE);
 					}
