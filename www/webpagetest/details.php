@@ -114,6 +114,8 @@ $data = loadPageRunData($testPath, $run, $cached);
                             $cols++;
                         if( $test['test']['aft'] )
                             $cols++;
+                        if($data['domElements'] > 0)
+                            $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
                         <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
@@ -128,6 +130,9 @@ $data = loadPageRunData($testPath, $run, $cached);
                         <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
+                        <?php } ?>
+                        <?php if( $data['domElements'] > 0 ) { ?>
+                        <th align="center" valign="middle">DOM Elements</th>
                         <?php } ?>
                         <th align="center" valign="middle">Result (error code)</th>
 
@@ -152,6 +157,8 @@ $data = loadPageRunData($testPath, $run, $cached);
                         }
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . number_format($data['domTime'] / 1000.0, 3) . "s</td>\n";
+                        if( $data['domElements'] > 0 )
+                            echo "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
                         echo "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
 
                         echo "<td id=\"docComplete\" class=\"border\" valign=\"middle\">" . number_format($data['docTime'] / 1000.0, 3) . "s</td>\n";

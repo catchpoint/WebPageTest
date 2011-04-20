@@ -279,6 +279,7 @@ public:
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString attrVal);	// combined attribute and value separated by '
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString &tag, CString &attribute, CString &value, attrOperator &op);
 	virtual CComPtr<IHTMLElement>	FindDomElementByAttribute(CString &tag, CString &attribute, CString &value, attrOperator &op, CComPtr<IHTMLDocument2> doc);
+  DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &doc);
 
 protected:
   bool windowUpdated;

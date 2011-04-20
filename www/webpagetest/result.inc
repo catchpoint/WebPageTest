@@ -144,6 +144,8 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                             $cols++;
                         if( $test['test']['aft'] )
                             $cols++;
+                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                            $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
@@ -160,6 +162,9 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                         <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>
+                        <?php } ?>
+                        <?php if($pageData[$fvMedian][0]['domElements'] > 0) { ?>
+                        <th align="center" valign="middle">DOM Elements</th>
                         <?php } ?>
 
                         <th align="center" class="border" valign="middle">Time</th>
@@ -186,6 +191,8 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                         }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
+                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                            echo "<td id=\"fvDomElements\" valign=\"middle\">{$pageData[$fvMedian][0]['domElements']}</td>\n";
 
                         echo "<td id=\"fvDocComplete\" class=\"border\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['docTime'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"fvRequestsDoc\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requestsDoc'],0) . "</td>\n";
@@ -211,8 +218,10 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                                 $aft = 'N/A';
                             echo "<td id=\"rvAFT\" class=\"even\" valign=\"middle\">$aft</th>";
                         }
-                        if((float)$pageData[$rvMedian][1]['domTime'] > 0.0)
+                        if((float)$pageData[$rvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"rvDomElement\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['domTime'] / 1000.0, 3) . "s</td>\n";
+                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                            echo "<td id=\"rvDomElements\" class=\"even\" valign=\"middle\">{$pageData[$rvMedian][1]['domElements']}</td>\n";
 
                         echo "<td id=\"rvDocComplete\" class=\"even border\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['docTime'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"rvRequestsDoc\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requestsDoc'],0) . "</td>\n";

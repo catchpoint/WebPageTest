@@ -903,6 +903,20 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 	DWORD msDomElement = (DWORD)(tmDOMElement * 1000.0);
 	DWORD msBasePage = (DWORD)(tmBasePage * 1000.0);
 
+  // count the DOM elements on the page
+  DWORD domElements = 0;
+  if( !browsers.IsEmpty() )
+  {
+    CBrowserTracker tracker = browsers.GetHead();
+	  CComPtr<IDispatch> spDoc;
+	  if( SUCCEEDED(tracker.browser->get_Document(&spDoc)) && spDoc )
+    {
+      CComQIPtr<IHTMLDocument2> doc = spDoc;
+      if( doc )
+        domElements = CountDOMElements(doc);
+    }
+  }
+
 	CA2T ip(inet_ntoa(pageIP.sin_addr));
 	
 	// split up the url
@@ -937,7 +951,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 				_T("Requests (Doc)\tOK Responses (Doc)\tRedirects (Doc)\tNot Modified (Doc)\tNot Found (Doc)\tOther Responses (Doc)\tCompression Score\t")
 				_T("Host\tIP Address\tETag Score\tFlagged Requests\tFlagged Connections\tMax Simultaneous Flagged Connections\t")
 				_T("Time to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\t")
-        _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)")
+        _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)\tDOM Elements")
 				_T("\r\n");
 	}
 	else
@@ -955,7 +969,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
-                    _T("%d")
+                    _T("%d\t%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -968,7 +982,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc,
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
-      msAFT);
+      msAFT, domElements);
 	buff += result;
 }
 

@@ -699,6 +699,56 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString &tag, CSt
 }
 
 /*-----------------------------------------------------------------------------
+  Recursively count the number of DOM elements on the page
+-----------------------------------------------------------------------------*/
+DWORD CPagetestBase::CountDOMElements(CComQIPtr<IHTMLDocument2> &doc)
+{
+  DWORD count = 0;
+
+  if( doc )
+  {
+    // count the number of elements on the current document
+		CComPtr<IHTMLElementCollection> coll;
+		if( SUCCEEDED(doc->get_all(&coll)) && coll )
+		{
+			long nodes = 0;
+			if( SUCCEEDED(coll->get_length(&nodes)) )
+        count += nodes;
+      coll.Release();
+    }
+
+    // walk any/all iFrames
+		CComQIPtr<IOleContainer> ole(doc);
+		if(ole)
+		{
+			CComPtr<IEnumUnknown> objects;
+			if( SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) && objects )
+			{
+				IUnknown* pUnk;
+				ULONG uFetched;
+				while( S_OK == objects->Next(1, &pUnk, &uFetched) )
+				{
+					CComQIPtr<IWebBrowser2> browser(pUnk);
+					pUnk->Release();
+					if (browser)
+					{
+						CComPtr<IDispatch> disp;
+						if( SUCCEEDED(browser->get_Document(&disp)) && disp )
+						{
+							CComQIPtr<IHTMLDocument2> frameDoc(disp);
+							if (frameDoc)
+								count += CountDOMElements(frameDoc);
+						}
+					}
+				}
+			}
+		}			
+  }
+
+  return count;
+}
+
+/*-----------------------------------------------------------------------------
   Find what we assume is the browser document window:
   Largest child window that:
   - Is visible
