@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test_hook.h"
 #include "mongoose/mongoose.h"
 #include "wpt_test_hook.h"
+#include "hook_chrome.h"
 
 static TestServer * _global_test_server = NULL;
 
@@ -48,10 +49,12 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestServer::TestServer(WptHook& hook, WptTestHook &test):
+TestServer::TestServer(WptHook& hook, WptTestHook &test, 
+                        HookChrome& chrome_hook):
   _mongoose_context(NULL)
   ,_hook(hook)
-  ,_test(test) {
+  ,_test(test)
+  ,_chrome_hook(chrome_hook) {
   InitializeCriticalSection(&cs);
 }
 
@@ -124,6 +127,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
                   _test.ToJSON());
     } else if (strcmp(request_info->uri, "/task") == 0) {
+      _chrome_hook.InstallHooks();
       CStringA task;
       bool record = false;
       _test.GetNextTask(task, record);

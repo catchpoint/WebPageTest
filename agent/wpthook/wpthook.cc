@@ -33,8 +33,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "wpthook.h"
 #include "window_messages.h"
+#include "../wptdriver/dbghelp/dbghelp.h"
 
 WptHook * global_hook = NULL;
+extern HINSTANCE global_dll_handle;
 
 static const UINT_PTR TIMER_DONE = 1;
 static const DWORD TIMER_DONE_INTERVAL = 100;
@@ -53,13 +55,14 @@ WptHook::WptHook(void):
   ,_results(_test_state, _requests, _sockets, _screen_capture)
   ,_dns(_test_state)
   ,_done(false)
-  ,_test_server(*this, _test) {
+  ,_test_server(*this, _test, _chrome_hook) {
   _file_base = shared_results_file_base;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::~WptHook(void) {
+  SymCleanup(GetCurrentProcess());
 }
 
 /*-----------------------------------------------------------------------------
@@ -119,6 +122,24 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 -----------------------------------------------------------------------------*/
 void WptHook::Init(){
   ATLTRACE2(_T("[wpthook] Init()\n"));
+
+  // prepare the symbol server and debughelp options
+  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
+                SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
+                SYMOPT_NO_PROMPTS);
+  char symcache[MAX_PATH] = {'\0'};
+  char sympath[1024];
+  GetModuleFileNameA(global_dll_handle, symcache, _countof(symcache));
+  lstrcpyA(PathFindFileNameA(symcache), "symbols");
+  CreateDirectoryA(symcache, NULL);
+  wsprintfA(sympath,"SRV*%s*"
+    "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
+    symcache);
+  SymInitialize(GetCurrentProcess(), sympath, FALSE);
+
+  // install the hooks that depend on debug symbols
+  _chrome_hook.InstallHooks();
+
   _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
 }
 
