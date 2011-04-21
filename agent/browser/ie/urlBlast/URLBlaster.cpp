@@ -960,6 +960,60 @@ bool CURLBlaster::ConfigureIE(void)
 			RegCloseKey(hKey);
 		}
 
+	  // see what version of IE is installed
+	  DWORD ver = 0;
+	  CRegKey key;
+	  if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
+	  {
+		  TCHAR buff[1024];
+		  ULONG len;
+		  len = _countof(buff);
+		  if( SUCCEEDED(key.QueryStringValue(_T("Version"), buff, &len)) )
+			  ver = _ttol(buff);
+	  }
+
+	  // Disable IE7  emulation for IE8
+	  if( ver >= 8 )
+	  {
+		  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+			  DWORD val = 8000;
+        if( ver > 8 )
+          val = 9000;
+			  RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			  RegCloseKey(hKey);
+		  }
+		  if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_BROWSER_EMULATION"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+        RegDeleteValue(hKey, _T("pagetest.exe"));
+			  RegCloseKey(hKey);
+		  }
+  		
+		  // set up IE8/9 connection settings
+		  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPERSERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+			  DWORD val = 6;
+			  RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			  RegCloseKey(hKey);
+		  }
+		  if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPERSERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+        RegDeleteValue(hKey, _T("pagetest.exe"));
+			  RegCloseKey(hKey);
+		  }
+		  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPER1_0SERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+			  DWORD val = 6;
+			  RegSetValueEx(hKey, _T("pagetest.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			  RegCloseKey(hKey);
+		  }
+		  if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\Microsoft\\Internet Explorer\\MAIN\\FeatureControl\\FEATURE_MAXCONNECTIONSPER1_0SERVER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+		  {
+        RegDeleteValue(hKey, _T("pagetest.exe"));
+			  RegCloseKey(hKey);
+		  }
+	  }
+
     // configure Chrome Frame to be the default renderer (if it is installed)
 		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Google\\ChromeFrame"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
 		{
