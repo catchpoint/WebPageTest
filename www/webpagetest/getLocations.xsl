@@ -17,17 +17,33 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
       <tr>
         <th class="location">Location</th>
         <th>Total Tests</th>
-        <th>High Priority</th>
-        <th>Low Priority</th>
         <th>Being Tested</th>
+        <th>High Priority</th>
+        <th>P1</th>
+        <th>P2</th>
+        <th>P3</th>
+        <th>P4</th>
+        <th>P5</th>
+        <th>P6</th>
+        <th>P7</th>
+        <th>P8</th>
+        <th>P9</th>
       </tr>
       <xsl:for-each select="response/data/location">
       <tr>
         <td class="location"><xsl:value-of select="id"/></td>
         <td><xsl:value-of select="PendingTests/Total"/></td>
-        <td><xsl:value-of select="PendingTests/HighPriority"/></td>
-        <td><xsl:value-of select="PendingTests/LowPriority"/></td>
         <td><xsl:value-of select="PendingTests/Testing"/></td>
+        <td><xsl:value-of select="PendingTests/HighPriority"/></td>
+        <td><xsl:value-of select="PendingTests/p1"/></td>
+        <td><xsl:value-of select="PendingTests/p2"/></td>
+        <td><xsl:value-of select="PendingTests/p3"/></td>
+        <td><xsl:value-of select="PendingTests/p4"/></td>
+        <td><xsl:value-of select="PendingTests/p5"/></td>
+        <td><xsl:value-of select="PendingTests/p6"/></td>
+        <td><xsl:value-of select="PendingTests/p7"/></td>
+        <td><xsl:value-of select="PendingTests/p8"/></td>
+        <td><xsl:value-of select="PendingTests/p9"/></td>
       </tr>
       </xsl:for-each>
     </table>

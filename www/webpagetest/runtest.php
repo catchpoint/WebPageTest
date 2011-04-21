@@ -370,7 +370,7 @@
 * @param mixed $test
 * @param mixed $error
 */
-function ValidateKey($test, &$error)
+function ValidateKey(&$test, &$error)
 {
   // load the secret key (if there is one)
   $secret = '';
@@ -400,6 +400,8 @@ function ValidateKey($test, &$error)
     }elseif( isset($test['key']) && strlen($test['key']) ){
       // validate their API key and enforce any rate limits
       if( isset($keys[$test['key']]) ){
+        if (isset($keys[$test['key']]['priority']))
+            $test['priority'] = $keys[$test['key']]['priority'];
         if( isset($keys[$test['key']]['limit']) ){
           $limit = (int)$keys[$test['key']]['limit'];
           if( $limit > 0 ){

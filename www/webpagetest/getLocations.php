@@ -121,8 +121,13 @@ function GetBacklog($dir)
     $files = glob( $dir . '/*.url', GLOB_NOSORT );
     $userCount = count($files);
 
-    $files = glob( $dir . '/*.p*', GLOB_NOSORT );
-    $lowCount = count($files);
+    $lowCount = 0;
+    for($i = 1; $i <= 9; $i++)
+    {
+        $files = glob( $dir . "/*.p$i", GLOB_NOSORT );
+        $lowCount += count($files);
+        $backlog["p$i"] = count($files);
+    }
 
     $files = glob( $dir . '/testing/*.url', GLOB_NOSORT );
     $testing = count($files);
