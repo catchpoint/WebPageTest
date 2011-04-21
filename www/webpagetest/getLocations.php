@@ -129,10 +129,8 @@ function GetBacklog($dir)
         $backlog["p$i"] = count($files);
     }
 
-    $files = glob( $dir . '/testing/*.url', GLOB_NOSORT );
+    $files = glob( $dir . '/testing/*.*', GLOB_NOSORT );
     $testing = count($files);
-    $files = glob( $dir . '/testing/*.p*', GLOB_NOSORT );
-    $testing += count($files);
     
     $backlog['Total'] = $userCount + $lowCount + $testing;
     $backlog['HighPriority'] = $userCount;

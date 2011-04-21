@@ -205,8 +205,11 @@ else
             }
             
             // archive the test result
-            require_once('storage/storage.inc');
-            StoreResults($id);
+            if( is_file('storage/storage.inc') )
+            {
+                require_once('storage/storage.inc');
+                StoreResults($id);
+            }
         }
     }
     else
