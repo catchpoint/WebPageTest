@@ -3,15 +3,11 @@
 # will be used for the label
 
 # load the video clip, and do any necessary preparation
-function PrepareClip(int endTime)
+function PrepareClip()
 {
 	SetWorkingDir(".\0")
 	video = Import("video.avs")
 	SetWorkingDir("..")
-
-    #trim the video if we are forcing an end time
-    endFrame = (endTime + 50) / 100
-    video = endFrame > 0 ? video.Trim(0,endFrame) : video
 
 	return video
 }
@@ -32,7 +28,7 @@ function PadVideo(clip video)
     return video
 }
 
-video = PrepareClip(%0-end%)
+video = PrepareClip()
 video = PadVideo(video)
 
 last = video.FrameCount()

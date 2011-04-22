@@ -222,7 +222,7 @@ private:
 	void SaveStatusUpdates(CString file);
 	void SortEvents();
   DWORD CalculateAFT();
-  void SaveVideo(DWORD endTime);
+  void SaveVideo();
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
 };
 

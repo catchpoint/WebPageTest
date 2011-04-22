@@ -1005,7 +1005,12 @@ void CTestState::BackgroundTimer(void)
 			}
 
 			bool grabImage = false;
-			if( (painted || !lastImageTime) && captureVideo && hBrowserWnd && IsWindow(hBrowserWnd) && BrowserWindowUpdated() )
+      if( !lastImageTime )
+      {
+        if( captureVideo && hBrowserWnd && IsWindow(hBrowserWnd) )
+          grabImage = true;
+      }
+			else if( painted && captureVideo && hBrowserWnd && IsWindow(hBrowserWnd) && BrowserWindowUpdated() )
 			{
 				// see what time increment we are in
 				// we go from 0.1 second to 1 second to 5 second intervals
@@ -1016,14 +1021,15 @@ void CTestState::BackgroundTimer(void)
 				if( imageCount >= imageIncrements * 2 )
 					minTime = 5000;
 
-				if( !lastImageTime || ((data.ms > lastImageTime) && (data.ms - lastImageTime) >= minTime) )
+				if( data.ms > lastImageTime && (data.ms - lastImageTime) >= minTime )
 					grabImage = true;
 			}
 
 			if( grabImage )
 			{
 				ATLTRACE(_T("[Pagetest] - Grabbing video frame : %d ms\n"), data.ms);
-				SetBrowserWindowUpdated(false);
+        if( painted )
+				  SetBrowserWindowUpdated(false);
         screenCapture.Capture(hBrowserWnd, CapturedImage::VIDEO);
 				imageCount++;
 				lastImageTime = data.ms;

@@ -7,6 +7,9 @@ $tests = array();
 $fastest = null;
 $ready = true;
 $error = null;
+$endTime = 'all';
+if( strlen($_REQUEST['end']) )
+    $endTime = trim($_REQUEST['end']);
 
 $compTests = explode(',', $_REQUEST['tests']);
 foreach($compTests as $t)
@@ -17,6 +20,7 @@ foreach($compTests as $t)
         $test = array();
         $test['id'] = $parts[0];
         $test['cached'] = 0;
+        $test['end'] = $endTime;
         
         for( $i = 1; $i < count($parts); $i++ )
         {
@@ -29,6 +33,8 @@ foreach($compTests as $t)
                     $test['label'] = $p[1];
                 if( $p[0] == 'c' )
                     $test['cached'] = (int)$p[1];
+                if( $p[0] == 'e' )
+                    $test['end'] = trim($p[1]);
             }
         }
         
@@ -39,7 +45,40 @@ foreach($compTests as $t)
         if( $testInfo !== FALSE )
         {
             if( isset($testInfo['test']) && isset($testInfo['test']['completeTime']) )
+            {
                 $test['done'] = true;
+
+                if( !$test['run'] )
+                    $test['run'] = GetMedianRun($test['pageData']);
+                $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+
+                $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
+                    $fastest = $loadTime;
+
+                // figure out the real end time (in ms)
+                if( isset($test['end']) )
+                {
+                    if( !strcmp($test['end'], 'doc') )
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
+                    elseif( !strcmp($test['end'], 'full') )
+                        $test['end'] = 0;
+                    elseif( !strcmp($test['end'], 'all') )
+                        $test['end'] = -1;
+                    elseif( !strcmp($test['end'], 'aft') )
+                    {
+                        $test['end'] = $test['aft'];
+                        if( !$test['end'] )
+                            $test['end'] = -1;
+                    }
+                    else
+                        $test['end'] = (int)((double)$test['end'] * 1000.0);
+                }
+                else
+                    $test['end'] = 0;
+                if( !$test['end'] )
+                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+            }
             else
             {
                 $test['done'] = false;
@@ -51,14 +90,6 @@ foreach($compTests as $t)
                     $test['started'] = false;
             }
             
-            if( !$test['run'] )
-                $test['run'] = GetMedianRun($test['pageData']);
-            $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
-
-            $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
-            if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
-                $fastest = $loadTime;
-
             $tests[] = $test;
         }
     }
@@ -149,24 +180,33 @@ function LoadTestData()
                         if( count($parts) >= 2 )
                         {
                             $index = (int)$parts[1];
+                            $ms = $index * 100;
                             
-                            if( $index < $test['video']['start'] )
-                                $test['video']['start'] = $index;
-                            if( $index > $test['video']['end'] )
-                                $test['video']['end'] = $index;
-                            
-                            // figure out the dimensions of the source image
-                            if( !$test['video']['width'] || !$test['video']['height'] )
+                            if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] )
                             {
-                                $size = getimagesize($path);
-                                $test['video']['width'] = $size[0];
-                                $test['video']['height'] = $size[1];
+                                if( $index < $test['video']['start'] )
+                                    $test['video']['start'] = $index;
+                                if( $index > $test['video']['end'] )
+                                    $test['video']['end'] = $index;
+                                
+                                // figure out the dimensions of the source image
+                                if( !$test['video']['width'] || !$test['video']['height'] )
+                                {
+                                    $size = getimagesize($path);
+                                    $test['video']['width'] = $size[0];
+                                    $test['video']['height'] = $size[1];
+                                }
+                                
+                                $test['video']['frames'][$index] = "$file";
                             }
-                            
-                            $test['video']['frames'][$index] = "$file";
                         }
                     }
                 }
+                
+                if ($test['end'] == -1)
+                    $test['end'] = $test['video']['end'] * 100;
+                elseif ($test['end'])
+                    $test['video']['end'] = ($test['end'] + 99) / 100;
 
                 closedir($dir);
             }

@@ -297,7 +297,6 @@ void CPagetestReporting::FlushResults(void)
           msDone = max(msDoc, msDone);
 					DWORD msRender = (DWORD)(tmStartRender * 1000.0);
 					DWORD msDom = (DWORD)(tmDOMElement * 1000.0);
-          DWORD msVideoDone = max(msDone, max(msRender, msDom));
 
           if( saveEverything && script_logData )
 					{
@@ -369,13 +368,10 @@ void CPagetestReporting::FlushResults(void)
 						SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
             if( aft )
-            {
               msAFT = CalculateAFT();
-              msVideoDone = max(msVideoDone, msAFT);
-            }
 
-            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video up to %d ms\n"), msVideoDone);
-            SaveVideo(msVideoDone);
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
+            SaveVideo();
 
             // save out the progress data
 						EnterCriticalSection(&csBackground);
@@ -388,12 +384,9 @@ void CPagetestReporting::FlushResults(void)
 
 							CProgressData data = progressData.GetNext(pos);
               DWORD ms = data.sampleTime < start ? 0 : (DWORD)((data.sampleTime - start)/msFreq);
-              if( ms <= msVideoDone + 100 )
-							{
-								CStringA buff;
-								buff.Format("%d,%d,%0.2f,%d\r\n", ms, data.bpsIn, data.cpu, data.mem );
-								progress += buff;
-							}
+							CStringA buff;
+							buff.Format("%d,%d,%0.2f,%d\r\n", ms, data.bpsIn, data.cpu, data.mem );
+							progress += buff;
 						}
 						LeaveCriticalSection(&csBackground);
 						hFile = CreateFile(logFile+step+_T("_progress.csv"), GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
@@ -3782,7 +3775,7 @@ DWORD CPagetestReporting::CalculateAFT()
 /*-----------------------------------------------------------------------------
 	Save out the video
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::SaveVideo(DWORD endTime)
+void CPagetestReporting::SaveVideo()
 {
   screenCapture.Lock();
   CxImage * last_image = NULL;
@@ -3795,35 +3788,32 @@ void CPagetestReporting::SaveVideo(DWORD endTime)
     if (image._capture_time.QuadPart > start)
       image_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
 
-    if (image_time <= endTime + 100) 
+    // we save the frames in increments of 100ms, round it to the closest interval
+    image_time = ((image_time + 50) / 100);
+    CxImage * img = new CxImage;
+    if (image.Get(*img)) 
     {
-      // we save the frames in increments of 100ms, round it to the closest interval
-      image_time = ((image_time + 50) / 100);
-      CxImage * img = new CxImage;
-      if (image.Get(*img)) 
+      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      if (last_image) 
       {
-        img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
-        if (last_image) 
-        {
-          if (ImagesAreDifferent(last_image, img)) {
-            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
-            SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
-          }
-        } 
-        else 
-        {
-          // always save the first image at time zero
-          file_name = logFile + _T("_progress_0000.jpg");
+        if (ImagesAreDifferent(last_image, img)) {
+          file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
           SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
         }
-
-        if (last_image)
-          delete last_image;
-        last_image = img;
+      } 
+      else 
+      {
+        // always save the first image at time zero
+        file_name = logFile + _T("_progress_0000.jpg");
+        SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
       }
-      else
-        delete img;
+
+      if (last_image)
+        delete last_image;
+      last_image = img;
     }
+    else
+      delete img;
   }
   if (last_image)
     delete last_image;

@@ -219,6 +219,10 @@ function ScreenShotTable()
     global $thumbSize;
     global $interval;
     global $maxCompare;
+    $aftAvailable = false;
+    $endTime = 'all';
+    if( strlen($_REQUEST['end']) )
+        $endTime = trim($_REQUEST['end']);
 
     if( count($tests) )
     {
@@ -228,12 +232,16 @@ function ScreenShotTable()
             if( $test['video']['end'] > $end )
                 $end = $test['video']['end'];
                 
-        echo '<br><form id="createForm" name="create" method="get" action="/video/create.php" onsubmit="return ValidateInput(this)"><table id="videoContainer"><tr>';
+        echo '<br><form id="createForm" name="create" method="get" action="/video/create.php" onsubmit="return ValidateInput(this)">';
+        echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
+        echo '<table id="videoContainer"><tr>';
 
         // build a table with the labels
         echo '<td id="labelContainer"><table id="videoLabels"><tr><th>&nbsp;</th></tr>';
         foreach( $tests as &$test )
         {
+            if($test['aft'])
+                $aftAvailable = true;
             // figure out the height of this video
             $height = 100;
             if( $test['video']['width'] && $test['video']['height'] )
@@ -247,7 +255,13 @@ function ScreenShotTable()
             $cached = 0;
             if( $test['cached'] )
                 $cached = 1;
-            echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached\" checked=checked> ";
+            $testEnd = '';
+            if( $test['end'] )
+            {
+                $testEnd = (int)(($test['end'] + 99) / 100);
+                $testEnd = (float)$testEnd / 10.0;
+            }
+            echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
             $cached = '';
             if( $test['cached'] )
                 $cached = 'cached/';
@@ -289,7 +303,9 @@ function ScreenShotTable()
             $last = $end + $interval - 1;
             for( $frame = 0; $frame <= $last; $frame++ )
             {
-                $path = $test['video']['frames'][$frame];
+                $path = null;
+                if( isset($test['video']['frames'][$frame]) )
+                    $path = $test['video']['frames'][$frame];
                 if( isset($path) )
                     $test['currentframe'] = $frame;
                 else
@@ -354,7 +370,7 @@ function ScreenShotTable()
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
         $ival = $interval * 100;
-        echo "<a class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival\">Export filmstrip as an image...</a>";
+        echo "<a class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\"></div>";
@@ -365,9 +381,10 @@ function ScreenShotTable()
             <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
             <?php
                 echo "<input type=\"hidden\" name=\"tests\" value=\"{$_REQUEST['tests']}\">\n";
+                echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
             ?>
                 <table id="layoutTable">
-                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th></tr>
+                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison End Point</th></th></tr>
                     <?php
                         // fill in the thumbnail size selection
                         echo "<tr><td>";
@@ -403,6 +420,29 @@ function ScreenShotTable()
                         if( $interval == 50 )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec<br>";
+                        echo "</td>";
+
+                        // fill in the end-point selection
+                        echo "<td>";
+                        $checked = '';
+                        if( !strcasecmp($endTime, 'all') )
+                            $checked = ' checked=checked';
+                        echo "<input type=\"radio\" name=\"end\" value=\"all\"$checked onclick=\"this.form.submit();\"> Last Change<br>";
+                        $checked = '';
+                        if( !strcasecmp($endTime, 'doc') )
+                            $checked = ' checked=checked';
+                        echo "<input type=\"radio\" name=\"end\" value=\"doc\"$checked onclick=\"this.form.submit();\"> Document Complete<br>";
+                        $checked = '';
+                        if( !strcasecmp($endTime, 'full') )
+                            $checked = ' checked=checked';
+                        echo "<input type=\"radio\" name=\"end\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded<br>";
+                        if( $aftAvailable )
+                        {
+                            $checked = '';
+                            if( !strcasecmp($endTime, 'aft') )
+                                $checked = ' checked=checked';
+                            echo "<input type=\"radio\" name=\"end\" value=\"aft\"$checked onclick=\"this.form.submit();\"> AFT<br>";
+                        }
                         echo "</td></tr>";
                     ?>
                 </table>

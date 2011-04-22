@@ -13,10 +13,12 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
             $tests .= trim($parts[0]);
             if( $parts[1] )
                 $tests .= "-r:{$parts[1]}";
-            if( $parts[2] )
+            if( strlen(trim($parts[2])) )
                 $tests .= '-l:' . urlencode($parts[2]);
             if( $parts[3] )
-                $tests .= "-c:{$parts[1]}";
+                $tests .= "-c:{$parts[3]}";
+            if( strlen(trim($parts[4])) )
+                $tests .= "-e:{$parts[4]}";
         }
     }
 
@@ -65,6 +67,9 @@ else
     if( !$exists )
     {
         $labels = array();
+        $endTime = 'all';
+        if( strlen($_REQUEST['end']) )
+            $endTime = trim($_REQUEST['end']);
         
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
@@ -75,7 +80,7 @@ else
                 $test = array();
                 $test['id'] = $parts[0];
                 $test['cached'] = 0;
-                $test['end'] = '0';
+                $test['end'] = $endTime;
                 
                 for( $i = 1; $i < count($parts); $i++ )
                 {
@@ -96,18 +101,31 @@ else
                 $test['path'] = GetTestPath($test['id']);
                 $test['pageData'] = loadAllPageData($test['path']);
                 
-                BuildVideoScripts("./{$test['path']}");
-
                 if( !$test['run'] )
                     $test['run'] = GetMedianRun($test['pageData']);
                     
                 // figure out the real end time (in ms)
-                if( !strcmp($test['end'], 'doc') )
-                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                elseif( !strcmp($test['end'], 'full') )
+                if( isset($test['end']) )
+                {
+                    if( !strcmp($test['end'], 'doc') )
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
+                    elseif( !strcmp($test['end'], 'aft') )
+                    {
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+                        if( !$test['end'] )
+                            $test['end'] = -1;
+                    }
+                    elseif( !strcmp($test['end'], 'full') )
+                        $test['end'] = 0;
+                    elseif( !strcmp($test['end'], 'all') )
+                        $test['end'] = -1;
+                    else
+                        $test['end'] = (int)((double)$test['end'] * 1000.0);
+                }
+                if( $test['end'] == -1 )
                     $test['end'] = 0;
-                else
-                    $test['end'] = (int)((double)$test['end'] * 1000.0);
+                elseif( !$test['end'] )
+                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
 
                 $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
                 if( $test['cached'] )
@@ -127,33 +145,23 @@ else
         $count = count($tests);
         if( $count )
         {
-            if( $count == 1 )
+            if( !strlen($id) )
             {
-                $tpl = '';
-                if( strlen($_REQUEST['template']) )
-                    $tpl = $_REQUEST['template'];
-                $id = "{$test['id']}{$tpl}.{$test['run']}.{$test['cached']}";
-            }
-            else
-            {
-                if( !strlen($id) )
+                // try and create a deterministic id so multiple submissions of the same tests will result in the same id
+                if( strlen($_REQUEST['tests']) )
                 {
-                    // try and create a deterministic id so multiple submissions of the same tests will result in the same id
-                    if( strlen($_REQUEST['tests']) )
-                    {
-                        $date = date('ymd_');
-                        $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version;
-                        if( strpos($hashstr, '_') == 6 )
-                            $date = substr($hashstr, 0, 7);
-                        $id = $date . sha1($hashstr);
-                    }
-                    else
-                        $id = date('ymd_') . md5(uniqid(rand(), true));
+                    $date = date('ymd_');
+                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']);
+                    if( $_REQUEST['slow'] )
+                        $hashstr .= '.slow';
+                    if( strpos($hashstr, '_') == 6 )
+                        $date = substr($hashstr, 0, 7);
+                    $id = $date . sha1($hashstr);
                 }
+                else
+                    $id = date('ymd_') . md5(uniqid(rand(), true));
             }
 
-            if( $_REQUEST['slow'] )
-                $id .= ".slow";
             $path = GetVideoPath($id);
             if( is_file("./$path/video.mp4") )
                 $exists = true;
@@ -178,6 +186,9 @@ else
                         // zip up the video files
                         foreach( $tests as $index => &$test )
                         {
+                            // build an appropriate script file for this test
+                            BuildVideoScript(null, $test['videoPath'], $test['end']);
+
                             $files = array();
                             $dir = opendir($test['videoPath']);
                             if( $dir )
@@ -195,9 +206,6 @@ else
                             // update the label in the script
                             $script = str_replace("%$index%", $test['label'], $script);
                             
-                            // and the end time
-                            $script = str_replace("%{$index}-end%", $test['end'], $script);
-
                             if( count($files) )
                                 $zip->add($files, PCLZIP_OPT_REMOVE_ALL_PATH, PCLZIP_OPT_ADD_PATH, "$index");
                         }

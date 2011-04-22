@@ -1,5 +1,5 @@
 # load the video clip, and do any necessary preparation
-function PrepareClip(string dir, string label, int endTime)
+function PrepareClip(string dir, string label)
 {
 	clipWidth = 288
 
@@ -7,10 +7,6 @@ function PrepareClip(string dir, string label, int endTime)
 	video = Import("video.avs")
 	SetWorkingDir("..")
 	
-    #trim the video if we are forcing an end time
-    endFrame = (endTime + 50) / 100
-    video = endFrame > 0 ? video.Trim(0,endFrame) : video
-
 	#resize the video (aspect-correct) to fit within the defined box size
 	clipHeight = Int(Float(clipWidth) / 1.644)
 	width = video.Width()
@@ -71,21 +67,21 @@ function PadVideo(clip video)
     return video
 }
 
-v1 = PrepareClip("0", "%0%", %0-end%)
+v1 = PrepareClip("0", "%0%")
 v1 = DisplayTime(v1)
-v2 = PrepareClip("1", "%1%", %1-end%)
+v2 = PrepareClip("1", "%1%")
 v2 = DisplayTime(v2)
-v3 = PrepareClip("2", "%2%", %2-end%)
+v3 = PrepareClip("2", "%2%")
 v3 = DisplayTime(v3)
-v4 = PrepareClip("3", "%3%", %3-end%)
+v4 = PrepareClip("3", "%3%")
 v4 = DisplayTime(v4)
-v5 = PrepareClip("4", "%4%", %4-end%)
+v5 = PrepareClip("4", "%4%")
 v5 = DisplayTime(v5)
-v6 = PrepareClip("5", "%5%", %5-end%)
+v6 = PrepareClip("5", "%5%")
 v6 = DisplayTime(v6)
-v7 = PrepareClip("6", "%6%", %6-end%)
+v7 = PrepareClip("6", "%6%")
 v7 = DisplayTime(v7)
-v8 = PrepareClip("7", "%7%", %7-end%)
+v8 = PrepareClip("7", "%7%")
 v8 = DisplayTime(v8)
 blank = BlankClip(v5)
 

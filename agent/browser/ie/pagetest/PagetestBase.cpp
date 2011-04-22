@@ -812,16 +812,6 @@ bool CPagetestBase::FindBrowserWindow()
       _SetGDIWindow(hBrowserWnd, hGDINotifyWindow, UWM_CHECK_PAINT);
   }
 
-  TCHAR wndClass[1024];
-  if( GetClassName(hBrowserWnd, wndClass, _countof(wndClass)) )
-  {
-    ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X - %s\n"), hBrowserWnd, wndClass);
-  }
-  else
-  {
-    ATLTRACE(_T("[pagetest] - FindBrowserWindow() - 0x%08X\n"), hBrowserWnd);
-  }
-
   return found;
 }
 

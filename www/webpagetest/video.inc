@@ -66,12 +66,14 @@ function BuildVideoScripts($testPath)
 * 
 * @param mixed $videoDir
 */
-function BuildVideoScript($testPath, $videoDir)
+function BuildVideoScript($testPath, $videoDir, $endTime = 0)
 {
     // figure out the frame range and actual file names
     $start = 20000;
     $end = 0;
     $frames = array();
+    if( $endTime )
+        $endTime = (int)(($endTime + 99) / 100);
     
     $dir = opendir($videoDir);
     if( $dir )
@@ -85,11 +87,14 @@ function BuildVideoScript($testPath, $videoDir)
                 if( count($parts) >= 2 )
                 {
                     $index = (int)$parts[1];
-                    if( $index < $start )
-                        $start = $index;
-                    if( $index > $end )
-                        $end = $index;
-                    $frames[$index] = $file;
+                    if( !$endTime || $index <= $endTime )
+                    {
+                        if( $index < $start )
+                            $start = $index;
+                        if( $index > $end )
+                            $end = $index;
+                        $frames[$index] = $file;
+                    }
                 }
             }
         }
@@ -125,7 +130,13 @@ function BuildVideoScript($testPath, $videoDir)
         }
         
         // put in the last frame
-        $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
+        if( $endTime )
+        {
+            $count = max((int)($endTime - $lastIndex + 1), 1);
+            $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = $count, fps = 10)\r\n";
+        }
+        else
+            $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
         
         // write out the script file
         file_put_contents("$videoDir/video.avs", $script);
@@ -139,7 +150,8 @@ function BuildVideoScript($testPath, $videoDir)
     }
     
     // create the summary stats script
-    BuildVideoStatsScript($testPath, $videoDir);
+    if( isset($testPath) && strlen($testPath) )
+        BuildVideoStatsScript($testPath, $videoDir);
 }
 
 /**

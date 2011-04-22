@@ -2,26 +2,13 @@
 # Each needs to be in it's own directory and the directory name
 # will be used for the label
 
-clipWidth = 500
-
 # load the video clip, and do any necessary preparation
-function PrepareClip(int clipWidth, int endTime)
+function PrepareClip()
 {
 	SetWorkingDir(".\0")
 	video = Import("video.avs")
 	SetWorkingDir("..")
 
-    #trim the video if we are forcing an end time
-    endFrame = (endTime + 50) / 100
-    video = endFrame > 0 ? video.Trim(0,endFrame) : video
-
-	width = video.Width()
-	height = video.Height()
-	ratio = Float(height) / Float(width)
-	width = Float(clipWidth)
-	height = width * ratio
-	video = video.LanczosResize( Int(width), Int(height) )
-	
 	end = video.FrameCount()
 	video = video.ApplyRange(end - 1, end, "GreyScale")
 	
@@ -57,7 +44,7 @@ function PadVideo(clip video)
     return video
 }
 
-video = PrepareClip(clipWidth, %0-end%)
+video = PrepareClip()
 video = DisplayTime(video)
 video = PadVideo(video)
 

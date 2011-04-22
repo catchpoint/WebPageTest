@@ -1,5 +1,5 @@
 # load the video clip, and do any necessary preparation
-function PrepareClip(string dir, string label, int endTime)
+function PrepareClip(string dir, string label)
 {
 	clipWidth = 400
 
@@ -7,10 +7,6 @@ function PrepareClip(string dir, string label, int endTime)
 	video = Import("video.avs")
 	SetWorkingDir("..")
 	
-    #trim the video if we are forcing an end time
-    endFrame = (endTime + 50) / 100
-    video = endFrame > 0 ? video.Trim(0,endFrame) : video
-
 	#resize the video (aspect-correct) to fit within the defined box size
 	clipHeight = Int(Float(clipWidth) / 1.644)
 	width = video.Width()
@@ -73,9 +69,9 @@ function PadVideo(clip video)
     return video
 }
 
-v1 = PrepareClip("0", "%0%", %0-end%)
+v1 = PrepareClip("0", "%0%")
 # v1 = DisplayTime(v1)
-v2 = PrepareClip("1", "%1%", %1-end%)
+v2 = PrepareClip("1", "%1%")
 #v2 = DisplayTime(v2)
 
 video = StackHorizontal(v1, v2)
