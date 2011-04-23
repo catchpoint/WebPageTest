@@ -358,7 +358,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
   // Update location information
   $locationInformation = getLocationInformation();
 
-  logOutput("[DEBUG] [processJobsForUsers] start: " . intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] start: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
 
   $userTable = Doctrine_Core::getTable('User');
   $user = $userTable->find($userId);
@@ -382,7 +382,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
     $result = $q->fetchArray();
   }
   
-  logOutput("[DEBUG] [processJobsForUsers] before looping through results: " . intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] before looping through results: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
   try {
     foreach ($result as $row)
     {
@@ -468,7 +468,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
 
           $format = "xml";
 
-          logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " . intval(memory_get_usage() / 1024));
+          logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
             $wptRes = submitWPTRequest(
             $row['Host'] .$wptRuntest,
             $url,
@@ -491,7 +491,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
 
           $wptResultId = $wptRes['wptResultId'];
           $wptResultText = $wptRes['statusText'];
-          logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " . intval(memory_get_usage() / 1024));
+          logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
 //          $row['Lastrun'] = $dte;
           if ($wptResultId == "-1"){
             $wptResult['Status'] = "905";
@@ -542,11 +542,11 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
     logOutput('[ERROR] [processJobsForUsers] Exception : ' . $e->getMessage() . "");
     exit;
   }
-  logOutput("[DEBUG] [processJobsForUsers] after looping: " . intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] after looping: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
   unset($result);
   $user->free(true);
   unset($user);
-  logOutput("[DEBUG] [processJobsForUsers] after cleanup: " . intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] after cleanup: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
 }
 
 
