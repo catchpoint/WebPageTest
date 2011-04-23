@@ -296,7 +296,7 @@
     {if $statusCodes[$res.Status]}{$statusCodes[$res.Status]}{else}{$res.Status}{/if}<br></td>
   <td align="left"><a title="JOB: {$res.WPTJob.Label} --- SCRIPT: {$res.WPTJob.WPTScript.Label}"
                       href="listResults.php?filterField=WPTJob.Id&filterValue={$res.WPTJob.Id}">{$res.WPTJob.Label|truncate:45}</a><br>{$res.WPTHost|truncate:45}
-    <br>{$res.Runs} ( {if $res.RunToUseForAverage eq 0}Avgerage{else}{$res.RunToUseForAverage}{/if} )
+    <br>{$res.Runs} ( {if $res.RunToUseForAverage eq 0}Average{else}{$res.RunToUseForAverage}{/if} )
   </td>
   <td align="right" valign="top">{$res.AvgFirstViewFirstByte/1000}
     <hr>{$res.AvgRepeatViewFirstByte/1000}</td>
