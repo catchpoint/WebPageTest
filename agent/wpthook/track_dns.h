@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 class TestState;
+class WptTest;
 
 typedef struct {
   ADDRINFOA			info;
@@ -43,19 +44,21 @@ public:
     ,_name(name) {
       QueryPerformanceCounter(&_start);
       _end.QuadPart = 0;
+      _override_addr.S_un.S_addr = 0;
   }
   ~DnsInfo(){}
 
-  CString       _name;
-  LARGE_INTEGER _start;
-  LARGE_INTEGER _end;
-  bool          _success;
-  bool          _accounted_for;
+  CString         _name;
+  LARGE_INTEGER   _start;
+  LARGE_INTEGER   _end;
+  bool            _success;
+  bool            _accounted_for;
+  struct in_addr	_override_addr;
 };
 
 class TrackDns {
 public:
-  TrackDns(TestState& test_state);
+  TrackDns(TestState& test_state, WptTest& test);
   ~TrackDns(void);
 
   bool LookupStart(CString& name, void *&context, 
@@ -68,4 +71,5 @@ public:
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
   CRITICAL_SECTION            cs;
   TestState&                  _test_state;
+  WptTest&                    _test;
 };

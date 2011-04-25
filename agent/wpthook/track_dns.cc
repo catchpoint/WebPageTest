@@ -29,10 +29,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_dns.h"
 #include "test_state.h"
+#include "../wptdriver/wpt_test.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TrackDns::TrackDns(TestState& test_state):_test_state(test_state) {
+TrackDns::TrackDns(TestState& test_state, WptTest& test):
+  _test_state(test_state)
+  , _test(test) {
   _dns_lookups.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -46,9 +49,9 @@ TrackDns::~TrackDns(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TrackDns::LookupStart(CString & name, void *&context, 
+bool TrackDns::LookupStart(CString& name, void *&context, 
                             CAtlArray<ADDRINFOA_ADDR> &addresses) {
-  bool override_dns = false;
+  bool use_internal_dns = false;
 
   ATLTRACE2(_T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
               GetCurrentThreadId(), (LPCTSTR)name);
@@ -60,18 +63,26 @@ bool TrackDns::LookupStart(CString & name, void *&context,
     _dns_lookups.SetAt(info, info);
     context = info;
     LeaveCriticalSection(&cs);
+
+    _test.OverrideDNSName(name);
+    info->_override_addr.S_un.S_addr = _test.OverrideDNSAddress(name);
   }
 
-  return override_dns;
+  return use_internal_dns;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackDns::LookupAddress(void * context, ADDRINFOA * address) {
-  if( address->ai_addrlen >= sizeof(struct sockaddr_in) && 
-      address->ai_family == AF_INET )
+  if (address->ai_addrlen >= sizeof(struct sockaddr_in) && 
+      address->ai_family == AF_INET)
   {
     struct sockaddr_in * ipName = (struct sockaddr_in *)address->ai_addr;
+    if (context) {
+      DnsInfo * info = (DnsInfo *)context;
+		  if( info->_override_addr.S_un.S_addr )
+        ipName->sin_addr.S_un.S_addr = info->_override_addr.S_un.S_addr;
+    }
     ATLTRACE2(_T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
       GetCurrentThreadId(),
       ipName->sin_addr.S_un.S_un_b.s_b1

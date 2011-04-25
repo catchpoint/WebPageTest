@@ -53,7 +53,7 @@ WptHook::WptHook(void):
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns)
   ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
-  ,_dns(_test_state)
+  ,_dns(_test_state, _test)
   ,_done(false)
   ,_test_server(*this, _test, _chrome_hook) {
   _file_base = shared_results_file_base;

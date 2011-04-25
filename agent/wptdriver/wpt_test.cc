@@ -338,7 +338,7 @@ void  WptTest::FixURL(ScriptCommand& command) {
   the browser (setting state, etc)
 -----------------------------------------------------------------------------*/
 bool WptTest::ProcessCommand(ScriptCommand& command) {
-  bool processed = false;
+  bool processed = true;
   CString cmd = command.command;
   cmd.MakeLower();
 
@@ -347,8 +347,43 @@ bool WptTest::ProcessCommand(ScriptCommand& command) {
       _log_data = true;
     else
       _log_data = false;
-    processed = true;
+  } else if (cmd == _T("setdns")) {
+	  CDNSEntry entry(command.target, command.value);
+		_dns_override.AddTail(entry);
+  } else if (cmd == _T("setdnsname")) {
+		CDNSName entry(command.target, command.value);
+		if (entry.name.GetLength() && entry.realName.GetLength())
+			_dns_name_override.AddTail(entry);
+  } else {
+    processed = false;
   }
 
   return processed;
+}
+
+/*-----------------------------------------------------------------------------
+  See if we need to override the DNS name
+-----------------------------------------------------------------------------*/
+void  WptTest::OverrideDNSName(CString& name) {
+  POSITION pos = _dns_name_override.GetHeadPosition();
+  while (pos) {
+	  CDNSName entry = _dns_name_override.GetNext(pos);
+	  if (!name.CompareNoCase(entry.name))
+		  name = entry.realName;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  See if we need to override the DNS address
+-----------------------------------------------------------------------------*/
+ULONG WptTest::OverrideDNSAddress(CString& name) {
+  ULONG addr = 0;
+	POSITION pos = _dns_override.GetHeadPosition();
+	while (pos) {
+		CDNSEntry entry = _dns_override.GetNext(pos);
+		if (!name.CompareNoCase(entry.name) || !entry.name.Compare(_T("*")))
+			addr = entry.addr;
+	}
+
+  return addr;
 }
