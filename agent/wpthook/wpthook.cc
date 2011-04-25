@@ -52,7 +52,7 @@ WptHook::WptHook(void):
   ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns)
-  ,_results(_test_state, _requests, _sockets, _screen_capture)
+  ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
   ,_dns(_test_state)
   ,_done(false)
   ,_test_server(*this, _test, _chrome_hook) {
@@ -95,9 +95,11 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         if (_test_state.IsDone()) {
           KillTimer(_message_window, TIMER_DONE);
           _results.Save();
-          _done = true;
-          if (_test_state._frame_window)
-            ::PostMessage(_test_state._frame_window,WM_CLOSE,0,0);
+          if (_test.Done() ) {
+            _done = true;
+            if (_test_state._frame_window)
+              ::PostMessage(_test_state._frame_window,WM_CLOSE,0,0);
+          }
         }
 
     default:

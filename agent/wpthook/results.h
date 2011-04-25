@@ -34,11 +34,12 @@ class TestState;
 class TrackSockets;
 class ScreenCapture;
 class CxImage;
+class WptTest;
 
 class Results {
 public:
-  Results(TestState& test_state, Requests& requests, TrackSockets& sockets,
-          ScreenCapture& screen_capture);
+  Results(TestState& test_state, WptTest& test, Requests& requests, 
+          TrackSockets& sockets, ScreenCapture& screen_capture);
   ~Results(void);
 
   void Reset(void);
@@ -53,6 +54,7 @@ private:
   TestState&  _test_state;
   TrackSockets& _sockets;
   ScreenCapture& _screen_capture;
+  WptTest&      _test;
 
   void SavePageData(void);
   void SaveRequests(void);

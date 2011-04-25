@@ -232,7 +232,6 @@ CWsHook::~CWsHook(void) {
 SOCKET CWsHook::WSASocketW(int af, int type, int protocol, 
                   LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = INVALID_SOCKET;
-  _test_state.ActivityDetected();
   if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
     if( ret != INVALID_SOCKET )
@@ -245,7 +244,6 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 -----------------------------------------------------------------------------*/
 int CWsHook::closesocket(SOCKET s) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   _sockets.Close(s);
   if (_closesocket)
     ret = _closesocket(s);
@@ -257,13 +255,11 @@ int CWsHook::closesocket(SOCKET s) {
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, 
                                                               IN int namelen) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   _sockets.Connect(s, name, namelen);
   if (_connect)
     ret = _connect(s, name, namelen);
   if (!ret)
     _sockets.Connected(s);
-  _test_state.ActivityDetected();
   return ret;
 }
 
@@ -271,7 +267,6 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
 -----------------------------------------------------------------------------*/
 int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   if( _recv )
     ret = _recv(s, buf, len, flags);
   if( ret > 0 && !flags && buf && len )
@@ -286,7 +281,6 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                      LPWSAOVERLAPPED lpOverlapped, 
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
@@ -316,7 +310,6 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 -----------------------------------------------------------------------------*/
 int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   if (len)
     _sockets.DataOut(s, buf, len);
   if( _send )
@@ -331,7 +324,6 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  _test_state.ActivityDetected();
   for (DWORD i = 0; i < dwBufferCount; i++)
     if (lpBuffers[i].len && lpBuffers[i].buf)
       _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len);
@@ -357,7 +349,6 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
                              const ADDRINFOA * pHints, PADDRINFOA * ppResult) {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
-  _test_state.ActivityDetected();
   void * context = NULL;
   CString name = CA2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
@@ -398,8 +389,6 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
   if (context)
     _dns.LookupDone(context, ret);
 
-  _test_state.ActivityDetected();
-
   return ret;
 }
 
@@ -409,7 +398,6 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
                              const ADDRINFOW * pHints, PADDRINFOW * ppResult) {
   int ret = WSAEINVAL;
   bool overrideDNS = false;
-  _test_state.ActivityDetected();
   void * context = NULL;
   CString name = CW2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
@@ -449,8 +437,6 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 
   if (context)
     _dns.LookupDone(context, ret);
-
-  _test_state.ActivityDetected();
 
   return ret;
 }
@@ -498,7 +484,6 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
                                   lpdwFlags);
 
   if (ret && lpcbTransfer) {
-    ATLTRACE2(_T("[wpthook] CWsHook::WSAGetOverlappedResult completed\n"));
     WsaBuffTracker buff;
     if (recv_buffers.Lookup(lpOverlapped, buff)) {
       DWORD bytes = *lpcbTransfer;

@@ -41,13 +41,19 @@ ScreenCapture::ScreenCapture() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 ScreenCapture::~ScreenCapture(void) {
+  Reset();
+  DeleteCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ScreenCapture::Reset() {
   EnterCriticalSection(&cs);
   while (!_captured_images.IsEmpty()) {
     CapturedImage& image = _captured_images.RemoveHead();
     image.Free();
   }
   LeaveCriticalSection(&cs);
-  DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------

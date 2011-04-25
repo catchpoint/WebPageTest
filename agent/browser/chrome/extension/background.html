@@ -1,8 +1,11 @@
 <script>
 var STARTUP_DELAY = 5000;
+var TASK_INTERVAL = 1000;
+var TASK_INTERVAL_SHORT = 0;
 var g_active=false;
 var g_tabId = -1;
 var g_start = 0;
+var g_requesting_task = false;
 
 // on startup, kick off our testing
 setTimeout( "wptStartup()", STARTUP_DELAY );
@@ -10,7 +13,7 @@ setTimeout( "wptStartup()", STARTUP_DELAY );
 function wptStartup() {
 	chrome.tabs.getSelected(null, function(tab){
 		g_tabId = tab.id;
-		wptGetTask();
+		setInterval( "wptGetTask()", TASK_INTERVAL );
 	});
 }
 
@@ -22,25 +25,39 @@ function wptNavigate(url){
 
 // execute a single task/script command
 function wptExecuteTask(task){
-  g_active = true;
-  if (task.action == "navigate")
-	wptNavigate(task.target);
+  if (task.action.length) {
+    if (task.record)
+	  g_active = true;
+    else
+	  g_active = false;
+
+    // decode and execute the actual command
+    if (task.action == "navigate")
+	  wptNavigate(task.target);
+
+    if (!g_active)
+	  setTimeout( "wptGetTask()", TASK_INTERVAL_SHORT );
+  }
 }
 
 // get the next task from the wptdriver
 function wptGetTask(){
-  try{
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://127.0.0.1:8888/task", true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState == 4) {
-	    var resp = JSON.parse(xhr.responseText);
-	    if (resp.statusCode == 200)
-          wptExecuteTask(resp.data);
+  if (!g_requesting_task) {
+    g_requesting_task = true;
+    try{
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "http://127.0.0.1:8888/task", true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          var resp = JSON.parse(xhr.responseText);
+          if (resp.statusCode == 200)
+            wptExecuteTask(resp.data);
+        }
       }
-    }
-    xhr.send();
-  }catch(err){}
+      xhr.send();
+    }catch(err){}
+    g_requesting_task = false;
+  }
 }
 
 // notification that navigation started

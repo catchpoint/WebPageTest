@@ -119,14 +119,11 @@ void TestServer::MongooseCallback(enum mg_event event,
 
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
-    ATLTRACE(_T("[wptdriver] HTTP Request: %s\n"), 
+    ATLTRACE(_T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri));
-    ATLTRACE(_T("[wptdriver] HTTP Query String: %s\n"), 
+    ATLTRACE(_T("[wpthook] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string));
-    if (strcmp(request_info->uri, "/get_test") == 0) {
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, 
-                  _test.ToJSON());
-    } else if (strcmp(request_info->uri, "/task") == 0) {
+    if (strcmp(request_info->uri, "/task") == 0) {
       _chrome_hook.InstallHooks();
       CStringA task;
       bool record = false;

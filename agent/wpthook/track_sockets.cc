@@ -78,7 +78,6 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
   {
     struct sockaddr_in * ipName = (struct sockaddr_in *)name;
 
-      // only add it to the list if it's not connecting to localhost
     EnterCriticalSection(&cs);
     SocketInfo * info = new SocketInfo;
     info->_id = _nextSocketId;
@@ -113,8 +112,6 @@ void TrackSockets::Connected(SOCKET s) {
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
 void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - TrackSockets::DataIn() %d bytes on socket %d"),
-            data_len, s);
   bool localhost = false;
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;
@@ -149,8 +146,6 @@ void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
 -----------------------------------------------------------------------------*/
 void TrackSockets::DataOut(SOCKET s, const char * data, 
                             unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - TrackSockets::DataOut() %d bytes on socket %d"),
-            data_len, s);
   bool localhost = false;
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;

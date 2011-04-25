@@ -381,7 +381,6 @@ function ScreenShotTable()
             <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
             <?php
                 echo "<input type=\"hidden\" name=\"tests\" value=\"{$_REQUEST['tests']}\">\n";
-                echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
             ?>
                 <table id="layoutTable">
                     <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison End Point</th></th></tr>
@@ -424,6 +423,8 @@ function ScreenShotTable()
 
                         // fill in the end-point selection
                         echo "<td>";
+                        if( !$aftAvailable && !strcasecmp($endTime, 'aft') )
+                            $endTime = 'all';
                         $checked = '';
                         if( !strcasecmp($endTime, 'all') )
                             $checked = ' checked=checked';

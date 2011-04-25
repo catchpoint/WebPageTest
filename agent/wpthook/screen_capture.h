@@ -61,6 +61,7 @@ public:
   bool GetImage(CapturedImage::TYPE type, CxImage& image);
   void Lock();
   void Unlock();
+  void Reset();
 
   CAtlList<CapturedImage> _captured_images;
 

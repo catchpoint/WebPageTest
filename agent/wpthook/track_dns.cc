@@ -54,6 +54,7 @@ bool TrackDns::LookupStart(CString & name, void *&context,
               GetCurrentThreadId(), (LPCTSTR)name);
 
   if (_test_state._active) {
+    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     DnsInfo * info = new DnsInfo(name);
     _dns_lookups.SetAt(info, info);
@@ -86,6 +87,7 @@ void TrackDns::LookupDone(void * context, int result) {
   ATLTRACE2(_T("[wshook] (%d) DNS Lookup complete\n"), GetCurrentThreadId());
 
   if (_test_state._active) {
+    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     DnsInfo * info = NULL;
     if (_dns_lookups.Lookup(context, info) && info) {

@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "test_state.h"
 #include "screen_capture.h"
+#include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
 
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
@@ -48,10 +49,11 @@ static const BYTE JPEG_VIDEO_QUALITY = 75;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Results::Results(TestState& test_state, Requests& requests, 
+Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, ScreenCapture& screen_capture):
   _requests(requests)
   , _test_state(test_state)
+  , _test(test)
   , _sockets(sockets)
   , _screen_capture(screen_capture) {
   _file_base = shared_results_file_base;
@@ -67,16 +69,20 @@ Results::~Results(void) {
   Reset the current test results
 -----------------------------------------------------------------------------*/
 void Results::Reset(void) {
+  _requests.Reset();
+  _screen_capture.Reset();
 }
 
 /*-----------------------------------------------------------------------------
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
-  SaveRequests();
-  SavePageData();
-  SaveImages();
-  SaveProgressData();
+  if (_test._log_data) {
+    SaveRequests();
+    SavePageData();
+    SaveImages();
+    SaveProgressData();
+  }
 }
 
 

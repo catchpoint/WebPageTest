@@ -55,9 +55,9 @@ public:
 
   void  Reset(void);
   virtual bool  Load(CString& test);
-  CStringA ToJSON();
 
   bool  GetNextTask(CStringA& task, bool& record);
+  bool  Done();
 
   // overall test settings
   CString _id;
@@ -81,14 +81,20 @@ public:
   CString _basic_auth;
   CString _script;
   CString _test_file;
+  bool    _log_data;
   
   // current state
   int     _run;
   bool    _clear_cache;
+  bool    _active;
 
 protected:
-  CStringA JSONEscape(CString src);
-  CStringA EncodeTask(CString action, CString target, CString value);
+  CStringA  JSONEscape(CString src);
+  CStringA  EncodeTask(ScriptCommand& command);
+  void      BuildScript();
+  bool      NavigationCommand(CString command);
+  void      FixURL(ScriptCommand& command);
+  bool      ProcessCommand(ScriptCommand& command);
 
   CAtlList<ScriptCommand> _script_commands;
 };

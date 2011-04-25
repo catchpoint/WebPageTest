@@ -32,17 +32,7 @@ void WptTestHook::LoadFromFile() {
           ATLTRACE(_T("[wpthook] - Loaded %d bytes\n"), bytes_read);
           CString test_data(buff);
           if (Load(test_data)) {
-            // build up a new script
-            _script_commands.RemoveAll();
-    
-            if (_directory.GetLength() && _url.GetLength()) {
-              ScriptCommand command;
-              command.command = _T("navigate");
-              command.target = _url;
-              command.record = true;
-
-              _script_commands.AddTail(command);
-            }
+            BuildScript();
           }
         }
         free(buff);
@@ -53,3 +43,4 @@ void WptTestHook::LoadFromFile() {
 
   _run = shared_current_run;
 }
+

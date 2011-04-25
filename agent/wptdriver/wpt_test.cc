@@ -79,6 +79,8 @@ void WptTest::Reset(void) {
   _script.Empty();
   _run = 0;
   _clear_cache = true;
+  _active = false;
+  _log_data = true;
 }
 
 /*-----------------------------------------------------------------------------
@@ -91,9 +93,10 @@ bool WptTest::Load(CString& test) {
 
   Reset();
 
+  bool done = false;
   int linePos = 0;
   CString line = test.Tokenize(_T("\r\n"), linePos);
-  while (linePos >= 0) {
+  while (!done && linePos >= 0) {
     int keyEnd = line.Find('=');
     if (keyEnd > 0) {
       CString key = line.Left(keyEnd).Trim();
@@ -135,10 +138,10 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("Basic Auth")))
           _basic_auth = value.Trim();
       }
-    } else if (line.Trim().CompareNoCase(_T("[Script]"))) {
+    } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
       _script = test.Mid(linePos).Trim();
-      linePos = test.GetLength();
+      done = true;
     }
 
     line = test.Tokenize(_T("\r\n"), linePos);
@@ -150,78 +153,6 @@ bool WptTest::Load(CString& test) {
     ret = true;
 
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Create a JSON Encoding of the test data
------------------------------------------------------------------------------*/
-CStringA WptTest::ToJSON() {
-  CStringA buff;
-  CStringA json = "{";
-
-  buff.Format("\"id\":\"%s\"", (LPCSTR)JSONEscape(_id));
-  json += buff;
-
-  buff.Format(",\"url\":\"%s\"", (LPCSTR)JSONEscape(_url));
-  json += buff;
-
-  buff.Format(",\"runs\":%d", _runs);
-  json += buff;
-
-  buff.Format(",\"fv_only\":%s", _fv_only ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"end_at_doc_complete\":%s", _doc_complete ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"ignore_ssl_errors\":%s", _ignore_ssl ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"tcpdump\":%s", _tcpdump ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"video\":%s", _video ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"aft\":%s", _aft ? "true" : "false");
-  json += buff;
-
-  buff.Format(",\"test_type\":\"%s\"", (LPCSTR)JSONEscape(_test_type));
-  json += buff;
-
-  buff.Format(",\"block\":\"%s\"", (LPCSTR)JSONEscape(_block));
-  json += buff;
-
-  buff.Format(",\"bw_in\":%d", _bwIn);
-  json += buff;
-
-  buff.Format(",\"bw_out\":%d", _bwOut);
-  json += buff;
-
-  buff.Format(",\"latency\":%d", _latency);
-  json += buff;
-
-  buff.Format(",\"plr\":%0.3f", _plr);
-  json += buff;
-
-  buff.Format(",\"browser\":\"%s\"", (LPCSTR)JSONEscape(_browser));
-  json += buff;
-
-  buff.Format(",\"basic_auth\":\"%s\"", (LPCSTR)JSONEscape(_basic_auth));
-  json += buff;
-
-  buff.Format(",\"script\":\"%s\"", (LPCSTR)JSONEscape(_script));
-  json += buff;
-
-  // current state
-  buff.Format(",\"run\":%d", _run);
-  json += buff;
-
-  buff.Format(",\"clear_cache\":%s", _clear_cache ? "true" : "false");
-  json += buff;
-
-  json += _T("}");
-  return json;
 }
 
 /*-----------------------------------------------------------------------------
@@ -245,16 +176,22 @@ CStringA WptTest::JSONEscape(CString src) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTest::GetNextTask(CStringA& task, bool& record) {
-  bool ret = true;
+  bool ret = false;
 
   ATLTRACE(_T("[wpthook] - WptTest::GetNextTask\n"));
 
-  if (!_script_commands.IsEmpty()) {
-    ScriptCommand command = _script_commands.RemoveHead();
-    task = EncodeTask(command.command, command.target, command.value);
-    record = command.record;
-  } else {
-    ret = false;
+  if (!_active){
+    while (!ret && !_script_commands.IsEmpty()) {
+      ScriptCommand command = _script_commands.RemoveHead();
+      if (!ProcessCommand(command)) {
+        FixURL(command);
+        task = EncodeTask(command);
+        record = command.record;
+        if (record)
+          _active = true;
+        ret = true;
+      }
+    }
   }
 
   return ret;
@@ -263,26 +200,155 @@ bool WptTest::GetNextTask(CStringA& task, bool& record) {
 /*-----------------------------------------------------------------------------
   Create a JSON-encoded version of the task
 -----------------------------------------------------------------------------*/
-CStringA WptTest::EncodeTask(CString action, CString target, CString value) {
+CStringA WptTest::EncodeTask(ScriptCommand& command) {
   CStringA json = "{";
   CStringA buff;
 
-  if (action.GetLength()) {
-    buff.Format("\"action\":\"%s\"", (LPCSTR)JSONEscape(action));
+  if (command.command.GetLength()) {
+    buff.Format("\"action\":\"%s\"", (LPCSTR)JSONEscape(command.command));
     json += buff;
   }
 
-  if (target.GetLength()) {
-    buff.Format(",\"target\":\"%s\"", (LPCSTR)JSONEscape(target));
+  if (command.target.GetLength()) {
+    buff.Format(",\"target\":\"%s\"", (LPCSTR)JSONEscape(command.target));
     json += buff;
   }
 
-  if (value.GetLength()) {
-    buff.Format(",\"value\":\"%s\"", (LPCSTR)JSONEscape(value));
+  if (command.value.GetLength()) {
+    buff.Format(",\"value\":\"%s\"", (LPCSTR)JSONEscape(command.value));
     json += buff;
   }
+
+  if (command.record)
+    json += ",\"record\":true";
+  else
+    json += ",\"record\":false";
 
   json += _T("}");
   return json;
 }
 
+/*-----------------------------------------------------------------------------
+  The last measurement completed, is it time to exit?
+-----------------------------------------------------------------------------*/
+bool WptTest::Done() {
+  ATLTRACE(_T("[wpthook] - WptTest::Done()\n"));
+  bool ret = false;
+
+  _active = false;
+  if (_script_commands.IsEmpty())
+    ret = true;
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Parse the loaded script for commands (or create a default script if we
+  are just loading an url)
+-----------------------------------------------------------------------------*/
+void WptTest::BuildScript() {
+  _script_commands.RemoveAll();
+
+  if (_script.GetLength()) {
+    bool has_measurement = false;
+    bool in_comment = false;
+    int pos = 0;
+    CString line = _script.Tokenize(_T("\r\n"), pos).Trim();
+    while (pos >= 0) {
+      if (in_comment) {
+        if (line.Left(2) == _T("*/"))
+          in_comment = false;
+      } else {
+        if (line.Left(2) == _T("/*"))
+          in_comment = true;
+        else if(line.GetAt(0) != _T('/')) {
+          // break the command into it's component parts
+          int command_pos = 0;
+          CString command = line.Tokenize(_T("\t"), command_pos).Trim();
+          if (command.GetLength()) {
+            ScriptCommand script_command;
+            script_command.command = command;
+            script_command.record = NavigationCommand(command);
+            script_command.target = line.Tokenize(_T("\t"),command_pos).Trim();
+            if (command_pos > 0 && script_command.target.GetLength()) {
+              script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
+            }
+
+            ATLTRACE(_T("Script command: %s,%s,%s\n"), 
+                      (LPCTSTR)script_command.command,
+                      (LPCTSTR)script_command.target,
+                      (LPCTSTR)script_command.value);
+
+            if (script_command.record)
+              has_measurement = true;
+
+            _script_commands.AddTail(script_command);
+          }
+        }
+      }
+
+      line = _script.Tokenize(_T("\r\n"), pos).Trim();
+    }
+
+    if (!has_measurement)
+      _script_commands.RemoveAll();
+  }
+    
+  if (_script_commands.IsEmpty() && _url.GetLength()) {
+    ScriptCommand command;
+    command.command = _T("navigate");
+    command.target = _url;
+    command.record = true;
+
+    _script_commands.AddTail(command);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  See if the supplied command is one that initiates a measurement
+  (even if that measurement needs to be ignored)
+-----------------------------------------------------------------------------*/
+bool WptTest::NavigationCommand(CString command) {
+  bool ret = false;
+  command.MakeLower();
+
+  if (command == _T("navigate") ||
+      command == _T("startmeasurement") ||
+      command == _T("waitforcomplete") ||
+      command == _T("submitform") ||
+      command.Find(_T("andwait")) > 0)
+    ret = true;
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Make sure the URL has a protocol for navigation commands
+-----------------------------------------------------------------------------*/
+void  WptTest::FixURL(ScriptCommand& command) {
+  if (!command.command.CompareNoCase(_T("navigate")) && 
+      command.target.GetLength()) {
+    if (command.target.Left(4) != _T("http"))
+      command.target = CString(_T("http://")) + command.target;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Process the commands that we know about and that can be processed outside of
+  the browser (setting state, etc)
+-----------------------------------------------------------------------------*/
+bool WptTest::ProcessCommand(ScriptCommand& command) {
+  bool processed = false;
+  CString cmd = command.command;
+  cmd.MakeLower();
+
+  if (cmd == _T("logdata")) {
+    if (_ttoi(command.target))
+      _log_data = true;
+    else
+      _log_data = false;
+    processed = true;
+  }
+
+  return processed;
+}

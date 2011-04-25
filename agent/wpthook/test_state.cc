@@ -48,43 +48,20 @@ static const DWORD MS_IN_SEC = 1000;
 TestState::TestState(int test_timeout, bool end_on_load, Results& results,
                       ScreenCapture& screen_capture, WptTestHook &test):
   _test_timeout(test_timeout)
-  ,_active(false)
-  ,_timeout(false)
-  ,_next_document(1)
-  ,_current_document(0)
-  ,_doc_requests(0)
-  ,_requests(0)
-  ,_doc_bytes_in(0)
-  ,_bytes_in(0)
-  ,_doc_bytes_out(0)
-  ,_bytes_out(0)
-  ,_last_bytes_in(0)
   ,_end_on_load(end_on_load)
   ,_results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
   ,_document_window(NULL)
-  ,_screen_updated(false)
   ,_render_check_thread(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
-  ,_last_data_ms(0)
-  ,_video_capture_count(0)
   ,_test(test) {
-  _start.QuadPart = 0;
-  _on_load.QuadPart = 0;
-  _render_start.QuadPart = 0;
-  _first_activity.QuadPart = 0;
-  _last_activity.QuadPart = 0;
-  _first_byte.QuadPart = 0;
-  _last_video_time.QuadPart = 0;
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
-  _last_cpu_idle.QuadPart = 0;
-  _last_cpu_kernel.QuadPart = 0;
-  _last_cpu_user.QuadPart = 0;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
+  Reset(false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -92,6 +69,41 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
 TestState::~TestState(void) {
   Done();
   DeleteCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::Reset(bool cascade) {
+  EnterCriticalSection(&_data_cs);
+  _active = false;
+  _timeout = false;
+  _next_document = 1;
+  _current_document = 0;
+  _doc_requests = 0;
+  _requests = 0;
+  _doc_bytes_in = 0;
+  _bytes_in = 0;
+  _doc_bytes_out = 0;
+  _bytes_out = 0;
+  _last_bytes_in = 0;
+  _screen_updated = false;
+  _last_data_ms = 0;
+  _video_capture_count = 0;
+  _start.QuadPart = 0;
+  _on_load.QuadPart = 0;
+  _render_start.QuadPart = 0;
+  _first_activity.QuadPart = 0;
+  _last_activity.QuadPart = 0;
+  _first_byte.QuadPart = 0;
+  _last_video_time.QuadPart = 0;
+  _last_cpu_idle.QuadPart = 0;
+  _last_cpu_kernel.QuadPart = 0;
+  _last_cpu_user.QuadPart = 0;
+  _progress_data.RemoveAll();
+  LeaveCriticalSection(&_data_cs);
+
+  if (cascade)
+    _results.Reset();
 }
 
 /*-----------------------------------------------------------------------------
@@ -115,11 +127,9 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
   ATLTRACE2(_T("[wpthook] TestState::Start()\n"));
+  Reset();
   QueryPerformanceCounter(&_start);
-  _results.Reset();
-  _timeout = false;
   _active = true;
-  _screen_updated = false;
   _current_document = _next_document;
   _next_document++;
   FindBrowserWindow();  // the document window may not be available yet
@@ -168,10 +178,12 @@ void TestState::OnNavigate() {
 void TestState::OnLoad(DWORD load_time) {
   if (_active) {
     ATLTRACE2(_T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
-    if (load_time)
+    if (load_time) {
+      ATLTRACE(_T("[wpthook] - _on_load calculated based on load_time\n"));
       _on_load.QuadPart = _start.QuadPart + 
                           (_ms_frequency.QuadPart * load_time);
-    else {
+    } else {
+      ATLTRACE(_T("[wpthook] - _on_load recorded\n"));
       QueryPerformanceCounter(&_on_load);
       _screen_capture.Capture(_document_window, 
                                     CapturedImage::DOCUMENT_COMPLETE);
@@ -188,23 +200,28 @@ bool TestState::IsDone() {
   if (_active){
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    __int64 elapsed_test = 0;
-    __int64 elapsed_doc = 0;
-    __int64 elapsed_activity = 0;
+    DWORD elapsed_test = 0;
+    DWORD elapsed_doc = 0;
+    DWORD elapsed_activity = 0;
 
     // calculate the varous elapsed times
     if (_start.QuadPart && now.QuadPart >= _start.QuadPart)
-      elapsed_test = (now.QuadPart - _start.QuadPart) / _ms_frequency.QuadPart;
+      elapsed_test = (DWORD)((now.QuadPart - _start.QuadPart) 
+                            / _ms_frequency.QuadPart);
 
     if (_on_load.QuadPart && now.QuadPart >= _on_load.QuadPart)
-      elapsed_doc = (now.QuadPart - _on_load.QuadPart) 
-                    / _ms_frequency.QuadPart;
+      elapsed_doc = (DWORD)((now.QuadPart - _on_load.QuadPart) 
+                              / _ms_frequency.QuadPart);
 
     if (_last_activity.QuadPart && now.QuadPart >= _last_activity.QuadPart)
-      elapsed_activity = (now.QuadPart - _last_activity.QuadPart)
-                         / _ms_frequency.QuadPart;
+      elapsed_activity = (DWORD)((now.QuadPart - _last_activity.QuadPart)
+                                  / _ms_frequency.QuadPart);
 
-    if (elapsed_test > _test_timeout){
+    ATLTRACE(_T("[wpthook] - TestState::IsDone() test: %d ms, ") 
+              _T("doc: %d ms, activity: %d ms\n"), elapsed_test, elapsed_doc,
+              elapsed_activity);
+
+    if ((int)elapsed_test > _test_timeout){
       // the test timed out
       _timeout = true;
       done = true;
@@ -231,6 +248,7 @@ bool TestState::IsDone() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Done(void) {
+  ATLTRACE(_T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
@@ -249,6 +267,8 @@ void TestState::Done(void) {
       CloseHandle(_render_check_thread);
       _render_check_thread = NULL;
     }
+
+    _active = false;
   }
 }
 
