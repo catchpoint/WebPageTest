@@ -34,7 +34,7 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, computerName(_T(""))
 	, aliveFile(_T(""))
 	, testType(0)
-	, rebootInterval(0)
+	, rebootInterval(720)
 	, clearCacheInterval(-1)
 	, labID(0)
 	, dialerID(0)
@@ -331,8 +331,25 @@ void CurlBlastDlg::DoStartup(void)
 	status.SetWindowText(_T("Disabling DNS cache..."));
 	DisableDNSCache();
 
-	// set the OS to not boost foreground processes
+  // stop services that can interfere with our measurements
+  StopService(_T("WinDefend")); // defender
+  StopService(_T("wscsvc"));    // security center
+
+  // kill the action center (next reboot)
 	HKEY hKey;
+	if( SUCCEEDED(RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"), 0, KEY_SET_VALUE, &hKey)) )
+	{
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("HideSCAHealth"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+	if( SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer"), 0, KEY_SET_VALUE, &hKey)) )
+	{
+		RegDeleteValue(hKey, _T("HideSCAHealth"));
+		RegCloseKey(hKey);
+	}
+
+	// set the OS to not boost foreground processes
 	if( SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Control\\PriorityControl"), 0, KEY_SET_VALUE, &hKey)) )
 	{
 		DWORD val = 0x18;
@@ -501,7 +518,7 @@ void CurlBlastDlg::LoadSettings(void)
 	threadCount			= GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
 	timeout				= GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
 	testType			= GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
-	rebootInterval		= GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), 0, iniFile);
+	rebootInterval		= GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), rebootInterval, iniFile);
 	clearCacheInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Cache Interval"), 0, iniFile);
 	labID				= GetPrivateProfileInt(_T("Configuration"), _T("Lab ID"), -1, iniFile);
 	dialerID			= GetPrivateProfileInt(_T("Configuration"), _T("Dialer ID"), 0, iniFile);
@@ -1271,6 +1288,37 @@ void CurlBlastDlg::DisableDNSCache(void)
 			
 			CloseServiceHandle(scm);
 		}
+	}
+}
+
+/*-----------------------------------------------------------------------------
+  Stop the given service
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::StopService(CString serviceName)
+{
+	SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+	if( scm )
+	{
+		SC_HANDLE svc = OpenService(scm, serviceName, GENERIC_READ | GENERIC_EXECUTE);
+		if( svc )
+		{
+			// stop the service
+			SERVICE_STATUS status;
+			if( ControlService(svc, SERVICE_CONTROL_STOP, &status) )
+			{
+				// wait for it to actually stop
+				while( status.dwCurrentState != SERVICE_STOPPED )
+				{
+					Sleep(500);
+					if( !QueryServiceStatus(svc, &status) )
+						status.dwCurrentState = SERVICE_STOPPED;
+				}
+			}
+			
+			CloseServiceHandle(svc);
+		}
+		
+		CloseServiceHandle(scm);
 	}
 }
 

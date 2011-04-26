@@ -112,6 +112,7 @@ protected:
 	DWORD experimental;
 	void CheckExit(void);
 	void DisableDNSCache(void);
+  void StopService(CString serviceName);
 	void Defrag(void);
 	void SetupScreen(void);
 	void GetEC2Config();
