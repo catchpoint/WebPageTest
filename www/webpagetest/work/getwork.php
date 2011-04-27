@@ -35,8 +35,12 @@ if( !$done )
     {
         // see if the tester is marked as being offline
         $offline = false;
-        if( isset($tester) && is_file("./work/testers/$location/$tester.offline") )
-            $offline = true;
+        if( strlen($ec2) && strlen($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
+        {
+            require_once('./ec2/ec2.inc.php');
+            if( !EC2_CheckInstance($location, $ec2) )
+                $offline = true;
+        }
         
         if( !$offline )
         {
@@ -235,6 +239,13 @@ if( !$done && (rand(1, 100) <= 5) )
 // send back a blank result if we didn't have anything
 if( !$done )
 {
+    // scale EC2 if necessary
+    if( strlen($ec2) && isset($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
+    {
+        require_once('./ec2/ec2.inc.php');
+        EC2_ScaleDown($locations[$location]['ec2'], $ec2);
+    }
+
     header('Content-type: text/plain');
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");

@@ -210,6 +210,13 @@
         // redirect the browser to the test results page
         if( !$error )
         {
+            // scale EC2 if necessary
+            if( isset($locations[$test['location']]['ec2']) && is_file('./ec2/ec2.inc.php') )
+            {
+                require_once('./ec2/ec2.inc.php');
+                EC2_ScaleUp($locations[$test['location']]['ec2']);
+            }
+            
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
