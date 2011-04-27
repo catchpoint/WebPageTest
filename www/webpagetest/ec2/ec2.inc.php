@@ -187,11 +187,11 @@ function EC2_ScaleDown($location, $ec2Config, $instanceID)
 * @param mixed $ec2Config
 * @param mixed $instance
 */
-function EC2_CheckInstance($location, $instanceID)
+function EC2_CheckInstance($location, $ec2Config, $instanceID)
 {
     $active = false;
 
-    $file = @fopen("./ec2/testers.$location.dat", 'r');
+    $file = @fopen("./ec2/testers.$location.dat", 'c+');
     if( $file )
     {
         if( flock($file, LOCK_EX) )
@@ -208,6 +208,41 @@ function EC2_CheckInstance($location, $instanceID)
                     }
                 }
             }
+            
+            // check in case we don't already know about this instance (and it's not shutting down)
+            if( !$active )
+            {
+                $config = parse_ini_file('./settings/ec2.ini', true);
+                if( isset($config[$ec2Config]) )
+                {
+                    $region = $config[$ec2Config]['region'];
+                    $ami = $config[$ec2Config]['ami'];
+                    require_once('./ec2/sdk.class.php');
+                    $ec2 = new AmazonEC2($config[$ec2Config]['key'], $config[$ec2Config]['secret']);
+                    if( $ec2 && strlen($region) && strlen($ami) )
+                    {
+                        $ec2->set_region($region);
+                        UpdateInstanceList($ec2, $instances, $ami);
+                        if( count($instances) )
+                        {
+                            foreach( $instances as &$instance )
+                            {
+                                if( $instance['id'] == $instanceID )
+                                {
+                                    $active = true;
+                                    break;
+                                }
+                            }
+
+                            // write out the updated list of instances
+                            fseek($file, 0);
+                            ftruncate($file, 0);
+                            fwrite($file, json_encode($instances));
+                        }
+                    }
+                }
+            }
+            
             flock($file, LOCK_UN);
         }
         fclose($file);

@@ -13,6 +13,8 @@ if( isset($ec2) && strlen($ec2) )
     $tester = $ec2;
 elseif( isset($pc) && strlen($pc) )
     $tester = $pc;
+    
+logMsg("getwork.php location:$location tester:$tester ex2:$ec2");
 
 // see if there is an update
 $done = false;
@@ -37,9 +39,13 @@ if( !$done )
         $offline = false;
         if( strlen($ec2) && strlen($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
         {
+            logMsg("Checking $ec2 to see if it is offline");
             require_once('./ec2/ec2.inc.php');
-            if( !EC2_CheckInstance($location, $ec2) )
+            if( !EC2_CheckInstance($location, $locations[$location]['ec2'], $ec2) )
+            {
+                logMsg("$ec2 is offline");
                 $offline = true;
+            }
         }
         
         if( !$offline )
@@ -242,8 +248,12 @@ if( !$done )
     // scale EC2 if necessary
     if( strlen($ec2) && isset($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
     {
-        require_once('./ec2/ec2.inc.php');
-        EC2_ScaleDown($locations[$location]['ec2'], $ec2);
+        $files = glob( $locations[$location]['localDir'] . '/testing/*.*', GLOB_NOSORT );
+        if( !count($files) )
+        {
+            require_once('./ec2/ec2.inc.php');
+            EC2_ScaleDown($location, $locations[$location]['ec2'], $ec2);
+        }
     }
 
     header('Content-type: text/plain');

@@ -214,7 +214,7 @@
             if( isset($locations[$test['location']]['ec2']) && is_file('./ec2/ec2.inc.php') )
             {
                 require_once('./ec2/ec2.inc.php');
-                EC2_ScaleUp($locations[$test['location']]['ec2']);
+                EC2_ScaleUp($test['location'], $locations[$test['location']]['ec2']);
             }
             
             $host  = $_SERVER['HTTP_HOST'];
