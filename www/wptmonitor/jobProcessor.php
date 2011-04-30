@@ -52,7 +52,7 @@ include 'alert_functions.inc';
       $agentCount = $location['AgentCount'];
       $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
       if ( $location['runRate'] ){
-        if ( $location['AgentCount'] < 1 || ($location['runRate']/40 < $location['AgentCount'])){
+        if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
             $message = "--------------------------------------------\n";
             $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
             $message .= "Runrate: ".$runRate."\n";
