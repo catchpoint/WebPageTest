@@ -63,7 +63,7 @@ include 'alert_functions.inc';
               $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
             }
             $message .= "Target Ratio: 40\n";
-            $message .= "Please add ".round($requiredAdditionalTesters,0)." additional agents for this location.";
+            $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
         }
       }
     }
