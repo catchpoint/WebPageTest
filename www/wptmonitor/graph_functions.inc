@@ -243,6 +243,7 @@ function getChangeNoteData($user_id, $jobIds, $startDateTime, $endDateTime) {
     $q = Doctrine_Query::create()->from('ChangeNote c')
         ->andWhere('c.Date <= ?', $endDateTime)
         ->andWhere('c.Date >= ?', $startDateTime)
+        ->andWhere('c.Public')->orWhere('c.UserId = ?',$user_id)
         ->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
     $result = $q->fetchArray();
     $q->free(true);
