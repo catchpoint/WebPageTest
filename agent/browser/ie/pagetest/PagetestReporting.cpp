@@ -370,8 +370,11 @@ void CPagetestReporting::FlushResults(void)
             if( aft )
               msAFT = CalculateAFT();
 
-            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
-            SaveVideo();
+            if( captureVideo )
+            {
+              ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
+              SaveVideo();
+            }
 
             // save out the progress data
 						EnterCriticalSection(&csBackground);
