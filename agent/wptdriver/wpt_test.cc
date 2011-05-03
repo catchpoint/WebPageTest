@@ -279,8 +279,8 @@ void WptTest::BuildScript() {
           CString command = line.Tokenize(_T("\t"), command_pos).Trim();
           if (command.GetLength()) {
             ScriptCommand script_command;
-            script_command.command = command;
             script_command.record = NavigationCommand(command);
+            script_command.command = command;
             script_command.target = line.Tokenize(_T("\t"),command_pos).Trim();
             if (command_pos > 0 && script_command.target.GetLength()) {
               script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
@@ -320,16 +320,22 @@ void WptTest::BuildScript() {
   See if the supplied command is one that initiates a measurement
   (even if that measurement needs to be ignored)
 -----------------------------------------------------------------------------*/
-bool WptTest::NavigationCommand(CString command) {
+bool WptTest::NavigationCommand(CString& command) {
   bool ret = false;
   command.MakeLower();
 
   if (command == _T("navigate") ||
       command == _T("startmeasurement") ||
       command == _T("waitforcomplete") ||
-      command == _T("submitform") ||
-      command.Find(_T("andwait")) > 0)
+      command == _T("submitform")) {
     ret = true;
+  } else {
+    int index = command.Find(_T("andwait"));
+    if (index > 0) {
+      command = command.Left(index);
+      ret = true;
+    }
+  }
 
   return ret;
 }

@@ -130,7 +130,7 @@ protected:
   CStringA  JSONEscape(CString src);
   CStringA  EncodeTask(ScriptCommand& command);
   void      BuildScript();
-  bool      NavigationCommand(CString command);
+  bool      NavigationCommand(CString& command);
   void      FixURL(ScriptCommand& command);
   bool      ProcessCommand(ScriptCommand& command, bool &consumed);
 
