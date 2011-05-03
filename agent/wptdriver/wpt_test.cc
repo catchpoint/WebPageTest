@@ -166,13 +166,11 @@ CStringA WptTest::JSONEscape(CString src) {
   CStringA dest = CT2A(src);
   dest.Replace("\\", "\\\\");
   dest.Replace("\"", "\\\"");
-  dest.Replace("'", "\\'");
   dest.Replace("/", "\\/");
   dest.Replace("\b", "\\b");
   dest.Replace("\r", "\\r");
   dest.Replace("\n", "\\n");
   dest.Replace("\t", "\\t");
-  dest.Replace("\v", "\\v");
   dest.Replace("\f", "\\f");
   return dest;
 }

@@ -17,29 +17,6 @@ function wptStartup() {
 	});
 }
 
-// navigate to the provided url
-function wptNavigate(url){
-  chrome.tabs.update(g_tabId, {"url":url}, function(tab) {
-  });
-}
-
-// execute a single task/script command
-function wptExecuteTask(task){
-  if (task.action.length) {
-    if (task.record)
-	  g_active = true;
-    else
-	  g_active = false;
-
-    // decode and execute the actual command
-    if (task.action == "navigate")
-	  wptNavigate(task.target);
-
-    if (!g_active)
-	  setTimeout( "wptGetTask()", TASK_INTERVAL_SHORT );
-  }
-}
-
 // get the next task from the wptdriver
 function wptGetTask(){
   if (!g_requesting_task) {
@@ -84,9 +61,9 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
     if (props.status == "loading")
       wptOnNavigate();
     if (props.status == "complete") {
-	  // get the navigation timings from the page
-	  chrome.tabs.executeScript(tabId, {file: "script.js"});
-	}
+      // get the navigation timings from the page
+      chrome.tabs.executeScript(tabId, {file: "script.js"});
+    }
   }
 });
 
@@ -98,5 +75,38 @@ chrome.extension.onConnect.addListener(function(port) {
     }    
   });
 });
+
+/***********************************************************
+                      Script Commands
+***********************************************************/
+
+// execute a single task/script command
+function wptExecuteTask(task){
+  if (task.action.length) {
+    if (task.record)
+      g_active = true;
+    else
+      g_active = false;
+
+    // decode and execute the actual command
+    if (task.action == "navigate")
+      wptNavigate(task.target);
+    else if (task.action == "exec")
+      wptExec(task.target);
+
+    if (!g_active)
+      setTimeout( "wptGetTask()", TASK_INTERVAL_SHORT );
+  }
+}
+
+// exec
+function wptExec(script){
+  chrome.tabs.executeScript(null, {code:script});
+}
+
+// navigate
+function wptNavigate(url){
+  chrome.tabs.update(g_tabId, {"url":url});
+}
 
 </script>
