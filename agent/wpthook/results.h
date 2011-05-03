@@ -55,6 +55,7 @@ private:
   TrackSockets& _sockets;
   ScreenCapture& _screen_capture;
   WptTest&      _test;
+  bool        _saved;
 
   void SavePageData(void);
   void SaveRequests(void);

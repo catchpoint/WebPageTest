@@ -55,7 +55,8 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _test_state(test_state)
   , _test(test)
   , _sockets(sockets)
-  , _screen_capture(screen_capture) {
+  , _screen_capture(screen_capture)
+  , _saved(false) {
   _file_base = shared_results_file_base;
   ATLTRACE(_T("[wpthook] - Results base file: %s"), (LPCTSTR)_file_base);
 }
@@ -71,13 +72,14 @@ Results::~Results(void) {
 void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
+  _saved = false;
 }
 
 /*-----------------------------------------------------------------------------
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
-  if (_test._log_data) {
+  if (!_saved && _test._log_data) {
     SaveRequests();
     SavePageData();
     SaveImages();
@@ -129,7 +131,8 @@ void Results::SaveImages(void) {
               JPEG_DEFAULT_QUALITY);
   }
 
-  SaveVideo();
+  if (_test._video)
+    SaveVideo();
 }
 
 /*-----------------------------------------------------------------------------

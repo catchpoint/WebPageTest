@@ -122,6 +122,9 @@ public:
   int     _run;
   bool    _clear_cache;
   bool    _active;
+  LARGE_INTEGER _sleep_end;
+  LARGE_INTEGER _perf_frequency;
+  int     _combine_steps;
 
 protected:
   CStringA  JSONEscape(CString src);
@@ -129,7 +132,7 @@ protected:
   void      BuildScript();
   bool      NavigationCommand(CString command);
   void      FixURL(ScriptCommand& command);
-  bool      ProcessCommand(ScriptCommand& command);
+  bool      ProcessCommand(ScriptCommand& command, bool &consumed);
 
   CAtlList<ScriptCommand> _script_commands;
 

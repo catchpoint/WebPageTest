@@ -42,6 +42,7 @@ static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
 static const DWORD START_RENDER_MARGIN = 30;
 static const DWORD MS_IN_SEC = 1000;
+static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -67,7 +68,7 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::~TestState(void) {
-  Done();
+  Done(true);
   DeleteCriticalSection(&_data_cs);
 }
 
@@ -75,34 +76,44 @@ TestState::~TestState(void) {
 -----------------------------------------------------------------------------*/
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
-  _active = false;
-  _timeout = false;
-  _next_document = 1;
-  _current_document = 0;
-  _doc_requests = 0;
-  _requests = 0;
-  _doc_bytes_in = 0;
-  _bytes_in = 0;
-  _doc_bytes_out = 0;
-  _bytes_out = 0;
-  _last_bytes_in = 0;
-  _screen_updated = false;
-  _last_data_ms = 0;
-  _video_capture_count = 0;
-  _start.QuadPart = 0;
-  _on_load.QuadPart = 0;
-  _render_start.QuadPart = 0;
-  _first_activity.QuadPart = 0;
-  _last_activity.QuadPart = 0;
-  _first_byte.QuadPart = 0;
-  _last_video_time.QuadPart = 0;
-  _last_cpu_idle.QuadPart = 0;
-  _last_cpu_kernel.QuadPart = 0;
-  _last_cpu_user.QuadPart = 0;
-  _progress_data.RemoveAll();
+  if (cascade && _test._combine_steps) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    _last_activity.QuadPart = now.QuadPart;
+    _on_load.QuadPart = 0;
+    _step_start.QuadPart = 0;
+    _timeout = false;
+  } else {
+    _active = false;
+    _timeout = false;
+    _next_document = 1;
+    _current_document = 0;
+    _doc_requests = 0;
+    _requests = 0;
+    _doc_bytes_in = 0;
+    _bytes_in = 0;
+    _doc_bytes_out = 0;
+    _bytes_out = 0;
+    _last_bytes_in = 0;
+    _screen_updated = false;
+    _last_data_ms = 0;
+    _video_capture_count = 0;
+    _start.QuadPart = 0;
+    _step_start.QuadPart = 0;
+    _on_load.QuadPart = 0;
+    _render_start.QuadPart = 0;
+    _first_activity.QuadPart = 0;
+    _last_activity.QuadPart = 0;
+    _first_byte.QuadPart = 0;
+    _last_video_time.QuadPart = 0;
+    _last_cpu_idle.QuadPart = 0;
+    _last_cpu_kernel.QuadPart = 0;
+    _last_cpu_user.QuadPart = 0;
+    _progress_data.RemoveAll();
+  }
   LeaveCriticalSection(&_data_cs);
 
-  if (cascade)
+  if (cascade && !_test._combine_steps)
     _results.Reset();
 }
 
@@ -128,7 +139,9 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 void TestState::Start() {
   ATLTRACE2(_T("[wpthook] TestState::Start()\n"));
   Reset();
-  QueryPerformanceCounter(&_start);
+  QueryPerformanceCounter(&_step_start);
+  if (!_start.QuadPart)
+    _start.QuadPart = _step_start.QuadPart;
   _active = true;
   _current_document = _next_document;
   _next_document++;
@@ -138,13 +151,18 @@ void TestState::Start() {
   ::ShowWindow(_frame_window, SW_RESTORE);
   ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
 
-  _exit = false;
-  ResetEvent(_check_render_event);
-  _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
+  if (!_render_check_thread) {
+    _exit = false;
+    ResetEvent(_check_render_event);
+    _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
                                                                    this, 0, 0);
-  timeBeginPeriod(1);
-  CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
+  }
+
+  if (!_data_timer) {
+    timeBeginPeriod(1);
+    CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
         DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
+  }
   CollectData();
 }
 
@@ -180,7 +198,7 @@ void TestState::OnLoad(DWORD load_time) {
     ATLTRACE2(_T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
     if (load_time) {
       ATLTRACE(_T("[wpthook] - _on_load calculated based on load_time\n"));
-      _on_load.QuadPart = _start.QuadPart + 
+      _on_load.QuadPart = _step_start.QuadPart + 
                           (_ms_frequency.QuadPart * load_time);
     } else {
       ATLTRACE(_T("[wpthook] - _on_load recorded\n"));
@@ -205,8 +223,8 @@ bool TestState::IsDone() {
     DWORD elapsed_activity = 0;
 
     // calculate the varous elapsed times
-    if (_start.QuadPart && now.QuadPart >= _start.QuadPart)
-      elapsed_test = (DWORD)((now.QuadPart - _start.QuadPart) 
+    if (_step_start.QuadPart && now.QuadPart >= _step_start.QuadPart)
+      elapsed_test = (DWORD)((now.QuadPart - _step_start.QuadPart) 
                             / _ms_frequency.QuadPart);
 
     if (_on_load.QuadPart && now.QuadPart >= _on_load.QuadPart)
@@ -247,25 +265,27 @@ bool TestState::IsDone() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::Done(void) {
+void TestState::Done(bool force) {
   ATLTRACE(_T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
-    // kill the timer that was collecting periodic data (cpu, video, etc)
-    if (_data_timer) {
-      DeleteTimerQueueTimer(NULL, _data_timer, NULL);
-      _data_timer = NULL;
-      timeEndPeriod(1);
-    }
+    if (force || !_test._combine_steps) {
+      // kill the timer that was collecting periodic data (cpu, video, etc)
+      if (_data_timer) {
+        DeleteTimerQueueTimer(NULL, _data_timer, NULL);
+        _data_timer = NULL;
+        timeEndPeriod(1);
+      }
 
-    // clean up the background thread that was doing the timer checks
-    if (_render_check_thread) {
-      _exit = true;
-      SetEvent(_check_render_event);
-      WaitForSingleObject(_render_check_thread, INFINITE);
-      CloseHandle(_render_check_thread);
-      _render_check_thread = NULL;
+      // clean up the background thread that was doing the timer checks
+      if (_render_check_thread) {
+        _exit = true;
+        SetEvent(_check_render_event);
+        WaitForSingleObject(_render_check_thread, INFINITE);
+        CloseHandle(_render_check_thread);
+        _render_check_thread = NULL;
+      }
     }
 
     _active = false;

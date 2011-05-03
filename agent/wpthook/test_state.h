@@ -70,6 +70,7 @@ public:
 
   // times
   LARGE_INTEGER _start;
+  LARGE_INTEGER _step_start;
   LARGE_INTEGER _on_load;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
@@ -119,7 +120,7 @@ private:
 
   CRITICAL_SECTION  _data_cs;
 
-  void Done();
+  void Done(bool force = false);
   void FindBrowserWindow(void);
   void CollectSystemStats(DWORD ms_from_start);
 };

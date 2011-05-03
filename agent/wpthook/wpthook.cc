@@ -94,8 +94,10 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
     case WM_TIMER:
         if (_test_state.IsDone()) {
           KillTimer(_message_window, TIMER_DONE);
-          _results.Save();
+          if (!_test._combine_steps)
+            _results.Save();
           if (_test.Done() ) {
+            _results.Save();
             _done = true;
             if (_test_state._frame_window)
               ::PostMessage(_test_state._frame_window,WM_CLOSE,0,0);

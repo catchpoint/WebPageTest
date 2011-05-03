@@ -68,13 +68,14 @@ void ScreenCapture::Capture(HWND wnd, CapturedImage::TYPE type) {
 }
 
 /*-----------------------------------------------------------------------------
+  Get the last image of the requested type
 -----------------------------------------------------------------------------*/
 bool ScreenCapture::GetImage(CapturedImage::TYPE type, CxImage& image) {
   bool ret = false;
   image.Destroy();
   EnterCriticalSection(&cs);
   POSITION pos = _captured_images.GetHeadPosition();
-  while (pos && !ret) {
+  while (pos) {
     CapturedImage& captured_image = _captured_images.GetNext(pos);
     if (captured_image._type == type)
       ret = captured_image.Get(image);

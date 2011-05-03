@@ -47,6 +47,8 @@ WptTest::WptTest(void) {
     _test_file = CString(path) + _T("\\test.dat");
   }
 
+  QueryPerformanceFrequency(&_perf_frequency);
+
   Reset();
 }
 
@@ -81,6 +83,8 @@ void WptTest::Reset(void) {
   _clear_cache = true;
   _active = false;
   _log_data = true;
+  _sleep_end.QuadPart = 0;
+  _combine_steps = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -181,15 +185,25 @@ bool WptTest::GetNextTask(CStringA& task, bool& record) {
   ATLTRACE(_T("[wpthook] - WptTest::GetNextTask\n"));
 
   if (!_active){
-    while (!ret && !_script_commands.IsEmpty()) {
-      ScriptCommand command = _script_commands.RemoveHead();
-      if (!ProcessCommand(command)) {
-        FixURL(command);
-        task = EncodeTask(command);
-        record = command.record;
-        if (record)
-          _active = true;
-        ret = true;
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    if( !_sleep_end.QuadPart || now.QuadPart >= _sleep_end.QuadPart) {
+      bool keep_processing = true;
+      while (keep_processing && !_script_commands.IsEmpty()) {
+        ScriptCommand command = _script_commands.RemoveHead();
+        bool consumed = false;
+        keep_processing = ProcessCommand(command, consumed);
+        if (!consumed) {
+          FixURL(command);
+          task = EncodeTask(command);
+          record = command.record;
+          if (record) {
+            _active = true;
+            if (_combine_steps > 0)
+              _combine_steps--;
+          }
+          ret = true;
+        }
       }
     }
   }
@@ -337,12 +351,20 @@ void  WptTest::FixURL(ScriptCommand& command) {
   Process the commands that we know about and that can be processed outside of
   the browser (setting state, etc)
 -----------------------------------------------------------------------------*/
-bool WptTest::ProcessCommand(ScriptCommand& command) {
-  bool processed = true;
+bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
+  bool continue_processing = true;
+  consumed = true;
+
+  ATLTRACE(_T("[wpthook] Processing Command '%s'\n"), command.command);
   CString cmd = command.command;
   cmd.MakeLower();
 
-  if (cmd == _T("logdata")) {
+  if (cmd == _T("combinesteps")) {
+    _combine_steps = -1;
+    int count = _ttoi(command.target);
+    if (count > 0)
+      _combine_steps = count;
+  } else if (cmd == _T("logdata")) {
     if (_ttoi(command.target))
       _log_data = true;
     else
@@ -354,11 +376,19 @@ bool WptTest::ProcessCommand(ScriptCommand& command) {
 		CDNSName entry(command.target, command.value);
 		if (entry.name.GetLength() && entry.realName.GetLength())
 			_dns_name_override.AddTail(entry);
+  } else if (cmd == _T("sleep")) {
+    int seconds = _ttoi(command.target);
+    if (seconds > 0) {
+      QueryPerformanceCounter(&_sleep_end);
+      _sleep_end.QuadPart += seconds * _perf_frequency.QuadPart;
+      continue_processing = false;
+    }
   } else {
-    processed = false;
+    continue_processing = false;
+    consumed = false;
   }
 
-  return processed;
+  return continue_processing;
 }
 
 /*-----------------------------------------------------------------------------
