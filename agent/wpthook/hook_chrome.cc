@@ -28,6 +28,7 @@ BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID ctx) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void HookChrome::InstallHooks(void) {
+  return;
   if (!hooked) {
     ATLTRACE(_T("[wpthook] - HookChrome::InstallHooks\n"));
 

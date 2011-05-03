@@ -216,6 +216,7 @@ void WptDriverCore::Init(void){
   KillBrowsers();
 
   // copy dbghelp.dll and symsrv.dll to the chrome directory
+/*
   TCHAR src_dir[MAX_PATH];
   GetModuleFileName(NULL, src_dir, _countof(src_dir));
   *PathFindFileName(src_dir) = _T('\0');
@@ -242,6 +243,7 @@ void WptDriverCore::Init(void){
     DownloadSymbols(_settings._browser_chrome._directory);
     SymCleanup(GetCurrentProcess());
   }
+*/
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();
