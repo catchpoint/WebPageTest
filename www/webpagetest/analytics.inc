@@ -8,6 +8,7 @@ if($settings['analytics'])
     echo "_gaq.push(['_setAccount', '{$settings['analytics']}']);";
     ?>
     _gaq.push(['_trackPageview']);
+    _gaq.push(['_trackPageLoadTime']);
 
     (function() {
     var ga = document.createElement('script');
