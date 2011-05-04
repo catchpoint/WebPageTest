@@ -8,6 +8,6 @@
     "default_icon": "wptextension.jpg"
   },
   "permissions": [
-    "tabs", "https://*/*", "http://*/*"
+    "cookies", "tabs", "https://*/*", "http://*/*"
   ]
 }

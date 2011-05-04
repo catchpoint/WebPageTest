@@ -77,6 +77,13 @@ chrome.extension.onConnect.addListener(function(port) {
 });
 
 /***********************************************************
+                      Utility Functions
+***********************************************************/
+function trim(stringToTrim) {
+	return stringToTrim.replace(/^\s+|\s+$/g,"");
+}
+
+/***********************************************************
                       Script Commands
 ***********************************************************/
 
@@ -93,6 +100,8 @@ function wptExecuteTask(task){
       wptNavigate(task.target);
     else if (task.action == "exec")
       wptExec(task.target);
+    else if (task.action == "setcookie")
+      wptSetCookie(task.target, task.value);
 
     if (!g_active)
       setTimeout( "wptGetTask()", TASK_INTERVAL_SHORT );
@@ -107,6 +116,34 @@ function wptExec(script){
 // navigate
 function wptNavigate(url){
   chrome.tabs.update(g_tabId, {"url":url});
+}
+
+// setCookie
+function wptSetCookie(cookie_path, data) {
+  var pos = data.indexOf(';');
+  var val = data;
+  var cookie_expires = '';
+  if (pos > 0) {
+    val = data.substring(0,pos);
+    var exp = trim(data.substring(pos + 1));
+    pos = exp.indexOf('=');
+    if (pos > 0) {
+      cookie_expires = trim(exp.substring(pos + 1));
+    }
+  }
+  pos = val.indexOf('=');
+  if (pos > 0) {
+    var cookie_name = trim(val.substring(0,pos));
+    var cookie_value = trim(val.substring(pos + 1));
+    if (cookie_name.length && cookie_value.length && cookie_path.length) {
+      var cookie = {url:cookie_path, name:cookie_name, value: cookie_value};
+      if (cookie_expires.length) {
+        var date = new Date(cookie_expires);
+        cookie.expirationDate = date.getTime();
+      }
+      chrome.cookies.set(cookie);
+    }
+  }
 }
 
 </script>
