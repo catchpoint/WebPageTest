@@ -84,6 +84,7 @@ void Results::Save(void) {
     SavePageData();
     SaveImages();
     SaveProgressData();
+    _saved = true;
   }
 }
 
