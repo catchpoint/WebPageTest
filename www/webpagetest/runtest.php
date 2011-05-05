@@ -613,6 +613,7 @@ function ValidateScript(&$test, &$error)
 {
     FixScript($test['script']);
     
+    $ok = false;
     $url = null;
     $lines = explode("\n", $test['script']);
     foreach( $lines as $line )
@@ -620,7 +621,12 @@ function ValidateScript(&$test, &$error)
         $tokens = explode("\t", $line);
         $command = trim($tokens[0]);
         if( !strcasecmp($command, 'navigate') )
+        {
+            $ok = true;
             $url = trim($tokens[1]);
+            if (stripos($url, '%URL%') !== false)
+                $url = null;
+        }
         elseif( !strcasecmp($command, 'loadVariables') )
             $error = "loadVariables is not a supported command for uploaded scripts.";
         elseif( !strcasecmp($command, 'loadFile') )
@@ -629,7 +635,7 @@ function ValidateScript(&$test, &$error)
             $error = "fileDialog is not a supported command for uploaded scripts.";
     }
     
-    if( !isset($url) )
+    if( !$ok )
         $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
     
     return $url;
@@ -804,7 +810,12 @@ function SubmitUrl($testId, $testData, &$test, $url)
     
     // add the script data (if we're running a script)
     if( strlen($test['script']) )
-        $out .= "\r\n[Script]\r\n" . trim($test['script']);
+    {
+        $script = trim($test['script']);
+        if (strlen($url))
+            $script = str_ireplace('%URL%', $url, $script);
+        $out .= "\r\n[Script]\r\n" . $script;
+    }
         
     // write out the actual test file
     $ext = 'url';
