@@ -396,15 +396,19 @@ $loc = ParseLocations($locations);
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
-            if( strlen($GLOBALS['cdnPath']) )
+            foreach( $sponsors as &$sponsor )
             {
-                foreach( $sponsors as &$sponsor )
+                if( strlen($GLOBALS['cdnPath']) )
                 {
                     if( isset($sponsor['logo']) )
                         $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
                     if( isset($sponsor['logo_big']) )
                         $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
                 }
+                $offset = 0;
+                if( $sponsor['index'] )
+                    $offset = -40 * $sponsor['index'];
+                $sponsor['offset'] = $offset;
             }
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
         ?>

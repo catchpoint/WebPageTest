@@ -337,11 +337,14 @@ function UpdateSponsor()
                 var sponsorImg = null;
                 var sponsorTxt = '';
                 var sponsorHref = '';
+                var sponsorStyle = '';
 
                 if( s["logo_big"] != undefined && s["logo_big"].length )
                     sponsorImg = s["logo_big"];
-                else if( s["logo"] != undefined && s["logo"].length )
+                else if( s["logo"] != undefined && s["logo"].length ) {
                     sponsorImg = s["logo"];
+                    sponsorStyle = ' style="top: ' + s["offset"] + 'px;" ';
+                }
                     
                 if( s["alt"] != undefined && s["alt"].length )
                     sponsorTxt = s["alt"];
@@ -355,13 +358,17 @@ function UpdateSponsor()
                         html += '<p class="centered nomargin"><small>and</small></p>';
 
                     html += '<p class="centered nomargin">';
+                    if( sponsorStyle.length )
+                        html += '<div class="sponsor_logo">';
                     if( sponsorHref.length )
                         html += '<a class="sponsor_link" href="' + sponsorHref + '">';
                     
-                    html += '<img title="' + sponsorTxt + '" alt="' + sponsorTxt + '" src="' + sponsorImg + '" class="sponsor_logo">';
+                    html += '<img title="' + sponsorTxt + '" alt="' + sponsorTxt + '" src="' + sponsorImg + '" ' + sponsorStyle + '>';
                     
                     if( sponsorHref.length )
                         html += '</a>';
+                    if( sponsorStyle.length )
+                        html += '</div>';
                     
                     html += '</p>';
                 

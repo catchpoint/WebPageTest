@@ -6,15 +6,18 @@
 
 <link rel="shortcut icon" href="/images/favicon.ico" type="image/vnd.microsoft.icon">
 <link rel="icon" href="/images/favicon.png" type="image/png">
-<link rel="stylesheet" href="<?php echo $GLOBALS['cdnPath']; ?>/pagestyle.css?v=<?php echo VER_CSS;?>" type="text/css">
 
 <?php 
+    echo "<style type=\"text/css\">\n";
+    
+    // inline the css since it is small (though this will cause background images to not come from the CDN if there is one)
+    include('./pagestyle.css');
+
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;
     if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
         $privateInstall = false;
 
-    echo '<style type="text/css">';
     $blkLogo = false;
     $color = html2rgb($_REQUEST['color']);
     if( $color )
@@ -28,24 +31,21 @@
     if( $privateInstall )
     {
         if( $blkLogo )
-            echo ".logo a {background-image: url({$GLOBALS['cdnPath']}/images/logo_private_blk.png);}";
+            echo ".logo a {background-image: url(/images/logo_private_blk.png);}";
         else
-            echo ".logo a {background-image: url({$GLOBALS['cdnPath']}/images/logo_private.png);}";
+            echo ".logo a {background-image: url(/images/logo_private.png);}";
     }
     elseif( $blkLogo )
     {
-        echo ".logo a {background-image: url({$GLOBALS['cdnPath']}/images/logo_blk.png);}";
+        echo ".logo a {background-image: url(/images/logo_blk.png);}";
     }
-    echo '</style>';
 
     // include a custom style if one exists
     if( is_file('./settings/custom.css') )
-    {
-        echo '<style type="text/css">';
         include('./settings/custom.css');
-        echo '</style>';
-    }
 
+    echo "\n</style>\n";
+        
     // include the analytics code if it is appropriate
     if( !$noanalytics )
         include('analytics.inc');

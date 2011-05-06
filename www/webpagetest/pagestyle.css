@@ -20,7 +20,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .cleared {display: block;clear: both;}
 .hidden {display: none;}
 .nomargin {margin:0;}
-.progress {min-width: 100; min-height: 100; background: url(images/progress.gif) norepeat center middle; }
+.progress {min-width: 100; min-height: 100; background: url(/images/progress.gif) norepeat center middle; }
 .arrow {  border-style: dashed; border-color: transparent; border-width: 0.53em; display: -moz-inline-box; display: inline-block; height: 0; line-height: 0; position: relative; vertical-align: middle; width: 0; }
 
 .arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
@@ -36,14 +36,14 @@ h2 .small {font-weight:normal; font-size: 12px;}
 /* Header */
 #header {height: 100px;}
 .logo {width: 222px;margin: 0;padding-top: 15px; float:left;}
-.logo a {display: block;height: 71px;text-indent: -999em;background-image: url(images/logo_wpt.png);}
+.logo a {display: block;height: 71px;text-indent: -999em;background-image: url(/images/logo_wpt.png);}
 .headerAd {float:right; width:728; height:90; margin:5px 0 1px;}
 #wptAuthBar {width: 980px; height: 18px; text-align: right; color: #fff;}
 #wptAuthBar a {color: #fff;}
 
 /* Nav */
 #nav_bkg {background-color: #000;line-height: 1em; clear:both; font-size: 16px; }
-#nav {height: 30px;text-transform: uppercase; background: url(images/gloss30.png?v=2) repeat-x;}
+#nav {height: 30px;text-transform: uppercase; background: url(/images/gloss30.png?v=2) repeat-x;}
 #nav li {float: left;height: inherit;}
 #nav li a {display: block;height: 18px;color: #fff;padding: 5px 20px;text-decoration: none;}
 #nav li.current a {text-decoration:underline; color: #f1c52e; }
@@ -72,9 +72,9 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #test_box-container .ui-tabs-nav li {float: left;height: 28px;margin: 0 1px 1px 0;background-color: #2a2a2a;}
 #test_box-container .ui-tabs-nav li.ui-tabs-selected {margin: 0 1px 0 0;height: inherit;background-color: #292929;}
 #test_box-container .ui-tabs-nav li a {display: block;height: inherit;color: #fff;padding: 0 20px 0 32px;text-decoration: none;font-weight: bold;background: no-repeat 8px 6px;}
-#test_box-container .ui-tabs-nav li.analytical_review a {background-image: url(images/test_box-container-ui-tabs-nav-li-analytical_review-a-bkg.png);}
-#test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
-#test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(images/miniphonelogo.png);}
+#test_box-container .ui-tabs-nav li.analytical_review a {background-image: url(/images/test_box-container-ui-tabs-nav-li-analytical_review-a-bkg.png);}
+#test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(/images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
+#test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(/images/miniphonelogo.png);}
 .test_box.ui-tabs-hide {display: none;}
 
 .test_box {clear: both;padding: 20px;background-color: #292929;}
@@ -86,7 +86,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .test_box label.full_width {float: none;width: auto;}
 .test_box label.inline {float: none;display: inline;}
 .test_box input.text {width: 350px;height: 22px;padding: 0 5px;background-color: #fff;border: 1px solid #bbb;}
-.test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;background: url(images/test_box-text-bkg.png) no-repeat;border: none;}
+.test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;background: url(/images/test_box-text-bkg.png) no-repeat;border: none;}
 .test_box input.text.short {width: 40px;}
 .test_box input.before_label {float: left;width: auto;}
 .test_box select {width: 270px;}
@@ -96,7 +96,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #simplemodal-container {background-color:#fff; border:2px solid #444; padding:4px;}
 #location-dialog {width: 970px; height: 550px; background-color: #fff; text-align:center;}
 #location-dialog h3 {margin-bottom: 5px;}
-#map {width:970px; height: 470px; margin: 0px 0px 10px; border: 1px solid black; background-image: url('images/progress.gif'); background-repeat: no-repeat; background-position: center; }
+#map {width:970px; height: 470px; margin: 0px 0px 10px; border: 1px solid black; background-image: url('/images/progress.gif'); background-repeat: no-repeat; background-position: center; }
 #location-ok {margin: 0px 10px;}
 
 #advanced_settings {color: #f1c52e !important; text-decoration: none; font-size: 13px; font-weight: bold; }
@@ -148,8 +148,8 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #mobile_logo { margin-top: 100px; float: right; width: 270px; height: 59px;}
 #mobile_test a {color: #fff;}
 
-#start_test-container {float: left;padding: 28px 0 0 21px;background: url(images/start_test-container-bkg.png) no-repeat left 40px;}
-.start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(images/start_test-bkg.png);border: none;}
+#start_test-container {float: left;padding: 28px 0 0 21px;background: url(/images/start_test-container-bkg.png) no-repeat left 40px;}
+.start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(/images/start_test-bkg.png);border: none;}
 #sponsor {display: none; background-color: #fff; }
 
 /* Test Reults Pages */
@@ -199,6 +199,8 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .links {table-layout:fixed; background-color: #fff; position: relative; width: 100%; height: 45px; }
 .links td { text-align: center; vertical-align: middle;}
 #sponsor_header {background-color: #555; color: #f1c52e;padding: 1px 10px 2px 25px; clear:both; font-weight: bold;}
+.sponsor_logo {width: 180px; height: 40px; display:block; overflow: hidden;}
+.sponsor_logo img {position: relative;}
 
 /* Footer */
 #footer {padding: 20px;background-color: #797979;}
@@ -230,7 +232,7 @@ table.pretty td.even { background: whitesmoke; }
 /*pagespeed results*/
 #pagespeed_results {width: 960px; background-color: #fff; padding: 25px 10px; margin: -15px -20px 0px;}
 #pagespeed_results h2 {text-align: center;}
-.score{background-image:url("images/scoreIcon.png")}
+.score{background-image:url("/images/scoreIcon.png")}
 .score-red{background-position:0 0}
 .score-yellow{background-position:-14px 0}
 .score-green{background-position:-28px 0}
@@ -240,32 +242,32 @@ table.pretty td.even { background: whitesmoke; }
 /*tree view for pagespeed*/
 .treeview, .treeview ul { padding: 0; margin: 0; list-style: none; }
 .treeview ul { background-color: white; margin-top: 4px; }
-.treeview .hitarea { background: url(images/treeview-default.gif) -64px -25px no-repeat; height: 16px; width: 16px; margin-left: -20px; float: left; cursor: pointer; }
+.treeview .hitarea { background: url(/images/treeview-default.gif) -64px -25px no-repeat; height: 16px; width: 16px; margin-left: -20px; float: left; cursor: pointer; }
 /* fix for IE6 */
 * html .hitarea { display: inline; float:none; }
 .treeview li {  margin: 0; padding: 3px 0pt 3px 20px; }
 .treeview a.selected { background-color: #eee; }
 #treecontrol { margin: 1em 0; display: none; }
 .treeview .hover { color: red; cursor: pointer; }
-.treeview li { background: url(images/treeview-default-line.gif) 0 0 no-repeat; }
+.treeview li { background: url(/images/treeview-default-line.gif) 0 0 no-repeat; }
 .treeview li.collapsable, .treeview li.expandable { background-position: 0 -176px; }
 .treeview .expandable-hitarea { background-position: -80px -3px; }
 .treeview li.last { background-position: 0 -1766px }
-.treeview li.lastCollapsable, .treeview li.lastExpandable { background-image: url(images/treeview-default.gif); }  
+.treeview li.lastCollapsable, .treeview li.lastExpandable { background-image: url(/images/treeview-default.gif); }  
 .treeview li.lastCollapsable { background-position: 0 -111px }
 .treeview li.lastExpandable { background-position: -32px -67px }
 .treeview div.lastCollapsable-hitarea, .treeview div.lastExpandable-hitarea { background-position: 0; }
-.treeview-red li { background-image: url(images/treeview-red-line.gif); }
-.treeview-red .hitarea, .treeview-red li.lastCollapsable, .treeview-red li.lastExpandable { background-image: url(images/treeview-red.gif); } 
-.treeview-black li { background-image: url(images/treeview-black-line.gif); }
-.treeview-black .hitarea, .treeview-black li.lastCollapsable, .treeview-black li.lastExpandable { background-image: url(images/treeview-black.gif); }  
-.treeview-gray li { background-image: url(images/treeview-gray-line.gif); }
-.treeview-gray .hitarea, .treeview-gray li.lastCollapsable, .treeview-gray li.lastExpandable { background-image: url(images/treeview-gray.gif); } 
-.treeview-famfamfam li { background-image: url(images/treeview-famfamfam-line.gif); }
-.treeview-famfamfam .hitarea, .treeview-famfamfam li.lastCollapsable, .treeview-famfamfam li.lastExpandable { background-image: url(images/treeview-famfamfam.gif); } 
+.treeview-red li { background-image: url(/images/treeview-red-line.gif); }
+.treeview-red .hitarea, .treeview-red li.lastCollapsable, .treeview-red li.lastExpandable { background-image: url(/images/treeview-red.gif); } 
+.treeview-black li { background-image: url(/images/treeview-black-line.gif); }
+.treeview-black .hitarea, .treeview-black li.lastCollapsable, .treeview-black li.lastExpandable { background-image: url(/images/treeview-black.gif); }  
+.treeview-gray li { background-image: url(/images/treeview-gray-line.gif); }
+.treeview-gray .hitarea, .treeview-gray li.lastCollapsable, .treeview-gray li.lastExpandable { background-image: url(/images/treeview-gray.gif); } 
+.treeview-famfamfam li { background-image: url(/images/treeview-famfamfam-line.gif); }
+.treeview-famfamfam .hitarea, .treeview-famfamfam li.lastCollapsable, .treeview-famfamfam li.lastExpandable { background-image: url(/images/treeview-famfamfam.gif); } 
 
 .filetree li { padding: 3px 0 2px 16px; }
 .filetree span.folder, .filetree span.file { padding: 1px 0 1px 16px; display: block; }
-.filetree span.folder { background: url(images/folder.gif) 0 0 no-repeat; }
-.filetree li.expandable span.folder { background: url(images/folder-closed.gif) 0 0 no-repeat; }
-.filetree span.file { background: url(images/file.gif) 0 0 no-repeat; }
+.filetree span.folder { background: url(/images/folder.gif) 0 0 no-repeat; }
+.filetree li.expandable span.folder { background: url(/images/folder-closed.gif) 0 0 no-repeat; }
+.filetree span.file { background: url(/images/file.gif) 0 0 no-repeat; }

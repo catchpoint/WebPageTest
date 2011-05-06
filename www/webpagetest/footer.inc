@@ -79,8 +79,12 @@
         $sponsors = array();
         $s = parse_ini_file('./settings/sponsors.ini', true);
         foreach( $s as &$entry )
-            if( strlen($entry['logo']) )
-                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'alt' => $entry['alt']);
+            if( strlen($entry['logo']) ) {
+                $offset = 0;
+                if( $entry['index'] )
+                    $offset = -40 * $entry['index'];
+                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset);
+            }
         
         $count = count($sponsors);
         if( $count && !$_GET['bare'] )
@@ -105,7 +109,7 @@
                     $i++;
 
                 $remaining--;
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img class=\"lazy\" imgsrc=\"{$sponsor['logo']}\" src=\"{$GLOBALS['cdnPath']}/images/cleardot.gif\" alt=\"{$sponsor['alt']}\"></a></td>";
+                echo "<td ><div class=\"sponsor_logo\"><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img style=\"top: {$sponsor['offset']}px;\" src=\"{$sponsor['logo']}\" alt=\"\"></a></div></td>";
             }
             echo '</tr></table>';
             echo '</div>';
