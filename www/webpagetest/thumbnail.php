@@ -28,7 +28,7 @@ if( strpos($file, ':') === FALSE &&
         $haveLocations = false;
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
         $pageData = loadPageRunData($testPath, $run, $cached);
-        $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true );
+        $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true );
         $img = drawWaterfall($url, $requests, $pageData, false, $options);
         if( !$requests || !$pageData )
             $failed = true;
@@ -80,6 +80,7 @@ if( strpos($file, ':') === FALSE &&
         else
         {
             header ("Content-type: image/png");
+            imagetruecolortopalette($img, true, 256);
             imagepng($img);
         }
     }
