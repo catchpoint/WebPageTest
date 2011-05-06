@@ -68,7 +68,7 @@ BuildVideoScript($testPath, $videoPath);
             ?>
             <h1>Fully Loaded</h1>
 		    <a href="<?php echo substr($testPath, 1) . '/' . $run . $cachedText; ?>_screen.jpg">
-            <img class="center" alt="Screen Shot" src="<?php echo "{$GLOBALS['cdnPath']}/thumbnail.php?width=930&test=$id&run=$run&file=$run{$cachedText}_screen.jpg"; ?>">
+            <img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="<?php echo substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg'; ?>">
             </a>
             <?php
                 // display the last status message if we have one
