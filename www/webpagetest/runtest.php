@@ -27,9 +27,23 @@
         $test = array();
         $test['url'] = trim($req_url);
         
+        // Extract the location and connectivity.
         $parts = explode('.', trim($req_location));
         $test['location'] = $parts[0];
         $test['connectivity'] = $parts[1];
+        
+        // Extract the multiple locations.
+        if ( isset($req_multiple_locations)) 
+        {
+            $test['multiple_locations'] = array();
+            foreach ($req_multiple_locations as $location_string)
+            {
+                array_push($test['multiple_locations'], $location_string);
+            }
+            $test['batch_locations'] = 1;
+        }
+        var_dump($req_multiple_locations);
+        return;
         
         $test['domElement'] = trim($req_domelement);
         $test['login'] = trim($req_login);
@@ -83,7 +97,7 @@
         // default batch and API requests to a lower priority
         if( !isset($req_priority) )
         {
-            if( $test['batch'] )
+            if( $test['batch'] || $test['batch_locations'] )
                 $test['priority'] =  7;
             elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json )
                 $test['priority'] =  5;
@@ -148,7 +162,30 @@
           
         if( !$error )
         {
-            if( $test['batch'] )
+            if( $test['batch_locations'] && count($test['multiple_locations']) )
+            {
+                $test['id'] = CreateTest($test, $test['url'], 0, 1);
+
+                $test['tests'] = array();
+                foreach( $test['multiple_locations'] as $location_string )
+                {
+                    // Create a test with the given location and applicable connectivity.
+                    UpdateLocation($test, $locations, $location_string);
+                    $id = CreateTest($test, $test['url']);
+                    if( isset($id) )
+                        $test['tests'][] = array('url' => $test['url'], 'id' => $id);
+                }
+
+                // write out the list of urls and the test ID for each
+                if( count($test['tests']) )
+                {
+                    $path = GetTestPath($test['id']);
+                    file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                }
+                else
+                    $error = 'Locations could not be submitted for testing';
+            }
+            elseif( $test['batch'] )
             {
                 // build up the full list of urls
                 $urls = array();
@@ -230,7 +267,7 @@
                 if( strlen($req_r) )
                     echo "<requestId>{$req_r}</requestId>\n";
                 echo "<data>\n";
-                if( $test['batch'] )
+                if( $test['batch'] || $test['batch_locations'])
                 {
                     foreach( $test['tests'] as &$t )
                     {
@@ -266,7 +303,7 @@
                 if( strlen($req_r) )
                     $ret['requestId'] = $req_r;
                 $ret['data'] = array();
-                if( $test['batch'] )
+                if( $test['batch'] || $test['batch_locations'])
                 {
                     $ret['data']['test'] = array();
                     foreach( $test['tests'] as &$t )
@@ -371,6 +408,60 @@
             include 'blocked.php';
     }
 
+
+/**
+* Update the given location into the Test variable. This is needed for
+* submitting multiple-locations tests in one-shot.
+*   This also involves updating the locationText, browser and connectivity
+* values that are applicable for the new location.
+* 
+* @param mixed $test
+* @param mixed $new_location
+*/
+function UpdateLocation(&$test, &$locations, $new_location)    
+{
+  // Update the location.
+  $test['location'] = $new_location;
+    
+  // see if we need to override the browser
+  if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
+    $test['browser'] = $locations[$test['location']]['browserExe'];
+                
+  // figure out what the location working directory and friendly name are
+  $test['locationText'] = $locations[$test['location']]['label'];
+  $test['workdir'] = $locations[$test['location']]['localDir'];
+  $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
+  $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
+  if( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
+      $error = "Invalid Location, please try submitting your test request again.";
+
+  // see if we need to pick the default connectivity
+  if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
+      $test['connectivity'] = 'DSL';
+
+  if( isset($test['connectivity']) )
+  {
+      $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
+      $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+      if( isset($connectivity[$test['connectivity']]) )
+      {
+          $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
+          $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
+          $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
+          $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+
+          if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
+              $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
+      }
+  }
+
+  // adjust the latency for any last-mile latency at the location
+  if( isset($test['latency']) && $locations[$test['location']]['latency'] )
+      $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
+
+}
+    
+    
 /**
 * See if we are requiring key validation and if so, enforce the restrictions
 * 
@@ -951,7 +1042,7 @@ function ShardKey()
 * @param mixed $test
 * @param mixed $url
 */
-function CreateTest(&$test, $url, $batch = 0)
+function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
     $testId = null;
     
@@ -995,6 +1086,7 @@ function CreateTest(&$test, $url, $batch = 0)
     $testInfo .= "loc={$test['location']}\r\n";
     $testInfo .= "id=$testId\r\n";
     $testInfo .= "batch=$batch\r\n";
+    $testInfo .= "batch_locations=$batch_locations\r\n";
     $testInfo .= "aft={$test['aft']}\r\n";
     $testInfo .= "sensitive={$test['sensitive']}\r\n";
     if( strlen($test['login']) )
@@ -1034,7 +1126,7 @@ function CreateTest(&$test, $url, $batch = 0)
     file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
 
     // for "batch" tests (the master) we don't need to submit an actual test request
-    if( !$batch )
+    if( !$batch && !$batch_locations)
     {
         // build up the actual test commands
         $testFile = '';
@@ -1098,7 +1190,9 @@ function CreateTest(&$test, $url, $batch = 0)
     // log the test
     if( isset($testId) )
     {
-        if( $batch )
+        if ( $batch_locations )
+            LogTest($test, $testId, 'Multiple Locations test');
+        else if( $batch )
             LogTest($test, $testId, 'Bulk Test');
         else
             LogTest($test, $testId, $url);
