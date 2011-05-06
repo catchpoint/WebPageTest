@@ -19,6 +19,10 @@ else
     // see if the test is actually finished
     if( isset($test['test']['completeTime']) )
     {
+        $host  = $_SERVER['HTTP_HOST'];
+        $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+        $path = substr($testPath, 1);
+
         $pageData = loadAllPageData($testPath);
 
         $msLoad = microtime(true);
@@ -42,6 +46,7 @@ else
         $pageStats = calculatePageStats($pageData, $fv, $rv);
         
         echo "<testId>$id</testId>";
+        echo "<summary>http://$host$uri/result/$id/</summary>";
         if (isset($test['testinfo']))
         {
             if( @strlen($test['testinfo']['url']) )
@@ -110,10 +115,6 @@ else
         }
 
         // spit out the raw data for each run
-        $host  = $_SERVER['HTTP_HOST'];
-        $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-        $path = substr($testPath, 1);
-
         for( $i = 1; $i <= $runs; $i++ )
         {
             echo "<run>";
