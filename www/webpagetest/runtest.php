@@ -42,8 +42,6 @@
             }
             $test['batch_locations'] = 1;
         }
-        var_dump($req_multiple_locations);
-        return;
         
         $test['domElement'] = trim($req_domelement);
         $test['login'] = trim($req_login);
