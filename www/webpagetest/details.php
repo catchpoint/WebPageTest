@@ -9,7 +9,7 @@ $data = loadPageRunData($testPath, $run, $cached);
 <html>
     <head>
         <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
         div.bar {
 			height:12px; 

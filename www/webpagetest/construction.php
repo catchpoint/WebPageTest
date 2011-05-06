@@ -5,7 +5,7 @@ include 'common.inc';
 <html>
     <head>
 		<title>WebPagetest - Under Construction</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Construction'; include ('head.inc'); ?>
     </head>
 	<body>
         <div class="page">

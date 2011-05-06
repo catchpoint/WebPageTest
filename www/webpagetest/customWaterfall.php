@@ -5,7 +5,7 @@ include 'common.inc';
 <html>
     <head>
         <title>WebPagetest Custom Waterfall<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">
