@@ -150,7 +150,7 @@ else
                 if( !is_dir('./video/dat') )
                     mkdir('./video/dat');
                     
-                $lockFile = fopen( './video/dat/lock.dat', "a+b",  false);
+                $lockFile = fopen( './video/dat/lock.dat', "w",  false);
                 if( $lockFile )
                 {
                     if( flock($lockFile, LOCK_EX) )

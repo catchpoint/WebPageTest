@@ -22,7 +22,7 @@ if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./tmp/feeds.dat') )
 
 if( $updateFeeds )
 {
-    $lockFile = fopen( './tmp/feeds.lock', 'cb',  false);
+    $lockFile = fopen( './tmp/feeds.lock', 'w',  false);
     if( $lockFile )
     {
         // make sure we're not trying to update the same feeds in parallel

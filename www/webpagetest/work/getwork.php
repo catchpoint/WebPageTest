@@ -55,7 +55,7 @@ if( !$done )
                 mkdir($workDir, 0777, true);
                 
             // lock the working directory for the given location
-            $lockFile = fopen( "./tmp/$location.lock", 'cb',  false);
+            $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
             if( $lockFile )
             {
                 if( flock($lockFile, LOCK_EX) )
@@ -276,7 +276,7 @@ function GetVideoJob()
     if( is_dir($videoDir) )
     {
         // lock the directory
-        $lockFile = fopen( './tmp/video.lock', 'cb',  false);
+        $lockFile = fopen( './tmp/video.lock', 'w',  false);
         if( $lockFile )
         {
             if( flock($lockFile, LOCK_EX) )
