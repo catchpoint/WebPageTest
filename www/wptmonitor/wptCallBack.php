@@ -1,6 +1,8 @@
 <?php
   include 'monitor.inc';
   include 'wpt_functions.inc';
+  include_once 'alert_functions.inc';
+
   $resultId= $_REQUEST['id'];
   logOutput("[INFO] [wptCallBack] WPT Callback called for result id ".$resultId);
   processResultsForAll($resultId);
