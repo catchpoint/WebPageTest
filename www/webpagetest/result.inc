@@ -4,12 +4,15 @@ require_once('optimization_detail.inc.php');
 $video = false;
 if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['video'] )
     $video = true;
+$testComplete = true;
+if( !$test['test']['completeTime'] ) 
+    $testComplete = false;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
         <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
-        <?php if( !$test['test']['completeTime'] ) { ?>
+        <?php if( !$testComplete ) { ?>
         <meta http-equiv="refresh" content="30">
         <?php } ?>
         <?php include ('head.inc'); ?>
@@ -23,7 +26,7 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
             ?>
             <div id="result">
             <?php 
-            if( !$test['test']['completeTime'] ) 
+            if( !$testComplete ) 
             {
                 ?>
                 <p class="left">
@@ -51,7 +54,7 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                 </p>
                 <?php 
                 $runs = count($pageData);
-                if( !$test['test']['completeTime'] )
+                if( !$testComplete )
                     echo "<h3>Test is partially complete ($runs of {$test['test']['runs']} runs).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
                 else
                     echo "<h3>Calculating the AFT.<br>This page will refresh every 30 seconds until the calculation is complete.</h3>";
@@ -341,6 +344,7 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                 </tr>
                 <?php } ?>
                 
+                <?php if( $testComplete ) { ?>
                 <tr>
                     <td align="left" valign="middle">Content Breakdown</td>
                     <?php
@@ -350,11 +354,12 @@ if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['v
                     echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
                     ?>
                         <a href="/result/<?php echo "$id/$run/breakdown/"; ?>">
-                        <img width=390 height=200 src="<?php echo "{$GLOBALS['cdnPath']}/breakdownPie.png?width=390&height=200&type=Requests&fontSize=8&test=$id&run=$run"; ?>">
-                        <img width=390 height=200 src="<?php echo "{$GLOBALS['cdnPath']}/breakdownPie.png?width=390&height=200&type=Bytes&fontSize=8&test=$id&run=$run"; ?>">
+                        <img width=390 height=200 src="<?php echo "/breakdownPie.png?width=390&height=200&type=Requests&fontSize=8&test=$id&run=$run"; ?>">
+                        <img width=390 height=200 src="<?php echo "/breakdownPie.png?width=390&height=200&type=Bytes&fontSize=8&test=$id&run=$run"; ?>">
                         </a>
                     </td>
                 </tr>
+                <?php } ?>
                 
                 </table><br>
             <?php
