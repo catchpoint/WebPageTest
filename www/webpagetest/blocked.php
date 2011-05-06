@@ -5,7 +5,7 @@ require_once('common.inc');
 <html>
     <head>
         <title>WebPagetest - Access Denied</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Blocked'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

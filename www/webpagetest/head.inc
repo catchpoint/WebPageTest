@@ -38,10 +38,6 @@
     }
     echo '</style>';
 
-    // include the analytics code if it is appropriate
-    if( !$noanalytics )
-        include('analytics.inc');
-        
     // include a custom style if one exists
     if( is_file('./settings/custom.css') )
     {
@@ -50,6 +46,10 @@
         echo '</style>';
     }
 
+    // include the analytics code if it is appropriate
+    if( !$noanalytics )
+        include('analytics.inc');
+        
         
 function html2rgb($color)
 {

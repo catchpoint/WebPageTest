@@ -9,7 +9,7 @@ $pub = $settings['publishTo'];
 <html>
     <head>
         <title>WebPagetest - Publish</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Publish'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

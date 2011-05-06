@@ -10,7 +10,7 @@ $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLoc
 <html>
     <head>
         <title>WebPagetest Page Images<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Page Images'; include ('head.inc'); ?>
         <style type="text/css">
         .images td
         {

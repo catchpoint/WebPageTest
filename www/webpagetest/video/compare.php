@@ -57,7 +57,7 @@ else
                 if( !$ready )
                     echo "<meta http-equiv=\"refresh\" content=\"10\">\n";
             ?>
-            <?php include ('head.inc'); ?>
+            <?php $gaTemplate = 'Visual Comparison'; include ('head.inc'); ?>
             <style type="text/css">
                 #video
                 {

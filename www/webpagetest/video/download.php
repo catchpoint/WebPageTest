@@ -16,7 +16,7 @@ else
 <html>
     <head>
         <title>WebPagetest - Visual Comparison</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
         <style type="text/css">
             div.content
             {

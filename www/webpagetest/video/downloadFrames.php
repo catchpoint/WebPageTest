@@ -32,7 +32,7 @@ if( !$ok )
     <head>
         <title>WebPagetest - Visual Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
         <style type="text/css">
             div.content
             {

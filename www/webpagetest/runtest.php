@@ -367,7 +367,7 @@
                 <html>
                     <head>
                         <title>WebPagetest - Test Error</title>
-                        <?php include ('head.inc'); ?>
+                        <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
                     </head>
                     <body>
                         <div class="page">

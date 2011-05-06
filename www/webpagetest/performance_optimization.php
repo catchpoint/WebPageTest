@@ -6,7 +6,7 @@ require_once('optimization_detail.inc.php');
 <html>
     <head>
         <title>WebPagetest Optimization Check Results<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Optimization Check'; include ('head.inc'); ?>
         <style type="text/css">
             td.nowrap {white-space:nowrap;}
             th.nowrap {white-space:nowrap;}

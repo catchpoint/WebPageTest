@@ -42,7 +42,7 @@ $loc = ParseLocations($locations);
 <html>
     <head>
         <title>WebPagetest</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

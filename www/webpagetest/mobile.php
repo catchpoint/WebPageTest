@@ -8,7 +8,7 @@ $run=$_GET['run'];
 <html>
     <head>
         <title>WebPagetest - Mobile Test</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Mobile Test'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

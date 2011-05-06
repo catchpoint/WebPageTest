@@ -3,6 +3,7 @@
     <head>
         <title>WebPagetest - Traceroute test result<?php echo $testLabel; ?></title>
         <?php
+            $gaTemplate = 'Traceroute Result'; 
             include ('head.inc');
             include ('testStatus.inc');
         ?>

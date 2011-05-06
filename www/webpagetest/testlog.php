@@ -41,7 +41,7 @@ else
 <html>
     <head>
         <title>WebPagetest - Test Log</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
 		<style type="text/css">
 			h4 {text-align: center;}
 			.history table {text-align:left;}

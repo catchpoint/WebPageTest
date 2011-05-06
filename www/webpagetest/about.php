@@ -9,7 +9,7 @@ include 'common.inc';
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'About'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

@@ -10,7 +10,7 @@ $run=$_GET['run'];
 <html>
     <head>
         <title>WebPagetest - Visual Comparison</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Visual Test'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

@@ -6,7 +6,7 @@ require_once('./lib/json.php');
 <html>
     <head>
         <title>WebPagetest Page Speed analysis<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Page Speed'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

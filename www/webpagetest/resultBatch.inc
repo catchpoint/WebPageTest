@@ -3,6 +3,7 @@
     <head>
         <title>WebPagetest Bulk test result<?php echo $testLabel; ?></title>
         <?php
+            $gaTemplate = 'Bulk Result';
             include ('head.inc');
             include ('testStatus.inc');
         ?>

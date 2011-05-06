@@ -17,7 +17,7 @@ if( (int)$test[test][fvonly] == 0 )
 <html>
     <head>
         <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
         <style type="text/css">
             td {
                 text-align:center; 

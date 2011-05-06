@@ -101,7 +101,7 @@ function DisplayError()
 <html>
     <head>
         <title>WebPagetest - Visual Comparison</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Visual Comparison Error'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

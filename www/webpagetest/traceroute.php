@@ -16,7 +16,7 @@ $loc = ParseLocations($locations);
 <html>
     <head>
         <title>WebPagetest - Traceroute diagnostic</title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

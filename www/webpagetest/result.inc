@@ -15,7 +15,7 @@ if( !$test['test']['completeTime'] )
         <?php if( !$testComplete ) { ?>
         <meta http-equiv="refresh" content="30">
         <?php } ?>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>
     <body>
         <div class="page">

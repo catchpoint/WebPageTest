@@ -19,7 +19,7 @@ BuildVideoScript($testPath, $videoPath);
 <html>
     <head>
         <title>WebPagetest Screen Shots<?php echo $testLabel; ?></title>
-        <?php include ('head.inc'); ?>
+        <?php $gaTemplate = 'Screen Shot'; include ('head.inc'); ?>
         <style type="text/css">
         img.center {
             display:block; 
