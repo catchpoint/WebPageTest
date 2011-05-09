@@ -98,6 +98,8 @@ protected:
 	int ec2;
   int useCurrentAccount;
   HMODULE hHookDll;
+  int keepDNS;
+  DWORD clearShortTermCacheSecs;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;

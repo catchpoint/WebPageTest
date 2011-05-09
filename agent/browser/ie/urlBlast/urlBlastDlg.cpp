@@ -62,6 +62,8 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, ec2(0)
   , useCurrentAccount(0)
   , hHookDll(NULL)
+  , keepDNS(0)
+  , clearShortTermCacheSecs(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
@@ -523,27 +525,29 @@ void CurlBlastDlg::LoadSettings(void)
 	GetModuleFileName(NULL, iniFile, _countof(iniFile));
 	lstrcpy( PathFindFileName(iniFile), _T("urlBlast.ini") );
 
-	startupDelay		= GetPrivateProfileInt(_T("Configuration"), _T("Startup Delay"), 10, iniFile) * 1000;
-	threadCount			= GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
-	timeout				= GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
-	testType			= GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
-	rebootInterval		= GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), rebootInterval, iniFile);
+	startupDelay		    = GetPrivateProfileInt(_T("Configuration"), _T("Startup Delay"), 10, iniFile) * 1000;
+	threadCount			    = GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
+	timeout				      = GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
+	testType			      = GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
+	rebootInterval		  = GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), rebootInterval, iniFile);
 	clearCacheInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Cache Interval"), 0, iniFile);
-	labID				= GetPrivateProfileInt(_T("Configuration"), _T("Lab ID"), -1, iniFile);
-	dialerID			= GetPrivateProfileInt(_T("Configuration"), _T("Dialer ID"), 0, iniFile);
-	connectionType		= GetPrivateProfileInt(_T("Configuration"), _T("Connection Type"), -1, iniFile);
+	labID				        = GetPrivateProfileInt(_T("Configuration"), _T("Lab ID"), -1, iniFile);
+	dialerID			      = GetPrivateProfileInt(_T("Configuration"), _T("Dialer ID"), 0, iniFile);
+	connectionType		  = GetPrivateProfileInt(_T("Configuration"), _T("Connection Type"), -1, iniFile);
 	uploadLogsInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Upload logs interval"), 0, iniFile);
-	experimental		= GetPrivateProfileInt(_T("Configuration"), _T("Experimental"), 0, iniFile);
-	minInterval			= GetPrivateProfileInt(_T("Configuration"), _T("Min Interval"), 5, iniFile);
-	screenShotErrors	= GetPrivateProfileInt(_T("Configuration"), _T("Screen Shot Errors"), 0, iniFile);
-	checkOpt			= GetPrivateProfileInt(_T("Configuration"), _T("Check Optimizations"), 1, iniFile);
-	browserWidth		= GetPrivateProfileInt(_T("Configuration"), _T("Browser Width"), 1024, iniFile);
-	browserHeight		= GetPrivateProfileInt(_T("Configuration"), _T("Browser Height"), 768, iniFile);
-	debug				= GetPrivateProfileInt(_T("Configuration"), _T("debug"), 0, iniFile);
-	pipeIn				= GetPrivateProfileInt(_T("Configuration"), _T("pipe in"), 1, iniFile);
-	pipeOut				= GetPrivateProfileInt(_T("Configuration"), _T("pipe out"), 2, iniFile);
-	ec2					= GetPrivateProfileInt(_T("Configuration"), _T("ec2"), 0, iniFile);
-  useCurrentAccount = GetPrivateProfileInt(_T("Configuration"), _T("Use Current Account"), 0, iniFile);;
+	experimental		    = GetPrivateProfileInt(_T("Configuration"), _T("Experimental"), 0, iniFile);
+	minInterval			    = GetPrivateProfileInt(_T("Configuration"), _T("Min Interval"), 5, iniFile);
+	screenShotErrors	  = GetPrivateProfileInt(_T("Configuration"), _T("Screen Shot Errors"), 0, iniFile);
+	checkOpt			      = GetPrivateProfileInt(_T("Configuration"), _T("Check Optimizations"), 1, iniFile);
+	browserWidth		    = GetPrivateProfileInt(_T("Configuration"), _T("Browser Width"), 1024, iniFile);
+	browserHeight		    = GetPrivateProfileInt(_T("Configuration"), _T("Browser Height"), 768, iniFile);
+	debug				        = GetPrivateProfileInt(_T("Configuration"), _T("debug"), 0, iniFile);
+	pipeIn				      = GetPrivateProfileInt(_T("Configuration"), _T("pipe in"), 1, iniFile);
+	pipeOut				      = GetPrivateProfileInt(_T("Configuration"), _T("pipe out"), 2, iniFile);
+	ec2					        = GetPrivateProfileInt(_T("Configuration"), _T("ec2"), 0, iniFile);
+  useCurrentAccount   = GetPrivateProfileInt(_T("Configuration"), _T("Use Current Account"), 0, iniFile);;
+  keepDNS		          = GetPrivateProfileInt(_T("Configuration"), _T("Keep DNS"), keepDNS, iniFile);
+  clearShortTermCacheSecs	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Short Cache Secs"), clearShortTermCacheSecs, iniFile);
 
 	log.debug = debug;
 
@@ -1481,25 +1485,27 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			runHandles[i] = blaster->hRun;
 
 			// pass on configuration information
-			blaster->errorLog		= logFile;
-			blaster->testType		= testType;
+			blaster->errorLog		  = logFile;
+			blaster->testType		  = testType;
 			blaster->urlManager		= &urlManager;
-			blaster->labID			= labID;
-			blaster->dialerID		= dialerID;
+			blaster->labID			  = labID;
+			blaster->dialerID		  = dialerID;
 			blaster->connectionType	= connectionType;
-			blaster->timeout		= timeout;
+			blaster->timeout		  = timeout;
 			blaster->experimental	= experimental;
-			blaster->desktop		= desktop;
+			blaster->desktop		  = desktop;
 			blaster->customEventText= customEventText;
 			blaster->screenShotErrors = screenShotErrors;
 			blaster->accountBase	= accountBase;
-			blaster->password		= password;
+			blaster->password		  = password;
 			blaster->preLaunch		= preLaunch;
 			blaster->postLaunch		= postLaunch;
 			blaster->dynaTrace		= dynaTrace;
-			blaster->pipeIn			= pipeIn;
-			blaster->pipeOut		= pipeOut;
+			blaster->pipeIn			  = pipeIn;
+			blaster->pipeOut		  = pipeOut;
 			blaster->useBitBlt		= useBitBlt;
+      blaster->keepDNS      = keepDNS;
+      blaster->clearShortTermCacheSecs = clearShortTermCacheSecs;
 			
 			// force 1024x768 for screen shots
 			blaster->pos.right = browserWidth;
@@ -1625,6 +1631,10 @@ void CurlBlastDlg::GetEC2Config()
 							rebootInterval = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_defrag_interval")) && value.GetLength() )
 							clearCacheInterval = _ttol(value); 
+						else if( !key.CompareNoCase(_T("wpt_keep_DNS")) && value.GetLength() )
+							keepDNS = _ttol(value); 
+						else if( !key.CompareNoCase(_T("wpt_clear_short_cache_secs")) && value.GetLength() )
+							clearShortTermCacheSecs = _ttol(value); 
 					}
 				}
 			}

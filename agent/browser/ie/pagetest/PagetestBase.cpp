@@ -49,6 +49,7 @@ CPagetestBase::CPagetestBase(void):
 	, hBrowserWnd(NULL)
 	, ieMajorVer(0)
 	, ignoreSSL(0)
+  , clearShortTermCacheSecs(0)
   , _SetGDIWindow(NULL)
   , _SetGDIWindowUpdated(NULL)
   , _GDIWindowUpdated(NULL)

@@ -197,12 +197,13 @@ public:
 	DWORD						ieMajorVer;		// version of IE that is running
 
 	// URLBlast support
-	CString						testUrl;
-	CString						testOptions;
-	bool						exitWhenDone;
-	DWORD						timeout;
-	DWORD						ignoreSSL;
-	CString						customHost;
+	CString	testUrl;
+	CString	testOptions;
+	bool		exitWhenDone;
+	DWORD		timeout;
+	DWORD		ignoreSSL;
+  DWORD    clearShortTermCacheSecs;
+	CString	customHost;
 
 	// scripting support
 	bool	runningScript;

@@ -247,6 +247,8 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("Check Optimizations"), checkOpt);
 					ignoreSSL = 0;
 					key.QueryDWORDValue(_T("ignoreSSL"), ignoreSSL);
+          clearShortTermCacheSecs = 0;
+					key.QueryDWORDValue(_T("clearShortTermCacheSecs"), clearShortTermCacheSecs);
           aft = 0;
 					key.QueryDWORDValue(_T("AFT"), aft);
           aftEarlyCutoff = 25;
@@ -323,6 +325,11 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 				}		
 			}
 		}
+
+    // Delete short lifetime cache elements if configured (Blaze patch)
+    // TODO: replace this with proper cache aging if we can figure out how to do it
+    if( ok && cached && clearShortTermCacheSecs > 0 )
+      ClearShortTermCache(clearShortTermCacheSecs);
 
 		// clear the cache if necessary (extra precaution)
 		if( ok && !cached && !cacheCleared )
@@ -1044,4 +1051,75 @@ void CTestState::BackgroundTimer(void)
 	}
 
 	LeaveCriticalSection(&csBackground);
+}
+
+/*-----------------------------------------------------------------------------
+	Delete any cache items with a lifetime less than cacheTTL
+-----------------------------------------------------------------------------*/
+#define RATIO_100NANO_TO_SECOND ((_int64)10000000)
+void CTestState::ClearShortTermCache(DWORD cacheTTL)
+{
+  DWORD cacheEntryInfoBufferSizeInitial = 0;
+  DWORD cacheEntryInfoBufferSize = 0;
+  DWORD dwError;
+  LPINTERNET_CACHE_ENTRY_INFO lpCacheEntry;
+  HANDLE hCacheDir;
+
+  // Determine the size of the first entry, if it exists
+  hCacheDir = FindFirstUrlCacheEntry(NULL,0,&cacheEntryInfoBufferSizeInitial);
+  if (hCacheDir == NULL && GetLastError() == ERROR_NO_MORE_ITEMS)
+    return;
+
+  // Get the current time in a large integer (seems like a weird way to do it, but that's what MSDN dictates...)
+  SYSTEMTIME curSysTime;
+  GetSystemTime(&curSysTime);
+  FILETIME curFileTime;
+  SystemTimeToFileTime(&curSysTime, &curFileTime);
+  ULONGLONG curTimeSecs = ((((ULONGLONG) curFileTime.dwHighDateTime) << 32) + curFileTime.dwLowDateTime) / RATIO_100NANO_TO_SECOND;
+
+  // Read the first entry
+  cacheEntryInfoBufferSize = cacheEntryInfoBufferSizeInitial;
+  lpCacheEntry = (LPINTERNET_CACHE_ENTRY_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cacheEntryInfoBufferSize);
+  hCacheDir = FindFirstUrlCacheEntry(NULL, lpCacheEntry, &cacheEntryInfoBufferSizeInitial);
+  // Iterate the current and next entries
+  BOOL retVal = (hCacheDir != NULL);
+  while(retVal)
+  {
+    cacheEntryInfoBufferSizeInitial = cacheEntryInfoBufferSize;
+
+    // Find out the current time in secs
+    ULONGLONG cacheItemTimeSecs = ((((ULONGLONG) lpCacheEntry->ExpireTime.dwHighDateTime) << 32) + lpCacheEntry->ExpireTime.dwLowDateTime) / RATIO_100NANO_TO_SECOND;
+
+    // If the item expires in less than the given limit, delete it
+    if (cacheItemTimeSecs < (curTimeSecs + cacheTTL))
+  		DeleteUrlCacheEntry(lpCacheEntry->lpszSourceUrlName);
+
+    // Get the next record
+  	retVal = FindNextUrlCacheEntry(hCacheDir, lpCacheEntry, &cacheEntryInfoBufferSizeInitial);		
+  	if (!retVal)
+  	{
+  		// If we have no more items, break
+  		dwError = GetLastError();
+  		if (dwError == ERROR_NO_MORE_ITEMS)
+  		{
+  			break;
+  		}
+  		// Otherwise, if the error was insufficient buffer, increase the buffer size
+  		if (dwError == ERROR_INSUFFICIENT_BUFFER && cacheEntryInfoBufferSizeInitial > cacheEntryInfoBufferSize)
+  		{
+  			cacheEntryInfoBufferSize = cacheEntryInfoBufferSizeInitial;
+  			// Re-allocate to a larger size
+  			lpCacheEntry = (LPINTERNET_CACHE_ENTRY_INFO)HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, lpCacheEntry, cacheEntryInfoBufferSize);
+  			if (lpCacheEntry)
+  				retVal = FindNextUrlCacheEntry(hCacheDir, lpCacheEntry, &cacheEntryInfoBufferSizeInitial);					
+  		}
+  		else
+  			break;
+  	}
+  }
+  
+  HeapFree(GetProcessHeap(),0,lpCacheEntry);
+  
+  // Cleanup the cache dir handle
+  FindCloseUrlCache(hCacheDir);
 }

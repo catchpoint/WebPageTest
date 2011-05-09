@@ -37,6 +37,8 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 , hDynaTrace(NULL)
 , useBitBlt(0)
 , winpcap(logRef)
+, keepDNS(0)
+, clearShortTermCacheSecs(0)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -481,7 +483,8 @@ bool CURLBlaster::LaunchBrowser(void)
 	info.testResult = -1;
 
 	// flush the DNS cache
-	FlushDNS();
+  if( !keepDNS )
+	  FlushDNS();
 	
 	if( !info.url.IsEmpty() )
 	{
@@ -801,7 +804,7 @@ void CURLBlaster::ConfigurePagetest(void)
 
 
 			RegSetValueEx(hKey, _T("ignoreSSL"), 0, REG_DWORD, (const LPBYTE)&info.ignoreSSL, sizeof(info.ignoreSSL));
-			RegSetValueEx(hKey, _T("useBitBlt"), 0, REG_DWORD, (const LPBYTE)&useBitBlt, sizeof(useBitBlt));
+			RegSetValueEx(hKey, _T("clearShortTermCacheSecs"), 0, REG_DWORD, (const LPBYTE)&clearShortTermCacheSecs, sizeof(clearShortTermCacheSecs));
 			
 			CString descriptor = _T("Launch");
 			RegSetValueEx(hKey, _T("Descriptor"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)descriptor, (descriptor.GetLength() + 1) * sizeof(TCHAR));

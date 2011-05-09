@@ -69,6 +69,8 @@ public:
 	DWORD pipeIn;
 	DWORD pipeOut;
 	DWORD useBitBlt;
+  int keepDNS;
+  DWORD clearShortTermCacheSecs;
 	
 	CRITICAL_SECTION cs;
 	DWORD browserPID;
