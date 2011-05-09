@@ -204,7 +204,7 @@ if ($login == TRUE) {
     $_SESSION['ls_user'] = $theUser['Username'];
     $_SESSION['ls_email'] = $theUser['EmailAddress'];
     $_SESSION['ls_admin'] = $theUser['IsSuperAdmin'];
-    if ( ! $theUser['TimeZone'] ){
+    if ( empty($theUser['TimeZone'])){
       $theUser['TimeZone'] = "GMT";
     }
     $_SESSION['ls_timezone'] = $theUser['TimeZone'];

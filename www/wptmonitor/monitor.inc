@@ -3,7 +3,7 @@
   date_default_timezone_set($_SESSION['ls_timezone']);
 
   // Check to see if we are to impersonate
-  if ($_REQUEST['impId'] && $_SESSION['ls_admin'] ){
+  if (array_key_exists('impId',$_REQUEST) && array_key_exists('ls_admin',$_SESSION)){
     $_SESSION['ls_impersonate_id'] = $_REQUEST['impId'];
     // Clear session vars
     foreach ($_SESSION as $key=>$sessionVar){
