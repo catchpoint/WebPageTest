@@ -1,6 +1,6 @@
 <?php
   require_once('bootstrap.php');
-  if ( !$_SESSION  ){
+  if ( !isset($_SESSION)){
     session_start();
   }
   date_default_timezone_set($_SESSION['ls_timezone']);
