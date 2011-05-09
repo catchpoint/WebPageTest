@@ -62,14 +62,16 @@
   $wptValidationStateCodes['3']="Needs Review";
 
   // Results per page
-  if ( !$_SESSION['resultsPerPage']){
-    $_SESSION['resultsPerPage'] = 15;
+  if ($_SESSION){
+    if ( !array_key_exists('resultsPerPage',$_SESSION)){
+      $_SESSION['resultsPerPage'] = 15;
+    }
   }
-  if ($_REQUEST['resultsPerPage']){
+  if (!array_key_exists('resultsPerPage',$_REQUEST)){
     $_SESSION['resultsPerPage'] = $_REQUEST['resultsPerPage'];
   }
   // Handle results per page
-  $resultsPerPage = $_SESSION['resultsPerPage'];
+//  $resultsPerPage = $_SESSION['resultsPerPage'];
   $smarty->assign('resultsPerPage',$_SESSION['resultsPerPage']);
 
   define("VALIDATION_TYPE_MATCH",1);
