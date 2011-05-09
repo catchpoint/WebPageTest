@@ -656,6 +656,8 @@ function processResultsForAll( $resultId = null ) {
             $line = explode("\t",$lines[1]);
           }
           foreach( $headers as $key=>$header){
+            //Set default
+            $dialerId = '0';
             if ($header == "Dialer ID"){
               $dialerId = $line[$key];
             }
