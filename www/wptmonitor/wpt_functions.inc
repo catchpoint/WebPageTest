@@ -646,20 +646,20 @@ function processResultsForAll( $resultId = null ) {
 
         if ( $pageData ){
           $lines = explode("\n",$pageData);
-        }
-        if ($lines){
-          $headers = explode("\t",$lines[0]);
-          $line = explode("\t",$lines[1]);
-        }
-        foreach( $headers as $key=>$header){
-          if ($header == "Dialer ID"){
-            $dialerId = $line[$key];
+          if ($lines){
+            $headers = explode("\t",$lines[0]);
+            $line = explode("\t",$lines[1]);
           }
-          if ( $header == "Error Code"){
-            // Ignore the 99999. 
-//            if (!$line[$key] == "99999"){
-              $errorCode = $line[$key];
-//            }
+          foreach( $headers as $key=>$header){
+            if ($header == "Dialer ID"){
+              $dialerId = $line[$key];
+            }
+            if ( $header == "Error Code"){
+              // Ignore the 99999.
+  //            if (!$line[$key] == "99999"){
+                $errorCode = $line[$key];
+  //            }
+            }
           }
         }
         if ( $errorCode ){
