@@ -73,7 +73,7 @@
       $_SESSION['resultsPerPage'] = 15;
     }
   }
-  if (!array_key_exists('resultsPerPage',$_REQUEST)){
+  if (array_key_exists('resultsPerPage',$_REQUEST)){
     $_SESSION['resultsPerPage'] = $_REQUEST['resultsPerPage'];
   }
   // Handle results per page
