@@ -623,6 +623,11 @@ function processResultsForAll( $resultId = null ) {
         continue;
       }
       $status = $xml->statusCode;
+      // If no valid statusCode then assume error.
+      if (! $xml || !$xml->statusCode){
+        logOutput("[ERROR] [ProcessResults] Failed to get statusCode for WPTResultId: $wptResultId Id: $id",$wptResultId);
+        continue;
+      }
       // If 100 then it's still waiting
       $result['Status'] = $status;
 
