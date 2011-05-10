@@ -77,7 +77,7 @@
     $_SESSION['resultsPerPage'] = $_REQUEST['resultsPerPage'];
   }
   // Handle results per page
-//  $resultsPerPage = $_SESSION['resultsPerPage'];
+  $resultsPerPage = $_SESSION['resultsPerPage'];
   $smarty->assign('resultsPerPage',$_SESSION['resultsPerPage']);
 
   define("VALIDATION_TYPE_MATCH",1);
