@@ -10,7 +10,7 @@ date_default_timezone_set('UTC');
 
 // constants
 define('VER_CSS', 38);          // version of the sitewide css file
-define('VER_JS', 12);            // version of the sitewide javascript file
+define('VER_JS', 13);            // version of the sitewide javascript file
 define('VER_JS_TEST', 13);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
@@ -522,20 +522,7 @@ function gz_is_file($filename)
 function GetPageSpeedScore($file)
 {
     $score = '';
-    $pagespeed = json_decode(gz_file_get_contents($file), true);
-
-    if( !$pagespeed )
-    {
-        // try an alternate JSON decoder
-        require_once('./lib/json.php');
-        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
-        $pagespeed = $json->decode(gz_file_get_contents($file), true);
-        if( $pagespeed )
-        {
-            // make sure we only have to go this route once, save the corrected file
-            gz_file_put_contents($file, json_encode($pagespeed));
-        }
-    }
+    $pagespeed = LoadPageSpeedData($file);
 
     if( $pagespeed )
     {
@@ -551,6 +538,31 @@ function GetPageSpeedScore($file)
     }
     
     return $score;
+}
+
+/**
+* Load the full Page Speed data from disk
+* 
+* @param mixed $file
+*/
+function LoadPageSpeedData($file)
+{
+    $pagespeed = json_decode(gz_file_get_contents($file), true);
+
+    if( !$pagespeed )
+    {
+        // try an alternate JSON decoder
+        require_once('./lib/json.php');
+        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
+        $pagespeed = $json->decode(gz_file_get_contents($file), true);
+        if( $pagespeed )
+        {
+            // make sure we only have to go this route once, save the corrected file
+            gz_file_put_contents($file, json_encode($pagespeed));
+        }
+    }
+    
+    return $pagespeed;
 }
 
 /**

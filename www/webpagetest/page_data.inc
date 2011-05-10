@@ -108,10 +108,13 @@ function loadPageData($file)
                                 'image_savings' => (int)$fields[69],
                                 'optimization_checked' => (int)$fields[71],
                                 'aft' => (int)$fields[72],
-                                'domElements' => (int)$fields[73]
+                                'domElements' => (int)$fields[73],
+                                'pageSpeedVersion' => trim($fields[74])
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
+                if (!strlen($ret['pageSpeedVersion']))
+                    $ret['pageSpeedVersion'] = '1.9';
             }
         }
     }

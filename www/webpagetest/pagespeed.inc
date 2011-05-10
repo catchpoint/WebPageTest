@@ -4,14 +4,9 @@
 * 
 * @param mixed $file
 */
-function PageSpeedTreeHTML($file, $docRoot = '') {
+function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
     $html = '';
-    $pagespeed_data = gz_file_get_contents($file);
-    $pagespeed = json_decode($pagespeed_data, true);
-    if (!$pagespeed) {
-        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
-        $pagespeed = $json->decode($pagespeed_data, true);
-    }
+    $pagespeed = LoadPageSpeedData($file);
     if( $pagespeed )
     {
         $html .= '<div class="pagespeed_container">';
@@ -26,7 +21,7 @@ function PageSpeedTreeHTML($file, $docRoot = '') {
             $count++;
         }
         if( $count )
-            $html .= 'Page Speed Score: <b>' . ceil($total / $count) . '/100</b><br>';
+            $html .= "Page Speed $ver Score: <b>" . ceil($total / $count) . '/100</b>*<br>';
 
         $html .= '<ul id="pagespeed_tree" class="pagespeed_treeview">';
         
@@ -74,7 +69,7 @@ function PageSpeedTreeHTML($file, $docRoot = '') {
                 
             $html .= '</li>';
         }
-        $html .= '</ul></div>';
+        $html .= '</ul><br>* Page Speed scores can only be compared to scores from the same version of the Page Speed library.</div>';
     }
     
     return $html;

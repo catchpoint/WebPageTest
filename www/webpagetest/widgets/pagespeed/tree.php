@@ -34,16 +34,16 @@ if (strlen($testPath) && strlen($div)) {
     echo "pagespeed_tree_first_script.parentNode.insertBefore(pagespeed_tree_css, pagespeed_tree_first_script);\n";
       
     // insert the actual html into the div
-    $run = $_REQUEST['run'];
-    if( !$run ) {
-        require_once('page_data.inc');
+    require_once('page_data.inc');
+    if( !isset($pageData) )
         $pageData = loadAllPageData($testPath);
+    if( !$run ) {
         $run = GetMedianRun($pageData, $cached);
         if (!$run)
             $run = 1;
     }
 
-    $html = PageSpeedTreeHTML("$testPath/$run{$cachedText}_pagespeed.txt", $base_path);
+    $html = PageSpeedTreeHTML("$testPath/$run{$cachedText}_pagespeed.txt", $base_path, $pageData[$run][$cached]['pageSpeedVersion']);
     $html = str_replace("'", "\\'", $html);
     echo "document.getElementById('$div').innerHTML = '$html';";
 }

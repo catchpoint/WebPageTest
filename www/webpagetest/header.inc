@@ -138,7 +138,7 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
                 {
                     $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
                     if( strlen($score) )
-                        echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed Score</a>: <b>$score/100</b></span>";
+                        echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
                 }
                 
                 echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
