@@ -7,7 +7,7 @@ if($settings['analytics'])
     <?php
     echo "_gaq.push(['_setAccount', '{$settings['analytics']}']);\n";
     if( isset($gaTemplate) && strlen($gaTemplate) )
-        echo "_gaq.push(['_setCustomVar', 1, 'Template', $gaTemplate, 3]);\n";
+        echo "_gaq.push(['_setCustomVar', 1, 'Template', '$gaTemplate', 3]);\n";
     ?>
     _gaq.push(['_trackPageview']);
     _gaq.push(['_trackPageLoadTime']);
