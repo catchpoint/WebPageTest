@@ -70,6 +70,7 @@ else
         $endTime = 'all';
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
+        $videoIdExtra = "";
         
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
@@ -81,7 +82,10 @@ else
                 $test['id'] = $parts[0];
                 $test['cached'] = 0;
                 $test['end'] = $endTime;
-                
+                $test['syncStartRender'] = "";
+                $test['syncDocTime'] = "";
+                $test['syncFullyLoaded'] = "";
+                    
                 for( $i = 1; $i < count($parts); $i++ )
                 {
                     $p = explode(':', $parts[$i]);
@@ -95,6 +99,13 @@ else
                             $test['cached'] = (int)$p[1];
                         if( $p[0] == 'e' )
                             $test['end'] = trim($p[1]);
+                        // Optional Extra info to sync the video with
+                        if( $p[0] == 's' )
+                            $test['syncStartRender'] = (int)$p[1];
+                        if( $p[0] == 'd' )
+                            $test['syncDocTime'] = (int)$p[1];
+                        if( $p[0] == 'f' )
+                            $test['syncFullyLoaded'] = (int)$p[1];
                     }
                 }
                 
@@ -131,6 +142,12 @@ else
                 if( $test['cached'] )
                     $test['videoPath'] .= '_cached';
                     
+                if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
+                {
+                    BuildRunVideoStatsScript($test['path'], $test['run'], $test['cached'], $test ['videoPath'], $test['syncStartRender'], $test['syncDocTime'], $test['syncFullyLoad ed']);
+                    $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syn cFullyLoaded']}";
+                }
+
                 if( !strlen($test['label']) )
                     $test['label'] = trim(gz_file_get_contents("./{$test['path']}/label.txt"));
                 if( !strlen($test['label']) )
@@ -151,7 +168,7 @@ else
                 if( strlen($_REQUEST['tests']) )
                 {
                     $date = date('ymd_');
-                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']);
+                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra;
                     if( $_REQUEST['slow'] )
                         $hashstr .= '.slow';
                     if( strpos($hashstr, '_') == 6 )

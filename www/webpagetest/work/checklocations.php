@@ -11,7 +11,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 $locations = parse_ini_file('./settings/locations.ini', true);
 BuildLocations($locations);
 
-$settings = parse_ini_file('./settings/settings.ini');
+$settings = parse_ini_file('./settings/settings.ini', true);
 
 $files = scandir('./tmp');
 foreach( $files as $file )
@@ -40,7 +40,7 @@ foreach( $files as $file )
             {
                 // if it has been over 60 minutes, send out a notification    
                 // figure out who to notify
-                $to = $settings['notify'];
+                $to = $settings['settings']['notify'];
                 if( $locations[$loc]['notify'] )
                 {
                     if( $to )
@@ -49,7 +49,31 @@ foreach( $files as $file )
                 }
                 
                 if( $to )
-                    mail($to, "$loc WebPagetest ALERT", "The $loc location has not checked for new jobs in $minutes minutes." );
+                {
+                    // send the e-mail through an SMTP server?
+                    if (array_key_exists('mailserver', $settings))
+                    {
+                        require_once "Mail.php";
+                        $mailServerSettings = $settings['mailserver'];
+                        $mailInit = array ();
+                        if (array_key_exists('host', $mailServerSettings))
+                            $mailInit['host'] = $mailServerSettings['hos t'];
+                        if (array_key_exists('port', $mailServerSettings))
+                            $mailInit['port'] = $mailServerSettings['po rt'];
+                        if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth'])
+                        {
+                            $mailInit['auth'] = true;
+                            $mailInit['username'] = $mailServerSettings[ 'username'];
+                            $mailInit['password'] = $mailServerSettings['password'];
+                        }
+                        $smtp = Mail::factory('smtp', $mailInit);
+                        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => "$loc WebPagetest ALERT");
+                        $body = "The $loc location has not checked for new jobs in $minutes minutes.";
+                        $mail = $smtp->send($to, $headers, $body);
+                    }
+                    else
+                        mail($to, "$loc WebPagetest ALERT", "The $loc location has not checked for new jobs in $minutes minutes." );
+                }
             }
             
             echo "$loc: $elapsed sec\r\n";

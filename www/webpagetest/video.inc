@@ -176,29 +176,48 @@ function BuildVideoStatsScript($testPath, $videoDir)
                 if( strstr($dir, '_cached') !== false )
                     $cached = 1;
                     
-                // load thee page-level data for the run
-                require_once('./page_data.inc');
-                $pageData = loadPageRunData($testPath, $run, $cached);
-                if( $pageData && count($pageData))
-                {
-                    $script = "test_url=\"{$pageData['URL']}\"\r\n";
-                    $script .= "test_loadTime={$pageData['loadTime']}\r\n";
-                    $script .= "test_TTFB={$pageData['TTFB']}\r\n";
-                    $script .= "test_startRender={$pageData['render']}\r\n";
-                    $script .= "test_fullyLoaded={$pageData['fullyLoaded']}\r\n";
-                    $script .= "test_documentComplete={$pageData['docTime']}\r\n";
-                    $script .= "test_domTime={$pageData['domTime']}\r\n";
-                    $script .= "test_bytesIn={$pageData['bytesIn']}\r\n";
-                    $script .= "test_requests={$pageData['requests']}\r\n";
-                    $script .= "test_result={$pageData['result']}\r\n";
-                    $script .= "test_cached={$pageData['cached']}\r\n";
-                    file_put_contents("$videoDir/stats.avs", $script);
-                }
+                BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, "", "", "");
             }
         }
     }
 }
-  
+
+/**
+* Create a script with the video stats
+*
+* @param mixed $videoDir
+*/
+function BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, $syncStartRender, $syncDocTime, $syncFullyLoaded)
+{
+    // load the page-level data for the run
+    require_once('./page_data.inc');
+    $pageData = loadPageRunData($testPath, $run, $cached);
+    if( $pageData && count($pageData))
+    {
+        if (!$syncStartRender)
+            $syncStartRender = $pageData['render'];
+        if (!$syncDocTime)
+            $syncDocTime = $pageData['docTime'];
+        if (!$syncFullyLoaded)
+            $syncFullyLoaded = $pageData['fullyLoaded'];
+        $script = "test_url=\"{$pageData['URL']}\"\r\n";
+        $script .= "test_loadTime={$pageData['loadTime']}\r\n";
+        $script .= "test_TTFB={$pageData['TTFB']}\r\n";
+        $script .= "test_startRender={$pageData['render']}\r\n";
+        $script .= "test_fullyLoaded={$pageData['fullyLoaded']}\r\n";
+        $script .= "test_documentComplete={$pageData['docTime']}\r\n";
+        $script .= "test_domTime={$pageData['domTime']}\r\n";
+        $script .= "test_bytesIn={$pageData['bytesIn']}\r\n";
+        $script .= "test_requests={$pageData['requests']}\r\n";
+        $script .= "test_result={$pageData['result']}\r\n";
+        $script .= "test_cached={$pageData['cached']}\r\n";
+        $script .= "test_syncStartRender={$syncStartRender}\r\n";
+        $script .= "test_syncDocumentComplete={$syncDocTime}\r\n";
+        $script .= "test_syncFullyLoaded={$syncFullyLoaded}\r\n";
+        file_put_contents("$videoDir/stats.avs", $script);
+    }
+}
+
 /**
 * Create the zip file of the video
 * 
