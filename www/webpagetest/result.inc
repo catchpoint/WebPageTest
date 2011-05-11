@@ -34,30 +34,12 @@ if( !$test['test']['completeTime'] )
                 Url: <a rel="nofollow" href=<?php echo '"' . $url . '"';?>><?php echo $url;?></a><br>
                 From: <?php echo $test['test']['location'];?><br>
                 <?php 
-                    if( $dom ) 
-                        echo 'DOM Element: <b>' . $dom . '</b><br>';
-                    if( $test['test']['fvonly'] ) 
-                        echo '<b>First View only</b><br>';
-                    if( (int)$test['test']['runs'] > 1 ) 
-                        echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
-                    if( (int)$test['test']['authenticated'] == 1) 
-                        echo '<br><b>Authenticated: ' . $login . '</b>';
-                    if( (int)$test['test']['connections'] !== 0) 
-                        echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-                    if( $test['test']['script'] )
-                    {
-                        echo '<b>Scripted test</b><br>';
-                        if ($settings['show_script_in_results'])
-                            AddScriptDiv($testPath);
-                    }
+                    echo GetTestInfoHtml();
                 ?>
                 </p>
                 <?php 
                 $runs = count($pageData);
-                if( !$testComplete )
-                    echo "<h3>Test is partially complete ($runs of {$test['test']['runs']} runs).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
-                else
-                    echo "<h3>Calculating the AFT.<br>This page will refresh every 30 seconds until the calculation is complete.</h3>";
+                echo "<h3>Test is partially complete ($runs of {$test['test']['runs']} runs).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
             }
             else 
             { 
@@ -65,32 +47,9 @@ if( !$test['test']['completeTime'] )
             <div id="download">
                 <div id="testinfo">
                     <?php
-                    if( $dom ) 
-                        echo 'DOM Element: <b>' . $dom . '</b><br>';
-                    if( $test['test']['fvonly'] ) 
-                        echo '<b>First View only</b><br>';
-                    if( (int)$test['test']['runs'] > 1 ) 
-                        echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
-                    if( (int)$test['test']['authenticated'] == 1) 
-                        echo '<br><b>Authenticated: ' . $login . '</b>';
-                    if( (int)$test['test']['connections'] !== 0) 
-                        echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-                    if( $test['test']['script'] )
-                    {
-                        echo '<b>Scripted test</b><br>';
-                        if ($settings['show_script_in_results'])
-                            AddScriptDiv($testPath);
-                    }
+                    echo GetTestInfoHtml();
                     if( gz_is_file("$testPath/testinfo.json") )
                     {
-                        $owner = null;
-                        if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
-                          $owner = $_COOKIE['o'];
-                        }else{
-                          $owner = sha1(uniqid(uniqid('', true), true));
-                        }
-                        setcookie('o', $owner, time()+60*60*24*365, '/');
-
                         // load the secret key (if there is one)
                         $secret = '';
                         $keys = parse_ini_file('./settings/keys.ini', true);
@@ -398,19 +357,5 @@ function LookupError($error)
     }
     
     return $errorText;
-}
-
-function AddScriptDiv($testPath)
-{
-    echo '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
-    echo '<div id="script_in_results-container" class="hidden">';
-    echo '<pre>' . GetScript($testPath) . '</pre>';
-    echo '</div>';
-}
-
-function GetScript($testPath)
-{
-    $json_contents = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    return htmlspecialchars($json_contents['script']);
 }
 ?>

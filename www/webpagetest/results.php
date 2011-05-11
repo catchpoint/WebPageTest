@@ -6,7 +6,6 @@ $pageData = loadAllPageData($testPath);
 // if we don't have an url, try to get it from the page results
 if( !strlen($url) )
     $url = $pageData[1][0]['URL'];
-
 if( isset($test['test']) && $test['test']['batch'] )
     include 'resultBatch.inc';
 elseif( isset($test['testinfo']['cancelled']) )

@@ -68,6 +68,7 @@ if( is_dir('./forums') && !$settings['disableMybb'] )
 }
 
 // assign a unique ID to each person
+$isOwner = false;
 $owner = null;
 if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $owner = $_COOKIE['o'];
@@ -126,8 +127,15 @@ if( $id )
     if( gz_is_file("$testPath/testinfo.json") )
     {
         $test['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if (isset($test['testinfo']) && isset($test['testinfo']['completed']))
-            $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
+        if (isset($test['testinfo']))
+        {
+            if( isset($test['testinfo']['completed']))
+                $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
+            if (isset($test['testinfo']['owner']) && strlen($owner) && $owner == $test['testinfo']['owner'])
+                $isOwner = true;
+            elseif (isset($test['testinfo']['uid']) && strlen($uid) && $uid == $test['testinfo']['uid'])
+                $isOwner = true;
+        }
     }
     if( gz_is_file("$testPath/url.txt") )
         $url = htmlspecialchars(gz_file_get_contents("$testPath/url.txt"));
@@ -929,5 +937,47 @@ function ParseLocations(&$locations)
     }
     
     return $loc;
+}
+
+/**
+* Get the text block of the test info that we want to display
+* 
+*/
+function GetTestInfoHtml($includeScript = true)
+{
+    global $test;
+    global $isOwner;
+    global $dom;
+    global $login;
+    global $settings;
+    $html = '';
+    if( $dom ) 
+        $html .= 'DOM Element: <b>' . $dom . '</b><br>';
+    if( $test['test']['fvonly'] ) 
+        $html .= '<b>First View only</b><br>';
+    if( (int)$test['test']['runs'] > 1 ) 
+        $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
+    if( (int)$test['test']['authenticated'] == 1) 
+        $html .= '<b>Authenticated: ' . $login . '</b><br>';
+    if( isset($test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') && $test['testinfo']['bwIn'] && $test['testinfo']['bwOut'] )
+    {
+        $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
+        if( $test['testinfo']['plr'] )
+            $html .= ", {$test['testinfo']['plr']}% Packet Loss";
+        $html .= '<br>';
+    }
+    if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
+    {
+        if ($includeScript && ($settings['show_script_in_results'] || $isOwner))
+        {
+            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
+            $html .= '<div id="script_in_results-container" class="hidden">';
+            $html .= '<pre>' . $test['testinfo']['script'] . '</pre>';
+            $html .= '</div>';
+        }
+        else
+            $html .= '<b>Scripted test</b><br>';
+    }
+    return $html;
 }
 ?>

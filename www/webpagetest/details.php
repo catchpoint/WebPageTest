@@ -93,11 +93,16 @@ $data = loadPageRunData($testPath, $run, $cached);
 
             <div id="result">
                 <div id="download">
+                    <div id="testinfo">
+                        <?php
+                        echo GetTestInfoHtml();
+                        ?>
+                    </div>
                     <?php
-	    		echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
-	    		echo '<br>';
-			if ( $settings['enable_google_csi'] )
-				echo '<a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+	    		        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
+	    		        echo '<br>';
+			            if ( $settings['enable_google_csi'] )
+				            echo '<a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";

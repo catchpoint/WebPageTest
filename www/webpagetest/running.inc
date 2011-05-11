@@ -19,12 +19,7 @@
                 <p>
                 Url: <a rel="nofollow" href=<?php echo '"' . $url . '"';?>><?php echo $url;?></a><br>
                 From: <?php echo $test['test']['location'];?><br>
-                <?php if( $dom ) echo 'DOM Element: <b>' . $dom . '</b><br>'; ?>
-                <?php if( $test['test']['fvonly'] ) echo '<b>First View only</b><br>'; ?>
-                <?php if( (int)$test['test']['runs'] > 1 ) echo 'Test runs: <b>' . $test['test']['runs'] . '</b><br>'; ?>
-                <?php if( (int)$test['test']['authenticated'] == 1) echo '<br><b>Authenticated: ' . $login . '</b>'; ?>
-                <?php if( (int)$test['test']['connections'] !== 0) echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';?>
-                <?php if( $test['test']['script'] ) echo '<b>Scripted test</b><br>'; ?>
+                <?php echo GetTestInfoHtml(false); ?>
                 </p>
                 <h3>Testing...</h3>
                 <?php
