@@ -41,6 +41,7 @@ public:
   DnsInfo(CString name):
     _success(false)
     , _accounted_for(false)
+    , _tracked(false)
     ,_name(name) {
       QueryPerformanceCounter(&_start);
       _end.QuadPart = 0;
@@ -53,6 +54,7 @@ public:
   LARGE_INTEGER   _end;
   bool            _success;
   bool            _accounted_for;
+  bool            _tracked;
   struct in_addr	_override_addr;
 };
 

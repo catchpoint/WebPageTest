@@ -133,6 +133,7 @@ protected:
   bool      NavigationCommand(CString& command);
   void      FixURL(ScriptCommand& command);
   bool      ProcessCommand(ScriptCommand& command, bool &consumed);
+  bool      PreProcessScriptCommand(ScriptCommand& command);
 
   CAtlList<ScriptCommand> _script_commands;
 

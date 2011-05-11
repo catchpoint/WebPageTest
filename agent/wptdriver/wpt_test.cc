@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void) {
+  QueryPerformanceFrequency(&_perf_frequency);
+
   // figure out what our working diriectory is
   TCHAR path[MAX_PATH];
   if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
@@ -46,8 +48,6 @@ WptTest::WptTest(void) {
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
   }
-
-  QueryPerformanceFrequency(&_perf_frequency);
 
   Reset();
 }
@@ -93,7 +93,7 @@ void WptTest::Reset(void) {
 bool WptTest::Load(CString& test) {
   bool ret = false;
 
-  ATLTRACE(_T("WptTest::Load()\n"));
+  WptTrace(loglevel::kFunction, _T("WptTest::Load()\n"));
 
   Reset();
 
@@ -151,7 +151,8 @@ bool WptTest::Load(CString& test) {
     line = test.Tokenize(_T("\r\n"), linePos);
   }
 
-  ATLTRACE(_T("WptTest::Load() - Loaded test %s\n"), (LPCTSTR)_id);
+  WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
+                                                                (LPCTSTR)_id);
 
   if( _id.GetLength() )
     ret = true;
@@ -180,7 +181,7 @@ CStringA WptTest::JSONEscape(CString src) {
 bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = false;
 
-  ATLTRACE(_T("[wpthook] - WptTest::GetNextTask\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::GetNextTask\n"));
 
   if (!_active){
     LARGE_INTEGER now;
@@ -244,7 +245,7 @@ CStringA WptTest::EncodeTask(ScriptCommand& command) {
   The last measurement completed, is it time to exit?
 -----------------------------------------------------------------------------*/
 bool WptTest::Done() {
-  ATLTRACE(_T("[wpthook] - WptTest::Done()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::Done()\n"));
   bool ret = false;
 
   _active = false;
@@ -286,7 +287,7 @@ void WptTest::BuildScript() {
               script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
             }
 
-            ATLTRACE(_T("Script command: %s,%s,%s\n"), 
+            WptTrace(loglevel::kFrequentEvent,_T("Script command: %s,%s,%s\n"), 
                       (LPCTSTR)script_command.command,
                       (LPCTSTR)script_command.target,
                       (LPCTSTR)script_command.value);
@@ -294,7 +295,8 @@ void WptTest::BuildScript() {
             if (script_command.record)
               has_measurement = true;
 
-            _script_commands.AddTail(script_command);
+            if (!PreProcessScriptCommand(script_command))
+              _script_commands.AddTail(script_command);
           }
         }
       }
@@ -359,7 +361,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   bool continue_processing = true;
   consumed = true;
 
-  ATLTRACE(_T("[wpthook] Processing Command '%s'\n"), command.command);
+  WptTrace(loglevel::kFunction, _T("[wpthook] Processing Command '%s'\n"), 
+                                                              command.command);
   CString cmd = command.command;
   cmd.MakeLower();
 
@@ -373,13 +376,6 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _log_data = true;
     else
       _log_data = false;
-  } else if (cmd == _T("setdns")) {
-	  CDNSEntry entry(command.target, command.value);
-		_dns_override.AddTail(entry);
-  } else if (cmd == _T("setdnsname")) {
-		CDNSName entry(command.target, command.value);
-		if (entry.name.GetLength() && entry.realName.GetLength())
-			_dns_name_override.AddTail(entry);
   } else if (cmd == _T("sleep")) {
     int seconds = _ttoi(command.target);
     if (seconds > 0) {
@@ -393,6 +389,30 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   }
 
   return continue_processing;
+}
+
+/*-----------------------------------------------------------------------------
+  Process any commands that we need to handle right at startup
+  This is primarily for DNS overrides because of Chrome's pre-fetching
+-----------------------------------------------------------------------------*/
+bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
+  bool processed = true;
+
+  CString cmd = command.command;
+  cmd.MakeLower();
+
+  if (cmd == _T("setdns")) {
+	  CDNSEntry entry(command.target, command.value);
+		_dns_override.AddTail(entry);
+  } else if (cmd == _T("setdnsname")) {
+		CDNSName entry(command.target, command.value);
+		if (entry.name.GetLength() && entry.realName.GetLength())
+			_dns_name_override.AddTail(entry);
+  } else {
+    processed = false;
+  }
+
+  return processed;
 }
 
 /*-----------------------------------------------------------------------------
@@ -421,3 +441,4 @@ ULONG WptTest::OverrideDNSAddress(CString& name) {
 
   return addr;
 }
+

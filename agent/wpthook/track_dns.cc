@@ -53,19 +53,22 @@ bool TrackDns::LookupStart(CString& name, void *&context,
                             CAtlArray<ADDRINFOA_ADDR> &addresses) {
   bool use_internal_dns = false;
 
-  ATLTRACE2(_T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
+  WptTrace(loglevel::kFrequentEvent, 
+            _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
               GetCurrentThreadId(), (LPCTSTR)name);
+
+  // we need to check for overrides even if we aren't active
+  DnsInfo * info = new DnsInfo(name);
+  _test.OverrideDNSName(name);
+  info->_override_addr.S_un.S_addr = _test.OverrideDNSAddress(name);
+  context = info;
 
   if (_test_state._active) {
     _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
-    DnsInfo * info = new DnsInfo(name);
+    info->_tracked = true;
     _dns_lookups.SetAt(info, info);
-    context = info;
     LeaveCriticalSection(&cs);
-
-    _test.OverrideDNSName(name);
-    info->_override_addr.S_un.S_addr = _test.OverrideDNSAddress(name);
   }
 
   return use_internal_dns;
@@ -74,39 +77,46 @@ bool TrackDns::LookupStart(CString& name, void *&context,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackDns::LookupAddress(void * context, ADDRINFOA * address) {
-  if (address->ai_addrlen >= sizeof(struct sockaddr_in) && 
-      address->ai_family == AF_INET)
-  {
-    struct sockaddr_in * ipName = (struct sockaddr_in *)address->ai_addr;
-    if (context) {
-      DnsInfo * info = (DnsInfo *)context;
+  if (context) {
+    DnsInfo * info = (DnsInfo *)context;
+    if (address->ai_addrlen >= sizeof(struct sockaddr_in) && 
+        address->ai_family == AF_INET)
+    {
+      struct sockaddr_in * ipName = (struct sockaddr_in *)address->ai_addr;
 		  if( info->_override_addr.S_un.S_addr )
         ipName->sin_addr.S_un.S_addr = info->_override_addr.S_un.S_addr;
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
+        GetCurrentThreadId(),
+        ipName->sin_addr.S_un.S_un_b.s_b1
+        ,ipName->sin_addr.S_un.S_un_b.s_b2
+        ,ipName->sin_addr.S_un.S_un_b.s_b3
+        ,ipName->sin_addr.S_un.S_un_b.s_b4);
     }
-    ATLTRACE2(_T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
-      GetCurrentThreadId(),
-      ipName->sin_addr.S_un.S_un_b.s_b1
-      ,ipName->sin_addr.S_un.S_un_b.s_b2
-      ,ipName->sin_addr.S_un.S_un_b.s_b3
-      ,ipName->sin_addr.S_un.S_un_b.s_b4);
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackDns::LookupDone(void * context, int result) {
-  ATLTRACE2(_T("[wshook] (%d) DNS Lookup complete\n"), GetCurrentThreadId());
+  WptTrace(loglevel::kFrequentEvent, 
+            _T("[wshook] (%d) DNS Lookup complete\n"), GetCurrentThreadId());
 
-  if (_test_state._active) {
-    _test_state.ActivityDetected();
-    EnterCriticalSection(&cs);
-    DnsInfo * info = NULL;
-    if (_dns_lookups.Lookup(context, info) && info) {
-      QueryPerformanceCounter(&info->_end);
-      if (!result)
-        info->_success = true;
+  if (context) {
+    DnsInfo * info = (DnsInfo *)context;
+    if (info->_tracked && _test_state._active) {
+      _test_state.ActivityDetected();
+      EnterCriticalSection(&cs);
+      DnsInfo * dns_info = NULL;
+      if (_dns_lookups.Lookup(context, dns_info) && dns_info) {
+        QueryPerformanceCounter(&dns_info->_end);
+        if (!result)
+          dns_info->_success = true;
+      }
+      LeaveCriticalSection(&cs);
     }
-    LeaveCriticalSection(&cs);
+    if (!info->_tracked)
+      delete info;
   }
 }
 
