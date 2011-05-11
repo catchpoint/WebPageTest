@@ -68,6 +68,7 @@
         $test['bwIn'] = (int)$req_bwDown;
         $test['bwOut'] = (int)$req_bwUp;
         $test['latency'] = (int)$req_latency;
+        $test['testLatency'] = (int)$req_latency;
         $test['plr'] = trim($req_plr);
         $test['callback'] = $req_callback;
         $test['agent'] = $req_agent;
@@ -446,6 +447,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
           $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
           $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
           $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
+          $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
           $test['plr'] = $connectivity[$test['connectivity']]['plr'];
 
           if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
@@ -455,7 +457,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   // adjust the latency for any last-mile latency at the location
   if( isset($test['latency']) && $locations[$test['location']]['latency'] )
-      $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
+      $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
 
 }
     
@@ -670,6 +672,7 @@ function ValidateParameters(&$test, $locations, &$error)
                         $test['bwIn'] = (int)$connectivity[$test['connectivity']]['bwIn'] / 1000;
                         $test['bwOut'] = (int)$connectivity[$test['connectivity']]['bwOut'] / 1000;
                         $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
+                        $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['plr'] = $connectivity[$test['connectivity']]['plr'];
                         
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
@@ -679,7 +682,7 @@ function ValidateParameters(&$test, $locations, &$error)
                 
                 // adjust the latency for any last-mile latency at the location
                 if( isset($test['latency']) && $locations[$test['location']]['latency'] )
-                    $test['latency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
+                    $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
             
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
@@ -1159,7 +1162,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         {
             $testFile .= "bwIn={$test['bwIn']}\r\n";
             $testFile .= "bwOut={$test['bwOut']}\r\n";
-            $testFile .= "latency={$test['latency']}\r\n";
+            $testFile .= "latency={$test['testLatency']}\r\n";
             $testFile .= "plr={$test['plr']}\r\n";
         }
 
