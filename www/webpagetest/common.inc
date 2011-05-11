@@ -100,11 +100,14 @@ if( $id )
     
     $testPath = './' . GetTestPath($id);
     // test if the testPath exists. If not, download from the remote storage.
-    if( !is_dir($testPath) && is_file('storage/storage.inc') )
+    if( $settings['archive'] )
     {
-        logMsg("Download $testPath\n");
-        require_once('storage/storage.inc');
-        DownloadResults($id);
+        if( !is_dir($testPath) && is_file('storage/storage.ini') && is_file('storage/storage.inc') )
+        {
+            logMsg("Download $testPath\n");
+            require_once('storage/storage.inc');
+            DownloadResults($id);
+        }
     }
 
     $run = htmlspecialchars($_GET["run"]);

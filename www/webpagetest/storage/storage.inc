@@ -7,47 +7,53 @@ require_once('./lib/pclzip.lib.php');
 function StoreResults($id)
 {
     $settings = parse_ini_file('./storage/settings.ini', true);
-    $storageProvider = $settings['Storage']['provider'];
-    if( 'local' != $storageProvider ) 
+    if( $settings )
     {
-        $zfile = $id . '.zip';
-        $archive = new PclZip($zfile);
-        $testPath = './' . GetTestPath($id);
-        $v_list = $archive->create($testPath);
-        if( 0 == $v_list )
-            return -1;
         $storageProvider = $settings['Storage']['provider'];
-        $key = $settings['Storage']['access_key_id'];
-        $privateKey = $settings['Storage']['secret_access_key'];
-        $host = $settings['Storage']['host'];
-        if( 'gs' == $storageProvider )
+        if( 'local' != $storageProvider ) 
         {
-            require_once('./storage/lib/class.gs.php');
-            $storageObj = new GS($key, $privateKey, $host);
-        }
-        elseif( 's3' == $storageProvider )
-        {
-            require_once('./storage/lib/class.s3.php');
-            $storageObj = new S3($key, $privateKey, $host);
-        }
-        // Get the bucket name
-        $bucketName = $settings['Storage']['bucket_name'];
-        // Upload the test result
-        $response = $storageObj->uploadFile($bucketName, $zfile, $zfile);
-        if( $response )
-        {
-            // Record the archived state in the local copy
-            if( gz_is_file("$testPath/testinfo.json") )
+            $zfile = $id . '.zip';
+            $archive = new PclZip($zfile);
+            $testPath = './' . GetTestPath($id);
+            $v_list = $archive->create($testPath);
+            if( 0 == $v_list )
+                return -1;
+            $storageProvider = $settings['Storage']['provider'];
+            $key = $settings['Storage']['access_key_id'];
+            $privateKey = $settings['Storage']['secret_access_key'];
+            $host = $settings['Storage']['host'];
+            if( 'gs' == $storageProvider )
             {
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                if( !isset($testInfo['archived']) )
+                require_once('./storage/lib/class.gs.php');
+                $storageObj = new GS($key, $privateKey, $host);
+            }
+            elseif( 's3' == $storageProvider )
+            {
+                require_once('./storage/lib/class.s3.php');
+                $storageObj = new S3($key, $privateKey, $host);
+            }
+            if( $storageObj )
+            {
+                // Get the bucket name
+                $bucketName = $settings['Storage']['bucket_name'];
+                // Upload the test result
+                $response = $storageObj->uploadFile($bucketName, $zfile, $zfile);
+                if( $response )
                 {
-                    $testInfo['archived'] = $storageProvider;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                    // Record the archived state in the local copy
+                    if( gz_is_file("$testPath/testinfo.json") )
+                    {
+                        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                        if( !isset($testInfo['archived']) )
+                        {
+                            $testInfo['archived'] = $storageProvider;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        }
+                    }
+                    unlink($zfile);
                 }
             }
         }
-        unlink($zfile);
     }
     return 0;
 }
@@ -57,45 +63,51 @@ function StoreResults($id)
 function DownloadResults($id)
 {
     $settings = parse_ini_file('./storage/settings.ini', true);
-    $storageProvider = $settings['Storage']['provider'];
-    if( 'local' != $storageProvider )
+    if( $settings )
     {
-        $key = $settings['Storage']['access_key_id'];
-        $privateKey = $settings['Storage']['secret_access_key'];
-        $host = $settings['Storage']['host'];
-        $bucketName = $settings['Storage']['bucket_name'];
-        if( 'gs' == $storageProvider )
+        $storageProvider = $settings['Storage']['provider'];
+        if( 'local' != $storageProvider )
         {
-            require_once('./storage/lib/class.gs.php');
-            $storageObj = new GS($key, $privateKey, $host);
-        }
-        elseif( 's3' == $storageProvider )
-        {
-            require_once('./storage/lib/class.s3.php');
-            $storageObj = new S3($key, $privateKey, $host);
-        }
-        $zfile = $id . '.zip';
-        $response = $storageObj->downloadFile($bucketName, $zfile, $zfile);
-        if( $response )
-        {
-            $archive = new PclZip($zfile);
-            if( $archive->extract() == 0 )
-                return -2;
-            // Record the archived state in the local copy
-            $testPath = './' . GetTestPath($id);
-            if( gz_is_file("$testPath/testinfo.json") )
+            $key = $settings['Storage']['access_key_id'];
+            $privateKey = $settings['Storage']['secret_access_key'];
+            $host = $settings['Storage']['host'];
+            $bucketName = $settings['Storage']['bucket_name'];
+            if( 'gs' == $storageProvider )
             {
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                if( !isset($testInfo['archived']) )
+                require_once('./storage/lib/class.gs.php');
+                $storageObj = new GS($key, $privateKey, $host);
+            }
+            elseif( 's3' == $storageProvider )
+            {
+                require_once('./storage/lib/class.s3.php');
+                $storageObj = new S3($key, $privateKey, $host);
+            }
+            if( $storageObj )
+            {
+                $zfile = $id . '.zip';
+                $response = $storageObj->downloadFile($bucketName, $zfile, $zfile);
+                if( $response )
                 {
-                    $testInfo['archived'] = $storageProvider;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                }
-            }         
-            unlink($zfile);
-        } 
-        else
-            return -1;
+                    $archive = new PclZip($zfile);
+                    if( $archive->extract() == 0 )
+                        return -2;
+                    // Record the archived state in the local copy
+                    $testPath = './' . GetTestPath($id);
+                    if( gz_is_file("$testPath/testinfo.json") )
+                    {
+                        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                        if( !isset($testInfo['archived']) )
+                        {
+                            $testInfo['archived'] = $storageProvider;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        }
+                    }         
+                    unlink($zfile);
+                } 
+                else
+                    return -1;
+            }
+        }
     }
     return 0;
 }
