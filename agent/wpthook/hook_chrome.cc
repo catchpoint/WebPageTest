@@ -30,7 +30,7 @@ BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID ctx) {
 void HookChrome::InstallHooks(void) {
   return;
   if (!hooked) {
-    ATLTRACE(_T("[wpthook] - HookChrome::InstallHooks\n"));
+    WptTrace(loglevel::kFunction,_T("[wpthook] - HookChrome::InstallHooks\n"));
 
     bool dll_loaded = false;
     MODULEENTRY32 dll;
@@ -58,20 +58,21 @@ void HookChrome::InstallHooks(void) {
         hooked = true;
         // just dump all of the symbols for testing :-)
 /*        if (SymEnumSymbols(GetCurrentProcess(), mod, "*", EnumSymProc, NULL)) {
-          ATLTRACE(_T("[wpthook] - done enumerating symbols\n"));
+          WptTrace(_T("[wpthook] - done enumerating symbols\n"));
         } else {
-          ATLTRACE(_T("[wpthook] - Error enumerating symbols: 0x%08X\n"), GetLastError());
+          WptTrace(_T("[wpthook] - Error enumerating symbols: 0x%08X\n"), GetLastError());
         }
 */
 
         SymUnloadModule64(GetCurrentProcess(), mod);
       } else {
-        ATLTRACE(_T("[wpthook] - error loading symbols for chrome.dll\n"));
+        WptTrace(loglevel::kError, 
+                    _T("[wpthook] - error loading symbols for chrome.dll\n"));
       }
     } else {
-      ATLTRACE(_T("[wpthook] - Chrome.dll not loaded\n"));
+      WptTrace(loglevel::kError, _T("[wpthook] - Chrome.dll not loaded\n"));
     }
 
-    ATLTRACE(_T("[wpthook] - HookChrome::InstallHooks done\n"));
+    WptTrace(loglevel::kFunction, _T("[wpthook] - HookChrome::InstallHooks done\n"));
   }
 }

@@ -54,6 +54,7 @@ class CWsHook {
 public:
   CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state);
   virtual ~CWsHook(void);
+  void Init();
 
   // straight winsock hooks
   SOCKET	WSASocketW(int af, int type, int protocol, 

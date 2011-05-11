@@ -58,7 +58,8 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false) {
   _file_base = shared_results_file_base;
-  ATLTRACE(_T("[wpthook] - Results base file: %s"), (LPCTSTR)_file_base);
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
+            (LPCTSTR)_file_base);
 }
 
 /*-----------------------------------------------------------------------------

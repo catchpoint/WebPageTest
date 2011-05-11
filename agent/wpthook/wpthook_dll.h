@@ -28,11 +28,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#ifdef WPTDRIVER
+#define _import __declspec( dllimport )
+#else
+#define _import __declspec( dllexport )
+#endif
+
 extern "C" {
-__declspec( dllimport ) void WINAPI InstallHook(HANDLE process);
-__declspec( dllimport ) void WINAPI 
-                                SetResultsFileBase(const WCHAR * file_base);
-__declspec( dllimport ) void WINAPI SetTestTimeout(DWORD timeout);
-__declspec( dllimport ) void WINAPI SetClearedCache(bool cleared_cache);
-__declspec( dllimport ) void WINAPI SetCurrentRun(DWORD run);
+_import void WINAPI InstallHook(HANDLE process);
+_import void WINAPI SetResultsFileBase(const WCHAR * file_base);
+_import void WINAPI SetTestTimeout(DWORD timeout);
+_import void WINAPI SetClearedCache(bool cleared_cache);
+_import void WINAPI SetCurrentRun(DWORD run);
+_import void WINAPI SetDebugLevel(int level, const WCHAR * log_file);
+_import bool WINAPI WptCheckLogLevel(int level);
+_import void WINAPI WptLogMessage(const WCHAR * msg);
 }

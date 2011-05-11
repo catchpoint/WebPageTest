@@ -179,13 +179,16 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   , _dns(dns)
   , _sockets(sockets)
   , _test_state(test_state) {
-  if (!pHook)
-    pHook = this;
-
   dns_override.InitHashTable(257);
   recv_buffers.InitHashTable(257);
-
   InitializeCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CWsHook::Init() {
+  if (!pHook)
+    pHook = this;
 
   // install the code hooks
   _WSASocketW = hook.createHookByName("ws2_32.dll", "WSASocketW", 
@@ -505,7 +508,8 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
 int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject, 
                                 long lNetworkEvents) {
   int ret = SOCKET_ERROR;
-  ATLTRACE(_T("[wpthook] WSAEventSelect for socket %d\n"), s);
+  WptTrace(loglevel::kFunction, _T("[wpthook] WSAEventSelect for socket %d\n"),
+            s);
 
   if (_WSAEventSelect)
     ret = _WSAEventSelect(s, hEventObject, lNetworkEvents);
@@ -521,7 +525,8 @@ int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject,
   if (_WSAEnumNetworkEvents)
     ret = _WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
 
-  ATLTRACE(_T("[wpthook] WSAEnumNetworkEvents for socket %d\n"), s);
+  WptTrace(loglevel::kFunction, 
+            _T("[wpthook] WSAEnumNetworkEvents for socket %d\n"), s);
 
   if (!ret && lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
     _sockets.Connected(s);

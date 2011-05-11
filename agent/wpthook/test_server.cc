@@ -119,9 +119,9 @@ void TestServer::MongooseCallback(enum mg_event event,
 
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
-    ATLTRACE(_T("[wpthook] HTTP Request: %s\n"), 
+    WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri));
-    ATLTRACE(_T("[wpthook] HTTP Query String: %s\n"), 
+    WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string));
     if (strcmp(request_info->uri, "/task") == 0) {
       _chrome_hook.InstallHooks();
@@ -225,7 +225,8 @@ DWORD TestServer::ParseLoadTime(CStringA query_string) {
       CStringA value = token.Mid(split + 1).Trim();
       if (!key.CompareNoCase("load_time")) {
         load_time = atoi(value);
-        ATLTRACE(_T("[wptdriver] Page load time from extension: %dms"), 
+        WptTrace(loglevel::kFrequentEvent, 
+                _T("[wptdriver] Page load time from extension: %dms"), 
                 load_time);
       }
     }

@@ -55,6 +55,7 @@ class CGDIHook {
 public:
   CGDIHook(TestState& test_state);
   ~CGDIHook(void);
+  void Init();
   
   BOOL	BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, 
                                                             int y1, DWORD rop);

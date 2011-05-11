@@ -63,7 +63,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   _end.QuadPart = 0;
   InitializeCriticalSection(&cs);
 
-  ATLTRACE(_T("[wpthook] - new request on socket %d\n"), socket_id);
+  WptTrace(loglevel::kFunction, _T("[wpthook] - new request on socket %d\n"), 
+            socket_id);
 }
 
 
@@ -83,7 +84,8 @@ Request::~Request(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::DataIn(const char * data, unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - Request::DataIn() - %d bytes\n"), data_len);
+  WptTrace(loglevel::kFunction, 
+            _T("[wpthook] - Request::DataIn() - %d bytes\n"), data_len);
 
   EnterCriticalSection(&cs);
   if (_active) {
@@ -106,7 +108,8 @@ void Request::DataIn(const char * data, unsigned long data_len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::DataOut(const char * data, unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - Request::DataOut() - %d bytes\n"), data_len);
+  WptTrace(loglevel::kFunction, 
+                _T("[wpthook] - Request::DataOut() - %d bytes\n"), data_len);
   
   EnterCriticalSection(&cs);
   if (_active) {
@@ -125,7 +128,7 @@ void Request::DataOut(const char * data, unsigned long data_len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::SocketClosed() {
-  ATLTRACE(_T("[wpthook] - Request::SocketClosed()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SocketClosed()\n"));
 
   EnterCriticalSection(&cs);
   if (_active) {

@@ -67,15 +67,16 @@ BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
 -----------------------------------------------------------------------------*/
 CGDIHook::CGDIHook(TestState& test_state):
   _test_state(test_state) {
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CGDIHook::Init() {
   if (!pHook)
     pHook = this;
 
-  ATLTRACE2(_T("[wpthook] CGDIHook::CGDIHook\n"));
-
   _BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
   _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
-
-  ATLTRACE2(_T("[wpthook] CGDIHook::CGDIHook Complete\n"));
 }
 
 /*-----------------------------------------------------------------------------

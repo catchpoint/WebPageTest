@@ -71,7 +71,8 @@ void TrackSockets::Close(SOCKET s) {
 -----------------------------------------------------------------------------*/
 void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
                             int namelen) {
-  ATLTRACE(_T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
+  WptTrace(loglevel::kFunction, 
+            _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
   // we only care about IP sockets at this point
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET)
@@ -94,7 +95,8 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::Connected(SOCKET s) {
-  ATLTRACE(_T("[wpthook] - TrackSockets::Connected(%d)\n"), s);
+  WptTrace(loglevel::kFunction, 
+            _T("[wpthook] - TrackSockets::Connected(%d)\n"), s);
 
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;

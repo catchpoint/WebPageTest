@@ -67,6 +67,47 @@ WptHook::~WptHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+static unsigned __stdcall ThreadProc( void* arg ) {
+  WptHook * wpthook = (WptHook *)arg;
+  if( wpthook )
+    wpthook->BackgroundThread();
+    
+  return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::Init(){
+  WptTrace(loglevel::kProcess, _T("[wpthook] Init()\n"));
+
+  _winsock_hook.Init();
+  _gdi_hook.Init();
+  _test_state.Init();
+  _test.LoadFromFile();
+
+/*
+  // prepare the symbol server and debughelp options
+  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
+                SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
+                SYMOPT_NO_PROMPTS);
+  char symcache[MAX_PATH] = {'\0'};
+  char sympath[1024];
+  GetModuleFileNameA(global_dll_handle, symcache, _countof(symcache));
+  lstrcpyA(PathFindFileNameA(symcache), "symbols");
+  CreateDirectoryA(symcache, NULL);
+  wsprintfA(sympath,"SRV*%s*"
+    "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
+    symcache);
+  SymInitialize(GetCurrentProcess(), sympath, FALSE);
+
+  // install the hooks that depend on debug symbols
+  _chrome_hook.InstallHooks();
+*/
+  _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptHook::Start() {
   _test_state.Start();
   SetTimer(_message_window, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
@@ -113,41 +154,6 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 }
 
 /*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-static unsigned __stdcall ThreadProc( void* arg ) {
-  WptHook * wpthook = (WptHook *)arg;
-  if( wpthook )
-    wpthook->BackgroundThread();
-    
-  return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WptHook::Init(){
-  ATLTRACE2(_T("[wpthook] Init()\n"));
-
-  // prepare the symbol server and debughelp options
-  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
-                SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
-                SYMOPT_NO_PROMPTS);
-  char symcache[MAX_PATH] = {'\0'};
-  char sympath[1024];
-  GetModuleFileNameA(global_dll_handle, symcache, _countof(symcache));
-  lstrcpyA(PathFindFileNameA(symcache), "symbols");
-  CreateDirectoryA(symcache, NULL);
-  wsprintfA(sympath,"SRV*%s*"
-    "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
-    symcache);
-  SymInitialize(GetCurrentProcess(), sympath, FALSE);
-
-  // install the hooks that depend on debug symbols
-  _chrome_hook.InstallHooks();
-
-  _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
-}
-
-/*-----------------------------------------------------------------------------
   WndProc for the messaging window
 -----------------------------------------------------------------------------*/
 static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg, 
@@ -164,9 +170,8 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::BackgroundThread() {
-  ATLTRACE2(_T("[wpthook] BackgroundThread()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
 
-  _test.LoadFromFile();
   _test_server.Start();
 
   // create a hidden window for processing messages from wptdriver

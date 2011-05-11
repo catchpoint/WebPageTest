@@ -28,9 +28,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+namespace loglevel {
+  const int kError = 1;
+  const int kWarning = 2;
+  const int kProcess = 3;
+  const int kRareEvent = 4;
+  const int kFrequentEvent = 7;
+  const int kFunction = 8;
+  const int kTrace = 9;
+};
+
 // Utility routines shared by all of the code
 
 bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL);
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
                           HWND& document_window);
+void WptTrace(int level, LPCTSTR format, ...);

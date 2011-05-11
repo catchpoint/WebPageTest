@@ -36,7 +36,7 @@ WptSettings::WptSettings(void):
   _timeout(DEFAULT_TEST_TIMEOUT)
   ,_startup_delay(DEFAULT_STARTUP_DELAY)
   ,_polling_delay(DEFAULT_POLLING_DELAY)
-  ,_debug(false) {
+  ,_debug(0) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -52,9 +52,13 @@ bool WptSettings::Load(void) {
 
   TCHAR buff[1024];
   TCHAR iniFile[MAX_PATH];
+  TCHAR logFile[MAX_PATH];
   iniFile[0] = 0;
   GetModuleFileName(NULL, iniFile, _countof(iniFile));
   lstrcpy( PathFindFileName(iniFile), _T("wptdriver.ini") );
+  lstrcpy(logFile, iniFile);
+  lstrcpy( PathFindFileName(logFile), _T("wpt.log") );
+  DeleteFile(logFile);
 
   // Load the server settings (WebPagetest Web Server)
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Url"), _T(""), buff, 
@@ -77,9 +81,12 @@ bool WptSettings::Load(void) {
   if (_server.GetLength() && _location.GetLength())
     ret = true;
 
-  if (GetPrivateProfileInt(_T("WebPagetest"), _T("Debug"), 0, iniFile)) {
-    _debug = true;
-  }
+  #ifdef DEBUG
+  _debug = 9;
+  #else
+  _debug = GetPrivateProfileInt(_T("WebPagetest"), _T("Debug"),_debug,iniFile);
+  #endif
+  SetDebugLevel(_debug, logFile);
 
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"),_timeout, iniFile);

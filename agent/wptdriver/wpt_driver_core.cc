@@ -177,6 +177,8 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
 bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   bool ret = false;
 
+  WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
+
   test.SetFileBase();
   if (test._clear_cache)
     browser.ClearCache();
@@ -189,6 +191,9 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     _winpcap.StopCapture();
   KillBrowsers();
   _webpagetest.UploadIncrementalResults(test);
+
+  WptTrace(loglevel::kFunction, 
+            _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
 
   return ret;
 }
@@ -405,7 +410,8 @@ bool WptDriverCore::ExtractZipFile(CString file) {
 void WptDriverCore::DownloadSymbols(CString directory) {
   _status.Set(_T("Downloading debug symbols..."));
 
-  ATLTRACE(_T("[wptdriver] - Downloading debug symbols in %s\n"), 
+  WptTrace(loglevel::kFunction, 
+            _T("[wptdriver] - Downloading debug symbols in %s\n"), 
               (LPCTSTR)directory);
   WIN32_FIND_DATA fd;
   HANDLE find = FindFirstFile(directory + _T("\\*.*"), &fd);
@@ -416,7 +422,8 @@ void WptDriverCore::DownloadSymbols(CString directory) {
             lstrcmp(fd.cFileName, _T("..")) )
           DownloadSymbols(directory + CString(_T("\\")) + fd.cFileName);
       } else if (!lstrcmpi(fd.cFileName, _T("chrome.dll"))) {
-        ATLTRACE(_T("[wptdriver] - Downloading debug symbols for %s\n"), 
+        WptTrace(loglevel::kFunction, 
+                  _T("[wptdriver] - Downloading debug symbols for %s\n"), 
                   fd.cFileName);
         CStringA dll_path = CT2A(directory + CString(_T("\\")) + fd.cFileName);
         DWORD64 mod = SymLoadModuleEx(GetCurrentProcess(), NULL, dll_path, 

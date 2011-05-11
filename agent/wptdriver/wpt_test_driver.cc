@@ -40,15 +40,13 @@ bool WptTestDriver::Start() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTestDriver::Load(CString& test) {
-  ATLTRACE(_T("[wptdriver] - WptTestDriver::Load\n"));
+  WptTrace(loglevel::kFunction, _T("[wptdriver] - WptTestDriver::Load\n"));
   bool ret = WptTest::Load(test);
 
   if (_directory.GetLength() )
     DeleteDirectory(_directory, false);
 
   if (ret) {
-    ATLTRACE(_T("[wptdriver] - WptTestDriver::Load writing to %s\n"), 
-              (LPCTSTR)_test_file);
     HANDLE file = CreateFile(_test_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
                               0, 0);
     if (file != INVALID_HANDLE_VALUE) {

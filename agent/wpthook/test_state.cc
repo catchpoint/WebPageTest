@@ -62,7 +62,6 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
-  Reset(false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -70,6 +69,12 @@ TestState::TestState(int test_timeout, bool end_on_load, Results& results,
 TestState::~TestState(void) {
   Done(true);
   DeleteCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::Init() {
+  Reset(false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -137,7 +142,7 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
-  ATLTRACE2(_T("[wpthook] TestState::Start()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
   Reset();
   QueryPerformanceCounter(&_step_start);
   if (!_start.QuadPart)
@@ -180,7 +185,7 @@ void TestState::ActivityDetected() {
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigate() {
   if (_active) {
-    ATLTRACE2(_T("[wpthook] TestState::OnNavigate()\n"));
+    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
     FindBrowserWindow();
     GrabVideoFrame(true);
     _on_load.QuadPart = 0;
@@ -195,13 +200,15 @@ void TestState::OnNavigate() {
 -----------------------------------------------------------------------------*/
 void TestState::OnLoad(DWORD load_time) {
   if (_active) {
-    ATLTRACE2(_T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
+    WptTrace(loglevel::kFunction, 
+              _T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
     if (load_time) {
-      ATLTRACE(_T("[wpthook] - _on_load calculated based on load_time\n"));
+      WptTrace(loglevel::kFrequentEvent, 
+              _T("[wpthook] - _on_load calculated based on load_time\n"));
       _on_load.QuadPart = _step_start.QuadPart + 
                           (_ms_frequency.QuadPart * load_time);
     } else {
-      ATLTRACE(_T("[wpthook] - _on_load recorded\n"));
+      WptTrace(loglevel::kFrequentEvent,_T("[wpthook] - _on_load recorded\n"));
       QueryPerformanceCounter(&_on_load);
       _screen_capture.Capture(_document_window, 
                                     CapturedImage::DOCUMENT_COMPLETE);
@@ -235,7 +242,8 @@ bool TestState::IsDone() {
       elapsed_activity = (DWORD)((now.QuadPart - _last_activity.QuadPart)
                                   / _ms_frequency.QuadPart);
 
-    ATLTRACE(_T("[wpthook] - TestState::IsDone() test: %d ms, ") 
+    WptTrace(loglevel::kFunction, 
+              _T("[wpthook] - TestState::IsDone() test: %d ms, ") 
               _T("doc: %d ms, activity: %d ms\n"), elapsed_test, elapsed_doc,
               elapsed_activity);
 
@@ -266,7 +274,7 @@ bool TestState::IsDone() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Done(bool force) {
-  ATLTRACE(_T("[wpthook] - **** TestState::Done()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
@@ -299,8 +307,9 @@ void TestState::FindBrowserWindow(void) {
   DWORD browser_process_id = GetCurrentProcessId();
   if (::FindBrowserWindow(browser_process_id, _frame_window, 
                           _document_window)) {
-    ATLTRACE(_T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                    _frame_window, _document_window);
+    WptTrace(loglevel::kFunction, 
+              _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
+              _frame_window, _document_window);
     if (!_document_window)
       _document_window = _frame_window;
   }

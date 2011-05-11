@@ -67,6 +67,7 @@ public:
   void RenderCheckThread();
   void CollectData();
   void Reset(bool cascade = true);
+  void Init();
 
   // times
   LARGE_INTEGER _start;

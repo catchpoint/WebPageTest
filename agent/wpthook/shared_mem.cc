@@ -28,26 +28,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "stdafx.h"
 #include "shared_mem.h"
+#include "wpthook_dll.h"
 
 #pragma once
 #pragma data_seg (".shared")
-HHOOK	shared_hook_handle = 0;
-WCHAR  shared_results_file_base[MAX_PATH] = {NULL};
-DWORD  shared_test_timeout = 120000;
-bool   shared_test_force_on_load = false;
-bool   shared_cleared_cache = false;
-DWORD  shared_current_run = 0;
+HHOOK shared_hook_handle = 0;
+WCHAR shared_results_file_base[MAX_PATH] = {NULL};
+DWORD shared_test_timeout = 120000;
+bool  shared_test_force_on_load = false;
+bool  shared_cleared_cache = false;
+DWORD shared_current_run = 0;
+WCHAR shared_log_file[MAX_PATH] = {NULL};
+int   shared_debug_level = 0;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
-
-extern "C" {
-__declspec( dllexport ) void WINAPI SetResultsFileBase(const WCHAR* file_base);
-__declspec( dllexport ) void WINAPI SetTestTimeout(DWORD timeout);
-__declspec( dllexport ) void WINAPI SetForceDocComplete(bool force);
-__declspec( dllexport ) void WINAPI SetClearedCache(bool cleared_cache);
-__declspec( dllexport ) void WINAPI SetCurrentRun(DWORD run);
-}
 
 /*-----------------------------------------------------------------------------
   Set the base file name to use for results files
@@ -78,4 +73,25 @@ void WINAPI SetClearedCache(bool cleared_cache) {
 -----------------------------------------------------------------------------*/
 void WINAPI SetCurrentRun(DWORD run) {
   shared_current_run = run;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetDebugLevel(int level, const WCHAR * log_file) {
+  shared_debug_level = level;
+  lstrcpyW(shared_log_file, log_file);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WINAPI WptCheckLogLevel(int level) {
+  bool should_log = false;
+  if (level <= shared_debug_level)
+    should_log = true;
+  return should_log;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI WptLogMessage(const WCHAR * msg) {
 }

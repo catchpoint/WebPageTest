@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../wpthook/wpthook_dll.h"
 
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
@@ -165,4 +166,28 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window,
   }
 
   return found;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptTrace(int level, LPCTSTR format, ...) {
+  if (WptCheckLogLevel(level)) {
+	  va_list args;
+	  va_start( args, format );
+
+	  int len = _vsctprintf( format, args ) + 1;
+	  if (len) {
+		  TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
+		  if (msg) {
+			  if (_vstprintf_s( msg, len, format, args ) > 0) {
+          #ifdef DEBUG
+				  OutputDebugString(msg);
+          #endif
+          WptLogMessage(msg);
+        }
+
+			  free( msg );
+		  }
+	  }
+  }
 }

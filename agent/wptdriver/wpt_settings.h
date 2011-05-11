@@ -66,7 +66,7 @@ public:
   DWORD   _timeout;
   DWORD   _startup_delay;
   DWORD   _polling_delay;
-  bool    _debug;
+  int     _debug;
 
   // browsers
   BrowserSettings _browser_chrome;

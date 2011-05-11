@@ -95,7 +95,8 @@ void Requests::SocketClosed(DWORD socket_id) {
 -----------------------------------------------------------------------------*/
 void Requests::DataIn(DWORD socket_id, const char * data, 
                                                       unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - Requests::DataIn() %d bytes\n"), data_len);
+  WptTrace(loglevel::kFunction, 
+              _T("[wpthook] - Requests::DataIn() %d bytes\n"), data_len);
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if it maps to a known request
@@ -104,8 +105,8 @@ void Requests::DataIn(DWORD socket_id, const char * data,
     if (_active_requests.Lookup(socket_id, request) && request) {
       request->DataIn(data, data_len);
     } else {
-      ATLTRACE(_T("[wpthook] - Requests::DataIn() not associated with ")
-               _T("a known request\n"));
+      WptTrace(loglevel::kFrequentEvent, _T("[wpthook] - Requests::DataIn()")
+               _T(" not associated with a known request\n"));
     }
     LeaveCriticalSection(&cs);
   }
@@ -115,7 +116,8 @@ void Requests::DataIn(DWORD socket_id, const char * data,
 -----------------------------------------------------------------------------*/
 void Requests::DataOut(DWORD socket_id, const char * data, 
                                                       unsigned long data_len) {
-  ATLTRACE(_T("[wpthook] - Requests::DataOut() %d bytes\n"), data_len);
+  WptTrace(loglevel::kFunction, 
+            _T("[wpthook] - Requests::DataOut() %d bytes\n"), data_len);
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if we are starting a new http request
@@ -133,8 +135,9 @@ void Requests::DataOut(DWORD socket_id, const char * data,
     if (request) {
       request->DataOut(data, data_len);
     } else {
-      ATLTRACE(_T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
-               _T(" on socket %d"), socket_id);
+      WptTrace(loglevel::kFrequentEvent, 
+                _T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
+                _T(" on socket %d"), socket_id);
     }
     LeaveCriticalSection(&cs);
   }
