@@ -110,6 +110,7 @@ $data = loadPageRunData($testPath, $run, $cached);
                         }
                     ?>
                 </div>
+                <div class="cleared"></div>
 		        <br>
                 <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                     <tr>

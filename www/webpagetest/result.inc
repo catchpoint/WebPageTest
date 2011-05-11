@@ -88,6 +88,7 @@ if( !$test['test']['completeTime'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>
             </div>
+            <div class="cleared"></div>
             <div id="average">
                 <?php 
                 $fvMedian = GetMedianRun($pageData, 0);
