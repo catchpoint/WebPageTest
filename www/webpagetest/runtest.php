@@ -187,47 +187,75 @@
             elseif( $test['batch'] )
             {
                 // build up the full list of urls
-                $urls = array();
-                $err;
+                $bulk = array();
+                $bulk['urls'] = array();
+                $bulk['variations'] = array();
+                $bulkUrls = '';
                 if( isset($req_bulkurls) && strlen($req_bulkurls) )
-                {
-                    $lines = explode("\n", $req_bulkurls);
-                    foreach( $lines as $line )
-                    {
-                        $line = trim($line);
-                        if( strlen($line) && ValidateURL($line, $err, $settings) )
-                            $urls[] = $line;
-                    }
-                }
-                
+                    $bulkUrls = $req_bulkurls . "\n";
                 if( isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']) )
+                    $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
+                
+                $current_mode = 'urls';
+                if( strlen($bulkUrls) )
                 {
-                    $lines = file($_FILES['bulkfile']['tmp_name'], FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                    $lines = explode("\n", $bulkUrls);
                     foreach( $lines as $line )
                     {
                         $line = trim($line);
-                        if( strlen($line) && ValidateURL($line, $err, $settings) )
-                            $urls[] = $line;
+                        if( strlen($line) )
+                        {
+                            if( substr($line, 0, 1) == '[' )
+                            {
+                                if( !strcasecmp($line, '[urls]') )
+                                    $current_mode = 'urls';
+                                elseif(!strcasecmp($line, '[variations]'))
+                                    $current_mode = 'variations';
+                                else
+                                    $current_mode = '';
+                            }
+                            elseif( $current_mode == 'urls' )
+                            {
+                                $entry = ParseBulkUrl($line);
+                                if( $entry )
+                                    $bulk['urls'][] = $entry;
+                            }
+                            elseif( $current_mode == 'variations' )
+                            {
+                                $entry = ParseBulkVariation($line);
+                                if( $entry )
+                                    $bulk['variations'][] = $entry;
+                            }
+                        }
                     }
                 }
                 
-                if( count($urls) )
+                if( count($bulk['urls']) )
                 {
                     $test['id'] = CreateTest($test, $test['url'], 1);
                     
-                    $test['tests'] = array();
-                    foreach( $urls as $url )
+                    $testCount = 0;
+                    foreach( $bulk['urls'] as &$entry )
                     {
-                        $id = CreateTest($test, $url);
-                        if( isset($id) )
-                            $test['tests'][] = array('url' => $url, 'id' => $id);
+                        $entry['id'] = CreateTest($test, $entry['u']);
+                        if( $entry['id'] )
+                        {
+                            $entry['v'] = array();
+                            foreach( $bulk['variations'] as $variation_index => &$variation )
+                            {
+                                $url = CreateUrlVariation($entry['u'], $variation['q']);
+                                if( $url )
+                                    $entry['v'][$variation_index] = CreateTest($test, $url);
+                            }
+                            $testCount++;
+                        }
                     }
                     
                     // write out the list of urls and the test ID for each
-                    if( count($test['tests']) )
+                    if( $testCount )
                     {
                         $path = GetTestPath($test['id']);
-                        file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                        gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
                     }
                     else
                         $error = 'Urls could not be submitted for testing';
@@ -1200,5 +1228,65 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     }
 
     return $testId;
+}
+
+/**
+* Parse an URL from bulk input which can optionally have a label
+* <url>
+* or
+* <label>=<url>
+* 
+* @param mixed $line
+*/
+function ParseBulkUrl($line)
+{
+    $entry = null;
+    global $settings;
+    $err;
+    
+    $equals = strpos($line, '=');
+    $query = strpos($line, '?');
+    $label = null;
+    $url = null;
+    if( $equals === false || ($query !== false && $equals < $query) )
+        $url = $line;
+    else
+    {
+        $label = trim(substr($line, 0, $equals));
+        $url = trim(substr($line, $equals + 1));
+    }
+    
+    if( $url && ValidateURL($url, $err, $settings) )
+    {
+        $entry = array();
+        $entry['u'] = $url;
+        if( $label )
+            $entry['l'] = $label;
+    }
+    
+    return $entry;
+}
+
+/**
+* Parse the url variation from the bulk data
+* in the format:
+* <label>=<query param>
+* 
+* @param mixed $line
+*/
+function ParseBulkVariation($line)
+{
+    $entry = null;
+    $equals = strpos($line, '=');
+
+    if( $equals !== false )
+    {
+        $label = trim(substr($line, 0, $equals));
+        $query = trim(substr($line, $equals + 1));
+        if( strlen($label) && strlen($query) )
+            $entry = array('l' => $label, 'q' => $query);
+    }
+
+    return $entry;
 }
 ?>

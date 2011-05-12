@@ -950,6 +950,7 @@ function GetTestInfoHtml($includeScript = true)
     global $dom;
     global $login;
     global $settings;
+    global $admin;
     $html = '';
     if( $dom ) 
         $html .= 'DOM Element: <b>' . $dom . '</b><br>';
@@ -968,7 +969,7 @@ function GetTestInfoHtml($includeScript = true)
     }
     if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
     {
-        if ($includeScript && ($settings['show_script_in_results'] || $isOwner))
+        if ($includeScript && ($settings['show_script_in_results'] || $isOwner || $admin))
         {
             $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
             $html .= '<div id="script_in_results-container" class="hidden">';
@@ -979,5 +980,27 @@ function GetTestInfoHtml($includeScript = true)
             $html .= '<b>Scripted test</b><br>';
     }
     return $html;
+}
+
+/**
+* Append the provided query param onto the provided url (handeling ? vs &)
+* 
+* @param mixed $entry
+*/
+function CreateUrlVariation($url, $query)
+{
+    $newUrl = null;
+    $url = trim($url);
+    $query = trim($query);
+    if( strlen($url) && strlen($query) )
+    {
+        $newUrl = $url;
+        if( strpos($url, '?') === false )
+            $newUrl .= '?';
+        else
+            $newUrl .= '&';
+        $newUrl .= $query;
+    }
+    return $newUrl;
 }
 ?>
