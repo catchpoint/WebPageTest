@@ -1694,6 +1694,9 @@ void CurlBlastDlg::GetEC2Config()
 
 	if( !instance.IsEmpty() )
 		urlManager.SetHttpEC2Instance(instance);
+
+  // force EC2 to use the current OS user account
+  useCurrentAccount = 1;
 }
 
 /*-----------------------------------------------------------------------------
