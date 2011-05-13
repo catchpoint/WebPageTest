@@ -46,7 +46,10 @@
                     $all_tests_completed = DisplayTests($tests);
 
                 if ($all_tests_completed)
+                {
                     echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                    echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Aggregate Statistics</a>";
+                }
                 else
                 {
                     echo "<br>Tests are not yet complete. Please <a href=\"javascript:location.reload(true)\">refresh</a> this page later to check on the status.";

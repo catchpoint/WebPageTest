@@ -303,4 +303,70 @@ function GetMedianRun(&$pageData, $cached)
     
     return $run;
 }
+
+/**
+* Count the number of tests with successful results
+* 
+* @param mixed $pageData
+* @param mixed $cached
+*/
+function CountSuccessfulTests(&$pageData, $cached)
+{
+    $count = 0;
+    foreach( $pageData as &$run )
+    {
+        if( $run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999 )
+            $count++;
+    }
+    
+    return $count;
+}
+
+/**
+* Calculate some stats for the given metric from the page data
+* 
+* @param mixed $pageData
+* @param mixed $cached
+* @param mixed $metric
+* @param mixed $median
+* @param mixed $avg
+* @param mixed $stdDev
+*/
+function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, &$stdDev)
+{
+    $median = null;
+    $avg = null;
+    $stdDev = null;
+    $count = 0;
+    
+    // first pass, calculate the average and array of values for grabbing the median
+    $values = array();
+    $sum = 0;
+    foreach( $pageData as &$run )
+    {
+        if( ($run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999) && isset($run[$cached][$metric]) )
+        {
+            $values[] = $run[$cached][$metric];
+            $sum += $run[$cached][$metric];
+            $count++;
+        }
+    }
+    
+    if( $count )
+    {
+        $avg = $sum / $count;
+        sort($values, SORT_NUMERIC);
+        $medianIndex = (int)($count / 2);
+        $median = $values[$medianIndex];
+        
+        // pass 2, calculate the standard deviation
+        $sum = 0;
+        foreach($values as $value){
+            $sum += pow($value - $avg, 2);
+        }
+        $stdDev = sqrt($sum / $count);
+    }
+    
+    return $count;
+}
 ?>
