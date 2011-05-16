@@ -292,6 +292,12 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								info.host = value;
 							else if( !key.CompareNoCase(_T("Browser")) )
 								info.browser = value;
+							else if( !key.CompareNoCase(_T("noopt")) && _ttol(value) )
+                info.checkOpt = 0;
+							else if( !key.CompareNoCase(_T("noimages")) )
+                info.noImages = _ttol(value);
+							else if( !key.CompareNoCase(_T("noheaders")) )
+                info.noHeaders = _ttol(value);
 						}
 					}
 

@@ -209,7 +209,9 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
 
         $tabs['Content Breakdown'] = "/result/$id/$run/breakdown/$cTxt";
         $tabs['Domains'] = "/result/$id/$run/domains/$cTxt";
-        $tabs['Screen Shot'] = "/result/$id/$run/screen_shot/$cTxt";
+        
+        if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+            $tabs['Screen Shot'] = "/result/$id/$run/screen_shot/$cTxt";
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
         foreach( $tabs as $tabName => $tabUrl )

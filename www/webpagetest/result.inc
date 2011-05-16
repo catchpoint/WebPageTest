@@ -225,11 +225,11 @@ if( !$test['test']['completeTime'] )
                     <?php
                     if($pageData[$run][0]['optimization_checked'])
                         echo '<th align="center" valign="middle">Optimization Checklist</th>';
+                    if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+                        echo '<th align="center" valign="middle">Screen Shot</th>';
+                    if($video)
+                        echo '<th align="center" valign="middle">Video</th>';
                     ?>
-                    <th align="center" valign="middle">Screen Shot</th>
-                    <?php if($video) { ?>
-                    <th align="center" valign="middle">Video</th>
-                    <?php } ?>
                 </tr>
                 <tr>
                     <td align="left" valign="middle">First View<?php 
@@ -249,11 +249,11 @@ if( !$test['test']['completeTime'] )
                     <?php
                     if($pageData[$run][0]['optimization_checked'])
                         echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_optimization_thumb.png\"></a></td>\n";
-                    ?>
-                    <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/screen_shot/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_screen_thumb.jpg"></a></td>
-                    <?php if($video) { ?>
-                    <td align="center" valign="middle">
-                        <?php
+                    if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
+                    if($video) 
+                    {
+                        echo '<td align="center" valign="middle">';
                         if( is_dir("$testPath/video_$run") )
                         {
                             echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:0\">Filmstrip View</a><br>-<br>";
@@ -262,9 +262,9 @@ if( !$test['test']['completeTime'] )
                         }
                         else
                             echo "not available";
-                        ?>
-                    </td>
-                    <?php } ?>
+                        echo '</td>';
+                    }
+                    ?>
                 </tr>
 
                 <?php if( isset($pageData[$run][1]) ) { ?>
@@ -281,16 +281,16 @@ if( !$test['test']['completeTime'] )
                         }
                         if( gz_is_file("$testPath/{$run}_Cached.cap") )
                             echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
-                    ?></td>
-                    <td align="center" class="even" valign="middle"><a href="/result/<?php echo "$id/$run/details/cached/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_Cached_waterfall_thumb.png"></a></td>
-                    <?php
+                    echo '</td>';
+                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_waterfall_thumb.png></a></td>";
+
                     if($pageData[$run][0]['optimization_checked'])
                         echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_optimization_thumb.png\"></a></td>\n";
-                    ?>
-                    <td align="center" class="even" valign="middle"><a href="/result/<?php echo "$id/$run/screen_shot/cached/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_Cached_screen_thumb.jpg"></a></td>
-                    <?php if($video) { ?>
-                    <td align="center" valign="middle">
-                        <?php
+                    if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
+                    if($video) 
+                    {
+                        echo '<td align="center" valign="middle">';
                         if( is_dir("$testPath/video_{$run}_cached") )
                         {
                             echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:1\">Filmstrip View</a><br>-<br>";
@@ -298,9 +298,9 @@ if( !$test['test']['completeTime'] )
                         }
                         else
                             echo "not available";
-                        ?>
-                    </td>
-                    <?php } ?>
+                        echo '</td>';
+                    } 
+                    ?>
                 </tr>
                 <?php } ?>
                 
@@ -308,9 +308,13 @@ if( !$test['test']['completeTime'] )
                 <tr>
                     <td align="left" valign="middle">Content Breakdown</td>
                     <?php
-                    $span = 3;
+                    $span = 2;
+                    if($pageData[$run][0]['optimization_checked'])
+                        $span++;
+                    if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+                        $span++;
                     if( $video )
-                        $span = 4;
+                        $span++;
                     echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
                     ?>
                         <a href="/result/<?php echo "$id/$run/breakdown/"; ?>">

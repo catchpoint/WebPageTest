@@ -69,6 +69,8 @@ CPagetestReporting::CPagetestReporting(void):
 	, captureVideo(0)
 	, screenShotErrors(0)
 	, checkOpt(1)
+  , noHeaders(0)
+  , noImages(0)
 	, totalFlagged(0)
 	, maxSimFlagged(0)
 	, flaggedRequests(0)
@@ -308,31 +310,38 @@ void CPagetestReporting::FlushResults(void)
 						ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Images\n"));
 							
 						// write out the screen shot
-            CxImage image;
-            if( screenCapture.GetImage(CapturedImage::FULLY_LOADED, image) )
-						  SaveProgressImage(image, logFile+step+_T("_screen.jpg"), false);
-						
-						// save out the other screen shots we have gathered
-            if( screenCapture.GetImage(CapturedImage::START_RENDER, image) )
-						  SaveProgressImage(image, logFile+step+_T("_screen_render.jpg"));
-            if( screenCapture.GetImage(CapturedImage::DOM_ELEMENT, image) )
-						  SaveProgressImage(image, logFile+step+_T("_screen_dom.jpg"));
-            if( screenCapture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image) )
-						  SaveProgressImage(image, logFile+step+_T("_screen_doc.jpg"));
+            if( !noImages )
+            {
+              CxImage image;
+              if( screenCapture.GetImage(CapturedImage::FULLY_LOADED, image) )
+						    SaveProgressImage(image, logFile+step+_T("_screen.jpg"), false);
+  						
+						  // save out the other screen shots we have gathered
+              if( screenCapture.GetImage(CapturedImage::START_RENDER, image) )
+						    SaveProgressImage(image, logFile+step+_T("_screen_render.jpg"));
+              if( screenCapture.GetImage(CapturedImage::DOM_ELEMENT, image) )
+						    SaveProgressImage(image, logFile+step+_T("_screen_dom.jpg"));
+              if( screenCapture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image) )
+						    SaveProgressImage(image, logFile+step+_T("_screen_doc.jpg"));
+            }
 
 						ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Reports\n"));
 						
 						// save the report
-						HANDLE hFile = CreateFile(logFile+step+_T("_report.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
-						if( hFile != INVALID_HANDLE_VALUE )
-						{
-							CString szReport;
-							GenerateReport(szReport);
-							DWORD written;
-							CT2A str((LPCTSTR)szReport);
-							WriteFile(hFile, (LPCSTR)str, szReport.GetLength(), &written, 0);
-							CloseHandle(hFile);
-						}
+            HANDLE hFile = INVALID_HANDLE_VALUE;
+            if( !noHeaders )
+            {
+						  hFile = CreateFile(logFile+step+_T("_report.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
+						  if( hFile != INVALID_HANDLE_VALUE )
+						  {
+							  CString szReport;
+							  GenerateReport(szReport);
+							  DWORD written;
+							  CT2A str((LPCTSTR)szReport);
+							  WriteFile(hFile, (LPCSTR)str, szReport.GetLength(), &written, 0);
+							  CloseHandle(hFile);
+						  }
+            }
 						
 						// save the page speed report
 						hFile = CreateFile(logFile+step+_T("_pagespeed.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);

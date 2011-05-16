@@ -84,6 +84,9 @@
         $test['tcpdump'] = $req_tcpdump;
         $test['sensitive'] = $req_sensitive;
         $test['type'] = trim($req_type);
+        $test['noopt'] = trim($req_noopt);
+        $test['noimages'] = trim($req_noimages);
+        $test['noheaders'] = trim($req_noheaders);
         
         // see if it is a batch test
         $test['batch'] = 0;
@@ -1190,6 +1193,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "\r\nblock={$test['block']}";
             file_put_contents("{$test['path']}/block.txt",  $test['block']);
         }
+        if( $test['noopt'] )
+            $testFile .= "\r\nnoopt=1";
+        if( $test['noimages'] )
+            $testFile .= "\r\nnoimages=1";
+        if( $test['noheaders'] )
+            $testFile .= "\r\nnoheaders=1";
         $testFile .= "\r\nruns={$test['runs']}\r\n";
         
         if( isset($test['connectivity']) )

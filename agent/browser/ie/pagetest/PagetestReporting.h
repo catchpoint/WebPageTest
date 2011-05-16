@@ -131,6 +131,8 @@ public:
 	DWORD			saveEverything;	// Do we save out a waterfall image, reports and everything we have?
 	DWORD			captureVideo;	// do we save out the images necessary to construct a video?
 	DWORD			checkOpt;		// Do we run the optimization checks?
+  DWORD     noHeaders;
+  DWORD     noImages;
 	CString			somEventName;	// name for the current web test
 	MIB_TCPSTATS	tcpStatsStart;	// TCP stats at the start of the document
 	MIB_TCPSTATS	tcpStats;		// TCP stats calculated

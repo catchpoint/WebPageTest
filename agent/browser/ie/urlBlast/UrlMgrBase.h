@@ -40,6 +40,9 @@ public:
     aftEarlyCutoff = 25;
     tcpdumpFile.Empty();
     testType.Empty();
+    noOpt = 0;
+    noImages = 0;
+    noHeaders = 0;
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -68,6 +71,9 @@ public:
 	CString	host;				      // custom host header
   CString browser;          // custom browser?
   CString testType;         // custom test type? (traceroute)
+  DWORD noOpt;              // disable optimization checks?
+  DWORD noImages;           // disable screen shots
+  DWORD noHeaders;          // disable storing the full headers
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out
