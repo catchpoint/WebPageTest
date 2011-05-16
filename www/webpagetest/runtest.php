@@ -65,8 +65,14 @@
         $test['uid'] = $req_uid;
         $test['user'] = $req_user;
         $test['priority'] = (int)$req_priority;
-        $test['bwIn'] = (int)$req_bwDown;
-        $test['bwOut'] = (int)$req_bwUp;
+        if( isset($req_bwIn) && !isset($req_bwDown) )
+            $test['bwIn'] = (int)$req_bwIn;
+        else
+            $test['bwIn'] = (int)$req_bwDown;
+        if( isset($req_bwOut) && !isset($req_bwUp) )
+            $test['bwOut'] = (int)$req_bwOut;
+        else
+            $test['bwOut'] = (int)$req_bwUp;
         $test['latency'] = (int)$req_latency;
         $test['testLatency'] = (int)$req_latency;
         $test['plr'] = trim($req_plr);
