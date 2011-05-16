@@ -375,7 +375,8 @@ void CPagetestReporting::FlushResults(void)
 
 						// save out the status updates
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
-						SaveStatusUpdates(logFile+step+_T("_status.txt"));
+            if( !noHeaders )
+						  SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
             if( aft )
               msAFT = CalculateAFT();
@@ -387,28 +388,31 @@ void CPagetestReporting::FlushResults(void)
             }
 
             // save out the progress data
-						EnterCriticalSection(&csBackground);
-						CStringA progress;
-						POSITION pos = progressData.GetHeadPosition();
-						while( pos )
-						{
-							if( progress.IsEmpty() )
-								progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
+            if( !noHeaders )
+            {
+						  EnterCriticalSection(&csBackground);
+						  CStringA progress;
+						  POSITION pos = progressData.GetHeadPosition();
+						  while( pos )
+						  {
+							  if( progress.IsEmpty() )
+								  progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
 
-							CProgressData data = progressData.GetNext(pos);
-              DWORD ms = data.sampleTime < start ? 0 : (DWORD)((data.sampleTime - start)/msFreq);
-							CStringA buff;
-							buff.Format("%d,%d,%0.2f,%d\r\n", ms, data.bpsIn, data.cpu, data.mem );
-							progress += buff;
-						}
-						LeaveCriticalSection(&csBackground);
-						hFile = CreateFile(logFile+step+_T("_progress.csv"), GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
-						if( hFile != INVALID_HANDLE_VALUE )
-						{
-							DWORD dwBytes;
-							WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
-							CloseHandle(hFile);
-						}
+							  CProgressData data = progressData.GetNext(pos);
+                DWORD ms = data.sampleTime < start ? 0 : (DWORD)((data.sampleTime - start)/msFreq);
+							  CStringA buff;
+							  buff.Format("%d,%d,%0.2f,%d\r\n", ms, data.bpsIn, data.cpu, data.mem );
+							  progress += buff;
+						  }
+						  LeaveCriticalSection(&csBackground);
+						  hFile = CreateFile(logFile+step+_T("_progress.csv"), GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
+						  if( hFile != INVALID_HANDLE_VALUE )
+						  {
+							  DWORD dwBytes;
+							  WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
+							  CloseHandle(hFile);
+						  }
+            }
           }
 
           // delete the image data
