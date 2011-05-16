@@ -143,12 +143,16 @@ function LoadTestData()
     foreach( $tests as &$test )
     {
         $testPath = GetTestPath($test['id']);
-        $test['url'] = htmlspecialchars(gz_file_get_contents("./$testPath/url.txt"));
+        $pageData = loadAllPageData($testPath);
+        $test['url'] = trim($pageData[1][0]['URL']);
         
         if( strlen($test['label']) )
             $test['name'] = $test['label'];
         else
-            $test['name'] = htmlspecialchars(gz_file_get_contents("./$testPath/label.txt"));
+        {
+            $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
+            $test['name'] = trim($testInfo['label']);
+        }
         if( !strlen($test['name']) )
         {
             $test['name'] = $test['url'];

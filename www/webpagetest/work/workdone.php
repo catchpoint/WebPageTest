@@ -230,9 +230,8 @@ function notify( $mailto, $from,  $id, $testPath, $host )
     $headers .= "From: $from\r\n";
     $headers .= "Reply-To: $from";
     
-    $url;
-    if( gz_is_file("$testPath/url.txt") )
-        $url = htmlspecialchars(gz_file_get_contents("$testPath/url.txt"));
+    $pageData = loadAllPageData($testPath);
+    $url = trim($pageData[1][0]['URL']);
     $shorturl = substr($url, 0, 40);
     if( strlen($url) > 40 )
         $shorturl .= '...';

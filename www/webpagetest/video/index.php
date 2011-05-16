@@ -40,8 +40,10 @@ $run=$_GET['run'];
                             if( $tid )
                             {
                                 $testPath = './' . GetTestPath($tid);
-                                $url = htmlspecialchars(gz_file_get_contents("$testPath/url.txt"));
-                                $label = htmlspecialchars(gz_file_get_contents("$testPath/label.txt"));
+                                $pageData = loadAllPageData($testPath);
+                                $url = trim($pageData[1][0]['URL']);
+                                $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
+                                $label = trim($testInfo['label']);
                                 if( strlen($url) )
                                 {
                                     echo '<div id="urldiv0" class="urldiv">';

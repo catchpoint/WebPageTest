@@ -282,7 +282,7 @@ if( !$test['test']['completeTime'] )
                         if( gz_is_file("$testPath/{$run}_Cached.cap") )
                             echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                     echo '</td>';
-                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_waterfall_thumb.png></a></td>";
+                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
 
                     if($pageData[$run][0]['optimization_checked'])
                         echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_optimization_thumb.png\"></a></td>\n";

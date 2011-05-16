@@ -1107,15 +1107,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     if( !is_dir($test['path']) )
         mkdir($test['path'], 0777, true);
     
-    // write out the url, DOM element and login
-    file_put_contents("{$test['path']}/url.txt",  $url);
-    if( strlen($test['domElement']) )
-        file_put_contents("{$test['path']}/dom.txt",  $test['domElement']);
-    if( strlen($test['login']) )
-        file_put_contents("{$test['path']}/login.txt",  $test['login']);
-    if( strlen($test['label']) )
-        file_put_contents("{$test['path']}/label.txt",  $test['label']);
-    
     // write out the ini file
     $testInfo = "[test]\r\n";
     $testInfo .= "fvonly={$test['fvonly']}\r\n";
@@ -1189,10 +1180,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if( strlen($test['type']) )
             $testFile .= "\r\ntype={$test['type']}";
         if( $test['block'] )
-        {
             $testFile .= "\r\nblock={$test['block']}";
-            file_put_contents("{$test['path']}/block.txt",  $test['block']);
-        }
         if( $test['noopt'] )
             $testFile .= "\r\nnoopt=1";
         if( $test['noimages'] )

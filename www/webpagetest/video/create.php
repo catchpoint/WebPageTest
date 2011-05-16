@@ -149,9 +149,12 @@ else
                 }
 
                 if( !strlen($test['label']) )
-                    $test['label'] = trim(gz_file_get_contents("./{$test['path']}/label.txt"));
+                {
+                    $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
+                    $test['label'] = trim($testInfo['label']);
+                }
                 if( !strlen($test['label']) )
-                    $test['label'] = trim(gz_file_get_contents("./{$test['path']}/url.txt"));
+                    $test['label'] = trim($test['pageData'][1][0]['URL']);
                 $labels[] = $test['label'];
                 
                 if( is_dir($test['videoPath']) )

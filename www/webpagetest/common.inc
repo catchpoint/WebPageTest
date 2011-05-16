@@ -135,16 +135,14 @@ if( $id )
                 $isOwner = true;
             elseif (isset($test['testinfo']['uid']) && strlen($uid) && $uid == $test['testinfo']['uid'])
                 $isOwner = true;
+            
+            $url = $test['testinfo']['url'];
+            $dom = $test['testinfo']['domElement'];
+            $login = $test['testinfo']['login'];
+            $blockString = $test['testinfo']['block'];
+            $label = $test['testinfo']['label'];
         }
     }
-    if( gz_is_file("$testPath/url.txt") )
-        $url = htmlspecialchars(gz_file_get_contents("$testPath/url.txt"));
-    if( gz_is_file("$testPath/dom.txt") )
-        $dom = htmlspecialchars(gz_file_get_contents("$testPath/dom.txt"));
-    if( gz_is_file("$testPath/login.txt") )
-        $login = htmlspecialchars(gz_file_get_contents("$testPath/login.txt"));
-    if( gz_is_file("$testPath/block.txt") )
-        $blockString = htmlspecialchars(gz_file_get_contents("$testPath/block.txt"));
 
     // build a common label to add to the title of each of the results pages
     if( isset($test["test"]) && isset($test["test"]["location"]) )
@@ -158,7 +156,6 @@ if( $id )
             $url_temp = substr($url,7);
         elseif (substr($url,0,8) == 'https://')
             $url_temp = substr($url,8);
-        $label = htmlspecialchars(gz_file_get_contents("$testPath/label.txt"));
         if ($label)
             $label = $label . " : ";
         $testLabel = FitText(' - ' . $locs . ' : ' . $label . $url_temp, 40);
