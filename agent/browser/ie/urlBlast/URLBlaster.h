@@ -97,6 +97,8 @@ protected:
 	HANDLE hDynaTrace;
   CWinPCap  winpcap;
   HANDLE testingMutex;
+  CString heartbeatEventName;
+  HANDLE  heartbeatEvent;
 	
 	// directories
 	CString	profile;

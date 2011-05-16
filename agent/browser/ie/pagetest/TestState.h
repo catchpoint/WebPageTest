@@ -64,4 +64,6 @@ protected:
 	virtual void CheckDOM(void);		// Check to see if a specific DOM element we're looking for has been loaded yet
 	void	ParseTestOptions();			// Parse the url-based test options string
   void  ClearShortTermCache(DWORD cacheTTL);
+
+  HANDLE heartbeatEvent;
 };

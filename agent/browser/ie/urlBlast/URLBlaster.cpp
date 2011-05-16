@@ -7,6 +7,7 @@
 #include <Lm.h>
 #include <WtsApi32.h>
 #include "TraceRoute.h"
+#include "log.h"
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -39,6 +40,7 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 , winpcap(logRef)
 , keepDNS(0)
 , clearShortTermCacheSecs(0)
+, heartbeatEvent(NULL)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -69,6 +71,9 @@ CURLBlaster::~CURLBlaster(void)
 
 		CloseHandle( hLogonToken );
 	}
+
+  if( heartbeatEvent )
+    CloseHandle(heartbeatEvent);
 		
 	CloseHandle( hMustExit );
 	CloseHandle( hClearedCache );
@@ -141,6 +146,18 @@ bool CURLBlaster::Start(int userIndex)
 
   // Get WinPCap ready (install it if necessary)
   winpcap.Initialize();
+
+  // create a heartbeat event that the browser plugin can fire for when scripts are running
+	SECURITY_ATTRIBUTES nullDacl;
+	ZeroMemory(&nullDacl, sizeof(nullDacl));
+	nullDacl.nLength = sizeof(nullDacl);
+	nullDacl.bInheritHandle = FALSE;
+	SECURITY_DESCRIPTOR SD;
+	if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
+		if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
+			nullDacl.lpSecurityDescriptor = &SD;
+  heartbeatEventName.Format(_T("Global\\URLBlast Heartbeat %d"), userIndex);
+  heartbeatEvent = CreateEvent(&nullDacl, FALSE, FALSE, heartbeatEventName);
 
 	// spawn the worker thread
 	ResetEvent(hMustExit);
@@ -573,6 +590,8 @@ bool CURLBlaster::LaunchBrowser(void)
 				log.Trace(_T("Launching... user='%s', path='%s', command line='%s'"), (LPCTSTR)userName, (LPCTSTR)exe, (LPCTSTR)commandLine);
 				
 				// launch internet explorer as our user
+        if( heartbeatEvent )
+          ResetEvent(heartbeatEvent);
 				EnterCriticalSection(&cs);
         bool ok = false;
         if( hProfile == HKEY_CURRENT_USER )
@@ -599,14 +618,35 @@ bool CURLBlaster::LaunchBrowser(void)
 					
 					// wait for it to exit - give it up to double the timeout value
 					// TODO:  have urlManager specify the timeout
-					int multiple = 2;
+				  int multiple = 2;
           if( info.runningScript || info.aft )
-						multiple = 10;
-					if( WaitForSingleObject(pi.hProcess, timeout * multiple * 1000) == WAIT_OBJECT_0 )
+					  multiple = 10;
+          if( heartbeatEvent )
+          {
+            HANDLE handles[2];
+            handles[0] = heartbeatEvent;
+            handles[1] = pi.hProcess;
+            DWORD forceEnd = GetTickCount() + (timeout * multiple * 1000);
+            DWORD waitResult;
+
+            // keep looping as long as we keep getting heartbeats
+            do 
+            {
+              waitResult = WaitForMultipleObjects(2, handles, FALSE, timeout * 1000);
+              if( waitResult == WAIT_OBJECT_0 + 1 )
+                ret = true;
+            } while( waitResult == WAIT_OBJECT_0 && GetTickCount() < forceEnd);
+          }
+          else
+          {
+					  if( WaitForSingleObject(pi.hProcess, timeout * multiple * 1000) == WAIT_OBJECT_0 )
+              ret = true;
+          }
+
+          if( ret )
 					{
 						count++;
 						cached = true;
-						ret = true;
 						if( hDlg )
 							PostMessage(hDlg, MSG_UPDATE_UI, 0, 0);
 					}
@@ -799,6 +839,8 @@ void CURLBlaster::ConfigurePagetest(void)
 			RegSetValueEx(hKey, _T("Experimental"), 0, REG_DWORD, (const LPBYTE)&experimental, sizeof(experimental));
 			RegSetValueEx(hKey, _T("Screen Shot Errors"), 0, REG_DWORD, (const LPBYTE)&screenShotErrors, sizeof(screenShotErrors));
 			RegSetValueEx(hKey, _T("Check Optimizations"), 0, REG_DWORD, (const LPBYTE)&info.checkOpt, sizeof(info.checkOpt));
+      RegSetValueEx(hKey, _T("No Headers"), 0, REG_DWORD, (const LPBYTE)&info.noHeaders, sizeof(info.noHeaders));
+      RegSetValueEx(hKey, _T("No Images"), 0, REG_DWORD, (const LPBYTE)&info.noImages, sizeof(info.noImages));
 			
 			RegSetValueEx(hKey, _T("Include Object Data"), 0, REG_DWORD, (const LPBYTE)&info.includeObjectData, sizeof(info.includeObjectData));
 
@@ -841,6 +883,8 @@ void CURLBlaster::ConfigurePagetest(void)
 			RegDeleteValue(hKey, _T("Host"));
 			if( !info.host.IsEmpty() )
 				RegSetValueEx(hKey, _T("Host"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.host, (info.host.GetLength() + 1) * sizeof(TCHAR));
+
+      RegSetValueEx(hKey, _T("Heartbeat Event"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)heartbeatEventName, (heartbeatEventName.GetLength() + 1) * sizeof(TCHAR));
 
 			RegCloseKey(hKey);
 		}

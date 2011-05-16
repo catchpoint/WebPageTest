@@ -52,11 +52,14 @@ CTestState::CTestState(void):
 	,lastImageTime(0)
 	,lastRealTime(0)
 	,cacheCleared(false)
+  ,heartbeatEvent(NULL)
 {
 }
 
 CTestState::~CTestState(void)
 {
+  if( heartbeatEvent )
+    CloseHandle(heartbeatEvent);
 }
 
 /*-----------------------------------------------------------------------------
@@ -255,11 +258,24 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("aftEarlyCutoff"), aftEarlyCutoff);
           aftMinChanges = 25;
 					key.QueryDWORDValue(_T("aftMinChanges"), aftMinChanges);
+					noHeaders = 0;
+					key.QueryDWORDValue(_T("No Headers"), noHeaders);
+					noImages = 0;
+					key.QueryDWORDValue(_T("No Images"), noImages);
 
 					len = sizeof(buff) / sizeof(TCHAR);
 					customHost.Empty();
 					if( key.QueryStringValue(_T("Host"), buff, &len) == ERROR_SUCCESS )
 						customHost = buff;
+
+          if( !heartbeatEvent )
+          {
+					  len = sizeof(buff) / sizeof(TCHAR);
+					  if( key.QueryStringValue(_T("Heartbeat Event"), buff, &len) == ERROR_SUCCESS )
+              heartbeatEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, buff);
+          }
+          if( heartbeatEvent )
+            SetEvent(heartbeatEvent);
 
 					if( !runningScript )
 					{
@@ -437,6 +453,9 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 void CTestState::CheckComplete()
 {
 	ATLTRACE(_T("[Pagetest] - Checking to see if the test is complete\n"));
+
+  if( heartbeatEvent )
+    SetEvent(heartbeatEvent);
 
 	if( active || capturingAFT )
 	{
