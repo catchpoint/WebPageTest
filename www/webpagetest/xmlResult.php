@@ -54,7 +54,16 @@ else
             if( @strlen($test['testinfo']['location']) )
                 echo "<location>{$test['testinfo']['location']}</location>";
             if( @strlen($test['testinfo']['connectivity']) )
+            {
                 echo "<connectivity>{$test['testinfo']['connectivity']}</connectivity>";
+                if( $test['testinfo']['bwIn'] && $test['testinfo']['bwOut'] )
+                {
+                    echo "<bwDown>{$test['testinfo']['bwIn']}</bwDown>";
+                    echo "<bwUp>{$test['testinfo']['bwOut']}</bwUp>";
+                    echo "<latency>{$test['testinfo']['latency']}</latency>";
+                    echo "<plr>{$test['testinfo']['plr']}</plr>";
+                }
+            }
             if( @strlen($test['testinfo']['label']) )
                 echo "<label>" . htmlentities($test['testinfo']['label']) . "</label>";
             if( @strlen($test['testinfo']['completed']) )
