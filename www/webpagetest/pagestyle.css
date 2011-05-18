@@ -200,7 +200,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .links {table-layout:fixed; background-color: #fff; position: relative; width: 100%; height: 45px; }
 .links td { text-align: center; vertical-align: middle;}
 #sponsor_header {background-color: #555; color: #f1c52e;padding: 1px 10px 2px 25px; clear:both; font-weight: bold;}
-.sponsor_logo {width: 180px; height: 40px; display:block; overflow: hidden;}
+.sponsor_logo {width: 180px; height: 40px; display:block; overflow: hidden; cursor: pointer;}
 .sponsor_logo img {position: relative;}
 
 /* Footer */

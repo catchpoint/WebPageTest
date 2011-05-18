@@ -109,7 +109,8 @@
                     $i++;
 
                 $remaining--;
-                echo "<td ><div class=\"sponsor_logo\"><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><img style=\"top: {$sponsor['offset']}px;\" src=\"{$sponsor['logo']}\" alt=\"\"></a></div></td>";
+                $style = "background-image: url({$sponsor['logo']}); background-position: 0px {$sponsor['offset']}px;";
+                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
             }
             echo '</tr></table>';
             echo '</div>';
