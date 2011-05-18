@@ -87,6 +87,7 @@
         $test['noopt'] = trim($req_noopt);
         $test['noimages'] = trim($req_noimages);
         $test['noheaders'] = trim($req_noheaders);
+        $test['view'] = trim($req_view);
         
         // see if it is a batch test
         $test['batch'] = 0;
@@ -1209,15 +1210,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nBasic Auth={$test['login']}:{$test['password']}\r\n";
         }
             
-        if( SubmitUrl($testId, $testFile, $test, $url) )
-        {
-            // store the entire test data structure JSON encoded (instead of a bunch of individual files)
-            if( !$test['sensitive'] )
-                gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
-        }
-        else
+        if( !SubmitUrl($testId, $testFile, $test, $url) )
             $testId = null;
     }
+
+    // store the entire test data structure JSON encoded (instead of a bunch of individual files)
+    gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
     
     // log the test
     if( isset($testId) )

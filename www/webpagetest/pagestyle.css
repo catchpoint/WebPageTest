@@ -17,6 +17,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .page {width: 980px;margin: 0 auto;}
 .centered {text-align: center;}
 .left {text-align: left;}
+.right {text-align: right;}
 .cleared {display: block;clear: both;}
 .hidden {display: none;}
 .nomargin {margin:0;}
@@ -176,12 +177,14 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .subtitle {margin: -24px 0 24px;font-weight: bold;}
 .dynaTrace {background-color: #ffff5d;}
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }
-
 #more_checks {padding: 10px 15px 30px;}
-
 .anchor {position: relative;top: -110px;}
-
 #tooltip {z-index: 99;position: absolute;padding: 5px;background-color: #eee;border: 1px solid #aaa;}
+#tableResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
+#tableResults th, #tableResults td {border: 1px silver solid; padding: 0.4em; }
+#tableResults th { background: gainsboro; }
+#tableResults td.good {color: green; font-weight: bold;}
+#tableResults td.bad {color: red;  font-weight: bold;}
 
 /*Status page*/
 #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
