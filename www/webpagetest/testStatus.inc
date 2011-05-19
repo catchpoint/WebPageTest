@@ -200,8 +200,8 @@ function GetTestStatusText($id, $test)
           if( $elapsedUpdate > 10 )
           {
                 // force the test to end
-                $testInfo['completed'] = $now;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                $testInfoJson['completed'] = $now;
+                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
                 $test = file_get_contents("$testPath/testinfo.ini");
                 $date = date("m/d/y G:i:s", $now);
 
