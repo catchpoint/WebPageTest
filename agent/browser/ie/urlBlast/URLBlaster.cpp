@@ -56,11 +56,10 @@ CURLBlaster::~CURLBlaster(void)
 {
 	SetEvent(hMustExit);
 	
-	// wait for the thread to exit (up to double the timeout value)
+	// wait for the thread to exit (no timeout)
 	if( hThread )
 	{
-		if( WaitForSingleObject(hThread, timeout * 2 * 1000) == WAIT_TIMEOUT )
-			TerminateThread(hThread, 0);
+		WaitForSingleObject(hThread, INFINITE);
 		CloseHandle(hThread);
 	}
 	
