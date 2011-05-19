@@ -190,6 +190,30 @@ function GetTestStatusText($id, $test)
         $statusText = "Test Started $elapsed minutes ago";
       else
         $statusText = "Test Started $elapsed minutes ago (probably failed)";
+        
+      // force the test to end if it started but we haven't seen progress in the last 10 minutes
+      if( $elapsed > 10 )
+      {
+          $elapsedUpdate = 100;
+          if( isset($testInfoJson['last_update']) )
+            $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
+          if( $elapsedUpdate > 10 )
+          {
+                // force the test to end
+                $testInfo['completed'] = $now;
+                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                $test = file_get_contents("$testPath/testinfo.ini");
+                $date = date("m/d/y G:i:s", $now);
+
+                // update the completion time if it isn't already set
+                if( !strpos($test, 'completeTime') )
+                {
+                    $complete = "[test]\r\ncompleteTime=$date";
+                    $out = str_replace('[test]', $complete, $test);
+                    file_put_contents("$testPath/testinfo.ini", $out);
+                }
+          }
+      }
     }
   }
   else

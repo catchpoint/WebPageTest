@@ -95,6 +95,23 @@ else
             }
         }
         
+        // clean up the backup of the job file
+        $backupDir = $locations[$location]['localDir'] . '/testing';
+        if( is_dir($backupDir) )
+        {
+            $files = glob("$backupDir/$id.*", GLOB_NOSORT);
+            foreach($files as $file)
+                unlink($file);
+        }
+        
+        $time = time();
+        if( gz_is_file("$testPath/testinfo.json") )
+        {
+            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+            if( isset($testInfo) )
+                $testInfo['last_updated'] = $time;
+        }
+            
         // see if the test is complete
         if( $done )
         {
@@ -108,7 +125,6 @@ else
             $medianRun = GetMedianRun($pageData, 0);
 
             $test = file_get_contents("$testPath/testinfo.ini");
-            $time = time();
             $now = date("m/d/y G:i:s", $time);
 
             // update the completion time if it isn't already set
@@ -121,24 +137,13 @@ else
                 file_put_contents("$testPath/testinfo.ini", $out);
             }
 
-            if( gz_is_file("$testPath/testinfo.json") )
+            if( isset($testInfo) )
             {
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                 if( !isset($testInfo['completed']) )
                 {
                     $testInfo['completed'] = $time;
                     $testInfo['medianRun'] = $medianRun;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                 }
-            }
-            
-            // clean up the backup of the job file
-            $backupDir = $locations[$location]['localDir'] . '/testing';
-            if( is_dir($backupDir) )
-            {
-                $files = glob("$backupDir/$id.*", GLOB_NOSORT);
-                foreach($files as $file)
-                    unlink($file);
             }
             
             // see if it is an industry benchmark test
@@ -211,6 +216,9 @@ else
                 StoreResults($id);
             }
         }
+        
+        if( isset($testInfo) )
+            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
     }
     else
         logMsg("location key incorrect\n");
