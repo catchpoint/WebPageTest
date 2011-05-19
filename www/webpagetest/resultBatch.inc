@@ -204,22 +204,16 @@ function DisplaySimple(&$tests, &$complete)
     $count = 0;
     $fvonly = false;
     
-    // get the relevant times and generate the header HTML
+    // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
         $fvLoadTime = null;
         $fvRenderTime = null;
         $rvLoadTime = null;
         $rvRenderTime = null;
-        $label = $test['l'];
-        if( !strlen($label) )
-            $label = htmlspecialchars(ShortenUrl($test['u']));
         $id = $test['id'];
         $testPath = './' . GetTestPath($id);
         $current_test = parse_ini_file("$testPath/testinfo.ini",true);
-        $html .= "<th><a href=\"/result/$id/\">$label</a></th>";
-        if( $count )
-            $html .= "<th>Difference</a></th>";
         if( $current_test['test']['fvonly'] )
             $fvonly = true;
         if( (isset($current_test['test']) && isset($current_test['test']['completeTime'])) )
@@ -249,6 +243,20 @@ function DisplaySimple(&$tests, &$complete)
         $fvRenderTimes[$count] = $fvRenderTime;
         $rvLoadTimes[$count] = $rvLoadTime;
         $rvRenderTimes[$count] = $rvRenderTime;
+        $count++;
+    }
+    
+    // second pass, generate the header
+    $count = 0;
+    foreach( $tests['urls'] as &$test )
+    {
+        $label = $test['l'];
+        if( !strlen($label) )
+            $label = htmlspecialchars(ShortenUrl($test['u']));
+        $id = $test['id'];
+        $html .= "<th><a href=\"/result/$id/\">$label</a></th>";
+        if( $count && $complete )
+            $html .= "<th>Difference</a></th>";
         $count++;
     }
     $html .= '</tr>';
