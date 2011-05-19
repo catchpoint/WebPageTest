@@ -180,11 +180,11 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #more_checks {padding: 10px 15px 30px;}
 .anchor {position: relative;top: -110px;}
 #tooltip {z-index: 99;position: absolute;padding: 5px;background-color: #eee;border: 1px solid #aaa;}
-#tableResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
-#tableResults th, #tableResults td {border: 1px silver solid; padding: 0.4em; }
-#tableResults th { background: gainsboro; }
-#tableResults td.good {color: green; font-weight: bold;}
-#tableResults td.bad {color: red;  font-weight: bold;}
+#batchResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
+#batchResults th, #batchResults td {border: 1px silver solid; padding: 0.4em; }
+#batchResults th { background: gainsboro; }
+#batchResults td.good {color: green; font-weight: bold;}
+#batchResults td.bad {color: red;  font-weight: bold;}
 
 /*Status page*/
 #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}

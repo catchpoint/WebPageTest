@@ -86,7 +86,7 @@ else
 function DisplayTests(&$tests, &$all_tests_completed)
 {
     $all_tests_completed = true;
-    $html = '<table id="tableResults" border="1" cellpadding="10" cellspacing="0">
+    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
             <th>Median load time (First view)</th>
@@ -114,7 +114,7 @@ function DisplayTests(&$tests, &$all_tests_completed)
 function DisplayTestsWithVariations(&$tests, &$all_tests_completed)
 {
     $all_tests_completed = true;
-    $html = '<table id="tableResults" border="1" cellpadding="10" cellspacing="0">
+    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
             <th>Median load time (First view)</th>
@@ -191,7 +191,7 @@ function DisplayTest($current_id, $current_url, $current_label, &$all_tests_comp
 */
 function DisplaySimple(&$tests, &$complete)
 {
-    $html = '<table id="tableResults" border="1" cellpadding="10" cellspacing="0">
+    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
             <tr>
             <th></th>';
     $fvLoadTime = array();
