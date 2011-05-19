@@ -852,7 +852,8 @@ function ScriptParameterCount($command)
         !strcasecmp($command, 'sendCommandAndWait') || 
         !strcasecmp($command, 'setCookie') || 
         !strcasecmp($command, 'setDNS') || 
-        !strcasecmp($command, 'setDnsName') )
+        !strcasecmp($command, 'setDnsName') ||
+        !strcasecmp($command, 'overrideHost') )
     {
         $count = 3;
     }

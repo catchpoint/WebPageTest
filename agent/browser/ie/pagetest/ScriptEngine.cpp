@@ -88,6 +88,7 @@ void CScriptEngine::ScriptComplete(void)
 	script_lastCommand.Empty();
 	userAgent.Empty();
 	dnsServers.RemoveAll();
+  hostOverride.RemoveAll();
 	runningScript = false;
   script_combineSteps = 0;
 	
@@ -696,6 +697,18 @@ void CScriptEngine::ContinueScript(bool reset)
           script_combineSteps = -1; // default to combining ALL steps
         err = false;
       }
+      else if(!item.command.CompareNoCase(_T("overrideHost")))
+      {
+        if( item.target.GetLength() && item.value.GetLength() )
+        {
+          CHostOverride host(item.target, item.value);
+          hostOverride.AddTail(host);
+        }
+        else
+          hostOverride.RemoveAll();
+        err = false;
+      }
+     
 			
 			if( err && script_logErrors )
 			{

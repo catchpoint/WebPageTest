@@ -112,6 +112,25 @@ public:
 	CString	realName;
 };
 
+class CHostOverride
+{
+public:
+  CHostOverride(){}
+  CHostOverride(CString originalFQDN, CString newFQDN):originalHost(originalFQDN),newHost(newFQDN){}
+  CHostOverride(const CHostOverride& src){*this = src;}
+  ~CHostOverride(void){}
+	const CHostOverride& operator =(const CHostOverride& src)
+	{
+		originalHost = src.originalHost;
+		newHost = src.newHost;
+
+		return src;
+	}
+
+  CString originalHost;
+  CString newHost;
+};
+
 class CScriptEngine:
 	public CPagetestBase
 {
@@ -147,6 +166,7 @@ public:
 	CAtlList<CDNSName>			dnsNameOverride;	// List of DNS names to override
   CAtlList<CString>       headersAdd;       // list of headers to add
   CAtlList<CString>       headersSet;       // list of headers to set/override
+  CAtlList<CHostOverride> hostOverride;     // host headers to override
 
 protected:
 	bool LoadScript(CString file);

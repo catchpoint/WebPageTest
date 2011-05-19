@@ -783,6 +783,11 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 	// update the activity time
 	if( active )
 	{
+		EnterCriticalSection(&cs);
+		CWinInetRequest * r = NULL;
+		winInetRequests.Lookup(hRequest, r);
+		LeaveCriticalSection(&cs);
+
 		// modify the user agent string if it was passed as a custom header (IE8)
 		if( !userAgent.IsEmpty() )
 		{
@@ -873,10 +878,27 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
       }
     }
 
-		EnterCriticalSection(&cs);
-		CWinInetRequest * r = NULL;
-		winInetRequests.Lookup(hRequest, r);
-		LeaveCriticalSection(&cs);
+    // override the host
+    if( hostOverride.GetCount() )
+    {
+      if( r && r->host.GetLength() )
+      {
+        ATLTRACE(_T("[Pagetest] - Checking for host override for %s\n"), (LPCTSTR)r->host);
+        pos = hostOverride.GetHeadPosition();
+        while(pos)
+        {
+          CHostOverride hostPair = hostOverride.GetNext(pos);
+          if( !r->host.CompareNoCase(hostPair.originalHost) )
+          {
+            ATLTRACE(_T("[Pagetest] - Overriding host %s to %s\n"), (LPCTSTR)r->host, (LPCTSTR)hostPair.newHost);
+			      CString header = CString("Host: ") + hostPair.newHost + _T("\r\n");
+			      HttpAddRequestHeaders( hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+            header = CString("x-Host: ") + r->host + _T("\r\n");
+			      HttpAddRequestHeaders( hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+          }
+        }
+      }
+    }
 
 		// tweak the SSL options if we are ignoring cert errors
 		if( r && r->secure && ignoreSSL )
