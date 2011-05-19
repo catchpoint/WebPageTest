@@ -1,17 +1,6 @@
 #
-# Fastcgi support
-#
-#<IfModule mod_fastcgi.c>
-#    AddHandler fastcgi-script fcg fcgi fpl
-#    AddHandler php5-fastcgi .php
-#    Action php5-fastcgi /dispatch.fcgi
-#</IfModule>
-
-
-#
 #Friendly urls
 #
-
 RewriteEngine on
 #main pages
 RewriteRule ^about$ /about.php
@@ -131,22 +120,26 @@ RewriteRule ^docs$ http://www.webperformancecentral.com/wiki/WebPagetest [R]
 #
 #Caching for images
 #
-ExpiresActive On
-ExpiresByType image/gif A31536000
-ExpiresByType image/jpg A31536000
-ExpiresByType image/jpeg A31536000
-ExpiresByType image/png A31536000
-ExpiresByType image/bmp A31536000
-ExpiresByType text/css A31536000
-ExpiresByType text/javascript A31536000
-ExpiresByType application/javascript A31536000
-ExpiresByType application/x-javascript A31536000
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/gif A31536000
+    ExpiresByType image/jpg A31536000
+    ExpiresByType image/jpeg A31536000
+    ExpiresByType image/png A31536000
+    ExpiresByType image/bmp A31536000
+    ExpiresByType text/css A31536000
+    ExpiresByType text/javascript A31536000
+    ExpiresByType application/javascript A31536000
+    ExpiresByType application/x-javascript A31536000
+</IfModule>
 
 #
 #Disable ETags
 #
-Header unset ETag
-FileETag None
+<IfModule mod_headers.c>
+    Header unset ETag
+    FileETag None
+</IfModule>
 
 #
 #Disable directory browsing
@@ -164,7 +157,10 @@ Options -Indexes
 #
 # Force text/javascript instead of application/javascript for js (Potentially remove this when MaxCDN fixes their compression)
 #
-AddType text/javascript .js
+<IfModule mod_mime.c>
+    AddType text/javascript .js
+    AddType application/dtas dtas
+</IfModule>
 
 # GZip Compression
 <IfModule mod_deflate.c>
@@ -179,5 +175,3 @@ AddType text/javascript .js
 	AddOutputFilterByType DEFLATE application/x-javascript
 </IfModule>
 
-# Additional mime types
-AddType application/dtas dtas
