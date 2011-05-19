@@ -8,7 +8,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <head>
       <meta http-equiv="refresh" content="15" />
       <style type="text/css">
-      th,td{text-align:center; padding: 0px 20px;}
+      th,td{text-align:center; padding: 0px 15px;}
       .tester{text-align: left;}
       .header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}
       </style>
@@ -16,10 +16,11 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="7"><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="8"><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
+            <th>Version</th>
             <th>PC</th>
             <th>EC2 Instance</th>
             <th>IP</th>
@@ -30,6 +31,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
           <xsl:for-each select="testers/tester">
               <tr>
                 <td class="tester"><xsl:value-of select="index"/></td>
+                <td><xsl:value-of select="version"/></td>
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
                 <td><xsl:value-of select="ip"/></td>

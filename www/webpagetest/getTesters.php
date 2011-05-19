@@ -121,7 +121,7 @@ function GetTesters($file)
             $location['testers'] = array();
             foreach( $testers as $index => $tester )
             {
-                $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip']);
+                $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver']);
                 
                 // last time it checked in
                 if( isset($tester['updated']) )
@@ -146,7 +146,7 @@ function GetTesters($file)
                 $entry['busy'] = 0;
                 if( isset( $tester['test'] ) )
                     $entry['busy'] = 1;
-
+                    
                 $location['testers'][] = $entry;
             }
         }

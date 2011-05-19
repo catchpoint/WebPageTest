@@ -197,6 +197,7 @@ if( !$done )
                         $times[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
                         $times[$tester]['pc'] = $pc;
                         $times[$tester]['ec2'] = $ec2;
+                        $times[$tester]['ver'] = $_GET['ver'];
                         if( isset($testId) )
                         {
                             $times[$tester]['test'] = $testId;
