@@ -47,14 +47,18 @@ else
             <div id="result">
                 <div id="download">
                     <div id="testinfo">
-                        <b>Bulk Test</b><br>
-                        From: <?php echo $test['test']['location'];?><br>
-                        <?php echo GetTestInfoHtml(); ?>
+                        Tested From: <?php echo $test['test']['location'];?><br>
+                        <?php
+                            if( !$simpleView )
+                                echo GetTestInfoHtml(); 
+                        ?>
                     </div>
                 </div>
                 <div class="cleared"></div>
-                <br>
                 <?php
+                if (!$complete)
+                    echo '<h2>Please wait while the testing is performed.<br><span class="small">This page will refresh every 30 seconds until the test is complete.</span></h2>';
+                echo '<br>';
                 echo $testHtml;
 
                 if ($complete)
@@ -67,7 +71,6 @@ else
                 }
                 else
                 {
-                    echo "<br>Tests are not yet complete. Please wait while testing continues (this page will automatically update as testing progresses).";
                     echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
                 }
                 ?>
@@ -191,9 +194,9 @@ function DisplayTest($current_id, $current_url, $current_label, &$all_tests_comp
 */
 function DisplaySimple(&$tests, &$complete)
 {
-    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
+    $html = '<table id="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
-            <th></th>';
+            <th class="empty"></th>';
     $fvLoadTime = array();
     $fvRenderTimes = array();
     $rvLoadTimes = array();
@@ -215,6 +218,8 @@ function DisplaySimple(&$tests, &$complete)
         $testPath = './' . GetTestPath($id);
         $current_test = parse_ini_file("$testPath/testinfo.ini",true);
         $html .= "<th><a href=\"/result/$id/\">$label</a></th>";
+        if( $count )
+            $html .= "<th>Difference</a></th>";
         if( $current_test['test']['fvonly'] )
             $fvonly = true;
         if( (isset($current_test['test']) && isset($current_test['test']['completeTime'])) )
@@ -255,6 +260,18 @@ function DisplaySimple(&$tests, &$complete)
         $html .= DisplayMetric('Start Render Time', $fvRenderTimes, $count);
         $html .= DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
         $html .= DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+
+        // links to the test results
+        $html .= '<tr><td class="right">Full Test Result</td>';
+        $count = 0;
+        foreach( $tests['urls'] as &$test )
+        {
+            $html .= "<td><a href=\"/result/{$test['id']}/\"><img class=\"progress\" src=\"{$GLOBALS['cdnPath']}/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
+            if( $count )
+                $html .= "<td></td>";
+            $count++;
+        }
+        $html .= "</tr>";
     }
     else
     {
@@ -286,39 +303,36 @@ function DisplayMetric($metric, &$values, $count)
 {
     // the actual values
     $html .= "<tr><td class=\"right\"><b>$metric</b></td>";
+    $baseline = $values[0];
     for( $i = 0; $i < $count; $i++ )
     {
         $html .= '<td>';
         if ($values[$i])
             $html .= number_format( $values[$i] / 1000.0, 3) . 's';
         $html .= '</td>';
+        if( $i )
+        {
+            if ($values[$i] && $baseline > 0 && $i)
+            {
+                $delta = $values[$i] - $baseline;
+                $pct = number_format(abs($delta / $baseline) * 100.0, 1);
+                $class = '';
+                $direction = '';
+                if( $delta > 0 )
+                {
+                    $direction = '+';
+                    $class = 'bad';
+                }
+                elseif( $delta < 0 )
+                    $class = 'good';
+                $html .= "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
+            }
+            else
+                $html .= '<td></td>';
+        }
     }
     $html .= '</tr>';
     
-    // the deltas
-    $html .= '<tr><td class="right">Difference</td>';
-    $baseline = $values[0];
-    for( $i = 0; $i < $count; $i++ )
-    {
-        if ($values[$i] && $baseline > 0 && $i)
-        {
-            $delta = $values[$i] - $baseline;
-            $pct = number_format(abs($delta / $baseline) * 100.0, 1);
-            $class = '';
-            $direction = '';
-            if( $delta > 0 )
-            {
-                $direction = '+';
-                $class = 'bad';
-            }
-            elseif( $delta < 0 )
-                $class = 'good';
-            $html .= "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
-        }
-        else
-            $html .= '<td></td>';
-    }
-    $html .= '</tr>';
     return $html;
 }
 ?>

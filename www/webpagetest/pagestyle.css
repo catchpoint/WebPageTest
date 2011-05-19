@@ -181,10 +181,11 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .anchor {position: relative;top: -110px;}
 #tooltip {z-index: 99;position: absolute;padding: 5px;background-color: #eee;border: 1px solid #aaa;}
 #batchResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
-#batchResults th, #batchResults td {border: 1px silver solid; padding: 0.4em; }
+#batchResults th, #batchResults td {border: 1px silver solid; padding: 5px 15px; }
 #batchResults th { background: gainsboro; }
 #batchResults td.good {color: green; font-weight: bold;}
 #batchResults td.bad {color: red;  font-weight: bold;}
+#batchResults th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
 
 /*Status page*/
 #statusImg {margin-left: auto; margin-right: auto; width: 600px; clear:both; text-align:center;}
