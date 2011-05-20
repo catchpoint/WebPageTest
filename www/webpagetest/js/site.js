@@ -1,3 +1,13 @@
+function ClearOAuthCookies() {
+  var mydate = new Date();
+  mydate.setTime(mydate.getTime() - 1);
+  document.cookie = "google_email=; expires=" + mydate.toGMTString() + "; path=/;";
+  document.cookie = "google_id=; expires=" + mydate.toGMTString() + "; path=/;";
+  document.cookie = "google_association_handle=; expires=" + mydate.toGMTString() + "; path=/;";
+  document.cookie = "page_before_google_oauth=; expires=" + mydate.toGMTString() + "; path=/;";
+  document.cookie = "o=; expires=" + mydate.toGMTString() + "; path=/;";
+  window.location.reload();
+}
 /*!
  * jQuery JavaScript Library v1.4.2
  * http://jquery.com/

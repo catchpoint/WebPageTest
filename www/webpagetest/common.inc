@@ -10,7 +10,7 @@ date_default_timezone_set('UTC');
 
 // constants
 define('VER_CSS', 38);          // version of the sitewide css file
-define('VER_JS', 13);            // version of the sitewide javascript file
+define('VER_JS', 14);            // version of the sitewide javascript file
 define('VER_JS_TEST', 13);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
@@ -70,7 +70,10 @@ if( is_dir('./forums') && !$settings['disableMybb'] )
 // assign a unique ID to each person
 $isOwner = false;
 $owner = null;
-if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+  $owner = $_COOKIE['google_id'];
+}
+else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $owner = $_COOKIE['o'];
 }else{
   $owner = sha1(uniqid(uniqid('', true), true));

@@ -11,9 +11,18 @@
                 $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
             echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
         }
+        else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
+	{
+            $logoutUrl = 'javascript:ClearOAuthCookies();';
+            $google_email = $_COOKIE['google_email'];
+            echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        }
         else
         {
-            echo "<a href=\"/forums/member.php?action=login\">Login</a> &nbsp;|&nbsp; <a href=\"/forums/member.php?action=register\">Register</a>";
+            echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+            echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+            $currentPath = $_SERVER['SCRIPT_NAME'];
+            echo '<a href="/oauth/login.php">Login with Google</a> ';
         }
         echo '</div>';
     }
