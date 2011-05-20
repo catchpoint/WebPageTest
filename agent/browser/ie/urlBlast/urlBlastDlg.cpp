@@ -225,6 +225,7 @@ void CurlBlastDlg::OnClose()
 	
 	KillTimer(1);
 	KillTimer(2);
+	KillTimer(3);
 
 	status.SetWindowText(_T("Waiting to exit..."));
 	
@@ -276,11 +277,18 @@ void CurlBlastDlg::OnTimer(UINT_PTR nIDEvent)
 				
 				// kill any debug windows that are open
 				KillProcs();
-				
+
 				// update the UI
 				PostMessage(MSG_UPDATE_UI);
 			}
 			break;
+
+    case 3: // slow periodic timer
+      {
+        // clear the temp folder
+        ClearTemp();
+      }
+      break;
 	}
 }
 
@@ -376,6 +384,7 @@ void CurlBlastDlg::DoStartup(void)
 	
 	// run a periodic timer for doing housekeeping work
 	SetTimer(2, 500, NULL);
+  SetTimer(3, 20000, NULL);
 }
 
 /*-----------------------------------------------------------------------------
@@ -1815,4 +1824,14 @@ void CurlBlastDlg::RemoveSystemGDIHook()
     if( _removeHook )
       _removeHook();
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Clear out the temp files folder
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::ClearTemp()
+{
+  TCHAR path[MAX_PATH];
+  if( GetTempPath(_countof(path), path) )
+    DeleteDirectory(path, false);
 }

@@ -109,6 +109,7 @@ protected:
 	void CheckUploadLogs(void);
 	void UploadLogs(void);
 	void KillProcs(void);
+  void ClearTemp(void);
 
 	void CloseDialogs(void);
 	DWORD experimental;
