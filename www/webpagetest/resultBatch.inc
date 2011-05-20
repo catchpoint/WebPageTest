@@ -1,4 +1,6 @@
 <?php
+if( !defined('BARE_UI') )
+    define('BARE_UI', true);
 require_once('testStatus.inc');
 $tests = null;
 if( gz_is_file("$testPath/tests.json") )
@@ -18,13 +20,19 @@ if( !strcasecmp($test['testinfo']['view'], 'simple') )
     $simpleView = true;
 
 $complete = true;
+$videoComplete = true;
+$dirty = false;
 $testHtml = '';
 if( $simpleView )
-    $testHtml = DisplaySimple($tests, $complete);
+    $testHtml = DisplaySimple($tests, $complete, $test['testinfo']['video'], $videoComplete, $dirty);
 elseif( count($tests['variations']) )
     $testHtml = DisplayTestsWithVariations($tests, $complete);
 else
     $testHtml = DisplayTests($tests, $complete);
+
+// rewrite the bulk file if it changed
+if( $dirty )
+    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -34,9 +42,19 @@ else
         <?php
         if( !$complete )
             echo "<meta http-equiv=\"refresh\" content=\"30\">\n";
+        elseif( !$videoComplete )
+            echo "<meta http-equiv=\"refresh\" content=\"10\">\n";
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
+        <style type="text/css">
+            #player
+            {
+                margin-left: auto;
+                margin-right: auto;
+            }
+        </style>
+        <script type="text/javascript" src="/video/player/flowplayer-3.2.4.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -56,8 +74,10 @@ else
                 </div>
                 <div class="cleared"></div>
                 <?php
+                if (strlen($test['testinfo']['label']))
+                    echo "<h2>{$test['testinfo']['label']}</h2>";
                 if (!$complete)
-                    echo '<h2>Please wait while the testing is performed.<br><span class="small">This page will refresh every 30 seconds until the test is complete.</span></h2>';
+                    echo '<h2>Please wait while the testing is performed<br><span class="small">This page will refresh every 30 seconds until the test is complete</span></h2>';
                 echo '<br>';
                 echo $testHtml;
 
@@ -192,7 +212,7 @@ function DisplayTest($current_id, $current_url, $current_label, &$all_tests_comp
 * @param mixed $tests
 * @param mixed $complete
 */
-function DisplaySimple(&$tests, &$complete)
+function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
 {
     $html = '<table id="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
@@ -295,7 +315,41 @@ function DisplaySimple(&$tests, &$complete)
         }
         $html .= '</tr>';
     }
-    $html .= '</table>';
+    $html .= '</table><br>';
+    
+    // video
+    if( $complete && $video )
+    {
+        $videoComplete = true;
+        if( !strlen($tests['videoID']) )
+        {
+            $tests['videoID'] = CreateVideo($tests);
+            $dirty = true;
+            $videoComplete = false;
+            if( !strlen($tests['videoID']) )
+            {
+                // bail on the video if it couldn't be created
+                $videoComplete = true;
+                $tests['videoReady'] = true;
+            }
+        }
+        elseif( !$tests['videoReady'] )
+        {
+            $tests['videoReady'] = CheckVideo($tests['videoID']);
+            if( $tests['videoReady'] )
+                $dirty = true;
+            else
+                $videoComplete = false;
+        }
+        
+        if( $videoComplete )
+        {
+            $html .= '<h2>Visual Comparison<br><span class="small">Compared until the latest visual change on each page</span></h2>';
+            $html .= VideoHtml($tests['videoID']);
+        }
+        else
+            $html .= '<h2>Please wait while the video comparison is created<br><span class="small">This page will refresh every 10 seconds until the video is ready</span></h2>';
+    }
     
     return $html;
 }
@@ -341,6 +395,124 @@ function DisplayMetric($metric, &$values, $count)
     }
     $html .= '</tr>';
     
+    return $html;
+}
+
+/**
+* Send a request to create a video and return the ID
+* 
+* @param mixed $tests
+*/
+function CreateVideo(&$tests)
+{
+    $id = null;
+
+    $host  = $_SERVER['HTTP_HOST'];
+    $request = "http://$host/video/create.php?f=json&tests=";
+
+    $count = 0;
+    foreach( $tests['urls'] as &$test )
+    {
+        if( $count )
+            $request .= ',';
+        $request .= "{$test['id']}-l:";
+        $label = $test['l'];
+        if( !strlen($label) )
+            $label = htmlspecialchars(ShortenUrl($test['u']));
+        $request .= urlencode($label);
+        $count++;
+    }
+    
+    $ctx = stream_context_create(array('http' => array('timeout' => 10)));
+    echo $request;
+    $response = json_decode(file_get_contents($request, 0, $ctx), true);
+    if( $response['statusCode'] == 200 )
+        $id = $response['data']['videoId'];
+    
+    return $id;
+}
+
+/**
+* Check to see if the video is complete
+* 
+* @param mixed $videoID
+*/
+function CheckVideo($videoID)
+{
+    $done = false;
+
+    $dir = GetVideoPath($videoID, true);
+    if( is_dir("./$dir") )
+    {
+        $ini = parse_ini_file("./$dir/video.ini");
+        if( isset($ini['completed']) )
+        {
+            $done = true;
+            GenerateVideoThumbnail("./$dir");
+        }
+    }
+    
+    return $done;
+}
+
+/**
+* Generate the HTML for embedding the video
+* 
+* @param mixed $id
+*/
+function VideoHtml($id)
+{
+    $width = 816;
+    $height = 384;
+
+    $dir = GetVideoPath($id, true);
+    $hasThumb = false;
+    if( is_file("./$dir/video.png") )
+    {
+        $hasThumb = true;
+        list($width, $height) = getimagesize("./$dir/video.png");
+    }
+    
+    $html = "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player\"></div>\n";
+    $html .= "<script>\n
+                    flowplayer(\"player\", \n
+                                    {\n
+                                        src: \"/video/player/flowplayer-3.2.4.swf\",\n
+                                        cachebusting: true,\n
+                                        version: [9, 115]\n
+                                    } , \n
+                                    { \n
+                                        clip:  { \n
+                                            scaling: \"fit\"\n
+                                        } ,\n
+                                        playlist: [";
+    if( $hasThumb )
+    {
+        $html .= "{ url: '/$dir/video.png'} ,\n";
+        $html .= "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
+    }
+    else
+        $html .= "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
+    $html .= "                          ],\n
+                                        plugins: {\n
+                                            controls: {\n
+                                                volume:false,\n
+                                                mute:false,\n
+                                                stop:true,\n
+                                                tooltips: { \n
+                                                    buttons: true, \n
+                                                    fullscreen: 'Enter fullscreen mode' \n
+                                                } \n
+                                            }\n
+                                        } ,\n
+                                        canvas:  { \n
+                                            backgroundColor: '#000000', \n
+                                            backgroundGradient: 'none'\n
+                                        }\n
+                                    }\n
+                                ); \n
+                </script>\n";
+
     return $html;
 }
 ?>

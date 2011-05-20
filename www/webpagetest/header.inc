@@ -1,7 +1,7 @@
 <?php
     require_once('page_data.inc');
 
-    if( $supportsAuth && !$_GET['bare'] )
+    if( $supportsAuth && !defined('BARE_UI') )
     {
         echo '<div id="wptAuthBar">';
         if( isset($user) )
@@ -32,7 +32,7 @@
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
     <?php
-        if( !$_GET['bare'] )
+        if( !defined('BARE_UI') )
         {
             // see if we have a location that the test was run from (for a custom ad)
             $testLoc;

@@ -41,7 +41,7 @@ $loc = ParseLocations($locations);
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest</title>
+        <title>WebPagetest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
     <body>
@@ -69,7 +69,7 @@ $loc = ParseLocations($locations);
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
-            
+
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="javascript:void(0)">Analytical Review</a></li>
@@ -386,6 +386,11 @@ $loc = ParseLocations($locations);
             </div>
             </form>
             
+            <?php
+            if( is_file('settings/intro.inc') )
+                include('settings/intro.inc');
+            ?>
+
             <?php include('footer.inc'); ?>
         </div>
 

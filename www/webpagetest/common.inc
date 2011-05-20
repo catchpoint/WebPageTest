@@ -20,6 +20,9 @@ if (!is_dir($tempDir))
 $tempDir .= '/';
 define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
+if( $_GET['bare'] )
+    define('BARE_UI', true);
+
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
 
@@ -294,6 +297,23 @@ function GetVideoPath($id, $find = false)
     }
 
     return $path;
+}
+
+/**
+* Generate a thumbnail for the video file if we don't already have one
+* 
+* @param mixed $dir
+*/
+function GenerateVideoThumbnail($dir)
+{
+    $dir = realpath($dir);
+    if( is_file("$dir/video.mp4") && !is_file("$dir/video.png") )
+    {
+        $output = array();
+        $result;
+        $command = "ffmpeg -i \"$dir/video.mp4\" -vframes 1 -ss 00:00:00 -f image2 \"$dir/video.png\"";
+        $retStr = exec($command, $output, $result);
+    }
 }
 
 /**

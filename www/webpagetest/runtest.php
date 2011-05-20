@@ -247,12 +247,15 @@
                     $testCount = 0;
                     foreach( $bulk['urls'] as &$entry )
                     {
+                        $test['label'] = $entry['l'];
                         $entry['id'] = CreateTest($test, $entry['u']);
                         if( $entry['id'] )
                         {
                             $entry['v'] = array();
                             foreach( $bulk['variations'] as $variation_index => &$variation )
                             {
+                                if( strlen($test['label']) && strlen($variation['l']) )
+                                    $test['label'] .= ' - ' . $variation['l'];
                                 $url = CreateUrlVariation($entry['u'], $variation['q']);
                                 if( $url )
                                     $entry['v'][$variation_index] = CreateTest($test, $url);

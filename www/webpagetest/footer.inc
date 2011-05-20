@@ -18,7 +18,7 @@
         if( is_file('./tmp/feeds.dat') )
             $feeds = json_decode(file_get_contents('./tmp/feeds.dat'), true);
         
-        if( count($feeds) && !$_GET['bare'] )
+        if( count($feeds) && !defined('BARE_UI') )
         {
             echo '<table id="feeds"><tr>';
             
@@ -87,7 +87,7 @@
             }
         
         $count = count($sponsors);
-        if( $count && !$_GET['bare'] )
+        if( $count && !defined('BARE_UI') )
         {
             echo '<div id="sponsor_header">WebPagetest Partners</div>';
             shuffle($sponsors);
