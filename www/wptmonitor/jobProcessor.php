@@ -18,10 +18,6 @@
     exit;
   }
 
-  updateQueueProcessRate();
-  checkQueueGrowthCountAndEmailAlert();
-  checkTesterRatioAndEmailAlert();
-
   try
   {
     $users = Doctrine_Core::getTable('User')->findAll();
@@ -42,6 +38,10 @@
     error_log("[WPTMonitor] Failed while Listing Users: " . $wptResultId . " message: " . $e->getMessage());
     logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
   }
+
+  updateQueueProcessRate();
+  checkQueueGrowthCountAndEmailAlert();
+  checkTesterRatioAndEmailAlert();
 
 ?>
  
