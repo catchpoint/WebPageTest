@@ -5,17 +5,23 @@
  * to see if the results are ready. If they are the results are downloaded. The xmlResult file is downloaded and
  * optionally the additional assets can be downloaded if the job was configured to do so.
  */
-include 'monitor.inc';
-include 'alert_functions.inc';
+  include 'monitor.inc';
+  include 'alert_functions.inc';
   include 'wpt_functions.inc';
+  include_once 'utils.inc';
   require_once('bootstrap.php');
+
   $key = $_REQUEST['key'];
   $configKey = getWptConfigFor('jobProcessorKey');
   if ( $configKey != $key ){
     print "Invalid Key";
     exit;
   }
+
+  updateQueueProcessRate();
+  checkQueueGrowthCountAndEmailAlert();
   checkTesterRatioAndEmailAlert();
+
   try
   {
     $users = Doctrine_Core::getTable('User')->findAll();
@@ -37,42 +43,5 @@ include 'alert_functions.inc';
     logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
   }
 
-  function checkTesterRatioAndEmailAlert(){
-    logOutput('[INFO] [checkTesterRatioAndEmailAlert] ' );
-    $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
-    $config = $configTable->find(1);
-    $siteContactEmailAddress = $config['SiteContactEmailAddress'];
-    // Check runrate to test ration and alert if necessary
-    // Currently hard coded to alert if ration exceeds 40:1
-    // TODO: Make configurable, or improve method of determining optimum run rate
-    $locations = getLocationInformation();
-    $message = "";
-    foreach ($locations as $location){
-      $runRate = $location['runRate'];
-      $agentCount = $location['AgentCount'];
-      $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
-      if ( $location['runRate'] ){
-        if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
-            $message = "--------------------------------------------\n";
-            $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
-            $message .= "Runrate: ".$runRate."\n";
-            $message .= "Testers: ".$agentCount."\n";
-            if ($agentCount){
-              $message .= "Ratio: ".$runRate/$agentCount."\n";
-            } else {
-              $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
-            }
-            $message .= "Target Ratio: 40\n";
-            $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
-        }
-      }
-    }
-    if ($message){
-      sendEmailAlert($siteContactEmailAddress, $message);
-      logOutput('[ERROR] [checkTesterRatioAndEmailAlert] ' . $message );
-      echo $message;
-    }
-
-  }
 ?>
  

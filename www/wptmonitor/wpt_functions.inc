@@ -1026,5 +1026,109 @@ function getReportResultsForLabel($label,$fromDate,$toDate,$stddev,$runLabel=nul
     }
     return $currentJobCount;
   }
+/*
+ * Check the QueueGrowthCount and email an alert if it has grown for 4 consecutive times.
+ */
+function checkQueueGrowthCountAndEmailAlert(){
+  $queueStatusFilename = './QueueStatus.ini';
+  $queueStatus = parse_ini_file($queueStatusFilename,true);
+  $message = "";
+  $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
+  $config = $configTable->find(1);
+  $siteContactEmailAddress = $config['SiteContactEmailAddress'];
+
+  foreach( $queueStatus as $key=>$status){
+    if ($status['QueueGrowthCount'] > 4 ){
+      $message = "\n--------------------------------------------\n";
+      $message .= "Queue Growth alert for location: ".$status['id']."\n";
+      $message .= "In Queue: ".$status['PendingTests']."\n";
+      $message .= "Testers: ".$status['Testers']."\n";
+    }
+  }
+  if ($message){
+    sendEmailAlert($siteContactEmailAddress, $message);
+    logOutput('[ERROR] [checkTesterRatioAndEmailAlert] ' . $message );
+  }
+}
+
+/*
+ * Checks the current count of jobs in queue compared to the previous run.
+ * If the pending tests for the current info is greater than the last check
+ * A counter is incremented. 'QueueGrowthCount'
+ */
+function updateQueueProcessRate(){
+  $queueStatusFilename = './QueueStatus.ini';
+  try {
+    // Write current queue status
+    $locationInformation = getLocationInformation();
+
+    // First time through, or file got deleted.
+    if (!file_exists($queueStatusFilename )){
+      foreach ($locationInformation as $key=>$location){
+        $locationInformation[$key]['QueueGrowthCount'] = '0';
+      }
+      writeIniFile($locationInformation,$queueStatusFilename ,true);
+    } else {
+      // Compare previous status to current status to detect queue growth.
+      $previousLocationInformation = parse_ini_file($queueStatusFilename ,true);
+
+      foreach ($previousLocationInformation as $key=>$previousLocation){
+        $location = $locationInformation[$key];
+        if ( $location['PendingTests'] > $previousLocation['PendingTests'] ){
+          $location['QueueGrowthCount']++;
+        } else {
+          $location['QueueGrowthCount'] = '0';
+        }
+        $locationInformation[$key] = $location;
+      }
+      // Write current status out
+      writeIniFile($locationInformation,$queueStatusFilename ,true);
+    }
+  } catch (Exception $e) {
+    logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
+  }
+}
+/*
+ * Check the ratio of runrate to tester
+ * Currently hard coded for a ratio of 40 "job submissions" for each tester per hour
+ *
+ */
+function checkTesterRatioAndEmailAlert(){
+  logOutput('[INFO] [checkTesterRatioAndEmailAlert] ' );
+  $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
+  $config = $configTable->find(1);
+  $siteContactEmailAddress = $config['SiteContactEmailAddress'];
+  // Check runrate to test ration and alert if necessary
+  // Currently hard coded to alert if ration exceeds 40:1
+  // TODO: Make configurable, or improve method of determining optimum run rate
+  $locations = getLocationInformation();
+  $message = "";
+  foreach ($locations as $location){
+    $runRate = $location['runRate'];
+    $agentCount = $location['AgentCount'];
+    $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
+    if ( $location['runRate'] ){
+      if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
+          $message = "--------------------------------------------\n";
+          $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
+          $message .= "Runrate: ".$runRate."\n";
+          $message .= "Testers: ".$agentCount."\n";
+          if ($agentCount){
+            $message .= "Ratio: ".$runRate/$agentCount."\n";
+          } else {
+            $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
+          }
+          $message .= "Target Ratio: 40\n";
+          $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
+      }
+    }
+  }
+  if ($message){
+    sendEmailAlert($siteContactEmailAddress, $message);
+    logOutput('[ERROR] [checkTesterRatioAndEmailAlert] ' . $message );
+    echo $message;
+  }
+
+}
 
 ?>
