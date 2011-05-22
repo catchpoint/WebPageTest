@@ -1074,10 +1074,14 @@ function updateQueueProcessRate(){
 
       foreach ($previousLocationInformation as $key=>$previousLocation){
         $location = $locationInformation[$key];
-        if ( $location['PendingTests'] > $previousLocation['PendingTests'] ){
-          $location['QueueGrowthCount']++;
-        } else {
+        if ( $location['PendingTests'] == 0){
           $location['QueueGrowthCount'] = '0';
+        } else {
+          if ( $location['PendingTests'] > $previousLocation['PendingTests'] ){
+            $location['QueueGrowthCount']++;
+          } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
+            $location['QueueGrowthCount']--;
+          }
         }
         $locationInformation[$key] = $location;
       }
