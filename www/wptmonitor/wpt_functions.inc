@@ -1036,13 +1036,14 @@ function checkQueueGrowthCountAndEmailAlert(){
   $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
   $config = $configTable->find(1);
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
-
   foreach( $queueStatus as $key=>$status){
     if ($status['QueueGrowthCount'] > 4 ){
       $message = "\n--------------------------------------------\n";
       $message .= "Queue Growth alert for location: ".$status['id']."\n";
       $message .= "In Queue: ".$status['PendingTests']."\n";
-      $message .= "Testers: ".$status['Testers']."\n";
+      $message .= "Testers: ".$status['AgentCount']."\n";
+      $message .= "\n--------------------------------------------\n";
+      $message .= "Queue count continues to grow. Please provision more testers or decrease the runrate for this location.";
     }
   }
   if ($message){
@@ -1058,6 +1059,8 @@ function checkQueueGrowthCountAndEmailAlert(){
  */
 function updateQueueProcessRate(){
   $queueStatusFilename = './QueueStatus.ini';
+  $updateFrequency = 600;
+  $currentTime = current_seconds();
   try {
     // Write current queue status
     $locationInformation = getLocationInformation();
@@ -1066,6 +1069,7 @@ function updateQueueProcessRate(){
     if (!file_exists($queueStatusFilename )){
       foreach ($locationInformation as $key=>$location){
         $locationInformation[$key]['QueueGrowthCount'] = '0';
+        $locationInformation[$key]['QueueGrowthCheckTimeStamp'] = $currentTime;
       }
       writeIniFile($locationInformation,$queueStatusFilename ,true);
     } else {
@@ -1074,16 +1078,28 @@ function updateQueueProcessRate(){
 
       foreach ($previousLocationInformation as $key=>$previousLocation){
         $location = $locationInformation[$key];
-        if ( $location['PendingTests'] == 0){
-          $location['QueueGrowthCount'] = '0';
-        } else {
-          if ( $location['PendingTests'] > $previousLocation['PendingTests'] ){
-            $location['QueueGrowthCount']++;
-          } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
-            $location['QueueGrowthCount']--;
+        if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
+          logOutput('[INFO] [jobProcessor] QueueGrowthCheck for : '.$key);
+
+          if ( $location['PendingTests'] == 0){
+            $location['QueueGrowthCount'] = '0';
+            logOutput('[INFO] [jobProcessor] Resetting count QueueGrowthCheck for: '.$key);
+          } else {
+            if ( $location['PendingTests'] >= $previousLocation['PendingTests'] ){
+              $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']+1;
+              logOutput('[INFO] [jobProcessor] Incrementing count QueueGrowthCheck to '. $location['QueueGrowthCount'].' for: '.$key);
+            } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
+              logOutput('[INFO] [jobProcessor] Decrementing count QueueGrowthCheck for: '.$key);
+              $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']-1;
+            }
           }
+          $location['QueueGrowthCheckTimeStamp'] = $currentTime;
+          $locationInformation[$key] = $location;
+        } else {
+          logOutput('[INFO] [jobProcessor] Skipping QueueGrowthCheck: interval not passed for : '.$key);
+          // Keep previous info it update time hasn't passed
+          $locationInformation[$key] = $previousLocation;
         }
-        $locationInformation[$key] = $location;
       }
       // Write current status out
       writeIniFile($locationInformation,$queueStatusFilename ,true);
@@ -1110,6 +1126,7 @@ function checkTesterRatioAndEmailAlert(){
   foreach ($locations as $location){
     $runRate = $location['runRate'];
     $agentCount = $location['AgentCount'];
+    if ( empty($agentCount) ) $agentCount = '0';
     $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){

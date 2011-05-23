@@ -39,8 +39,8 @@
     logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
   }
 
-  updateQueueProcessRate();
   checkQueueGrowthCountAndEmailAlert();
+  updateQueueProcessRate();
   checkTesterRatioAndEmailAlert();
 
 ?>
