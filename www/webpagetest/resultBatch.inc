@@ -408,7 +408,7 @@ function CreateVideo(&$tests)
     $id = null;
 
     $host  = $_SERVER['HTTP_HOST'];
-    $request = "http://$host/video/create.php?f=json&tests=";
+    $request = "http://$host/video/create.php?f=json&end=doc&tests=";
 
     $count = 0;
     foreach( $tests['urls'] as &$test )
