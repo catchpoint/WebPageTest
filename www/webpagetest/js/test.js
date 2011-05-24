@@ -50,6 +50,8 @@ function PreparePSSTest(form)
         return false
     }
     
+    form.label.value = 'PSS Comparison for ' + url;
+    
     // build the psuedo batch-url list
     var batch = "Original=" + url + " noscript\nOptimized=" + url;
     form.bulkurls.value=batch;
