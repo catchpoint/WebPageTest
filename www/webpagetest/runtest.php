@@ -248,6 +248,7 @@
                     foreach( $bulk['urls'] as &$entry )
                     {
                         $test['label'] = $entry['l'];
+                        $test['noscript'] = $entry['ns'];
                         $entry['id'] = CreateTest($test, $entry['u']);
                         if( $entry['id'] )
                         {
@@ -746,6 +747,7 @@ function ValidateScript(&$test, &$error)
 {
     FixScript($test['script']);
     
+    $navigateCount = 0;
     $ok = false;
     $url = null;
     $lines = explode("\n", $test['script']);
@@ -755,6 +757,7 @@ function ValidateScript(&$test, &$error)
         $command = trim($tokens[0]);
         if( !strcasecmp($command, 'navigate') )
         {
+            $navigateCount++;
             $ok = true;
             $url = trim($tokens[1]);
             if (stripos($url, '%URL%') !== false)
@@ -770,6 +773,8 @@ function ValidateScript(&$test, &$error)
     
     if( !$ok )
         $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
+    else if( $navigateCount > 10 )
+        $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
     
     return $url;
 }
@@ -934,7 +939,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
         mkdir($test['workdir'], 0777, true);
     
     $out = "Test ID=$testId\r\nurl=";
-    if( !strlen($test['script']) )
+    if( !strlen($test['script']) || $test['noscript'] )
         $out .= $url;
     else
         $out .= "script://$testId.pts";
@@ -943,11 +948,17 @@ function SubmitUrl($testId, $testData, &$test, $url)
     $out .= $testData;
     
     // add the script data (if we're running a script)
-    if( strlen($test['script']) )
+    if( strlen($test['script']) && !$test['noscript'] )
     {
         $script = trim($test['script']);
         if (strlen($url))
+        {
             $script = str_ireplace('%URL%', $url, $script);
+            $parts = parse_url($url);
+            $host = $parts['host'];
+            if( strlen($host) )
+                $script = str_ireplace('%HOST%', $host, $script);
+        }
         $out .= "\r\n[Script]\r\n" . $script;
     }
         
@@ -1248,6 +1259,14 @@ function ParseBulkUrl($line)
     $entry = null;
     global $settings;
     $err;
+    $noscript = 0;
+    
+    $pos = stripos($line, 'noscript');
+    if( $pos !== false )
+    {
+        $line = trim(substr($line, 0, $pos));
+        $noscript = 1;
+    }
     
     $equals = strpos($line, '=');
     $query = strpos($line, '?');
@@ -1267,6 +1286,7 @@ function ParseBulkUrl($line)
         $entry['u'] = $url;
         if( $label )
             $entry['l'] = $label;
+        $entry['ns'] = $noscript;
     }
     
     return $entry;

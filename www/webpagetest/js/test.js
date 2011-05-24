@@ -40,6 +40,23 @@ function ValidateInput(form)
     return true;
 }
 
+function PreparePSSTest(form)
+{
+    var url = form.testurl.value;
+    if( url == "" || url == "Enter a Website URL" )
+    {
+        alert( "Please enter an URL to test." );
+        form.url.focus();
+        return false
+    }
+    
+    // build the psuedo batch-url list
+    var batch = "Original=" + url + " noscript\nOptimized=" + url;
+    form.bulkurls.value=batch;
+    
+    return true;
+}
+
 /*
     Do any populating of the input form based on the loaded location information
 */
