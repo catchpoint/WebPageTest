@@ -65,8 +65,15 @@ if( $dirty )
             <div id="result">
                 <div id="download">
                     <div id="testinfo">
-                        Tested From: <?php echo $test['test']['location'];?><br>
                         <?php
+                            if( $test['test']['batch'] )
+                            {
+                                echo 'Tested From: ' . $test['test']['location'] . '<br>';
+                            }
+                            else if ( $test['test']['batch_locations'] )
+                            {
+                                echo 'Tested Url: ' . $test['testinfo']['url'] . '<br>';
+                            }
                             if( !$simpleView )
                                 echo GetTestInfoHtml(); 
                         ?>

@@ -117,8 +117,26 @@ $loc = ParseLocations($locations);
                             </select>
                         </li>
                     </ul>
-
-                    <?php
+                    <a href="javascript:OpenMultipleLocations()"><font color="white">Multiple locations/browsers?</font></a>
+                    <br>
+                    <div id="multiple-location-dialog" align=center style="display: none; color: white;">
+                        <p>
+                            <select name="multiple_locations[]" multiple id="multiple_locations[]">
+                                <?php
+                                    foreach($locations as $key => &$location_value)
+                                    {
+                                        if( isset( $location_value['browser'] ) )
+                                        {
+                                            echo "<option value=\"{$key}\" $selected>{$location_value['label']}</option>";
+                                        }
+                                    }
+                                ?>
+                            </select>
+                            <a href='javascript:CloseMultipleLocations()'><font color="white">Ok</font></a>
+                        </p>
+                    </div>
+                    <br>
+                   <?php
                     if( (int)$_COOKIE["as"] )
                     {
                         echo '<p><a href="javascript:void(0)" id="advanced_settings" class="extended">Advanced Settings <span class="arrow"></span></a><small id="settings_summary_label" class="hidden"><br><span id="settings_summary"></span></small></p>';
@@ -363,7 +381,6 @@ $loc = ParseLocations($locations);
                 </div>
             </div>
             <div class="cleared"></div>
-
             <div id="location-dialog" style="display:none;">
                 <h3>Select Test Location</h3>
                 <div id="map">

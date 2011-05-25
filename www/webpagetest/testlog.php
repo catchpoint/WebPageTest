@@ -209,7 +209,7 @@ else
                                             {
                                                 echo '<tr>';
                                                 echo '<td>';
-                                                if( isset($guid) && $video )
+                                                if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) )
                                                     echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\">";
                                                 echo '</td>';
 							                    echo '<td class="date">';

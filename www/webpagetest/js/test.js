@@ -431,6 +431,22 @@ function UpdateSettingsSummary()
 }
 
 /*
+    Show the multiple location selection dialog
+*/
+function OpenMultipleLocations()
+{
+    document.getElementById('multiple-location-dialog').style.display = 'block'; 
+}
+
+/*
+    Close the multiple location selection dialog.
+*/
+function CloseMultipleLocations()
+{
+    document.getElementById('multiple-location-dialog').style.display = 'none'; 
+}
+
+/*
     Pop up the location selection dialog
 */
 var map;
