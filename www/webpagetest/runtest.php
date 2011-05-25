@@ -781,7 +781,6 @@ function ValidateScript(&$test, &$error)
 
 /**
 * Try to automaticaly fix a script that used spaces instead of tabs.
-* Also, strip the server specific configuration.
 * 
 * @param mixed $script
 */
@@ -803,11 +802,6 @@ function FixScript(&$script)
                     $command = strtok(trim($line), " \t\r\n");
                     if( $command !== false )
                     {
-                        if( $command == "csiVariable" )
-                        {
-                            $target = strtok("\r\n");
-                            continue;
-                        }
                         $newScript .= $command;
                         $expected = ScriptParameterCount($command);
                         if( $expected == 2 )
