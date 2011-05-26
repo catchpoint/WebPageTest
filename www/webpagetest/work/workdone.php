@@ -27,8 +27,6 @@ if( $_REQUEST['video'] )
         $ini .= 'completed=' . date('c') . "\r\n";
         file_put_contents($iniFile, $ini);
     }
-    else
-        delTree($dir);
 }
 else
 {
