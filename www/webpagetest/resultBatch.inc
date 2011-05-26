@@ -41,9 +41,27 @@ if( $dirty )
         <title>WebPagetest Bulk test result<?php echo $testLabel; ?></title>
         <?php
         if( !$complete )
-            echo "<meta http-equiv=\"refresh\" content=\"30\">\n";
+        {
+            ?>
+            <noscript>
+            <meta http-equiv="refresh" content="30" />
+            </noscript>
+            <script language="JavaScript">
+            setTimeout( "window.location.reload(true)", 30000 );
+            </script>
+            <?php
+        }
         elseif( !$videoComplete )
-            echo "<meta http-equiv=\"refresh\" content=\"10\">\n";
+        {
+            ?>
+            <noscript>
+            <meta http-equiv="refresh" content="10" />
+            </noscript>
+            <script language="JavaScript">
+            setTimeout( "window.location.reload(true)", 10000 );
+            </script>
+            <?php
+        }
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>

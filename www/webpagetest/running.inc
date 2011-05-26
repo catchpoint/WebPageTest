@@ -2,7 +2,12 @@
 <html>
     <head>
         <title>WebPagetest - Running web page performance and optimization test...</title>
-        <meta http-equiv="refresh" content="15">
+        <noscript>
+        <meta http-equiv="refresh" content="15" />
+        </noscript>
+        <script language="JavaScript">
+        setTimeout( "window.location.reload(true)", 15000 );
+        </script>
         <?php 
             $noanalytics = true;
             include ('head.inc');

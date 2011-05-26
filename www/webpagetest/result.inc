@@ -13,7 +13,12 @@ if( !$test['test']['completeTime'] )
     <head>
         <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
         <?php if( !$testComplete ) { ?>
-        <meta http-equiv="refresh" content="30">
+        <noscript>
+        <meta http-equiv="refresh" content="30" />
+        </noscript>
+        <script language="JavaScript">
+        setTimeout( "window.location.reload(true)", 30000 );
+        </script>
         <?php } ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>

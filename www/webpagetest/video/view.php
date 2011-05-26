@@ -108,7 +108,16 @@ else
         <title><?php echo $title;?></title>
         <?php
         if( $valid && !$done )
-            echo "<meta http-equiv=\"refresh\" content=\"10\">\n";
+        {
+            ?>
+            <noscript>
+            <meta http-equiv="refresh" content="10" />
+            </noscript>
+            <script language="JavaScript">
+            setTimeout( "window.location.reload(true)", 10000 );
+            </script>
+            <?php
+        }
         ?>
         <?php $gaTemplate = 'Video'; include ('head.inc'); ?>
         <style type="text/css">

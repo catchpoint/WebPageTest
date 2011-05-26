@@ -6,7 +6,12 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 <xsl:template match="/">
   <html>
   <head>
+      <noscript>
       <meta http-equiv="refresh" content="15" />
+      </noscript>
+      <script language="JavaScript">
+      setTimeout( "window.location.reload(true)", 15000 );
+      </script>
       <style type="text/css">
       th,td{text-align:center; padding: 0px 15px;}
       .tester{text-align: left;}
