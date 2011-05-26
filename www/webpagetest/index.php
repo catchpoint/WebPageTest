@@ -117,6 +117,7 @@ $loc = ParseLocations($locations);
                             </select>
                         </li>
                     </ul>
+                    <?php if ($settings['multi_locations']) { ?>
                     <a href="javascript:OpenMultipleLocations()"><font color="white">Multiple locations/browsers?</font></a>
                     <br>
                     <div id="multiple-location-dialog" align=center style="display: none; color: white;">
@@ -136,6 +137,7 @@ $loc = ParseLocations($locations);
                         </p>
                     </div>
                     <br>
+                    <?php } ?>
                    <?php
                     if( (int)$_COOKIE["as"] )
                     {
