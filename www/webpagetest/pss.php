@@ -30,6 +30,7 @@ $loc = ParseLocations($locations);
             <input type="hidden" name="view" value="simple">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
+            <input type="hidden" name="priority" value="0">
             <input type="hidden" name="runs" value="5">
             <input type="hidden" name="script" value="setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;instaweb.google.com&#10;navigate&#09;%URL%">
             <input type="hidden" name="bulkurls" value="">
