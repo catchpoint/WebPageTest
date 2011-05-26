@@ -130,6 +130,29 @@ bool CURLBlaster::Start(int userIndex)
 	  profile += _T("\\");
 	  profile += userName;
   }
+
+  if( !dynaTrace.IsEmpty() && SHGetSpecialFolderPath(NULL, path, CSIDL_PROFILE, FALSE))
+  {
+    dynaTraceSessions = path;
+    dynaTraceSessions += _T("\\.dynaTrace\\ajax\\browser\\iesessions");
+
+    // create the registry entries to turn it on
+    HKEY hKey;
+    if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("System\\CurrentControlSet\\Control\\Session Manager\\Environment"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+    {
+	    LPCTSTR szTrue = _T("true");
+	    RegSetValueEx(hKey, _T("DT_AE_AGENTACTIVE"), 0, REG_SZ, (const LPBYTE)szTrue, (lstrlen(szTrue) + 1) * sizeof(TCHAR));
+	    RegSetValueEx(hKey, _T("DT_IE_AGENT_ACTIVE"), 0, REG_SZ, (const LPBYTE)szTrue, (lstrlen(szTrue) + 1) * sizeof(TCHAR));
+
+      LPCTSTR szSession = _T("WebPagetest");
+	    RegSetValueEx(hKey, _T("DT_AE_AGENTNAME"), 0, REG_SZ, (const LPBYTE)szSession, (lstrlen(szSession) + 1) * sizeof(TCHAR));
+	    RegSetValueEx(hKey, _T("DT_IE_SESSION_NAME"), 0, REG_SZ, (const LPBYTE)szSession, (lstrlen(szSession) + 1) * sizeof(TCHAR));
+
+	    RegCloseKey(hKey);
+      DWORD result;
+      SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Environment", SMTO_ABORTIFHUNG, 5000, &result);
+    }
+  }
 	
 	info.userName = userName;
 	
@@ -1338,6 +1361,10 @@ void CURLBlaster::LaunchDynaTrace()
 {
 	if( !dynaTrace.IsEmpty() )
 	{
+    // delete the existing dynatrace sessions
+    if( dynaTraceSessions.GetLength() )
+      DeleteDirectory(dynaTraceSessions, false);
+
 		Launch(dynaTrace, &hDynaTrace);
 		WaitForInputIdle(hDynaTrace, 30000);
 	}
@@ -1357,28 +1384,18 @@ void CURLBlaster::CloseDynaTrace()
 		CloseHandle(hDynaTrace);
 
 		// zip up the profile data to our test results folder
-		TCHAR path[MAX_PATH];
-		DWORD len = _countof(path);
-		lstrcpy(path, _T("C:\\Documents and Settings"));
-		GetProfilesDirectory(path, &len);
-		TCHAR name[MAX_PATH];
-		len = _countof(name);
-		if( GetUserName(name, &len) )
-		{
-			lstrcat(path, _T("\\"));
-			lstrcat(path, name);
-			lstrcat(path, _T("\\.dynaTrace\\ajax\\browser\\iesessions"));
-			ZipDir(path, info.logFile + _T("_dynaTrace.dtas"), _T(""), NULL);
-		}
+    if( dynaTraceSessions.GetLength() )
+			ZipDir(dynaTraceSessions, info.logFile + _T("_dynaTrace.dtas"), _T(""), NULL);
 	}
 }
 
 /*-----------------------------------------------------------------------------
 	Archive (and delete) the given directory
 -----------------------------------------------------------------------------*/
-void CURLBlaster::ZipDir(CString dir, CString dest, CString depth, zipFile file)
+int CURLBlaster::ZipDir(CString dir, CString dest, CString depth, zipFile file)
 {
 	bool top = false;
+  int count = 0;
 
 	// start by creating an empty zip file
 	if( !file )
@@ -1404,7 +1421,7 @@ void CURLBlaster::ZipDir(CString dir, CString dest, CString depth, zipFile file)
 						if( depth.GetLength() )
 							d = depth + CString(_T("\\")) + fd.cFileName;
 
-						ZipDir( dir + CString(_T("\\")) + fd.cFileName, dest, d, file);
+						count += ZipDir( dir + CString(_T("\\")) + fd.cFileName, dest, d, file);
 						RemoveDirectory(dir + CString(_T("\\")) + fd.cFileName);
 					}
 					else
@@ -1435,6 +1452,7 @@ void CURLBlaster::ZipDir(CString dir, CString dest, CString depth, zipFile file)
 											// write the file to the archive
 											zipWriteInFileInZip( file, mem, size );
 											zipCloseFileInZip( file );
+                      count++;
 										}
 									}
 									
@@ -1455,5 +1473,11 @@ void CURLBlaster::ZipDir(CString dir, CString dest, CString depth, zipFile file)
 
 	// if we're done with the root, delete everything
 	if( top && file )
+  {
 		zipClose(file, 0);
+    if( !count )
+      DeleteFile(dest);
+  }
+
+  return count;
 }

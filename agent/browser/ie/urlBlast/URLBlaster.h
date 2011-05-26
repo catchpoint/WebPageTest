@@ -66,6 +66,7 @@ public:
 	CString preLaunch;
 	CString postLaunch;
 	CString dynaTrace;
+  CString dynaTraceSessions;
 	DWORD pipeIn;
 	DWORD pipeOut;
 	DWORD useBitBlt;
@@ -111,7 +112,7 @@ protected:
   bool Launch(CString cmd, HANDLE * phProc = NULL);
 	void LaunchDynaTrace();
 	void CloseDynaTrace();
-	void ZipDir(CString dir, CString dest, CString depth, zipFile file);
+	int ZipDir(CString dir, CString dest, CString depth, zipFile file);
 };
 
 // utility routine
