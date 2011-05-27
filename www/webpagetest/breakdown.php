@@ -5,6 +5,9 @@ include 'contentColors.inc';
 include 'connectionView.inc';
 require_once('page_data.inc');
 
+$page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Website content breakdown by mime type$testLabel";
+
 // walk through the requests and group them by mime type
 $requestsFv;
 $breakdownFv = getBreakdown($id, $testPath, $run, 0, $requestsFv);

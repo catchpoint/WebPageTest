@@ -14,6 +14,10 @@ define('VER_JS', 14);            // version of the sitewide javascript file
 define('VER_JS_TEST', 14);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
+// SEO stuff
+$page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
+
 $tempDir = realpath('./tmp');
 if (!is_dir($tempDir))
     mkdir($tempDir, 0777, true);

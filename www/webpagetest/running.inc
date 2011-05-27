@@ -10,6 +10,8 @@
         </script>
         <?php 
             $noanalytics = true;
+            $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
+            $page_description = "Running website performance test.";
             include ('head.inc');
         ?>
     </head>

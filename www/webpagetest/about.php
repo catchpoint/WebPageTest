@@ -1,5 +1,7 @@
 <?php 
 include 'common.inc';
+$page_keywords = array('About','Contact','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "More information about WebPagetest website speed testing and how to contact us.";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

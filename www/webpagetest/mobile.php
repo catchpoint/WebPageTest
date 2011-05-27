@@ -2,6 +2,8 @@
 include 'common.inc';
 $tid=$_GET['tid'];
 $run=$_GET['run'];
+$page_keywords = array('Mobile','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Run a free website speed test from around the globe using real mobile devices.";
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">

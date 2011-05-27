@@ -1,6 +1,10 @@
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-<meta name="keywords" content="Webpagetest, Performance, Optimization, Pagetest, Page Design">
-<meta name="description" content="Speed up the performance of your web pages with an automated analysis">
+<?php
+if( count($page_keywords) )
+    echo '<meta name="keywords" content="' . implode(',', $page_keywords) . "\">\n";
+if( strlen($page_description) )
+    echo "<meta name=\"description\" content=\"$page_description\">\n";
+?>
 <meta name="author" content="Patrick Meenan">
 <meta http-equiv="X-UA-Compatible" content="IE=8"> 
 

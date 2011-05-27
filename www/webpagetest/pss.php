@@ -12,6 +12,9 @@ if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
+
+$page_keywords = array('PSS','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "PSS Test$testLabel.";
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">

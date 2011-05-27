@@ -4,6 +4,8 @@ set_time_limit(300);
 include 'common.inc';
 require_once('./lib/pclzip.lib.php');
 $pub = $settings['publishTo'];
+$page_keywords = array('Publish','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Publish test results to WebPagetest.";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

@@ -35,6 +35,9 @@ else
     include 'object_detail.inc'; 
     require_once('waterfall.inc');
 
+    $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+    $page_description = "Visual comparison of multiple websites with a side-by-side video and filmstrip view of the user experience.";
+
     $title = 'Web page visual comparison';
     $labels = '';
     foreach( $tests as &$test )

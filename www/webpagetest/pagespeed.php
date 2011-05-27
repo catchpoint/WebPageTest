@@ -1,6 +1,8 @@
 <?php
 include 'common.inc';
 require_once('./lib/json.php');
+$page_keywords = array('Page Speed','Webpagetest','Website Speed Test','Analysis');
+$page_description = "Google Page Speed results$testLabel.";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

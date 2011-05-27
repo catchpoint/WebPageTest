@@ -5,6 +5,9 @@ $id = $_REQUEST['id'];
 $valid = false;
 $done = false;
 
+$page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+$page_description = "Side-by-side video comparison of website performance.";
+
 $xml = false;
 if( !strcasecmp($_REQUEST['f'], 'xml') )
     $xml = true;

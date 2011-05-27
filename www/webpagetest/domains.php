@@ -2,6 +2,9 @@
 include 'common.inc';
 include 'domains.inc';
 
+$page_keywords = array('Domains','Webpagetest','Website Speed Test');
+$page_description = "Website domain breakdown$testLabel";
+
 // walk through the requests and group them by domain
 $requestsFv;
 $breakdownFv = getDomainBreakdown($id, $testPath, $run, 0, $requestsFv);

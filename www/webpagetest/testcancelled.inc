@@ -4,6 +4,8 @@
         <title>WebPagetest - Test cancelled</title>
         <?php
             $noanalytics = true;
+            $page_keywords = array('Cancelled','Webpagetest','Website Speed Test','Page Speed');
+            $page_description = "Website speed test cancelled.";
             include ('head.inc');
         ?>
     </head>

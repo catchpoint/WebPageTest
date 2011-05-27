@@ -5,6 +5,8 @@ require_once('page_data.inc');
 $secure = false;
 $haveLocations = false;
 $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true);
+$page_keywords = array('Images','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Website speed test images$testLabel.";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

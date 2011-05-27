@@ -2,6 +2,9 @@
 include 'common.inc';
 set_time_limit(0);
 
+$page_keywords = array('Log','History','Webpagetest','Website Speed Test');
+$page_description = "History of website performance speed tests run on WebPagetest.";
+
 // shared initializiation/loading code
 error_reporting(0);
 $days = (int)$_GET["days"];

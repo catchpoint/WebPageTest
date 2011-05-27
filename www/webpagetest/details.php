@@ -4,6 +4,9 @@ include 'object_detail.inc';
 require_once('page_data.inc');
 require_once('waterfall.inc');
 $data = loadPageRunData($testPath, $run, $cached);
+
+$page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Website performance test details$testLabel";
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

@@ -33,6 +33,9 @@ else
 // rewrite the bulk file if it changed
 if( $dirty )
     gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+
+$page_keywords = array('Bulk','Result','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Bulk website performance test result$testLabel.";
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">

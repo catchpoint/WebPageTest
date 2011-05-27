@@ -4,6 +4,8 @@ include 'common.inc';
 $loc = GetDefaultLocation();
 $tid=$_GET['tid'];
 $run=$_GET['run'];
+$page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+$page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
