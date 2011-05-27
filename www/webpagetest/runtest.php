@@ -745,7 +745,7 @@ function ValidateParameters(&$test, $locations, &$error)
 */
 function ValidateScript(&$test, &$error)
 {
-    FixScript($test['script']);
+    FixScript($test, $test['script']);
     
     $navigateCount = 0;
     $ok = false;
@@ -780,11 +780,12 @@ function ValidateScript(&$test, &$error)
 }
 
 /**
+* Extract the server side configuration.
 * Try to automaticaly fix a script that used spaces instead of tabs.
 * 
 * @param mixed $script
 */
-function FixScript(&$script)
+function FixScript(&$test, &$script)
 {
     if( strlen($script) )
     {
@@ -802,6 +803,19 @@ function FixScript(&$script)
                     $command = strtok(trim($line), " \t\r\n");
                     if( $command !== false )
                     {
+                        if( $command == "csiVariable" )
+                        {
+                            $target = strtok("\r\n");
+			    if( isset($test['extract_csi']) )
+			    {
+				array_push($test['extract_csi'], $target);                                
+			    }
+			    else
+			    {
+				$test['extract_csi'] = array($target);
+			    }
+                            continue;
+                        }
                         $newScript .= $command;
                         $expected = ScriptParameterCount($command);
                         if( $expected == 2 )

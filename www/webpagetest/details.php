@@ -179,9 +179,36 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
                         ?>
                     </tr>
-                </table>
-                <br>
+                </table><br>
+		<?php
+		    if( isset($test['testinfo']['extract_csi']) )
+		    {
+			require_once('google/google_lib.inc');
+                        $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
+		?>
+		<h2>Csi Metrics</h2>
+                <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
+                   <tr>
+                <?php
+                        foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                            echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
+                        echo '</tr><tr>';
+                        foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                        {
+                            if( array_key_exists($csi_param, $params) )
+                            {
+                                echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
+                            }
+                            else
+                            {
+                                echo '<td class="even" valign="middle"></td>';
+                            }
+                        }
+                        echo '</tr>';
+                ?>
+		</table><br>
                 <?php 
+                    }
                 $secure = false;
                 $haveLocations = false;
                 $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true);

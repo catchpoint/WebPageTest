@@ -206,6 +206,57 @@ $page_description = "Website performance test result$testLabel.";
                     <?php } ?>
                     </table><br>
                 <?php
+                    if( isset($test['testinfo']['extract_csi']) && $fvMedian && count($pageData) > 1 )
+		    {
+			require_once('google/google_lib.inc');
+			// Draw the table and print the first-view details.
+		    	$fv_params = ParseCsiInfo($id, $testPath, $fvMedian, false, true);
+		?>
+		    <h2>Csi Metrics (Median Run)</h2>
+                    <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
+                    <tr>
+			<th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
+		<?php
+		    	foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                       	    echo '<th align="center" class="border" valign="middle" colspan="1">' . $csi_param . '</th>';
+		        echo '</tr><tr>';
+		        echo '<td align="left" class="even" valign="middle">First View';
+                        echo ' (<a href="#run' . $fvMedian . '">Run ' . $fvMedian . '</a>)';
+			foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+			{
+			    if( array_key_exists($csi_param, $fv_params) )
+			    {
+                                echo '<td class="even" valign="middle">' . $fv_params[$csi_param] . '</td>';
+			    }
+			    else
+			    {
+				echo '<td class="even" valign="middle"></td>';
+			    }
+			}
+			// Print the repeat view row.
+			if( $rvMedian )
+			{
+			    echo '</tr><tr>';
+			    $rv_params = ParseCsiInfo($id, $testPath, $rvMedian, true, true);
+                            echo '<td align="left" class="even" valign="middle">Repeat View';
+                            echo ' (<a href="#run' . $rvMedian . '">Run ' . $rvMedian . '</a>)';
+                            foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                            {
+                                if( array_key_exists($csi_param, $rv_params) )
+                                {
+                                    echo '<td class="even" valign="middle">' . $rv_params[$csi_param] . '</td>';
+                                }
+                                else
+                                {
+                                    echo '<td class="even" valign="middle"></td>';
+                                }
+                            }
+			}
+			echo '</tr>';
+		?>
+		    </table><br>
+		<?php
+		    }
                 }
                 else
                     echo '<h3>The test completed but there were no successful results.</h3>';
