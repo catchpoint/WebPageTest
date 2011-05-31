@@ -531,6 +531,27 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 								// update the timestamp for when we successfully talked to the server
 								lastSuccess = GetTickCount();
 
+                // If the system time is more than 1 minute off of the server
+                // set the clock to match the server time
+                SYSTEMTIME serverTime;
+                if( file->QueryInfo(HTTP_QUERY_DATE | HTTP_QUERY_FLAG_SYSTEMTIME, &serverTime) )
+                {
+                  SYSTEMTIME systemTime;
+                  GetSystemTime(&systemTime);
+                  FILETIME ftServer, ftSystem;
+                  if( SystemTimeToFileTime(&serverTime, &ftServer) && SystemTimeToFileTime(&systemTime, &ftSystem) )
+                  {
+                    LARGE_INTEGER tServer, tSystem;
+                    tServer.HighPart = ftServer.dwHighDateTime;
+                    tServer.LowPart = ftServer.dwLowDateTime;
+                    tSystem.HighPart = ftSystem.dwHighDateTime;
+                    tSystem.LowPart = ftSystem.dwLowDateTime;
+                    int tDelta = abs((int)((tServer.QuadPart - tSystem.QuadPart) / (__int64)10000000));
+                    if( tDelta > 60 )
+                      SetSystemTime(&serverTime);
+                  }
+                }
+
 								// get the mime type
 								CString mime;
 								zip = false;
