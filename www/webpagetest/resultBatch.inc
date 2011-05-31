@@ -102,9 +102,12 @@ $page_description = "Bulk website performance test result$testLabel.";
                 </div>
                 <div class="cleared"></div>
                 <?php
-                if (strlen($test['testinfo']['label']))
-                    echo "<h2>{$test['testinfo']['label']}</h2>";
-                if (!$complete)
+                if ($complete)
+                {
+                    if (strlen($test['testinfo']['label']))
+                        echo "<h2>{$test['testinfo']['label']}</h2>";
+                }
+                else
                     echo '<h2>Please wait while the testing is performed<br><span class="small">This page will refresh every 30 seconds until the test is complete</span></h2>';
                 echo '<br>';
                 echo $testHtml;
