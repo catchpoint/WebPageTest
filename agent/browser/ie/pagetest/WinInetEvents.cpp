@@ -338,11 +338,14 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 									r->outHeaders = buff;
 								
 							// get some specific headers we care about
-							len = sizeof(buff);
-							index = 0;
-							memset(buff, 0, len);
-							if( HttpQueryInfo(r->hRequest, HTTP_QUERY_FLAG_REQUEST_HEADERS | HTTP_QUERY_HOST , buff, &len, &index) )
-								r->host = buff;
+              if( !r->host.GetLength() )
+              {
+							  len = sizeof(buff);
+							  index = 0;
+							  memset(buff, 0, len);
+							  if( HttpQueryInfo(r->hRequest, HTTP_QUERY_FLAG_REQUEST_HEADERS | HTTP_QUERY_HOST , buff, &len, &index) )
+								  r->host = buff;
+              }
 							
 							// keep track of the request that is actively sending on this thread
 							EnterCriticalSection(&cs);
