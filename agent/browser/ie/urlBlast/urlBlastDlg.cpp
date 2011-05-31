@@ -1833,5 +1833,9 @@ void CurlBlastDlg::ClearTemp()
 {
   TCHAR path[MAX_PATH];
   if( GetTempPath(_countof(path), path) )
-    DeleteDirectory(path, false);
+  {
+    TCHAR longPath[MAX_PATH];
+    if( GetLongPathName(path, longPath, _countof(longPath)) )
+      DeleteDirectory(longPath, false);
+  }
 }
