@@ -87,10 +87,8 @@ void TestState::Reset(bool cascade) {
     _last_activity.QuadPart = now.QuadPart;
     _on_load.QuadPart = 0;
     _step_start.QuadPart = 0;
-    _timeout = false;
   } else {
     _active = false;
-    _timeout = false;
     _next_document = 1;
     _current_document = 0;
     _doc_requests = 0;
@@ -115,6 +113,8 @@ void TestState::Reset(bool cascade) {
     _last_cpu_kernel.QuadPart = 0;
     _last_cpu_user.QuadPart = 0;
     _progress_data.RemoveAll();
+    _test_result = 0;
+    GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
 
@@ -145,6 +145,7 @@ void TestState::Start() {
   WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
   Reset();
   QueryPerformanceCounter(&_step_start);
+  GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
   _active = true;
@@ -197,19 +198,26 @@ void TestState::OnNavigate() {
 }
 
 /*-----------------------------------------------------------------------------
+  Notification from the extension that the page has finished loading.
+  We need to do some sanity checking here to make sure the value reported 
+  from the extension is sane
 -----------------------------------------------------------------------------*/
 void TestState::OnLoad(DWORD load_time) {
   if (_active) {
     WptTrace(loglevel::kFunction, 
               _T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
-    if (load_time) {
+    QueryPerformanceCounter(&_on_load);
+    DWORD elapsed_test = 0;
+    if (_step_start.QuadPart && _on_load.QuadPart >= _step_start.QuadPart)
+      elapsed_test = (DWORD)((_on_load.QuadPart - _step_start.QuadPart) 
+                            / _ms_frequency.QuadPart);
+    if (load_time && load_time <= elapsed_test) {
       WptTrace(loglevel::kFrequentEvent, 
               _T("[wpthook] - _on_load calculated based on load_time\n"));
       _on_load.QuadPart = _step_start.QuadPart + 
                           (_ms_frequency.QuadPart * load_time);
     } else {
       WptTrace(loglevel::kFrequentEvent,_T("[wpthook] - _on_load recorded\n"));
-      QueryPerformanceCounter(&_on_load);
       _screen_capture.Capture(_document_window, 
                                     CapturedImage::DOCUMENT_COMPLETE);
     }
@@ -249,7 +257,7 @@ bool TestState::IsDone() {
 
     if ((int)elapsed_test > _test_timeout){
       // the test timed out
-      _timeout = true;
+      _test_result = TEST_RESULT_TIMEOUT;
       done = true;
     } else if (!_current_document && _end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD){
