@@ -14,7 +14,7 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 }
 else
 {
-    $ret['data'] = GetTestStatus($id);
+    $ret['data'] = GetTestStatus($id, false);
     $ret['statusCode'] = $ret['data']['statusCode'];
     $ret['statusText'] = $ret['data']['statusText'];
 }

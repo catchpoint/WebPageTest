@@ -11,7 +11,7 @@ $testQueue = array();
 * Get the status of the given test ID (and return the info in an array)
 * 
 */
-function GetTestStatus($id)
+function GetTestStatus($id, $includePosition = true)
 {
     global $locations;
     global $testQueue;
@@ -58,88 +58,99 @@ function GetTestStatus($id)
                     $ret['statusText'] = 'Test Started';
                 }
 
-                $pageData = loadAllPageData($testPath);
-                
-                // count the number of fv and rv tests that have completed
-                $fvRuns = 0;
-                $rvRuns = 0;
-                foreach( $pageData as &$run )
+                if( $includePosition )
                 {
-                    if( isset($run[0]) )
-                        $fvRuns++;
-                    if( isset($run[1]) )
-                        $rvRuns++;
+                    $pageData = loadAllPageData($testPath);
+                    
+                    // count the number of fv and rv tests that have completed
+                    $fvRuns = 0;
+                    $rvRuns = 0;
+                    foreach( $pageData as &$run )
+                    {
+                        if( isset($run[0]) )
+                            $fvRuns++;
+                        if( isset($run[1]) )
+                            $rvRuns++;
+                    }
+                    
+                    $ret['fvRunsCompleted'] = $fvRuns;
+                    $ret['rvRunsCompleted'] = $rvRuns;
+                    
+                    // TODO: Add actual summary result information
                 }
-                
-                $ret['fvRunsCompleted'] = $fvRuns;
-                $ret['rvRunsCompleted'] = $rvRuns;
-                
-                // TODO: Add actual summary result information
             }
             else
             {
-                $found = false;
-                $count = 0;
-                
-                // get it's position in line
-                if( isset($test['test']['loc']) )
+                if( $includePosition )
                 {
-                    if( !isset($testQueue[$test['test']['loc']]) )
+                    $found = false;
+                    $count = 0;
+                    
+                    // get it's position in line
+                    if( isset($test['test']['loc']) )
                     {
-                        $workDir = $locations[$test['test']['loc']]['localDir'];
-                        
-                        // get a list of all of the files in the directory and store them indexed by filetime
-                        $files = array();
-                        $f = scandir($workDir);
-                        foreach( $f as $file )
+                        if( !isset($testQueue[$test['test']['loc']]) )
                         {
-                            $fileTime = filemtime("$workDir/$file");
-                            if( $fileTime && !isset($files[$fileTime]) )
-                                $files[$fileTime] = $file;
-                            else
-                                $files[] = $file;
+                            $workDir = $locations[$test['test']['loc']]['localDir'];
+                            
+                            // get a list of all of the files in the directory and store them indexed by filetime
+                            $files = array();
+                            $f = scandir($workDir);
+                            foreach( $f as $file )
+                            {
+                                $fileTime = filemtime("$workDir/$file");
+                                if( $fileTime && !isset($files[$fileTime]) )
+                                    $files[$fileTime] = $file;
+                                else
+                                    $files[] = $file;
+                            }
+                            
+                            // sort it by time
+                            ksort($files);
+                            $testQueue[$test['test']['loc']] = $files;
                         }
                         
-                        // sort it by time
-                        ksort($files);
-                        $testQueue[$test['test']['loc']] = $files;
-                    }
-                    
-                    // loop by priority until I find the test I'm looking for
-                    $testId;
-                    
-                    // loop through all of the possible extension types in priority order
-                    $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
-                    foreach( $priority as $ext )
-                    {
-                        foreach( $testQueue[$test['test']['loc']] as $file )
+                        // loop by priority until I find the test I'm looking for
+                        $testId;
+                        
+                        // loop through all of the possible extension types in priority order
+                        $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
+                        foreach( $priority as $ext )
                         {
-                            $parts = pathinfo($file);
-                            if( !strcasecmp( $parts['extension'], $ext) )
+                            foreach( $testQueue[$test['test']['loc']] as $file )
                             {
-                                $testId = basename($file, ".$ext");;
-                                if( $testId == $id )
+                                $parts = pathinfo($file);
+                                if( !strcasecmp( $parts['extension'], $ext) )
                                 {
-                                    $found = true;
-                                    break 2;
+                                    $testId = basename($file, ".$ext");;
+                                    if( $testId == $id )
+                                    {
+                                        $found = true;
+                                        break 2;
+                                    }
+                                    else
+                                        $count++;
                                 }
-                                else
-                                    $count++;
                             }
                         }
                     }
-                }
-                
-                if( $found )
-                {
-                    $ret['statusCode'] = 101;
-                    $ret['statusText'] = 'Test Pending';
-                    $ret['behindCount'] = $count;
+                    
+                    if( $found )
+                    {
+                        $ret['statusCode'] = 101;
+                        $ret['statusText'] = 'Test Pending';
+                        $ret['behindCount'] = $count;
+                    }
+                    else
+                    {
+                        $ret['statusCode'] = 401;
+                        $ret['statusText'] = 'Test request not found';
+                    }
                 }
                 else
                 {
-                    $ret['statusCode'] = 401;
-                    $ret['statusText'] = 'Test request not found';
+                    $ret['statusCode'] = 101;
+                    $ret['statusText'] = 'Test Pending';
                 }
             }
         }
