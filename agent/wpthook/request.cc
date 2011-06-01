@@ -206,6 +206,13 @@ bool Request::Process() {
       _test_state._doc_bytes_out += _data_sent;
       _test_state._doc_requests++;
     }
+
+    if (_result >= 400 || _result < 0) {
+      if (_test_state._test_result == TEST_RESULT_NO_ERROR)
+        _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
+      else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
+        _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+    }
   }
   LeaveCriticalSection(&cs);
 

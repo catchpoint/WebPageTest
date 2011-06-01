@@ -32,6 +32,11 @@ class Results;
 class ScreenCapture;
 class WptTestHook;
 
+const int TEST_RESULT_NO_ERROR = 0;
+const int TEST_RESULT_TIMEOUT = 99997;
+const int TEST_RESULT_TIMEOUT_CONTENT_ERROR = 99998;
+const int TEST_RESULT_CONTENT_ERROR = 99999;
+
 class CProgressData {
 public:
   CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0){}
@@ -77,6 +82,7 @@ public:
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
+  SYSTEMTIME    _start_time;
 
   LARGE_INTEGER _first_byte;
   int _doc_requests;
@@ -86,6 +92,7 @@ public:
   int _doc_bytes_out;
   int _bytes_out;
   int _last_bytes_in;
+  int _test_result;
 
   bool  _active;
   int   _current_document;
@@ -101,7 +108,6 @@ public:
 
 private:
   int   _test_timeout; 
-  bool  _timeout;
   bool  _end_on_load;
   int   _next_document;
   Results&  _results;

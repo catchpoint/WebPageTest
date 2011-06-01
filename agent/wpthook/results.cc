@@ -251,9 +251,13 @@ void Results::SavePageData(void){
     // build up the string of data fileds for the page result
 
     // Date
-    result += "\t";
+    buff.Format("%d/%d/%d\t", _test_state._start_time.wMonth,
+          _test_state._start_time.wDay, _test_state._start_time.wYear);
+    result += buff;
     // Time
-    result += "\t";
+    buff.Format("%d:%d:%d\t", _test_state._start_time.wHour,
+          _test_state._start_time.wMinute, _test_state._start_time.wSecond);
+    result += buff;
     // Event Name
     result += "\t";
     // URL
@@ -298,7 +302,8 @@ void Results::SavePageData(void){
     // Other Responses
     result += "\t";
     // Error Code
-    result += "\t";
+    buff.Format("%d\t", _test_state._test_result);
+    result += buff;
     // Time to Start Render (ms)
     int render_start_time = 0;
     if (_test_state._render_start.QuadPart > _test_state._start.QuadPart)
@@ -488,9 +493,13 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   CStringA buff;
 
   // Date
-  result += "\t";
+  buff.Format("%d/%d/%d\t", _test_state._start_time.wMonth,
+        _test_state._start_time.wDay, _test_state._start_time.wYear);
+  result += buff;
   // Time
-  result += "\t";
+  buff.Format("%d:%d:%d\t", _test_state._start_time.wHour,
+        _test_state._start_time.wMinute, _test_state._start_time.wSecond);
+  result += buff;
   // Event Name
   result += "\t";
   // IP Address
