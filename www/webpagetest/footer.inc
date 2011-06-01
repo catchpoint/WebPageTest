@@ -129,3 +129,5 @@
     }
     </script>
     <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
+    <script type="text/javascript" src="http://apis.google.com/js/plusone.js"></script>
+    

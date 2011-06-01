@@ -904,6 +904,8 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Please enter a Valid URL.  <b>$host</b> is not a valid Internet host name";
     elseif( !strcmp($host, "127.0.0.1") || ((!strncmp($host, "192.168.", 8)  || !strncmp($host, "10.", 3)) && !$settings['allowPrivate']) )
         $error = "You can not test <b>$host</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
+    elseif( !strcasecmp(substr($url, -4), '.pdf') )
+        $error = "You can not test PDF files with WebPagetest";
     else
         $ret = true;
 

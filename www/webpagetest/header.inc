@@ -95,7 +95,11 @@
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
+
+        if (!$privateInstall)
+            echo '<div class="gplusone"><g:plusone size="small" href="http://www.webpagetest.org/"></g:plusone></div>';
 ?></ul>
+
 </div>
     
 <div id="main">
