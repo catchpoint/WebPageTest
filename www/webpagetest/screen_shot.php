@@ -32,18 +32,18 @@ $page_description = "Website performance test screen shots$testLabel.";
         div.test_results-content {
             text-align: center;
         }
-        table {
+        #messages {
             text-align: left;
             width: 50em;
             display: block;
             margin-left: auto;
             margin-right: auto;
         }
-        table th {
+        #messages th {
             padding: 0.2em 1em;
             text-align: left;
         }
-        table td {
+        #messages td {
             padding: 0.2em 1em;
         }
         .time {
@@ -120,13 +120,15 @@ $page_description = "Website performance test screen shots$testLabel.";
                 if( count($messages) )
                 {
                     echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
-                    echo "<table class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
+                    echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
                     foreach( $messages as $message )
                         echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";
                     echo "</table>\n";
                 }
             ?>
             
+            </div>
+
             <?php include('footer.inc'); ?>
         </div>
 	</body>
