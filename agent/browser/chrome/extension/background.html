@@ -49,6 +49,7 @@ function wptOnNavigate(){
 // notification that the page loaded
 function wptOnLoad(load_time){
   try{
+		g_active = false;
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://127.0.0.1:8888/event/load?load_time="+load_time, true);
     xhr.send();
@@ -60,17 +61,13 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
   if (g_active){
     if (props.status == "loading")
       wptOnNavigate();
-    if (props.status == "complete") {
-      // get the navigation timings from the page
-      chrome.tabs.executeScript(tabId, {file: "script.js"});
-    }
   }
 });
 
 // Add a listener for messages from script.js.
 chrome.extension.onConnect.addListener(function(port) {
   port.onMessage.addListener(function(data) {
-    if (data.message == "load") {
+    if (g_active && data.message == "wptLoad") {
       wptOnLoad(data.load_time);
     }    
   });
