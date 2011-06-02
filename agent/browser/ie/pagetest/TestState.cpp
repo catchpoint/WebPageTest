@@ -421,6 +421,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			EnterCriticalSection(&cs);
 			active = true;
 			available = false;
+      capturingAFT = false;
       if( aft )
         capturingAFT = true;
 			reportSt = NONE;
@@ -511,8 +512,11 @@ void CTestState::CheckComplete()
 				  while( pos )
 				  {
 					  CWinInetRequest * r = winInetRequestList.GetNext(pos);
-					  if( r && r->valid && !r->closed )
+            if( r && r->valid && !r->end )
+            {
+              ATLTRACE(_T("[Pagetest] (0x%p) %s%s\n"), r->hRequest, r->host, r->object);
 						  openRequests++;
+            }
 				  }
 				  LeaveCriticalSection(&cs);
 

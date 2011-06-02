@@ -781,7 +781,6 @@ void CWinInetEvents::AfterHttpOpenRequest(HINTERNET hRequest, void * context)
 -----------------------------------------------------------------------------*/
 void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPVOID lpOptional, DWORD dwOptionalLength)
 {
-	ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - OnHttpSendRequest\n"), GetCurrentThreadId(), hRequest);
 
 	// update the activity time
 	if( active )
@@ -790,6 +789,15 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 		CWinInetRequest * r = NULL;
 		winInetRequests.Lookup(hRequest, r);
 		LeaveCriticalSection(&cs);
+
+    if( r )
+    {
+      ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - OnHttpSendRequest: %s%s\n"), GetCurrentThreadId(), hRequest, r->host, r->object);
+    }
+    else
+    {
+      ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - OnHttpSendRequest\n"), GetCurrentThreadId(), hRequest);
+    }
 
 		// modify the user agent string if it was passed as a custom header (IE8)
 		if( !userAgent.IsEmpty() )

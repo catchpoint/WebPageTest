@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 CPagetestBase::CPagetestBase(void):
 	available(false)
-	, abm(0)
+	, abm(1)
 	, openRequests(0)
 	, testUrl(_T(""))
 	, timeout(240)
@@ -55,6 +55,7 @@ CPagetestBase::CPagetestBase(void):
   , _GDIWindowUpdated(NULL)
   , windowUpdated(false)
   , hGDINotifyWindow(NULL)
+  , aft(0)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 	msFreq = freq / (__int64)1000;
@@ -220,14 +221,12 @@ DWORD CPagetestBase::CheckABM(void)
 	abm = -1;
 	if( runningScript )
 		abm = script_ABM;
-	else if( interactive )
-		abm = 2;
 	
 	if( abm == -1 )
 	{
 		// check the abm flag and if it is set, use that as the end of document measurement
 		// this should be removed when the analysts can use the activity time field instead
-		abm = 0;
+		abm = 1;
 		CRegKey key;
 		if( key.Open(HKEY_CURRENT_USER, _T("Software\\America Online\\SOM"), KEY_READ) == ERROR_SUCCESS )
 		{

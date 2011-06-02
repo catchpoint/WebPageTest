@@ -740,12 +740,6 @@ void CPagetestReporting::ProcessResults(void)
 	measurementType = 1;
 	if( abm == 1 )
 		measurementType = 2;
-	else if( abm == 2 )
-	{
-		// automatic determination based on the number of requests as part of the doc
-		if( (double)nRequest * 0.50 > (double)nRequest_doc )
-			measurementType = 2;
-	}
 	
 	// pick the load time based on the measurement type (either endDoc or lastActivity)
 	if( measurementType == 1 )

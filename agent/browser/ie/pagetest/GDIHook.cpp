@@ -127,22 +127,8 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1
 		HWND hWnd = WindowFromDC(hdc);
     if( hWnd )
     {
-      TCHAR wndClass[1024];
-      if( GetClassName(hWnd, wndClass, _countof(wndClass)) )
-      {
-        ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X - %s\n"), hWnd, wndClass);
-      }
-      else
-      {
-        ATLTRACE(_T("[pagetest] - BitBlt() - 0x%08X\n"), hWnd);
-      }
-
 		  if( hWnd == dlg->hBrowserWnd )
         dlg->SetBrowserWindowUpdated(true);
-    }
-    else
-    {
-      ATLTRACE(_T("[pagetest] - BitBlt() - Not a window\n"));
     }
 	}
 

@@ -873,11 +873,9 @@ void CURLBlaster::ConfigurePagetest(void)
 			CString descriptor = _T("Launch");
 			RegSetValueEx(hKey, _T("Descriptor"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)descriptor, (descriptor.GetLength() + 1) * sizeof(TCHAR));
 
-			DWORD abm = 2;
+			DWORD abm = 1;
 			if( info.urlType == 1 )
 				abm = 0;
-			else if( info.urlType == 2 )
-				abm = 1;
 			RegSetValueEx(hKey, _T("ABM"), 0, REG_DWORD, (const LPBYTE)&abm, sizeof(abm));
 
 			DWORD val = 0;
