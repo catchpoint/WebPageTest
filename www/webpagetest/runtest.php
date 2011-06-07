@@ -2,6 +2,7 @@
     require_once('common.inc');
     require_once('unique.inc');
     import_request_variables('PG', 'req_');
+    set_time_limit(300);
      
     $xml = false;
     if( !strcasecmp($req_f, 'xml') )
@@ -308,30 +309,12 @@
                 if( strlen($req_r) )
                     echo "<requestId>{$req_r}</requestId>\n";
                 echo "<data>\n";
-                if( $test['batch'] || $test['batch_locations'])
-                {
-                    foreach( $test['tests'] as &$t )
-                    {
-                        echo "<test>\n";
-                        echo "<testId>{$t['id']}</testId>\n";
-                        echo "<testUrl>" . htmlentities($t['url']) . "</testUrl>\n";
-                        echo "<ownerKey>{$t['owner']}</ownerKey>\n";
-                        echo "<xmlUrl>http://$host$uri/xmlResult/{$t['id']}/</xmlUrl>\n";
-                        echo "<userUrl>http://$host$uri/result/{$t['id']}/</userUrl>\n";
-                        echo "<summaryCSV>http://$host$uri/result/{$t['id']}/page_data.csv</summaryCSV>\n";
-                        echo "<detailCSV>http://$host$uri/result/{$t['id']}/requests.csv</detailCSV>\n";
-                        echo "</test>\n";
-                    }
-                }
-                else
-                {
-                    echo "<testId>{$test['id']}</testId>\n";
-                    echo "<ownerKey>{$test['owner']}</ownerKey>\n";
-                    echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
-                    echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>\n";
-                    echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
-                    echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
-                }
+                echo "<testId>{$test['id']}</testId>\n";
+                echo "<ownerKey>{$test['owner']}</ownerKey>\n";
+                echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
+                echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>\n";
+                echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
+                echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
                 echo "</data>\n";
                 echo "</response>\n";
                 
@@ -344,31 +327,12 @@
                 if( strlen($req_r) )
                     $ret['requestId'] = $req_r;
                 $ret['data'] = array();
-                if( $test['batch'] || $test['batch_locations'])
-                {
-                    $ret['data']['test'] = array();
-                    foreach( $test['tests'] as &$t )
-                    {
-                        $entry = array();
-                        $entry['testId'] = $t['id'];
-                        $entry['ownerKey'] = $t['owner'];
-                        $entry['testUrl'] = $t['url'];
-                        $entry['jsonUrl'] = "http://$host$uri/jsonResult/{$t['id']}/";
-                        $entry['userUrl'] = "http://$host$uri/result/{$t['id']}/";
-                        $entry['summaryCSV'] = "http://$host$uri/result/{$t['id']}/page_data.csv";
-                        $entry['detailCSV'] = "http://$host$uri/result/{$t['id']}/requests.csv";
-                        $ret['data']['test'][] = $entry;
-                    }
-                }
-                else
-                {
-                    $ret['data']['testId'] = $test['id'];
-                    $ret['data']['ownerKey'] = $test['owner'];
-                    $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult/{$test['id']}/";
-                    $ret['data']['userUrl'] = "http://$host$uri/result/{$test['id']}/";
-                    $ret['data']['summaryCSV'] = "http://$host$uri/result/{$test['id']}/page_data.csv";
-                    $ret['data']['detailCSV'] = "http://$host$uri/result/{$test['id']}/requests.csv";
-                }
+                $ret['data']['testId'] = $test['id'];
+                $ret['data']['ownerKey'] = $test['owner'];
+                $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult/{$test['id']}/";
+                $ret['data']['userUrl'] = "http://$host$uri/result/{$test['id']}/";
+                $ret['data']['summaryCSV'] = "http://$host$uri/result/{$test['id']}/page_data.csv";
+                $ret['data']['detailCSV'] = "http://$host$uri/result/{$test['id']}/requests.csv";
                 header ("Content-type: application/json");
                 echo json_encode($ret);
             }
@@ -729,6 +693,9 @@ function ValidateParameters(&$test, $locations, &$error)
             
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
+            
+            if( $test['aft'] && $test['runs'] > 1 )
+                $error = "Above the Fold Time testing is currently limited to 1 test at a time because it is extremely resource intensive.";
         }
     }
     elseif( !strlen($error) )
@@ -1288,7 +1255,7 @@ function ParseBulkUrl($line)
     $query = strpos($line, '?');
     $label = null;
     $url = null;
-    if( $equals === false || ($query !== false && $equals < $query) )
+    if( $equals === false || ($query !== false && $query < $equals) )
         $url = $line;
     else
     {
