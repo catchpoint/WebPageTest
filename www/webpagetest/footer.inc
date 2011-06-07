@@ -100,7 +100,7 @@
             $remaining = $count;
             foreach( $sponsors as &$sponsor )
             {
-                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4) )
+                if( $i >= $rowCount || ($i == $rowCount - 1 && $remaining < 4 && $remaining > $rowCount) )
                 {
                     $i = 1;
                     echo '</tr></table><table class="links"><tr>';
@@ -129,5 +129,5 @@
     }
     </script>
     <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
-    <script type="text/javascript" src="http://apis.google.com/js/plusone.js"></script>
+    <script type="text/javascript" async="async" src="https://apis.google.com/js/plusone.js"></script>
     
