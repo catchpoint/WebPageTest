@@ -42,7 +42,7 @@
                 ?>
             </div>
             <?php
-              $statusText = GetTestStatusText($id, $test);
+              $statusText = GetTestStatusText($id);
             ?>
             <div id="statusImg">
                 <?php

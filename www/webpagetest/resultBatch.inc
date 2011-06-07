@@ -1,4 +1,5 @@
 <?php
+set_time_limit(300);
 if( !defined('BARE_UI') )
     define('BARE_UI', true);
 require_once('testStatus.inc');
@@ -19,20 +20,20 @@ $simpleView = false;
 if( !strcasecmp($test['testinfo']['view'], 'simple') )
     $simpleView = true;
 
-$complete = true;
-$videoComplete = true;
+$fvonly = false;
+if( $test['test']['fvonly'] )
+    $fvonly = true;
+
+// run a quick check to see if the tests are complete
 $dirty = false;
-$testHtml = '';
-if( $simpleView )
-    $testHtml = DisplaySimple($tests, $complete, $test['testinfo']['video'], $videoComplete, $dirty);
-elseif( count($tests['variations']) )
-    $testHtml = DisplayTestsWithVariations($tests, $complete);
-else
-    $testHtml = DisplayTests($tests, $complete);
+$complete = CheckTests($tests, $dirty);
 
 // rewrite the bulk file if it changed
 if( $dirty )
+{
     gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    $dirty = false;
+}
 
 $page_keywords = array('Bulk','Result','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Bulk website performance test result$testLabel.";
@@ -51,17 +52,6 @@ $page_description = "Bulk website performance test result$testLabel.";
             </noscript>
             <script language="JavaScript">
             setTimeout( "window.location.reload(true)", 30000 );
-            </script>
-            <?php
-        }
-        elseif( !$videoComplete )
-        {
-            ?>
-            <noscript>
-            <meta http-equiv="refresh" content="10" />
-            </noscript>
-            <script language="JavaScript">
-            setTimeout( "window.location.reload(true)", 10000 );
             </script>
             <?php
         }
@@ -110,7 +100,20 @@ $page_description = "Bulk website performance test result$testLabel.";
                 else
                     echo '<h2>Please wait while the testing is performed<br><span class="small">This page will refresh every 30 seconds until the test is complete</span></h2>';
                 echo '<br>';
-                echo $testHtml;
+
+                if( $simpleView )
+                    DisplaySimple($tests, $test['testinfo']['video'], $dirty);
+                elseif( count($tests['variations']) )
+                    DisplayTestsWithVariations($tests);
+                else
+                    DisplayTests($tests);
+
+                // rewrite the bulk file if it changed
+                if( $dirty )
+                {
+                    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+                    $dirty = false;
+                }
 
                 if ($complete)
                 {
@@ -137,15 +140,16 @@ $page_description = "Bulk website performance test result$testLabel.";
 * 
 * @param mixed $tests
 */
-function DisplayTests(&$tests, &$all_tests_completed)
+function DisplayTests(&$tests)
 {
-    $all_tests_completed = true;
-    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
+    global $fvonly;
+    echo '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
-            <th>Median load time (First view)</th>
-            <th>Median load time (Repeat view)</th>
-            <th>Raw page data</th>
+            <th>Median load time (First view)</th>';
+    if( !$fvonly )
+        echo '<th>Median load time (Repeat view)</th>';
+    echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
         </tr>';
@@ -154,10 +158,9 @@ function DisplayTests(&$tests, &$all_tests_completed)
         $label = $test['l'];
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
-        $html .= DisplayTest($test['id'], $test['u'], $label, $all_tests_completed);
+        DisplayTest($test['id'], $test['u'], $label, $test['c']);
     }
-    $html .= '</table>';
-    return $html;
+    echo '</table>';
 }
 
 /**
@@ -165,15 +168,16 @@ function DisplayTests(&$tests, &$all_tests_completed)
 * 
 * @param mixed $tests
 */
-function DisplayTestsWithVariations(&$tests, &$all_tests_completed)
+function DisplayTestsWithVariations(&$tests)
 {
-    $all_tests_completed = true;
-    $html = '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
+    global $fvonly;
+    echo '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
-            <th>Median load time (First view)</th>
-            <th>Median load time (Repeat view)</th>
-            <th>Raw page data</th>
+            <th>Median load time (First view)</th>';
+    if( !$fvonly )
+        echo '<th>Median load time (Repeat view)</th>';
+    echo   '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
         </tr>';
@@ -182,13 +186,11 @@ function DisplayTestsWithVariations(&$tests, &$all_tests_completed)
         $label = $test['l'];
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
-        $html .= DisplayTest($test['id'], $test['u'], $label, $all_tests_completed);
+        DisplayTest($test['id'], $test['u'], $label, $test['c']);
         foreach( $test['v'] as $variationIndex => $variationId )
-            $html .= DisplayTest($variationId, CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q']), "$label - {$tests['variations'][$variationIndex]['l']}", $all_tests_completed);
+            DisplayTest($variationId, CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q']), "$label - {$tests['variations'][$variationIndex]['l']}", $test['c']);
     }
-    $html .= '</table>';
-
-    return $html;
+    echo '</table>';
 }
 
 /**
@@ -198,43 +200,43 @@ function DisplayTestsWithVariations(&$tests, &$all_tests_completed)
 * @param mixed $current_url
 * @param mixed $current_label
 */
-function DisplayTest($current_id, $current_url, $current_label, &$all_tests_completed)
+function DisplayTest($id, $url, $label, $complete)
 {
-    $html = '';
-    $current_testPath = './' . GetTestPath($current_id);
-    $current_test = parse_ini_file("$current_testPath/testinfo.ini",true);
-    $fileUrl = GetFileUrl($current_url);
+    global $fvonly;
+    $testPath = './' . GetTestPath($id);
+    $fileUrl = GetFileUrl($url);
 
-    $html .= '<tr>';
-    $safeUrl = htmlspecialchars($current_url);
-    $html .= "<td><a href=\"/result/$current_id/\" title=\"$safeUrl\" target=\"_blank\">$current_label</a></td>";
-    if( (isset($current_test['test']) && isset($current_test['test']['completeTime'])) )
+    echo '<tr>';
+    $safeUrl = htmlspecialchars($url);
+    echo "<td><a href=\"/result/$id/\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
+    if( $complete )
     {
-        $current_pageData = loadAllPageData($current_testPath);
-        $fvMedian = GetMedianRun($current_pageData, 0);
-        $rvMedian = GetMedianRun($current_pageData, 1);
+        $pageData = loadAllPageData($testPath);
+        $fvMedian = GetMedianRun($pageData, 0);
+        $rvMedian = GetMedianRun($pageData, 1);
         $rvMedian_column = '';
         if ($rvMedian)
-            $rvMedian_column = number_format($current_pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
-        $html .= "<td>" . number_format($current_pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
-        $html .= "<td>$rvMedian_column</td>";
-        $html .= "<td><a href=\"/result/$current_id/{$current_id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";
-        $html .= "<td><a href=\"/result/$current_id/{$current_id}_{$fileUrl}_requests.csv\">Download Object Data</a></td>";
-        $html .= "<td><a href=\"/export.php?test=$current_id\">Download HAR</a></td>";
+            $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
+        echo "<td>" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
+        if( !$fvonly )
+            echo "<td>$rvMedian_column</td>";
+        echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";
+        echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Download Object Data</a></td>";
+        echo "<td><a href=\"/export.php?test=$id\">Download HAR</a></td>";
     }
     else
     {
-        $all_tests_completed = false;
-        $html .= '<td colspan="5">';
-        $html .= GetTestStatusText($current_id, $current_test);
-        $status = GetTestStatus($current_id);
+        if( $fvonly )
+            echo '<td colspan="4">';
+        else
+            echo '<td colspan="5">';
+        echo GetTestStatusText($id);
+        $status = GetTestStatus($id);
         if( $status['statusCode'] == 101 )
-            $html .= "( <a href=\"/cancelTest.php?test=$current_id\">Cancel Test</a> )";
-        $html .= '</td>';
+            echo "( <a href=\"/cancelTest.php?test=$id\">Cancel Test</a> )";
+        echo '</td>';
     }
-    $html .= "</tr>\n";
-        
-    return $html;
+    echo "</tr>\n";
 }
 
 /**
@@ -243,9 +245,9 @@ function DisplayTest($current_id, $current_url, $current_label, &$all_tests_comp
 * @param mixed $tests
 * @param mixed $complete
 */
-function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
+function DisplaySimple(&$tests, $video, &$dirty)
 {
-    $html = '<table id="batchResults" border="1" cellpadding="15" cellspacing="0">
+    echo '<table id="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
             <th class="empty"></th>';
     $fvLoadTime = array();
@@ -253,7 +255,8 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
     $rvLoadTimes = array();
     $rvRenderTimes = array();
     $count = 0;
-    $fvonly = false;
+    global $fvonly;
+    global $complete;
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
@@ -264,12 +267,8 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
         $rvRenderTime = null;
         $id = $test['id'];
         $testPath = './' . GetTestPath($id);
-        $current_test = parse_ini_file("$testPath/testinfo.ini",true);
-        if( $current_test['test']['fvonly'] )
-            $fvonly = true;
-        if( (isset($current_test['test']) && isset($current_test['test']['completeTime'])) )
+        if( $test['c'] )
         {
-            $test['complete'] = true;
             $pageData = loadAllPageData($testPath);
             if( CountSuccessfulTests($pageData, 0) )
             {
@@ -286,14 +285,15 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
         }
         else
         {
-            $test['complete'] = false;
-            $test['status'] = GetTestStatusText($id, $current_test);
-            $complete = false;
+            $test['status'] = GetTestStatusText($id);
         }
         $fvLoadTimes[$count] = $fvLoadTime;
         $fvRenderTimes[$count] = $fvRenderTime;
-        $rvLoadTimes[$count] = $rvLoadTime;
-        $rvRenderTimes[$count] = $rvRenderTime;
+        if( !$fvonly )
+        {
+            $rvLoadTimes[$count] = $rvLoadTime;
+            $rvRenderTimes[$count] = $rvRenderTime;
+        }
         $count++;
     }
     
@@ -305,48 +305,51 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
         $id = $test['id'];
-        $html .= "<th><a href=\"/result/$id/\">$label</a></th>";
+        echo "<th><a href=\"/result/$id/\">$label</a></th>";
         if( $count && $complete )
-            $html .= "<th>Difference</a></th>";
+            echo "<th>Difference</a></th>";
         $count++;
     }
-    $html .= '</tr>';
+    echo '</tr>';
     
     // FV Page load time
     if( $complete )
     {
-        $html .= DisplayMetric('Page Load Time', $fvLoadTimes, $count);
-        $html .= DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-        $html .= DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
-        $html .= DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+        DisplayMetric('Page Load Time', $fvLoadTimes, $count);
+        DisplayMetric('Start Render Time', $fvRenderTimes, $count);
+        if( !$fvonly )
+        {
+            DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
+            DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+        }
 
         // links to the test results
-        $html .= '<tr><td class="right">Full Test Result</td>';
+        echo '<tr><td class="right">Full Test Result</td>';
         $count = 0;
         foreach( $tests['urls'] as &$test )
         {
-            $html .= "<td><a href=\"/result/{$test['id']}/\"><img class=\"progress\" src=\"{$GLOBALS['cdnPath']}/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
+            echo "<td><a href=\"/result/{$test['id']}/\"><img class=\"progress\" src=\"{$GLOBALS['cdnPath']}/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
             if( $count )
-                $html .= "<td></td>";
+                echo "<td></td>";
             $count++;
         }
-        $html .= "</tr>";
+        echo "</tr>";
     }
     else
     {
-        $html .= "<tr><td>Test Status</td>";
+        echo "<tr><td>Test Status</td>";
         foreach( $tests['urls'] as &$test )
         {
-            $html .= '<td>';
-            if( $test['complete'] )
-                $html .= 'Complete';
+            echo '<td>';
+            if( $test['c'] )
+                echo 'Complete';
             else
-                $html .= $test['status'];
-            $html .= '</td>';
+                echo $test['status'];
+            echo '</td>';
         }
-        $html .= '</tr>';
+        echo '</tr>';
     }
-    $html .= '</table><br>';
+    echo '</table><br>';
     
     // video
     if( $complete && $video )
@@ -375,14 +378,15 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
         
         if( $videoComplete )
         {
-            $html .= '<h2>Visual Comparison<br><span class="small">Compared until the latest visual change on each page</span></h2>';
-            $html .= VideoHtml($tests['videoID']);
+            echo '<h2>Visual Comparison<br><span class="small">Compared until the latest visual change on each page</span></h2>';
+            VideoHtml($tests['videoID']);
         }
         else
-            $html .= '<h2>Please wait while the video comparison is created<br><span class="small">This page will refresh every 10 seconds until the video is ready</span></h2>';
+        {
+            echo '<h2>Please wait while the video comparison is created<br><span class="small">This page will refresh every 10 seconds until the video is ready</span></h2>';
+            echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+        }
     }
-    
-    return $html;
 }
 
 /**
@@ -395,14 +399,14 @@ function DisplaySimple(&$tests, &$complete, $video, &$videoComplete, &$dirty)
 function DisplayMetric($metric, &$values, $count)
 {
     // the actual values
-    $html .= "<tr><td class=\"right\"><b>$metric</b></td>";
+    echo "<tr><td class=\"right\"><b>$metric</b></td>";
     $baseline = $values[0];
     for( $i = 0; $i < $count; $i++ )
     {
-        $html .= '<td>';
+        echo '<td>';
         if ($values[$i])
-            $html .= number_format( $values[$i] / 1000.0, 3) . 's';
-        $html .= '</td>';
+            echo number_format( $values[$i] / 1000.0, 3) . 's';
+        echo '</td>';
         if( $i )
         {
             if ($values[$i] && $baseline > 0 && $i)
@@ -418,15 +422,13 @@ function DisplayMetric($metric, &$values, $count)
                 }
                 elseif( $delta < 0 )
                     $class = 'good';
-                $html .= "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
+                echo "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
             }
             else
-                $html .= '<td></td>';
+                echo '<td></td>';
         }
     }
-    $html .= '</tr>';
-    
-    return $html;
+    echo '</tr>';
 }
 
 /**
@@ -504,8 +506,8 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    $html = "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player\"></div>\n";
-    $html .= "<script>\n
+    echo "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player\"></div>\n";
+    echo "<script>\n
                     flowplayer(\"player\", \n
                                     {\n
                                         src: \"/video/player/flowplayer-3.2.4.swf\",\n
@@ -519,12 +521,12 @@ function VideoHtml($id)
                                         playlist: [";
     if( $hasThumb )
     {
-        $html .= "{ url: '/$dir/video.png'} ,\n";
-        $html .= "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
+        echo "{ url: '/$dir/video.png'} ,\n";
+        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
     }
     else
-        $html .= "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
-    $html .= "                          ],\n
+        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
+    echo "                          ],\n
                                         plugins: {\n
                                             controls: {\n
                                                 volume:false,\n
@@ -543,7 +545,52 @@ function VideoHtml($id)
                                     }\n
                                 ); \n
                 </script>\n";
+}
 
-    return $html;
+/**
+* Walk through the tests determining which ones are complete
+* 
+* @param mixed $tests
+*/
+function CheckTests(&$tests, &$dirty)
+{
+    $allComplete = true;
+
+    foreach( $tests['urls'] as &$test )
+    {
+        if( !$test['c'] )
+        {
+            $complete = true;
+            $id = $test['id'];
+            $testPath = './' . GetTestPath($id);
+            $testIni = parse_ini_file("$testPath/testinfo.ini",true);
+            if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                $complete = false;
+            else
+            {
+                // go through all of the variations as well
+                foreach( $test['v'] as $variationId )
+                {
+                    $testPath = './' . GetTestPath($variationId);
+                    $testIni = parse_ini_file("$testPath/testinfo.ini",true);
+                    if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                    {
+                        $complete = false;
+                        break;
+                    }
+                }
+            }
+            
+            if( $complete )
+            {
+                $test['c'] = 1;
+                $dirty = true;
+            }
+            else
+                $allComplete = false;
+        }
+    }
+    
+    return $allComplete;
 }
 ?>

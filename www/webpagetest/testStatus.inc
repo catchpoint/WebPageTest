@@ -162,7 +162,7 @@ function GetTestStatus($id, $includePosition = true)
 /**
  * Get the status text for the given test.
  */
-function GetTestStatusText($id, $test)
+function GetTestStatusText($id)
 {
   $statusText = "";
   $testPath = './' . GetTestPath($id);
@@ -171,17 +171,15 @@ function GetTestStatusText($id, $test)
   {
     return "Test Cancelled";
   }
-  if( $test['test']['startTime'] )
+  if( $testInfoJson['started'] )
   {
     $started = true;
     $now = time();
-    $start = strtotime($test['test']['startTime']);
+    $start = $testInfoJson['started'];
     if( isset($testInfoJson['cancelled']) )
     {
         return "Test Cancelled";
     }
-    if( $testInfoJson['started'] )
-      $start = $testInfoJson['started'];
 
     $elapsed = 0;
     if( $now > $start )
