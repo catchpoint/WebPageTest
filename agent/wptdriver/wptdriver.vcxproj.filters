@@ -82,9 +82,6 @@
     <ClCompile Include="zlib\contrib\minizip\zip.c">
       <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="log.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="traceroute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -182,9 +179,6 @@
     </ClInclude>
     <ClInclude Include="zlib\zlib.h">
       <Filter>Third-Party\zlib\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="log.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="traceroute.h">
       <Filter>Header Files</Filter>

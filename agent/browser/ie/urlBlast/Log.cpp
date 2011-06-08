@@ -239,17 +239,18 @@ void CLog::GetWindowsVersion(DWORD& ver, CString& val)
 					{
 						case 0: val += _T(" 2000"); break;
 						case 1: val += _T(" XP"); break;
-						case 2: val += _T(" Server 2003"); break;
+						case 2: val += (GetSystemMetrics(SM_SERVERR2) == 0 ? _T(" Server 2003") : _T(" Server 2003 R2")); break;
 					}
 				}
 				break;
 				
 			case 6:	
 				{
-					if( info.wProductType == VER_NT_WORKSTATION )
-						val += _T(" Vista");
-					else
-						val += _T(" Server 2008");
+					switch( info.dwMinorVersion )
+					{
+            case 0: val += (info.wProductType == VER_NT_WORKSTATION ? _T(" Vista") : _T(" Server 2008")); break;
+            case 1: val += (info.wProductType == VER_NT_WORKSTATION ? _T(" 7") : _T(" Server 2008 R2")); break;
+          }
 				}
 		}
 

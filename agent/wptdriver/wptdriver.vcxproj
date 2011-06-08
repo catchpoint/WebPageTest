@@ -110,7 +110,6 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
   <ItemGroup>
     <ClInclude Include="ipfw.h" />
     <ClInclude Include="ipfw_int.h" />
-    <ClInclude Include="log.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -144,7 +143,6 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipfw.cc" />
-    <ClCompile Include="log.cc" />
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

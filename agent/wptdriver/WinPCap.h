@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 #include <pcap.h>
-#include "Log.h"
 
 typedef const char *(__cdecl * PCAP_LIB_VERSION)(void);
 typedef int(__cdecl * PCAP_FINDALLDEVS_EX)(char *source, 
