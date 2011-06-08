@@ -4,7 +4,9 @@ if( !defined('BARE_UI') )
     define('BARE_UI', true);
 require_once('testStatus.inc');
 $tests = null;
-if( gz_is_file("$testPath/tests.json") )
+if( gz_is_file("$testPath/bulk.json") )
+    $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
+elseif( gz_is_file("$testPath/tests.json") )
 {
     $legacyData = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
     $tests = array();
@@ -13,8 +15,6 @@ if( gz_is_file("$testPath/tests.json") )
     foreach( $legacyData as &$legacyTest )
         $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
 }
-elseif( gz_is_file("$testPath/bulk.json") )
-    $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
     
 $simpleView = false;
 if( !strcasecmp($test['testinfo']['view'], 'simple') )
@@ -230,8 +230,8 @@ function DisplayTest($id, $url, $label, $complete)
             echo '<td colspan="4">';
         else
             echo '<td colspan="5">';
-        echo GetTestStatusText($id);
         $status = GetTestStatus($id);
+        echo $status['statusText'];
         if( $status['statusCode'] == 101 )
             echo "( <a href=\"/cancelTest.php?test=$id\">Cancel Test</a> )";
         echo '</td>';

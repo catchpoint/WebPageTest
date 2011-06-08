@@ -18,19 +18,21 @@ function GetTestStatus($id, $includePosition = true)
     
     $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
     $testPath = './' . GetTestPath($id);
-    if( is_file("$testPath/testinfo.ini") )
+    $test = @parse_ini_file("$testPath/testinfo.ini",true);
+    if( isset($test) && isset($test['test']) )
     {
-        // make sure it is a valid test
-        $test = parse_ini_file("$testPath/testinfo.ini",true);
-        if( isset($test['test']) )
-        {
-            $ret['testId'] = $id;
-            $ret['runs'] = (int)$test['test']['runs'];
-            $ret['fvonly'] = (int)$test['test']['fvonly'];
-            
-            if( isset($test['test']['loc']) )
-                $ret['location'] = $test['test']['loc'];
+        $ret['testId'] = $id;
+        $ret['runs'] = (int)$test['test']['runs'];
+        $ret['fvonly'] = (int)$test['test']['fvonly'];
+        
+        if( isset($test['test']['loc']) )
+            $ret['location'] = $test['test']['loc'];
 
+        // see if it is a bulk test
+        if( $test['test']['batch'] || $test['test']['batch_locations'] )
+            GetBatchStatus($ret);
+        else
+        {
             // Ignore the cancelled tests.
             if( gz_is_file("$testPath/testinfo.json") )
             {
@@ -55,7 +57,51 @@ function GetTestStatus($id, $includePosition = true)
                 else
                 {
                     $ret['statusCode'] = 100;
-                    $ret['statusText'] = 'Test Started';
+                    $now = time();
+                    $start = $testInfoJson['started'];
+                    $elapsed = 0;
+                    if( $now > $start )
+                      $elapsed = $now - $start;
+                    if( $elapsed == 0 )
+                      $ret['statusText'] = "Test just started";
+                    elseif( $elapsed == 1 )
+                      $ret['statusText'] = "Test Started $elapsed second ago";
+                    elseif( $elapsed < 60 )
+                      $ret['statusText'] = "Test Started $elapsed seconds ago";
+                    else
+                    {
+                      $elapsed = floor($elapsed / 60);
+                      if( $elapsed == 1 )
+                        $ret['statusText'] = "Test Started $elapsed minute ago";
+                      elseif( $elapsed < 60 )
+                        $ret['statusText'] = "Test Started $elapsed minutes ago";
+                      else
+                        $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
+                        
+                      // force the test to end if it started but we haven't seen progress in the last 10 minutes
+                      if( $elapsed > 10 )
+                      {
+                          $elapsedUpdate = 100;
+                          if( isset($testInfoJson['last_update']) )
+                            $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
+                          if( $elapsedUpdate > 10 )
+                          {
+                                // force the test to end
+                                $testInfoJson['completed'] = $now;
+                                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
+                                $test = file_get_contents("$testPath/testinfo.ini");
+                                $date = date("m/d/y G:i:s", $now);
+
+                                // update the completion time if it isn't already set
+                                if( !strpos($test, 'completeTime') )
+                                {
+                                    $complete = "[test]\r\ncompleteTime=$date";
+                                    $out = str_replace('[test]', $complete, $test);
+                                    file_put_contents("$testPath/testinfo.ini", $out);
+                                }
+                          }
+                      }
+                    }
                 }
 
                 if( $includePosition )
@@ -138,8 +184,13 @@ function GetTestStatus($id, $includePosition = true)
                     if( $found )
                     {
                         $ret['statusCode'] = 101;
-                        $ret['statusText'] = 'Test Pending';
                         $ret['behindCount'] = $count;
+                        if( $count > 1 )
+                            $ret['statusText'] = "Waiting behind $count other tests...";
+                        elseif( $count == 1 )
+                            $ret['statusText'] = "Waiting behind 1 other test...";
+                        else
+                            $ret['statusText'] = "Waiting at the front of the queue...";
                     }
                     else
                     {
@@ -164,82 +215,96 @@ function GetTestStatus($id, $includePosition = true)
  */
 function GetTestStatusText($id)
 {
-  $statusText = "";
-  $testPath = './' . GetTestPath($id);
-  $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-  if( isset($testInfoJson['cancelled']) )
-  {
-    return "Test Cancelled";
-  }
-  if( $testInfoJson['started'] )
-  {
-    $started = true;
-    $now = time();
-    $start = $testInfoJson['started'];
-    if( isset($testInfoJson['cancelled']) )
-    {
-        return "Test Cancelled";
-    }
-
-    $elapsed = 0;
-    if( $now > $start )
-      $elapsed = $now - $start;
-    if( $elapsed == 0 )
-      $statusText = "Test just started";
-    elseif( $elapsed == 1 )
-      $statusText = "Test Started $elapsed second ago";
-    elseif( $elapsed < 60 )
-      $statusText = "Test Started $elapsed seconds ago";
-    else
-    {
-      $elapsed = floor($elapsed / 60);
-      if( $elapsed == 1 )
-        $statusText = "Test Started $elapsed minute ago";
-      elseif( $elapsed < 60 )
-        $statusText = "Test Started $elapsed minutes ago";
-      else
-        $statusText = "Test Started $elapsed minutes ago (probably failed)";
-        
-      // force the test to end if it started but we haven't seen progress in the last 10 minutes
-      if( $elapsed > 10 )
-      {
-          $elapsedUpdate = 100;
-          if( isset($testInfoJson['last_update']) )
-            $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
-          if( $elapsedUpdate > 10 )
-          {
-                // force the test to end
-                $testInfoJson['completed'] = $now;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-                $test = file_get_contents("$testPath/testinfo.ini");
-                $date = date("m/d/y G:i:s", $now);
-
-                // update the completion time if it isn't already set
-                if( !strpos($test, 'completeTime') )
-                {
-                    $complete = "[test]\r\ncompleteTime=$date";
-                    $out = str_replace('[test]', $complete, $test);
-                    file_put_contents("$testPath/testinfo.ini", $out);
-                }
-          }
-      }
-    }
-  }
-  else
-  {
-    $started = false;
     $status = GetTestStatus($id);
-    if( $status['statusCode'] == 101 )
+    return $status['statusText'];
+}
+
+/**
+* Check the status of a batch test
+* 
+* @param mixed $status
+*/
+function GetBatchStatus(&$status)
+{
+    $dirty = false;
+    $id = $status['testId'];
+    $testPath = './' . GetTestPath($id);
+    if( gz_is_file("$testPath/bulk.json") )
+        $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
+    elseif( gz_is_file("$testPath/tests.json") )
     {
-      if( $status['behindCount'] > 1 )
-        $statusText = "Waiting behind {$status['behindCount']} other tests...";
-      elseif( $status['behindCount'] == 1 )
-        $statusText = "Waiting behind 1 other test...";
-      else
-        $statusText = "Waiting at the front of the queue...";
+        $legacyData = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
+        $tests = array();
+        $tests['variations'] = array();
+        $tests['urls'] = array();
+        foreach( $legacyData as &$legacyTest )
+            $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
     }
-  }
-  return $statusText;
+
+    if( count($tests) )
+    {
+        $started = false;
+        $allComplete = true;
+
+        foreach( $tests['urls'] as &$test )
+        {
+            if( $test['c'] )
+                $started = true;
+            else
+            {
+                $complete = true;
+                $id = $test['id'];
+                $testPath = './' . GetTestPath($id);
+                $testIni = parse_ini_file("$testPath/testinfo.ini",true);
+                if( isset($test['test']['startTime']) )
+                    $started = true;
+                if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                    $complete = false;
+
+                // go through all of the variations as well
+                foreach( $test['v'] as $variationId )
+                {
+                    $testPath = './' . GetTestPath($variationId);
+                    $testIni = parse_ini_file("$testPath/testinfo.ini",true);
+                    if( isset($testIni['test']['startTime']) )
+                        $started = true;
+                    if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                    {
+                        $complete = false;
+                        break;
+                    }
+                }
+                
+                if( $complete )
+                {
+                    $test['c'] = 1;
+                    $dirty = true;
+                }
+                else
+                    $allComplete = false;
+            }
+        }
+        
+        if( $allComplete )
+        {
+            $status['statusCode'] = 200;
+            $status['statusText'] = 'Test Complete';
+        }
+        elseif( $started )
+        {
+            $status['statusCode'] = 100;
+            $status['statusText'] = 'Test Started';
+        }
+        else
+        {
+            $status['statusCode'] = 101;
+            $status['statusText'] = 'Test Pending';
+        }
+        
+        // rewrite the bulk file if it changed
+        if( $dirty )
+            gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    }
 }
 
 ?>
