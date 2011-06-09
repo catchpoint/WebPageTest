@@ -108,6 +108,7 @@ protected:
 	CString tempFiles;
 	CString silverlight;
 	CString flash;
+  CString domStorage;
 
   bool Launch(CString cmd, HANDLE * phProc = NULL);
 	void LaunchDynaTrace();

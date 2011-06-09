@@ -164,6 +164,7 @@ bool CURLBlaster::Start(int userIndex)
 	  tempFiles = profile + _T("\\Local Settings\\Temporary Internet Files");
 	  silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
 	  flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
+    domStorage = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Internet Explorer\\DOMStore");
   }
 
   // Get WinPCap ready (install it if necessary)
@@ -414,15 +415,25 @@ bool CURLBlaster::DoUserLogon(void)
 						  flash += _T("\\Macromedia\\Flash Player\\#SharedObjects");
 					  }
 
-					  cookies.Replace(_T("%USERPROFILE%"), profile);
-					  history.Replace(_T("%USERPROFILE%"), profile);
-					  tempFiles.Replace(_T("%USERPROFILE%"), profile);
-					  silverlight.Replace(_T("%USERPROFILE%"), profile);
-					  flash.Replace(_T("%USERPROFILE%"), profile);
-  					
 					  RegCloseKey(hKey);
 				  }
-			  }
+
+				  if( SUCCEEDED(RegOpenKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\5.0\\Cache\\Extensible Cache\\DOMStore"), 0, KEY_READ, &hKey)) )
+				  {
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("CachePath"), 0, 0, (LPBYTE)path, &len)) )
+						  domStorage = path;
+            
+            RegCloseKey(hKey);
+          }
+
+				  cookies.Replace(_T("%USERPROFILE%"), profile);
+				  history.Replace(_T("%USERPROFILE%"), profile);
+				  tempFiles.Replace(_T("%USERPROFILE%"), profile);
+				  silverlight.Replace(_T("%USERPROFILE%"), profile);
+				  flash.Replace(_T("%USERPROFILE%"), profile);
+				  domStorage.Replace(_T("%USERPROFILE%"), profile);
+        }
   			
 			  ret = true;
 		  }
@@ -454,6 +465,7 @@ void CURLBlaster::ClearCache(void)
 	// delete the cookies, history and temporary internet files for this user
 	DeleteDirectory( cookies );
 	DeleteDirectory( history );
+  DeleteDirectory( domStorage );
 	cacheCount = 0;
 	DeleteDirectory( tempFiles );
 	CString buff;
