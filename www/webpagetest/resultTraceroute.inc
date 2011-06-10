@@ -52,7 +52,8 @@ function DisplayTraceroute( &$testPath, $run )
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
     if( count($rows) > 2 )
     {
-        foreach($rows as $index => &$row)
+        $index = 0;
+        foreach($rows as &$row)
         {
             $parseLine = str_replace(",", ", ", $row);
             $fields = explode(",", $parseLine);
@@ -63,9 +64,10 @@ function DisplayTraceroute( &$testPath, $run )
             
             if( $data['hop'] > 0 )
             {
+                $index++;
                 if( $index == 1 )
                 {
-                    echo "<caption>Traceroute #$run to {$data['name']} ({$data['addr']})</caption>\n";
+                    echo "<caption>Traceroute #$run to {$data['addr']}</caption>\n";
                     ?>
                     <thead>
                     <tr>
@@ -78,15 +80,12 @@ function DisplayTraceroute( &$testPath, $run )
                     <tbody>
                     <?php
                 }
-                elseif( $index > 1 )
-                {
-                    echo "<tr>\n";
-                    echo "<td>{$data['hop']}</td>\n";
-                    echo "<td>{$data['time']}</td>\n";
-                    echo "<td>{$data['addr']}</td>\n";
-                    echo "<td>{$data['name']}</td>\n";
-                    echo "</tr>\n";
-                }
+                echo "<tr>\n";
+                echo "<td>{$data['hop']}</td>\n";
+                echo "<td>{$data['time']}</td>\n";
+                echo "<td>{$data['addr']}</td>\n";
+                echo "<td>{$data['name']}</td>\n";
+                echo "</tr>\n";
             }
         }
         echo "</tbody>\n";
