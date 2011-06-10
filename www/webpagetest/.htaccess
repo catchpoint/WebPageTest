@@ -105,8 +105,12 @@ RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-
 RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+).(txt|csv)$ /gettext.php?test=$1$2$3_$4_$5&file=$6.$7
 
 #tcpdump capture files
-RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+).cap$ /gettcpdump.php?test=$1&file=$2.cap
-RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached.cap$ /gettcpdump.php?test=$1&file=$2_Cached.cap
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+).cap$ /getgzip.php?test=$1&file=$2.cap
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached.cap$ /getgzip.php?test=$1&file=$2_Cached.cap
+
+#page speed
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_pagespeed.txt$ /getgzip.php?test=$1&file=$2_pagespeed.txt&mime=application%2Fjson
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_pagespeed.txt$ /getgzip.php?test=$1&file=$2_Cached_pagespeed.txt&mime=application%2Fjson
 
 #widgets
 RewriteRule ^widgets/pagespeed/tree$ /widgets/pagespeed/tree.php [qsa]

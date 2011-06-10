@@ -100,6 +100,7 @@ else
                 if( strlen($score) )
                     echo "<PageSpeedScore>$score</PageSpeedScore>";
             }
+            echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>";
             echo "</firstView>";
             
             if( isset($rv) )
@@ -117,6 +118,7 @@ else
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>";
                     }
+                    echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>";
                     echo "</repeatView>";
                 }
             }
@@ -176,6 +178,7 @@ else
                     echo "<pageData>http://$host$uri$path/{$i}_IEWPG.txt</pageData>";
                     echo "<requestsData>http://$host$uri$path/{$i}_IEWTR.txt</requestsData>";
                     echo "<utilization>http://$host$uri$path/{$i}_progress.csv</utilization>";
+                    echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_pagespeed.txt</PageSpeedData>";
                     echo "</rawData>";
                     
                     // video frames
@@ -244,6 +247,7 @@ else
                     echo "<pageData>http://$host$uri$path/{$i}_Cached_IEWPG.txt</pageData>";
                     echo "<requestsData>http://$host$uri$path/{$i}_Cached_IEWTR.txt</requestsData>";
                     echo "<utilization>http://$host$uri$path/{$i}_Cached_progress.csv</utilization>";
+                    echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_Cached_pagespeed.txt</PageSpeedData>";
                     echo "</rawData>";
                     
                     // video frames
