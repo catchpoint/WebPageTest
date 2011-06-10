@@ -259,10 +259,10 @@ function GetBatchStatus(&$status)
                 $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                 if( $testInfo['started'] )
                     $started = true;
-                if( $testInfo['completed'] )
-                    $complete = false;
                 if( $testInfo['cancelled'] )
                     $cancelled = true;
+                elseif( !$testInfo['completed'] )
+                    $complete = false;
 
                 // go through all of the variations as well
                 foreach( $test['v'] as $variationId )
@@ -273,7 +273,7 @@ function GetBatchStatus(&$status)
                         $started = true;
                     if( $testInfo['cancelled'] )
                         $cancelled = true;
-                    if( !$testInfo['completed'] )
+                    elseif( !$testInfo['completed'] )
                     {
                         $complete = false;
                         break;
