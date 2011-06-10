@@ -72,12 +72,13 @@ $loc = ParseLocations($locations);
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="javascript:void(0)">Analytical Review</a></li>
+                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <?php
                     if( $settings['mobile'] )
                         echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
                     ?>
+                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">

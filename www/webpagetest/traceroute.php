@@ -23,6 +23,7 @@ $page_description = "Test network path from multiple locations around the world 
     <body>
         <div class="page">
             <?php
+            $tab = 'Home';
             include 'header.inc';
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
@@ -47,6 +48,15 @@ $page_description = "Test network path from multiple locations around the world 
             <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents....</h2>
             
             <div id="test_box-container">
+                <ul class="ui-tabs-nav">
+                    <li class="analytical_review"><a href="/">Analytical Review</a></li>
+                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
+                    <?php
+                    if( $settings['mobile'] )
+                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
+                    ?>
+                    <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
+                </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
                         <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>

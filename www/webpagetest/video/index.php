@@ -27,11 +27,12 @@ $page_description = "Visually compare the performance of multiple websites with 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Analytical Review</a></li>
-                    <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="javascript:void(0)">Visual Comparison</a></li>
+                    <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Visual Comparison</a></li>
                     <?php
                     if( $settings['mobile'] )
                         echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
                     ?>
+                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="visual_comparison" class="test_box">
 

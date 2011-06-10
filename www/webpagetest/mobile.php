@@ -27,7 +27,8 @@ $page_description = "Run a free website speed test from around the globe using r
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="mobile_test ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="javascript:void(0)">Mobile</a></li>
+                    <li class="mobile_test ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Mobile</a></li>
+                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="mobile_test" class="test_box">
                     <p>Mobile testing is provided by <a href="http://www.blaze.io/mobile/">Mobitest</a> and you will be taken to the Blaze website for the results.</p>

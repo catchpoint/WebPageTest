@@ -77,6 +77,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #test_box-container .ui-tabs-nav li.analytical_review a {background-image: url(/images/test_box-container-ui-tabs-nav-li-analytical_review-a-bkg.png);}
 #test_box-container .ui-tabs-nav li.visual_comparison a {background-image: url(/images/test_box-container-ui-tabs-nav-li-visual_comparison-a-bkg.png);}
 #test_box-container .ui-tabs-nav li.mobile_test a {background-image: url(/images/miniphonelogo.png);}
+#test_box-container .ui-tabs-nav li.traceroute a {background-image: url(/images/traceroute.png);}
 .test_box.ui-tabs-hide {display: none;}
 
 .test_box {clear: both;padding: 20px;background-color: #292929;}
