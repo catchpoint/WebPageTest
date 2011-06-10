@@ -245,6 +245,7 @@ function GetBatchStatus(&$status)
     {
         $started = false;
         $allComplete = true;
+        $cancelled = false;
 
         foreach( $tests['urls'] as &$test )
         {
@@ -255,20 +256,24 @@ function GetBatchStatus(&$status)
                 $complete = true;
                 $id = $test['id'];
                 $testPath = './' . GetTestPath($id);
-                $testIni = parse_ini_file("$testPath/testinfo.ini",true);
-                if( isset($test['test']['startTime']) )
+                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                if( $testInfo['started'] )
                     $started = true;
-                if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                if( $testInfo['completed'] )
                     $complete = false;
+                if( $testInfo['cancelled'] )
+                    $cancelled = true;
 
                 // go through all of the variations as well
                 foreach( $test['v'] as $variationId )
                 {
                     $testPath = './' . GetTestPath($variationId);
-                    $testIni = parse_ini_file("$testPath/testinfo.ini",true);
-                    if( isset($testIni['test']['startTime']) )
+                    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                    if( $testInfo['started'] )
                         $started = true;
-                    if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
+                    if( $testInfo['cancelled'] )
+                        $cancelled = true;
+                    if( !$testInfo['completed'] )
                     {
                         $complete = false;
                         break;
@@ -289,6 +294,11 @@ function GetBatchStatus(&$status)
         {
             $status['statusCode'] = 200;
             $status['statusText'] = 'Test Complete';
+        }
+        elseif( $cancelled )
+        {
+            $status['statusCode'] = 402;
+            $status['statusText'] = 'Test Cancelled';
         }
         elseif( $started )
         {
