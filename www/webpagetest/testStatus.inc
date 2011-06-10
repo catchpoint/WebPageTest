@@ -241,7 +241,7 @@ function GetBatchStatus(&$status)
             $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
     }
 
-    if( count($tests) )
+    if( count($tests['urls']) )
     {
         $started = false;
         $allComplete = true;

@@ -368,39 +368,55 @@ function BatchResult($id, $testPath)
     if( strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>";
 
-    if( gz_is_file("$testPath/tests.json") )
+    $tests = null;
+    if( gz_is_file("$testPath/bulk.json") )
+        $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
+    elseif( gz_is_file("$testPath/tests.json") )
+    {
+        $legacyData = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
+        $tests = array();
+        $tests['variations'] = array();
+        $tests['urls'] = array();
+        foreach( $legacyData as &$legacyTest )
+            $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
+    }
+        
+    if( count($tests['urls']) )
     {
         echo "<statusCode>200</statusCode>";
         echo "<statusText>Ok</statusText>";
         if( strlen($_REQUEST['r']) )
             echo "<requestId>{$_REQUEST['r']}</requestId>";
-        $tests = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
-        if( count($tests) )
-        {
-            $host  = $_SERVER['HTTP_HOST'];
-            $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
-            echo "<data>";
-            foreach( $tests as &$test )
+        $host  = $_SERVER['HTTP_HOST'];
+        $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+
+        echo "<data>";
+        foreach( $tests['urls'] as &$test )
+        {
+            echo "<test>";
+            echo "<testId>{$test['id']}</testId>";
+            echo "<testUrl>" . htmlentities($test['u']) . "</testUrl>";
+            echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>";
+            echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>";
+            echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>";
+            echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>";
+            echo "</test>";
+
+            // go through all of the variations as well
+            foreach( $test['v'] as $variationIndex => $variationId )
             {
                 echo "<test>";
-                echo "<testId>{$test['id']}</testId>";
-                echo "<testUrl>" . htmlentities($test['url']) . "</testUrl>";
-                echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>";
-                echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>";
-                echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>";
-                echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>";
+                echo "<testId>$variationId</testId>";
+                echo "<testUrl>" . htmlentities(CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q'])) . "</testUrl>";
+                echo "<xmlUrl>http://$host$uri/xmlResult/$variationId/</xmlUrl>";
+                echo "<userUrl>http://$host$uri/result/$variationId/</userUrl>";
+                echo "<summaryCSV>http://$host$uri/result/$variationId/page_data.csv</summaryCSV>";
+                echo "<detailCSV>http://$host$uri/result/$variationId/requests.csv</detailCSV>";
                 echo "</test>";
             }
-            echo "</data>";
         }
-        else
-        {
-            echo "<statusCode>403</statusCode>";
-            echo "<statusText>No test data for test ID: $id</statusText>";
-            echo "<data>";
-            echo "</data>";
-        }
+        echo "</data>";
     }
     else
     {
