@@ -1137,6 +1137,9 @@ function checkTesterRatioAndEmailAlert(){
   $locations = getLocationInformation();
   $message = "";
   foreach ($locations as $location){
+    if (empty($location) || !array_key_exists('id',$location) || empty($location['id'])){
+      continue;
+    }
     $runRate = $location['runRate'];
     $agentCount = $location['AgentCount'];
     if ( empty($agentCount) ) $agentCount = '0';
