@@ -1038,12 +1038,12 @@ function checkQueueGrowthCountAndEmailAlert(){
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
     if ($status['QueueGrowthCount'] > 4 ){
-      logOutput('[INFO] [jobProcessor] QueueGrowthCheck has grown over 4 times for: '.$key);
+      logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 4 times for: '.$key);
 
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
       if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( current_seconds() > $status["LastQueueGrowthAlertTime"] +3600 )){
-        logOutput('[INFO] [jobProcessor] QueueGrowthCheck for: '.$key.' has not alerted since: '.$status["LastQueueGrowthAlertTime"]);
+        logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck for: '.$key.' has not alerted since: '.$status["LastQueueGrowthAlertTime"]);
         $message = "\n--------------------------------------------\n";
         $message .= "Queue Growth alert for location: ".$status['id']."\n";
         $message .= "In Queue: ".$status['PendingTests']."\n";
@@ -1053,6 +1053,8 @@ function checkQueueGrowthCountAndEmailAlert(){
         // Update alert time stamp
         $queueStatus[$key]['LastQueueGrowthAlertTime'] = current_seconds();
         writeIniFile($queueStatus, $queueStatusFilename ,true);
+      } else {
+        logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck for: '.$key.' alert interval has not passed. Last Alert: '.$status["LastQueueGrowthAlertTime"]);
       }
     }
   }
@@ -1094,24 +1096,24 @@ function updateQueueProcessRate(){
         $location['LastTesterRatioAlertTime'] >= $previousLocation['LastTesterRatioAlertTime'];
 
         if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
-          logOutput('[INFO] [jobProcessor] QueueGrowthCheck for : '.$key);
+          logOutput('[INFO] [updateQueueProcessRate] QueueGrowthCheck for : '.$key);
 
           if ( $location['PendingTests'] == 0){
             $location['QueueGrowthCount'] = '0';
-            logOutput('[INFO] [jobProcessor] Resetting count QueueGrowthCheck for: '.$key);
+            logOutput('[INFO] [updateQueueProcessRate] Resetting count QueueGrowthCheck for: '.$key);
           } else {
             if ( $location['PendingTests'] >= $previousLocation['PendingTests'] ){
               $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']+1;
-              logOutput('[INFO] [jobProcessor] Incrementing count QueueGrowthCheck to '. $location['QueueGrowthCount'].' for: '.$key);
+              logOutput('[INFO] [updateQueueProcessRate] Incrementing count QueueGrowthCheck to '. $location['QueueGrowthCount'].' for: '.$key);
             } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
-              logOutput('[INFO] [jobProcessor] Decrementing count QueueGrowthCheck for: '.$key);
+              logOutput('[INFO] [updateQueueProcessRate] Decrementing count QueueGrowthCheck for: '.$key);
               $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']-1;
             }
           }
           $location['QueueGrowthCheckTimeStamp'] = $currentTime;
           $locationInformation[$key] = $location;
         } else {
-          logOutput('[INFO] [jobProcessor] Skipping QueueGrowthCheck: interval not passed for : '.$key);
+          logOutput('[INFO] [updateQueueProcessRate] Skipping QueueGrowthCheck: interval not passed for : '.$key);
           // Keep previous info it update time hasn't passed
           $locationInformation[$key] = $previousLocation;
         }
@@ -1120,7 +1122,7 @@ function updateQueueProcessRate(){
       writeIniFile($locationInformation,$queueStatusFilename ,true);
     }
   } catch (Exception $e) {
-    logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
+    logOutput('[ERROR] [updateQueueProcessRate] Exception : ' . $e->getMessage());
   }
 }
 /*
@@ -1151,8 +1153,10 @@ function checkTesterRatioAndEmailAlert(){
     $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
+        logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
         // Only alert once per hour
-        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus) || current_seconds() > ($queueStatus[$location['id']]['LastTesterRatioAlertTime'] > + 3600 )){
+        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus) || ( current_seconds() > $queueStatus[$location['id']]['LastTesterRatioAlertTime'] + 3600 )){
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
           $message = "--------------------------------------------\n";
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
           $message .= "Runrate: ".$runRate."\n";
@@ -1167,7 +1171,10 @@ function checkTesterRatioAndEmailAlert(){
           // Update time stamp
           $queueStatus[$location['id']]['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
+        } else {
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
         }
+
       }
     }
   }
