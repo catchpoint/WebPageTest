@@ -1038,12 +1038,19 @@ function checkQueueGrowthCountAndEmailAlert(){
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
     if ($status['QueueGrowthCount'] > 4 ){
-      $message = "\n--------------------------------------------\n";
-      $message .= "Queue Growth alert for location: ".$status['id']."\n";
-      $message .= "In Queue: ".$status['PendingTests']."\n";
-      $message .= "Testers: ".$status['AgentCount']."\n";
-      $message .= "\n--------------------------------------------\n";
-      $message .= "Queue count continues to grow. Please provision more testers or decrease the runrate for this location.";
+      // Growth rate has exceeded threshold, but only send an alert once per hour.
+      // Check time stamp
+      if ( !array_key_exists("LastAlertTime",$status) || ( $status["LastAlertTime"]+3600 > current_seconds())){
+        $message = "\n--------------------------------------------\n";
+        $message .= "Queue Growth alert for location: ".$status['id']."\n";
+        $message .= "In Queue: ".$status['PendingTests']."\n";
+        $message .= "Testers: ".$status['AgentCount']."\n";
+        $message .= "\n--------------------------------------------\n";
+        $message .= "Queue count continues to grow. Please provision more testers or decrease the runrate for this location.";
+        // Update alert time stamp
+        $queueStatus[$key]['LastAlertTime'] = current_seconds();
+        writeIniFile($queueStatus, $queueStatusFilename ,true);
+      }
     }
   }
   if ($message){
