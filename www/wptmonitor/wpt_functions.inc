@@ -1156,7 +1156,7 @@ function checkTesterRatioAndEmailAlert(){
         logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
         // Only alert once per hour
         if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus) || ( current_seconds() > $queueStatus[$location['id']]['LastTesterRatioAlertTime'] + 3600 )){
-          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
           $message = "--------------------------------------------\n";
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
           $message .= "Runrate: ".$runRate."\n";
