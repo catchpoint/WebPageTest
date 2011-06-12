@@ -1088,6 +1088,11 @@ function updateQueueProcessRate(){
 
       foreach ($previousLocationInformation as $key=>$previousLocation){
         $location = $locationInformation[$key];
+
+        // Bring over prefious setting for Last Alert Times.
+        $location['LastQueueGrowthAlertTime'] >= $previousLocation['LastQueueGrowthAlertTime'];
+        $location['LastTesterRatioAlertTime'] >= $previousLocation['LastTesterRatioAlertTime'];
+
         if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
           logOutput('[INFO] [jobProcessor] QueueGrowthCheck for : '.$key);
 
