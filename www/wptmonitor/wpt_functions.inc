@@ -871,22 +871,30 @@ function processURLScript($script, $url) {
 
 function updateJobStatus($id, $status) {
   $q = Doctrine_Query::create()->from('WPTResult r')->where('r.Id = ?', $id);
-  $result = $q->fetchOne();
-  $q->free(true);
-  $result['Status'] = $status;
-  $result->save();
+  if ( $q->count() > 0 ){
+    $result = $q->fetchOne();
+    $q->free(true);
+    $result['Status'] = $status;
+    $result->save();
+  }
 }
 
 function incrementDownloadAttempts($id) {
-  $q = Doctrine_Query::create()->from('WPTResult r')->where('r.Id = ?', $id);
-  $result = $q->fetchOne();
-  $q->free(true);
-  if (!$result['FirstStatusUpdate']) {
-    $result['FirstStatusUpdate'] = current_seconds();
+  try{
+    $q = Doctrine_Query::create()->from('WPTResult r')->where('r.Id = ?', $id);
+      if ( $q->count() > 0 ){
+        $result = $q->fetchOne();
+        $q->free(true);
+        if (!$result['FirstStatusUpdate']) {
+          $result['FirstStatusUpdate'] = current_seconds();
+        }
+        $result['DownloadAttempts'] = $result['DownloadAttempts'] + 1;
+        $result['LastStatusUpdate'] = current_seconds();
+        $result->save();
+      }
+    } catch (Exception $ex){
+    print $ex;
   }
-  $result['DownloadAttempts'] = $result['DownloadAttempts'] + 1;
-  $result['LastStatusUpdate'] = current_seconds();
-  $result->save();
 }
 
 function getReportDataForLabel($label,$fromDate,$toDate,$stddev, $runLabel=null){
@@ -1161,20 +1169,22 @@ function checkTesterRatioAndEmailAlert(){
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
           $message .= "Runrate: ".$runRate."\n";
           $message .= "Testers: ".$agentCount."\n";
+          $message .= "Timestamp: ".current_seconds()."\n";
           if ($agentCount){
             $message .= "Ratio: ".$runRate/$agentCount."\n";
           } else {
             $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
           }
+          $message = "--------------------------------------------\n";
           $message .= "Target Ratio: 40\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
           $queueStatus[$location['id']]['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
+          print_r($queueStatus);exit;
         } else {
           logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
         }
-
       }
     }
   }
@@ -1183,7 +1193,7 @@ function checkTesterRatioAndEmailAlert(){
     logOutput('[INFO] [checkTesterRatioAndEmailAlert] Alert message sent:\n' . $message );
     echo $message;
   }
-
+  
 }
 
 ?>
