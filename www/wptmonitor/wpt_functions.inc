@@ -1058,7 +1058,7 @@ function checkQueueGrowthCountAndEmailAlert(){
   }
   if ($message){
     sendEmailAlert($siteContactEmailAddress, $message);
-    logOutput('[ERROR] [checkTesterRatioAndEmailAlert] ' . $message );
+    logOutput('[ERROR] [checkQueueGrowthCountAndEmailAlert] ' . $message );
   }
 }
 
