@@ -1038,9 +1038,12 @@ function checkQueueGrowthCountAndEmailAlert(){
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
     if ($status['QueueGrowthCount'] > 4 ){
+      logOutput('[INFO] [jobProcessor] QueueGrowthCheck has grown over 4 times for: '.$key);
+
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
-      if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( $status["LastQueueGrowthAlertTime"]+3600 > current_seconds())){
+      if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( $status["LastQueueGrowthAlertTime"] > current_seconds() +3600 )){
+        logOutput('[INFO] [jobProcessor] QueueGrowthCheck for: '.$key.' has not alerted since: '.$status["LastQueueGrowthAlertTime"]);
         $message = "\n--------------------------------------------\n";
         $message .= "Queue Growth alert for location: ".$status['id']."\n";
         $message .= "In Queue: ".$status['PendingTests']."\n";
@@ -1141,7 +1144,7 @@ function checkTesterRatioAndEmailAlert(){
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
         // Only alert once per hour
-        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus) || ($queueStatus[$location['id']]['LastTesterRatioAlertTime'] + 3600 > current_seconds())){
+        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus) || ($queueStatus[$location['id']]['LastTesterRatioAlertTime'] > current_seconds()+ 3600 )){
           $message = "--------------------------------------------\n";
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
           $message .= "Runrate: ".$runRate."\n";
