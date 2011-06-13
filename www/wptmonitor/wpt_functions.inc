@@ -1099,8 +1099,8 @@ function updateQueueProcessRate(){
         $location = $locationInformation[$key];
 
         // Bring over previous setting for Last Alert Times.
-        $location['LastQueueGrowthAlertTime'] >= $previousLocation['LastQueueGrowthAlertTime'];
-        $location['LastTesterRatioAlertTime'] >= $previousLocation['LastTesterRatioAlertTime'];
+        $location['LastQueueGrowthAlertTime'] = $previousLocation['LastQueueGrowthAlertTime'];
+        $location['LastTesterRatioAlertTime'] = $previousLocation['LastTesterRatioAlertTime'];
 
         if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
           logOutput('[INFO] [updateQueueProcessRate] QueueGrowthCheck for : '.$key);
@@ -1151,6 +1151,8 @@ function checkTesterRatioAndEmailAlert(){
   $locations = getLocationInformation();
   $message = "";
   foreach ($locations as $location){
+    $id = $location['id'];
+    $queueStat = $queueStatus['id'];
     if (empty($location) || !array_key_exists('id',$location) || empty($location['id'])){
       continue;
     }
@@ -1161,7 +1163,9 @@ function checkTesterRatioAndEmailAlert(){
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
         // Only alert once per hour
-        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus["'".$location['id']."'"]) || ( current_seconds() > $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] + 3600 )){
+        echo "***".$queueStat['LastTesterRatioAlertTime'];exit;
+        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus["'".$location['id']."'"]) ||
+            ( current_seconds() > $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] + 3600 )){
           logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
           $message = "--------------------------------------------\n";
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
