@@ -1047,7 +1047,6 @@ function checkQueueGrowthCountAndEmailAlert(){
   foreach( $queueStatus as $key=>$status){
     if ($status['QueueGrowthCount'] > 4 ){
       logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 4 times for: '.$key);
-
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
       if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( current_seconds() > $status["LastQueueGrowthAlertTime"] +3600 )){
@@ -1142,7 +1141,6 @@ function updateQueueProcessRate(){
 function checkTesterRatioAndEmailAlert(){
   $queueStatusFilename = './QueueStatus.ini';
   $queueStatus = parse_ini_file($queueStatusFilename,true);
-  logOutput('[INFO] [checkTesterRatioAndEmailAlert] ' );
   $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
   $config = $configTable->find(1);
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
@@ -1153,7 +1151,7 @@ function checkTesterRatioAndEmailAlert(){
   $message = "";
   foreach ($locations as $location){
     $id = $location['id'];
-    $queueStat = $queueStatus['id'];
+    $queueStat = $queueStatus["'".$id."'"];
     if (empty($location) || !array_key_exists('id',$location) || empty($location['id'])){
       continue;
     }
@@ -1164,11 +1162,11 @@ function checkTesterRatioAndEmailAlert(){
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
         // Only alert once per hour
-        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus["'".$location['id']."'"]) ||
-            ( current_seconds() > $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] + 3600 )){
-          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
+        if (!array_key_exists('LastTesterRatioAlertTime',$queueStat) ||
+            ( current_seconds() > $queueStat['LastTesterRatioAlertTime'] + 3600 )){
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$id.' has not alerted since: '.$queueStat['LastTesterRatioAlertTime']);
           $message = "--------------------------------------------\n";
-          $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
+          $message .= "Runrate ratio insufficient for location: ".$id."\n";
           $message .= "Runrate: ".$runRate."\n";
           $message .= "Testers: ".$agentCount."\n";
           $message .= "Timestamp: ".current_seconds()."\n";
@@ -1181,10 +1179,10 @@ function checkTesterRatioAndEmailAlert(){
           $message .= "Target Ratio: 40\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
-          $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] = current_seconds();
+          $queueStat['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
         } else {
-          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$id.' alert interval has not passed. Last Alert: '.$queueStat['LastTesterRatioAlertTime']);
         }
       }
     }
