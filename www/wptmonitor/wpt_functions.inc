@@ -1160,10 +1160,10 @@ function checkTesterRatioAndEmailAlert(){
     $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
-        logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
+        logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
         // Only alert once per hour
-        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus[$location['id']]) || ( current_seconds() > $queueStatus[$location['id']]['LastTesterRatioAlertTime'] + 3600 )){
-          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
+        if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus["'".$location['id']."'"]) || ( current_seconds() > $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] + 3600 )){
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
           $message = "--------------------------------------------\n";
           $message .= "Runrate ratio insufficient for location: ".$location['id']."\n";
           $message .= "Runrate: ".$runRate."\n";
@@ -1181,7 +1181,7 @@ function checkTesterRatioAndEmailAlert(){
           $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
         } else {
-          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
+          logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
         }
       }
     }
