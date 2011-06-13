@@ -1160,7 +1160,6 @@ function checkTesterRatioAndEmailAlert(){
     $requiredAdditionalTesters = ($runRate / 40) - $agentCount;
     if ( $location['runRate'] ){
       if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > 40 )){
-        logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
         // Only alert once per hour
         if (!array_key_exists('LastTesterRatioAlertTime',$queueStatus["'".$location['id']."'"]) || ( current_seconds() > $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] + 3600 )){
           logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location['id'].' has not alerted since: '.$queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime']);
