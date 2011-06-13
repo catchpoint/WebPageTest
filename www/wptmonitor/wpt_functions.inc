@@ -1174,7 +1174,7 @@ function checkTesterRatioAndEmailAlert(){
           } else {
             $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
           }
-          $message = "--------------------------------------------\n";
+          $message .= "--------------------------------------------\n";
           $message .= "Target Ratio: 40\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
