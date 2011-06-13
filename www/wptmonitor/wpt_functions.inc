@@ -1095,11 +1095,10 @@ function updateQueueProcessRate(){
     } else {
       // Compare previous status to current status to detect queue growth.
       $previousLocationInformation = parse_ini_file($queueStatusFilename ,true);
-
       foreach ($previousLocationInformation as $key=>$previousLocation){
         $location = $locationInformation[$key];
 
-        // Bring over prefious setting for Last Alert Times.
+        // Bring over previous setting for Last Alert Times.
         $location['LastQueueGrowthAlertTime'] >= $previousLocation['LastQueueGrowthAlertTime'];
         $location['LastTesterRatioAlertTime'] >= $previousLocation['LastTesterRatioAlertTime'];
 
@@ -1126,6 +1125,7 @@ function updateQueueProcessRate(){
           $locationInformation[$key] = $previousLocation;
         }
       }
+
       // Write current status out
       writeIniFile($locationInformation,$queueStatusFilename ,true);
     }
@@ -1141,7 +1141,6 @@ function updateQueueProcessRate(){
 function checkTesterRatioAndEmailAlert(){
   $queueStatusFilename = './QueueStatus.ini';
   $queueStatus = parse_ini_file($queueStatusFilename,true);
-
   logOutput('[INFO] [checkTesterRatioAndEmailAlert] ' );
   $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
   $config = $configTable->find(1);
@@ -1179,9 +1178,8 @@ function checkTesterRatioAndEmailAlert(){
           $message .= "Target Ratio: 40\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
-          $queueStatus[$location['id']]['LastTesterRatioAlertTime'] = current_seconds();
+          $queueStatus["'".$location['id']."'"]['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
-          print_r($queueStatus);exit;
         } else {
           logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$location.' alert interval has not passed. Last Alert: '.$queueStatus[$location['id']]['LastTesterRatioAlertTime']);
         }
