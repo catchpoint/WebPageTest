@@ -1179,7 +1179,7 @@ function checkTesterRatioAndEmailAlert(){
           $message .= "Target Ratio: 40\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
-          $queueStat['LastTesterRatioAlertTime'] = current_seconds();
+          $queueStatus["'".$id."'"]['LastTesterRatioAlertTime'] = current_seconds();
           writeIniFile($queueStatus, $queueStatusFilename ,true);
         } else {
           logOutput('[INFO] [checkTesterRatioAndEmailAlert] LastTesterRatioAlertTime for: '.$id.' alert interval has not passed. Last Alert: '.$queueStat['LastTesterRatioAlertTime']);
