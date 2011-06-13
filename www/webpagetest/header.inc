@@ -119,7 +119,7 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
             $pageData = loadAllPageData($testPath);
             
         $gradeRun = 1;
-        if( $run )
+        if( $_GET["run"] )
             $gradeRun = $run;
         else
         {
@@ -131,31 +131,14 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
         echo '<div id="header_container">';
         echo '<div id="optimization">';
             echo '<div id="optimization_header">';
-            if( !strcasecmp('Test Result', $tab) && !$nosubheader &&
-                (isset($test['test']) && isset($test['test']['completeTime'])) )
+            if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
             {
-                if( !isset($pageData) )
-                    $pageData = loadAllPageData($testPath);
-                
-                $gradeRun = 1;
-                if( $run )
-                    $gradeRun = $run;
-                else
-                {
-                    $medianRun = GetMedianRun($pageData, 0);
-                    if( $medianRun )
-                        $gradeRun = $medianRun;
-                }
-
-                if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
-                {
-                    $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
-                    if( strlen($score) )
-                        echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
-                }
-                
-                echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
+                $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
+                if( strlen($score) )
+                    echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
             }
+            
+            echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
             echo '</div>';
             echo '<div id="grades">';
                 $grades = GetGrades($pageData[$gradeRun][0]);
