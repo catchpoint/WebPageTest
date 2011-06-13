@@ -16,6 +16,7 @@
       <w>permlevel</w>
       <w>qstring</w>
       <w>runtest</w>
+      <w>strangeloop</w>
       <w>ttfb</w>
       <w>uncompiled</w>
       <w>vname</w>

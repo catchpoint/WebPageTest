@@ -1056,6 +1056,7 @@ function checkQueueGrowthCountAndEmailAlert(){
         $message .= "Queue Growth alert for location: ".$status['id']."\n";
         $message .= "In Queue: ".$status['PendingTests']."\n";
         $message .= "Testers: ".$status['AgentCount']."\n";
+        $message .= "Timestamp: ".current_seconds()."\n";
         $message .= "\n--------------------------------------------\n";
         $message .= "Queue count continues to grow. Please provision more testers or decrease the runrate for this location.";
         // Update alert time stamp
