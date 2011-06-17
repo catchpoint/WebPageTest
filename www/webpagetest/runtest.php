@@ -89,6 +89,7 @@
         $test['noimages'] = trim($req_noimages);
         $test['noheaders'] = trim($req_noheaders);
         $test['view'] = trim($req_view);
+        $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
         
         // see if it is a batch test
         $test['batch'] = 0;
@@ -869,7 +870,7 @@ function ValidateURL(&$url, &$error, &$settings)
     
     if( strpos($host, '.') === FALSE )
         $error = "Please enter a Valid URL.  <b>$host</b> is not a valid Internet host name";
-    elseif( !strcmp($host, "127.0.0.1") || ((!strncmp($host, "192.168.", 8)  || !strncmp($host, "10.", 3)) && !$settings['allowPrivate']) )
+    elseif( (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "10.", 3)) && !$settings['allowPrivate'] )
         $error = "You can not test <b>$host</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
     elseif( !strcasecmp(substr($url, -4), '.pdf') )
         $error = "You can not test PDF files with WebPagetest";
@@ -1109,7 +1110,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     // write out the ini file
     $testInfo = "[test]\r\n";
     $testInfo .= "fvonly={$test['fvonly']}\r\n";
-    $testInfo .= "runs={$test['runs']}\r\n";
+    $resultRuns = $test['runs'] - $test['discard'];
+    $testInfo .= "runs=$resultRuns\r\n";
     $testInfo .= "location=\"{$test['locationText']}\"\r\n";
     $testInfo .= "loc={$test['location']}\r\n";
     $testInfo .= "id=$testId\r\n";
@@ -1186,6 +1188,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "\r\nnoimages=1";
         if( $test['noheaders'] )
             $testFile .= "\r\nnoheaders=1";
+        if( $test['discard'] )
+            $testFile .= "\r\ndiscard={$test['discard']}";
         $testFile .= "\r\nruns={$test['runs']}\r\n";
         
         if( isset($test['connectivity']) )

@@ -88,7 +88,6 @@ function loadPageData($file)
                                 'render' => (int)$fields[18],
                                 'fullyLoaded' => (int)$fields[22],
                                 'cached' => (int)$fields[27],
-                                'web' => (int)$fields[30],
                                 'docTime' => (int)$fields[32],
                                 'domTime' => (int)$fields[34],
                                 'score_cache' => (int)$fields[36],

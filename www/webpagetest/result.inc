@@ -90,7 +90,9 @@ $page_description = "Website performance test result$testLabel.";
                     echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
                     echo "<a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Raw object data</a>";
 		    echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
-		     if( $settings['enable_google_csi'] )
+            if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
+                echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
+		    if( $settings['enable_google_csi'] )
 			echo '<br><a href="/google/google_csi.php?test=' . $id . '">CSI data (.csv)</a>';
                     if( $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";

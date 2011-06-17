@@ -9,6 +9,7 @@ date_default_timezone_set('UTC');
 
 
 // constants
+define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 38);          // version of the sitewide css file
 define('VER_JS', 14);            // version of the sitewide javascript file
 define('VER_JS_TEST', 14);       // version of the javascript specific to the test pages
@@ -993,7 +994,7 @@ function GetTestInfoHtml($includeScript = true)
     }
     if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
     {
-        if ($includeScript && ($settings['show_script_in_results'] || $isOwner || $admin))
+        if ($includeScript && ($settings['show_script_in_results'] || $isOwner || $admin) && !$test['testinfo']['sensitive'])
         {
             $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
             $html .= '<div id="script_in_results-container" class="hidden">';
@@ -1026,5 +1027,17 @@ function CreateUrlVariation($url, $query)
         $newUrl .= $query;
     }
     return $newUrl;
+}
+
+/**
+* Append a / to the URL if we are looking at a base page
+* 
+* @param mixed $url
+*/
+function FixUrlSlash($url)
+{
+    if( strpos($url,'/',8) == false )
+        $url .= '/';
+    return $url;
 }
 ?>

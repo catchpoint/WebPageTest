@@ -8,6 +8,7 @@ RewriteRule ^traceroute$ /traceroute.php
 RewriteRule ^mobile$ /mobile.php
 RewriteRule ^tips$ /tips.php
 RewriteRule ^pss$ /pss.php
+RewriteRule ^compare$ /pss.php
 
 #result paths
 RewriteRule ^result/([a-zA-Z0-9_]+)$ /result/$1/ [R] 

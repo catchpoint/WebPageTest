@@ -113,6 +113,16 @@ else
         // see if the test is complete
         if( $done )
         {
+            $beaconUrl = null;
+            if( strlen($settings['showslow'])  )
+            {
+                $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
+                if( $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
+                    unset($beaconUrl);
+                else
+                    $testInfo['showslow'] = 1;
+            }
+
             // do pre-complete post-processing
             require_once('video.inc');
             MoveVideoFiles($testPath);
@@ -205,6 +215,13 @@ else
 
                 // send the request (we don't care about the response)
                 file_get_contents($url, 0, $ctx);
+            }
+            
+            // send a beacon?
+            if( strlen($beaconUrl) )
+            {
+                @include('./work/beacon.inc');
+                @SendBeacon($settings['beacon'], $id, $testPath, $testInfo, $pageData);
             }
             
             // archive the test result

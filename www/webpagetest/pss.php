@@ -13,14 +13,14 @@ $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
 
-$page_keywords = array('PSS','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "PSS Test$testLabel.";
+$page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
+$page_description = "Comparison Test$testLabel.";
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest - PSS Test</title>
+        <title>WebPagetest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
     </head>
     <body>
@@ -30,11 +30,12 @@ $page_description = "PSS Test$testLabel.";
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
             
+            <input type="hidden" name="private" value="1">
             <input type="hidden" name="view" value="simple">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="runs" value="5">
+            <input type="hidden" name="runs" value="10">
             <input type="hidden" name="script" value="setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%">
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
@@ -53,7 +54,7 @@ $page_description = "PSS Test$testLabel.";
             }
             ?>
 
-            <h2 class="cufon-dincond_black">PSS Test</h2>
+            <h2 class="cufon-dincond_black">Comparison Test</h2>
             
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">
