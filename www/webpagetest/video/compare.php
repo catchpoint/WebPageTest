@@ -140,7 +140,7 @@ else
                 {
                     float: right;
                     position: relative;
-                    top: -5em;
+                    top: -8em;
                 }
                 #layoutTable
                 {
@@ -187,6 +187,24 @@ else
                     top: -3em;
                     width: 930px;
                 }
+                #advanced
+                {
+                    background: black;
+                    color: white;
+                    font-family: arial,sans-serif;
+                    padding: 20px;
+                }
+                #advanced td
+                {
+                    padding: 2px 10px;
+                }
+                #advanced-ok
+                {
+                    margin-left: auto;
+                    margin-right: auto;
+                    margin-top: 10px;
+                    display: block;
+                }
             </style>
         </head>
         <body>
@@ -208,7 +226,7 @@ else
                 <?php include('footer.inc'); ?>
             </div>
 
-            <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/compare.js?v=4"></script> 
+            <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/compare.js?v=5"></script> 
             <script type="text/javascript">
                 <?php echo "var maxCompare = $maxCompare;"; ?>
             </script>
@@ -382,8 +400,9 @@ function ScreenShotTable()
         echo "<a class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
-        echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\"></div>";
-        echo "</form>";
+        echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
+        echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
+        echo "</div></form>";
         
         ?>
         <div id="layout">
@@ -500,9 +519,33 @@ function ScreenShotTable()
             echo "<img id=\"waterfallImage\" usemap=\"#waterfall_map\" border=\"0\" alt=\"Waterfall\" src=\"/waterfall.php?width=930px&test={$tests[0]['id']}&run={$tests[0]['run']}&cached={$tests[0]['cached']}&cpu=0&bw=0\">";
             ?>
         </div>
+        
         <?php
         }
+        ?>
         
+        <div id="advanced" style="display:none;">
+            <h3>Advanced Visual Comparison Configuration</h3>
+            <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
+            <p>URL structure: ...compare.php?tests=&lt;Test 1 ID&gt;,&lt;Test 2 ID&gt;...</p>
+            <p>The tests are displayed in the order listed and can be customized with options:</p>
+            <table>
+            <tr><td>Custom label</td><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
+            <tr><td>Specific run</td><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
+            <tr><td>Repeat view</td><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
+            <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
+            </table>
+            <br>
+            <p>Examples:</p>
+            <ul>
+            <li><b>Customizing labels:</b>
+            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
+            <li><b>Compare First vs. Repeat view:</b>
+            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            </ul>
+            <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
+        </div>
+        <?php
         echo '<br><br>';
     }
 }

@@ -18,3 +18,8 @@ function ValidateInput(form)
     
     return ret;
 }
+
+function ShowAdvanced()
+{
+    $("#advanced").modal({opacity:80});
+}
