@@ -56,6 +56,7 @@ CPagetestBase::CPagetestBase(void):
   , windowUpdated(false)
   , hGDINotifyWindow(NULL)
   , aft(0)
+  , titleTime(0)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 	msFreq = freq / (__int64)1000;
@@ -170,6 +171,8 @@ void CPagetestBase::Reset(void)
 		domElement = 0;
 		startRender = 0;
 		basePage = 0;
+    titleTime = 0;
+    pageTitle.Empty();
 		layoutChanged.RemoveAll();
 		active = false;
     capturingAFT = false;

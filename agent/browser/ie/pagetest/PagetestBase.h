@@ -189,12 +189,14 @@ public:
 	__int64						domElement;		// time when the DOM element appeared (only if looking for a specific DOM element)
 	__int64						startRender;	// time when the UI started to render
 	__int64						basePage;		// time when the base page completed
+	__int64						titleTime;		// time when the page title was first set
 	CAtlList<__int64>			layoutChanged;	// times when the page dimensions changed
 	CTime						startTime;
 	bool						haveBasePage;	// do we already have the base page identified?
 	DWORD						basePageRedirects;	// number of redirects for the base page
 	CString						basePageHost;
 	DWORD						ieMajorVer;		// version of IE that is running
+  CString         pageTitle;    // title of the page
 
 	// URLBlast support
 	CString	testUrl;

@@ -45,6 +45,7 @@ public:
 	virtual void DocumentComplete(CString & szUrl, DWORD code = 0);
 	virtual void ieQuit(void);
 	virtual void StatusUpdate(CString status);
+	virtual void TitleChange(CString title);
 
   // Javascript callbacks to the window.webpagetest object
   virtual void JSDone(void);

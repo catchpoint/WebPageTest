@@ -41,4 +41,5 @@ protected:
 	bool	UploadFile(CString url, CTestInfo &info, CString& file, CString fileName);
 	bool	BuildFormData(CTestInfo &info, CStringA& headers, CStringA& body, CStringA& footer, DWORD fileSize, DWORD &requestLen, CString fileName );
 	void	InstallUpdate(CString path);
+  void  DeleteResults(CTestInfo &info);
 };

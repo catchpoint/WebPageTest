@@ -426,6 +426,8 @@ function UpdateSettingsSummary()
         
     if( $('#keep_test_private').attr('checked') )
         summary += ", private";
+    else
+        summary += ", results are public";
         
     $('#settings_summary').text(summary);
 }

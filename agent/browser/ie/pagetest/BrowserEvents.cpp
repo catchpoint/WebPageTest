@@ -288,6 +288,28 @@ void CBrowserEvents::StatusUpdate(CString status)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void CBrowserEvents::TitleChange(CString title)
+{
+	if( active )
+	{
+		__int64 now;
+		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+
+		EnterCriticalSection(&cs);
+    if( !titleTime )
+    {
+      OutputDebugString(_T("First title change\n"));
+      titleTime = now;
+    }
+    title.Replace(_T('\t'), _T(' '));
+    OutputDebugString(title);
+    pageTitle = title;
+		LeaveCriticalSection(&cs);
+	}
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void CBrowserEvents::JSDone(void)
 {
 	QueryPerformanceCounter((LARGE_INTEGER *)&lastRequest);

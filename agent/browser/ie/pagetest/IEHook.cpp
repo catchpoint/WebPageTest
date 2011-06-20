@@ -448,6 +448,15 @@ STDMETHODIMP_(void) CIEHook::OnStatusTextChange( BSTR bstrStatus )
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+STDMETHODIMP_(void) CIEHook::OnTitleChange( BSTR bstrTitle )
+{
+	CString title(bstrTitle);
+  if( dlg && title.CompareNoCase(_T("about:blank")) )
+		dlg->TitleChange(title);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool CIEHook::AttachChromeFrame()
 {
   bool ret = false;

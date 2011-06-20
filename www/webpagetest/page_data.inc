@@ -108,7 +108,9 @@ function loadPageData($file)
                                 'optimization_checked' => (int)$fields[71],
                                 'aft' => (int)$fields[72],
                                 'domElements' => (int)$fields[73],
-                                'pageSpeedVersion' => trim($fields[74])
+                                'pageSpeedVersion' => trim($fields[74]),
+                                'title' => htmlspecialchars(trim($fields[75])),
+                                'titleTime' => (int)$fields[76]
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
@@ -154,6 +156,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                     $fv['fullyLoaded'] += $data[0]['fullyLoaded'];
                     $fv['docTime'] += $data[0]['docTime'];
                     $fv['domTime'] += $data[0]['domTime'];
+                    $fv['titleTime'] += $data[0]['titleTime'];
                     $fvCount++;
                 }
             }
@@ -176,6 +179,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                     $rv['fullyLoaded'] += $data[1]['fullyLoaded'];
                     $rv['docTime'] += $data[1]['docTime'];
                     $rv['domTime'] += $data[1]['domTime'];
+                    $rv['titleTime'] += $data[1]['titleTime'];
                     $rvCount++;
                 }
             }
@@ -195,6 +199,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
         $fv['fullyLoaded'] /= (double)$fvCount;
         $fv['docTime'] /= (double)$fvCount;
         $fv['domTime'] /= (double)$fvCount;
+        $fv['titleTime'] /= (double)$fvCount;
         
         // go through and find the run closest to the average
         $closest = -1;
@@ -230,6 +235,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
         $rv['fullyLoaded'] /= (double)$rvCount;
         $rv['docTime'] /= (double)$rvCount;
         $rv['domTime'] /= (double)$rvCount;
+        $rv['titleTime'] /= (double)$rvCount;
         
         // go through and find the run closest to the average
         $closest = -1;

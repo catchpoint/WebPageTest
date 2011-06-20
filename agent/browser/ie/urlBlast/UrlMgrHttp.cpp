@@ -11,6 +11,7 @@ public:
 		fvonly(false)
 		, runs(0)
 		, currentRun(0)
+    , discard(0)
 		{}
 	~CUrlMgrHttpContext(void){}
 	CString testId;
@@ -19,6 +20,7 @@ public:
 	CString fileRunBase;
 	bool	fvonly;
 	DWORD	runs;
+  DWORD discard;
 	DWORD	currentRun;
 };
 
@@ -298,6 +300,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.noImages = _ttol(value);
 							else if( !key.CompareNoCase(_T("noheaders")) )
                 info.noHeaders = _ttol(value);
+							else if( !key.CompareNoCase(_T("discard")) )
+                context->discard = _ttol(value);
 						}
 					}
 
@@ -310,6 +314,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 					ret = true;
 					info.context = context;
 					context->currentRun = 1;
+          context->discard = __min(context->discard, context->runs - 1);
 					
           if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
 						info.url = CString(_T("http://")) + info.url;
@@ -371,20 +376,27 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 		
 		if( ret )
 		{
-			// upload the images individually
-			UploadImages(info);
+      if( context->discard )
+      {
+        DeleteResults(info);
+      }
+      else
+      {
+			  // upload the images individually
+			  UploadImages(info);
 
-			// upload the results we have so far
-			info.done = false;
-			CString zipFilePath;
-			if( ZipResults(info, zipFilePath) )
-			{
-				// upload the results
-				UploadFile(workDone, info, zipFilePath, _T(""));
-				
-				// delete the zip file
-				DeleteFile(zipFilePath);
-			}
+			  // upload the results we have so far
+			  info.done = false;
+			  CString zipFilePath;
+			  if( ZipResults(info, zipFilePath) )
+			  {
+				  // upload the results
+				  UploadFile(workDone, info, zipFilePath, _T(""));
+  				
+				  // delete the zip file
+				  DeleteFile(zipFilePath);
+			  }
+      }
 
 			// delete the log file
 			DeleteFile(info.logFile);
@@ -435,19 +447,26 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 			else
 				info.done = false;
 
-			// upload the images individually
-			UploadImages(info);
+      if( context->discard )
+      {
+        DeleteResults(info);
+      }
+      else
+      {
+			  // upload the images individually
+			  UploadImages(info);
 
-			// zip up and post the results
-			CString zipFilePath;
-			if( ZipResults(info, zipFilePath) )
-			{
-				// upload the results
-				UploadFile(workDone, info, zipFilePath, _T(""));
-				
-				// delete the zip file
-				DeleteFile(zipFilePath);
-			}
+			  // zip up and post the results
+			  CString zipFilePath;
+			  if( ZipResults(info, zipFilePath) )
+			  {
+				  // upload the results
+				  UploadFile(workDone, info, zipFilePath, _T(""));
+  				
+				  // delete the zip file
+				  DeleteFile(zipFilePath);
+			  }
+      }
 
 			// delete the log file
 			DeleteFile(info.logFile);
@@ -456,7 +475,13 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 			if( !info.done )
 			{
 				// get ready for another run
-				context->currentRun++;
+        if( context->discard )
+        {
+          context->discard--;
+          context->runs--;
+        }
+        else
+				  context->currentRun++;
 				CString runText;
 				runText.Format(_T("%d"), context->currentRun);
 				context->fileRunBase = context->fileBase + CString(_T("-")) + runText;
@@ -1146,4 +1171,26 @@ void CUrlMgrHttp::InstallUpdate(CString path)
 		// sleep for 10 seconds so we don't accidentally pick up a new job while ptUpdate is trying to kill us
 		Sleep(10000);
 	}
+}
+
+/*-----------------------------------------------------------------------------
+	Delete the results files that we would normally have uploaded
+-----------------------------------------------------------------------------*/
+void CUrlMgrHttp::DeleteResults(CTestInfo &info)
+{
+	if( info.context )
+	{
+		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
+	  WIN32_FIND_DATA fd;
+	  HANDLE hFind = FindFirstFile( workDir + context->fileRunBase + _T("*.*"), &fd);
+	  if( hFind != INVALID_HANDLE_VALUE )
+	  {
+		  do
+		  {
+			  CString filePath = workDir + fd.cFileName;
+        DeleteFile(filePath);
+      }while( FindNextFile(hFind, &fd));
+      FindClose(hFind);
+    }
+  }
 }

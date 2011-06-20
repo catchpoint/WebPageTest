@@ -124,6 +124,7 @@ public:
 		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NEWWINDOW3, OnNewWindow3 )
 		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_ONQUIT, OnQuit )
 		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_STATUSTEXTCHANGE, OnStatusTextChange )
+		SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_TITLECHANGE, OnTitleChange )
 	END_SINK_MAP()
 
 	HRESULT FinalConstruct(){return S_OK;}
@@ -139,6 +140,7 @@ public:
 	STDMETHOD_(void,OnNewWindow3)( IDispatch **ppDisp, VARIANT_BOOL *Cancel, DWORD dwFlags, BSTR bstrUrlContext, BSTR bstrUrl);
 	STDMETHOD_(void,OnQuit)( VOID );
 	STDMETHOD_(void,OnStatusTextChange)( BSTR bstrStatus );
+	STDMETHOD_(void,OnTitleChange)( BSTR bstrTitle );
 
 	// IOleObjectWithSite Methods
 	STDMETHOD(SetSite)(IUnknown *pUnkSite);
