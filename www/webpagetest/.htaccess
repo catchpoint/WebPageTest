@@ -110,8 +110,8 @@ RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+).cap$ /getgzip.php?test=$1&file=$2.c
 RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached.cap$ /getgzip.php?test=$1&file=$2_Cached.cap
 
 #page speed
-RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_pagespeed.txt$ /getgzip.php?test=$1&file=$2_pagespeed.txt&mime=application%2Fjson
-RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_pagespeed.txt$ /getgzip.php?test=$1&file=$2_Cached_pagespeed.txt&mime=application%2Fjson
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_pagespeed.txt$ /getgzip.php?test=$1&file=$2_pagespeed.txt
+RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_pagespeed.txt$ /getgzip.php?test=$1&file=$2_Cached_pagespeed.txt
 
 #widgets
 RewriteRule ^widgets/pagespeed/tree$ /widgets/pagespeed/tree.php [qsa]
@@ -179,5 +179,6 @@ Options -Indexes
 	AddOutputFilterByType DEFLATE text/javascript
 	AddOutputFilterByType DEFLATE application/javascript
 	AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
 </IfModule>
 

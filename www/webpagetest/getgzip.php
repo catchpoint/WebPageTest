@@ -4,8 +4,8 @@ $file = "$testPath/{$_GET['file']}";
 
 if( isset($_GET['file']) && strlen($_GET['file']) && gz_is_file($file) )
 {
-    if( strlen($_GET['mime']) )
-        header ("Content-type: {$_GET['mime']}");
+    if( strpos($_GET['file'], 'pagespeed') !== false )
+        header ("Content-type: application/json");
     else
         header ("Content-type: application/octet-stream");
     gz_readfile_chunked($file);
