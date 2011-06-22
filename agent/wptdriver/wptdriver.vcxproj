@@ -117,6 +117,7 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
     <ClInclude Include="traceroute.h" />
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
+    <ClInclude Include="web_page_replay.h" />
     <ClInclude Include="winpcap.h" />
     <ClInclude Include="wptdriver.h" />
     <ClInclude Include="wpt_driver_core.h" />
@@ -151,6 +152,7 @@ copy /Y "../browser/chrome/extension" "$(outdir)\\extension"</Command>
     <ClCompile Include="traceroute.cpp" />
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
+    <ClCompile Include="web_page_replay.cc" />
     <ClCompile Include="winpcap.cpp" />
     <ClCompile Include="wptdriver.cc" />
     <ClCompile Include="wpt_driver_core.cc" />

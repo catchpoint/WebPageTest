@@ -95,6 +95,13 @@ bool WptSettings::Load(void) {
   // load the browser settings
   _browser_chrome.Load(_T("chrome"), iniFile);
 
+  // load the Web Page Replay host
+  if (GetPrivateProfileString(
+      _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
+      _countof(buff), iniFile )) {
+    _web_page_replay_host = buff;
+  }
+
   return ret;
 }
 

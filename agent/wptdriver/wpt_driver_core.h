@@ -29,6 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "ipfw.h"
 
+class WebPageReplay;
+
+
 class WptDriverCore {
 public:
   WptDriverCore(WptStatus &status);
@@ -53,6 +56,7 @@ private:
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   void ResetIpfw(void);
+  bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);
   void FlushDNS(void);
   void ExtractZipFiles();
@@ -60,4 +64,3 @@ private:
   void DownloadSymbols(CString directory);
   void KillBrowsers();
 };
-

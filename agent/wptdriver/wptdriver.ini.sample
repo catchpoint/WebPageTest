@@ -2,6 +2,7 @@
 url=http://staging.webpagetest.org/
 location=Dev_Pat
 ;debug=1
+;web_page_replay_host=192.168.0.11
 
 [chrome]
 exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"

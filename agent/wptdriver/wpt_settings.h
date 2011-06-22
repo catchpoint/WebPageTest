@@ -67,6 +67,7 @@ public:
   DWORD   _startup_delay;
   DWORD   _polling_delay;
   int     _debug;
+  CString _web_page_replay_host;
 
   // browsers
   BrowserSettings _browser_chrome;

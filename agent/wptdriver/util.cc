@@ -47,6 +47,7 @@ bool LaunchProcess(CString command_line, HANDLE * process_handle){
                       NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
       if (process_handle) {
         *process_handle = pi.hProcess;
+        ret = true;
         CloseHandle(pi.hThread);
       } else {
         WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);

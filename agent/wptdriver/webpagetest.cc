@@ -114,10 +114,28 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
+  bool ret = true;
+
+  CString directory = test._directory + CString(_T("\\"));
+  TCHAR * glob_pattern = _T("*.*");
+  CAtlList<CString> files;
+  GetFiles(directory, glob_pattern, files);
+  while (!files.IsEmpty()) {
+    DeleteFile(files.RemoveHead());
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
-  ret = UploadImages(test);
+  CString directory = test._directory + CString(_T("\\"));
+  CAtlList<CString> image_files;
+  GetImageFiles(directory, image_files);
+  ret = UploadImages(test, image_files);
   if (ret) {
     ret = UploadData(test, false);
   }
@@ -131,7 +149,10 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
 bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
-  ret = UploadImages(test);
+  CString directory = test._directory + CString(_T("\\"));
+  CAtlList<CString> image_files;
+  GetImageFiles(directory, image_files);
+  ret = UploadImages(test, image_files);
   if (ret) {
     ret = UploadData(test, true);
   }
@@ -141,30 +162,47 @@ bool WebPagetest::TestDone(WptTestDriver& test){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool  WebPagetest::UploadImages(WptTestDriver& test) {
+void WebPagetest::GetImageFiles(const CString& directory,
+                                CAtlList<CString>& image_files) {
+  TCHAR * glob_patterns[] = {
+    _T("*.jpg"), _T("*.png"), _T("*.dtas"), _T("*.cap"), _T("*.gz")
+  };
+  for (int i = 0; i < _countof(glob_patterns); i++) {
+    GetFiles(directory, glob_patterns[i], image_files);
+  }
+}
+
+void WebPagetest::GetFiles(const CString& directory,
+                           const TCHAR* glob_pattern,
+                           CAtlList<CString>& files) {
+  WIN32_FIND_DATA fd;
+  HANDLE find_handle = FindFirstFile(directory + glob_pattern, &fd);
+  if (find_handle != INVALID_HANDLE_VALUE) {
+    do {
+      if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        CString file = directory + fd.cFileName;
+        files.AddTail(file);
+      }
+    } while (FindNextFile(find_handle, &fd));
+    FindClose(find_handle);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WebPagetest::UploadImages(WptTestDriver& test,
+                               CAtlList<CString>& image_files) {
   bool ret = true;
 
-  // upload the large binary files individually (images, tcpdump, etc)
+  // Upload the large binary files individually (e.g. images, tcpdump).
   CString url = _settings._server + _T("work/resultimage.php");
-  CString dir = test._directory + CString(_T("\\"));
-  TCHAR * extensions[] = {_T("*.jpg"), _T("*.png"), _T("*.dtas"), 
-                            _T("*.cap"), _T("*.gz")};
-  for (int i = 0; i < _countof(extensions) && ret; i++) {
-    TCHAR * ext = extensions[i];
-    WIN32_FIND_DATA fd;
-    HANDLE find_handle = FindFirstFile(dir + ext, &fd);
-    if (find_handle != INVALID_HANDLE_VALUE) {
-      do {
-        if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-          CString file = dir + fd.cFileName;
-          ret = UploadFile(url, false, test, file);
-        }
-      } while (ret && FindNextFile(find_handle, &fd));
-
-      FindClose(find_handle);
-    }
+  POSITION pos = image_files.GetHeadPosition();
+  while (ret && pos) {
+    CString file = image_files.GetNext(pos);
+    ret = UploadFile(url, false, test, file);
+    if (ret)
+      DeleteFile(file);
   }
-
   return ret;
 }
 
@@ -183,6 +221,8 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   if (ret || done) {
     CString url = _settings._server + _T("work/workdone.php");
     ret = UploadFile(url, done, test, file);
+    if (ret)
+      DeleteFile(file);
   }
 
   return ret;

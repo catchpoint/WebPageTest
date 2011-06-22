@@ -85,6 +85,7 @@ void WptTest::Reset(void) {
   _log_data = true;
   _sleep_end.QuadPart = 0;
   _combine_steps = 0;
+  _upload_incremental_results = true;
 }
 
 /*-----------------------------------------------------------------------------
@@ -441,4 +442,3 @@ ULONG WptTest::OverrideDNSAddress(CString& name) {
 
   return addr;
 }
-

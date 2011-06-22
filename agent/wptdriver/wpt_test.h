@@ -121,6 +121,7 @@ public:
   // current state
   int     _run;
   bool    _clear_cache;
+  bool    _upload_incremental_results;
   bool    _active;
   LARGE_INTEGER _sleep_end;
   LARGE_INTEGER _perf_frequency;
@@ -141,4 +142,3 @@ protected:
 	CAtlList<CDNSEntry>			_dns_override;
 	CAtlList<CDNSName>			_dns_name_override;
 };
-

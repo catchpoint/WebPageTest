@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "web_page_replay.h"
 #include "wpt_driver_core.h"
 #include "zlib/contrib/minizip/unzip.h"
 #include <Wtsapi32.h>
@@ -116,22 +117,21 @@ void WptDriverCore::WorkThread(void) {
 
     WptTestDriver test;
     if (_webpagetest.GetTest(test)) {
-      _status.Set(_T("Starting test..."));   
-      if (!TracerouteTest(test)) {
-        if (ConfigureIpfw(test)) {
-          WebBrowser browser(_settings, test, _status,
-                              _settings._browser_chrome);
-          for (test._run = 1; test._run <= test._runs; test._run++) {
-            test._clear_cache = true;
+      _status.Set(_T("Starting test..."));
+      WebBrowser browser(_settings, test, _status, _settings._browser_chrome);
+      if (SetupWebPageReplay(test, browser) &&
+          !TracerouteTest(test) &&
+          ConfigureIpfw(test)) {
+        for (test._run = 1; test._run <= test._runs; test._run++) {
+          test._clear_cache = true;
+          BrowserTest(test, browser);
+          if (!test._fv_only) {
+            test._clear_cache = false;
             BrowserTest(test, browser);
-            if (!test._fv_only) {
-              test._clear_cache = false;
-              BrowserTest(test, browser);
-            }
           }
-          ResetIpfw();
         }
       }
+      ResetIpfw();
 
       bool uploaded = false;
       for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
@@ -190,8 +190,11 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   if (test._tcpdump)
     _winpcap.StopCapture();
   KillBrowsers();
-  _webpagetest.UploadIncrementalResults(test);
-
+  if (test._upload_incremental_results) {
+    _webpagetest.UploadIncrementalResults(test);
+  } else {
+    _webpagetest.DeleteIncrementalResults(test);
+  }
   WptTrace(loglevel::kFunction, 
             _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
 
@@ -323,6 +326,29 @@ void WptDriverCore::ResetIpfw(void) {
   _ipfw.CreatePipe(PIPE_OUT, 0, 0, 0);
 }
 
+
+/*-----------------------------------------------------------------------------
+  Set up Web Page Replay (Record the page then start playback for it.)
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::SetupWebPageReplay(
+    WptTestDriver& test, WebBrowser &browser) {
+  bool ret = true;
+  if (!_settings._web_page_replay_host.IsEmpty()) {
+    if (WebPageReplaySetRecordMode(_settings._web_page_replay_host)) {
+      test._clear_cache = true;
+      ret = BrowserTest(test, browser);
+      if (!test._fv_only) {
+        test._clear_cache = false;
+        ret = BrowserTest(test, browser);
+      }
+      WebPageReplaySetReplayMode(_settings._web_page_replay_host);
+    } else {
+      _status.Set(_T("Web Page Replay Record FAILED"));
+      ret = false;
+    }
+  }
+  return ret;
+}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

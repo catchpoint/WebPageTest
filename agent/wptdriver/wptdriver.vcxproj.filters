@@ -91,6 +91,9 @@
     <ClCompile Include="wpt_test_driver.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="web_page_replay.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -187,6 +190,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="wpt_test_driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="web_page_replay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

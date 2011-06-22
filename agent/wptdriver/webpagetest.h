@@ -32,6 +32,7 @@ public:
   WebPagetest(WptSettings &settings, WptStatus &status);
   ~WebPagetest(void);
   bool GetTest(WptTestDriver& test);
+  bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
 
@@ -55,9 +56,11 @@ private:
                             CStringA& form_data, DWORD& content_length);
   bool UploadFile(CString url, bool done, WptTestDriver& test, CString file);
   bool CompressResults(CString directory, CString zip_file);
-  bool UploadImages(WptTestDriver& test);
+  void GetImageFiles(const CString& directory, CAtlList<CString>& files);
+  void GetFiles(const CString& directory, const TCHAR* glob_pattern,
+                CAtlList<CString>& files);
+  bool UploadImages(WptTestDriver& test, CAtlList<CString>& image_files);
   bool UploadData(WptTestDriver& test, bool done);
   bool ProcessZipFile(CString zip_file, WptTestDriver& test);
   bool InstallUpdate(CString dir);
 };
-
