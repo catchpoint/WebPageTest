@@ -287,8 +287,8 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-  if (ret != SOCKET_ERROR && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
-        && *lpNumberOfBytesRecvd && !lpOverlapped && !lpCompletionRoutine) {
+  if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
+        && *lpNumberOfBytesRecvd) {
     DWORD bytes = *lpNumberOfBytesRecvd;
     DWORD i = 0;
     while (i < dwBufferCount && bytes > 0) {
