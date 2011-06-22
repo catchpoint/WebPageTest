@@ -1,7 +1,6 @@
 <?php
     require_once('common.inc');
     require_once('unique.inc');
-    import_request_variables('PG', 'req_');
     set_time_limit(300);
      
     $xml = false;

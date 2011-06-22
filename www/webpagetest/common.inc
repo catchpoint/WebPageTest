@@ -6,6 +6,7 @@ if( $debug )
     error_reporting(E_ALL);
 umask(0);
 date_default_timezone_set('UTC');
+import_request_variables('PG', 'req_');
 
 
 // constants
@@ -25,14 +26,14 @@ if (!is_dir($tempDir))
 $tempDir .= '/';
 define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
-if( $_GET['bare'] )
+if( $req_bare )
     define('BARE_UI', true);
 
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
 
 // override some settings from the URI
-if( $_GET['bulk'] )
+if( $req_bulk )
     $settings['noBulk'] = 0;
 
 $cdnPath = '';
@@ -90,14 +91,14 @@ setcookie('o', $owner, time()+60*60*24*365, '/');
 
 
 // set their color selection as a cookie
-if( isset($_GET['color']) )
+if( $req_color )
 {
-    setcookie('color', $_GET['color'], time()+60*60*24*365, '/');
-    $_REQUEST['color'] = $_GET['color'];
+    setcookie('color', $req_color, time()+60*60*24*365, '/');
+    $_REQUEST['color'] = $req_color;
 }
 
 // Load the test-specific data
-$id = htmlspecialchars($_GET["test"]);
+$id = htmlspecialchars($req_test);
 
 // if we didn't get an id explicitly, try from cookie
 if( !$id )
@@ -122,10 +123,10 @@ if( $id )
         }
     }
 
-    $run = htmlspecialchars($_GET["run"]);
+    $run = htmlspecialchars($req_run);
     if( !$run )
         $run = (int)1;
-    $cached = (int)$_GET["cached"];
+    $cached = (int)$req_cached;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
