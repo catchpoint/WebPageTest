@@ -473,6 +473,10 @@ void CURLBlaster::ClearCache(void)
 	OutputDebugString(buff);
 	DeleteDirectory( silverlight );
 	DeleteDirectory( flash, false );
+
+  // delete the local storage quotas from the registry
+  DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"), false);
+  DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"), false);
 	
 	cached = false;
 }
@@ -523,6 +527,39 @@ void DeleteDirectory( LPCTSTR inPath, bool remove )
 		if( remove )
 			RemoveDirectory(inPath);
 	}
+}
+
+/*-----------------------------------------------------------------------------
+	Recursively delete the given reg key
+-----------------------------------------------------------------------------*/
+void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove)
+{
+  HKEY hKey;
+  if( SUCCEEDED(RegOpenKeyEx(hParent, key, 0, KEY_READ | KEY_WRITE, &hKey)))
+  {
+    CAtlList<CString> keys;
+    TCHAR subKey[255];
+    memset(subKey, 0, sizeof(subKey));
+    DWORD len = 255;
+    DWORD i = 0;
+    while( RegEnumKeyEx(hKey, i, subKey, &len, 0, 0, 0, 0) == ERROR_SUCCESS )
+    {
+      keys.AddTail(subKey);
+      i++;
+      len = 255;
+      memset(subKey, 0, sizeof(subKey));
+    }
+
+    while( !keys.IsEmpty() )
+    {
+      CString child = keys.RemoveHead();
+      DeleteRegKey(hKey, child, true);
+    }
+
+    RegCloseKey(hKey);
+    if( remove )
+      RegDeleteKey(hParent, key);
+  }
 }
 
 /*-----------------------------------------------------------------------------

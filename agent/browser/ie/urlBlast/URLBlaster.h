@@ -118,3 +118,4 @@ protected:
 
 // utility routine
 void DeleteDirectory( LPCTSTR inPath, bool remove = true );
+void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
