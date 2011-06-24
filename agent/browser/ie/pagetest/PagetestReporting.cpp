@@ -717,7 +717,7 @@ void CPagetestReporting::ProcessResults(void)
 		tmDOMElement = 1;
 	tmBasePage = basePage < start ? 0 : ((double)(basePage - start)) / (double)freq;
 	
-	if( !errorCode || errorCode == 99999 )
+	if( (!errorCode || errorCode == 99999) && !endDoc )
 	{
 		if( script_waitForJSDone || !requiredRequests.IsEmpty() || (!domElementId.IsEmpty() && !domElement) )
 		{
@@ -752,7 +752,7 @@ void CPagetestReporting::ProcessResults(void)
   tmLoad = tmActivity = max(tmActivity, tmDoc);
   tmLastActivity = tmActivity;
 
-	if( (!errorCode || errorCode == 99999) && (tmDoc > timeout * 1000 || tmLastActivity > timeout * 1000) )
+	if( (!errorCode || errorCode == 99999) && (!tmDoc || tmDoc > timeout * 1000) )
 		errorCode = 99997;
 	
 	// If it was web 1.0, use the document stats for the page stats
