@@ -27,6 +27,13 @@ $page_description = "Comparison Test$testLabel.";
         <div class="page">
             <?php
             include 'header.inc';
+            
+            if( $supportsAuth && ($admin || strpos($_COOKIE['google_email'], '@google.com') == false) )
+            {
+                echo '<h1 class="centered">Access Denied</h1>';
+            }
+            else
+            {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
             
@@ -35,7 +42,8 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="runs" value="10">
+            <input type="hidden" name="runs" value="8">
+            <input type="hidden" name="discard" value="3">
             <input type="hidden" name="script" value="setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%">
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
@@ -157,7 +165,10 @@ $page_description = "Comparison Test$testLabel.";
             </div>
             </form>
             
-            <?php include('footer.inc'); ?>
+            <?php
+            }
+            include('footer.inc'); 
+            ?>
         </div>
 
         <script type="text/javascript">
