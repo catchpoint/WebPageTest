@@ -1079,7 +1079,7 @@ function checkQueueGrowthCountAndEmailAlert(){
  */
 function updateQueueProcessRate(){
   $queueStatusFilename = './QueueStatus.ini';
-  $updateFrequency = 600;
+//  $updateFrequency = 600;
   $currentTime = current_seconds();
   try {
     // Write current queue status
@@ -1103,7 +1103,7 @@ function updateQueueProcessRate(){
         $location['LastTesterRatioAlertTime'] = $previousLocation['LastTesterRatioAlertTime'];
 	      $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount'];
 
-        if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
+//        if ( $previousLocation['QueueGrowthCheckTimeStamp'] + $updateFrequency < $currentTime ){
           logOutput('[INFO] [updateQueueProcessRate] QueueGrowthCheck for : '.$key);
 
           if ( $location['PendingTests'] == 0){
@@ -1120,11 +1120,11 @@ function updateQueueProcessRate(){
           }
           $location['QueueGrowthCheckTimeStamp'] = $currentTime;
           $locationInformation[$key] = $location;
-        } else {
-          logOutput('[INFO] [updateQueueProcessRate] Skipping QueueGrowthCheck: interval not passed for : '.$key);
-          // Keep previous info it update time hasn't passed
-          $locationInformation[$key] = $previousLocation;
-        }
+//        } else {
+//          logOutput('[INFO] [updateQueueProcessRate] Skipping QueueGrowthCheck: interval not passed for : '.$key);
+//           Keep previous info it update time hasn't passed
+//          $locationInformation[$key] = $previousLocation;
+//        }
       }
 
       // Write current status out
