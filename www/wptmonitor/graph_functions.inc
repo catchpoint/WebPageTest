@@ -345,7 +345,7 @@ function getAverage($startAt, $increment, $data, $field) {
   if ($count > 0) {
     $result = $total / $count;
   } else {
-    $result = null;
+    $result = NULL;
   }
   return $result;
 }

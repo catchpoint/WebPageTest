@@ -158,33 +158,43 @@ if ($_REQUEST['act'] == 'report') {
   $smarty->assign('changeNotes',$changeNotes);
   
   $timeStamps = array();
-  foreach($series as $ser){
-    $timeStamps[]=$ser['Date'];
-  }
-  array_walk($timeStamps, 'formatDate');
-
+//  foreach($series as $ser){
+//    $timeStamps[]=$ser['Date'];
+//  }
+//  array_walk($timeStamps, 'formatDate');
   $jobTable = Doctrine_Core::getTable('WPTJob');
   $datas = array();
   $overallAverages = array();
   $averageDetails = array();
   foreach($jobIds as $jobId){
     $responseTimes = getGraphData($userId, $jobId, $startDateTime, $endDateTime, $percentile, $trimAbove, $adjustUsing, $trimBelow);
+
     $avg = getResultsDataAvg($startDateTime, $endDateTime, $interval, $responseTimes, $fields);
 
     foreach($availFields as $availField){
       $data = array();
+      $idx = 0;
       foreach($avg as $a){
         $date = $a['Date'];
         if (array_key_exists($availField,$a)){
+          if ( empty($a[$availField])){
+            continue;
+          }
           $data[$date] = $a[$availField]/1000;
+          $timeStamps[$idx] = date('m/d H:i', $date);
+          $idx++;
         }
       }
+//      $timeStamps[$idx] = date('m/d H:i', $endDateTime);
       if ( sizeof($data) > 0){
         $job = $jobTable->find($jobId);
         $jobLabel = $job['Label'];
         $datas[$jobLabel." - ".$availField] = $data;
       }
     }
+//    print_r($timeStamps);
+//    echo sizeof($datas['www.wine.com Treated East IE7 - AvgFirstViewDocCompleteTime']);exit;
+//    print_r($datas);exit;
     $allFields = $availFields;
     $allFields[] = 'AvgFirstViewDocCompleteRequests';
     $allFields[] = 'AvgFirstViewDocCompleteBytesIn';
@@ -203,17 +213,11 @@ if ($_REQUEST['act'] == 'report') {
     $avgDetail['Label']=$jobLabel;
     $averageDetails[] = $avgDetail;
   }
-//  print_r($overallAverages);exit;
-
+  $smarty->assign('interval',$interval);
   $smarty->assign('overallAverages',$overallAverages);
   $smarty->assign('averageDetails',$averageDetails);
-//  echo "<PRE>";
-//  print_r($datas);exit;
-
   $cryptQueryString = compressCrypt(urldecode($_SERVER['QUERY_STRING'].'&_pky='.$userId));
-
   $smarty->assign('cryptQueryString',$cryptQueryString);
-
   $smarty->assign('datas',$datas);
   $smarty->assign('x_axis_tick_labels',$timeStamps);
 

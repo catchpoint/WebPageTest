@@ -66,12 +66,13 @@
 <h3 align="left">Graph</h3>
   {jpgraph_line title='Average Reponse Time'
                         subtitle='report'
-                        width='900'
+                        width='1000'
                         height='600'
                         margins='40,30,40,120'
                         y_axis_title='Seconds'
                         x_axis_tick_labels=$x_axis_tick_labels
-                        datas=$datas}
+                        datas=$datas
+                        interval=$interval}
 
 <hr>
 <h3 align="left">Response Times</h3>

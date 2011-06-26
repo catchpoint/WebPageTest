@@ -1,6 +1,7 @@
 <?php
 require_once ('jpgraph/jpgraph.php');
 require_once ('jpgraph/jpgraph_line.php');
+require_once( "jpgraph/jpgraph_date.php" );
 
 /**
  * Smarty {eval} function plugin
@@ -12,6 +13,10 @@ require_once ('jpgraph/jpgraph_line.php');
  */
 function smarty_function_jpgraph_line($params, &$smarty) {
   $datas = $params['datas'];
+  if (sizeof($datas) < 1 ){
+    return "<h1 style='color: red;'>No Data for given time period </h1>";
+  }
+  $interval = $params['interval'];
   $title = $params['title'];
   $x_axis_title = $params['x_axis_title'];
   $x_axis_tick_labels = $params['x_axis_tick_labels'];
@@ -22,23 +27,65 @@ function smarty_function_jpgraph_line($params, &$smarty) {
   $height = $params['height'];
 
   $graphDatas = array();
+
+  // Determine ... from interval
+
+  switch ($interval){
+    case 1:
+      $timeAlign =HOURADJ_1;
+      break;
+    case 300:
+      $timeAlign =HOURADJ_1;
+      break;
+    case 900:
+      $timeAlign =HOURADJ_1;
+      break;
+    case 1800:
+      $timeAlign =HOURADJ_1;
+      break;
+    case 3600:
+      $timeAlign =HOURADJ_1;
+      break;
+    case 10800:
+      $timeAlign =DAYADJ_1;
+      break;
+    case 21600:
+      $timeAlign =DAYADJ_1;
+      break;
+    case 43200:
+      $timeAlign =DAYADJ_1;
+      break;
+    case 86400:
+      $timeAlign =DAYADJ_1;
+      break;
+    case 604800:
+      $timeAlign =DAYADJ_3;
+      break;
+
+  }
   foreach ($datas as $key=>$data){
     $graphData = array();
+  $idx = 0;
     foreach ($data as $d){
+//      $graphData["'".$x_axis_tick_labels[$idx]."'"] = $d;
       $graphData[] = $d;
+      $idx++;
     }
     $graphDatas[$key] = $graphData;
   }
+//  print_r($graphDatas);exit;
   // Create the graph and set a scale.
   // These two calls are always required
   $graph = new Graph($width, $height);
-  $graph->SetScale('intlin');
+  $graph->SetScale('datint');
+  $graph->xaxis->scale->SetTimeAlign($timeAlign);
+//  $graph->xaxis->scale->SetDateFormat( 'm/d H:i' );
 
   $graph->xaxis->SetTickLabels($x_axis_tick_labels);
   $graph->xaxis->SetLabelAngle(90);
 
   // Setup margin and titles
-  $graph->SetMargin($margins[0], $margins[1]+300, $margins[2], $margins[3]);
+  $graph->SetMargin($margins[0], $margins[1], $margins[2], $margins[3]);
   $graph->title->Set($title);
   $graph->subtitle->Set($subtitle);
   $graph->xaxis->title->Set($x_axis_title);
@@ -69,6 +116,7 @@ function smarty_function_jpgraph_line($params, &$smarty) {
     '#8B7500','#333333','#990000');
   // Also add the new data series to the graph
   $colorIdx = 0;
+
   foreach($graphDatas as $key=>$data){
     $lp = new LinePlot($data);
     $lp->SetLegend($key);
