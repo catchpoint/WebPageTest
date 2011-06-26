@@ -271,6 +271,7 @@ function getGraphData($user_id,
       ->andWhere('r.AvgFirstViewFirstByte > 0')
 //      ->andWhere('r.AvgFirstViewStartRender > 0')
       ->andWhere('r.AvgFirstViewDocCompleteTime > 0')
+      ->andWhere('r.AvgFirstViewDocCompleteTime != ?', '')
       ->andWhere('r.WPTJobId = ?', $job_id)
       ->andWhere('r.Date <= ?', $endDateTime)
       ->andWhere('r.Date >= ?', $startDateTime);
@@ -344,7 +345,7 @@ function getAverage($startAt, $increment, $data, $field) {
   if ($count > 0) {
     $result = $total / $count;
   } else {
-    $result = 0;
+    $result = null;
   }
   return $result;
 }
