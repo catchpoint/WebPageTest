@@ -619,6 +619,8 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
                     return 'Click the grade to see a list of the javascript and css files that should be combined';
                 } else if (t.hasClass('use_of_cdn')) {
                     return 'Click the grade to see the requests that should be served from a CDN if you have a distributed user base';
+                } else if (t.hasClass('first_byte_time')) {
+                    return 'Click the grade to see information about the target First Byte Time';
                 }
                 
                 return false;

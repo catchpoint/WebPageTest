@@ -59,6 +59,42 @@ function PreparePSSTest(form)
     return true;
 }
 
+function PrepareBlinkTest(form)
+{
+    var url = form.testurl.value;
+    if( url == "" || url == "Enter a Website URL" )
+    {
+        alert( "Please enter an URL to test." );
+        form.url.focus();
+        return false;
+    }
+    
+    form.label.value = 'Blink Comparison for ' + url;
+    
+    var slash = url.indexOf('/');
+    var colon = url.indexOf(':');
+    if( colon == 4 || colon == 5 )
+    {
+        var slash = url.indexOf('/', colon + 3);
+        var colon = url.indexOf(':', colon + 1);
+    }
+    if( slash >= 0 )
+    {
+        var split = slash;
+        if( colon >= 0 && colon < slash )
+            split = colon;
+        blinkUrl = url.substring(0, split) + '.webinstant.sandbox.google.com' + url.substring(split);
+    }
+    else
+        blinkUrl = url + '.webinstant.sandbox.google.com';
+        
+    // build the batch-url list
+    var batch = "Original=" + url + "\nOptimized=" + blinkUrl;
+    form.bulkurls.value=batch;
+    
+    return true;
+}
+
 /*
     Do any populating of the input form based on the loaded location information
 */

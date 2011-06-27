@@ -141,7 +141,7 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
             echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
             echo '</div>';
             echo '<div id="grades">';
-                $grades = GetGrades($pageData[$gradeRun][0]);
+                $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
                 if( count($grades) )
                 {
                     echo '<ul class="grades">';
@@ -240,21 +240,21 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
 * Calculate the grades for the given test
 * 
 */
-function GetGrades(&$pageData)
+function GetGrades(&$pageData, &$test, $id, $run)
 {
     $grades = array();
     if($pageData['optimization_checked'])
     {
         require_once('optimization_detail.inc.php');
 
-        $opt = getOptimizationGrades($pageData);
+        $opt = getOptimizationGrades($pageData, $test, $id, $run);
 
-        $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => 'Keep-alive Enabled');
-        $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => 'Compress Text');
-        $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => 'Compress Images');
-        $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => 'Cache Static Content');
-        $grades['combine_js_css_files'] = array( 'class' => $opt['combine']['class'], 'grade' => $opt['combine']['grade'], 'description' => 'Combine JS/CSS Files');
-        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => 'CDN detected');
+        $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
+        $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
+        $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
+        $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => $opt['image_compression']['label']);
+        $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => $opt['caching']['label']);
+        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => $opt['cdn']['label']);
     }
     
     return $grades;

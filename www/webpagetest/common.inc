@@ -12,7 +12,7 @@ import_request_variables('PG', 'req_');
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 38);          // version of the sitewide css file
-define('VER_JS', 14);            // version of the sitewide javascript file
+define('VER_JS', 15);            // version of the sitewide javascript file
 define('VER_JS_TEST', 15);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 

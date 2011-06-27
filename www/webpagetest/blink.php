@@ -35,16 +35,14 @@ $page_description = "Comparison Test$testLabel.";
             else
             {
             ?>
-            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
+            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PrepareBlinkTest(this)">
             
             <input type="hidden" name="private" value="1">
             <input type="hidden" name="view" value="simple">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="runs" value="8">
-            <input type="hidden" name="discard" value="3">
-            <input type="hidden" name="script" value="setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%">
+            <input type="hidden" name="runs" value="5">
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
             <?php
