@@ -7,10 +7,11 @@
 * @param mixed $run
 * @param mixed $cached
 */
-function dumpOptimizationReport(&$pageData, &$requests)
+function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
     if( $pageData && $requests )
     {
+        ReportTTFB($pageData, $requests, $id, $run, $cached, $test);
         ReportKeepAlive($pageData, $requests);
         ReportTextCompression($pageData, $requests);
         ReportImageCompression($pageData, $requests);
@@ -21,6 +22,26 @@ function dumpOptimizationReport(&$pageData, &$requests)
         ReportCookies($pageData, $requests);
         ReportETags($pageData, $requests);
     }
+}
+
+/**
+* 
+* 
+* @param mixed $requests
+*/
+function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
+{
+    require_once('optimization.inc');
+    $score = gradeTTFB($pageData, $test, $id, $run, $cached, $target);
+    if( isset($score) )
+    {
+        echo "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
+        echo "<b>{$pageData['TTFB']} ms</b> First Byte Time<br>\n";
+        echo "<b>$target ms</b> Target First Byte Time<br>\n";
+    }
+    else
+        echo "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): N/A</h3></a><p class=\"indented1\">\n";
+    echo "</p><br>\n";
 }
 
 /**
@@ -441,6 +462,52 @@ function dumpOptimizationGlossary(&$settings)
             $rowspan = 2;
     ?>
     <table border="1" cellpadding="5px" cellspacing="0" style="width:100%">
+
+        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>First Byte Time</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >Time to First Byte for the page (back-end processing + redirects)</td>
+        </tr>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >The target time is the time needed for the DNS, socket and SSL negotiations + 100ms.  A single letter grade will be deducted for every 100ms beyond the target.</td>
+        </tr>
+
+        <tr class="blank"></tr>
+        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Keep-Alive</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >All objects that are from a domain that serves more than one object for the page (i.e. if only a single object is served from a given domain it will not be checked)</td>
+        </tr>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >The response header contains a "keep-alive" directive or the same socket was used for more than one object from the given host</td>
+        </tr>
+
+        <tr class="blank"></tr>
+        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>GZIP Text</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >All objects with a mime type of "text/*" or "*javascript*"</td>
+        </tr>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >Transfer-encoding is checked to see if it is gzip.  If it is not then the file is compressed and the percentage of compression 
+            is the result (so a page that can save 30% of the size of it's text by compressing would yield a 70% test result)</td>
+        </tr>
+
+        <tr class="blank"></tr>
+        <tr><th rowspan=<?php echo $rowspan; ?> colspan=1>Compress Images</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >Any object with a mime type of "image/*"</td>
+        </tr>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >GIF - All pass<br>
+            PNG - Must be 8 bit or lower (no 24-bit PNGs will pass)<br>
+            JPEG - Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
+            The overall score is the percentage of image bytes that can be saved by re-compressing the images.                        
+            </td>
+        </tr>
+
+        <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cache Static</th>
             <td class="nowrap">Applicable Objects</td>
             <td >Any non-html object with a mime type of "text/*", "*javascript*" or "image/*" that does not
@@ -456,32 +523,6 @@ function dumpOptimizationGlossary(&$settings)
                 days you will get a warning (only applies to max-age currently).
             </td>
         </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#cache">http://optimization.aol.com/standards/performance/#cache</a>
-            </td>
-        </tr>
-        <?php } ?>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Use A CDN</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All static non-html content (css, js and images)</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  The known CDN's are Akamai, Amazon CloudFront, Coral Cache, Edgecast, Google, Highwinds, Internap, Limelight, Mirror Image, Panther and Yahoo</td>
-        </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#cdn">http://optimization.aol.com/standards/performance/#cdn</a>
-            </td>
-        </tr>
-        <?php } ?>
 
         <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Combine CSS/JS</th>
@@ -492,91 +533,16 @@ function dumpOptimizationGlossary(&$settings)
             <td class="nowrap">What is checked</td>
             <td >If multiple files of the same type are served then each additional css file beyond 1 will subtract 5 percent and each Javascript file beyond the first wil subtract 10 percent</td>
         </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#head">http://optimization.aol.com/standards/performance/#head</a>
-            </td>
-        </tr>
-        <?php } ?>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>GZIP Text</th>
+        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Use A CDN</th>
             <td class="nowrap">Applicable Objects</td>
-            <td >All objects with a mime type of "text/*" or "*javascript*"</td>
+            <td >All static non-html content (css, js and images)</td>
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >Transfer-encoding is checked to see if it is gzip.  If it is not then the file is compressed and the percentage of compression 
-            is the result (so a page that can save 30% of the size of it's text by compressing would yield a 70% test result)</td>
+            <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  The known CDN's are Akamai, Amazon CloudFront, Coral Cache, Edgecast, Google, Highwinds, Internap, Limelight, Mirror Image, Panther and Yahoo</td>
         </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#comp">http://optimization.aol.com/standards/performance/#comp</a>
-            </td>
-        </tr>
-        <?php } ?>
-
-        <tr class="blank"></tr>
-        <tr><th rowspan=<?php echo $rowspan; ?> colspan=1>Compress Images</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >Any object with a mime type of "image/*"</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >GIF - All pass<br>
-            PNG - Must be 8 bit or lower (no 24-bit PNGs will pass)<br>
-            JPEG - Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
-            The overall score is the percentage of image bytes that can be saved by re-compressing the images.                        
-            </td>
-        </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#design_comp">http://optimization.aol.com/standards/performance/#design_comp</a>
-            </td>
-        </tr>
-        <?php } ?>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Keep-Alive</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All objects that are from a domain that serves more than one object for the page (i.e. if only a single object is served from a given domain it will not be checked)</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >The response header contains a "keep-alive" directive or the same socket was used for more than one object from the given host</td>
-        </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#keepalive">http://optimization.aol.com/standards/performance/#keepalive</a>
-            </td>
-        </tr>
-        <?php } ?>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cookies</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All requests</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Any request for a static object that sends up a cookie will fail.  All other requests that send up cookies will warn.</td>
-        </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#cookies">http://optimization.aol.com/standards/performance/#cookies</a>
-            </td>
-        </tr>
-        <?php } ?>
 
         <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Minify JS</th>
@@ -587,14 +553,16 @@ function dumpOptimizationGlossary(&$settings)
             <td class="nowrap">What is checked</td>
             <td >Javascript will be run through jsmin.  If the original content was gzip encoded, the minified version will also be gzipped for comparison.  If > 5KB or 10% is saved then it will fail.  If > 1KB is saved, it will warn, otherwise it will pass.</td>
         </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://optimization.aol.com/standards/performance/#dl_time">http://optimization.aol.com/standards/performance/#dl_time</a>
-            </td>
+
+        <tr class="blank"></tr>
+        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cookies</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >All requests</td>
         </tr>
-        <?php } ?>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >Any request for a static object that sends up a cookie will fail.  All other requests that send up cookies will warn.</td>
+        </tr>
 
         <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>No Etags</th>
@@ -605,14 +573,7 @@ function dumpOptimizationGlossary(&$settings)
             <td class="nowrap">What is checked</td>
             <td >If the response headers include an ETag header then the request will fail.</td>
         </tr>
-        <?php if((int)$settings['optLinks'] == 1) { ?>
-        <tr>
-            <td class="nowrap">Optimization information</td>
-            <td >
-                <a href="http://developer.yahoo.net/blog/archives/2007/07/high_performanc_11.html">http://developer.yahoo.net/blog/archives/2007/07/high_performanc_11.html</a>
-            </td>
-        </tr>
-        <?php } ?>
+
     </table>
 <?php
 }

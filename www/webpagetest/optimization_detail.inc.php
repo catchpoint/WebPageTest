@@ -5,26 +5,9 @@ require_once('object_detail.inc');
 /**
 * Parse the page data and load the optimization-specific details
 * 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @param mixed $includeObject
-*/
-function getOptimizationDetails($testPath, $run, $cached, $includeObject)
-{
-    $opt = null;
-    
-    $pageData = loadPageRunData($testPath, $run, $cached);
-    if( $pageData )
-        $opt = getOptimizationGrades($pageData);
-}
-
-/**
-* Parse the page data and load the optimization-specific details
-* 
 * @param mixed $pagedata
 */
-function getOptimizationGrades(&$pageData)
+function getOptimizationGrades(&$pageData, &$test, $id, $run)
 {
     $opt = null;
     
@@ -33,6 +16,7 @@ function getOptimizationGrades(&$pageData)
         $opt = array();
         
         // put them in rank-order
+        $opt['ttfb'] = array();
         $opt['keep-alive'] = array();
         $opt['gzip'] = array();
         $opt['image_compression'] = array();
@@ -44,6 +28,7 @@ function getOptimizationGrades(&$pageData)
         $opt['e-tags'] = array();
 
         // get the scores
+        $opt['ttfb']['score'] = gradeTTFB($pageData, $test, $id, $run, 0, $target);
         $opt['keep-alive']['score'] = $pageData['score_keep-alive'];
         $opt['gzip']['score'] = $pageData['score_gzip'];
         $opt['image_compression']['score'] = $pageData['score_compress'];
@@ -55,7 +40,8 @@ function getOptimizationGrades(&$pageData)
         $opt['e-tags']['score'] = $pageData['score_etags'];
         
         // define the labels for all  of them
-        $opt['keep-alive']['label'] = 'Enable keep-alive';
+        $opt['ttfb']['label'] = 'First Byte Time';
+        $opt['keep-alive']['label'] = 'Keep-alive Enabled';
         $opt['gzip']['label'] = 'Compress Text';
         $opt['image_compression']['label'] = 'Compress Images';
         $opt['caching']['label'] = 'Cache static content';
@@ -66,11 +52,11 @@ function getOptimizationGrades(&$pageData)
         $opt['e-tags']['label'] = 'Disable E-Tags';
         
         // flag the important ones
+        $opt['ttfb']['important'] = true;
         $opt['keep-alive']['important'] = true;
         $opt['gzip']['important'] = true;
         $opt['image_compression']['important'] = true;
         $opt['caching']['important'] = true;
-        $opt['combine']['important'] = true;
         $opt['cdn']['important'] = true;
         
         // apply grades
@@ -120,39 +106,86 @@ function getOptimizationGrades(&$pageData)
     }
     
     return $opt;
-}  
+}
 
 /**
-* Build a table for the key optimizations
+* Generate a grade for the TTFB
 * 
-* @param mixed $testPath
+* @param mixed $id
 * @param mixed $run
-* @param mixed $cached
 */
-function keyOptimizationsTable( $testPath, $run, $cached )
+function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
 {
-    $html = '';
-
-    $opt = getOptimizationDetails( $testPath, $run, $cached, false );
-    if( $opt && count($opt) )
+    $score = null;
+    
+    $ttfb = (int)$pageData['TTFB'];
+    if( $ttfb )
     {
-        $html .= '<thead><tr>';
-        foreach( $opt as &$item )
-            if( $item['important'] === true )
-                $html .= "<th class=\"opt_label\">{$item['label']}</th>";
-        $html .= "</tr></thead>\n";
-        $html .= '<tbody><tr>';
-        foreach( $opt as &$item )
-            if( $item['important'] === true )
-            {
-                $grade = $item['grade'];
-                if( $grade == 'N/A' )
-                    $grade = 'NA';
-                $html .= "<td class=\"opt_grade_$grade\">{$item['grade']}</td>";
-            }
-        $html .= "</tr></tbody>\n";
+        // see if we can fast-path fail this test without loading the object data
+        if( isset($test['testinfo']['latency']) )
+        {
+            $rtt = (int)$test['testinfo']['latency'] + 100;
+            $worstCase = $rtt * 7 + 1000;  // 7 round trips including dns, socket, request and ssl + 1 second back-end
+            if( $ttfb > $worstCase )
+                $score = 0;
+        }
+        
+        if( !isset($score) )
+        {
+            $target = getTargetTTFB($pageData, $test, $id, $run, $cached);
+            $score = (int)max(100 - (($ttfb - $target) / 10), 0);
+        }
     }
+    
+    return $score;
+}
 
-    return $html;
+/**
+* Determine the target TTFB for the given test
+* 
+* @param mixed $pageData
+* @param mixed $test
+* @param mixed $id
+* @param mixed $run
+*/
+function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
+{
+    $target = NULL;
+
+    $rtt = null;
+    if( isset($test['testinfo']['latency']) )
+        $rtt = (int)$test['testinfo']['latency'];
+    
+    // load the object data (unavoidable, we need the socket connect time to the first host)
+    require_once('object_detail.inc');
+    $testPath = './' . GetTestPath($id);
+    $secure = false;
+    $haveLocations;
+    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+    if( count($requests) )
+    {
+        // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
+        $socketConnect = null;
+        if( (int)$requests[0]['connect_end'] && (int)$requests[0]['connect_end'] > (int)$requests[0]['connect_start'] )
+            $socketConnect = $requests[0]['connect_end'] - $requests[0]['connect_start'];
+        elseif( (int)$requests[0]['socketTime'] > 0 )
+            $socketConnect = (int)$requests[0]['socketTime'];
+        if( isset($rtt) && (!isset($socketConnect) || $socketConnect > 3000) )
+            $rtt += 100;    // allow for an additional 100ms to reach the server on top of the traffic-shaped RTT
+        else
+            $rtt = $socketConnect;
+
+        if( isset($rtt) )
+        {
+            $sslTime = 0;
+            if( $requests[0]['secure'] && (int)$requests[0]['sslTime'] > 0 )
+                $sslTime = $requests[0]['sslTime'];
+            
+            // RTT's: DNS + Socket Connect + HTTP Request
+            $target =  ($rtt * 3) + sslTime;
+        }
+    }
+    
+    return $target;
 }
 ?>
