@@ -1,7 +1,7 @@
 <?php
     require_once('page_data.inc');
 
-    if( $supportsAuth && !defined('BARE_UI') )
+    if( $supportsAuth )
     {
         echo '<div id="wptAuthBar">';
         if( isset($user) )
@@ -12,7 +12,7 @@
             echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
         }
         else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-	{
+	    {
             $logoutUrl = 'javascript:ClearOAuthCookies();';
             $google_email = $_COOKIE['google_email'];
             echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
@@ -254,7 +254,7 @@ function GetGrades(&$pageData)
         $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => 'Compress Images');
         $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => 'Cache Static Content');
         $grades['combine_js_css_files'] = array( 'class' => $opt['combine']['class'], 'grade' => $opt['combine']['grade'], 'description' => 'Combine JS/CSS Files');
-        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => 'Use of CDN');
+        $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => 'CDN detected');
     }
     
     return $grades;

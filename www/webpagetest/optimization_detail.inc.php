@@ -60,7 +60,7 @@ function getOptimizationGrades(&$pageData)
         $opt['image_compression']['label'] = 'Compress Images';
         $opt['caching']['label'] = 'Cache static content';
         $opt['combine']['label'] = 'Combine js and css files';
-        $opt['cdn']['label'] = 'Use a CDN';
+        $opt['cdn']['label'] = 'CDN detected';
         $opt['cookies']['label'] = 'No cookies on static content';
         $opt['minify']['label'] = 'Minify javascript';
         $opt['e-tags']['label'] = 'Disable E-Tags';
@@ -74,31 +74,47 @@ function getOptimizationGrades(&$pageData)
         $opt['cdn']['important'] = true;
         
         // apply grades
-        foreach( $opt as &$item )
+        foreach( $opt as $check => &$item )
         {
             $grade = 'N/A';
             $weight = 0;
-            if( isset($item['score']) )
+            if( $check == 'cdn' )
             {
-                $weight = 100;
-                if( $item['score'] >= 90 )
-                    $grade = 'A';
-                elseif( $item['score'] >= 80 )
-                    $grade = 'B';
-                elseif( $item['score'] >= 70 )
-                    $grade = 'C';
-                elseif( $item['score'] >= 60 )
-                    $grade = 'D';
-                elseif( $item['score'] >= 0 )
-                    $grade = 'F';
+                if( $item['score'] >= 80 )
+                {
+                    $item['grade'] = "<img src=\"{$GLOBALS['cdnPath']}/images/grade_check.png\" alt=\"yes\">";
+                    $item['class'] = 'A';
+                }
                 else
-                    $weight = 0;
+                {
+                    $item['grade'] = 'X';
+                    $item['class'] = 'NA';
+                }
             }
-            $item['grade'] = $grade;
-            if( $grade == "N/A" )
-                $item['class'] = "NA";
             else
-                $item['class'] = $grade;
+            {
+                if( isset($item['score']) )
+                {
+                    $weight = 100;
+                    if( $item['score'] >= 90 )
+                        $grade = 'A';
+                    elseif( $item['score'] >= 80 )
+                        $grade = 'B';
+                    elseif( $item['score'] >= 70 )
+                        $grade = 'C';
+                    elseif( $item['score'] >= 60 )
+                        $grade = 'D';
+                    elseif( $item['score'] >= 0 )
+                        $grade = 'F';
+                    else
+                        $weight = 0;
+                }
+                $item['grade'] = $grade;
+                if( $grade == "N/A" )
+                    $item['class'] = "NA";
+                else
+                    $item['class'] = $grade;
+            }
             $item['weight'] = $weight;
         }
     }
