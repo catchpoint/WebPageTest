@@ -12,7 +12,9 @@ require_once( "jpgraph/jpgraph_date.php" );
  * @param Smarty
  */
 function smarty_function_jpgraph_line($params, &$smarty) {
+  try {
   $datas = $params['datas'];
+
   if (sizeof($datas) < 1 ){
     return "<h1 style='color: red;'>No Data for given time period </h1>";
   }
@@ -29,22 +31,21 @@ function smarty_function_jpgraph_line($params, &$smarty) {
   $graphDatas = array();
 
   // Determine ... from interval
-
   switch ($interval){
     case 1:
-      $timeAlign =HOURADJ_1;
+      $timeAlign =DAYADJ_1;
       break;
     case 300:
-      $timeAlign =HOURADJ_1;
+      $timeAlign =DAYADJ_1;
       break;
     case 900:
-      $timeAlign =HOURADJ_1;
+      $timeAlign =DAYADJ_1;
       break;
     case 1800:
-      $timeAlign =HOURADJ_1;
+      $timeAlign =DAYADJ_1;
       break;
     case 3600:
-      $timeAlign =HOURADJ_1;
+      $timeAlign =DAYADJ_1;
       break;
     case 10800:
       $timeAlign =DAYADJ_1;
@@ -59,7 +60,7 @@ function smarty_function_jpgraph_line($params, &$smarty) {
       $timeAlign =DAYADJ_1;
       break;
     case 604800:
-      $timeAlign =DAYADJ_3;
+      $timeAlign =DAYADJ_1;
       break;
 
   }
@@ -132,6 +133,9 @@ function smarty_function_jpgraph_line($params, &$smarty) {
   $imageFile = "graph/cache/graph".$rnd.".png";
   $graph->Stroke($imageFile);
   return "<img src=".$imageFile.">";
+  } catch (Exception $ex){
+    return "<h1 style='color: red;'>Invalid combination for the given time period </h1>";
+  }
 
 }
 
