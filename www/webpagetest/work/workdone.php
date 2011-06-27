@@ -221,7 +221,7 @@ else
             if( strlen($beaconUrl) )
             {
                 @include('./work/beacon.inc');
-                @SendBeacon($settings['beacon'], $id, $testPath, $testInfo, $pageData);
+                @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
             }
             
             // archive the test result
