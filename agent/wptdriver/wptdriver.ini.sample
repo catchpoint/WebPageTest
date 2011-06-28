@@ -1,6 +1,7 @@
 [WebPagetest]
 url=http://staging.webpagetest.org/
 location=Dev_Pat
+browser=chrome
 ;debug=1
 ;web_page_replay_host=192.168.0.11
 
@@ -8,3 +9,8 @@ location=Dev_Pat
 exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 options='--load-extension="%WPTDIR%\extension" --user-data-dir="%WPTDIR%\chrome_cache" --new-window --no-proxy-server --no-first-run --no-default-browser-check'
 cache="%WPTDIR%\chrome_cache"
+
+[firefox]
+exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+options='-install-global-extension "%WPTDIR%\firefox_extension.xpi" -profile="%WPTDIR%\firefox_profile" -no-remote'
+cache="%WPRDIR%\firefox_profile"

@@ -45,7 +45,7 @@ class BrowserSettings {
 public:
   BrowserSettings(){}
   ~BrowserSettings(){}
-  void Load(const TCHAR * browser, const TCHAR * iniFile);
+  bool Load(const TCHAR * browser, const TCHAR * iniFile);
 
   CString _exe;
   CString _options;
@@ -69,6 +69,6 @@ public:
   int     _debug;
   CString _web_page_replay_host;
 
-  // browsers
-  BrowserSettings _browser_chrome;
+  // TODO(slamm): Change to a map for multi-browser support.
+  BrowserSettings _browser;
 };

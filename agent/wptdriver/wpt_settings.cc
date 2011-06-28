@@ -92,9 +92,6 @@ bool WptSettings::Load(void) {
   _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"),_timeout, iniFile);
   SetTestTimeout(_timeout * SECONDS_TO_MS);
 
-  // load the browser settings
-  _browser_chrome.Load(_T("chrome"), iniFile);
-
   // load the Web Page Replay host
   if (GetPrivateProfileString(
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
@@ -102,12 +99,23 @@ bool WptSettings::Load(void) {
     _web_page_replay_host = buff;
   }
 
+  // Load the browser settings.
+  CString browser("chrome");  // default to "chrome" to support older ini files
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
+    _countof(buff), iniFile )) {
+    browser = buff;
+  }
+  if (!_browser.Load(browser, iniFile)) {
+    ret = false;
+  }
+
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
+bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
+  bool ret = false;
   TCHAR buff[4096];
 
   CString wpt_directory;
@@ -125,6 +133,7 @@ void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     *PathFindFileName(buff) = NULL;
     _directory = buff;
     _directory.Trim(_T("/\\"));
+    ret = true;
   }
 
   if (GetPrivateProfileString(browser, _T("options"), _T(""), buff, 
@@ -140,4 +149,5 @@ void BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _cache.Trim(_T("\""));
     _cache.Replace(_T("%WPTDIR%"), wpt_directory);
   }
+  return ret;
 }

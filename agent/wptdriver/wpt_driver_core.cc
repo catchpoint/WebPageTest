@@ -118,7 +118,7 @@ void WptDriverCore::WorkThread(void) {
     WptTestDriver test;
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
-      WebBrowser browser(_settings, test, _status, _settings._browser_chrome);
+      WebBrowser browser(_settings, test, _status, _settings._browser);
       if (SetupWebPageReplay(test, browser) &&
           !TracerouteTest(test) &&
           ConfigureIpfw(test)) {
@@ -230,9 +230,9 @@ void WptDriverCore::Init(void){
   *PathFindFileName(src_dir) = _T('\0');
   CString src = src_dir;
   CopyFile(src + _T("dbghelp.dll"), 
-            _settings._browser_chrome._directory + _T("\\dbghelp.dll"), FALSE);
+            _settings._browser._directory + _T("\\dbghelp.dll"), FALSE);
   CopyFile(src + _T("symsrv.dll"), 
-            _settings._browser_chrome._directory + _T("\\symsrv.dll"), FALSE);
+            _settings._browser._directory + _T("\\symsrv.dll"), FALSE);
 
   // download the symbol files for the browsers
   // we'll just be caching it here and downloading it for real in wpthook
@@ -248,7 +248,7 @@ void WptDriverCore::Init(void){
     "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
     symcache);
   if (SymInitialize(GetCurrentProcess(), sympath, FALSE)) {
-    DownloadSymbols(_settings._browser_chrome._directory);
+    DownloadSymbols(_settings._browser._directory);
     SymCleanup(GetCurrentProcess());
   }
 */
