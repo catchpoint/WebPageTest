@@ -10,13 +10,14 @@ if( strlen($page_description) )
 
 <link rel="shortcut icon" href="/images/favicon.ico" type="image/vnd.microsoft.icon">
 <link rel="icon" href="/images/favicon.png" type="image/png">
+<link rel="stylesheet" href="<?php echo $GLOBALS['cdnPath']; ?>/pagestyle.css?v=<?php echo VER_CSS;?>" type="text/css">
 
 <?php 
+    if(extension_loaded('newrelic'))
+        echo @newrelic_get_browser_timing_header();
+        
     echo "<style type=\"text/css\">\n";
     
-    // inline the css since it is small (though this will cause background images to not come from the CDN if there is one)
-    include('./pagestyle.css');
-
     // switch to the private install logo if we're not running on webpagetest
     $privateInstall = true;
     if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )

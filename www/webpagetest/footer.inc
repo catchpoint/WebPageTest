@@ -111,6 +111,8 @@
                 $remaining--;
                 $style = "background-image: url({$sponsor['logo']}); background-position: 0px {$sponsor['offset']}px;";
                 echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
+                if( $remaining && $remaining < $rowCount - $i )
+                    echo '<td></td>';
             }
             echo '</tr></table>';
             echo '</div>';
@@ -128,6 +130,10 @@
         return false;
     }
     </script>
+    <?php
+    if(extension_loaded('newrelic'))
+        echo @newrelic_get_browser_timing_footer();
+    ?>
     <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
     <script type="text/javascript" async="async" src="https://apis.google.com/js/plusone.js"></script>
     
