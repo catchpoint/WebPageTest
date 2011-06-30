@@ -50,7 +50,7 @@ else
         if (isset($test['testinfo']))
         {
             if( @strlen($test['testinfo']['url']) )
-                echo "<testUrl>" . htmlentities($test['testinfo']['url']) . "</testUrl>";
+                echo "<testUrl>" . xml_entities($test['testinfo']['url']) . "</testUrl>";
             if( @strlen($test['testinfo']['location']) )
                 echo "<location>{$test['testinfo']['location']}</location>";
             if( @strlen($test['testinfo']['connectivity']) )
@@ -65,7 +65,7 @@ else
                 }
             }
             if( @strlen($test['testinfo']['label']) )
-                echo "<label>" . htmlentities($test['testinfo']['label']) . "</label>";
+                echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>";
             if( @strlen($test['testinfo']['completed']) )
                 echo "<completed>" . date("r",$test['testinfo']['completed']) . "</completed>";
         }
@@ -93,7 +93,7 @@ else
             echo "<firstView>";
             echo "<run>$fvMedian</run>";
             foreach( $pageData[$fvMedian][0] as $key => $val )
-                echo "<$key>$val</$key>";
+                echo "<$key>" . xml_entities($val) . "</$key>";
             if( $pagespeed )
             {
                 $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
@@ -111,7 +111,7 @@ else
                     echo "<repeatView>";
                     echo "<run>$rvMedian</run>";
                     foreach( $pageData[$rvMedian][1] as $key => $val )
-                        echo "<$key>$val</$key>";
+                        echo "<$key>" . xml_entities($val) . "</$key>";
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
@@ -139,7 +139,7 @@ else
                     echo "<firstView>";
                     echo "<results>";
                     foreach( $pageData[$i][0] as $key => $val )
-                        echo "<$key>$val</$key>";
+                        echo "<$key>" . xml_entities($val) . "</$key>";
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
@@ -208,7 +208,7 @@ else
                     echo "<repeatView>";
                     echo "<results>";
                     foreach( $pageData[$i][1] as $key => $val )
-                        echo "<$key>$val</$key>";
+                        echo "<$key>" . xml_entities($val) . "</$key>";
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
@@ -396,7 +396,7 @@ function BatchResult($id, $testPath)
         {
             echo "<test>";
             echo "<testId>{$test['id']}</testId>";
-            echo "<testUrl>" . htmlentities($test['u']) . "</testUrl>";
+            echo "<testUrl>" . xml_entities($test['u']) . "</testUrl>";
             echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>";
             echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>";
             echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>";
@@ -408,7 +408,7 @@ function BatchResult($id, $testPath)
             {
                 echo "<test>";
                 echo "<testId>$variationId</testId>";
-                echo "<testUrl>" . htmlentities(CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q'])) . "</testUrl>";
+                echo "<testUrl>" . xml_entities(CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q'])) . "</testUrl>";
                 echo "<xmlUrl>http://$host$uri/xmlResult/$variationId/</xmlUrl>";
                 echo "<userUrl>http://$host$uri/result/$variationId/</userUrl>";
                 echo "<summaryCSV>http://$host$uri/result/$variationId/page_data.csv</summaryCSV>";
@@ -427,5 +427,30 @@ function BatchResult($id, $testPath)
     }
 
     echo "</response>";
+}
+
+
+function xml_entities($text, $charset = 'Windows-1252')
+{
+    // First we encode html characters that are also invalid in xml
+    $text = htmlentities($text, ENT_COMPAT, $charset, false);
+   
+    // XML character entity array from Wiki
+    // Note: &apos; is useless in UTF-8 or in UTF-16
+    $arr_xml_special_char = array("&quot;","&amp;","&apos;","&lt;","&gt;");
+   
+    // Building the regex string to exclude all strings with xml special char
+    $arr_xml_special_char_regex = "(?";
+    foreach($arr_xml_special_char as $key => $value){
+        $arr_xml_special_char_regex .= "(?!$value)";
+    }
+    $arr_xml_special_char_regex .= ")";
+   
+    // Scan the array for &something_not_xml; syntax
+    $pattern = "/$arr_xml_special_char_regex&([a-zA-Z0-9]+;)/";
+   
+    // Replace the &something_not_xml; with &amp;something_not_xml;
+    $replacement = '&amp;${1}';
+    return preg_replace($pattern, $replacement, $text);
 }
 ?>
