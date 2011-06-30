@@ -11,7 +11,7 @@ import_request_variables('PG', 'req_');
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 38);          // version of the sitewide css file
+define('VER_CSS', 40);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
 define('VER_JS_TEST', 15);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
@@ -110,6 +110,8 @@ if( $id )
     // set the test ID cookie (session cookie) if we're looking at a different test
     if( strcmp($id, $_COOKIE['tid']) )
         setcookie('tid', $id);
+    
+    RestoreTest($id);   // restore the test if it is archived (and deleted)
     
     $testPath = './' . GetTestPath($id);
     // test if the testPath exists. If not, download from the remote storage.
@@ -348,6 +350,9 @@ function GetDefaultLocation()
 */
 function delTree($dir) 
 {
+    if( substr( $dir, -1 ) != '/' )
+        $dir .= '/';
+        
     $files = glob( $dir . '*', GLOB_MARK );
     foreach( $files as $file )
     {
@@ -1040,5 +1045,185 @@ function FixUrlSlash($url)
     if( strpos($url,'/',8) == false )
         $url .= '/';
     return $url;
+}
+
+/**
+* Archive the given test if it hasn't already been archived
+* For now this will just zip and move to a location on disk
+* but will eventually integrate with the S3 archiving
+* 
+* @param mixed $id
+*/
+function ArchiveTest($id)
+{
+    global $settings;
+    $ret = false;
+    if( isset($settings['archive_dir']) )
+    {
+        $testPath = realpath('./' . GetTestPath($id));
+        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        $completed = $testInfo['completed'];
+        if( !$completed )
+        {
+            $test = parse_ini_file("$testPath/testinfo.ini", true);
+            $completed = isset($test['test']['completeTime']);
+        }
+        $api = false;
+        if( $testInfo['priority'] >= 5  )
+            $api = true;
+        if( !$testInfo['archived'] && $completed && !$api )
+        {
+            $dest = GetArchiveFile($id, true);
+            
+            // zip up the contents (this might be expensive - possibly replace with command-line later)
+            if(is_dir($testPath) === true)
+            {
+                $zip = new ZipArchive();
+                if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
+                {
+                    $testInfo['archived'] = true;
+                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+
+                    // add the files (skip the ones we don't want to archive long-term)
+                    $files = scandir($testPath);
+                    foreach( $files as $file )
+                    {
+                        $filePath = "$testPath/$file";
+                        if( is_file($filePath) && 
+                            strpos($file, '_doc.jpg') === false &&
+                            strpos($file, '_render.jpg') === false &&
+                            strpos($file, '_progress.csv') === false &&
+                            strpos($file, '_status.txt') === false )
+                        {
+                            if( strpos($file, '.jpg') === false )
+                                $zip->addFile($filePath, $file);
+                            else
+                            {
+                                $img = imagecreatefromjpeg($filePath);
+                                if( $img )
+                                {
+                                    $smallFile = "$filePath.small";
+                                    $width = imagesx($img);
+                                    $height = imagesy($img);
+                                    $newWidth = $width / 2;
+                                    $newHeight = $height / 2;
+                                    $small = imagecreatetruecolor($newWidth, $newHeight);
+                                    imagecopyresampled($small, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                                    imagedestroy($img);
+                                    unset($img);
+                                    imageinterlace($small, 1);
+                                    imagejpeg($small, $smallFile, 30);
+                                    imagedestroy($small);
+                                    unset($small);
+                                    $zip->addFromString($file, file_get_contents($smallFile));
+                                    unlink($smallFile);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // if it is a video test, save the median first view video
+                    if( $testInfo['video'] )
+                    {
+                        $run = $testInfo['medianRun'];
+                        if( !$run )
+                        {
+                            require_once('page_data.inc');
+                            $pageData = loadAllPageData($testPath);
+                            if( $pageData )
+                                $run = GetMedianRun($pageData, 0);
+                        }
+
+                        if( $run )
+                        {
+                            $relativeDir = "video_$run";
+                            $videoDir = "$testPath/$relativeDir";
+                            $files = scandir($videoDir);
+                            if( $files )
+                            {
+                                $zip->addEmptyDir($relativeDir);
+                                foreach($files as $file)
+                                {
+                                    $filePath = "$videoDir/$file";
+                                    if( is_file($filePath) )
+                                        $zip->addFile($filePath, "$relativeDir/$file");
+                                }
+                            }
+                        }
+                    }
+                    
+                    $zip->close();
+                    $ret = true;
+                }
+            }
+        }
+    }
+    return $ret;
+}
+
+/**
+* Restore the given test from the archive if it is archived
+* 
+* @param mixed $id
+*/
+function RestoreTest($id)
+{
+    global $settings;
+    $ret = false;
+    $testPath = './' . GetTestPath($id);
+    if( isset($settings['archive_dir']) && !is_dir($testPath) )
+    {
+        mkdir( $testPath, 0777, true );
+        $testPath = realpath($testPath);
+        $source = GetArchiveFile($id);
+        $zip = new ZipArchive;
+        if ($zip->open($source) === TRUE) 
+        {
+            $zip->extractTo($testPath);
+            $zip->close();
+            $ret = true;
+        }    
+    }
+    return $ret;
+}
+
+/**
+* Generate the file name for the given archive file
+* 
+* @param mixed $id
+* @param mixed $create_directory
+*/
+function GetArchiveFile($id, $create_directory = false)
+{
+    global $settings;
+    $file = null;
+    if( isset($settings['archive_dir']) && strlen($id) )
+    {
+        $file = $settings['archive_dir'] . GetTestPath($id) . '.zip';
+        if( $create_directory )
+        {
+            $dir = dirname($file);
+            mkdir($dir, 0777, true);
+        }
+    }
+    return $file;
+}
+
+/**
+* Get the number of days since the test was last accessed
+* 
+* @param mixed $id
+*/
+function TestLastAccessed($id)
+{
+    $elapsed = 0;
+    $file = './' . GetTestPath($id) . '/testinfo.ini';
+    $timestamp = filemtime($file);
+    if( $timestamp )
+    {
+        $elapsed = max(time() - $timestamp, 0);
+        $elapsed /= 86400;
+    }
+    return $elapsed;
 }
 ?>
