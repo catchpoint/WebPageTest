@@ -176,6 +176,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #download { text-align:right; clear: both; padding:5px 0px; }
 #average {text-align:center; }
 #result h2 {font-size: 1.5em; line-height:1em;}
+table.result {width: 920px;}
 .subtitle {margin: -24px 0 24px;font-weight: bold;}
 .dynaTrace {background-color: #ffff5d;}
 #script_in_results-container {clear:both; border: 1px solid black; padding: 5px; margin: 0 0 5px 0; }

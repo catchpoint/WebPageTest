@@ -279,13 +279,11 @@ $page_description = "Website performance test result$testLabel.";
                 if( $runs > 1 )
                     echo '<h4><a name="run' . $run. '">Run ' . $run . ':</a></h4>';
             ?>
-                <table id="table<?php echo $run;?>" class="pretty" align="center" border="1" cellpadding="20" cellspacing="0">
+                <table id="table<?php echo $run;?>" class="pretty result" align="center" border="1" cellpadding="20" cellspacing="0">
                 <tr>
                     <th align="center" class="empty" valign="middle"></th>
                     <th align="center" valign="middle">Waterfall</th>
                     <?php
-                    if($pageData[$run][0]['optimization_checked'])
-                        echo '<th align="center" valign="middle">Optimization Checklist</th>';
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
                         echo '<th align="center" valign="middle">Screen Shot</th>';
                     if($video)
@@ -306,12 +304,10 @@ $page_description = "Website performance test result$testLabel.";
                         if( gz_is_file("$testPath/{$run}.cap") )
                             echo "<br><br><a href=\"/result/$id/{$run}.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                     ?></td>
-                    <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/details/"; ?>"><img class="progress" width=250 src="<?php echo "{$GLOBALS['cdnPath']}/result/$id/$run"; ?>_waterfall_thumb.png"></a></td>
+                    <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/details/"; ?>"><img class="progress" width=250 src="<?php echo "/result/$id/$run"; ?>_waterfall_thumb.png"></a></td>
                     <?php
-                    if($pageData[$run][0]['optimization_checked'])
-                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_optimization_thumb.png\"></a></td>\n";
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
+                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
                     if($video) 
                     {
                         echo '<td align="center" valign="middle">';
@@ -343,12 +339,10 @@ $page_description = "Website performance test result$testLabel.";
                         if( gz_is_file("$testPath/{$run}_Cached.cap") )
                             echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                     echo '</td>';
-                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
+                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
 
-                    if($pageData[$run][0]['optimization_checked'])
-                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/performance_optimization/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_optimization_thumb.png\"></a></td>\n";
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"{$GLOBALS['cdnPath']}/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
+                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
                     if($video) 
                     {
                         echo '<td align="center" valign="middle">';
