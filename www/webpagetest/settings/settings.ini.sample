@@ -20,3 +20,7 @@ enableVideo=1
 
 ; disable gzip compressing the result text files
 ;nogzip=1
+
+;directory to archive test files (must include trailing slash)
+archive_dir=/data/archive/
+

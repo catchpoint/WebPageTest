@@ -378,7 +378,7 @@ function ScreenShotTable()
                         echo " width=\"$thumbSize\"";
                         if( $height )
                             echo " height=\"$height\"";
-                        echo " src=\"{$GLOBALS['cdnPath']}/thumbnail.php?test={$test['id']}&width=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                        echo " src=\"/thumbnail.php?test={$test['id']}&width=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
                         
                         $lastThumb = $path;
                     }
