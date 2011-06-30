@@ -117,20 +117,28 @@ function LoadLocations()
 function GetBacklog($dir)
 {
     $backlog = array();
-
-    $files = glob( $dir . '/*.url', GLOB_NOSORT );
-    $userCount = count($files);
-
+    $userCount = 0;
     $lowCount = 0;
     for($i = 1; $i <= 9; $i++)
+        $backlog["p$i"] = 0;
+    
+    if ($dh = opendir($dir)) 
     {
-        $files = glob( $dir . "/*.p$i", GLOB_NOSORT );
-        $lowCount += count($files);
-        $backlog["p$i"] = count($files);
+        while (($file = readdir($dh)) !== false) 
+        {
+            if( $pos = strpos($file, '.p') )
+            {
+                $priority = (int)substr($file, $pos + 2);
+                $backlog["p$priority"]++;
+                $lowCount++;
+            }
+            elseif( strpos($file, '.url') )
+                $userCount++;
+        }
+        closedir($dh);
     }
 
-    $files = glob( $dir . '/testing/*.*', GLOB_NOSORT );
-    $testing = count($files);
+    $testing = count(glob( $dir . '/testing/*.*', GLOB_NOSORT ));
     
     $backlog['Total'] = $userCount + $lowCount + $testing;
     $backlog['HighPriority'] = $userCount;
