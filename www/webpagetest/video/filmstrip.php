@@ -173,7 +173,7 @@ foreach( $tests as &$test )
                     if( $tmp )
                     {
                         $thumb = imagecreatetruecolor($thumbSize, $test['thumbHeight']);
-                        imagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $thumbSize, $test['thumbHeight'], imagesx($tmp), imagesy($tmp));
+                        fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $thumbSize, $test['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);
                         imagedestroy($tmp);
                     }
                 }

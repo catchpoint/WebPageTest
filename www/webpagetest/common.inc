@@ -51,6 +51,7 @@ $supportsAuth = false;
 $uid = NULL;
 $user = NULL;
 $admin = false;
+$api_keys;
 if( is_dir('./forums') && !$settings['disableMybb'] )
 {                         
     $supportsAuth = true;
@@ -1057,6 +1058,7 @@ function FixUrlSlash($url)
 function ArchiveTest($id)
 {
     global $settings;
+    global $api_keys;
     $ret = false;
     if( isset($settings['archive_dir']) )
     {
@@ -1069,7 +1071,16 @@ function ArchiveTest($id)
             $completed = isset($test['test']['completeTime']);
         }
         $api = false;
-        if( $testInfo['priority'] >= 5  )
+        if( !isset($api_keys) )
+        {
+            $api_keys = parse_ini_file('./settings/keys.ini', true);
+            if( !$api_keys )
+                $api_keys = array();
+        }
+        $priority = $testInfo['priority'];
+        if( isset($testInfo['k']) && array_key_exists($testInfo['k'], $api_keys) && array_key_exists('priority', $api_keys[$testInfo['k']]) )
+            $priority = $api_keys[$testInfo['k']]['priority'];
+        if( $priority >= 5  )
             $api = true;
         if( !$testInfo['archived'] && $completed && !$api )
         {
@@ -1092,33 +1103,9 @@ function ArchiveTest($id)
                         if( is_file($filePath) && 
                             strpos($file, '_doc.jpg') === false &&
                             strpos($file, '_render.jpg') === false &&
-                            strpos($file, '_progress.csv') === false &&
                             strpos($file, '_status.txt') === false )
                         {
-                            if( strpos($file, '.jpg') === false )
-                                $zip->addFile($filePath, $file);
-                            else
-                            {
-                                $img = imagecreatefromjpeg($filePath);
-                                if( $img )
-                                {
-                                    $smallFile = "$filePath.small";
-                                    $width = imagesx($img);
-                                    $height = imagesy($img);
-                                    $newWidth = $width / 2;
-                                    $newHeight = $height / 2;
-                                    $small = imagecreatetruecolor($newWidth, $newHeight);
-                                    imagecopyresampled($small, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                                    imagedestroy($img);
-                                    unset($img);
-                                    imageinterlace($small, 1);
-                                    imagejpeg($small, $smallFile, 30);
-                                    imagedestroy($small);
-                                    unset($small);
-                                    $zip->addFromString($file, file_get_contents($smallFile));
-                                    unlink($smallFile);
-                                }
-                            }
+                            $zip->addFile($filePath, $file);
                         }
                     }
                     
@@ -1225,5 +1212,32 @@ function TestLastAccessed($id)
         $elapsed /= 86400;
     }
     return $elapsed;
+}
+
+/**
+* Faster image resampling
+*/
+function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h, $quality = 3) {
+  // Plug-and-Play fastimagecopyresampled function replaces much slower imagecopyresampled.
+  // Just include this function and change all "imagecopyresampled" references to "fastimagecopyresampled".
+  // Typically from 30 to 60 times faster when reducing high resolution images down to thumbnail size using the default quality setting.
+  // Author: Tim Eckel - Date: 09/07/07 - Version: 1.1 - Project: FreeRingers.net - Freely distributable - These comments must remain.
+  //
+  // Optional "quality" parameter (defaults is 3). Fractional values are allowed, for example 1.5. Must be greater than zero.
+  // Between 0 and 1 = Fast, but mosaic results, closer to 0 increases the mosaic effect.
+  // 1 = Up to 350 times faster. Poor results, looks very similar to imagecopyresized.
+  // 2 = Up to 95 times faster.  Images appear a little sharp, some prefer this over a quality of 3.
+  // 3 = Up to 60 times faster.  Will give high quality smooth results very close to imagecopyresampled, just faster.
+  // 4 = Up to 25 times faster.  Almost identical to imagecopyresampled for most images.
+  // 5 = No speedup. Just uses imagecopyresampled, no advantage over imagecopyresampled.
+
+  if (empty($src_image) || empty($dst_image) || $quality <= 0) { return false; }
+  if ($quality < 5 && (($dst_w * $quality) < $src_w || ($dst_h * $quality) < $src_h)) {
+    $temp = imagecreatetruecolor ($dst_w * $quality + 1, $dst_h * $quality + 1);
+    imagecopyresized ($temp, $src_image, 0, 0, $src_x, $src_y, $dst_w * $quality + 1, $dst_h * $quality + 1, $src_w, $src_h);
+    imagecopyresampled ($dst_image, $temp, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $dst_w * $quality, $dst_h * $quality);
+    imagedestroy ($temp);
+  } else imagecopyresampled ($dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h);
+  return true;
 }
 ?>

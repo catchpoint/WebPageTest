@@ -142,7 +142,7 @@ function CheckTest($testPath, $id, &$archived)
             $delete = true;
     }
 
-    if( TestLastAccessed($id) > 7 )
+    if( TestLastAccessed($id) > 30 )
         $delete = true;
 
     if( $delete )
@@ -171,7 +171,7 @@ function GetLoad()
 
     // give the system a chance to breathe
     if( $load )
-        usleep(min(100000 * $load, 5000000));
+        usleep(min(30000 * $load, 5000000));
     else
         usleep(100000);
         

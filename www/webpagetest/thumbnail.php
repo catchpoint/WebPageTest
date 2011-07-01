@@ -53,7 +53,7 @@ else
         if( $img )
         {
             header('Last-Modified: ' . date("r"));
-            GenerateThumbnail($img);
+            GenerateThumbnail($img, $type);
             SendImage($img, $type);
         }
         else
@@ -115,7 +115,7 @@ function tbnDrawChecklist(&$img)
 * 
 * @param mixed $img
 */
-function GenerateThumbnail(&$img)
+function GenerateThumbnail(&$img, $type)
 {
     global $newWidth;
 
@@ -132,7 +132,10 @@ function GenerateThumbnail(&$img)
         $tmp = imagecreatetruecolor($newWidth, $newHeight);
 
         # Copy and resize old image into new image
-        imagecopyresampled($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        $quality = 4;
+        if( !strcasecmp( $type, 'jpg') )
+            $quality = 2;
+        fastimagecopyresampled ($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height, $quality);
         imagedestroy($img);
         $img = $tmp;    
         unset($tmp);
@@ -151,7 +154,8 @@ function SendImage(&$img, $type)
     if( !strcasecmp( $type, 'jpg') )
     {
         header ("Content-type: image/jpeg");
-        imagejpeg($img);
+        imageinterlace($img, 1);
+        imagejpeg($img, NULL, 50);
     }
     else
     {
