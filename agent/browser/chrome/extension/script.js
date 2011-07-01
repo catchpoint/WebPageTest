@@ -17,3 +17,9 @@ window.addEventListener("load", function() {
   WPTExtensionConnection.postMessage(
       {message: 'wptLoad', load_time: WPT_load_time});
 }, false);
+
+window.addEventListener("wptonload", function() { 
+	var WPTExtensionConnection = chrome.extension.connect();
+	WPTExtensionConnection.postMessage({message: 'wptLoad',
+									load_time: 0});
+}, false);
