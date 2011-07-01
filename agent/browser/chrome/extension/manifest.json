@@ -7,13 +7,13 @@
     "default_title": "WPT Chrome Extension",
     "default_icon": "wptextension.jpg"
   },
-	"content_scripts": [
-		{
-			"matches": ["<all_urls>"],
-			"js": ["script.js"],
-			"run_at": "document_start"
-		}
-	],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["script.js"],
+      "run_at": "document_start"
+    }
+  ],
   "permissions": [
     "cookies", "tabs", "https://*/*", "http://*/*"
   ]
