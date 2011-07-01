@@ -75,13 +75,14 @@ function tbnDrawWaterfall(&$img)
     global $run;
     global $cached;
     global $url;
+    global $newWidth;
     
     include('waterfall.inc');
     $secure = false;
     $haveLocations = false;
     $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
     $pageData = loadPageRunData($testPath, $run, $cached);
-    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true );
+    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true /*, 'thumbnail' => true, 'width' => $newWidth */ );
     $img = drawWaterfall($url, $requests, $pageData, false, $options);
     if( !$requests || !$pageData )
         $failed = true;

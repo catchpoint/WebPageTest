@@ -15,8 +15,19 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
     $docComplete = $pageData['docTime'];
     $aft = $pageData['aft'];
 
-    $cpuHeight = 50;
-    $bwHeight = 50;
+    $thumbnail = false;
+    if( isset($options['thumbnail']) )
+        $thumbnail = $options['thumbnail'];
+    if( $thumbnail )
+    {
+        $cpuHeight = 10;
+        $bwHeight = 10;
+    }
+    else
+    {
+        $cpuHeight = 50;
+        $bwHeight = 50;
+    }
     $requestList = FilterRequests($requests);
     $rowCount = count($requestList);
     $requestsBefore = false;
@@ -43,12 +54,18 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
     $width=$_REQUEST['width'];
     if( isset($options['width']) && (int)$options['width'])
         $width = (int)$options['width'];
-    if( !$width || $width < 300 || $width > 2000 )
+    if( !$width || (!$thumbnail && $width < 300) || $width > 2000 )
         $width = 930;
     $font = 2;
     $rowHeight = imagefontheight($font) + 4;
     $fontWidth = imagefontwidth($font);
-    $height = 2 + (3 * $rowHeight) + ($rowHeight * $rowCount);
+    if( $thumbnail )
+    {
+        $rowHeight = 4;
+        $height = 2 + ($rowHeight * $rowCount);
+    }
+    else
+        $height = 2 + (3 * $rowHeight) + ($rowHeight * $rowCount);
     $dataHeight = $height;
     $perf  = loadPerf($options);
     $bwMax = 0;
@@ -67,8 +84,10 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
     }
         
     $totalHeight = $height;
-        
-    $left = 250;
+    
+    $left = 1;
+    if( !$thumbnail )
+        $left = 250;
     $w = $width - 2 - $left;
     $maxChars = (int)(($left - 4) / $fontWidth);
     
@@ -140,10 +159,16 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
 
         // give it a white background and black border
         imagefilledrectangle($im, 0, 0, $width, $totalHeight, $white);
-        imagerectangle($im, 0, 0, $width - 1, $height - 1, $black);
+        if( $thumbnail )
+            imagerectangle($im, 0, 0, $width - 1, $height - 1, $dkGrey);
+        else
+            imagerectangle($im, 0, 0, $width - 1, $height - 1, $black);
         
         // do the alternating row coloring (after a 2 row header)
-        $y = 1 + ($rowHeight * 2);
+        if( $thumbnail )
+            $y = 1;
+        else
+            $y = 1 + ($rowHeight * 2);
         $i = 0;
         if( $requestsBefore )
         {
@@ -164,7 +189,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             if( $options['cpu'] )
             {
                 $y = $dataHeight + ($cpuHeight / 2) - ($rowHeight / 2);
-                imagestring($im, $font, 50, $y, 'CPU Utilization', $black);
+                if( !$thumbnail )
+                    imagestring($im, $font, 50, $y, 'CPU Utilization', $black);
                 $y += ($rowHeight / 2) - 1;
                 imageline($im, 10, $y, 45, $y, $cpuLine);
                 $y = $dataHeight + 1;
@@ -177,7 +203,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             {
                 $y = $height - ($bwHeight / 2) - ($rowHeight / 2);
                 $maxbps = number_format($bwMax / 1024);
-                imagestring($im, $font, 50, $y, "Bandwidth In (0 - {$maxbps} Kbps)", $black);
+                if( !$thumbnail )
+                    imagestring($im, $font, 50, $y, "Bandwidth In (0 - {$maxbps} Kbps)", $black);
                 $y += ($rowHeight / 2) - 1;
                 imageline($im, 10, $y, 45, $y, $bwLine);
                 $y = $height - $bwHeight + 1;
@@ -192,9 +219,18 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         foreach( $requestList as $index )
         {
             $request = &$requests[$index];
-            $color = $white;
-            if( $i % 2 == 0 )
+            if( $thumbnail )
+            {
                 $color = $grey;
+                if( $i % 2 == 0 )
+                    $color = $white;
+            }
+            else
+            {
+                $color = $white;
+                if( $i % 2 == 0 )
+                    $color = $grey;
+            }
             if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
                 $color = $error;
             elseif( $request['responseCode'] >= 300 )
@@ -212,7 +248,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         }
         
         // draw the separator
-        imageline($im, $left, 0, $left, $height - 1, $black);
+        if( !$thumbnail )
+            imageline($im, $left, 0, $left, $height - 1, $black);
         if( $dataHeight != $height )
         {
             imageline($im, 0, $dataHeight, $width, $dataHeight, $black);
@@ -260,20 +297,26 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             while( $pos < $range )
             {
                 $x = $left + (int)(($pos / $range) * $w);
-                imageline($im, $x, 1 + $rowHeight, $x, $dataHeight - $rowHeight, $dkGrey);
+                if( $thumbnail )
+                    imageline($im, $x, 1, $x, $dataHeight, $dkGrey);
+                else
+                    imageline($im, $x, 1 + $rowHeight, $x, $dataHeight - $rowHeight, $dkGrey);
                 if( $dataHeight != $height )
                     imageline($im, $x, $dataHeight + 1, $x, $height - 2, $dkGrey);
 
                 // draw the text label
-                $places = 2;
-                if( $tmInc >= 1000 )
-                    $places = 0;
-                else if( $tmInc >= 100 )
-                    $places = 1;
-                $val = number_format($tm / 1000.0, $places);
-                $x -= (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
-                imagestring($im, $font, $x, 3, $val, $black);
-                imagestring($im, $font, $x, $dataHeight - $rowHeight + 1, $val, $black);
+                if( !$thumbnail )
+                {
+                    $places = 2;
+                    if( $tmInc >= 1000 )
+                        $places = 0;
+                    else if( $tmInc >= 100 )
+                        $places = 1;
+                    $val = number_format($tm / 1000.0, $places);
+                    $x -= (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
+                    imagestring($im, $font, $x, 3, $val, $black);
+                    imagestring($im, $font, $x, $dataHeight - $rowHeight + 1, $val, $black);
+                }
 
                 $tm += $tmInc;
                 $pos += $inc;
@@ -336,21 +379,24 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         {
             $x = $left + (int)((double)$w * ((double)$startRender / $range));
             imageline($im, $x, 1, $x, $height - 1, $colStartRender);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
+            if( !$thumbnail )
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
         }
 
         if( $aft > 0 && $aft <= $range )
         {
             $x = $left + (int)((double)$w * ((double)$aft / $range));
             imageline($im, $x, 1, $x, $height - 1, $colAFT);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
+            if( !$thumbnail )
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
         }
 
         if( $domElement > 0 && $domElement <= $range )
         {
             $x = $left + (int)((double)$w * ((double)$domElement / $range));
             imageline($im, $x, 1, $x, $height - 1, $colDomElement);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
+            if( !$thumbnail )
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
         }
         
         if( $docComplete > 0 && $docComplete <= $range )
@@ -359,7 +405,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $docComplete = $range - 1;
             $x = $left + (int)((double)$w * ((double)$docComplete / $range));
             imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
+            if( !$thumbnail )
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
         }
 
         // draw the csi metrics
@@ -381,33 +428,39 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                         $triangleCoord[$i*2] += $x;
                         $triangleCoord[$i*2+1] += $rowHeight + 1;
                     }
-                    imagefilledpolygon($im, $triangleCoord, 3, $colCsi);
+                    if( !$thumbnail )
+                        imagefilledpolygon($im, $triangleCoord, 3, $colCsi);
                     imageline($im, $x, $rowHeight + 1, $x, $height - 1, $colCsi);
                 }
             }
         }       
 
         // put the url label in
-        $x = 4;
-        $y = 2 + $rowHeight;
-        $label = $url;
-        if( $x + (strlen($label) * $fontWidth) > $left )
+        if( !$thumbnail )
         {
-            $chars = ($left - $x) / $fontWidth;
-            $label = substr($label, 0, $chars - 4) . '...';
-        }
-        imagestring($im, $font, $x, $y,  $label, $black);
-        
-        if( $requestsBefore )
-        {
-            $y += $rowHeight;
-            imagestring($im, $font, $x, $y,  '...', $black);
+            $x = 4;
+            $y = 2 + $rowHeight;
+            $label = $url;
+            if( $x + (strlen($label) * $fontWidth) > $left )
+            {
+                $chars = ($left - $x) / $fontWidth;
+                $label = substr($label, 0, $chars - 4) . '...';
+            }
+            imagestring($im, $font, $x, $y,  $label, $black);
+            
+            if( $requestsBefore )
+            {
+                $y += $rowHeight;
+                imagestring($im, $font, $x, $y,  '...', $black);
+            }
         }
     }
 
     // draw the request information
     $i = 0;
-    $y = 2 + ($rowHeight * 2);
+    $y = 2;
+    if( !$thumbnail )
+        $y += ($rowHeight * 2);
     if( $requestsBefore )
     {
         $y += $rowHeight;
@@ -440,7 +493,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         {
             $chars = $maxChars;
             $l = $x;
-            if( $request['secure'] )
+            if( $request['secure'] && !$thumbnail )
             {
                 $lockWidth = 12;
                 DrawLock($im, $x, $y, $lockWidth, $rowHeight);
@@ -448,14 +501,17 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $chars -= $lockWidth / $fontWidth;
             }
             
-            $path = parse_url('http://' . $request['host'] . $request['url'], PHP_URL_PATH);
-            $object = basename($path);
-            // if the last character is a /, add it on
-            if( substr($path, -1) == '/' )
-                $object .= '/';
-            $indexLabel = $request['index'] + 1;
-            $label = $indexLabel . ': ' . $request['host'] . ' - ' . $object;
-            imagestring($im, $font, $l, $y,  FitText($label, $chars), $black);
+            if( !$thumbnail )
+            {
+                $path = parse_url('http://' . $request['host'] . $request['url'], PHP_URL_PATH);
+                $object = basename($path);
+                // if the last character is a /, add it on
+                if( substr($path, -1) == '/' )
+                    $object .= '/';
+                $indexLabel = $request['index'] + 1;
+                $label = $indexLabel . ': ' . $request['host'] . ' - ' . $object;
+                imagestring($im, $font, $l, $y,  FitText($label, $chars), $black);
+            }
 
             // draw the request
             $start = $request['offset'];
@@ -471,34 +527,48 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $xLeftmost = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
             
             // put the text label next to the line
-            $label = $request['totalTime'] . ' ms';
-            if($request['responseCode'] >= 300 || $request['responseCode'] < 0)
-                $label .= " ({$request['responseCode']})";
-            elseif($request['responseCode'] == 0)
-                $label .= ' (Request Canceled)';
+            if( !$thumbnail )
+            {
+                $label = $request['totalTime'] . ' ms';
+                if($request['responseCode'] >= 300 || $request['responseCode'] < 0)
+                    $label .= " ({$request['responseCode']})";
+                elseif($request['responseCode'] == 0)
+                    $label .= ' (Request Canceled)';
 
-            $labelWidth = strlen($label) * $fontWidth;
-            $leftPixels = $xLeftmost - $left;
-            $rightPixels = $width - $xEnd;
-            $textPos = $xEnd + 5;
-            if( $leftPixels > $rightPixels )
-                $textPos = $xLeftmost - 5 - $labelWidth;
-            
-            // erase the background behind the text
-            $color = $white;
-            if( ($i - 1) % 2 == 0 )
-                $color = $grey;
-            if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
-                $color = $error;
-            elseif( $request['responseCode'] >= 300 )
-                $color = $warning;
-            imagefilledrectangle($im, $textPos, $y, $textPos + $labelWidth, $y + $rowHeight - 2, $color);
-            
-            // draw the actual label
-            imagestring($im, $font, $textPos, $y,  $label, $black);
+                $labelWidth = strlen($label) * $fontWidth;
+                $leftPixels = $xLeftmost - $left;
+                $rightPixels = $width - $xEnd;
+                $textPos = $xEnd + 5;
+                if( $leftPixels > $rightPixels )
+                    $textPos = $xLeftmost - 5 - $labelWidth;
+                
+                // erase the background behind the text
+                $color = $white;
+                if( ($i - 1) % 2 == 0 )
+                    $color = $grey;
+                if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
+                    $color = $error;
+                elseif( $request['responseCode'] >= 300 )
+                    $color = $warning;
+                imagefilledrectangle($im, $textPos, $y, $textPos + $labelWidth, $y + $rowHeight - 2, $color);
+                
+                // draw the actual label
+                imagestring($im, $font, $textPos, $y,  $label, $black);
+            }
+
+            if( $thumbnail )
+            {
+                $barTop = $y - 1;
+                $barBottom = $y + $rowHeight - 2;
+            }
+            else
+            {
+                $barTop = $y;
+                $barBottom = $y + $rowHeight - 3;
+            }
 
             // background fill the content download time
-            drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colContent);
+            drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colContent);
             
             $end = $start;
             // DNS
@@ -507,7 +577,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $end += $request['dnsTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colDNS);
                 $start = $end;
             }
             
@@ -517,7 +587,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $end += $request['socketTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colConnect);
                 $start = $end;
             }
 
@@ -527,7 +597,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $end += $request['sslTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colSSL);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colSSL);
                 $start = $end;
             }
 
@@ -539,7 +609,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
                 if( $xEnd >= $xFullEnd )
                     $xEnd = $xFullEnd - 1;  // allow for a sliver of content download in between stacked requests
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colRequest);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colRequest);
                 $start = $end;
             }
             
@@ -548,7 +618,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colDNS);
             }
 
             // new-style connection reporting
@@ -556,7 +626,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colConnect);
             }
         }
         
@@ -589,7 +659,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         }
     }
 
-    if( !$imageMap && $requestsAfter )
+    if( !$imageMap && $requestsAfter && !$thumbnail )
         imagestring($im, $font, $x, $y,  '...', $black);
 
     if( $imageMap )
