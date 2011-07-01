@@ -16,12 +16,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
             include 'header.inc';
             ?>
 
-            <div style="width: 1000px; margin-left: auto; margin-right: auto;">
+            <div style="width: 930px; margin-left: auto; margin-right: auto;">
                 <br><b>Generate a custom Waterfall:</b><br>
                 <form style="margin-left:2em;" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                     Chart Type: <input type="radio" name="type" value="waterfall" checked="checked"> Waterfall
                      &nbsp; <input type="radio" name="type" value="connection"> Connection View<br>
-                     Image Width: <input id="width" type="text" name="width" style="width:3em" value="1000"> Pixels (300-2000)<br>
+                     Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)<br>
                      Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)<br>
                      Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
                     <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
@@ -32,7 +32,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
             </div>
             <br>
             <?php
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.png?test=$id&run=$run&cached=$cached\">";
+                $extension = 'php';
+                if( FRIENDLY_URLS )
+                    $extension = 'png';
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached\">";
             ?>
             
             <?php include('footer.inc'); ?>
@@ -83,9 +86,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var testId='$id';\n";
                 echo "var testRun='$run';\n";
                 echo "var cached='$cached';\n";
+                echo "var extension='$extension';\n";
                 ?>
                 
-                var src = '/waterfall.png?test=' + testId + '&run=' + testRun + '&cached=' + cached + '&max=' + max + '&width=' + width + '&type=' + type + '&cpu=' + showCPU + '&bw=' + showBW + '&dots=' + showDots + '&requests=' + requests;
+                var src = '/waterfall.' + extension + '?test=' + testId + '&run=' + testRun + '&cached=' + cached + '&max=' + max + '&width=' + width + '&type=' + type + '&cpu=' + showCPU + '&bw=' + showBW + '&dots=' + showDots + '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };
         </script>

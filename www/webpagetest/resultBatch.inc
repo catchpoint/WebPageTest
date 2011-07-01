@@ -42,7 +42,7 @@ $page_description = "Bulk website performance test result$testLabel.";
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest Bulk test result<?php echo $testLabel; ?></title>
+        <title>WebPagetest Comparison Test Result<?php echo $testLabel; ?></title>
         <?php
         if( !$complete )
         {
@@ -95,7 +95,11 @@ $page_description = "Bulk website performance test result$testLabel.";
                 if ($complete)
                 {
                     if (strlen($test['testinfo']['label']))
-                        echo "<h2>{$test['testinfo']['label']}</h2>";
+                    {
+                        $label = $test['testinfo']['label'];
+                        $label = str_replace('PSS Comparison for', 'Page Speed Service Comparison for', $label);
+                        echo "<h2>$label</h2>";
+                    }
                 }
                 else
                     echo '<h2>Please wait while the testing is performed<br><span class="small">This page will refresh every 30 seconds until the test is complete</span></h2>';
@@ -119,7 +123,10 @@ $page_description = "Bulk website performance test result$testLabel.";
                 {
                     if( !$simpleView )
                     {
-                        echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                        if( FRIENDLY_URLS )
+                            echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                        else
+                            echo "<br>Download Combined Raw: <a href=\"/csv.php?test=$id\">Page Data</a> - <a href=\"/csv.php?test=$id&requests=1\">Object Data</a>";
                         echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Aggregate Statistics</a>";
                     }
                 }
@@ -208,7 +215,10 @@ function DisplayTest($id, $url, $label, $complete)
 
     echo '<tr>';
     $safeUrl = htmlspecialchars($url);
-    echo "<td><a href=\"/result/$id/\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
+    if( FRIENDLY_URLS )
+        echo "<td><a href=\"/result/$id/\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
+    else
+        echo "<td><a href=\"/results.php?test=$id\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
     if( $complete )
     {
         $pageData = loadAllPageData($testPath);
@@ -220,8 +230,16 @@ function DisplayTest($id, $url, $label, $complete)
         echo "<td>" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
         if( !$fvonly )
             echo "<td>$rvMedian_column</td>";
-        echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";
-        echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Download Object Data</a></td>";
+        if( FRIENDLY_URLS )
+        {
+            echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";
+            echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Download Object Data</a></td>";
+        }
+        else
+        {
+            echo "<td><a href=\"/csv.php?test=$id\">Download Page Data</a></td>";
+            echo "<td><a href=\"/csv.php?test=$id&requests=1\">Download Object Data</a></td>";
+        }
         echo "<td><a href=\"/export.php?test=$id\">Download HAR</a></td>";
     }
     else
@@ -305,7 +323,7 @@ function DisplaySimple(&$tests, $video, &$dirty)
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
         $id = $test['id'];
-        echo "<th><a href=\"/result/$id/\">$label</a></th>";
+        echo "<th>$label</th>";
         if( $count && $complete )
             echo "<th>Difference</a></th>";
         $count++;
@@ -328,7 +346,10 @@ function DisplaySimple(&$tests, $video, &$dirty)
         $count = 0;
         foreach( $tests['urls'] as &$test )
         {
-            echo "<td><a href=\"/result/{$test['id']}/\"><img class=\"progress\" src=\"{$GLOBALS['cdnPath']}/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
+            $testurl = "/results.php?test={$test['id']}";
+            if( FRIENDLY_URLS )
+                $testurl = "/result/{$test['id']}/";
+            echo "<td><a href=\"$testurl\"><img class=\"progress\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
             if( $count )
                 echo "<td></td>";
             $count++;
@@ -544,7 +565,7 @@ function VideoHtml($id)
                                         }\n
                                     }\n
                                 ); \n
-                </script>\n";
+                </script>\n<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
 /**

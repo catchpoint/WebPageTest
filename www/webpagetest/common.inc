@@ -8,6 +8,10 @@ umask(0);
 date_default_timezone_set('UTC');
 import_request_variables('PG', 'req_');
 
+if ($_SERVER['HTTP_MOD_REWRITE'] == 'On')
+    define('FRIENDLY_URLS', true);
+else
+    define('FRIENDLY_URLS', false);
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version

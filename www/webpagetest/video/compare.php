@@ -292,7 +292,10 @@ function ScreenShotTable()
             $cached = '';
             if( $test['cached'] )
                 $cached = 'cached/';
-            echo "<a class=\"pagelink\" href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">";
+            if( FRIENDLY_URLS )
+                echo "<a class=\"pagelink\" href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">";
+            else
+                echo "<a class=\"pagelink\" href=\"/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}\">";
             echo WrapableString($test['name']);
             echo "</a></td></tr>\n";
         }

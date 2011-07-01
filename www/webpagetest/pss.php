@@ -62,7 +62,7 @@ $page_description = "Comparison Test$testLabel.";
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Comparison Test</h2>
+            <h2 class="cufon-dincond_black">Page Speed Service Comparison Test</h2>
             
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">

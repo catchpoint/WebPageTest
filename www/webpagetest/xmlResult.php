@@ -46,7 +46,10 @@ else
         $pageStats = calculatePageStats($pageData, $fv, $rv);
         
         echo "<testId>$id</testId>";
-        echo "<summary>http://$host$uri/result/$id/</summary>";
+        if( FRIENDLY_URLS )
+            echo "<summary>http://$host$uri/result/$id/</summary>";
+        else
+            echo "<summary>http://$host$uri/results.php?test=$id</summary>";
         if (isset($test['testinfo']))
         {
             if( @strlen($test['testinfo']['url']) )
@@ -100,7 +103,10 @@ else
                 if( strlen($score) )
                     echo "<PageSpeedScore>$score</PageSpeedScore>";
             }
-            echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>";
+            if( FRIENDLY_URLS )
+                echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>";
+            else
+                echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>";
             echo "</firstView>";
             
             if( isset($rv) )
@@ -118,7 +124,10 @@ else
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>";
                     }
-                    echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>";
+                    if( FRIENDLY_URLS )
+                        echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>";
+                    else
+                        echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>";
                     echo "</repeatView>";
                 }
             }
@@ -150,12 +159,22 @@ else
 
                     // links to the relevant pages
                     echo "<pages>";
-                    echo "<details>http://$host$uri/result/$id/$i/details/</details>";
-                    echo "<checklist>http://$host$uri/result/$id/$i/performance_optimization/</checklist>";
-                    echo "<report>http://$host$uri/result/$id/$i/optimization_report/</report>";
-                    echo "<breakdown>http://$host$uri/result/$id/$i/breakdown/</breakdown>";
-                    echo "<domains>http://$host$uri/result/$id/$i/domains/</domains>";
-                    echo "<screenShot>http://$host$uri/result/$id/$i/screen_shot/</screenShot>";
+                    if( FRIENDLY_URLS )
+                    {
+                        echo "<details>http://$host$uri/result/$id/$i/details/</details>";
+                        echo "<checklist>http://$host$uri/result/$id/$i/performance_optimization/</checklist>";
+                        echo "<breakdown>http://$host$uri/result/$id/$i/breakdown/</breakdown>";
+                        echo "<domains>http://$host$uri/result/$id/$i/domains/</domains>";
+                        echo "<screenShot>http://$host$uri/result/$id/$i/screen_shot/</screenShot>";
+                    }
+                    else
+                    {
+                        echo "<details>http://$host$uri/details.php?test=$id&amp;run=$i</details>";
+                        echo "<checklist>http://$host$uri/performance_optimization.php?test=$id&amp;run=$i</checklist>";
+                        echo "<breakdown>http://$host$uri/breakdown.php?test=$id&amp;run=$i</breakdown>";
+                        echo "<domains>http://$host$uri/domains.php?test=$id&amp;run=$i</domains>";
+                        echo "<screenShot>http://$host$uri/screen_shot.php?test=$id&amp;run=$i</screenShot>";
+                    }
                     echo "</pages>";
                     
                     // urls for the relevant images

@@ -8,6 +8,10 @@ require_once('page_data.inc');
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
 
+$extension = 'php';
+if( FRIENDLY_URLS )
+    $extension = 'png';
+
 // walk through the requests and group them by mime type
 $requestsFv;
 $breakdownFv = getBreakdown($id, $testPath, $run, 0, $requestsFv);
@@ -107,7 +111,7 @@ if( (int)$test[test][fvonly] == 0 )
             </table>
             <br>
             <img class="progress" usemap="#connection_map" id="connectionView" src="<?php 
-                echo "/waterfall.png?width=930&type=connection&test=$id&run=$run&mime=1&cached=0";?>">
+                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=0";?>">
             </div>
 
             <?php if( count($breakdownRv) ) { ?>
@@ -169,7 +173,7 @@ if( (int)$test[test][fvonly] == 0 )
             </table>
             <br>
             <img class="progress" usemap="#connection_map_rv" id="connectionView" src="<?php 
-                echo "/connectionView.php?width=930&test=$id&run=$run&mime=1&cached=1";?>">
+                echo "/connectionView.$extension?width=930&test=$id&run=$run&mime=1&cached=1";?>">
             </div>
             <?php } ?>
         </div>

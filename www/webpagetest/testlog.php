@@ -236,8 +236,9 @@ else
                                                     else
                                                         echo '<td class="uid"></td>';
                                                 }
-                                                    
-                                                $link = "/result/$guid/";
+                                                $link = "/results.php?test=$guid";
+                                                if( FRIENDLY_URLS )
+                                                    $link = "/result/$guid/";
                                                 if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
                                                     $link = $guid;
                                                     

@@ -52,8 +52,14 @@ $page_description = "Website performance optimization recommendations$testLabel.
             ?>
             <div style="text-align:center;">
                 <h1>Full Optimization Checklist</h1>
-                <img alt="If the optimization results don't display, please try refreshing the page" id="image" src="<?php 
-                    echo substr($testPath, 1) . '/' . $run . $cachedText . '_optimization.png"';?>>
+                <?php
+                    echo '<img alt="Optimization Checklist" id="image" src="';
+                    if( FRIENDLY_URLS )
+                        echo substr($testPath, 1) . '/' . $run . $cachedText . '_optimization.png';
+                    else
+                        echo "/optimizationChecklist.php?test=$id&run=$run&cached=$cached";
+                    echo '">';
+                ?>
                 <br>
             </div>
 

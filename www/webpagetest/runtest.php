@@ -311,10 +311,20 @@
                 echo "<data>\n";
                 echo "<testId>{$test['id']}</testId>\n";
                 echo "<ownerKey>{$test['owner']}</ownerKey>\n";
-                echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
-                echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>\n";
-                echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
-                echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
+                if( FRIENDLY_URLS )
+                {
+                    echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
+                    echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>\n";
+                    echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
+                    echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
+                }
+                else
+                {
+                    echo "<xmlUrl>http://$host$uri/xmlResult.php?test={$test['id']}</xmlUrl>\n";
+                    echo "<userUrl>http://$host$uri/results.php?test={$test['id']}</userUrl>\n";
+                    echo "<summaryCSV>http://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
+                    echo "<detailCSV>http://$host$uri/csv.php?test={$test['id']}&requests=1</detailCSV>\n";
+                }
                 echo "</data>\n";
                 echo "</response>\n";
                 
@@ -329,17 +339,30 @@
                 $ret['data'] = array();
                 $ret['data']['testId'] = $test['id'];
                 $ret['data']['ownerKey'] = $test['owner'];
-                $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult/{$test['id']}/";
-                $ret['data']['userUrl'] = "http://$host$uri/result/{$test['id']}/";
-                $ret['data']['summaryCSV'] = "http://$host$uri/result/{$test['id']}/page_data.csv";
-                $ret['data']['detailCSV'] = "http://$host$uri/result/{$test['id']}/requests.csv";
+                if( FRIENDLY_URLS )
+                {
+                    $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult/{$test['id']}/";
+                    $ret['data']['userUrl'] = "http://$host$uri/result/{$test['id']}/";
+                    $ret['data']['summaryCSV'] = "http://$host$uri/result/{$test['id']}/page_data.csv";
+                    $ret['data']['detailCSV'] = "http://$host$uri/result/{$test['id']}/requests.csv";
+                }
+                else
+                {
+                    $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
+                    $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
+                    $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
+                    $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
+                }
                 header ("Content-type: application/json");
                 echo json_encode($ret);
             }
             else
             {
                 // redirect regardless if it is a bulk test or not
-                header("Location: http://$host$uri/result/{$test['id']}/");    
+                if( FRIENDLY_URLS )
+                    header("Location: http://$host$uri/result/{$test['id']}/");    
+                else
+                    header("Location: http://$host$uri/results.php?test={$test['id']}");
             }
         }
         else

@@ -54,7 +54,7 @@
 
 <div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
         if( $id )
-            $resultUrl = "/result/$id/";
+            $resultUrl = FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id";
             
         $tabs = array(  'Home' => '/' );
                         
@@ -71,7 +71,7 @@
             $tabs['Test Result'] = $resultUrl;
         }
 
-        $tabs['Test History'] = '/testlog/1';
+        $tabs['Test History'] = FRIENDLY_URLS ? '/testlog/1' : '/testlog.php?days=1';
 
         if( is_dir('wptmonitor') )
             $tabs['Monitor'] = '/wptmonitor/';
@@ -81,7 +81,7 @@
         
         $tabs['Documentation'] = 'http://www.webperformancecentral.com/wiki/WebPagetest';
             
-        $tabs['About'] = '/about';
+        $tabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         
         foreach( $tabs as $tabName => $tabUrl )
         {
@@ -135,7 +135,10 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
             {
                 $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
                 if( strlen($score) )
-                    echo "<span id=\"headerPagespeedScore\"><a href=\"/result/$id/$gradeRun/pagespeed/\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
+                {
+                    $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
+                    echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
+                }
             }
             
             echo "<div id=\"opthelp\"><a href=\"http://www.webperformancecentral.com/wiki/WebPagetest/Optimization_Help\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
@@ -145,7 +148,7 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
                 if( count($grades) )
                 {
                     echo '<ul class="grades">';
-                    $optlink = "/result/$id/$gradeRun/performance_optimization/";
+                    $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
                     foreach( $grades as $check => &$grade )
                         echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                     echo '</ul>';
@@ -190,24 +193,24 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
         if( $cached )
             $cTxt = 'cached/';
 
-        $tabs = array( 'Summary' => "/result/$id/",
-                    'Details' => "/result/$id/$run/details/$cTxt"
+        $tabs = array( 'Summary' => FRIENDLY_URLS ? "/result/$id/" : "results.php?test=$id",
+                    'Details' => FRIENDLY_URLS ? "/result/$id/$run/details/$cTxt" : "/details.php?test=$id&run=$run&cached=$cached"
                     );
                     
         if( $pageData[$run][$cached]['optimization_checked'] )
-            $tabs['Performance Review'] = "/result/$id/$run/performance_optimization/$cTxt";
+            $tabs['Performance Review'] = FRIENDLY_URLS ? "/result/$id/$run/performance_optimization/$cTxt" : "/performance_optimization.php?test=$id&run=$run&cached=$cached";
         
         $cTxt2 = '';
         if( $cached )
             $cTxt2 = '_Cached';
         if( gz_is_file("$testPath/$run{$cTxt2}_pagespeed.txt") )
-            $tabs['Page Speed'] = "/result/$id/$run/pagespeed/$cTxt";
+            $tabs['Page Speed'] = FRIENDLY_URLS ? "/result/$id/$run/pagespeed/$cTxt" : "/pagespeed.php?test=$id&run=$run&cached=$cached";
 
-        $tabs['Content Breakdown'] = "/result/$id/$run/breakdown/$cTxt";
-        $tabs['Domains'] = "/result/$id/$run/domains/$cTxt";
+        $tabs['Content Breakdown'] = FRIENDLY_URLS ? "/result/$id/$run/breakdown/$cTxt" : "/breakdown.php?test=$id&run=$run&cached=$cached";
+        $tabs['Domains'] = FRIENDLY_URLS ? "/result/$id/$run/domains/$cTxt" : "/domains.php?test=$id&run=$run&cached=$cached";
         
         if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-            $tabs['Screen Shot'] = "/result/$id/$run/screen_shot/$cTxt";
+            $tabs['Screen Shot'] = FRIENDLY_URLS ? "/result/$id/$run/screen_shot/$cTxt" : "/screen_shot.php?test=$id&run=$run&cached=$cached";
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
         foreach( $tabs as $tabName => $tabUrl )

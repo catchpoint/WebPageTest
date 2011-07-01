@@ -262,12 +262,12 @@ $page_description = "Website performance test details$testLabel";
                 ?>
                 </map>
                 <?php
-                    $cached='';
-                    if((int)$_GET["cached"] == 1)
-                        $cached='_Cached';
-                    echo '<img class="progress" alt="Page load waterfall diagram" usemap="#waterfall_map" id="waterfall" src="' . substr($testPath, 1) . '/' . $run . $cached . '_waterfall.png">';
-                    echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached={$_GET["cached"]}\">customize waterfall</a> &#8226; ";
-                    echo "<a href=\"/pageimages.php?test=$id&run=$run&cached={$_GET["cached"]}\">View all Images</a>";
+                    if( FRIENDLY_URLS )
+                        echo '<img class="progress" alt="Page load waterfall diagram" usemap="#waterfall_map" id="waterfall" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_waterfall.png">';
+                    else
+                        echo "<img class=\"progress\" alt=\"Page load waterfall diagram\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached\">";
+                    echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
+                    echo "<a href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
                 ?>
                 <br>
                 <br>
@@ -312,7 +312,10 @@ $page_description = "Website performance test details$testLabel";
                 </table>
                 <br>
                 <img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="<?php 
-                    echo "/waterfall.png?type=connection&width=930&test=$id&run=$run&cached=" . $_GET['cached'];?>">
+                    $extenstion = 'php';
+                    if( FRIENDLY_URLS )
+                        $extenstion = 'png';
+                    echo "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached";?>">
                 </div>
 		        <br><br> 
                 <?php include('./ads/details_middle.inc'); ?>

@@ -39,9 +39,9 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
                 <p class="left">
                 <br>
-                Url: <a rel="nofollow" href=<?php echo '"' . $url . '"';?>><?php echo $url;?></a><br>
-                From: <?php echo $test['test']['location'];?><br>
                 <?php 
+                    echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml();
                 ?>
                 </p>
@@ -87,13 +87,21 @@ $page_description = "Website performance test result$testLabel.";
                 <?php
                     // create a friendlier (unique) name for the fi
                     $fileUrl = GetFileUrl($url);
-                    echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
-                    echo "<a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Raw object data</a>";
-		    echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
-            if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
-                echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
-		    if( $settings['enable_google_csi'] )
-			echo '<br><a href="/google/google_csi.php?test=' . $id . '">CSI data (.csv)</a>';
+                    if( FRIENDLY_URLS )
+                    {
+                        echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
+                        echo "<a href=\"/result/$id/{$id}_{$fileUrl}_requests.csv\">Raw object data</a>";
+                    }
+                    else
+                    {
+                        echo "<a href=\"/csv.php?test=$id\">Raw page data</a> - ";
+                        echo "<a href=\"/csv.php?test=$id&requests=1\">Raw object data</a>";
+                    }
+                    echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
+                    if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
+                        echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
+		            if( $settings['enable_google_csi'] )
+			        echo '<br><a href="/google/google_csi.php?test=' . $id . '">CSI data (.csv)</a>';
                     if( $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>
@@ -121,7 +129,9 @@ $page_description = "Website performance test result$testLabel.";
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
-                        <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
+                        <?php
+                        echo "<th align=\"center\" class=\"empty\" valign=\"middle\" colspan=\"$cols\"></th>\n";
+                        ?>
                         <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
                         <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
                     </tr>
@@ -302,12 +312,22 @@ $page_description = "Website performance test result$testLabel.";
                             echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
                         }
                         if( gz_is_file("$testPath/{$run}.cap") )
-                            echo "<br><br><a href=\"/result/$id/{$run}.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                        {
+                            if( FRIENDLY_URLS )
+                                echo "<br><br><a href=\"/result/$id/{$run}.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                            else
+                                echo "<br><br><a href=\"/getgzip.php?test=$id&file=$run.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                        }
                     ?></td>
-                    <td align="center" valign="middle"><a href="/result/<?php echo "$id/$run/details/"; ?>"><img class="progress" width=250 src="<?php echo "/result/$id/$run"; ?>_waterfall_thumb.png"></a></td>
+                    <td align="center" valign="middle"><a href="<?php echo FRIENDLY_URLS ? "/result/$id/$run/details/" : "/details.php?test=$id&run=$run"; ?>"><img class="progress" width=250 src="<?php echo FRIENDLY_URLS ? "/result/$id/{$run}_waterfall_thumb.png" : "/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png"; ?>"></a></td>
                     <?php
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-                        echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
+                    {
+                        if( FRIENDLY_URLS )
+                            echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
+                        else
+                            echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
+                    }
                     if($video) 
                     {
                         echo '<td align="center" valign="middle">';
@@ -337,12 +357,25 @@ $page_description = "Website performance test result$testLabel.";
                             echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached.cap") )
-                            echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                        {
+                            if( FRIENDLY_URLS )
+                                echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                            else
+                                echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                        }
                     echo '</td>';
-                    echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
+                    if( FRIENDLY_URLS )
+                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
+                    else
+                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_waterfall.png\"></a></td>";
 
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-                        echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
+                    {
+                        if( FRIENDLY_URLS )
+                            echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
+                        else
+                            echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
+                    }
                     if($video) 
                     {
                         echo '<td align="center" valign="middle">';
@@ -373,8 +406,13 @@ $page_description = "Website performance test result$testLabel.";
                     echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
                     ?>
                         <a href="/result/<?php echo "$id/$run/breakdown/"; ?>">
-                        <img width=390 height=200 src="<?php echo "/breakdownPie.png?width=390&height=200&type=Requests&fontSize=8&test=$id&run=$run"; ?>">
-                        <img width=390 height=200 src="<?php echo "/breakdownPie.png?width=390&height=200&type=Bytes&fontSize=8&test=$id&run=$run"; ?>">
+                        <?php
+                            $extension = 'php';
+                            if( FRIENDLY_URLS )
+                                $extension = 'png';
+                        ?>
+                        <img width=390 height=200 src="<?php echo "/breakdownPie.$extension?width=390&height=200&type=Requests&fontSize=8&test=$id&run=$run"; ?>">
+                        <img width=390 height=200 src="<?php echo "/breakdownPie.$extension?width=390&height=200&type=Bytes&fontSize=8&test=$id&run=$run"; ?>">
                         </a>
                     </td>
                 </tr>

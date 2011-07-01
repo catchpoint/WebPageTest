@@ -135,7 +135,7 @@ function GenerateThumbnail(&$img, $type)
         $quality = 4;
         if( !strcasecmp( $type, 'jpg') )
             $quality = 2;
-        fastimagecopyresampled ($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height, $quality);
+        fastimagecopyresampled($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height, $quality);
         imagedestroy($img);
         $img = $tmp;    
         unset($tmp);

@@ -28,8 +28,10 @@ $page_description = "Publish test results to WebPagetest.";
                 echo "The test has been published to $pub and is available here: <a href=\"$pubUrl\">$pubUrl</a>";
             else
                 echo "There was an error publishing the results to $pub. Please try again later";
-                
-            echo "</p><p><a href=\"/result/$id/\">Back to the test results</a></p>";
+            if( FRIENDLY_URLS )
+                echo "</p><p><a href=\"/result/$id/\">Back to the test results</a></p>";
+            else
+                echo "</p><p><a href=\"/results.php?test=$id\">Back to the test results</a></p>";
             ?>
             
             <?php include('footer.inc'); ?>
