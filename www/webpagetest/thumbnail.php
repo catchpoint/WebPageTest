@@ -82,7 +82,7 @@ function tbnDrawWaterfall(&$img)
     $haveLocations = false;
     $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
     $pageData = loadPageRunData($testPath, $run, $cached);
-    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true /*, 'thumbnail' => true, 'width' => $newWidth */ );
+    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true, 'thumbnail' => true, 'width' => $newWidth );
     $img = drawWaterfall($url, $requests, $pageData, false, $options);
     if( !$requests || !$pageData )
         $failed = true;
@@ -161,7 +161,6 @@ function SendImage(&$img, $type)
     else
     {
         header ("Content-type: image/png");
-        imagetruecolortopalette($img, true, 256);
         imagepng($img);
     }
 }

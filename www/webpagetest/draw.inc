@@ -148,4 +148,22 @@ function DrawLock($im, $x, $y, $width, $height)
     imagerectangle($im, $x, $top, $x + $width, $top + $boxHeight, $black);
 }
 
+/**
+* Fake some lines to make it look like text in a thumbnail
+* 
+*/
+function ThumbnailText(&$im, $x1, $y1, $width, $height, $string, $fontWidth, &$color)
+{
+    $count = strlen($string);
+    $x2 = min($width, $x1 + ($fontWidth * $count));
+    for( $y = $y1 + 1; $y < $y1 + $height; $y++ )
+    {
+        for( $x = $x1; $x <= $x2; $x++ )
+        {
+            if( rand(0, 2) )
+                imagesetpixel($im, $x, $y, $color);
+        }
+    }
+}
+
 ?>
