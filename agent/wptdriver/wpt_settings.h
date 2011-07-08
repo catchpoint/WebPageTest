@@ -50,7 +50,8 @@ public:
   CString _exe;
   CString _options;
   CString _cache;
-  CString _directory;
+  CString _exe_directory;
+  CString _setup_cmd;
 };
 
 // dynamic settings loaded from file

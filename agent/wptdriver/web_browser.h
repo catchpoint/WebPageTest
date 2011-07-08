@@ -37,7 +37,7 @@ public:
   ~WebBrowser(void);
 
   bool RunAndWait();
-  void ClearCache();
+  void ClearUserData();
 
 private:
   void InjectDll();
@@ -51,4 +51,3 @@ private:
 
   CRITICAL_SECTION  cs;
 };
-

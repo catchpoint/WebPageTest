@@ -7,10 +7,10 @@ browser=chrome
 
 [chrome]
 exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-options='--load-extension="%WPTDIR%\extension" --user-data-dir="%WPTDIR%\chrome_cache" --new-window --no-proxy-server --no-first-run --no-default-browser-check'
-cache="%WPTDIR%\chrome_cache"
+options='--load-extension="%WPTDIR%\extension" --user-data-dir="%WPTDIR%\chrome_user_data" --new-window --no-proxy-server --no-first-run --no-default-browser-check'
+cache="%WPTDIR%\chrome_user_data"
 
 [firefox]
 exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-options='-install-global-extension "%WPTDIR%\firefox_extension.xpi" -profile="%WPTDIR%\firefox_profile" -no-remote'
-cache="%WPRDIR%\firefox_profile"
+options='-profile="%WPTDIR%\firefox_profile" -no-remote'
+setup_cmd='C:\Python26\python.exe "%WPTDIR%\firefox\profile_setup.py" --profile_zip="%WPTDIR%\firefox\firefox5_profile.zip" --profile_dir="%WPTDIR%\firefox_profile" --extension_dir="%WPTDIR%\firefox\extension"'

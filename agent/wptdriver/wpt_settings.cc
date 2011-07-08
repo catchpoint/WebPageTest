@@ -131,8 +131,8 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
 
     lstrcpy(buff, _exe);
     *PathFindFileName(buff) = NULL;
-    _directory = buff;
-    _directory.Trim(_T("/\\"));
+    _exe_directory = buff;
+    _exe_directory.Trim(_T("/\\"));
     ret = true;
   }
 
@@ -148,6 +148,13 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _cache = buff;
     _cache.Trim(_T("\""));
     _cache.Replace(_T("%WPTDIR%"), wpt_directory);
+  }
+
+  if (GetPrivateProfileString(browser, _T("setup_cmd"), _T(""), buff, 
+    _countof(buff), iniFile )) {
+    _setup_cmd = buff;
+    _setup_cmd.Trim(_T("\""));
+    _setup_cmd.Replace(_T("%WPTDIR%"), wpt_directory);
   }
   return ret;
 }

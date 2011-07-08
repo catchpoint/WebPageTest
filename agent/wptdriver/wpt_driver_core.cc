@@ -35,7 +35,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
-const TCHAR * BROWSERS[] = {_T("chrome.exe"), _T("iexplore.exe")};
+const TCHAR * BROWSERS[] = {
+  _T("chrome.exe"),
+  _T("firefox.exe"),
+  _T("iexplore.exe")
+};
 
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
@@ -181,7 +185,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   test.SetFileBase();
   if (test._clear_cache)
-    browser.ClearCache();
+    browser.ClearUserData();
   if (test._tcpdump)
     _winpcap.StartCapture( test._file_base + _T(".cap") );
 
@@ -230,9 +234,9 @@ void WptDriverCore::Init(void){
   *PathFindFileName(src_dir) = _T('\0');
   CString src = src_dir;
   CopyFile(src + _T("dbghelp.dll"), 
-            _settings._browser._directory + _T("\\dbghelp.dll"), FALSE);
+            _settings._browser._exe_directory + _T("\\dbghelp.dll"), FALSE);
   CopyFile(src + _T("symsrv.dll"), 
-            _settings._browser._directory + _T("\\symsrv.dll"), FALSE);
+            _settings._browser._exe_directory + _T("\\symsrv.dll"), FALSE);
 
   // download the symbol files for the browsers
   // we'll just be caching it here and downloading it for real in wpthook
@@ -248,7 +252,7 @@ void WptDriverCore::Init(void){
     "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
     symcache);
   if (SymInitialize(GetCurrentProcess(), sympath, FALSE)) {
-    DownloadSymbols(_settings._browser._directory);
+    DownloadSymbols(_settings._browser._exe_directory);
     SymCleanup(GetCurrentProcess());
   }
 */

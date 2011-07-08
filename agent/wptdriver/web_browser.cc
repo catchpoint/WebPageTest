@@ -129,8 +129,11 @@ bool WebBrowser::RunAndWait() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WebBrowser::ClearCache() {
+void WebBrowser::ClearUserData() {
   if (_browser._cache.GetLength()) {
     DeleteDirectory(_browser._cache, false);
+  }
+  if (_browser._setup_cmd.GetLength()) {
+    LaunchProcess(_browser._setup_cmd);
   }
 }
