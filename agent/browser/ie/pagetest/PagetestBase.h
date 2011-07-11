@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define UWM_CHECK_PAINT			(WM_USER + 8)
 
 #define JPEG_DEFAULT_QUALITY 30
-#define JPEG_VIDEO_QUALITY 75
+#define JPEG_VIDEO_QUALITY 30
 
 typedef void (__stdcall * SETGDIWINDOW)(HWND hWnd, HWND hNotify, UINT msgNotify);
 typedef void (__stdcall * SETGDIWINDOWUPDATED)(bool);

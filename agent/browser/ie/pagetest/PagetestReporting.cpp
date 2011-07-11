@@ -314,7 +314,7 @@ void CPagetestReporting::FlushResults(void)
             {
               CxImage image;
               if( screenCapture.GetImage(CapturedImage::FULLY_LOADED, image) )
-						    SaveProgressImage(image, logFile+step+_T("_screen.jpg"), false);
+						    SaveProgressImage(image, logFile+step+_T("_screen.jpg"));
   						
 						  // save out the other screen shots we have gathered
               if( screenCapture.GetImage(CapturedImage::START_RENDER, image) )
@@ -3812,7 +3812,12 @@ void CPagetestReporting::SaveVideo()
     CxImage * img = new CxImage;
     if (image.Get(*img)) 
     {
-      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      // shrink it down to 400xX which is the size for a 2-video comparison
+      int width = img->GetWidth();
+      int height = img->GetHeight();
+      int newWidth = min(400, width / 2);
+      int newHeight = (int)((double)height * ((double)newWidth / (double)width));
+      img->Resample2(newWidth, newHeight);
       if (last_image) 
       {
         if (ImagesAreDifferent(last_image, img)) {
