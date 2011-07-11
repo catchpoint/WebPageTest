@@ -1,5 +1,5 @@
 <?php
-if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER))
+if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['HTTP_IF_MODIFIED_SINCE'])))
 {
     header("HTTP/1.0 304 Not Modified");
 }
@@ -52,7 +52,8 @@ else
 
         if( $img )
         {
-            header('Last-Modified: ' . date("r"));
+            header('Last-Modified: ' . date('r'));
+            header('Expires: '.gmdate('r', time() + 31536000));
             GenerateThumbnail($img, $type);
             SendImage($img, $type);
         }
@@ -135,7 +136,7 @@ function GenerateThumbnail(&$img, $type)
         # Copy and resize old image into new image
         $quality = 4;
         if( !strcasecmp( $type, 'jpg') )
-            $quality = 2;
+            $quality = 3;
         fastimagecopyresampled($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height, $quality);
         imagedestroy($img);
         $img = $tmp;    
@@ -156,7 +157,7 @@ function SendImage(&$img, $type)
     {
         header ("Content-type: image/jpeg");
         imageinterlace($img, 1);
-        imagejpeg($img, NULL, 50);
+        imagejpeg($img, NULL, 75);
     }
     else
     {
