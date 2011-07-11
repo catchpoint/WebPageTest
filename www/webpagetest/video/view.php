@@ -142,7 +142,7 @@ else
                 margin-right: auto;
             }
         </style>
-        <script type="text/javascript" src="player/flowplayer-3.2.4.min.js"></script>
+        <script type="text/javascript" src="player/flowplayer-3.2.6.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -174,7 +174,7 @@ else
                 <script>
                     flowplayer("player", 
                                     {
-                                        src: "player/flowplayer-3.2.4.swf",
+                                        src: "player/flowplayer-3.2.7.swf",
                                         cachebusting: true,
                                         version: [9, 115]
                                     } , 
