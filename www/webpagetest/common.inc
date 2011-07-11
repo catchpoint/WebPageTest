@@ -15,9 +15,9 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 40);          // version of the sitewide css file
+define('VER_CSS', 41);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
-define('VER_JS_TEST', 15);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 16);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
 // SEO stuff
@@ -115,7 +115,7 @@ if( $id )
     // set the test ID cookie (session cookie) if we're looking at a different test
     if( strcmp($id, $_COOKIE['tid']) )
         setcookie('tid', $id);
-    
+
     RestoreTest($id);   // restore the test if it is archived (and deleted)
     
     $testPath = './' . GetTestPath($id);
@@ -232,6 +232,7 @@ function GetTestPath($id)
         else
             $testPath = "results/{$settings['olddir']}/$id";
     }
+
     return $testPath;
 }
 
@@ -670,7 +671,7 @@ function BuildLocations( &$locations )
 * 
 * @param mixed $locations
 */
-function FilterLocations( &$locations )
+function FilterLocations( &$locations, $stripBrowser = null )
 {
     BuildLocations( $locations );
     
@@ -685,7 +686,7 @@ function FilterLocations( &$locations )
     if( !$_REQUEST['hidden'] && (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows'))
     {
         // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
-        foreach( $locations as $name => $loc )
+        foreach( $locations as $name => &$loc )
         {
             if( isset($loc['browser']) )
             {
@@ -705,8 +706,37 @@ function FilterLocations( &$locations )
             }
         }
     }
+    
+    // next pass, filter browsers if we were asked to
+    if( isset($stripBrowser) )
+    {
+        foreach( $locations as $name => &$loc )
+        {
+            if( isset($loc['browser']) )
+            {
+                $remove = false;
+                foreach( $stripBrowser as $browser )
+                {
+                    if( stripos($loc['browser'], $browser) !== false )
+                    {
+                        $remove = true;
+                        break;
+                    }
+                }
+                    
+                if( $remove )
+                    unset($locations[$name]);
+            }
+            else
+            {
+                // strip the browsers from the label
+                foreach( $stripBrowser as $browser )
+                    $loc['label'] = preg_replace("/[, ]*$browser/i", '', $loc['label']);
+            }
+        }
+    }
         
-    // second pass, remove any top-level locations whose sub-locations have all been removed
+    // next pass, remove any top-level locations whose sub-locations have all been removed
     foreach( $locations as $name => $loc )
     {
         // top-level locations do not have the browser specified
@@ -1074,7 +1104,7 @@ function ArchiveTest($id)
             $test = parse_ini_file("$testPath/testinfo.ini", true);
             $completed = isset($test['test']['completeTime']);
         }
-        $api = false;
+        $discard = false;
         if( !isset($api_keys) )
         {
             $api_keys = parse_ini_file('./settings/keys.ini', true);
@@ -1084,67 +1114,73 @@ function ArchiveTest($id)
         $priority = $testInfo['priority'];
         if( isset($testInfo['k']) && array_key_exists($testInfo['k'], $api_keys) && array_key_exists('priority', $api_keys[$testInfo['k']]) )
             $priority = $api_keys[$testInfo['k']]['priority'];
-        if( $priority >= 5  )
-            $api = true;
-        if( !$testInfo['archived'] && $completed && !$api )
+        if( $priority > 6  )
+            $discard = true;
+        if( $testInfo['archived'] )
+            $ret = true;
+        elseif( $completed && !$discard )
         {
             $dest = GetArchiveFile($id, true);
-            
-            // zip up the contents (this might be expensive - possibly replace with command-line later)
-            if(is_dir($testPath) === true)
+            if( is_file($dest) )
+                $ret = true;
+            else
             {
-                $zip = new ZipArchive();
-                if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
+                // zip up the contents
+                if(is_dir($testPath) === true)
                 {
-                    $testInfo['archived'] = true;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-
-                    // add the files (skip the ones we don't want to archive long-term)
-                    $files = scandir($testPath);
-                    foreach( $files as $file )
+                    $zip = new ZipArchive();
+                    if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
                     {
-                        $filePath = "$testPath/$file";
-                        if( is_file($filePath) && 
-                            strpos($file, '_doc.jpg') === false &&
-                            strpos($file, '_render.jpg') === false &&
-                            strpos($file, '_status.txt') === false )
-                        {
-                            $zip->addFile($filePath, $file);
-                        }
-                    }
-                    
-                    // if it is a video test, save the median first view video
-                    if( $testInfo['video'] )
-                    {
-                        $run = $testInfo['medianRun'];
-                        if( !$run )
-                        {
-                            require_once('page_data.inc');
-                            $pageData = loadAllPageData($testPath);
-                            if( $pageData )
-                                $run = GetMedianRun($pageData, 0);
-                        }
+                        $testInfo['archived'] = true;
+                        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
 
-                        if( $run )
+                        // add the files (skip the ones we don't want to archive long-term)
+                        $files = scandir($testPath);
+                        foreach( $files as $file )
                         {
-                            $relativeDir = "video_$run";
-                            $videoDir = "$testPath/$relativeDir";
-                            $files = scandir($videoDir);
-                            if( $files )
+                            $filePath = "$testPath/$file";
+                            if( is_file($filePath) && 
+                                strpos($file, '_doc.jpg') === false &&
+                                strpos($file, '_render.jpg') === false &&
+                                strpos($file, '_status.txt') === false )
                             {
-                                $zip->addEmptyDir($relativeDir);
-                                foreach($files as $file)
+                                $zip->addFile($filePath, $file);
+                            }
+                        }
+                        
+                        // if it is a video test, save the median first view video
+                        if( $testInfo['video'] )
+                        {
+                            $run = $testInfo['medianRun'];
+                            if( !$run )
+                            {
+                                require_once('page_data.inc');
+                                $pageData = loadAllPageData($testPath);
+                                if( $pageData )
+                                    $run = GetMedianRun($pageData, 0);
+                            }
+
+                            if( $run )
+                            {
+                                $relativeDir = "video_$run";
+                                $videoDir = "$testPath/$relativeDir";
+                                $files = scandir($videoDir);
+                                if( $files )
                                 {
-                                    $filePath = "$videoDir/$file";
-                                    if( is_file($filePath) )
-                                        $zip->addFile($filePath, "$relativeDir/$file");
+                                    $zip->addEmptyDir($relativeDir);
+                                    foreach($files as $file)
+                                    {
+                                        $filePath = "$videoDir/$file";
+                                        if( is_file($filePath) )
+                                            $zip->addFile($filePath, "$relativeDir/$file");
+                                    }
                                 }
                             }
                         }
+                        
+                        $zip->close();
+                        $ret = true;
                     }
-                    
-                    $zip->close();
-                    $ret = true;
                 }
             }
         }
@@ -1175,6 +1211,9 @@ function RestoreTest($id)
             $ret = true;
         }    
     }
+    else
+        $ret = true;
+        
     return $ret;
 }
 
@@ -1243,5 +1282,48 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
     imagedestroy ($temp);
   } else imagecopyresampled ($dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h);
   return true;
+}
+
+/**
+* Get the number of pending high-priority page loads at the given location
+* and the average time per page load (from the last 100 tests)
+*/
+function GetPendingTests($location, &$count, &$avgTime)
+{
+    $count = 0;
+    $avgTime = 0;
+    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+    if( $tests )
+    {
+        $count = (int)$tests['tests'];
+        $timeCount = count($tests['times']);
+        if( $timeCount )
+        {
+            $timeTotal = 0;
+            foreach( $tests['times'] as $time )
+                $timeTotal += $time;
+            $avgTime = ceil($timeTotal / $timeCount);
+        }
+    }
+}
+
+/**
+* Get the number of active testers at the given location
+*/
+function GetTesterCount($location)
+{
+    $count = 0;
+    $times = json_decode(file_get_contents("./tmp/$location.tm"), true);
+    if( count($times) )
+    {
+        $now = time();
+        foreach( $times as &$tester )
+        {
+            if( $tester['updated'] && $now - $tester['updated'] < 3600 )
+                $count++;
+        }
+    }
+    
+    return $count;
 }
 ?>

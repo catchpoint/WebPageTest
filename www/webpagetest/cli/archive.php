@@ -6,7 +6,13 @@ set_time_limit(0);
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
-$testlog = null;
+
+// check the old tests first
+$archived = json_decode(gz_file_get_contents("./logs/archived/old.archived"), true);
+if( !$archived )
+    $archived = array();
+CheckOldDir('./results/old', $archived);
+gz_file_put_contents("./logs/archived/old.archived", json_encode($archived));
 
 /*
 *   Archive any tests that have not already been archived
@@ -21,16 +27,7 @@ foreach( $years as $year )
     $yearDir = "./results/$year";
     if( is_dir($yearDir) && $year != '.' && $year != '..'  && $year != 'video' )
     {
-        if( $year == 'old' )
-        {
-            unset($testlog);
-            $archived = json_decode(gz_file_get_contents("./logs/archived/old.archived"), true);
-            if( !$archived )
-                $archived = array();
-            CheckOldDir($yearDir, $archived);
-            gz_file_put_contents("./logs/archived/old.archived", json_encode($archive));
-        }
-        else
+        if( $year != 'old' )
         {
             $months = scandir($yearDir);
             foreach( $months as $month )
@@ -50,10 +47,8 @@ foreach( $years as $year )
                                 $archived = json_decode(gz_file_get_contents("./logs/archived/$dayString.archived"), true);
                                 if( !$archived )
                                     $archived = array();
-                                $testlog = file_get_contents("./logs/$dayString.log");
                                 CheckDay($dayDir, "$year$month$day", $archived);
-                                gz_file_put_contents("./logs/archived/$dayString.archived", json_encode($archive));
-                                unset($testlog);
+                                gz_file_put_contents("./logs/archived/$dayString.archived", json_encode($archived));
                             }
                         }
                     }
@@ -65,6 +60,9 @@ foreach( $years as $year )
     }
 }
 echo "\nDone\n\n";
+
+$log = date('n') . "\nArchived: $archiveCount\nDeleted: $deleted\nKept: $kept";
+file_put_contents('./cli/archive.log', $log);
 
 /**
 * Recursively scan the old directory for tests
@@ -122,27 +120,23 @@ function CheckTest($testPath, $id, &$archived)
 {
     global $archiveCount;
     global $deleted;
-    global $testlog;
     global $kept;
     $delete = false;
+    $archived = false;
 
     if( !$archived[$id] )
     {
-        // make sure the on-disk path matches the generated one, otherwise nuke it because it is unreachable
-        $idPath = './' . GetTestPath($id);
-        if( $testPath == $idPath && (!isset($testlog) || strpos($testlog, $id) !== false) )
+        if( ArchiveTest($id) )
         {
-            if( ArchiveTest($id) )
-            {
-                $archiveCount++;
-                $archived[$id] = 1;
-            }
+            $archived = true;
+            $archiveCount++;
+            $archived[$id] = 1;
         }
-        else
-            $delete = true;
     }
 
-    if( TestLastAccessed($id) > 30 )
+    // Delete tests after 3 days of no access
+    $elapsed = TestLastAccessed($id);
+    if( $elapsed > 3 )
         $delete = true;
 
     if( $delete )
@@ -169,12 +163,6 @@ function GetLoad()
     if( count($loadValues) )
         $load = (float)$loadValues[0];
 
-    // give the system a chance to breathe
-    if( $load )
-        usleep(min(30000 * $load, 5000000));
-    else
-        usleep(100000);
-        
     return $load;
 }
 
