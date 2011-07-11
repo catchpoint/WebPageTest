@@ -113,6 +113,8 @@ else
         // see if the test is complete
         if( $done )
         {
+            $perTestTime = 0;
+            $testCount = 0;
             $beaconUrl = null;
             if( strlen($settings['showslow'])  )
             {
@@ -151,6 +153,34 @@ else
                 {
                     $testInfo['completed'] = $time;
                     $testInfo['medianRun'] = $medianRun;
+                    
+                    $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
+                    if( $lockFile )
+                    {
+                        if( flock($lockFile, LOCK_EX) )
+                        {
+                            $testCount = $testInfo['runs'];
+                            if( !$testInfo['fvonly'] )
+                                $testCount *= 2;
+                                
+                            if( $testInfo['started'] && $time > $testInfo['started'] && $testCount )
+                            {
+                                $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
+                                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                                if( !$tests )
+                                    $tests = array();
+                                // keep track of the average time for the last 100 tests
+                                $tests['times'][] = $perTestTime;
+                                if( count($tests['times']) > 100 )
+                                    array_shift($tests['times']);
+                                // update the number of high-priority "page loads" that we think are in the queue
+                                if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
+                                    $tests['tests'] = max(0, $tests['tests'] - $testCount);
+                                file_put_contents("./tmp/$location.tests", json_encode($tests));
+                            }
+                        }
+                        fclose($lockFile);
+                    }
                 }
             }
             

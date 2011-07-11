@@ -229,6 +229,17 @@ if( !$done )
                     {        
                         touch( "./tmp/$location.tm" );
                     }
+                    
+                    // zero out the tracked page loads in case some got lost
+                    if( !$done )
+                    {
+                        $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                        if( $tests )
+                        {
+                            $tests['tests'] = 0;
+                            file_put_contents("./tmp/$location.tests", json_encode($tests));
+                        }
+                    }
                 }
 
                 fclose($lockFile);

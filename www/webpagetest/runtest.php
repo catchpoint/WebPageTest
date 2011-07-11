@@ -179,9 +179,10 @@
                 $test['tests'] = array();
                 foreach( $test['multiple_locations'] as $location_string )
                 {
+                    $testData = $test;
                     // Create a test with the given location and applicable connectivity.
-                    UpdateLocation($test, $locations, $location_string);
-                    $id = CreateTest($test, $test['url']);
+                    UpdateLocation($testData, $locations, $location_string);
+                    $id = CreateTest($testData, $testData['url']);
                     if( isset($id) )
                         $test['tests'][] = array('url' => $test['url'], 'id' => $id);
                 }
@@ -248,9 +249,18 @@
                     $testCount = 0;
                     foreach( $bulk['urls'] as &$entry )
                     {
-                        $test['label'] = $entry['l'];
-                        $test['noscript'] = $entry['ns'];
-                        $entry['id'] = CreateTest($test, $entry['u']);
+                        $testData = $test;
+                        $testData['label'] = $entry['l'];
+                        if( $entry['ns'] )
+                        {
+                            unset($testData['script']);
+                            if( $testData['discard'] )
+                            {
+                                $testData['runs'] = max(1, $testData['runs'] - $testData['discard']);
+                                $testData['discard'] = 0;
+                            }
+                        }
+                        $entry['id'] = CreateTest($testData, $entry['u']);
                         if( $entry['id'] )
                         {
                             $entry['v'] = array();
@@ -260,7 +270,7 @@
                                     $test['label'] .= ' - ' . $variation['l'];
                                 $url = CreateUrlVariation($entry['u'], $variation['q']);
                                 if( $url )
-                                    $entry['v'][$variation_index] = CreateTest($test, $url);
+                                    $entry['v'][$variation_index] = CreateTest($testData, $url);
                             }
                             $testCount++;
                         }
@@ -945,7 +955,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
         mkdir($test['workdir'], 0777, true);
     
     $out = "Test ID=$testId\r\nurl=";
-    if( !strlen($test['script']) || $test['noscript'] )
+    if( !strlen($test['script']) )
         $out .= $url;
     else
         $out .= "script://$testId.pts";
@@ -954,7 +964,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
     $out .= $testData;
     
     // add the script data (if we're running a script)
-    if( strlen($test['script']) && !$test['noscript'] )
+    if( strlen($test['script']) )
     {
         $script = trim($test['script']);
         if (strlen($url))
@@ -972,8 +982,31 @@ function SubmitUrl($testId, $testData, &$test, $url)
     $ext = 'url';
     if( $test['priority'] )
         $ext = "p{$test['priority']}";
-    if( file_put_contents($test['workdir'] . "/$testId.$ext", $out) )
-        $ret = true;
+        
+    $location = $test['location'];
+    $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
+    if( $lockFile )
+    {
+        if( flock($lockFile, LOCK_EX) )
+        {
+            if( file_put_contents($test['workdir'] . "/$testId.$ext", $out) )
+            {
+                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                if( !$tests )
+                    $tests = array();
+                $testCount = $test['runs'];
+                if( !$test['fvonly'] )
+                    $testCount *= 2;
+                if( array_key_exists('tests', $tests) )
+                    $tests['tests'] += $testCount;
+                else
+                    $tests['tests'] = $testCount;
+                file_put_contents("./tmp/$location.tests", json_encode($tests));
+                $ret = true;
+            }
+        }
+        fclose($lockFile);
+    }
     
     return $ret;
 }
