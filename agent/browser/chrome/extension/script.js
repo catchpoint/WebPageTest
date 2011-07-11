@@ -1,6 +1,6 @@
-// This script is automatically injected into every page before it loads
-// we need to use it to register for the earliest onLoad callback
-// since the navigation timing times are sometimes questionable
+// This script is automatically injected into every page before it loads.
+// We need to use it to register for the earliest onLoad callback
+// since the navigation timing times are sometimes questionable.
 
 window.addEventListener("load", function() {
   var WPT_load_time = 0;
@@ -18,8 +18,8 @@ window.addEventListener("load", function() {
       {message: 'wptLoad', load_time: WPT_load_time});
 }, false);
 
-window.addEventListener("wptonload", function() { 
-	var WPTExtensionConnection = chrome.extension.connect();
-	WPTExtensionConnection.postMessage({message: 'wptLoad',
-									load_time: 0});
+window.addEventListener("wptonload", function() {
+  var WPTExtensionConnection = chrome.extension.connect();
+  WPTExtensionConnection.postMessage(
+      {message: 'wptLoad', load_time: 0});
 }, false);

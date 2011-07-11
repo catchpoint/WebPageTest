@@ -1,3 +1,5 @@
+goog.provide('wpt.main');
+
 var STARTUP_DELAY = 5000;
 var TASK_INTERVAL = 1000;
 var TASK_INTERVAL_SHORT = 0;
@@ -7,12 +9,12 @@ var g_start = 0;
 var g_requesting_task = false;
 
 // on startup, kick off our testing
-setTimeout( "wptStartup()", STARTUP_DELAY );
+window.setTimeout(wptStartup, STARTUP_DELAY);
 
 function wptStartup() {
   chrome.tabs.getSelected(null, function(tab){
     g_tabId = tab.id;
-    setInterval(wptGetTask, TASK_INTERVAL);
+    window.setInterval(wptGetTask, TASK_INTERVAL);
   });
 }
 
@@ -24,7 +26,7 @@ function wptGetTask(){
       var xhr = new XMLHttpRequest();
       xhr.open("GET", "http://127.0.0.1:8888/task", true);
       xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
+        if (xhr.readyState == 4 && xhr.status == 200) {
           var resp = JSON.parse(xhr.responseText);
           if (resp.statusCode == 200)
             wptExecuteTask(resp.data);
@@ -100,7 +102,7 @@ function wptExecuteTask(task){
       wptSetCookie(task.target, task.value);
 
     if (!g_active)
-      setTimeout( "wptGetTask()", TASK_INTERVAL_SHORT );
+      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );
   }
 }
 
@@ -141,4 +143,3 @@ function wptSetCookie(cookie_path, data) {
     }
   }
 }
-
