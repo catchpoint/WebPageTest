@@ -59,42 +59,6 @@ function PreparePSSTest(form)
     return true;
 }
 
-function PrepareBlinkTest(form)
-{
-    var url = form.testurl.value;
-    if( url == "" || url == "Enter a Website URL" )
-    {
-        alert( "Please enter an URL to test." );
-        form.url.focus();
-        return false;
-    }
-    
-    form.label.value = 'Blink Comparison for ' + url;
-    
-    var slash = url.indexOf('/');
-    var colon = url.indexOf(':');
-    if( colon == 4 || colon == 5 )
-    {
-        var slash = url.indexOf('/', colon + 3);
-        var colon = url.indexOf(':', colon + 1);
-    }
-    if( slash >= 0 )
-    {
-        var split = slash;
-        if( colon >= 0 && colon < slash )
-            split = colon;
-        blinkUrl = url.substring(0, split) + '.webinstant.sandbox.google.com' + url.substring(split);
-    }
-    else
-        blinkUrl = url + '.webinstant.sandbox.google.com';
-        
-    // build the batch-url list
-    var batch = "Original=" + url + "\nOptimized=" + blinkUrl;
-    form.bulkurls.value=batch;
-    
-    return true;
-}
-
 /*
     Do any populating of the input form based on the loaded location information
 */
@@ -293,6 +257,30 @@ function ConnectionChanged()
         var setSpeed = true;
         
         var backlog = locations[config]['backlog'];
+        var wait = locations[config]['wait'];
+        var waitText = '';
+        if( wait < 0 )
+        {
+            waitText = 'Location is offline, please select a different browser or location';
+            $('#wait').removeClass('backlogWarn').addClass('backlogHigh');
+            $('#start_test-button').hide();
+        }
+        else
+        {
+            $('#wait').removeClass('backlogWarn , backlogHigh');
+            $('#start_test-button').show();
+            if( wait == 1 )
+                waitText = '1 minute';
+            else if (wait > 0)
+            {
+                if (wait > 120)
+                    waitText = Math.rount(wait / 60) + ' hours';
+                else
+                    waitText = wait + ' minutes';
+            }
+            else
+                waitText = 'None';
+        }
 
         var up = locations[config]['up'] / 1000;
         var down = locations[config]['down'] / 1000;
@@ -339,6 +327,8 @@ function ConnectionChanged()
             $('#pending_tests').removeClass('backlogHigh , hidden').addClass("backlogWarn");
         else
             $('#pending_tests').removeClass('backlogWarn , hidden').addClass("backlogHigh");
+
+        $('#wait').text(waitText);
             
         UpdateSettingsSummary();
     }

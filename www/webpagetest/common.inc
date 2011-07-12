@@ -15,9 +15,9 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 41);          // version of the sitewide css file
+define('VER_CSS', 43);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
-define('VER_JS_TEST', 16);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 18);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
 // SEO stuff
@@ -731,7 +731,7 @@ function FilterLocations( &$locations, $stripBrowser = null )
             {
                 // strip the browsers from the label
                 foreach( $stripBrowser as $browser )
-                    $loc['label'] = preg_replace("/[, ]*$browser/i", '', $loc['label']);
+                    $loc['label'] = preg_replace("/[, -]*$browser/i", '', $loc['label']);
             }
         }
     }

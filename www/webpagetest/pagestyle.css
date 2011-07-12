@@ -98,7 +98,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 
 #simplemodal-overlay {background-color:#000;}
 #simplemodal-container {background-color:#fff; border:2px solid #444; padding:4px;}
-#location-dialog {width: 970px; height: 550px; background-color: #fff; text-align:center;}
+#location-dialog {width: 970px; height: 560px; background-color: #fff; text-align:center;}
 #location-dialog h3 {margin-bottom: 5px;}
 #map {width:970px; height: 470px; margin: 0px 0px 10px; border: 1px solid black; background-image: url('/images/progress.gif'); background-repeat: no-repeat; background-position: center; }
 #location-ok {margin: 0px 10px;}
@@ -152,7 +152,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 #mobile_logo { margin-top: 100px; float: right; width: 270px; height: 59px;}
 #mobile_test a {color: #fff;}
 
-#start_test-container {float: left;padding: 28px 0 0 21px;background: url(/images/start_test-container-bkg.png) no-repeat left 40px;}
+#start_test-container {float: left;padding: 28px 0 0 21px;background: url(/images/start_test-container-bkg.png) no-repeat left 40px; text-align: center;}
 .start_test {cursor:pointer; width: 200px;height: 36px;padding: 0;background: url(/images/start_test-bkg.png);border: none;}
 #sponsor {display: none; background-color: #fff; }
 
