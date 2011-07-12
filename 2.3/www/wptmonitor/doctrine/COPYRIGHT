@@ -1,0 +1,37 @@
+Copyrights
+----------
+
+Doctrine
+--------
+
+Doctrine is a Object Relational Mapper built from scratch with PHP5. It contains a few ports of other popular PHP classes/libraries.
+
+Url:        http://www.doctrine-project.org
+Copyright:  2005-2007 Konsta Vesterinen
+License:    LGPL - see LICENSE file
+
+symfony
+-------
+
+Doctrine contains ports of a few symfony classes/libraries
+
+Url:       http://www.symfony-project.com/
+Copyright: Fabien Potencier
+License:   MIT - see LICENSE file
+
+Spyc
+----
+
+Doctrine contains a port of the Spyc software
+
+Url:       http://spyc.sourceforge.net/
+Copyright: 2005-2006 Chris Wanstrath
+License:   MIT - http://www.opensource.org/licenses/mit-license.php
+
+Zend Framework
+--------------
+
+Doctrine contains ports of a few Zend components and has borrowed concepts and ideas from the Zend Framework project.
+
+Url:       http://framework.zend.com
+Copyright: Copyright © 2006-2007 by Zend Technologies, All rights reserved.

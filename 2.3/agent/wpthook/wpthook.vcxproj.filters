@@ -1,0 +1,648 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Third-Party">
+      <UniqueIdentifier>{56e63e9d-1a75-439a-a7fd-5745b0b56f3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\NCodeHook">
+      <UniqueIdentifier>{8895b285-595b-46b0-9e29-2becbc9105e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\distorm">
+      <UniqueIdentifier>{df374626-a802-47b9-a3c7-f012594bbc0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\distorm\Source Files">
+      <UniqueIdentifier>{ccb776cd-e97b-4008-9618-1f349f064c7f}</UniqueIdentifier>
+      <Extensions>c;cpp;cc;cxx</Extensions>
+    </Filter>
+    <Filter Include="Third-Party\CxImage">
+      <UniqueIdentifier>{eabee810-0378-4f4d-9468-e494b1dd5ab0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\CxImage\Header Files">
+      <UniqueIdentifier>{504ad415-dc74-436d-8a3b-6283fe2bc6d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\CxImage\Source Files">
+      <UniqueIdentifier>{09a1c042-901b-4a98-b21e-77130d309c0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\jpeg">
+      <UniqueIdentifier>{6706f0ab-14f6-498e-a431-6378a95e592d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\jpeg\Header Files">
+      <UniqueIdentifier>{d45cb167-62a8-4ebc-a045-352c5c5821bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\jpeg\Source Files">
+      <UniqueIdentifier>{4a71edcd-cb55-42d0-abb2-09f12d9d9d11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\Mongoose">
+      <UniqueIdentifier>{9f454a3f-2be3-4993-bba1-049bede3860c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared_mem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpthook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHook.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHookInstantiation.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="NCodeHook\NCodeHookItem.h">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\config.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\decoder.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\instructions.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\insts.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\operands.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\prefix.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\textdefs.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\wstring.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\src\x86defs.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\include\distorm.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="distorm\include\mnemonics.h">
+      <Filter>Third-Party\distorm</Filter>
+    </ClInclude>
+    <ClInclude Include="window_messages.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_winsock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_gdi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="track_dns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="track_sockets.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpthook_dll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_state.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="results.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="requests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="screen_capture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\stdint.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\xfile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximabmp.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximacfg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximadef.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximage.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximagif.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximaico.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximaiter.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximajas.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximajbg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximajpg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximamng.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximapcx.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximapng.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximapsd.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximaraw.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximaska.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximatga.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximath.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximatif.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximawbmp.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\ximawmf.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\xiofile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cximage\xmemfile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\cderror.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\cdjpeg.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jdct.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jerror.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jinclude.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jmemsys.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jmorecfg.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jpegint.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jpeglib.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jversion.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\transupp.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jconfig.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mongoose\mongoose.h">
+      <Filter>Third-Party\Mongoose</Filter>
+    </ClInclude>
+    <ClInclude Include="test_server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_test_hook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\wpt_test.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_chrome.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpthook.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NCodeHook\NCodeHook.cpp">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClCompile>
+    <ClCompile Include="NCodeHook\NCodeHookItem.cpp">
+      <Filter>Third-Party\NCodeHook</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\decoder.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\distorm.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\instructions.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\insts.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\include\mnemonics.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\operands.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\prefix.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\textdefs.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\wstring.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\x86defs.c">
+      <Filter>Third-Party\distorm\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_winsock.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_gdi.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="track_sockets.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="track_dns.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared_mem.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_state.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="results.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="request.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="requests.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="screen_capture.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\tif_xfile.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\xmemfile.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximabmp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximadsp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaenc.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaexif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximage.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximagif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximahist.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaico.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximainfo.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaint.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximajas.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximajbg.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximajpg.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximalpha.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximalyr.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximamng.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximapal.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximapcx.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximapng.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximapsd.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaraw.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximasel.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximaska.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximatga.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximath.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximatif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximatran.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximawbmp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximawmf.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cximage\ximawnd.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\wrtarga.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\cdjpeg.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jaricom.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcapimin.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcapistd.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcarith.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jccoefct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jccolor.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcdctmgr.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jchuff.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcinit.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcmainct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcmarker.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcmaster.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcomapi.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcparam.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcprepct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jcsample.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jctrans.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdapimin.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdapistd.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdarith.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdatadst.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdatasrc.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdcoefct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdcolor.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jddctmgr.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdhuff.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdinput.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdmainct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdmarker.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdmaster.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdmerge.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdpostct.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdsample.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jdtrans.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jerror.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jfdctflt.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jfdctfst.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jfdctint.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jidctflt.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jidctfst.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jidctint.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jmemmgr.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jmemnobs.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jquant1.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jquant2.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\jutils.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdbmp.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdcolmap.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdgif.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdppm.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdrle.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdswitch.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\rdtarga.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\transupp.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\wrbmp.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\wrgif.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\wrppm.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="jpeg\wrrle.c">
+      <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="inject.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mongoose\mongoose.c">
+      <Filter>Third-Party\Mongoose</Filter>
+    </ClCompile>
+    <ClCompile Include="test_server.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_test_hook.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\wpt_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_chrome.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wpthook.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
