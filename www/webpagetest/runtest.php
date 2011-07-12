@@ -211,6 +211,7 @@
                 $current_mode = 'urls';
                 if( strlen($bulkUrls) )
                 {
+                    $script = null;
                     $lines = explode("\n", $bulkUrls);
                     foreach( $lines as $line )
                     {
@@ -219,10 +220,23 @@
                         {
                             if( substr($line, 0, 1) == '[' )
                             {
+                                if( count($script) )
+                                {
+                                    $entry = ParseBulkScript($script);
+                                    if( $entry )
+                                        $bulk['urls'][] = $entry;
+                                    unset($script);
+                                }
+                                
                                 if( !strcasecmp($line, '[urls]') )
                                     $current_mode = 'urls';
                                 elseif(!strcasecmp($line, '[variations]'))
                                     $current_mode = 'variations';
+                                elseif(!strcasecmp($line, '[script]'))
+                                {
+                                    $script = array();
+                                    $current_mode = 'script';
+                                }
                                 else
                                     $current_mode = '';
                             }
@@ -238,7 +252,19 @@
                                 if( $entry )
                                     $bulk['variations'][] = $entry;
                             }
+                            elseif( $current_mode == 'script' )
+                            {
+                                $script[] = $line;
+                            }
                         }
+                    }
+                    
+                    if( count($script) )
+                    {
+                        $entry = ParseBulkScript($script);
+                        if( $entry )
+                            $bulk['urls'][] = $entry;
+                        unset($script);
                     }
                 }
                 
@@ -260,6 +286,8 @@
                                 $testData['discard'] = 0;
                             }
                         }
+                        if( $entry['s'] )
+                            $testData['script'] = $entry['s'];
                         $entry['id'] = CreateTest($testData, $entry['u']);
                         if( $entry['id'] )
                         {
@@ -589,7 +617,7 @@ function ValidateParameters(&$test, $locations, &$error)
 {
     if( strlen($test['script']) )
     {
-        $url = ValidateScript($test, $error);
+        $url = ValidateScript($test['script'], $error);
         if( isset($url) )
             $test['url'] = $url;
     }
@@ -743,14 +771,15 @@ function ValidateParameters(&$test, $locations, &$error)
 * @param mixed $test
 * @param mixed $error
 */
-function ValidateScript(&$test, &$error)
+function ValidateScript(&$script, &$error)
 {
-    FixScript($test, $test['script']);
+    global $test;
+    FixScript($test, $script);
     
     $navigateCount = 0;
     $ok = false;
     $url = null;
-    $lines = explode("\n", $test['script']);
+    $lines = explode("\n", $script);
     foreach( $lines as $line )
     {
         $tokens = explode("\t", $line);
@@ -775,6 +804,9 @@ function ValidateScript(&$test, &$error)
         $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
     else if( $navigateCount > 10 )
         $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
+    
+    if( strlen($error) )
+        unset($url);
     
     return $url;
 }
@@ -806,14 +838,14 @@ function FixScript(&$test, &$script)
                         if( $command == "csiVariable" )
                         {
                             $target = strtok("\r\n");
-			    if( isset($test['extract_csi']) )
-			    {
-				array_push($test['extract_csi'], $target);                                
-			    }
-			    else
-			    {
-				$test['extract_csi'] = array($target);
-			    }
+			                if( isset($test['extract_csi']) )
+			                {
+				                array_push($test['extract_csi'], $target);                                
+			                }
+			                else
+			                {
+				                $test['extract_csi'] = array($target);
+			                }
                             continue;
                         }
                         $newScript .= $command;
@@ -1354,6 +1386,44 @@ function ParseBulkVariation($line)
             $entry = array('l' => $label, 'q' => $query);
     }
 
+    return $entry;
+}
+
+/**
+* Parse a bulk script entry and create a test configuration from it
+* 
+* @param mixed $script
+*/
+function ParseBulkScript(&$script)
+{
+    global $test;
+    $entry = null;
+    
+    if( count($script) )
+    {
+        $s = '';
+        $entry = array();
+        foreach($script as $line)
+        {
+            if( !strncasecmp($line, 'label=', 6) )
+                $entry['l'] = trim(substr($line,6));
+            else
+            {
+                $s .= $line;
+                $s .= "\r\n";
+            }
+        }
+
+        $entry['u'] = ValidateScript($s, $error);
+                
+        if( strlen($entry['u']) )
+            $entry['s'] = $s;
+        else
+        {
+            unset($entry);
+        }
+    }
+    
     return $entry;
 }
 ?>
