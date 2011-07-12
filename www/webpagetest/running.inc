@@ -21,6 +21,13 @@
             require_once('testStatus.inc');
             $tab = 'Test Result';
             include 'header.inc';
+            if( !isset($test) )
+            {
+                echo "<h3>Test Not Found</h3>\n";
+                echo "<p>Sorry, the test you requested could not be found.</p>";
+            }
+            else
+            {
             ?>
             <div id="runningHeader">
                 <p>
@@ -69,7 +76,7 @@
             <br>
             <?php include('./ads/test_progress_bottom.inc'); ?>
             <br>
-            <?php include('footer.inc'); ?>
+            <?php } include('footer.inc'); ?>
         </div>
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
