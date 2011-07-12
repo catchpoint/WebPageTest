@@ -71,7 +71,7 @@
             $tabs['Test Result'] = $resultUrl;
         }
 
-        $tabs['Test History'] = FRIENDLY_URLS ? '/testlog/1' : '/testlog.php?days=1';
+        $tabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
 
         if( is_dir('wptmonitor') )
             $tabs['Monitor'] = '/wptmonitor/';
@@ -97,7 +97,16 @@
         }
 
         if (!$privateInstall)
+        {
             echo '<div class="gplusone"><g:plusone size="small" href="http://www.webpagetest.org/"></g:plusone></div>';
+            echo "<script type=\"text/javascript\">
+                    (function() {
+                      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+                      po.src = 'https://apis.google.com/js/plusone.js';
+                      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+                    })();
+                  </script>";
+        }
 ?></ul>
 
 </div>
@@ -245,6 +254,7 @@ if( !strcasecmp('Test Result', $tab) && !$nosubheader )
 */
 function GetGrades(&$pageData, &$test, $id, $run)
 {
+    global $test;
     $grades = array();
     if($pageData['optimization_checked'])
     {
@@ -252,7 +262,8 @@ function GetGrades(&$pageData, &$test, $id, $run)
 
         $opt = getOptimizationGrades($pageData, $test, $id, $run);
 
-        $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
+        if( $test['testinfo']['view'] != 'simple' )
+            $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
         $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => $opt['image_compression']['label']);
