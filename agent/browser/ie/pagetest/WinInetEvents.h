@@ -59,4 +59,5 @@ protected:
 	CAtlMap<DWORD, CWinInetRequest *>	winInetThreadSends;
 	bool	forceDone;
 	void AddAuthHeader(HINTERNET hRequest, CWinInetRequest * r );
+  void OverrideHost(CWinInetRequest * r);
 };
