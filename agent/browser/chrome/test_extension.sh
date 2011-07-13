@@ -29,29 +29,40 @@ CHROME='google-chrome'
 # Path to a temp directory.
 TEMP="/tmp/test_extension/$$"
 
-java -jar ${CLOSURE_COMPILER_JAR} \
- --js              extension/background.js \
- --js_output_file  /dev/null \
- --warning_level VERBOSE \
- --externs externs.js \
+# Command to check js sources for syntax and type errors.
+COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
+  --root=third_party/closure-library/
+  --root=wpt
+  --compiler_jar=${CLOSURE_COMPILER_JAR}
+  --compiler_flags=--warning_level=VERBOSE
+  --compiler_flags=--externs=../externs.js
+  --output_mode=script
+  --output_file=/dev/null"
+
+
+# Compile the background page.
+${COMPILE_JS} \
+  --input=wpt/background.js \
   || exit "Closure compiler returned $?";
 
-java -jar ${CLOSURE_COMPILER_JAR} \
- --js              extension/script.js \
- --js_output_file  /dev/null \
- --warning_level VERBOSE \
- --externs externs.js \
+${COMPILE_JS} \
+  --input=wpt/script.js \
   || exit "Closure compiler returned $?";
 
-mkdir -p ${TEMP} || (echo "Can't create temp dir"; exit 1)
+${COMPILE_JS} \
+  --input='wpt/allTests.js' \
+  || exit "Closure compiler returned $?";
 
+
+# Launch chrome, load the extension.
+mkdir -p ${TEMP} || exit "Can't create temp dir";
 USER_DATA_DIR="${TEMP}/user_data/";
 echo "User data dir is ${USER_DATA_DIR}.";
 
 ${CHROME} \
   --user-data-dir=${USER_DATA_DIR} \
   --no-first-run \
-  --load-extension=extension \
+  --load-extension=. \
   --new-window 'chrome://extensions' \
   --no-experiments \
   --no-default-browser-check \
