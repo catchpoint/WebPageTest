@@ -157,6 +157,7 @@ public:
 	DWORD	maxSimFlagged;		// Maximum number of simultaneous flagged connections
 	DWORD	flaggedRequests;	// number of flagged requests
 	CAtlList<CString>	blockedRequests;	// list of requests that were blocked
+	CAtlList<CString>	blockedAdRequests;	// list of ad requests that were blocked
 
 	// optimization aggregates
 	DWORD	gzipTotal;

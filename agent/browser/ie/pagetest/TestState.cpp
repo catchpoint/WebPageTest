@@ -54,6 +54,8 @@ CTestState::CTestState(void):
 	,cacheCleared(false)
   ,heartbeatEvent(NULL)
 {
+	// Load the ad regular expressions from disk.
+	LoadAdPatterns();
 }
 
 CTestState::~CTestState(void)
@@ -250,13 +252,15 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("Check Optimizations"), checkOpt);
 					ignoreSSL = 0;
 					key.QueryDWORDValue(_T("ignoreSSL"), ignoreSSL);
-          clearShortTermCacheSecs = 0;
+					blockads = 0;
+					key.QueryDWORDValue(_T("blockads"), blockads);
+					clearShortTermCacheSecs = 0;
 					key.QueryDWORDValue(_T("clearShortTermCacheSecs"), clearShortTermCacheSecs);
-          aft = 0;
+			        aft = 0;
 					key.QueryDWORDValue(_T("AFT"), aft);
-          aftEarlyCutoff = 25;
+					aftEarlyCutoff = 25;
 					key.QueryDWORDValue(_T("aftEarlyCutoff"), aftEarlyCutoff);
-          aftMinChanges = 25;
+					aftMinChanges = 25;
 					key.QueryDWORDValue(_T("aftMinChanges"), aftMinChanges);
 					noHeaders = 0;
 					key.QueryDWORDValue(_T("No Headers"), noHeaders);

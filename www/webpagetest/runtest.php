@@ -82,6 +82,7 @@
         $test['aftEarlyCutoff'] = (int)$req_aftec;
         $test['aftMinChanges'] = (int)$req_aftmc;
         $test['tcpdump'] = $req_tcpdump;
+        $test['blockads'] = $req_blockads;
         $test['sensitive'] = $req_sensitive;
         $test['type'] = trim($req_type);
         $test['noopt'] = trim($req_noopt);
@@ -669,6 +670,12 @@ function ValidateParameters(&$test, $locations, &$error)
                 $test['tcpdump'] = 1;
             else
                 $test['tcpdump'] = 0;
+                
+            // make sure blockads is explicitly 1 or 0
+            if( $test['blockads'] )
+                $test['blockads'] = 1;
+            else
+                $test['blockads'] = 0;
 
             // make sure sensitive is explicitly 1 or 0
             if( $test['sensitive'] )
@@ -1257,6 +1264,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "\r\nignoreSSL=1";
         if( $test['tcpdump'] )
             $testFile .= "\r\ntcpdump=1";
+        if( $test['blockads'] )
+            $testFile .= "\r\nblockads=1";
         if( $test['video'] )
             $testFile .= "\r\nCapture Video=1";
         if( $test['aft'] )

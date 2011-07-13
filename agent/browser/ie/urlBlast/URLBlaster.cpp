@@ -941,6 +941,10 @@ void CURLBlaster::ConfigurePagetest(void)
 		  RegSetValueEx(hKey, _T("aftMinChanges"), 0, REG_DWORD, (const LPBYTE)&info.aftMinChanges, sizeof(info.aftMinChanges));
 		  RegSetValueEx(hKey, _T("aftEarlyCutoff"), 0, REG_DWORD, (const LPBYTE)&info.aftEarlyCutoff, sizeof(info.aftEarlyCutoff));
 
+		  // Add the blockads bit.
+		  RegSetValueEx(hKey, _T("blockads"), 0, REG_DWORD, (const LPBYTE)&info.blockads, sizeof(info.blockads));
+
+
 			RegDeleteValue(hKey, _T("Block"));
 			if( !info.block.IsEmpty() )
 				RegSetValueEx(hKey, _T("Block"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.block, (info.block.GetLength() + 1) * sizeof(TCHAR));

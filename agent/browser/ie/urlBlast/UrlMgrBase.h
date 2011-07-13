@@ -35,6 +35,7 @@ public:
 		host.Empty();
     browser.Empty();
     tcpdump = false;
+	blockads = 0;
     aft = 0;
     aftMinChanges = 0;
     aftEarlyCutoff = 25;
@@ -81,6 +82,7 @@ public:
 	double	plr;				  // packet loss
 	bool	ipfw;				    // do we need to do a custom bandwidth?
   DWORD  tcpdump;       // packet capture?
+  DWORD  blockads;
   CString tcpdumpFile;
   DWORD aft;            // above-the-fold time
   DWORD aftEarlyCutoff;

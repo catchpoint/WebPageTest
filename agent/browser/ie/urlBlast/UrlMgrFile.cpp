@@ -171,6 +171,8 @@ bool CUrlMgrFile::GetNextUrl(CTestInfo &info)
 													saveHTML = _ttol(value) != 0;
 												else if( !key.CompareNoCase(_T("Block")) )
 													info.block = value;
+												else if( !key.CompareNoCase(_T("blockads")) )
+													info.blockads = _ttol(value);
 												else if( !key.CompareNoCase(_T("Basic Auth")) )
 													info.basicAuth = value;
 												else if( !key.CompareNoCase(_T("runs")) )

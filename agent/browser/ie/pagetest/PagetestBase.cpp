@@ -49,6 +49,7 @@ CPagetestBase::CPagetestBase(void):
 	, hBrowserWnd(NULL)
 	, ieMajorVer(0)
 	, ignoreSSL(0)
+	, blockads(0)
   , clearShortTermCacheSecs(0)
   , _SetGDIWindow(NULL)
   , _SetGDIWindowUpdated(NULL)
@@ -827,6 +828,71 @@ bool  CPagetestBase::BrowserWindowUpdated()
     ret = _GDIWindowUpdated();
   return ret;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool  CPagetestBase::IsAdRequest(CString fullUrl)
+{
+  POSITION pos = adPatterns.GetHeadPosition();
+  while( pos ) 
+  {
+    CString blockPattern = adPatterns.GetNext(pos);
+	if( fullUrl.Find(blockPattern) != -1 )
+    {
+	  ATLTRACE(_T("[Pagetest] - *** IsAdRequest: Matched - %s"), fullUrl);
+	  return true;
+    }
+  }
+  return false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  CPagetestBase::LoadAdPatterns()
+{
+  TCHAR iniFile[MAX_PATH];
+  iniFile[0] = 0;
+  GetModuleFileName(reinterpret_cast<HMODULE>(&__ImageBase), iniFile, _countof(iniFile));
+  lstrcpy( PathFindFileName(iniFile), _T("adblock.txt") );
+
+  CString fileName = CString(iniFile);
+  HANDLE hFile = CreateFile(fileName, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+
+  if( hFile != INVALID_HANDLE_VALUE )
+  {
+	  DWORD len = GetFileSize(hFile,NULL);
+	  if( len )
+	  {
+		  LPBYTE szUrl = (LPBYTE)malloc(len + 1);
+		  DWORD read;
+		  if( ReadFile(hFile, szUrl, len, &read, 0) )
+		  {
+			  CString file((const char *)szUrl);
+			  free(szUrl);
+			  int pos = 0;
+			  CString line = file.Tokenize(_T("\r\n"), pos);
+			   while( pos >= 0 )
+			   {
+				   line.Trim();
+				   adPatterns.AddTail(line);
+				   // on to the next line
+				   line = file.Tokenize(_T("\r\n"), pos);
+			   }
+		  }
+		  else
+		  {
+			  // Free the memory allocated incase the file can't be read.
+  			  free(szUrl);
+		  }
+	  }
+	  CloseHandle(hFile);
+  }
+  else
+  {
+  	  ATLTRACE(_T("[Pagetest] - *** LoadAdPatterns: Error loading file. %s"), iniFile);
+  }
+}
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

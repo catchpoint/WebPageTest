@@ -187,6 +187,7 @@ void CPagetestReporting::Reset(void)
 		tcpRetrans = 0;
 		
 		blockedRequests.RemoveAll();
+		blockedAdRequests.RemoveAll();
 
 		if (pagespeedResults != NULL) {
 			delete pagespeedResults;
@@ -1268,6 +1269,19 @@ void CPagetestReporting::GenerateReport(CString &szReport)
 		while( pos )
 		{
 			CString request = blockedRequests.GetNext(pos);
+			if( request.GetLength() )
+				szReport += request + _T("\n");
+		}
+		szReport += _T("\n");
+	}
+
+	if( !blockedAdRequests.IsEmpty() )
+	{
+		szReport += _T("\nBlocked Ad Requests:\n");
+		pos = blockedAdRequests.GetHeadPosition();
+		while( pos )
+		{
+			CString request = blockedAdRequests.GetNext(pos);
 			if( request.GetLength() )
 				szReport += request + _T("\n");
 		}

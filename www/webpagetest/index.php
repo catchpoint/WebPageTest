@@ -316,6 +316,13 @@ $loc = ParseLocations($locations);
 
                             <div id="block" class="test_subbox">
                                 <p>
+                                    <input type="checkbox" name="blockads" id="blockads" class="checkbox" style="float: left;width: auto;">
+                                    <label for="blockads" class="auto_width">
+                                        Block ads (defined by adblockrules.org)
+                                    </label>
+                                </p>
+                                <br>
+                                <p>
                                     <label for="block_requests_containing" class="full_width">
                                         Block Requests Containing...<br>
                                         <small>Space separated list</small>

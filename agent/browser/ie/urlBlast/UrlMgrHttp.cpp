@@ -245,7 +245,9 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 							else if( !key.CompareNoCase(_T("ignoreSSL")) )
 								info.ignoreSSL = _ttol(value);
 							else if( !key.CompareNoCase(_T("tcpdump")) )
-                info.tcpdump = _ttol(value);
+								info.tcpdump = _ttol(value);
+							else if( !key.CompareNoCase(_T("blockads")) )
+								info.blockads = _ttol(value);
 							else if( !key.CompareNoCase(_T("connections")) )
 								info.connections = _ttol(value);
 							else if( !key.CompareNoCase(_T("Harvest Links")) )
@@ -331,8 +333,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 					if( saveCookies )
 						info.cookiesFile = workDir + context->fileRunBase;
 
-          if( info.tcpdump )
-            info.tcpdumpFile = workDir + context->fileRunBase + _T(".cap");
+					if( info.tcpdump )
+						info.tcpdumpFile = workDir + context->fileRunBase + _T(".cap");
 
 					// save out the script if there is one
 					if( script.GetLength() )

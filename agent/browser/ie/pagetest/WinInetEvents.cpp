@@ -629,8 +629,10 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 {
 	void * context = NULL;
 	block = false;
+	bool is_ad = false;
 	
 	ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - BeforeHttpOpenRequest : flags - 0x%08X %s %s\n"), GetCurrentThreadId(), hConnect, dwFlags, (LPCTSTR)verb, (LPCTSTR)object);
+
 
 	if( !active && available && CheckABM() )
 	{
@@ -659,6 +661,15 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 			CString host;
 			winInetConnections.Lookup(hConnect, host);
 			CString fullUrl = host + object;
+
+			// Block ads.
+			if( blockads && IsAdRequest(fullUrl) )
+			{
+				is_ad = true;
+				block = true;
+			}
+
+			// Block requests containing the given string.
 			POSITION pos = blockRequests.GetHeadPosition();
 			while( pos && !block )
 			{
@@ -668,7 +679,9 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 					block = true;
 			}
 			
-			if( block )
+			if( is_ad && block )
+				blockedAdRequests.AddTail(fullUrl);
+			else if( block )
 				blockedRequests.AddTail(fullUrl);
 			else
 			{

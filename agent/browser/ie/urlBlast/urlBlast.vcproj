@@ -100,8 +100,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying ini file to output directory"
-				CommandLine="copy /Y *.ini &quot;$(outdir)\\&quot;"
+				Description="Copying ini files and required txt files to output directory"
+				CommandLine="copy /Y *.ini &quot;$(outdir)\\&quot;&#x0D;&#x0A;copy /Y adblock.txt &quot;$(outdir)\\&quot;"
 			/>
 		</Configuration>
 		<Configuration

@@ -168,6 +168,8 @@ public:
 	CString						endRequest;		// request to force end
 	CAtlList<CString>			blockRequests;	// which requests to block
 	CString						basicAuth;		// basic auth login to use
+  DWORD           blockads;
+  CAtlList<CString>	adPatterns;
   DWORD           aft;          // above-the fold measurement enabled?
   DWORD           aftMinChanges;
   DWORD           aftEarlyCutoff;
@@ -270,6 +272,8 @@ public:
   bool FindBrowserWindow();
   HWND FindBrowserDocument(HWND parent_window);
   bool  BrowserWindowUpdated();
+  bool IsAdRequest(CString fullUrl);
+  void LoadAdPatterns();
   void  SetBrowserWindowUpdated(bool updated);
 	void	ChromeFrame(CComPtr<IChromeFrame> chromeFrame);
 	
