@@ -120,6 +120,15 @@
     ?>
     <div class="cleared"></div>
     
+    <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
+    <?php
+    if (!$privateInstall)
+    {
+        echo    "<script type=\"text/javascript\" src=\"https://apis.google.com/js/plusone.js\">
+                    {parsetags: 'explicit'}
+                </script>\n";
+    }
+    ?>
     <script type="text/javascript">
         function showFeeds(column)
         {
@@ -129,8 +138,18 @@
             document.getElementById("more_feeds_" + column).className = "";
             return false;
         }
+        <?php
+        if (!$privateInstall)
+        {
+            echo    '(function($) {
+                        $(window).load(function() {
+                            gapi.plusone.go();
+                        });
+                    })(jQuery);
+                    ';
+        }
+        ?>
     </script>
-    <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
     <?php
     if(extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_footer();

@@ -99,13 +99,6 @@
         if (!$privateInstall)
         {
             echo '<div class="gplusone"><g:plusone size="small" href="http://www.webpagetest.org/"></g:plusone></div>';
-            echo "<script type=\"text/javascript\">
-                    (function() {
-                      var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
-                      po.src = 'https://apis.google.com/js/plusone.js';
-                      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
-                    })();
-                  </script>";
         }
 ?></ul>
 
