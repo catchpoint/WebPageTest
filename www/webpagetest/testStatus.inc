@@ -129,59 +129,8 @@ function GetTestStatus($id, $includePosition = true)
             {
                 if( $includePosition )
                 {
-                    $found = false;
-                    $count = 0;
-                    
-                    // get it's position in line
-                    if( isset($test['test']['loc']) )
-                    {
-                        if( !isset($testQueue[$test['test']['loc']]) )
-                        {
-                            $workDir = $locations[$test['test']['loc']]['localDir'];
-                            
-                            // get a list of all of the files in the directory and store them indexed by filetime
-                            $files = array();
-                            $f = scandir($workDir);
-                            foreach( $f as $file )
-                            {
-                                $fileTime = filemtime("$workDir/$file");
-                                if( $fileTime && !isset($files[$fileTime]) )
-                                    $files[$fileTime] = $file;
-                                else
-                                    $files[] = $file;
-                            }
-                            
-                            // sort it by time
-                            ksort($files);
-                            $testQueue[$test['test']['loc']] = $files;
-                        }
-                        
-                        // loop by priority until I find the test I'm looking for
-                        $testId;
-                        
-                        // loop through all of the possible extension types in priority order
-                        $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
-                        foreach( $priority as $ext )
-                        {
-                            foreach( $testQueue[$test['test']['loc']] as $file )
-                            {
-                                $parts = pathinfo($file);
-                                if( !strcasecmp( $parts['extension'], $ext) )
-                                {
-                                    $testId = basename($file, ".$ext");;
-                                    if( $testId == $id )
-                                    {
-                                        $found = true;
-                                        break 2;
-                                    }
-                                    else
-                                        $count++;
-                                }
-                            }
-                        }
-                    }
-                    
-                    if( $found )
+                    $count = FindJobPosition($testInfoJson['workdir'], $id);
+                    if( $count >= 0 )
                     {
                         $ret['statusCode'] = 101;
                         $ret['behindCount'] = $count;

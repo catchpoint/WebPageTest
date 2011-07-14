@@ -87,7 +87,20 @@ $page_description = "Comparison Test$testLabel.";
                     <ul class="input_fields">
                         <li><input type="text" name="testurl" id="testurl" value="Enter a Website URL" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
-                            <label for="location">Test From</label>
+                            <label for="location">Test From<br><small id="locinfo">(Using IE 8 on DSL)</small></label>
+                            <select name="pssloc" id="pssloc">
+                                <option value="US_East" selected>US East (Virginia)</option>
+                                <option value="US_West">US West (California)</option>
+                                <option value="Europe">Europe (Ireland)</option>
+                                <option value="Asia_Singapore">Asia (Singapore)</option>
+                                <option value="Asia_Tokyo">Asia (Tokyo)</option>
+                                <option value="other">More Configurations...</option>
+                            </select>
+                        </li>
+                    </ul>
+                    <ul class="input_fields hidden" id="morelocs">
+                        <li>
+                            <label for="location">Location</label>
                             <select name="where" id="location">
                                 <?php
                                 foreach($loc['locations'] as &$location)
@@ -150,6 +163,8 @@ $page_description = "Comparison Test$testLabel.";
                                 </tr>
                             </table>
                         </li>
+                    </ul>
+                    <ul class="input_fields">
                         <li>
                             <label for="wait">Expected Wait</label>
                             <span id="wait"></span>
@@ -160,7 +175,7 @@ $page_description = "Comparison Test$testLabel.";
 
             <div id="start_test-container">
                 <p><input id="start_test-button" type="submit" name="submit" value="" class="start_test"></p>
-                <p><a href="/pss_samples.php">View Sample Tests</a></p>
+                <p><a href="http://code.google.com/speed/pss/gallery.html">View Sample Tests</a></p>
             </div>
             <div class="cleared"><br></div>
 
@@ -240,6 +255,22 @@ $page_description = "Comparison Test$testLabel.";
                 
                 return true;
             }
+
+            $("#pssloc").change(function(){
+                var loc = $('#pssloc').val(); 
+                if( loc == 'other' )
+                {
+                    $('#morelocs').show();
+                    $('#locinfo').hide();
+                }
+                else
+                {
+                    $('#morelocs').hide();
+                    $('#locinfo').show();
+                    $('#location').val(loc); 
+                    LocationChanged();
+                }
+            });
         </script>
     </body>
 </html>

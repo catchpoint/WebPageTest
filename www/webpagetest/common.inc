@@ -1334,4 +1334,140 @@ function GetTesterCount($location)
     
     return $count;
 }
+
+/**
+* Add a job to the work queue (assume it is locked)
+*/
+function AddJobFile($workDir, $file, $priority)
+{
+    $ret = false;
+    if( LoadJobQueue($workDir, $queue) )
+    {
+        if( array_push($queue[$priority], $file) )
+            $ret = SaveJobQueue($workDir, $queue);
+    }
+    return $ret;
+}
+
+/**
+* Get a job from the given work queue (assume it is locked)
+*/
+function GetJobFile($workDir)
+{
+    $file = null;
+    
+    if( LoadJobQueue($workDir, $queue) )
+    {
+        $priority = 0;
+        while( !isset($file) && $priority <= 9 )
+        {
+            $file = array_shift($queue[$priority]);
+            $priority++;
+        }
+
+        if( isset($file) )
+        {
+            $file = "$workDir/$file";
+            $ret = SaveJobQueue($workDir, $queue);
+        }
+    }
+
+    return $file;
+}
+
+/**
+* Find the position in the work queue for the given test (assume it is locked)
+*/
+function FindJobPosition($workDir, $testId)
+{
+    $count = 0;
+    $found = false;
+
+    if( LoadJobQueue($workDir, $queue) )
+    {
+        $priority = 0;
+        while( !$found && $priority <= 9 )
+        {
+            foreach($queue[$priority] as $file)
+            {
+                if( stripos($file, $testId) !== false )
+                    $found = true;
+                else
+                    $count++;
+            }
+            $priority++;
+        }
+    }
+    
+    if( !$found )
+        $count = -1;
+        
+    return $count;
+}
+
+/**
+* Load the job queue from disk
+*/
+function LoadJobQueue($workDir, &$queue)
+{
+    $ret = true;
+    
+    $queueName = sha1($workDir);
+    $queueFile = "./tmp/$queueName.queue";
+    if( is_file($queueFile) )
+        $queue = json_decode(file_get_contents($queueFile), true);
+    else
+    {
+        // build the queue from disk
+        $files = array();
+        $f = scandir($workDir);
+        foreach( $f as $file )
+        {
+            if( is_file("$workDir/$file") )
+            {
+                $fileTime = filemtime("$workDir/$file");
+                if( $fileTime && !isset($files[$fileTime]) )
+                    $files[$fileTime] = $file;
+                else
+                    $files[] = $file;
+            }
+        }
+
+        // sort it by time
+        ksort($files);
+        
+        // now add them to the various priority queues
+        $queue = array();
+        for($priority = 0; $priority <= 9; $priority++)
+            $queue[$priority] = array();
+            
+        foreach($files as $file)
+        {
+            if( stripos($file, '.url') )
+                $queue[0][] = $file;
+            else if( preg_match('/\.p[1-9]/i', $file, $matches) )
+            {
+                $priority = (int)$matches[1];
+                $queue[$priority][] = $file;
+            }
+        }
+        
+        SaveJobQueue($workDir, $queue);
+    }
+    
+    return $ret;
+}
+
+/**
+* Save the job queue to disk
+*/
+function SaveJobQueue($workDir, &$queue)
+{
+    $ret = false;
+    $queueName = sha1($workDir);
+    if( file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+        $ret = true;
+        
+    return $ret;
+}
 ?>

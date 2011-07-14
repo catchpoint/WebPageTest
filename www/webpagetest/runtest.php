@@ -1028,7 +1028,9 @@ function SubmitUrl($testId, $testData, &$test, $url)
     {
         if( flock($lockFile, LOCK_EX) )
         {
-            if( file_put_contents($test['workdir'] . "/$testId.$ext", $out) )
+            $fileName = "$testId.$ext";
+            $file = $test['workdir'] . "/$fileName";
+            if( file_put_contents($file, $out) )
             {
                 $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
                 if( !$tests )
@@ -1043,6 +1045,8 @@ function SubmitUrl($testId, $testData, &$test, $url)
                 file_put_contents("./tmp/$location.tests", json_encode($tests));
                 $ret = true;
             }
+            
+            AddJobFile($test['workdir'], $fileName, $test['priority']);
         }
         fclose($lockFile);
     }

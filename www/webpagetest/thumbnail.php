@@ -1,4 +1,13 @@
 <?php
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('tbnDrawWaterfall');
+    newrelic_add_custom_tracer('tbnDrawChecklist');
+    newrelic_add_custom_tracer('GenerateThumbnail');
+    newrelic_add_custom_tracer('SendImage');
+    newrelic_add_custom_tracer('getRequests');
+    newrelic_add_custom_tracer('loadPageRunData');
+}
+
 if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['HTTP_IF_MODIFIED_SINCE'])))
 {
     header("HTTP/1.0 304 Not Modified");
@@ -9,15 +18,6 @@ else
     include 'object_detail.inc'; 
     require_once('page_data.inc');
     $file = $_GET['file'];
-
-    if(extension_loaded('newrelic')) { 
-        newrelic_add_custom_tracer('tbnDrawWaterfall');
-        newrelic_add_custom_tracer('tbnDrawChecklist');
-        newrelic_add_custom_tracer('GenerateThumbnail');
-        newrelic_add_custom_tracer('SendImage');
-        newrelic_add_custom_tracer('getRequests');
-        newrelic_add_custom_tracer('loadPageRunData');
-    }
 
     // make sure nobody is trying to use us to pull down external images from somewhere else
     if( strpos($file, ':') === FALSE &&

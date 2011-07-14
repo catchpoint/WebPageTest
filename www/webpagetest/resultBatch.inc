@@ -64,6 +64,11 @@ $page_description = "Bulk website performance test result$testLabel.";
                 margin-left: auto;
                 margin-right: auto;
             }
+            #pimg {
+                z-index: 999999;
+                display: none;
+                position: absolute;
+            }
             <?php
             if( $simpleView )
                 echo "#nav_bkg {display:none;}\n";
@@ -145,7 +150,7 @@ $page_description = "Bulk website performance test result$testLabel.";
                         <p>Here are some resources you can browse while you wait for testing to complete (all open in new browser tabs):</p>
                         <ul class="bullet_list">
                         <li><a href="http://code.google.com/speed/pss" target="_blank">Page Speed Service home page</a> - information about the service</li>
-                        <li><a href="/pss_samples.php" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the Page Speed Service</li>
+                        <li><a href="http://code.google.com/speed/pss/gallery.html" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the Page Speed Service</li>
                         </ul>
                         </div>
                         <?php
@@ -156,6 +161,37 @@ $page_description = "Bulk website performance test result$testLabel.";
                 ?>
             </div>
             <?php include('footer.inc'); ?>
+            <script type="text/javascript">
+                /*
+                 * jQuery Pimg (Preview image) 
+                 * Written by Dave Earley ( http://Bitsntuts.com )
+                 */
+                function pimg()
+                {
+                    this.xOffset = 10;
+                    this.yOffset = 300;
+                    $("img.pimg").hover(function (e)
+                    {
+                        this.img_title = this.title;
+                        this.title = "";
+                        var img_src = $(this).attr('img_src');
+                        var desc = (this.img_title != "") ? "<h3>" + this.img_title + "</h3>" : "";
+                        var image = (img_src) ? img_src : this.src;
+                        $("body").append("<div id='pimg'><img src='" + image + "' alt='Image preview' />" + desc + "</div>");
+                        $("#pimg").css("top", (e.pageY - yOffset) + "px").css("left", (e.pageX + xOffset) + "px");
+                        $("#pimg").show();
+                    }, function ()
+                    {
+                        this.title = this.img_title;
+                        $("#pimg").remove();
+                    });
+                    $("img.pimg").mousemove(function (e)
+                    {
+                        $("#pimg").css("top", (e.pageY - yOffset) + "px").css("left", (e.pageX + xOffset) + "px");
+                    });
+                };
+                pimg();
+            </script>
         </div>
     </body>
 </html>
@@ -308,19 +344,22 @@ function DisplaySimple(&$tests, $video, &$dirty)
         $rvRenderTime = null;
         $id = $test['id'];
         RestoreTest($id);
-        $testPath = './' . GetTestPath($id);
+        $test['path'] = GetTestPath($id);
+        $testPath = './' . $test['path'];
         if( $test['c'] )
         {
             $pageData = loadAllPageData($testPath);
             if( CountSuccessfulTests($pageData, 0) )
             {
                 $fvMedian = GetMedianRun($pageData, 0);
+                $test['fvMedian'] = $fvMedian;
                 $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
                 $fvRenderTime = $pageData[$fvMedian][0]['render'];
             }
             if( CountSuccessfulTests($pageData, 1) )
             {
                 $rvMedian = GetMedianRun($pageData, 1);
+                $test['rvMedian'] = $rvMedian;
                 $rvLoadTime = $pageData[$rvMedian][1]['loadTime'];
                 $rvRenderTime = $pageData[$rvMedian][1]['render'];
             }
@@ -373,7 +412,9 @@ function DisplaySimple(&$tests, $video, &$dirty)
             $testurl = "/results.php?test={$test['id']}";
             if( FRIENDLY_URLS )
                 $testurl = "/result/{$test['id']}/";
-            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
+            $path = $test['path'];
+            $run = $test['fvMedian'];
+            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
             if( $count )
                 echo "<td></td>";
             $count++;
