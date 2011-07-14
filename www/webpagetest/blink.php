@@ -22,6 +22,10 @@ $page_description = "Comparison Test$testLabel.";
     <head>
         <title>WebPagetest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
+        <style type="text/css">
+            #nav_bkg {display:none;}
+            .test_box input.text.large {width: 300px; margin-right: 10px;}
+        </style>
     </head>
     <body>
         <div class="page">
@@ -44,6 +48,8 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="runs" value="5">
             <input type="hidden" name="bulkurls" value="">
+            <input type="hidden" name="mv" value="1">
+            <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
             <?php
             if( strlen($secret) ){
@@ -65,9 +71,12 @@ $page_description = "Comparison Test$testLabel.";
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="testurl" id="testurl" value="Enter a Website URL" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="original_1" id="original_1" value="Enter original URL 1" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}">
+                        <input type="text" name="blink_1" id="blink_1" value="Enter blink URL 1" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="original_2" id="original_2" value="Enter original URL 2" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}">
+                        <input type="text" name="blink_2" id="blink_2" value="Enter blink URL 2" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
-                            <label for="location">Test Location</label>
+                            <label for="location">Test From</label>
                             <select name="where" id="location">
                                 <?php
                                 foreach($loc['locations'] as &$location)
@@ -81,12 +90,11 @@ $page_description = "Comparison Test$testLabel.";
                                 ?>
                             </select>
                             <?php if( $settings['map'] ) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
+                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
-                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                             <span class="cleared"></span>
                         </li>
-                        <li>
+                        <li class="hidden">
                             <label for="browser">Browser</label>
                             <select name="browser" id="browser">
                                 <?php
@@ -130,6 +138,10 @@ $page_description = "Comparison Test$testLabel.";
                                     ?>
                                 </tr>
                             </table>
+                        </li>
+                        <li>
+                            <label for="wait">Expected Wait</label>
+                            <span id="wait"></span>
                         </li>
                     </ul>
                 </div>
@@ -189,7 +201,50 @@ $page_description = "Comparison Test$testLabel.";
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
+        <script type="text/javascript">
+            function PrepareBlinkTest(form)
+            {
+                var o1 = form.original_1.value;
+                var o2 = form.original_2.value;
+                var b1 = form.blink_1.value;
+                var b2 = form.blink_2.value;
+                if( o1 == "" || o1.indexOf(' ') >= 0 )
+                {
+                    alert( "Please enter an original URL to test." );
+                    form.original_1.focus();
+                    return false;
+                }
+                if( o2 == "" || o2.indexOf(' ') >= 0 )
+                {
+                    alert( "Please enter an original URL to test." );
+                    form.original_2.focus();
+                    return false;
+                }
+                if( b1 == "" || b1.indexOf(' ') >= 0 )
+                {
+                    alert( "Please enter a blink URL to test." );
+                    form.blink_1.focus();
+                    return false;
+                }
+                if( b2 == "" || b2.indexOf(' ') >= 0 )
+                {
+                    alert( "Please enter a blink URL to test." );
+                    form.blink_2.focus();
+                    return false;
+                }
+                
+                form.label.value = 'Blink Comparison';
+                
+                // build the batch-url list
+                var batch = "[script]\nlabel=Original\nlogdata\t0\nnavigate\t" + o1 + "\nlogdata\t1\nnavigate\t" + o2 +"\n";
+                batch += "[script]\nlabel=Optimized\nlogdata\t0\nnavigate\t" + b1 + "\nlogdata\t1\nnavigate\t" + b2 +"\n";
+                form.bulkurls.value=batch;
+                
+                return true;
+            }
+
+        </script>
     </body>
 </html>
 
@@ -204,22 +259,32 @@ function LoadLocations()
     $locations = parse_ini_file('./settings/locations.ini', true);
     BuildLocations($locations);
     
-    FilterLocations( $locations );
+    FilterLocations( $locations, 'blink', array('IE', '6', '7', '8', '9', 'dynaTrace') );
     
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
     {
-        // count the number of tests at each location
-        if( isset($loc['localDir']) )
+        if( isset($loc['browser']) )
         {
-            $loc['backlog'] = CountTests($loc['localDir']);
-            unset( $loc['localDir'] );
+            GetPendingTests($index, $count, $avgTime);
+            if( !$avgTime )
+                $avgTime = 30;  // default to 30 seconds if we don't have any history
+            $loc['backlog'] = $count;
+            $loc['avgTime'] = $avgTime;
+            $loc['testers'] = GetTesterCount($index);
+            $loc['wait'] = -1;
+            if( $loc['testers'] )
+            {
+                $testCount = 10;
+                if( $loc['testers'] > 1 )
+                    $testCount = 5;
+                $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
+            }
         }
         
-        if( isset($loc['key']) )
-            unset( $loc['key'] );
-        if( isset($loc['remoteDir']) )
-            unset( $loc['remoteDir'] );
+        unset( $loc['localDir'] );
+        unset( $loc['key'] );
+        unset( $loc['remoteDir'] );
     }
     
     return $locations;

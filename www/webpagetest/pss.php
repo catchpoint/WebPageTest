@@ -22,6 +22,9 @@ $page_description = "Comparison Test$testLabel.";
     <head>
         <title>WebPagetest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
+        <style type="text/css">
+            #nav_bkg {display:none;}
+        </style>
     </head>
     <body>
         <div class="page">
@@ -30,7 +33,7 @@ $page_description = "Comparison Test$testLabel.";
             
             if( $supportsAuth && !($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
             {
-                echo '<h1 class="centered">Access Denied</h1>';
+                echo '<h2 class="centered">Restricted Access<br><span class="small">If you are a Googler, please lick on the "Login with Google" link at the top of the page to login through OAuth with your @google.com account</span></h2>';
             }
             else
             {
@@ -42,9 +45,21 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="runs" value="8">
-            <input type="hidden" name="discard" value="3">
-            <input type="hidden" name="script" value="setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%">
+            <input type="hidden" name="mv" value="1">
+            <input type="hidden" name="web10" value="1">
+            <?php
+            if( strlen($_GET['origin']) )
+            {
+                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOST%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
+            }
+            else
+            {
+                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
+                echo "<input type=\"hidden\" name=\"discard\" value=\"3\">\n";
+            }
+            ?>
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
             <?php
@@ -59,17 +74,20 @@ $page_description = "Comparison Test$testLabel.";
               
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
+              
+              if( strlen($_GET['origin']) )
+                echo '<h2 class="cufon-dincond_black"><small>Measure your original site performance for a site optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+              else
+                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Page Speed Service Comparison Test</h2>
-            
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
                         <li><input type="text" name="testurl" id="testurl" value="Enter a Website URL" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
-                            <label for="location">Test Location</label>
+                            <label for="location">Test From</label>
                             <select name="where" id="location">
                                 <?php
                                 foreach($loc['locations'] as &$location)
@@ -83,9 +101,8 @@ $page_description = "Comparison Test$testLabel.";
                                 ?>
                             </select>
                             <?php if( $settings['map'] ) { ?>
-                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Change">
+                            <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
-                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
                             <span class="cleared"></span>
                         </li>
                         <li>
@@ -133,13 +150,17 @@ $page_description = "Comparison Test$testLabel.";
                                 </tr>
                             </table>
                         </li>
+                        <li>
+                            <label for="wait">Expected Wait</label>
+                            <span id="wait"></span>
+                        </li>
                     </ul>
                 </div>
             </div>
 
             <div id="start_test-container">
-                <p><input type="submit" name="submit" value="" class="start_test"></p>
-                </div>
+                <p><input id="start_test-button" type="submit" name="submit" value="" class="start_test"></p>
+                <p><a href="/pss_samples.php">View Sample Tests</a></p>
             </div>
             <div class="cleared"><br></div>
 
@@ -163,8 +184,9 @@ $page_description = "Comparison Test$testLabel.";
                     <input id="location-ok" type=button class="simplemodal-close" value="OK">
                 </p>
             </div>
-            </form>
             
+            </form>
+
             <?php
             }
             include('footer.inc'); 
@@ -189,9 +211,36 @@ $page_description = "Comparison Test$testLabel.";
                 }
             }
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
+           
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script type="text/javascript">
+            function PreparePSSTest(form)
+            {
+                var url = form.testurl.value;
+                if( url == "" || url == "Enter a Website URL" )
+                {
+                    alert( "Please enter an URL to test." );
+                    form.url.focus();
+                    return false
+                }
+                
+                form.label.value = 'Page Speed Service Comparison for ' + url;
+                
+                <?php
+                // build the psuedo batch-url list
+                if( strlen($_GET['origin']) )
+                    echo 'var batch = "Original=" + url + "\nOptimized=" + url + " noscript";' . "\n";
+                else
+                    echo 'var batch = "Original=" + url + " noscript\nOptimized=" + url;' . "\n";
+                ?>
+                
+                form.bulkurls.value=batch;
+                
+                return true;
+            }
+        </script>
     </body>
 </html>
 
@@ -204,24 +253,32 @@ $page_description = "Comparison Test$testLabel.";
 function LoadLocations()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
-    
-    FilterLocations( $locations );
+    FilterLocations( $locations, 'pss', array('Chrome', 'dynaTrace') );
     
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
     {
-        // count the number of tests at each location
-        if( isset($loc['localDir']) )
+        if( isset($loc['browser']) )
         {
-            $loc['backlog'] = CountTests($loc['localDir']);
-            unset( $loc['localDir'] );
+            GetPendingTests($index, $count, $avgTime);
+            if( !$avgTime )
+                $avgTime = 30;  // default to 30 seconds if we don't have any history
+            $loc['backlog'] = $count;
+            $loc['avgTime'] = $avgTime;
+            $loc['testers'] = GetTesterCount($index);
+            $loc['wait'] = -1;
+            if( $loc['testers'] )
+            {
+                $testCount = 26;
+                if( $loc['testers'] > 1 )
+                    $testCount = 16;
+                $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
+            }
         }
         
-        if( isset($loc['key']) )
-            unset( $loc['key'] );
-        if( isset($loc['remoteDir']) )
-            unset( $loc['remoteDir'] );
+        unset( $loc['localDir'] );
+        unset( $loc['key'] );
+        unset( $loc['remoteDir'] );
     }
     
     return $locations;

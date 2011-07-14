@@ -64,8 +64,13 @@ $page_description = "Bulk website performance test result$testLabel.";
                 margin-left: auto;
                 margin-right: auto;
             }
+            <?php
+            if( $simpleView )
+                echo "#nav_bkg {display:none;}\n";
+            ?>
         </style>
-        <script type="text/javascript" src="/video/player/flowplayer-3.2.4.min.js"></script>
+        </style>
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/player/flowplayer-3.2.6.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -98,12 +103,13 @@ $page_description = "Bulk website performance test result$testLabel.";
                     {
                         $label = $test['testinfo']['label'];
                         $label = str_replace('PSS Comparison for', 'Page Speed Service Comparison for', $label);
-                        echo "<h2>$label</h2>";
+                        echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
                     }
                 }
                 else
-                    echo '<h2>Please wait while the testing is performed<br><span class="small">This page will refresh every 30 seconds until the test is complete</span></h2>';
-                echo '<br>';
+                    echo '<h2>Please wait while the testing is performed<br><span class="small">This page will automatically update until the test is complete</span></h2>';
+                if( !$simpleView )
+                    echo '<br>';
 
                 if( $simpleView )
                     DisplaySimple($tests, $test['testinfo']['video'], $dirty);
@@ -132,7 +138,20 @@ $page_description = "Bulk website performance test result$testLabel.";
                 }
                 else
                 {
-                    echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
+                    if( $simpleView )
+                    {
+                        ?>
+                        <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
+                        <p>Here are some resources you can browse while you wait for testing to complete (all open in new browser tabs):</p>
+                        <ul class="bullet_list">
+                        <li><a href="http://code.google.com/speed/pss" target="_blank">Page Speed Service home page</a> - information about the service</li>
+                        <li><a href="/pss_samples.php" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the Page Speed Service</li>
+                        </ul>
+                        </div>
+                        <?php
+                    }
+                    else
+                        echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
                 }
                 ?>
             </div>
@@ -210,6 +229,7 @@ function DisplayTestsWithVariations(&$tests)
 function DisplayTest($id, $url, $label, $complete)
 {
     global $fvonly;
+    RestoreTest($id);
     $testPath = './' . GetTestPath($id);
     $fileUrl = GetFileUrl($url);
 
@@ -265,7 +285,11 @@ function DisplayTest($id, $url, $label, $complete)
 */
 function DisplaySimple(&$tests, $video, &$dirty)
 {
-    echo '<table id="batchResults" border="1" cellpadding="15" cellspacing="0">
+    global $complete;
+    if( $complete )
+        echo '<a href="/compare" target="_blank">Test another Page</a> - <a href="http://code.google.com/speed/pss" target="_blank">Page Speed Service Home</a> - <a href="https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ" target="_blank">Sign Up!</a><br>';
+
+    echo '<br><table id="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
             <th class="empty"></th>';
     $fvLoadTime = array();
@@ -274,7 +298,6 @@ function DisplaySimple(&$tests, $video, &$dirty)
     $rvRenderTimes = array();
     $count = 0;
     global $fvonly;
-    global $complete;
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
@@ -284,6 +307,7 @@ function DisplaySimple(&$tests, $video, &$dirty)
         $rvLoadTime = null;
         $rvRenderTime = null;
         $id = $test['id'];
+        RestoreTest($id);
         $testPath = './' . GetTestPath($id);
         if( $test['c'] )
         {
@@ -349,7 +373,7 @@ function DisplaySimple(&$tests, $video, &$dirty)
             $testurl = "/results.php?test={$test['id']}";
             if( FRIENDLY_URLS )
                 $testurl = "/result/{$test['id']}/";
-            echo "<td><a href=\"$testurl\"><img class=\"progress\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
+            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=1&file=1_screen.jpg\"><br>view test</a></td>";
             if( $count )
                 echo "<td></td>";
             $count++;
@@ -478,7 +502,6 @@ function CreateVideo(&$tests)
     }
     
     $ctx = stream_context_create(array('http' => array('timeout' => 10)));
-    echo $request;
     $response = json_decode(file_get_contents($request, 0, $ctx), true);
     if( $response['statusCode'] == 200 )
         $id = $response['data']['videoId'];
@@ -531,7 +554,7 @@ function VideoHtml($id)
     echo "<script>\n
                     flowplayer(\"player\", \n
                                     {\n
-                                        src: \"/video/player/flowplayer-3.2.4.swf\",\n
+                                        src: \"/video/player/flowplayer-3.2.7.swf\",\n
                                         cachebusting: true,\n
                                         version: [9, 115]\n
                                     } , \n
@@ -583,6 +606,7 @@ function CheckTests(&$tests, &$dirty)
         {
             $complete = true;
             $id = $test['id'];
+            RestoreTest($id);
             $testPath = './' . GetTestPath($id);
             $testIni = parse_ini_file("$testPath/testinfo.ini",true);
             if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )
@@ -592,6 +616,7 @@ function CheckTests(&$tests, &$dirty)
                 // go through all of the variations as well
                 foreach( $test['v'] as $variationId )
                 {
+                    RestoreTest($variationId);
                     $testPath = './' . GetTestPath($variationId);
                     $testIni = parse_ini_file("$testPath/testinfo.ini",true);
                     if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) )

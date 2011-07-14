@@ -17,7 +17,7 @@ else
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 43);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
-define('VER_JS_TEST', 18);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 19);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
 // SEO stuff
@@ -671,7 +671,7 @@ function BuildLocations( &$locations )
 * 
 * @param mixed $locations
 */
-function FilterLocations( &$locations, $stripBrowser = null )
+function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null )
 {
     BuildLocations( $locations );
     
@@ -679,7 +679,15 @@ function FilterLocations( &$locations, $stripBrowser = null )
     foreach( $locations as $name => $loc )
     {
         if( $loc['hidden'] && !$_REQUEST['hidden'] )
-            unset( $locations[$name] );
+        {
+            $hide = true;
+            if( strlen($includeHidden) && stripos($loc['hidden'], $includeHidden) !== false )
+                $hide = false;
+            
+            if( $hide )
+                unset( $locations[$name] );
+        }
+        unset($loc['hidden']);
     }
     
     // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
@@ -717,7 +725,8 @@ function FilterLocations( &$locations, $stripBrowser = null )
                 $remove = false;
                 foreach( $stripBrowser as $browser )
                 {
-                    if( stripos($loc['browser'], $browser) !== false )
+                    $pos = stripos($loc['browser'], $browser);
+                    if( $pos !== false )
                     {
                         $remove = true;
                         break;
@@ -725,7 +734,9 @@ function FilterLocations( &$locations, $stripBrowser = null )
                 }
                     
                 if( $remove )
+                {
                     unset($locations[$name]);
+                }
             }
             else
             {
@@ -846,13 +857,10 @@ function ParseLocations(&$locations)
     {
         if( is_numeric($index) )
         {
-            if( !$locations[$name]['hidden'] || $_REQUEST['hidden'])
-            {
-                $location['label'] = $locations[$name]['label'];
-                $location['comment'] = str_replace("'", '"', $locations[$name]['comment']);
-                $location['name'] = $name;
-                $loc['locations'][$name] = $location;
-            }
+            $location['label'] = $locations[$name]['label'];
+            $location['comment'] = str_replace("'", '"', $locations[$name]['comment']);
+            $location['name'] = $name;
+            $loc['locations'][$name] = $location;
         }
     }
     
