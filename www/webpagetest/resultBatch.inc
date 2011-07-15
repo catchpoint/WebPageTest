@@ -69,10 +69,6 @@ $page_description = "Bulk website performance test result$testLabel.";
                 display: none;
                 position: absolute;
             }
-            <?php
-            if( $simpleView )
-                echo "#nav_bkg {display:none;}\n";
-            ?>
         </style>
         </style>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/player/flowplayer-3.2.6.min.js"></script>
@@ -81,6 +77,12 @@ $page_description = "Bulk website performance test result$testLabel.";
         <div class="page">
             <?php
             $tab = 'Test Result';
+            if( $simpleView )
+            $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
+                                'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
+                                'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
+                                'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
+                                'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             include 'header.inc';
             ?>
             <div id="result">
@@ -322,8 +324,6 @@ function DisplayTest($id, $url, $label, $complete)
 function DisplaySimple(&$tests, $video, &$dirty)
 {
     global $complete;
-    if( $complete )
-        echo '<a href="/compare" target="_blank">Test another Page</a> - <a href="http://code.google.com/speed/pss" target="_blank">Page Speed Service Home</a> - <a href="https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ" target="_blank">Sign Up!</a><br>';
 
     echo '<br><table id="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
@@ -595,7 +595,7 @@ function VideoHtml($id)
     echo "<script>\n
                     flowplayer(\"player\", \n
                                     {\n
-                                        src: \"/video/player/flowplayer-3.2.7.swf\",\n
+                                        src: \"{$GLOBALS['cdnPath']}/video/player/flowplayer-3.2.7.swf\",\n
                                         cachebusting: true,\n
                                         version: [9, 115]\n
                                     } , \n
@@ -606,11 +606,11 @@ function VideoHtml($id)
                                         playlist: [";
     if( $hasThumb )
     {
-        echo "{ url: '/$dir/video.png'} ,\n";
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
+        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.png'} ,\n";
+        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
     }
     else
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
+        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
     echo "                          ],\n
                                         plugins: {\n
                                             controls: {\n

@@ -56,43 +56,53 @@
         if( $id )
             $resultUrl = FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id";
             
-        $tabs = array(  'Home' => '/' );
-                        
-        if( $headerType == 'video' )
+        if( !count($navTabs) )
         {
-            if( !$filmstrip )
-                $filmstrip = urldecode($_COOKIE['fs']);
+            $navTabs = array(  'Home' => '/' );
+                            
+            if( $headerType == 'video' )
+            {
+                if( !$filmstrip )
+                    $filmstrip = urldecode($_COOKIE['fs']);
+                
+                if( $filmstrip )
+                    $navTabs['Test Result'] = '/video/compare.php?tests=' . urlencode($filmstrip);
+            }
+            else
+            {
+                $navTabs['Test Result'] = $resultUrl;
+            }
+
+            $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+
+            if( is_dir('wptmonitor') )
+                $navTabs['Monitor'] = '/wptmonitor/';
+
+            if( is_dir('forums') && !$settings['disableMybb'] )
+                $navTabs['Forums'] = '/forums/';
             
-            if( $filmstrip )
-                $tabs['Test Result'] = '/video/compare.php?tests=' . urlencode($filmstrip);
+            $navTabs['Documentation'] = 'http://www.webperformancecentral.com/wiki/WebPagetest';
+                
+            $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
-        else
-        {
-            $tabs['Test Result'] = $resultUrl;
-        }
-
-        $tabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
-
-        if( is_dir('wptmonitor') )
-            $tabs['Monitor'] = '/wptmonitor/';
-
-        if( is_dir('forums') && !$settings['disableMybb'] )
-            $tabs['Forums'] = '/forums/';
         
-        $tabs['Documentation'] = 'http://www.webperformancecentral.com/wiki/WebPagetest';
-            
-        $tabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
-        
-        foreach( $tabs as $tabName => $tabUrl )
+        foreach( $navTabs as $tabName => $tabUrl )
         {
             // make sure we have a test result to navigate to
             if( strlen($tabUrl) )
             {
                 // highlight the current tab
+                $target = '';
                 $current = '';
+                $opens = '';
                 if( !strcasecmp($tabName, $tab) )
                     $current = ' class="current"';
-                echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
+                if( substr($tabUrl, 0, 4) == 'http' )
+                {
+                    $target = ' target="_blank"';
+                    $opens = ' (opens in a new tab)';
+                }
+                echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
             }
         }
 

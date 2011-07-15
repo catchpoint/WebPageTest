@@ -168,7 +168,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .grades a {text-decoration: none;}
 
 #test_results-container {margin: 0 -25px -25px;}
-#test_results_running-container {margin: -5px -25px 0px;}
+#test_results_running-container {margin: 0 -25px 0px;}
 
 .test_results {clear:both;}
 .test_results-content {padding: 15px 20px 5px;}

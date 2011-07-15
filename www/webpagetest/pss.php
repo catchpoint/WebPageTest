@@ -22,13 +22,17 @@ $page_description = "Comparison Test$testLabel.";
     <head>
         <title>WebPagetest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
-        <style type="text/css">
-            #nav_bkg {display:none;}
-        </style>
     </head>
     <body>
         <div class="page">
             <?php
+            $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
+            if( strlen($_GET['pssid']) )
+                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
+            $navTabs += array(  'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
+                                'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
+                                'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+            $tab = 'New Comparison';
             include 'header.inc';
             
             if( $supportsAuth && !($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
