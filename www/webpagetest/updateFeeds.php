@@ -16,7 +16,9 @@ if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./tmp/feeds.dat') )
     if( $now > $updated )
         $elapsed = $now - $updated;
     $minutes = (int)($elapsed / 60);
-    if( $minutes < 15 )
+    if( $minutes >= 15 )
+        touch('./tmp/feeds.dat');
+    else
         $updateFeeds = false;
 }
 
