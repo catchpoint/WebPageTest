@@ -1445,7 +1445,7 @@ function LoadJobQueue($workDir, &$queue)
         {
             if( stripos($file, '.url') )
                 $queue[0][] = $file;
-            else if( preg_match('/\.p[1-9]/i', $file, $matches) )
+            else if( preg_match('/\.p([1-9])/i', $file, $matches) )
             {
                 $priority = (int)$matches[1];
                 $queue[$priority][] = $file;

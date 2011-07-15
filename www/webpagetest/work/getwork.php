@@ -312,7 +312,7 @@ function RecoverDeadTests($workDir, &$backupDir)
                     rename( "$backupDir/$file", "$workDir/_$file" );
                     touch("$workDir/_$file");
                     $priority = 0;
-                    if( preg_match('/\.p[1-9]/i', $file, $matches) )
+                    if( preg_match('/\.p([1-9])/i', $file, $matches) )
                         $priority = (int)$matches[1];
                     AddJobFile($workDir, $file, $priority);
                 }
