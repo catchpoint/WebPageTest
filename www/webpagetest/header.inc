@@ -98,7 +98,20 @@
 
         if (!$privateInstall)
         {
-            echo '<div class="gplusone"><g:plusone size="small" href="http://www.webpagetest.org/"></g:plusone></div>';
+            echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/"></g:plusone>&nbsp;
+                <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
+                <script type="text/javascript">
+                    (function() {
+                        var po = document.createElement(\'script\'); po.type = \'text/javascript\'; po.async = true;
+                        po.src = \'https://apis.google.com/js/plusone.js\';
+                        var tw = document.createElement(\'script\'); tw.type = \'text/javascript\'; tw.async = true;
+                        tw.src = \'http://platform.twitter.com/widgets.js\';
+                        var s = document.getElementsByTagName(\'script\')[0]; 
+                        s.parentNode.insertBefore(po, s);
+                        s.parentNode.insertBefore(tw, s);
+                      })();
+              </script></div>
+              ';
         }
 ?></ul>
 

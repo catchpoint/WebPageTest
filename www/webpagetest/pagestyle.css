@@ -42,7 +42,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .headerAd {float:right; width:728; height:90; margin:5px 0 1px;}
 #wptAuthBar {width: 980px; height: 18px; text-align: right; color: #fff;}
 #wptAuthBar a {color: #fff;}
-.gplusone {float:right; padding: 5px 0 0 0;}
+.gplusone {float:right; padding: 4px 5px 0 0;}
 
 /* Nav */
 #nav_bkg {background-color: #000;line-height: 1em; clear:both; font-size: 16px; }
