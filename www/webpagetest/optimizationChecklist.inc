@@ -64,8 +64,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
                             'score_combine' => 'Combine',
                             'score_cdn' => 'CDN detected',
                             'score_minify' => 'Minify JS',
-                            'score_cookies' => 'Cookies',
-                            'score_etags' => 'No ETags' );
+                            'score_cookies' => 'Cookies');
         $stdCount = count($standards);
         
         $x = $left;

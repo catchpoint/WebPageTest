@@ -20,7 +20,6 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
         ReportCDN($pageData, $requests);
         ReportMinify($pageData, $requests);
         ReportCookies($pageData, $requests);
-        ReportETags($pageData, $requests);
     }
 }
 
@@ -411,41 +410,6 @@ function ReportCookies(&$pageData, &$requests)
 }
 
 /**
-* 
-* 
-* @param mixed $requests
-*/
-function ReportETags(&$pageData, &$requests)
-{
-    $score = 'N/A';
-    $report = array();
-    if( isset($pageData['score_etags']) && $pageData['score_etags'] >= 0 )
-    {
-        $score = "{$pageData['score_etags']}/100";
-        
-        foreach( $requests as $index => &$request )
-        {
-            if( isset($request['score_etags']) && $request['score_etags'] >= 0 && $request['score_etags'] < 100 )
-            {
-                $key = $request['host'] . ' ' . $index;
-                $proto = 'http://';
-                if( $request['secure'] )
-                    $proto = 'https://';
-                $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
-                $report[$key] = $value;
-            }
-        }
-        
-        ksort($report);
-    }
-        
-    echo "<a  name=\"etags\"><h3>Remove ETag headers: $score</h3></a><p class=\"indented1\">\n";
-    foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
-}
-
-/**
 * Display a glossary for the optimization results
 * 
 * @param mixed $settings
@@ -562,16 +526,6 @@ function dumpOptimizationGlossary(&$settings)
         <tr>
             <td class="nowrap">What is checked</td>
             <td >Any request for a static object that sends up a cookie will fail.  All other requests that send up cookies will warn.</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>No Etags</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All requests</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >If the response headers include an ETag header then the request will fail.</td>
         </tr>
 
     </table>
