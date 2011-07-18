@@ -392,7 +392,7 @@ $page_description = "Website performance test result$testLabel.";
                 </tr>
                 <?php } ?>
                 
-                <?php if( $testComplete ) { ?>
+                <?php if( $testComplete && $run == $fvMedian ) { ?>
                 <tr>
                     <td align="left" valign="middle">Content Breakdown</td>
                     <?php
