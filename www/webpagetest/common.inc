@@ -1391,8 +1391,11 @@ function FindJobPosition($workDir, $testId)
             foreach($queue[$priority] as $file)
             {
                 if( stripos($file, $testId) !== false )
+                {
                     $found = true;
-                else
+                    break;
+                }
+                elseif( !$found )
                     $count++;
             }
             $priority++;
