@@ -1122,7 +1122,7 @@ function ArchiveTest($id)
         $priority = $testInfo['priority'];
         if( isset($testInfo['k']) && array_key_exists($testInfo['k'], $api_keys) && array_key_exists('priority', $api_keys[$testInfo['k']]) )
             $priority = $api_keys[$testInfo['k']]['priority'];
-        if( $priority > 6  )
+        if( $priority > 5  )
             $discard = true;
         if( $testInfo['archived'] )
             $ret = true;
