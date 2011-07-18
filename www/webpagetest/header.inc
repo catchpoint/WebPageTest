@@ -106,7 +106,7 @@
             }
         }
 
-        if (!$privateInstall)
+        if (!$privateInstall && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
         {
             echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/"></g:plusone>&nbsp;
                 <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
@@ -278,7 +278,7 @@ function GetGrades(&$pageData, &$test, $id, $run)
 
         $opt = getOptimizationGrades($pageData, $test, $id, $run);
 
-        if( $test['testinfo']['view'] != 'simple' )
+        if( $test['testinfo']['view'] != 'simple' && $test['testinfo']['view'] != 'pss' )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);

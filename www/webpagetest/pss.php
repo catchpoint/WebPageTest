@@ -33,6 +33,7 @@ $page_description = "Comparison Test$testLabel.";
                                 'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                 'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             $tab = 'New Comparison';
+            define('NAV_NO_SHARE', true);
             include 'header.inc';
             
             if( $supportsAuth && !($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
@@ -45,7 +46,7 @@ $page_description = "Comparison Test$testLabel.";
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
             
             <input type="hidden" name="private" value="1">
-            <input type="hidden" name="view" value="simple">
+            <input type="hidden" name="view" value="pss">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
@@ -179,7 +180,6 @@ $page_description = "Comparison Test$testLabel.";
 
             <div id="start_test-container">
                 <p><input id="start_test-button" type="submit" name="submit" value="" class="start_test"></p>
-                <p><a href="http://code.google.com/speed/pss/gallery.html">View Sample Tests</a></p>
             </div>
             <div class="cleared"><br></div>
 

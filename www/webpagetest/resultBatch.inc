@@ -16,9 +16,14 @@ elseif( gz_is_file("$testPath/tests.json") )
         $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
 }
     
-$simpleView = false;
-if( !strcasecmp($test['testinfo']['view'], 'simple') )
-    $simpleView = true;
+$view = trim(strtolower($test['testinfo']['view']));
+if( !strlen($view) )
+    $view = 'bulk';
+else
+    define('NAV_NO_SHARE', true);
+
+if( $view == 'simple' )
+    $view = 'pss';
 
 $fvonly = false;
 if( $test['test']['fvonly'] )
@@ -27,6 +32,7 @@ if( $test['test']['fvonly'] )
 // run a quick check to see if the tests are complete
 $dirty = false;
 $complete = CheckTests($tests, $dirty);
+$videoCount = 0;
 
 // rewrite the bulk file if it changed
 if( $dirty )
@@ -59,7 +65,7 @@ $page_description = "Bulk website performance test result$testLabel.";
         include ('head.inc');
         ?>
         <style type="text/css">
-            #player
+            .player
             {
                 margin-left: auto;
                 margin-right: auto;
@@ -77,12 +83,19 @@ $page_description = "Bulk website performance test result$testLabel.";
         <div class="page">
             <?php
             $tab = 'Test Result';
-            if( $simpleView )
-            $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
-                                'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
-                                'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
-                                'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
-                                'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+            if( $view == 'pss' )
+            {
+                $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
+                                    'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
+                                    'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
+                                    'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
+                                    'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+            }
+            elseif ($view == 'blink')
+            {
+                $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/blink?bid=$id" : "/blink.php?bid=$id",
+                                    'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id");
+            }
             include 'header.inc';
             ?>
             <div id="result">
@@ -97,7 +110,7 @@ $page_description = "Bulk website performance test result$testLabel.";
                             {
                                 echo 'Tested Url: ' . $test['testinfo']['url'] . '<br>';
                             }
-                            if( !$simpleView )
+                            if( $view == 'bulk' )
                                 echo GetTestInfoHtml(); 
                         ?>
                     </div>
@@ -112,18 +125,26 @@ $page_description = "Bulk website performance test result$testLabel.";
                         $label = str_replace('PSS Comparison for', 'Page Speed Service Comparison for', $label);
                         echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
                     }
+
+                    if( $view == 'pss' )
+                        DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+                    elseif( $view == 'blink' )
+                        DisplayBlink($tests, $test['testinfo']['video'], $dirty);
                 }
                 else
+                {
                     echo '<h2>Please wait while the testing is performed<br><span class="small">This page will automatically update until the test is complete</span></h2>';
-                if( !$simpleView )
-                    echo '<br>';
+                    if( $view != 'bulk' )
+                        DisplayProgress($tests);
+                }
 
-                if( $simpleView )
-                    DisplaySimple($tests, $test['testinfo']['video'], $dirty);
-                elseif( count($tests['variations']) )
-                    DisplayTestsWithVariations($tests);
-                else
-                    DisplayTests($tests);
+                if( $view == 'bulk' )
+                {
+                    if( count($tests['variations']) )
+                        DisplayTestsWithVariations($tests);
+                    else
+                        DisplayTests($tests);
+                }
 
                 // rewrite the bulk file if it changed
                 if( $dirty )
@@ -134,7 +155,7 @@ $page_description = "Bulk website performance test result$testLabel.";
 
                 if ($complete)
                 {
-                    if( !$simpleView )
+                    if( $view == 'bulk' )
                     {
                         if( FRIENDLY_URLS )
                             echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
@@ -145,7 +166,7 @@ $page_description = "Bulk website performance test result$testLabel.";
                 }
                 else
                 {
-                    if( $simpleView )
+                    if( $view == 'pss' )
                     {
                         ?>
                         <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
@@ -157,7 +178,7 @@ $page_description = "Bulk website performance test result$testLabel.";
                         </div>
                         <?php
                     }
-                    else
+                    elseif( $view == 'bulk' )
                         echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
                 }
                 ?>
@@ -192,7 +213,7 @@ $page_description = "Bulk website performance test result$testLabel.";
                         $("#pimg").css("top", (e.pageY - yOffset) + "px").css("left", (e.pageX + xOffset) + "px");
                     });
                 };
-                pimg();
+                //pimg();
             </script>
         </div>
     </body>
@@ -207,7 +228,7 @@ $page_description = "Bulk website performance test result$testLabel.";
 function DisplayTests(&$tests)
 {
     global $fvonly;
-    echo '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
+    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
             <th>Median load time (First view)</th>';
@@ -235,7 +256,7 @@ function DisplayTests(&$tests)
 function DisplayTestsWithVariations(&$tests)
 {
     global $fvonly;
-    echo '<table id="batchResults" border="1" cellpadding="10" cellspacing="0">
+    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Test</th>
             <th>Median load time (First view)</th>';
@@ -321,11 +342,11 @@ function DisplayTest($id, $url, $label, $complete)
 * @param mixed $tests
 * @param mixed $complete
 */
-function DisplaySimple(&$tests, $video, &$dirty)
+function DisplayPSS(&$tests, $video, &$dirty)
 {
     global $complete;
 
-    echo '<br><table id="batchResults" border="1" cellpadding="15" cellspacing="0">
+    echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
             <tr>
             <th class="empty"></th>';
     $fvLoadTime = array();
@@ -443,7 +464,7 @@ function DisplaySimple(&$tests, $video, &$dirty)
         $videoComplete = true;
         if( !strlen($tests['videoID']) )
         {
-            $tests['videoID'] = CreateVideo($tests);
+            $tests['videoID'] = CreateVideo($tests['urls']);
             $dirty = true;
             $videoComplete = false;
             if( !strlen($tests['videoID']) )
@@ -464,15 +485,214 @@ function DisplaySimple(&$tests, $video, &$dirty)
         
         if( $videoComplete )
         {
-            echo '<h2>Visual Comparison<br><span class="small">Compared until the latest visual change on each page</span></h2>';
+            echo '<h2>Visual Comparison</h2>';
             VideoHtml($tests['videoID']);
         }
         else
         {
-            echo '<h2>Please wait while the video comparison is created<br><span class="small">This page will refresh every 10 seconds until the video is ready</span></h2>';
+            echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
             echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
         }
     }
+}
+
+/**
+* Display a blink result page
+*/
+function DisplayBlink(&$tests, $video, &$dirty)
+{
+    require_once('./google/google_lib.inc');
+    global $complete;
+    $videoTests = array();
+
+    // grab the tests in the order we want
+    $hasCached = false;
+    $cached = array('Optimized' => null, 'Original' => null);
+    $hasNotCached = false;
+    $notCached = array('Optimized' => null, 'Original' => null);
+    foreach( $tests['urls'] as &$test )
+    {
+        $id = $test['id'];
+        $label = $test['l'];
+        if( $label == 'Optimized' )
+        {
+            $hasNotCached = true;
+            $notCached[$label] = $test;
+        }
+        elseif( $label == 'Original' )
+        {
+            $hasNotCached = true;
+            $notCached[$label] = $test;
+        }
+        elseif( $label == 'Optimized Cached' )
+        {
+            $cached['Optimized'] = $test;
+            $hasCached = true;
+        }
+        elseif( $label == 'Original Cached' )
+        {
+            $cached['Original'] = $test;
+            $hasCached = true;
+        }
+    }
+    
+    $videoComplete = true;
+    if( $hasCached )
+    {
+        DisplayBlinkTable($cached, '<b>Template cached</b><br>(Navigation within site)');
+        if( $video )
+        {
+            if( !strlen($tests['videoId']) )
+            {
+                $tests['videoId'] = CreateVideo($cached);
+                $dirty = true;
+                if( strlen($tests['videoId']) )
+                    $videoComplete = false;
+                else
+                    $tests['videoReady'] = true;
+            }
+            elseif( !$tests['videoReady'] )
+            {
+                $tests['videoReady'] = CheckVideo($tests['videoId']);
+                if( $tests['videoReady'] )
+                    $dirty = true;
+                else
+                    $videoComplete = false;
+            }
+            if( $videoComplete )
+            {
+                echo '<h2>Template Cached - Visual Comparison</h2>';
+                VideoHtml($tests['videoId']);
+            }
+            else
+                echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+        }
+    }
+
+    if( $hasNotCached )
+    {
+        echo '<br>';
+        DisplayBlinkTable($notCached, '<b>Template not cached</b><br>(User lands on site)');
+        if( $video )
+        {
+            if( !strlen($tests['NCvideoId']) )
+            {
+                $tests['NCvideoId'] = CreateVideo($notCached);
+                $dirty = true;
+                if( strlen($tests['NCvideoId']) )
+                    $videoComplete = false;
+                else
+                    $tests['NCvideoReady'] = true;
+            }
+            elseif( !$tests['NCvideoReady'] )
+            {
+                $tests['NCvideoReady'] = CheckVideo($tests['NCvideoId']);
+                if( $tests['NCvideoReady'] )
+                    $dirty = true;
+                else
+                    $videoComplete = false;
+            }
+            if( $videoComplete )
+            {
+                echo '<h2>Template Not Cached - Visual Comparison</h2>';
+                VideoHtml($tests['NCvideoId']);
+            }
+            else
+                echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+        }
+    }
+
+    if( !$videoComplete )
+        echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+}
+
+/**
+* Display one of the blink data tables
+*/
+function DisplayBlinkTable($tests, $tableLabel)
+{
+    global $complete;
+
+    echo '<table class="batchResults" border="1" cellpadding="15" cellspacing="0"><tr>';
+    echo '<th class="empty" style="border-right: 1px solid white;"></th>';
+    echo '<th class="empty"></th><th>Optimized</th><th>Original</th><th>Difference</th></tr>';
+    echo "<tr><td rowspan=5>$tableLabel</td></tr>";
+    
+    $metrics = array( 'Critical Low Res Loaded' => array(),
+                      'Critical Page Loaded' => array(),
+                      'Full Page Loaded' => array()
+                       );
+    
+    $count = 0;
+    global $fvonly;
+    
+    // first pass, check the status of all of the tests and calculate the relevant times
+    foreach( $tests as $label => &$test )
+    {
+        $id = $test['id'];
+        RestoreTest($id);
+        $test['path'] = GetTestPath($id);
+        $testPath = './' . $test['path'];
+        if( $test['c'] )
+        {
+            $pageData = loadAllPageData($testPath);
+            if( CountSuccessfulTests($pageData, 0) )
+            {
+                $fvMedian = GetMedianRun($pageData, 0);
+                $test['fvMedian'] = $fvMedian;
+                $metrics['Full Page Loaded'][$count] = $pageData[$fvMedian][0]['loadTime'];
+                $csi = ParseCsiInfo($id, $testPath, $fvMedian, 0, false);
+                $metrics['Critical Low Res Loaded'][$count] = $csi['cprc'];
+                $metrics['Critical Page Loaded'][$count] = $csi['cihl'];
+            }
+        }
+        else
+        {
+            $test['status'] = GetTestStatusText($id);
+        }
+        $count++;
+    }
+    
+    // FV Page load time
+    if( $complete )
+    {
+        foreach( $metrics as $label => &$values )
+            DisplayMetric($label, $values, $count, true);
+
+        // links to the test results
+        echo '<tr><td class="right">Full Test Result</td>';
+        $count = 0;
+        foreach( $tests as $label => &$test )
+        {
+            $id = $test['id'];
+            $testurl = "/results.php?test=$id";
+            if( FRIENDLY_URLS )
+                $testurl = "/result/$id/";
+            $path = $test['path'];
+            $run = $test['fvMedian'];
+            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+            if( $count )
+                echo "<td></td>";
+            $count++;
+        }
+        echo "</tr>";
+    }
+    else
+    {
+        echo "<tr><td>Test Status</td>";
+        foreach( $tests as &$test )
+        {
+            echo '<td>';
+            if( $test['c'] )
+                echo 'Complete';
+            else
+                echo $test['status'];
+            echo '</td>';
+        }
+        echo '<td></td></tr>';
+    }
+
+    echo '</table><br>';
 }
 
 /**
@@ -482,7 +702,7 @@ function DisplaySimple(&$tests, $video, &$dirty)
 * @param mixed $values
 * @param mixed $count
 */
-function DisplayMetric($metric, &$values, $count)
+function DisplayMetric($metric, &$values, $count, $reverse = false)
 {
     // the actual values
     echo "<tr><td class=\"right\"><b>$metric</b></td>";
@@ -497,7 +717,10 @@ function DisplayMetric($metric, &$values, $count)
         {
             if ($values[$i] && $baseline > 0 && $i)
             {
-                $delta = $values[$i] - $baseline;
+                if( $reverse )
+                    $delta = $baseline - $values[$i];
+                else
+                    $delta = $values[$i] - $baseline;
                 $pct = number_format(abs($delta / $baseline) * 100.0, 1);
                 $class = '';
                 $direction = '';
@@ -530,7 +753,7 @@ function CreateVideo(&$tests)
     $request = "http://$host/video/create.php?f=json&end=doc&tests=";
 
     $count = 0;
-    foreach( $tests['urls'] as &$test )
+    foreach( $tests as &$test )
     {
         if( $count )
             $request .= ',';
@@ -580,6 +803,8 @@ function CheckVideo($videoID)
 */
 function VideoHtml($id)
 {
+    global $videoCount;
+    $videoCount++;
     $width = 816;
     $height = 384;
 
@@ -591,9 +816,9 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    echo "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player\"></div>\n";
+    echo "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player$videoCount\" class=\"player\"></div>\n";
     echo "<script>\n
-                    flowplayer(\"player\", \n
+                    flowplayer(\"player$videoCount\", \n
                                     {\n
                                         src: \"{$GLOBALS['cdnPath']}/video/player/flowplayer-3.2.7.swf\",\n
                                         cachebusting: true,\n
@@ -629,7 +854,7 @@ function VideoHtml($id)
                                         }\n
                                     }\n
                                 ); \n
-                </script>\n<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
+                </script>\n<br>\n";
 }
 
 /**
@@ -679,5 +904,68 @@ function CheckTests(&$tests, &$dirty)
     }
     
     return $allComplete;
+}
+
+/**
+* Display progress information about the test
+* 
+* @param mixed $tests
+*/
+function DisplayProgress(&$tests)
+{
+    $elapsed = -1;
+    $position = -1;
+    require_once('testStatus.inc');
+    foreach($tests['urls'] as &$test)
+    {
+        $status = GetTestStatus($test['id']);
+        $statusCode = $status['statusCode'];
+        if( $statusCode == 100 || $statusCode == 200 )
+        {
+            if( $elapsed < 0 || $status['elapsed'] > $elapsed )
+                $elapsed = $status['elapsed'];
+        }
+        elseif( $statusCode == 101 )
+        {
+            if( $position < 0 || $status['behindCount'] < $position )
+                $position = $status['behindCount'];
+        }
+    }
+
+    $statusText = 'Waiting to be tested';
+    $img = "waiting";
+    if( $elapsed >= 0 )
+    {
+        $img = "testing";
+        if( $elapsed == 0 )
+          $statusText = "Test just started";
+        elseif( $elapsed == 1 )
+          $statusText = "Test Started $elapsed second ago";
+        elseif( $elapsed < 60 )
+          $statusText = "Test Started $elapsed seconds ago";
+        else
+        {
+          $elapsed = floor($elapsed / 60);
+          if( $elapsed == 1 )
+            $statusText = "Test Started $elapsed minute ago";
+          else
+            $statusText = "Test Started $elapsed minutes ago";
+        }
+    }
+    elseif( $position >= 0 )
+    {
+        if( $position > 1 )
+            $statusText = "Waiting behind $count other tests...";
+        elseif( $position == 1 )
+            $statusText = "Waiting behind 1 other test...";
+        else
+            $statusText = "Waiting at the front of the queue...";
+    }
+
+    echo '<br><div id="statusImg">';
+    echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
+    echo "<div id=\"statusText\">$statusText</div>\n";
+    echo '</div><br>';
+    
 }
 ?>

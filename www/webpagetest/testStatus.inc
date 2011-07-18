@@ -47,6 +47,12 @@ function GetTestStatus($id, $includePosition = true)
             if( isset($test['test']['startTime']) || isset($test['test']['completeTime']) )
             {
                 $ret['startTime'] = $test['test']['startTime'];
+                $start = $testInfoJson['started'];
+                $now = time();
+                $elapsed = 0;
+                if( $now > $start )
+                  $elapsed = $now - $start;
+                $ret['elapsed'] = $elapsed;
 
                 if( isset($test['test']['completeTime']) )
                 {
@@ -57,11 +63,6 @@ function GetTestStatus($id, $includePosition = true)
                 else
                 {
                     $ret['statusCode'] = 100;
-                    $now = time();
-                    $start = $testInfoJson['started'];
-                    $elapsed = 0;
-                    if( $now > $start )
-                      $elapsed = $now - $start;
                     if( $elapsed == 0 )
                       $ret['statusText'] = "Test just started";
                     elseif( $elapsed == 1 )
@@ -155,7 +156,7 @@ function GetTestStatus($id, $includePosition = true)
             }
         }
     }
-    
+
     return $ret;
 }
 

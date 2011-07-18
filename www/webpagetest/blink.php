@@ -23,13 +23,17 @@ $page_description = "Comparison Test$testLabel.";
         <title>WebPagetest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
         <style type="text/css">
-            #nav_bkg {display:none;}
             .test_box input.text.large {width: 300px; margin-right: 10px;}
         </style>
     </head>
     <body>
         <div class="page">
             <?php
+            $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/blink' : '/blink.php' );
+            if( strlen($_GET['bid']) )
+                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['bid']}/" : "/results.php?test={$_GET['bid']}";
+            $tab = 'New Comparison';
+            define('NAV_NO_SHARE', true);
             include 'header.inc';
             
             if( $supportsAuth && !($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
@@ -42,7 +46,7 @@ $page_description = "Comparison Test$testLabel.";
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PrepareBlinkTest(this)">
             
             <input type="hidden" name="private" value="1">
-            <input type="hidden" name="view" value="simple">
+            <input type="hidden" name="view" value="blink">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
@@ -94,7 +98,7 @@ $page_description = "Comparison Test$testLabel.";
                             <?php } ?>
                             <span class="cleared"></span>
                         </li>
-                        <li class="hidden">
+                        <li>
                             <label for="browser">Browser</label>
                             <select name="browser" id="browser">
                                 <?php
@@ -237,8 +241,10 @@ $page_description = "Comparison Test$testLabel.";
                 form.label.value = 'Blink Comparison';
                 
                 // build the batch-url list
-                var batch = "[script]\nlabel=Original\nlogdata\t0\nnavigate\t" + o1 + "\nlogdata\t1\nnavigate\t" + o2 +"\n";
-                batch += "[script]\nlabel=Optimized\nlogdata\t0\nnavigate\t" + b1 + "\nlogdata\t1\nnavigate\t" + b2 +"\n";
+                var batch = "[script]\nlabel=Optimized\nnavigate\t" + b1 +"\n";
+                batch += "[script]\nlabel=Original\nnavigate\t" + o1 + "\n";
+                batch += "[script]\nlabel=Optimized Cached\nlogdata\t0\nnavigate\t" + b1 + "\nlogdata\t1\nnavigate\t" + b2 +"\n";
+                batch += "[script]\nlabel=Original Cached\nlogdata\t0\nnavigate\t" + o1 + "\nlogdata\t1\nnavigate\t" + o2 +"\n";
                 form.bulkurls.value=batch;
                 
                 return true;
@@ -260,6 +266,7 @@ function LoadLocations()
     BuildLocations($locations);
     
     FilterLocations( $locations, 'blink', array('IE', '6', '7', '8', '9', 'dynaTrace') );
+    //FilterLocations( $locations);
     
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
@@ -275,9 +282,9 @@ function LoadLocations()
             $loc['wait'] = -1;
             if( $loc['testers'] )
             {
-                $testCount = 10;
+                $testCount = 20;
                 if( $loc['testers'] > 1 )
-                    $testCount = 5;
+                    $testCount = 10;
                 $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
             }
         }
