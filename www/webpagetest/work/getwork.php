@@ -2,7 +2,6 @@
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetUpdate');
     newrelic_add_custom_tracer('GetVideoJob');
-    newrelic_add_custom_tracer('UpdateFeeds');
     newrelic_add_custom_tracer('RecoverDeadTests');
     newrelic_add_custom_tracer('GetJobFile');
 }
@@ -35,10 +34,6 @@ if( !$done && $_GET['video'] )
 
 if( !$done )
     $done = GetJob();
-
-// if we didn't have work to hand out, try updating the rss feeds
-if( !$done )
-    UpdateFeeds();
 
 // send back a blank result if we didn't have anything
 if( !$done )
@@ -412,15 +407,4 @@ function GetUpdate()
     return $ret;
 }
 
-/**
-* Try updating the RSS feeds (on 5% of the checks)
-* 
-*/
-function UpdateFeeds()
-{
-    if( rand(1, 100) <= 5 )
-    {
-        include('updateFeeds.php');
-    }
-}
 ?>

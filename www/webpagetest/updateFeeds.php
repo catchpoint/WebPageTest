@@ -1,29 +1,15 @@
 <?php
-
-if( !is_dir('./tmp') )
-    mkdir('./tmp', 0777);
-
-// this is designed to be run automatically by being included or by hitting the url so don't output anything
-$feedData = array();
-
-// only update the feeds every 15 minutes
-$updateFeeds = true;
-if( (!isset($_GET['force']) || !$_GET['force']) && is_file('./tmp/feeds.dat') )
+/**
+* Update the feeds
+* 
+*/
+function UpdateFeeds()
 {
-    $updated = filemtime('./tmp/feeds.dat');
-    $now = time();
-    $elapsed = 0;
-    if( $now > $updated )
-        $elapsed = $now - $updated;
-    $minutes = (int)($elapsed / 60);
-    if( $minutes >= 15 )
-        touch('./tmp/feeds.dat');
-    else
-        $updateFeeds = false;
-}
+    if( !is_dir('./tmp') )
+        mkdir('./tmp', 0777);
 
-if( $updateFeeds )
-{
+    $feedData = array();
+
     $lockFile = fopen( './tmp/feeds.lock', 'w',  false);
     if( $lockFile )
     {
@@ -116,7 +102,6 @@ if( $updateFeeds )
         }
     }
 }
-
 
 /**
 * MyBB has a busted feed creator so go through and remove any invalid characters
