@@ -519,7 +519,10 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Action
   result += request->_method + "\t";
   // Host
-  result += request->GetRequestHeader("host") + "\t";
+  CStringA host = request->GetRequestHeader("x-host");
+  if (!host.GetLength())
+    host = request->GetRequestHeader("host");
+  result += host + "\t";
   // URL
   result += request->_object + "\t";
   // Response Code
