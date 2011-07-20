@@ -45,7 +45,7 @@ static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
-static const BYTE JPEG_VIDEO_QUALITY = 75;
+static const BYTE JPEG_VIDEO_QUALITY = 30;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -129,7 +129,7 @@ void Results::SaveImages(void) {
               JPEG_DEFAULT_QUALITY);
   }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, false, 
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, true, 
               JPEG_DEFAULT_QUALITY);
   }
 
@@ -156,7 +156,11 @@ void Results::SaveVideo(void) {
       // we save the frames in increments of 100ms (for now anyway)
       // round it to the closest interval
       image_time = ((image_time + 50) / 100);
-      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      // resize the image down to a max width of 400 to reduce bandwidth/space
+      DWORD newWidth = min(400, img->GetWidth() / 2);
+      DWORD newHeight = (DWORD)((double)img->GetHeight() * 
+                          ((double)newWidth / (double)img->GetWidth()));
+      img->Resample2(newWidth, newHeight);
       if (last_image) {
         RGBQUAD black = {0,0,0,0};
         if (img->GetWidth() > width)
