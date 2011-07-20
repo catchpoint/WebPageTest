@@ -2,7 +2,6 @@
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetUpdate');
     newrelic_add_custom_tracer('GetVideoJob');
-    newrelic_add_custom_tracer('RecoverDeadTests');
     newrelic_add_custom_tracer('GetJobFile');
 }
 
@@ -102,7 +101,6 @@ function GetJob()
             {
                 if( flock($lockFile, LOCK_EX) )
                 {
-                    RecoverDeadTests($workDir, $backupDir);
                     $fileName = GetJobFile($workDir);
                     
                     if( isset($fileName) && strlen($fileName) )
@@ -115,6 +113,7 @@ function GetJob()
 
                         // send the test info to the test agent
                         $testInfo = file_get_contents($fileName);
+                        unlink($fileName);
                         echo $testInfo;
                         $ok = true;
                         
@@ -122,21 +121,6 @@ function GetJob()
                         if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
                             $testId = trim($matches[1]);
 
-                        // make a backup of the job file
-                        if( !is_dir($backupDir) )
-                            mkdir($backupDir, 0777, true);
-                        
-                        $fileBase = basename($fileName);
-                        if( $fileBase == trim($fileBase, '_') )
-                        {
-                            $backupFile = $backupDir . '/' . $fileBase;
-                            rename($fileName, $backupFile);
-                            touch($backupFile);
-                        }
-                        else
-                            unlink($fileName);
-
-                        
                         if( isset($testId) )
                         {
                             // figure out the path to the results
@@ -278,42 +262,6 @@ function GetNextJobFile($workDir)
     }
 
     return $fileName;
-}
-
-/**
-* Recover any tests that timed out
-* 
-* @param mixed $workDir
-*/
-function RecoverDeadTests($workDir, &$backupDir)
-{
-    $backupDir = "$workDir/testing";
-    
-    // go through the backup directory and restore any that are over an hour old
-    // We prefix the files with an underscore to identify that they have been recovered 
-    // so we don't try to back them up
-    $backups = scandir($backupDir);
-    $now = time();
-    foreach( $backups as $file )
-    {
-        if( is_file( "$backupDir/$file" ) )
-        {
-            $fileTime = filemtime("$backupDir/$file");
-            if( $fileTime && $fileTime < $now )
-            {
-                $elapsed = $now - $fileTime;
-                if( $elapsed > 3600 )
-                {
-                    rename( "$backupDir/$file", "$workDir/_$file" );
-                    touch("$workDir/_$file");
-                    $priority = 0;
-                    if( preg_match('/\.p([1-9])/i', $file, $matches) )
-                        $priority = (int)$matches[1];
-                    AddJobFile($workDir, $file, $priority);
-                }
-            }
-        }
-    }
 }
 
 /**

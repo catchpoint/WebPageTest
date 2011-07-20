@@ -93,15 +93,6 @@ else
             }
         }
         
-        // clean up the backup of the job file
-        $backupDir = $locations[$location]['localDir'] . '/testing';
-        if( is_dir($backupDir) )
-        {
-            $files = glob("$backupDir/$id.*", GLOB_NOSORT);
-            foreach($files as $file)
-                unlink($file);
-        }
-        
         $time = time();
         if( gz_is_file("$testPath/testinfo.json") )
         {
