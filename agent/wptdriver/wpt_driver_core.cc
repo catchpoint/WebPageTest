@@ -472,27 +472,27 @@ void WptDriverCore::DownloadSymbols(CString directory) {
 -----------------------------------------------------------------------------*/
 void WptDriverCore::KillBrowsers() {
   if (!_settings._debug) {
-	  WTS_PROCESS_INFO * proc = NULL;
-	  DWORD count = 0;
+    WTS_PROCESS_INFO * proc = NULL;
+    DWORD count = 0;
     DWORD browser_count = _countof(BROWSERS);
-	  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc,&count)) {
-		  for (DWORD i = 0; i < count; i++) {
+    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc,&count)) {
+      for (DWORD i = 0; i < count; i++) {
         bool terminate = false;
 
         for (DWORD browser = 0; browser < browser_count && !terminate; 
               browser++) {
           TCHAR * process = PathFindFileName(proc[i].pProcessName);
-			    if (!lstrcmpi(process, BROWSERS[browser]) )
+          if (!lstrcmpi(process, BROWSERS[browser]) )
             terminate = true;
         }
 
         if (terminate) {
-				  HANDLE process_handle = OpenProcess(PROCESS_TERMINATE, FALSE, 
+          HANDLE process_handle = OpenProcess(PROCESS_TERMINATE, FALSE, 
                                                 proc[i].ProcessId);
-				  if (process_handle) {
-					  TerminateProcess(process_handle, 0);
-					  CloseHandle(process_handle);
-				  }
+          if (process_handle) {
+            TerminateProcess(process_handle, 0);
+            CloseHandle(process_handle);
+          }
         }
       }
     }

@@ -96,6 +96,7 @@ public:
 
   bool  _active;
   int   _current_document;
+  bool  _exit;
 
   HWND  _frame_window;
   HWND  _document_window;
@@ -113,7 +114,6 @@ private:
   Results&  _results;
   ScreenCapture& _screen_capture;
   HANDLE  _render_check_thread;
-  bool    _exit;
   HANDLE  _check_render_event;
   HANDLE  _data_timer;
 

@@ -159,10 +159,14 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
           if (!_test._combine_steps)
             _results.Save();
           if (_test.Done() ) {
+            _test_server.Stop();
             _results.Save();
             _done = true;
-            if (_test_state._frame_window)
-              ::PostMessage(_test_state._frame_window,WM_CLOSE,0,0);
+            if (_test_state._frame_window) {
+              WptTrace(loglevel::kTrace, 
+                          _T("[wpthook] - **** Exiting Chrome\n"));
+              ::SendMessage(_test_state._frame_window,WM_CLOSE,0,0);
+            }
           }
         }
 

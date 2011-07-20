@@ -80,6 +80,7 @@ void Results::Reset(void) {
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved && _test._log_data) {
     SaveRequests();
     SavePageData();
@@ -87,6 +88,7 @@ void Results::Save(void) {
     SaveProgressData();
     _saved = true;
   }
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
 
 

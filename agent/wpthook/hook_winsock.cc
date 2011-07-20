@@ -237,7 +237,7 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
   SOCKET ret = INVALID_SOCKET;
   if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
-    if( ret != INVALID_SOCKET )
+    if( ret != INVALID_SOCKET && !_test_state._exit )
       _sockets.Create(ret);
   }
   return ret;
@@ -247,7 +247,8 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 -----------------------------------------------------------------------------*/
 int CWsHook::closesocket(SOCKET s) {
   int ret = SOCKET_ERROR;
-  _sockets.Close(s);
+  if (!_test_state._exit)
+    _sockets.Close(s);
   if (_closesocket)
     ret = _closesocket(s);
   return ret;
@@ -258,7 +259,8 @@ int CWsHook::closesocket(SOCKET s) {
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, 
                                                               IN int namelen) {
   int ret = SOCKET_ERROR;
-  _sockets.Connect(s, name, namelen);
+  if (!_test_state._exit)
+    _sockets.Connect(s, name, namelen);
   if (_connect)
     ret = _connect(s, name, namelen);
   if (!ret)
@@ -272,7 +274,7 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
   if( _recv )
     ret = _recv(s, buf, len, flags);
-  if( ret > 0 && !flags && buf && len )
+  if( ret > 0 && !flags && buf && len && !_test_state._exit )
     _sockets.DataIn(s, buf, ret);
   return ret;
 }
@@ -288,7 +290,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
   if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
-        && *lpNumberOfBytesRecvd) {
+        && *lpNumberOfBytesRecvd && !_test_state._exit) {
     DWORD bytes = *lpNumberOfBytesRecvd;
     DWORD i = 0;
     while (i < dwBufferCount && bytes > 0) {
@@ -301,7 +303,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       i++;
     }
   } else if (ret == SOCKET_ERROR && lpBuffers 
-              && dwBufferCount && lpOverlapped) {
+              && dwBufferCount && lpOverlapped && !_test_state._exit) {
     WsaBuffTracker buff(lpBuffers, dwBufferCount);
     recv_buffers.SetAt(lpOverlapped, buff);
   }
@@ -315,7 +317,7 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
   char * new_buff = NULL;
   unsigned long new_len = 0;
-  if (len)
+  if (len && !_test_state._exit)
     _sockets.DataOut(s, buf, len, new_buff, new_len);
   if( _send ) {
     if (new_buff) {
@@ -325,7 +327,7 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     else
       ret = _send(s, buf, len, flags);
   }
-  if (new_buff) {
+  if (new_buff && !_test_state._exit) {
     _sockets.AfterDataOut(new_buff);
   }
   return ret;
@@ -341,10 +343,12 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   char * new_buff = NULL;
   unsigned long new_len = 0;
   unsigned original_len = 0;
-  for (DWORD i = 0; i < dwBufferCount; i++) {
-    if (lpBuffers[i].len && lpBuffers[i].buf) {
-      _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len,new_buff,new_len);
-      original_len += lpBuffers[i].len;
+  if (!_test_state._exit) {
+    for (DWORD i = 0; i < dwBufferCount; i++) {
+      if (lpBuffers[i].len && lpBuffers[i].buf) {
+        _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len,new_buff,new_len);
+        original_len += lpBuffers[i].len;
+      }
     }
   }
   if (_WSASend) {
@@ -364,7 +368,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                     dwFlags, lpOverlapped, lpCompletionRoutine);
   }
-  if (new_buff) {
+  if (new_buff && !_test_state._exit) {
     if (!ret) {
       if (new_buff) {
         _sockets.AfterDataOut(new_buff);
@@ -397,15 +401,16 @@ int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
 int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                              const ADDRINFOA * pHints, PADDRINFOA * ppResult) {
   int ret = WSAEINVAL;
-  bool overrideDNS = false;
   void * context = NULL;
   CString name = CA2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
-  bool override_dns = _dns.LookupStart( name, context, addresses );
+  bool override_dns = false;
+  if (!_test_state._exit)
+    override_dns = _dns.LookupStart( name, context, addresses );
 
-  if( _getaddrinfo && !overrideDNS )
+  if( _getaddrinfo && !override_dns )
     ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
-  else if( overrideDNS ) {
+  else if( override_dns ) {
     if( addresses.IsEmpty() )
       ret = EAI_NONAME;
     else {
@@ -427,7 +432,7 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
     }
   }
 
-  if (!ret) {
+  if (!ret && !_test_state._exit) {
     PADDRINFOA addr = *ppResult;
     while (addr) {
       _dns.LookupAddress(context, addr);
@@ -435,7 +440,7 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
     }
   }
 
-  if (context)
+  if (context && !_test_state._exit)
     _dns.LookupDone(context, ret);
 
   return ret;
@@ -446,15 +451,16 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
                              const ADDRINFOW * pHints, PADDRINFOW * ppResult) {
   int ret = WSAEINVAL;
-  bool overrideDNS = false;
   void * context = NULL;
   CString name = CW2T(pNodeName);
   CAtlArray<ADDRINFOA_ADDR> addresses;
-  bool override_dns = _dns.LookupStart( name, context, addresses );
+  bool override_dns = false;
+  if (!_test_state._exit)
+      override_dns = _dns.LookupStart( name, context, addresses );
 
-  if (_GetAddrInfoW && !overrideDNS)
+  if (_GetAddrInfoW && !override_dns)
     ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
-  else if (overrideDNS) { 
+  else if (override_dns) { 
     if (addresses.IsEmpty())
       ret = EAI_NONAME;
     else {
@@ -476,7 +482,7 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
     }
   }
 
-  if (!ret) {
+  if (!ret && !_test_state._exit) {
     PADDRINFOA addr = (PADDRINFOA)*ppResult;
     while (addr) {
       _dns.LookupAddress(context, addr);
@@ -532,7 +538,7 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
     ret = _WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, 
                                   lpdwFlags);
 
-  if (ret && lpcbTransfer) {
+  if (ret && lpcbTransfer && !_test_state._exit) {
     WsaBuffTracker buff;
     if (recv_buffers.Lookup(lpOverlapped, buff)) {
       DWORD bytes = *lpcbTransfer;
@@ -574,7 +580,8 @@ int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject,
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] WSAEnumNetworkEvents for socket %d\n"), s);
 
-  if (!ret && lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
+  if (!ret && !_test_state._exit && 
+      lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
     _sockets.Connected(s);
 
   return ret;
