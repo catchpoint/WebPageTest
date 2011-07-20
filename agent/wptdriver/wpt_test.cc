@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::WptTest(void) {
+WptTest::WptTest(void):_version(0) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -86,6 +86,12 @@ void WptTest::Reset(void) {
   _sleep_end.QuadPart = 0;
   _combine_steps = 0;
   _upload_incremental_results = true;
+  _user_agent.Empty();
+  _add_headers.RemoveAll();
+  _set_headers.RemoveAll();
+  _override_hosts.RemoveAll();
+  _dns_override.RemoveAll();
+  _dns_name_override.RemoveAll();
 }
 
 /*-----------------------------------------------------------------------------
@@ -384,6 +390,34 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _sleep_end.QuadPart += seconds * _perf_frequency.QuadPart;
       continue_processing = false;
     }
+  } else if (cmd == _T("setuseragent")) {
+    _user_agent = CT2A(command.target);
+  } else if (cmd == _T("addheader")) {
+    int pos = command.target.Find(_T(':'));
+    if (pos > 0) {
+      CStringA tag = CT2A(command.target.Left(pos).Trim());
+      CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
+      HttpHeaderValue header(tag, value);
+      _add_headers.AddTail(header);
+    }
+  } else if (cmd == _T("setheader")) {
+    int pos = command.target.Find(_T(':'));
+    if (pos > 0) {
+      CStringA tag = CT2A(command.target.Left(pos).Trim());
+      CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
+      HttpHeaderValue header(tag, value);
+      _set_headers.AddTail(header);
+    }
+  } else if (cmd == _T("resetheaders")) {
+    _add_headers.RemoveAll();
+    _set_headers.RemoveAll();
+  } else if (cmd == _T("overridehost")) {
+      CStringA host = CT2A(command.target.Trim());
+      CStringA new_host = CT2A(command.value.Trim());
+      if (host.GetLength() && new_host.GetLength()) {
+        HttpHeaderValue host_override(host, new_host);
+        _override_hosts.AddTail(host_override);
+      }
   } else {
     continue_processing = false;
     consumed = false;
@@ -403,12 +437,12 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
   cmd.MakeLower();
 
   if (cmd == _T("setdns")) {
-	  CDNSEntry entry(command.target, command.value);
-		_dns_override.AddTail(entry);
+    CDNSEntry entry(command.target, command.value);
+    _dns_override.AddTail(entry);
   } else if (cmd == _T("setdnsname")) {
-		CDNSName entry(command.target, command.value);
-		if (entry.name.GetLength() && entry.realName.GetLength())
-			_dns_name_override.AddTail(entry);
+    CDNSName entry(command.target, command.value);
+    if (entry.name.GetLength() && entry.realName.GetLength())
+      _dns_name_override.AddTail(entry);
   } else {
     processed = false;
   }
@@ -422,9 +456,9 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
 void  WptTest::OverrideDNSName(CString& name) {
   POSITION pos = _dns_name_override.GetHeadPosition();
   while (pos) {
-	  CDNSName entry = _dns_name_override.GetNext(pos);
-	  if (!name.CompareNoCase(entry.name))
-		  name = entry.realName;
+    CDNSName entry = _dns_name_override.GetNext(pos);
+    if (!name.CompareNoCase(entry.name))
+      name = entry.realName;
   }
 }
 
@@ -433,12 +467,85 @@ void  WptTest::OverrideDNSName(CString& name) {
 -----------------------------------------------------------------------------*/
 ULONG WptTest::OverrideDNSAddress(CString& name) {
   ULONG addr = 0;
-	POSITION pos = _dns_override.GetHeadPosition();
-	while (pos) {
-		CDNSEntry entry = _dns_override.GetNext(pos);
-		if (!name.CompareNoCase(entry.name) || !entry.name.Compare(_T("*")))
-			addr = entry.addr;
-	}
+  POSITION pos = _dns_override.GetHeadPosition();
+  while (pos) {
+    CDNSEntry entry = _dns_override.GetNext(pos);
+    if (!name.CompareNoCase(entry.name) || !entry.name.Compare(_T("*")))
+      addr = entry.addr;
+  }
 
   return addr;
+}
+
+/*-----------------------------------------------------------------------------
+  Modify an outbound request header.  The modifications can include:
+  - Including PTST in the user agent string
+  - Adding new headers
+  - Overriding existing headers
+  - Overriding the host header for a specific host
+-----------------------------------------------------------------------------*/
+bool WptTest::ModifyRequestHeader(CStringA& header) {
+  bool modified = true;
+
+  int pos = header.Find(':');
+  CStringA tag = header.Left(pos);
+  CStringA value = header.Mid(pos + 1).Trim();
+  if( !tag.CompareNoCase("User-Agent") ) {
+    if (_user_agent.GetLength()) {
+      header = CStringA("User-Agent: ") + _user_agent;
+    } else {
+      CStringA user_agent;
+      user_agent.Format(" PTST/%d", _version);
+      header += user_agent;
+    }
+  } else if (!tag.CompareNoCase("Host")) {
+    CStringA new_headers;
+    // Add new headers after the host header.
+    POSITION pos = _add_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _add_headers.GetNext(pos);
+      new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                      new_header._value;
+    }
+    // Override existing headers (they are added here and the original
+    // version is removed below when it is processed)
+    pos = _set_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _set_headers.GetNext(pos);
+      new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                      new_header._value;
+      if (!new_header._tag.CompareNoCase("Host")) {
+        header.Empty();
+        new_headers.TrimLeft();
+      }
+    }
+    // Override the Host header for specified hosts
+    // The original value is added in a x-Host header.
+    pos = _override_hosts.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue host_override = _override_hosts.GetNext(pos);
+      if (!host_override._tag.CompareNoCase(value)) {
+        header = CStringA("Host: ") + host_override._value;
+        new_headers += CStringA("\r\nx-Host: ") + value;
+      }
+    }
+    if (new_headers.GetLength()) {
+      header += new_headers;
+    } else {
+      modified = false;
+    }
+  } else {
+    modified = false;
+    // Delete headers that were being overriden
+    POSITION pos = _set_headers.GetHeadPosition();
+    while (pos && !modified) {
+      HttpHeaderValue new_header = _set_headers.GetNext(pos);
+      if (!new_header._tag.CompareNoCase(tag)) {
+        header.Empty();
+        modified = true;
+      }
+    }
+  }
+
+  return modified;
 }

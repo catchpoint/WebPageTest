@@ -145,9 +145,11 @@ void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
 /*-----------------------------------------------------------------------------
   Look up the socket ID (or create one if it doesn't already exist)
   and pass the data on to the request tracker
+
+  Allow for the data to be overridden with a new buffer
 -----------------------------------------------------------------------------*/
-void TrackSockets::DataOut(SOCKET s, const char * data, 
-                            unsigned long data_len) {
+void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len,
+                                char * &new_buff, unsigned long &new_len) {
   bool localhost = false;
   EnterCriticalSection(&cs);
   DWORD socket_id = 0;
@@ -176,7 +178,14 @@ void TrackSockets::DataOut(SOCKET s, const char * data,
   LeaveCriticalSection(&cs);
 
   if (!localhost )
-    _requests.DataOut(socket_id, data, data_len);
+    _requests.DataOut(socket_id, data, data_len, new_buff, new_len);
+}
+
+/*-----------------------------------------------------------------------------
+  Free up the custom buffer if we allocated one
+-----------------------------------------------------------------------------*/
+void TrackSockets::AfterDataOut(char * new_buff) {
+  _requests.AfterDataOut(new_buff);
 }
 
 /*-----------------------------------------------------------------------------

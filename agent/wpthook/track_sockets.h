@@ -62,7 +62,9 @@ public:
   void Connected(SOCKET s);
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void DataIn(SOCKET s, const char * data, unsigned long data_len);
-  void DataOut(SOCKET s, const char * data, unsigned long data_len);
+  void DataOut(SOCKET s, const char * data, unsigned long data_len,
+                          char * &new_buff, unsigned long &new_len);
+  void AfterDataOut(char * new_buff);
   void Reset();
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
                       LONGLONG& end);

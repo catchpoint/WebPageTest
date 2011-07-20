@@ -31,14 +31,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "track_sockets.h"
 #include "track_dns.h"
+#include "../wptdriver/wpt_test.h"
 
 const DWORD MAX_DATA_TO_RETAIN = 1048576;  // 1MB
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id,
-                  TrackSockets& sockets, TrackDns& dns):
+                  TrackSockets& sockets, TrackDns& dns, WptTest& test):
   _test_state(test_state)
+  , _test(test)
   , _data_sent(0)
   ,_data_received(0)
   , _ms_start(0)
@@ -57,7 +59,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _result(-1)
   , _sockets(sockets)
   , _dns(dns)
-  , _processed(false) {
+  , _processed(false)
+  , _headers_complete(false) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -107,20 +110,80 @@ void Request::DataIn(const char * data, unsigned long data_len) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::DataOut(const char * data, unsigned long data_len) {
+void Request::DataOut(const char * data, unsigned long data_len,
+                      char * &new_buff, unsigned long &new_len) {
   WptTrace(loglevel::kFunction, 
                 _T("[wpthook] - Request::DataOut() - %d bytes\n"), data_len);
   
   EnterCriticalSection(&cs);
   if (_active) {
-    _data_sent += data_len;
-    if (_data_sent < MAX_DATA_TO_RETAIN) {
-      DataChunk chunk(data, data_len);
-      _data_chunks_out.AddTail(chunk);
+    if (new_buff) {
+      // TODO: implement support for multiple-buffer sends
     }
-    
-    // Track BW statistics.
-    _test_state._bytes_out += data_len;
+    // see if we need to modify any of the data on it's way out
+    if (!_headers_complete && data && data_len && !new_buff) {
+      CStringA headers;
+      bool modified = false;
+      CStringA line;
+      unsigned long bytes = data_len;
+      unsigned long header_len = 0;
+      const char * current_data = data;
+      while( !_headers_complete && bytes ) {
+        if (*current_data == '\r' || *current_data == '\n') {
+          if( !line.IsEmpty() ) {
+            if (_test.ModifyRequestHeader(line))
+              modified = true;
+            if (line.GetLength()) {
+              headers += line;
+              headers += "\r\n";
+            }
+            line.Empty();
+          }
+          if (bytes >= 4 && !strncmp(current_data, "\r\n\r\n", 4)) {
+            headers += "\r\n";
+            header_len = data_len - bytes + 4;
+            _headers_complete = true;
+          }
+        } else {
+          line += *current_data;
+        }
+        current_data++;
+        bytes--;
+      }
+      if (modified) {
+        new_len = headers.GetLength();
+        unsigned long delta = 0;
+        if (header_len < data_len) {
+          CString buff;
+          delta = data_len - header_len;
+        }
+        new_len += delta;
+        new_buff = (char *)malloc(new_len);
+        memcpy(new_buff, (LPCSTR)headers, headers.GetLength());
+        if (delta) {
+          char * dest = new_buff + headers.GetLength();
+          const char * src = data + header_len;
+          memcpy(dest, src, delta);
+        }
+      }
+    }
+
+    // keep track of the data that was actually sent
+    if (new_buff) {
+      _data_sent += new_len;
+      if (_data_sent < MAX_DATA_TO_RETAIN) {
+        DataChunk chunk(new_buff, new_len);
+        _data_chunks_out.AddTail(chunk);
+      }
+      _test_state._bytes_out += new_len;
+    } else {
+      _data_sent += data_len;
+      if (_data_sent < MAX_DATA_TO_RETAIN) {
+        DataChunk chunk(data, data_len);
+        _data_chunks_out.AddTail(chunk);
+      }
+      _test_state._bytes_out += data_len;
+    }
   }
   LeaveCriticalSection(&cs);
 }
@@ -388,3 +451,4 @@ CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
   }
   return value;
 }
+

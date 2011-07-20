@@ -313,10 +313,21 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 -----------------------------------------------------------------------------*/
 int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
+  char * new_buff = NULL;
+  unsigned long new_len = 0;
   if (len)
-    _sockets.DataOut(s, buf, len);
-  if( _send )
-    ret = _send(s, buf, len, flags);
+    _sockets.DataOut(s, buf, len, new_buff, new_len);
+  if( _send ) {
+    if (new_buff) {
+      ret = _send(s, new_buff, new_len, flags);
+      ret = len;
+    }
+    else
+      ret = _send(s, buf, len, flags);
+  }
+  if (new_buff) {
+    _sockets.AfterDataOut(new_buff);
+  }
   return ret;
 }
 
@@ -327,12 +338,47 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  for (DWORD i = 0; i < dwBufferCount; i++)
-    if (lpBuffers[i].len && lpBuffers[i].buf)
-      _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len);
-  if (_WSASend)
-    ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+  char * new_buff = NULL;
+  unsigned long new_len = 0;
+  unsigned original_len = 0;
+  for (DWORD i = 0; i < dwBufferCount; i++) {
+    if (lpBuffers[i].len && lpBuffers[i].buf) {
+      _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len,new_buff,new_len);
+      original_len += lpBuffers[i].len;
+    }
+  }
+  if (_WSASend) {
+    if (new_buff && new_len) {
+      WSABUF out;
+      out.buf = new_buff;
+      out.len = new_len;
+      ret = _WSASend(s, &out, 1, lpNumberOfBytesSent, dwFlags, lpOverlapped,
+                      lpCompletionRoutine);
+      // Respond with the number of bytes the sending app was expecting
+      // to be written.  It can get confused if you write more data than
+      // they provided.
+      if (lpNumberOfBytesSent)
+        *lpNumberOfBytesSent = original_len;
+    }
+    else
+      ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                     dwFlags, lpOverlapped, lpCompletionRoutine);
+  }
+  if (new_buff) {
+    if (!ret) {
+      if (new_buff) {
+        _sockets.AfterDataOut(new_buff);
+      }
+    } else {
+      if (WSAGetLastError() == WSA_IO_PENDING) {
+        // TODO: figure out how to delete the buffer later and return the real
+        // number of bytes transmitted to the calling app
+      } else {
+        if (new_buff)
+          _sockets.AfterDataOut(new_buff);
+      }
+    }
+  }
   return ret;
 }
 

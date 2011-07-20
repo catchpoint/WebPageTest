@@ -32,16 +32,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class TestState;
 class TrackSockets;
 class TrackDns;
+class WptTest;
 
 class Requests {
 public:
-  Requests(TestState& test_state, TrackSockets& sockets, TrackDns& dns);
+  Requests(TestState& test_state, TrackSockets& sockets, TrackDns& dns,
+            WptTest& test);
   ~Requests(void);
 
   void SocketClosed(DWORD socket_id);
   void DataIn(DWORD socket_id, const char * data, unsigned long data_len);
-  void DataOut(DWORD socket_id, const char * data, unsigned long data_len);
-
+  void DataOut(DWORD socket_id, const char * data, unsigned long data_len,
+                char * &new_buff, unsigned long &new_len);
+  void AfterDataOut(char * new_buff);
   void Lock();
   void Unlock();
   void Reset();
@@ -54,6 +57,7 @@ private:
   TestState&        _test_state;
   TrackSockets&     _sockets;
   TrackDns&         _dns;
+  WptTest&          _test;
 
   bool IsHttpRequest(const char * data, unsigned long data_len);
 

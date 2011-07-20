@@ -51,12 +51,33 @@ WptHook::WptHook(void):
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
-  ,_requests(_test_state, _sockets, _dns)
+  ,_requests(_test_state, _sockets, _dns, _test)
   ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
   ,_dns(_test_state, _test)
   ,_done(false)
   ,_test_server(*this, _test, _chrome_hook) {
   _file_base = shared_results_file_base;
+  // grab the version number of the dll
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(global_dll_handle, file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    LPBYTE pVersion = NULL;
+    if (infoSize)  
+      pVersion = (LPBYTE)malloc( infoSize );
+    if (pVersion) {
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
+          if( info ) {
+            _test._version = LOWORD(info->dwFileVersionLS);
+          }
+        }
+      }
+      free( pVersion );
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

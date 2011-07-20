@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class TestState;
 class TrackSockets;
 class TrackDns;
+class WptTest;
 
 class DataChunk {
 public:
@@ -80,11 +81,12 @@ typedef CAtlList<HeaderField> Fields;
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, 
-          TrackSockets& sockets, TrackDns& dns);
+          TrackSockets& sockets, TrackDns& dns, WptTest& test);
   ~Request(void);
 
   void DataIn(const char * data, unsigned long data_len);
-  void DataOut(const char * data, unsigned long data_len);
+  void DataOut(const char * data, unsigned long data_len,
+                char * &new_buff, unsigned long &new_len);
   void SocketClosed();
   bool Process();
 
@@ -114,6 +116,7 @@ public:
 
 private:
   TestState&    _test_state;
+  WptTest&      _test;
   TrackSockets& _sockets;
   TrackDns&     _dns;
   LARGE_INTEGER _start;
@@ -124,6 +127,7 @@ private:
   bool          _active;
   Fields    _in_fields;
   Fields    _out_fields;
+  bool      _headers_complete;
 
   // merged data chunks
   char *  _data_in;

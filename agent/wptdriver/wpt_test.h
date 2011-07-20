@@ -81,6 +81,21 @@ public:
 	CString	realName;
 };
 
+class HttpHeaderValue {
+public:
+  HttpHeaderValue(){}
+  HttpHeaderValue(CStringA tag, CStringA value):_tag(tag),_value(value){}
+  HttpHeaderValue(const HttpHeaderValue& src){*this = src;}
+  ~HttpHeaderValue(void){}
+  const HttpHeaderValue& operator =(const HttpHeaderValue& src){
+    _tag = src._tag;
+    _value = src._value;
+    return src;
+  }
+  CStringA  _tag;
+  CStringA  _value;
+};
+
 class WptTest {
 public:
   WptTest(void);
@@ -93,6 +108,7 @@ public:
   bool  Done();
   void  OverrideDNSName(CString& name);
   ULONG OverrideDNSAddress(CString& name);
+  bool  ModifyRequestHeader(CStringA& header);
 
   // overall test settings
   CString _id;
@@ -126,6 +142,7 @@ public:
   LARGE_INTEGER _sleep_end;
   LARGE_INTEGER _perf_frequency;
   int     _combine_steps;
+  int     _version;
 
 protected:
   CStringA  JSONEscape(CString src);
@@ -141,4 +158,10 @@ protected:
   // DNS overrides
 	CAtlList<CDNSEntry>			_dns_override;
 	CAtlList<CDNSName>			_dns_name_override;
+
+  // header overrides
+  CStringA  _user_agent;
+  CAtlList<HttpHeaderValue> _add_headers;
+  CAtlList<HttpHeaderValue> _set_headers;
+  CAtlList<HttpHeaderValue> _override_hosts;
 };

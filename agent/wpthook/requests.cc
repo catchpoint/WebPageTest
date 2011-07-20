@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "track_dns.h"
 #include "track_sockets.h"
+#include "../wptdriver/wpt_test.h"
+
 
 const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ", "OPTIONS ",
                                "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
@@ -38,10 +40,11 @@ const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ", "OPTIONS ",
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Requests::Requests(TestState& test_state, TrackSockets& sockets,
-                    TrackDns& dns):
+                    TrackDns& dns, WptTest& test):
   _test_state(test_state)
   , _sockets(sockets)
-  , _dns(dns) {
+  , _dns(dns)
+  , _test(test) {
   _active_requests.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -115,9 +118,11 @@ void Requests::DataIn(DWORD socket_id, const char * data,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Requests::DataOut(DWORD socket_id, const char * data, 
-                                                      unsigned long data_len) {
+           unsigned long data_len, char * &new_buff, unsigned long &new_len) {
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - Requests::DataOut() %d bytes\n"), data_len);
+  new_buff = NULL;
+  new_len = 0;
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if we are starting a new http request
@@ -133,7 +138,7 @@ void Requests::DataOut(DWORD socket_id, const char * data,
     }
 
     if (request) {
-      request->DataOut(data, data_len);
+      request->DataOut(data, data_len, new_buff, new_len);
     } else {
       WptTrace(loglevel::kFrequentEvent, 
                 _T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
@@ -141,6 +146,14 @@ void Requests::DataOut(DWORD socket_id, const char * data,
     }
     LeaveCriticalSection(&cs);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Free up the custom buffer if we allocated one
+-----------------------------------------------------------------------------*/
+void Requests::AfterDataOut(char * new_buff) {
+  if (new_buff)
+    free(new_buff);
 }
 
 /*-----------------------------------------------------------------------------
@@ -163,7 +176,7 @@ bool Requests::IsHttpRequest(const char * data, unsigned long data_len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id) {
-  Request * request = new Request(_test_state, socket_id, _sockets, _dns);
+  Request * request = new Request(_test_state, socket_id, _sockets,_dns,_test);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
   return request;
