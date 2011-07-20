@@ -1,9 +1,6 @@
-goog.provide('wpt.contentScript');
-
 // This script is automatically injected into every page before it loads.
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
-
 window.addEventListener("load", function() {
   var WPT_load_time = 0;
   try {
