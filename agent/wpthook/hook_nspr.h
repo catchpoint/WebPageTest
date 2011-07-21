@@ -81,6 +81,8 @@ public:
   PRAddrInfo* PR_GetAddrInfoByName(const char *hostname, PRUint16 af, PRIntn flags);
   PRStatus PR_GetHostByName(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry);
 
+  PROsfd PR_FileDesc2NativeHandle(PRFileDesc *fd);
+
 private:
   void DumpOsfd(LPCTSTR name, PRFileDesc *fd);
   template <typename U> void GetFunctionByName(const std::string& dll, const std::string& funcName, U& func);

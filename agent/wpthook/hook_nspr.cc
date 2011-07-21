@@ -124,6 +124,17 @@ PRStatus PR_GetHostByName_Hook(const char *hostname, char *buf, PRIntn bufsize, 
   return ret;
 }
 
+PROsfd PR_FileDesc2NativeHandle_Hook(PRFileDesc *fd) {
+  PROsfd ret = 0;
+  if (pHook) {
+    ret = pHook->PR_FileDesc2NativeHandle(fd);
+  }
+  return ret;
+}
+
+// end of C hook functions
+
+
 NsprHook::NsprHook() {
 }
 
@@ -151,7 +162,8 @@ void NsprHook::Init() {
 
   _PR_GetAddrInfoByName = hook.createHookByName("nspr4.dll", "PR_GetAddrInfoByName", PR_GetAddrInfoByName_Hook);
   _PR_GetHostByName = hook.createHookByName("nspr4.dll", "PR_GetHostByName", PR_GetHostByName_Hook);
-  GetFunctionByName("nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+  _PR_FileDesc2NativeHandle = hook.createHookByName("nspr4.dll", "PR_FileDesc2NativeHandle", PR_FileDesc2NativeHandle_Hook);
+  //GetFunctionByName("nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
 }
 
 // NSPR hooks
@@ -254,6 +266,15 @@ PRStatus NsprHook::PR_GetHostByName(const char *hostname, char *buf, PRIntn bufs
   }
   return ret;
 }
+
+PROsfd NsprHook::PR_FileDesc2NativeHandle(PRFileDesc *fd) {
+  PROsfd ret = 0;
+  if (_PR_FileDesc2NativeHandle) {
+    ret = _PR_FileDesc2NativeHandle(fd);
+  }
+  return ret;
+}
+
 
 void NsprHook::DumpOsfd(LPCTSTR name, PRFileDesc *fd) {
 #ifdef DEBUG
