@@ -47,6 +47,12 @@
     <Filter Include="Third-Party\Mongoose">
       <UniqueIdentifier>{9f454a3f-2be3-4993-bba1-049bede3860c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\nspr">
+      <UniqueIdentifier>{151ac39f-1e62-44e3-876a-cc32b46f2aee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\nspr\obsolete">
+      <UniqueIdentifier>{e2ac132a-479d-4098-a1b5-7274f605dec4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -264,6 +270,30 @@
     </ClInclude>
     <ClInclude Include="hook_chrome.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_firefox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prio.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prinet.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prinrval.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prlong.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prtime.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prtypes.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\obsolete\protypes.h">
+      <Filter>Third-Party\nspr\obsolete</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -639,10 +669,18 @@
     <ClCompile Include="hook_chrome.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="hook_firefox.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wpthook.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="nspr\_winnt.cfg">
+      <Filter>Third-Party\nspr</Filter>
+    </None>
   </ItemGroup>
 </Project>

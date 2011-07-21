@@ -102,6 +102,7 @@ void WptHook::Init(){
   WptTrace(loglevel::kProcess, _T("[wpthook] Init()\n"));
 
   _winsock_hook.Init();
+  _firefox_hook.Init();
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
