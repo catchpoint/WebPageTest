@@ -261,11 +261,8 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
   int ret = SOCKET_ERROR;
   if (!_test_state._exit)
     _sockets.Connect(s, name, namelen);
-  if (_connect) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] - CwsHook::connect(socket=%u)"), s);
+  if (_connect)
     ret = _connect(s, name, namelen);
-  }
   if (!ret)
     _sockets.Connected(s);
   return ret;
@@ -275,11 +272,8 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
 -----------------------------------------------------------------------------*/
 int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  if(_recv) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] - CwsHook::recv(socket=%u)"), s);
+  if( _recv )
     ret = _recv(s, buf, len, flags);
-  }
   if( ret > 0 && !flags && buf && len && !_test_state._exit )
     _sockets.DataIn(s, buf, ret);
   return ret;
@@ -292,12 +286,9 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                      LPWSAOVERLAPPED lpOverlapped, 
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  if (_WSARecv) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] - CwsHook::WSARecv(socket=%u)"), s);
+  if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-  }
   if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
         && *lpNumberOfBytesRecvd && !_test_state._exit) {
     DWORD bytes = *lpNumberOfBytesRecvd;
@@ -332,11 +323,9 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     if (new_buff) {
       ret = _send(s, new_buff, new_len, flags);
       ret = len;
-    } else {
-      ret = _send(s, buf, len, flags);
-      WptTrace(loglevel::kFunction,
-               _T("[wpthook] - CwsHook::send(socket=%u)"), s);
     }
+    else
+      ret = _send(s, buf, len, flags);
   }
   if (new_buff && !_test_state._exit) {
     _sockets.AfterDataOut(new_buff);
@@ -374,12 +363,10 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       // they provided.
       if (lpNumberOfBytesSent)
         *lpNumberOfBytesSent = original_len;
-    } else {
+    }
+    else
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                     dwFlags, lpOverlapped, lpCompletionRoutine);
-      WptTrace(loglevel::kFunction,
-               _T("[wpthook] - CwsHook::WSARecv(socket=%u)"), s);
-    }
   }
   if (new_buff && !_test_state._exit) {
     if (!ret) {

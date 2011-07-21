@@ -54,8 +54,6 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>nspr</AdditionalIncludeDirectories>
-      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -125,7 +123,6 @@
     <ClInclude Include="distorm\src\wstring.h" />
     <ClInclude Include="distorm\src\x86defs.h" />
     <ClInclude Include="hook_chrome.h" />
-    <ClInclude Include="hook_nspr.h" />
     <ClInclude Include="hook_gdi.h" />
     <ClInclude Include="jpeg\cderror.h" />
     <ClInclude Include="jpeg\cdjpeg.h" />
@@ -143,15 +140,6 @@
     <ClInclude Include="NCodeHook\NCodeHook.h" />
     <ClInclude Include="NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="NCodeHook\NCodeHookItem.h" />
-    <ClInclude Include="nspr\nspr.h" />
-    <ClInclude Include="nspr\obsolete\protypes.h" />
-    <ClInclude Include="nspr\prinet.h" />
-    <ClInclude Include="nspr\prinrval.h" />
-    <ClInclude Include="nspr\prio.h" />
-    <ClInclude Include="nspr\private\primpl.h" />
-    <ClInclude Include="nspr\prlong.h" />
-    <ClInclude Include="nspr\prtime.h" />
-    <ClInclude Include="nspr\prtypes.h" />
     <ClInclude Include="request.h" />
     <ClInclude Include="requests.h" />
     <ClInclude Include="resource.h" />
@@ -414,7 +402,6 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="hook_chrome.cc" />
-    <ClCompile Include="hook_nspr.cc" />
     <ClCompile Include="hook_gdi.cc" />
     <ClCompile Include="inject.cc" />
     <ClCompile Include="jpeg\cdjpeg.c">

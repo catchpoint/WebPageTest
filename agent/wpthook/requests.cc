@@ -97,10 +97,9 @@ void Requests::SocketClosed(DWORD socket_id) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Requests::DataIn(DWORD socket_id, const char * data, 
-                      unsigned long data_len) {
+                                                      unsigned long data_len) {
   WptTrace(loglevel::kFunction, 
-           _T("[wpthook] - Requests::DataIn(socket_id=%u) %d bytes\n"),
-           socket_id, data_len);
+              _T("[wpthook] - Requests::DataIn() %d bytes\n"), data_len);
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if it maps to a known request
@@ -109,9 +108,8 @@ void Requests::DataIn(DWORD socket_id, const char * data,
     if (_active_requests.Lookup(socket_id, request) && request) {
       request->DataIn(data, data_len);
     } else {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Requests::DataIn(socket_id=%u) ")
-               _T("not associated with a known request\n"), socket_id);
+      WptTrace(loglevel::kFrequentEvent, _T("[wpthook] - Requests::DataIn()")
+               _T(" not associated with a known request\n"));
     }
     LeaveCriticalSection(&cs);
   }
@@ -122,8 +120,7 @@ void Requests::DataIn(DWORD socket_id, const char * data,
 void Requests::DataOut(DWORD socket_id, const char * data, 
            unsigned long data_len, char * &new_buff, unsigned long &new_len) {
   WptTrace(loglevel::kFunction, 
-           _T("[wpthook] - Requests::DataOut(socket_id=%u) %d bytes\n"),
-           socket_id, data_len);
+            _T("[wpthook] - Requests::DataOut() %d bytes\n"), data_len);
   new_buff = NULL;
   new_len = 0;
   if (_test_state._active) {
@@ -144,8 +141,8 @@ void Requests::DataOut(DWORD socket_id, const char * data,
       request->DataOut(data, data_len, new_buff, new_len);
     } else {
       WptTrace(loglevel::kFrequentEvent, 
-               _T("[wpthook] - Requests::DataOut(socket_id=%u) ")
-               _T("Non-HTTP traffic detected"), socket_id);
+                _T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
+                _T(" on socket %d"), socket_id);
     }
     LeaveCriticalSection(&cs);
   }
