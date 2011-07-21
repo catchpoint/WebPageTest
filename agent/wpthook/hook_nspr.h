@@ -29,8 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include "ncodehook/NCodeHookInstantiation.h"
-#define MDCPUCFG "nspr/_winnt.cfg"
-#include "nspr/prio.h"
+#define MDCPUCFG "md/_winnt.cfg"
+#include "prio.h"
+typedef struct TRANSMIT_FILE_BUFFERS TRANSMIT_FILE_BUFFERS;
+#include "private/pprio.h"
 
 typedef enum _SECStatus {
     SECWouldBlock = -2,
@@ -40,64 +42,65 @@ typedef enum _SECStatus {
 
 typedef struct PRAddrInfo PRAddrInfo;
 typedef struct PRHostEnt PrHostEnt;
+
+typedef PRFileDesc* (*PFN_PR_Socket)(PRInt32 domain, PRInt32 type, PRInt32 proto);
+typedef PRFileDesc* (*PFN_SSL_ImportFD)(PRFileDesc *model, PRFileDesc *fd);
+typedef SECStatus (*PFN_SSL_SetURL)(PRFileDesc *fd, const char *url);
+typedef PRStatus (*PFN_PR_Connect)(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
+typedef PRStatus (*PFN_PR_ConnectContinue)(PRFileDesc *fd, PRInt16 out_flags);
+
 typedef PRInt32 (*PFN_PR_Write)(PRFileDesc*, const void*, PRInt32);
 typedef PRInt32 (*PFN_PR_Send)(PRFileDesc*, const void*, PRInt32, PRIntn, PRIntervalTime);
 typedef PRInt32 (*PFN_PR_Read)(PRFileDesc*, void*, PRInt32);
 typedef PRInt32 (*PFN_PR_Recv)(PRFileDesc*, void*, PRInt32, PRIntn, PRIntervalTime);
-typedef PRFileDesc* (*PFN_SSL_ImportFD)(PRFileDesc *model, PRFileDesc *fd);
-typedef SECStatus (*PFN_SSL_SetURL)(PRFileDesc *fd, const char *url);
-typedef SECStatus (*PFN_SSL_ForceHandshake)(PRFileDesc *fd);
-typedef SECStatus (*PFN_SSL_ForceHandshakeWithTimeout)(PRFileDesc *fd, PRIntervalTime timeout);
-
-typedef PRStatus (*PFN_PR_Connect)(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
-typedef PRStatus (*PFN_PR_GetConnectStatus)(const PRPollDesc *pd);
 
 typedef PRAddrInfo* (*PFN_PR_GetAddrInfoByName)(const char *hostname, PRUint16 af, PRIntn flags);
 typedef PRStatus (*PFN_PR_GetHostByName)(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry);
 
-class FirefoxHook
+typedef PROsfd (*PFN_PR_FileDesc2NativeHandle)(PRFileDesc *fd);
+
+class NsprHook
 {
 public:
-  FirefoxHook();
-  ~FirefoxHook();
+  NsprHook();
+  ~NsprHook();
   void Init();
 
   // NSPR hooks
+  PRFileDesc* PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto);
+  PRFileDesc* SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
+  SECStatus SSL_SetURL(PRFileDesc *fd, const char *url);
+  PRStatus PR_Connect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
+  PRStatus PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags);
+
   PRInt32 PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount);
   PRInt32 PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
-
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
   PRInt32 PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout);
-
-  PRFileDesc *SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
-  SECStatus SSL_SetURL(PRFileDesc *fd, const char *url);
-  SECStatus SSL_ForceHandshake(PRFileDesc *fd);
-  SECStatus SSL_ForceHandshakeWithTimeout(PRFileDesc *fd, PRIntervalTime timeout);
-
-  PRStatus PR_Connect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout);
-  PRStatus PR_GetConnectStatus(const PRPollDesc *pd);
 
   PRAddrInfo* PR_GetAddrInfoByName(const char *hostname, PRUint16 af, PRIntn flags);
   PRStatus PR_GetHostByName(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry);
 
 private:
+  void DumpOsfd(LPCTSTR name, PRFileDesc *fd);
+  template <typename U> void GetFunctionByName(const std::string& dll, const std::string& funcName, U& func);
+
   bool hooked;
   NCodeHookIA32		  hook;
-  FILE* _fp;
+
+  PFN_PR_Socket    _PR_Socket;
+  PFN_SSL_ImportFD _SSL_ImportFD;
+  PFN_SSL_SetURL   _SSL_SetURL;
+  PFN_PR_Connect   _PR_Connect;
+  PFN_PR_ConnectContinue  _PR_ConnectContinue;
 
   PFN_PR_Read   _PR_Read;
   PFN_PR_Recv   _PR_Recv;
   PFN_PR_Write  _PR_Write;
   PFN_PR_Send   _PR_Send;
 
-  PFN_SSL_ImportFD  _SSL_ImportFD;
-  PFN_SSL_SetURL  _SSL_SetURL;
-  PFN_SSL_ForceHandshake  _SSL_ForceHandshake;
-  PFN_SSL_ForceHandshakeWithTimeout  _SSL_ForceHandshakeWithTimeout;
-
-  PFN_PR_Connect  _PR_Connect;
-  PFN_PR_GetConnectStatus  _PR_GetConnectStatus;
-
   PFN_PR_GetAddrInfoByName  _PR_GetAddrInfoByName;
   PFN_PR_GetHostByName  _PR_GetHostByName;
+
+  PFN_PR_FileDesc2NativeHandle _PR_FileDesc2NativeHandle;
 };

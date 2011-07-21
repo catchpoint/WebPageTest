@@ -100,9 +100,11 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 -----------------------------------------------------------------------------*/
 void WptHook::Init(){
   WptTrace(loglevel::kProcess, _T("[wpthook] Init()\n"));
-
+#ifdef DEBUG
+  MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
+#endif
   _winsock_hook.Init();
-  _firefox_hook.Init();
+  _nspr_hook.Init();
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();

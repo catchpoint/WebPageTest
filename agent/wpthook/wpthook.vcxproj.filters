@@ -53,6 +53,9 @@
     <Filter Include="Third-Party\nspr\obsolete">
       <UniqueIdentifier>{e2ac132a-479d-4098-a1b5-7274f605dec4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\nspr\private">
+      <UniqueIdentifier>{a96f5b3e-2692-469c-ab4e-af117f3238fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -271,9 +274,6 @@
     <ClInclude Include="hook_chrome.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hook_firefox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nspr\prio.h">
       <Filter>Third-Party\nspr</Filter>
     </ClInclude>
@@ -294,6 +294,15 @@
     </ClInclude>
     <ClInclude Include="nspr\obsolete\protypes.h">
       <Filter>Third-Party\nspr\obsolete</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\private\primpl.h">
+      <Filter>Third-Party\nspr\private</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\nspr.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_nspr.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -669,7 +678,7 @@
     <ClCompile Include="hook_chrome.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hook_firefox.cc">
+    <ClCompile Include="hook_nspr.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -677,10 +686,5 @@
     <ResourceCompile Include="wpthook.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="nspr\_winnt.cfg">
-      <Filter>Third-Party\nspr</Filter>
-    </None>
   </ItemGroup>
 </Project>
