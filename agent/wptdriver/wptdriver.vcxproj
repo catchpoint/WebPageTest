@@ -63,8 +63,6 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\\"
-mkdir "$(outdir)\extension"
-xcopy /Y /E /S /I "..\browser\chrome\extension" "$(outdir)\extension"
 xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
 </Command>
     </PostBuildEvent>
@@ -95,7 +93,6 @@ xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
 mkdir "$(outdir)\extension"
-copy /Y "..\browser\chrome\extension" "$(outdir)\extension"
 xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
 </Command>
     </PostBuildEvent>
