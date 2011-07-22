@@ -43,6 +43,7 @@ protected:
 	void DoStartup(void);
 	CArray<CURLBlaster *> workers;
 	void KillWorkers(void);
+  void InstallFlash();
 
 	CStatic rate;
 	__int64 start;

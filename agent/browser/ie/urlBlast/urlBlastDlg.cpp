@@ -311,6 +311,8 @@ void CurlBlastDlg::DoStartup(void)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 
+  InstallFlash();
+
 	log.dialerId = dialerID;
 	log.labID = labID;
 	log.LogEvent(event_Started);
@@ -1838,4 +1840,35 @@ void CurlBlastDlg::ClearTemp()
     if( GetLongPathName(path, longPath, _countof(longPath)) )
       DeleteDirectory(longPath, false);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Install/update the flash player if the executable is local 
+  (delivered as part of an update)
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::InstallFlash()
+{
+    // try launching the current version of the installer from the same directory we are in
+	  TCHAR path[MAX_PATH];
+	  if( GetModuleFileName(NULL, path, _countof(path)) )
+	  {
+		  lstrcpy(PathFindFileName(path), _T("flash.exe"));
+		  CString exe(path);
+		  CString cmd = CString(_T("\"")) + exe + _T("\" -install");
+
+		  PROCESS_INFORMATION pi;
+		  STARTUPINFO si;
+		  memset( &si, 0, sizeof(si) );
+		  si.cb = sizeof(si);
+		  si.dwFlags = STARTF_USESHOWWINDOW;
+		  si.wShowWindow = SW_HIDE;
+		  if( CreateProcess((LPCTSTR)exe, (LPTSTR)(LPCTSTR)cmd, 0, 0, FALSE, IDLE_PRIORITY_CLASS , 0, NULL, &si, &pi) )
+		  {
+			  WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);
+			  CloseHandle(pi.hThread);
+			  CloseHandle(pi.hProcess);
+        DeleteFile(path);
+			  log.Trace(_T("Updated/installed flash"), (LPCTSTR)cmd);
+		  }
+	  }
 }
