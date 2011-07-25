@@ -92,6 +92,11 @@ function wptOnNavigate(){
 
 // notification that the page loaded
 function wptOnLoad(load_time){
+  // close the debug window.
+  if (DEBUG) {
+    debugWindow.setEnabled(false);
+    debugWindow.win_.close();
+  }
   try {
     g_active = false;
     var xhr = new XMLHttpRequest();
@@ -132,13 +137,15 @@ function wptExecuteTask(task){
       g_active = false;
 
     // decode and execute the actual command
-    LOG.info("Running task " + task.action);
+    LOG.info("Running task " + task.action + " " + task.target);
     if (task.action == "navigate")
       g_commandRunner.doNavigate(g_tabId, task.target);
     else if (task.action == "exec")
       g_commandRunner.doExec(task.target);
     else if (task.action == "setcookie")
       g_commandRunner.doSetCookie(task.target, task.value);
+    else if (task.action == "block")
+      g_commandRunner.doBlock(task.target);    
 
     if (!g_active)
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );

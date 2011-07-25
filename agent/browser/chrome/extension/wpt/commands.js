@@ -81,3 +81,17 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
     }
   }
 };
+
+/**
+ * Implement the block command.
+ * @param {string} blockPattern
+ */
+wpt.commands.CommandRunner.prototype.doBlock = function(blockpattern) {
+  // Create a listener which blocks all the requests that has the patterm. Also,  pass an empty filter and "blocking" as the extraInfoSpec.
+  chrome.experimental.webRequest.onBeforeRequest.addListener(function(details){
+    if (details.url.indexOf(blockpattern) != -1) {
+      return { "cancel": true };
+    }
+    return {};
+  }, {}, ["blocking"]);
+};

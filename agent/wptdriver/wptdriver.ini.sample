@@ -10,7 +10,9 @@ exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 ; Load the chrome extension from the source directory.  This allows developers
 ; to edit the extension and reload without rebuilding.  It also avoids the cost
 ; of copying the extension when doing a build.
-options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-data-dir="%WPTDIR%\chrome_user_data" --new-window --no-proxy-server --no-first-run --no-default-browser-check'
+; Note: --enable-experimental-extension-apis is used for block command in wpt
+; scripting and it works only in the dev channel of chrome.
+options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-data-dir="%WPTDIR%\chrome_user_data" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
 cache="%WPTDIR%\chrome_user_data"
 
 [firefox]

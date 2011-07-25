@@ -16,6 +16,6 @@
     }
   ],
   "permissions": [
-    "cookies", "tabs", "https://*/*", "http://*/*"
+    "experimental", "cookies", "tabs", "https://*/*", "http://*/*"
   ]
 }
