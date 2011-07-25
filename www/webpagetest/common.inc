@@ -1338,13 +1338,14 @@ function GetTesterCount($location)
 /**
 * Add a job to the work queue (assume it is locked)
 */
-function AddJobFile($workDir, $file, $priority)
+function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 {
     $ret = false;
     if( LoadJobQueue($workDir, $queue) )
     {
-        if( array_push($queue[$priority], $file) )
-            $ret = SaveJobQueue($workDir, $queue);
+        if( !$queue_limit || count($queue[$priority]) < $queue_limit )
+            if( array_push($queue[$priority], $file) )
+                $ret = SaveJobQueue($workDir, $queue);
     }
     return $ret;
 }
@@ -1472,5 +1473,66 @@ function SaveJobQueue($workDir, &$queue)
         $ret = true;
         
     return $ret;
+}
+
+/**
+* Get the backlog for the given location
+* 
+* @param mixed $dir
+*/
+function GetTesters($locationId)
+{
+    $location = array();
+
+    $file = "./tmp/$locationId.tm";
+    if( is_file($file) )
+    {
+        $now = time();
+        $updated = filemtime($file);
+        $elapsed = 0;
+        if( $now > $updated )
+            $elapsed = $now - $updated;
+        $location['elapsed'] = (int)($elapsed / 60);
+        
+        // load information about each tester
+        $testers = json_decode(file_get_contents($file), true);
+        if( count($testers) )
+        {
+            ksort($testers);
+            $location['testers'] = array();
+            foreach( $testers as $index => $tester )
+            {
+                $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver']);
+                
+                // last time it checked in
+                if( isset($tester['updated']) )
+                {
+                    $elapsed = 0;
+                    $updated = $tester['updated'];
+                    if( $now > $updated )
+                        $elapsed = $now - $updated;
+                    $entry['elapsed'] = (int)($elapsed / 60);
+                }
+                
+                // last time it got work
+                if( isset($tester['last']) )
+                {
+                    $elapsed = 0;
+                    $updated = $tester['last'];
+                    if( $now > $updated )
+                        $elapsed = $now - $updated;
+                    $entry['last'] = (int)($elapsed / 60);
+                }
+                
+                $entry['busy'] = 0;
+                if( isset( $tester['test'] ) )
+                    $entry['busy'] = 1;
+                    
+                $location['testers'][] = $entry;
+            }
+        }
+    }
+    
+    return $location;
 }
 ?>

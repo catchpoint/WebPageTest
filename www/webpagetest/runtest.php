@@ -90,6 +90,7 @@
         $test['noheaders'] = trim($req_noheaders);
         $test['view'] = trim($req_view);
         $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
+        $test['queue_limit'] = 0;
         
         // see if it is a batch test
         $test['batch'] = 0;
@@ -320,7 +321,7 @@
             else
             {
                 $test['id'] = CreateTest($test, $test['url']);
-                if( !$test['id'] )
+                if( !$test['id'] && !strlen($error) )
                     $error = 'Error submitting url for testing';
             }
         }
@@ -598,6 +599,10 @@ function ValidateKey(&$test, &$error)
               $error = 'The test request will exceed the daily test limit for the given API key';
             }
           }
+        }
+        // check to see if we need to limit queue lengths from this API key
+        if ($keys[$test['key']]['queue_limit']) {
+            $test['queue_limit'] = $keys[$test['key']]['queue_limit'];
         }
       }else{
         $error = 'Invalid API Key';
@@ -988,6 +993,7 @@ function GenerateSNSScript($test)
 function SubmitUrl($testId, $testData, &$test, $url)
 {
     $ret = false;
+    global $error;
     
     // make sure the work directory exists
     if( !is_dir($test['workdir']) )
@@ -1032,21 +1038,28 @@ function SubmitUrl($testId, $testData, &$test, $url)
             $file = $test['workdir'] . "/$fileName";
             if( file_put_contents($file, $out) )
             {
-                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                if( !$tests )
-                    $tests = array();
-                $testCount = $test['runs'];
-                if( !$test['fvonly'] )
-                    $testCount *= 2;
-                if( array_key_exists('tests', $tests) )
-                    $tests['tests'] += $testCount;
+                if( AddJobFile($test['workdir'], $fileName, $test['priority'], $test['queue_limit']) )
+                {
+                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                    if( !$tests )
+                        $tests = array();
+                    $testCount = $test['runs'];
+                    if( !$test['fvonly'] )
+                        $testCount *= 2;
+                    if( array_key_exists('tests', $tests) )
+                        $tests['tests'] += $testCount;
+                    else
+                        $tests['tests'] = $testCount;
+                    file_put_contents("./tmp/$location.tests", json_encode($tests));
+
+                    $ret = true;
+                }
                 else
-                    $tests['tests'] = $testCount;
-                file_put_contents("./tmp/$location.tests", json_encode($tests));
-                $ret = true;
+                {
+                    unlink($file);
+                    $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
+                }
             }
-            
-            AddJobFile($test['workdir'], $fileName, $test['priority']);
         }
         fclose($lockFile);
     }

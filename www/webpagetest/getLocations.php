@@ -7,7 +7,7 @@ $locations = &LoadLocations();
 // get the backlog for each location
 foreach( $locations as $id => &$location )
 {
-    $location['PendingTests'] = GetBacklog($location['localDir']);
+    $location['PendingTests'] = GetBacklog($location['localDir'], $id);
     
     // strip out any sensitive data
     unset($location['localDir']);
@@ -114,31 +114,33 @@ function LoadLocations()
 * 
 * @param mixed $dir
 */
-function GetBacklog($dir)
+function GetBacklog($dir, $locationId)
 {
     $backlog = array();
+    
     $userCount = 0;
     $lowCount = 0;
+    $testing = 0;
     for($i = 1; $i <= 9; $i++)
         $backlog["p$i"] = 0;
-    
-    if ($dh = opendir($dir)) 
+
+    if (LoadJobQueue($dir, $queue))
     {
-        while (($file = readdir($dh)) !== false) 
+        $userCount = count($queue[0]);
+        for( $i = 1; $i <= 9; $i++ )
         {
-            if( $pos = strpos($file, '.p') )
-            {
-                $priority = (int)substr($file, $pos + 2);
-                $backlog["p$priority"]++;
-                $lowCount++;
-            }
-            elseif( strpos($file, '.url') )
-                $userCount++;
+            $count = count($queue[$i]);
+            $backlog["p$i"] = $count;
+            $lowCount += $count;
         }
-        closedir($dh);
     }
 
-    $testing = count(glob( $dir . '/testing/*.*', GLOB_NOSORT ));
+    $testers = GetTesters($locationId);
+    foreach($testers['testers'] as &$tester)
+    {
+        if( $tester['busy'] )
+            $testing++;
+    }
     
     $backlog['Total'] = $userCount + $lowCount + $testing;
     $backlog['HighPriority'] = $userCount;
