@@ -2,6 +2,7 @@ Debug
 Release
 *.vcxproj.user
 *~
+*.pyc
 Local.testsettings
 TraceAndTestImpact.testsettings
 wptdriver.ini
