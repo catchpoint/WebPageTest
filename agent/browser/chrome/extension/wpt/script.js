@@ -3,7 +3,7 @@
 // closure library outside tests.  Without closure, |goog| does not exist.
 // TODO(skerner): Make the non-test content script flow have base.js,
 // so that goog.provide exists.
-if (goog)
+if (window['goog'] != undefined)
   goog.provide('wpt.contentscript');
 
 // This script is automatically injected into every page before it loads.

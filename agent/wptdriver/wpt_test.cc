@@ -291,19 +291,42 @@ void WptTest::BuildScript() {
             script_command.command = command;
             script_command.target = line.Tokenize(_T("\t"),command_pos).Trim();
             if (command_pos > 0 && script_command.target.GetLength()) {
-              script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
+              // If command is "block" then parse all the space separated patterns
+              // in target into separate "block" commands.
+              if (script_command.command == _T("block")) {
+                CString patterns = script_command.target;
+                int pattern_pos = 0;
+                while (pattern_pos < patterns.GetLength()) {
+                  CString pattern = patterns.Tokenize(_T(" "), pattern_pos).Trim();
+                  // For each pattern, add a new script command.
+                  ScriptCommand block_script_command;
+                  block_script_command.command = script_command.command;
+                  block_script_command.target = pattern;
+                  // Block command don't need pre-processing and so add it directly.
+                  _script_commands.AddTail(block_script_command);
+                  WptTrace(loglevel::kFrequentEvent,_T("Block Script command: %s,%s,%s\n"), 
+                            (LPCTSTR)block_script_command.command,
+                            (LPCTSTR)block_script_command.target,
+                            (LPCTSTR)block_script_command.value);
+                }
+              }
+              else {
+                script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
+              }
             }
 
-            WptTrace(loglevel::kFrequentEvent,_T("Script command: %s,%s,%s\n"), 
-                      (LPCTSTR)script_command.command,
-                      (LPCTSTR)script_command.target,
-                      (LPCTSTR)script_command.value);
-
-            if (script_command.record)
-              has_measurement = true;
-
-            if (!PreProcessScriptCommand(script_command))
-              _script_commands.AddTail(script_command);
+            // Don't process the block commands since they are processed already.
+            if (script_command.command != _T("block")) {
+              WptTrace(loglevel::kFrequentEvent,_T("Script command: %s,%s,%s\n"), 
+                        (LPCTSTR)script_command.command,
+                        (LPCTSTR)script_command.target,
+                        (LPCTSTR)script_command.value);
+              if (script_command.record)
+                has_measurement = true;
+              
+              if (!PreProcessScriptCommand(script_command))
+                _script_commands.AddTail(script_command);
+            }
           }
         }
       }
