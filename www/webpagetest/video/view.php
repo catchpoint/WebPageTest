@@ -4,6 +4,13 @@ include 'common.inc';
 $id = $_REQUEST['id'];
 $valid = false;
 $done = false;
+$embed = false;
+if( $_REQUEST['embed'] )
+{
+    $embed = true;
+    header('Last-Modified: ' . date('r'));
+    header('Expires: '.gmdate('r', time() + 31536000));
+}
 
 $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
 $page_description = "Side-by-side video comparison of website performance.";
@@ -110,7 +117,7 @@ else
     <head>
         <title><?php echo $title;?></title>
         <?php
-        if( $valid && !$done )
+        if( $valid && !$done && !$embed )
         {
             ?>
             <noscript>
@@ -122,12 +129,18 @@ else
             <?php
         }
         ?>
-        <?php $gaTemplate = 'Video'; include ('head.inc'); ?>
+        <?php 
+            if( !$embed )
+            {
+                $gaTemplate = 'Video'; 
+                include ('head.inc'); 
+            }
+        ?>
         <style type="text/css">
             div.content
             {
                 text-align:center;
-                background: black;
+                background-color: black;
                 color: white;
                 font-family: arial,sans-serif
             }
@@ -141,18 +154,25 @@ else
                 margin-left: auto;
                 margin-right: auto;
             }
+            <?php
+            if( $embed )
+                echo 'body {background-color: black;}';
+            ?>
         </style>
-        <script type="text/javascript" src="player/flowplayer-3.2.6.min.js"></script>
+        <script type="text/javascript" src="/video/player/flowplayer-3.2.6.min.js"></script>
     </head>
     <body>
         <div class="page">
             <?php
-            $tab = 'Test Result';
-            $videoId = $id;
-            $nosubheader = true;
-            include 'header.inc';
+            if( !$embed )
+            {
+                $tab = 'Test Result';
+                $videoId = $id;
+                $nosubheader = true;
+                include 'header.inc';
+            }
 
-            if( $valid && $done )
+            if( $valid && ($done || $embed) )
             {
                 $width = 800;
                 $height = 600;
@@ -174,8 +194,8 @@ else
                 <script>
                     flowplayer("player", 
                                     {
-                                        src: "player/flowplayer-3.2.7.swf",
-                                        cachebusting: true,
+                                        src: "/video/player/flowplayer-3.2.7.swf",
+                                        cachebusting: false,
                                         version: [9, 115]
                                     } , 
                                     { 
@@ -212,24 +232,21 @@ else
                                 ); 
                 </script>
                 <?php                
-
-                echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
+                if(!$embed)
+                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
             }
-            elseif( $valid )
-            {
-            ?>
-            <h1>Your video will be available shortly.  Please wait...</h1>
-            <?php
-            }
+            elseif( $valid && !$embed )
+                echo '<h1>Your video will be available shortly.  Please wait...</h1>';
+            elseif($embed)
+                echo '<h1>The requested video does not exist.</h1>';
             else
-            {
-            ?>
-            <h1>The requested video does not exist.  Please try creating it again and if the problem persists please contact us.</h1>
-            <?php
-            }
+                echo '<h1>The requested video does not exist.  Please try creating it again and if the problem persists please contact us.</h1>';
             ?>
             
-            <?php include('footer.inc'); ?>
+            <?php 
+                if (!$embed)
+                    include('footer.inc'); 
+            ?>
         </div>
     </body>
 </html>
