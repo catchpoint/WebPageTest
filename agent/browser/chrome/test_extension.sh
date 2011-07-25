@@ -80,5 +80,7 @@ ${CHROME} \
   --no-default-browser-check \
   --password-store=basic \
   --disable-extensions-file-access-check \
+  --enable-experimental-extension-apis \
+
 
 echo "Chrome exited with status code $?";

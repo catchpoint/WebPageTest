@@ -1,6 +1,6 @@
 
 // Closure compiler needs to see a goog.provide, but we don't load
-// closure library outside tests.
+// closure library outside tests.  Without closure, |goog| does not exist.
 // TODO(skerner): Make the non-test content script flow have base.js,
 // so that goog.provide exists.
 if (goog)

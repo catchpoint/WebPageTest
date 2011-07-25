@@ -13,17 +13,19 @@ var g_tabId = -1;
 var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = new wpt.commands.CommandRunner(window.chrome);
+var g_debugWindow = null;
 
 // Developers can set DEBUG to true to see what commands are being run.
 /** @const */
 var DEBUG = false;
 
 var LOG = console;
+
 if (DEBUG) {
   window.onload = function() {
-    var debugWindow = new goog.debug.FancyWindow('main');
-    debugWindow.setEnabled(true);
-    debugWindow.init();
+    g_debugWindow = new goog.debug.FancyWindow('main');
+    g_debugWindow.setEnabled(true);
+    g_debugWindow.init();
 
     // Create a logger.
     LOG = goog.debug.Logger.getLogger('log');
@@ -93,9 +95,10 @@ function wptOnNavigate(){
 // notification that the page loaded
 function wptOnLoad(load_time){
   // close the debug window.
-  if (DEBUG) {
-    debugWindow.setEnabled(false);
-    debugWindow.win_.close();
+  if (DEBUG && g_debugWindow) {
+    g_debugWindow.setEnabled(false);
+    g_debugWindow.win_.close();
+    g_debugWindow = null;
   }
   try {
     g_active = false;
@@ -145,7 +148,7 @@ function wptExecuteTask(task){
     else if (task.action == "setcookie")
       g_commandRunner.doSetCookie(task.target, task.value);
     else if (task.action == "block")
-      g_commandRunner.doBlock(task.target);    
+      g_commandRunner.doBlock(task.target);
 
     if (!g_active)
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );
