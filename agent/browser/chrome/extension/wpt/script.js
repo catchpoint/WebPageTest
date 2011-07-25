@@ -1,3 +1,11 @@
+
+// Closure compiler needs to see a goog.provide, but we don't load
+// closure library outside tests.
+// TODO(skerner): Make the non-test content script flow have base.js,
+// so that goog.provide exists.
+if (goog)
+  goog.provide('wpt.contentscript');
+
 // This script is automatically injected into every page before it loads.
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
@@ -16,4 +24,3 @@ window.addEventListener("load", function() {
   WPTExtensionConnection.postMessage(
       {message: 'wptLoad', load_time: WPT_load_time});
 }, false);
-

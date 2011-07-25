@@ -9,8 +9,6 @@ function trim(stringToTrim) {
   return stringToTrim.replace(/^\s+|\s+$/g,"");
 }
 
-
-
 /**
  * Construct an object that runs the commands supported by WebPageTest.
  * See http://www.webperformancecentral.com/wiki/WebPagetest/Scripting
