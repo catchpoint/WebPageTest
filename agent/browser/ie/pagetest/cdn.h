@@ -33,5 +33,7 @@ CDN_PROVIDER cdnList[] = {
 	{".vo.msecnd.net", _T("Windows Azure")},
   {".voxcdn.net", _T("VoxCDN")},
   {".bluehatnetwork.com", _T("Blue Hat Network")},
+  {".swiftcdn1.com", _T("SwiftCDN")},
+  {".rncdn1.com", _T("Reflected Networks")},
 	{NULL, NULL}
 };
