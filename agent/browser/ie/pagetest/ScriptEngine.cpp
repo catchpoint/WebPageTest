@@ -625,7 +625,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("setCookie")) )
 			{
-				if( InternetSetCookie(item.target.Trim(), NULL, item.value) )
+				if( InternetSetCookieEx(item.target.Trim(), NULL, item.value, INTERNET_COOKIE_EVALUATE_P3P | INTERNET_COOKIE_THIRD_PARTY,(DWORD_PTR)_T("CP=NOI CUR OUR NOR") ) )
 					err = false;
 			}
 			else if( !item.command.CompareNoCase(_T("setHeader")) )
