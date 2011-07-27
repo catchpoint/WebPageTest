@@ -126,6 +126,15 @@
 ?></ul>
 
 </div>
+
+<?php
+if( strlen($settings['alert']) )
+{
+    echo '<div id="alert">';
+    echo $settings['alert'];
+    echo '</div>';
+}
+?>
     
 <div id="main">
     <div class="level_2">
