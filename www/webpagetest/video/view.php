@@ -183,6 +183,11 @@ else
                     $hasThumb = true;
                     list($width, $height) = getimagesize("./$dir/video.png");
                 }
+                
+                if( $_REQUEST['width'] )
+                    $width = (int)$_REQUEST['width'];
+                if( $_REQUEST['height'] )
+                    $height = (int)$_REQUEST['height'];
                     
                 echo '<div';
                 echo " style=\"display:block; width:{$width}px; height:{$height}px\"";
