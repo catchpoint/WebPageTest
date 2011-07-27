@@ -1342,6 +1342,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         else
             LogTest($test, $testId, $url);
     }
+    else
+    {
+        // delete the test if we didn't really submit it
+        delTree("{$test['path']}/");
+    }
 
     return $testId;
 }
