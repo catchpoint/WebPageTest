@@ -237,10 +237,12 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             $color = $white;
             if( $i % 2 == 0 )
                 $color = $grey;
-            if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
+            if( $request['responseCode'] >= 400 )
                 $color = $error;
             elseif( $request['responseCode'] >= 300 )
                 $color = $warning;
+            elseif( $request['responseCode'] < 0 && !$docComplete )
+                $color = $error;
             imagefilledrectangle($im, 1, $y, $width - 2, $y + $rowHeight - 1, $color);
             $y += $rowHeight;
             $i++;
@@ -552,10 +554,12 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $color = $white;
                 if( ($i - 1) % 2 == 0 )
                     $color = $grey;
-                if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
+                if( $request['responseCode'] >= 400 )
                     $color = $error;
                 elseif( $request['responseCode'] >= 300 )
                     $color = $warning;
+                elseif( $request['responseCode'] < 0 && !$docComplete )
+                    $color = $error;
                 imagefilledrectangle($im, $textPos, $y, $textPos + $labelWidth, $y + $rowHeight - 2, $color);
                 
                 // draw the actual label
