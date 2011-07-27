@@ -3,10 +3,34 @@
     <title>All tests for the chrome WebPageTest extension</title>
     <script src="../third_party/closure-library/closure/goog/base.js"></script>
     <script src="commands.js"></script>
-    <script src="allTests.js"></script>
+    <script src="script.js"></script>
+    <script>
+      goog.require('wpt.contentScript');
+      goog.require('wpt.commands');
+      goog.require('goog.testing.jsunit');
+      goog.require('goog.testing.AsyncTestCase');
+    </script>
   </head>
 
   <body>
-    <!-- allTests.js will fill the body with test results. -->
+    <div style="display:none">
+      <div id="testFindDomElements">
+        <!-- testFindDomElements() -->
+        <span aaa=one bbb=two>First span</span>
+        <div bbb=two>First div</div>
+        <div bbb=three>Second div</div>
+
+        <!-- testFindDomElementWithGetElementById() -->
+        <a id="thisIdExists">Anchor with id</a>
+
+        <!-- testFindDomElementWithGetElementByName() -->
+        <a name="thisNameExists">Anchor with name</a>
+        <a name="thitNameHasMultipleMatches">First named anchor</a>
+        <a name="thitNameHasMultipleMatches">Second named anchor</a>
+      </div>
+    </div>
+
+    <!-- allTests.js will append test results to the page body.  -->
+    <script src="allTests.js"></script>
   </body>
 </html>
