@@ -6,20 +6,17 @@ set_time_limit(0);
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
+$log = fopen('./cli/archive.log', 'w');
 
 // check the old tests first
-$archived = json_decode(gz_file_get_contents("./logs/archived/old.archived"), true);
-if( !$archived )
-    $archived = array();
-CheckOldDir('./results/old', $archived);
-gz_file_put_contents("./logs/archived/old.archived", json_encode($archived));
+CheckOldDir('./results/old');
 
 /*
 *   Archive any tests that have not already been archived
 *   We will also keep track of all of the tests that are 
 *   known to have been archived separately so we don't thrash
 */  
-$endDate = (int)date('Ymd');
+$endDate = (int)date('ymd');
 $years = scandir('./results');
 foreach( $years as $year )
 {
@@ -41,15 +38,9 @@ foreach( $years as $year )
                         $dayDir = "$monthDir/$day";
                         if( is_dir($dayDir) && $day != '.' && $day != '..' )
                         {
-                            $dayString = "20$year$month$day";
+                            $dayString = "$year$month$day";
                             if( (int)$dayString < $endDate )
-                            {
-                                $archived = json_decode(gz_file_get_contents("./logs/archived/$dayString.archived"), true);
-                                if( !$archived )
-                                    $archived = array();
-                                CheckDay($dayDir, "$year$month$day", $archived);
-                                gz_file_put_contents("./logs/archived/$dayString.archived", json_encode($archived));
-                            }
+                                CheckDay($dayDir, $dayString);
                         }
                     }
                     rmdir($monthDir);
@@ -61,15 +52,18 @@ foreach( $years as $year )
 }
 echo "\nDone\n\n";
 
-$log = date('n') . "\nArchived: $archiveCount\nDeleted: $deleted\nKept: $kept";
-file_put_contents('./cli/archive.log', $log);
+if( $log )
+{
+    fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . date('r') . "\n");;
+    fclose($log);
+}
 
 /**
 * Recursively scan the old directory for tests
 * 
 * @param mixed $path
 */
-function CheckOldDir($path, &$archived)
+function CheckOldDir($path)
 {
     $oldDirs = scandir($path);
     foreach( $oldDirs as $oldDir )
@@ -78,9 +72,9 @@ function CheckOldDir($path, &$archived)
         {
             // see if it is a test or a higher-level directory
             if( is_file("$path/$oldDir/testinfo.ini") )
-                CheckTest("$path/$oldDir", $oldDir, $archived);
+                CheckTest("$path/$oldDir", $oldDir);
             else
-                CheckOldDir("$path/$oldDir", $archived);
+                CheckOldDir("$path/$oldDir");
         }
     }
     rmdir($path);
@@ -93,7 +87,7 @@ function CheckOldDir($path, &$archived)
 * @param mixed $baseID
 * @param mixed $archived
 */
-function CheckDay($dir, $baseID, &$archived)
+function CheckDay($dir, $baseID)
 {
     $tests = scandir($dir);
     foreach( $tests as $test )
@@ -102,9 +96,9 @@ function CheckDay($dir, $baseID, &$archived)
         {
             // see if it is a test or a higher-level directory
             if( is_file("$dir/$test/testinfo.ini") )
-                CheckTest("$dir/$test", "{$baseID}_$test", $archived);
+                CheckTest("$dir/$test", "{$baseID}_$test");
             else
-                CheckDay("$dir/$test", "{$baseID}_$test", $archived);
+                CheckDay("$dir/$test", "{$baseID}_$test");
         }
     }
     rmdir($dir);
@@ -116,25 +110,22 @@ function CheckDay($dir, $baseID, &$archived)
 * @param mixed $logFile
 * @param mixed $match
 */
-function CheckTest($testPath, $id, &$archived)
+function CheckTest($testPath, $id)
 {
     global $archiveCount;
     global $deleted;
     global $kept;
-    $delete = false;
-    $archived = false;
+    global $log;
+    $logLine = "$id : ";
 
-    if( !$archived[$id] )
+    if( ArchiveTest($id) )
     {
-        if( ArchiveTest($id) )
-        {
-            $archived = true;
-            $archiveCount++;
-            $archived[$id] = 1;
-        }
+        $archiveCount++;
+        $logLine .= "Archived";
     }
 
     // Delete tests after 3 days of no access
+    $delete = false;
     $elapsed = TestLastAccessed($id);
     if( $elapsed > 3 )
         $delete = true;
@@ -143,27 +134,18 @@ function CheckTest($testPath, $id, &$archived)
     {
         delTree("$testPath/");
         $deleted++;
+        $logLine .= " Deleted";
     }
     else
         $kept++;
 
-    $load = GetLoad();
-    echo "\rLoad:$load, Arc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
-}
+    if( $log )
+    {
+        $logLine .= "\n";
+        fwrite($log, $logLine);
+    }
 
-/**
-* Get the current system load
-* 
-*/
-function GetLoad()
-{
-    $load = 0;
-    
-    $loadValues = explode(' ',file_get_contents("/proc/loadavg"));
-    if( count($loadValues) )
-        $load = (float)$loadValues[0];
-
-    return $load;
+    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 }
 
 ?>

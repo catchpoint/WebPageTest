@@ -2,8 +2,6 @@
 // shared initializiation/loading code
 set_time_limit(300);
 error_reporting(0);
-if( $debug )
-    error_reporting(E_ALL);
 umask(0);
 date_default_timezone_set('UTC');
 import_request_variables('PG', 'req_');
@@ -15,7 +13,7 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 46);          // version of the sitewide css file
+define('VER_CSS', 47);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
 define('VER_JS_TEST', 19);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
@@ -58,6 +56,7 @@ $admin = false;
 $api_keys;
 if( is_dir('./forums') && !$settings['disableMybb'] )
 {                         
+    ob_start();
     $supportsAuth = true;
     
     if( isset($_COOKIE['mybbuser']) )
@@ -73,12 +72,14 @@ if( is_dir('./forums') && !$settings['disableMybb'] )
             $user = $mybb->user['username'];
             if( $mybb->usergroup['cancp'] )
                 $admin = true;
+            unset($mybb);
         }
         catch(Exception $e)
         {
         }
         chdir($dir);
     }
+    ob_end_clean();
 }
 
 // assign a unique ID to each person
@@ -124,7 +125,6 @@ if( $id )
     {
         if( !is_dir($testPath) && is_file('storage/storage.ini') && is_file('storage/storage.inc') )
         {
-            logMsg("Download $testPath\n");
             require_once('storage/storage.inc');
             DownloadResults($id);
         }
@@ -1125,12 +1125,16 @@ function ArchiveTest($id)
         if( $priority > 5  )
             $discard = true;
         if( $testInfo['archived'] )
+        {
             $ret = true;
+        }
         elseif( $completed && !$discard )
         {
             $dest = GetArchiveFile($id, true);
             if( is_file($dest) )
+            {
                 $ret = true;
+            }
             else
             {
                 // zip up the contents
@@ -1139,8 +1143,7 @@ function ArchiveTest($id)
                     $zip = new ZipArchive();
                     if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
                     {
-                        $testInfo['archived'] = true;
-                        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        $ret = true;
 
                         // add the files (skip the ones we don't want to archive long-term)
                         $files = scandir($testPath);
@@ -1180,14 +1183,21 @@ function ArchiveTest($id)
                                     {
                                         $filePath = "$videoDir/$file";
                                         if( is_file($filePath) )
-                                            $zip->addFile($filePath, "$relativeDir/$file");
+                                            if( $zip->addFile($filePath, "$relativeDir/$file") === false )
+                                                $ret = false;
                                     }
                                 }
                             }
                         }
                         
-                        $zip->close();
-                        $ret = true;
+                        if( $zip->close() === false )
+                            $ret = false;
+                        
+                        if( $ret )
+                        {
+                            $testInfo['archived'] = true;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        }
                     }
                 }
             }
