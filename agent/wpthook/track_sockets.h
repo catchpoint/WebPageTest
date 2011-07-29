@@ -69,6 +69,9 @@ public:
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
                       LONGLONG& end);
   ULONG GetPeerAddress(DWORD socket_id);
+  
+  void SetIsSsl(SOCKET s, bool is_ssl);
+  bool IsSsl(SOCKET s);
 
 private:
   CRITICAL_SECTION cs;
@@ -76,5 +79,6 @@ private:
   TestState&                  _test_state;
   DWORD	_nextSocketId;	// ID to assign to the next socket
   CAtlMap<SOCKET, DWORD>	    _openSockets;
+  CAtlMap<SOCKET, bool>       _sslSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
 };

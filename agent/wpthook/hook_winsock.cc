@@ -274,7 +274,8 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
   if( _recv )
     ret = _recv(s, buf, len, flags);
-  if( ret > 0 && !flags && buf && len && !_test_state._exit )
+  if( ret > 0 && !flags && buf && len && !_test_state._exit &&
+     !_sockets.IsSsl(s) )
     _sockets.DataIn(s, buf, ret);
   return ret;
 }
@@ -289,23 +290,25 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-  if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
-        && *lpNumberOfBytesRecvd && !_test_state._exit) {
-    DWORD bytes = *lpNumberOfBytesRecvd;
-    DWORD i = 0;
-    while (i < dwBufferCount && bytes > 0) {
-      DWORD chunk = min(lpBuffers[i].len, bytes);
-      if (chunk) {
-        bytes -= chunk;
-        if( lpBuffers[i].buf )
-          _sockets.DataIn(s, lpBuffers[i].buf, chunk);
+  if (!_sockets.IsSsl(s)) {
+    if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
+          && *lpNumberOfBytesRecvd && !_test_state._exit) {
+      DWORD bytes = *lpNumberOfBytesRecvd;
+      DWORD i = 0;
+      while (i < dwBufferCount && bytes > 0) {
+        DWORD chunk = min(lpBuffers[i].len, bytes);
+        if (chunk) {
+          bytes -= chunk;
+          if( lpBuffers[i].buf )
+            _sockets.DataIn(s, lpBuffers[i].buf, chunk);
+        }
+        i++;
       }
-      i++;
+    } else if (ret == SOCKET_ERROR && lpBuffers 
+                && dwBufferCount && lpOverlapped && !_test_state._exit) {
+      WsaBuffTracker buff(lpBuffers, dwBufferCount);
+      recv_buffers.SetAt(lpOverlapped, buff);
     }
-  } else if (ret == SOCKET_ERROR && lpBuffers 
-              && dwBufferCount && lpOverlapped && !_test_state._exit) {
-    WsaBuffTracker buff(lpBuffers, dwBufferCount);
-    recv_buffers.SetAt(lpOverlapped, buff);
   }
 
   return ret;
@@ -317,7 +320,7 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
   char * new_buff = NULL;
   unsigned long new_len = 0;
-  if (len && !_test_state._exit)
+  if (len && !_test_state._exit && !_sockets.IsSsl(s))
     _sockets.DataOut(s, buf, len, new_buff, new_len);
   if( _send ) {
     if (new_buff) {
@@ -327,7 +330,7 @@ int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     else
       ret = _send(s, buf, len, flags);
   }
-  if (new_buff && !_test_state._exit) {
+  if (new_buff && !_test_state._exit && !_sockets.IsSsl(s)) {
     _sockets.AfterDataOut(new_buff);
   }
   return ret;
@@ -343,7 +346,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   char * new_buff = NULL;
   unsigned long new_len = 0;
   unsigned original_len = 0;
-  if (!_test_state._exit) {
+  if (!_test_state._exit && !_sockets.IsSsl(s)) {
     for (DWORD i = 0; i < dwBufferCount; i++) {
       if (lpBuffers[i].len && lpBuffers[i].buf) {
         _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len,new_buff,new_len);
@@ -368,7 +371,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                     dwFlags, lpOverlapped, lpCompletionRoutine);
   }
-  if (new_buff && !_test_state._exit) {
+  if (new_buff && !_test_state._exit && !_sockets.IsSsl(s)) {
     if (!ret) {
       if (new_buff) {
         _sockets.AfterDataOut(new_buff);

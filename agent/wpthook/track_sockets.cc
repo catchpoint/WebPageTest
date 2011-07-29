@@ -42,6 +42,7 @@ TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
   InitializeCriticalSection(&cs);
   _openSockets.InitHashTable(257);
   _socketInfo.InitHashTable(257);
+  _sslSockets.InitHashTable(257);
 }
 
 /*-----------------------------------------------------------------------------
@@ -237,4 +238,22 @@ ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
   }
   LeaveCriticalSection(&cs);
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::SetIsSsl(SOCKET s, bool is_ssl) {
+  if (is_ssl) {
+    bool unused = true;
+    _sslSockets.SetAt(s, unused);
+  } else if (IsSsl(s)) {
+    _sslSockets.RemoveKey(s);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::IsSsl(SOCKET s) {
+  bool unused;
+  return _sslSockets.Lookup(s, unused);
 }

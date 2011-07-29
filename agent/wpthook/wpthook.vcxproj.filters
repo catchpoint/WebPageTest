@@ -47,6 +47,18 @@
     <Filter Include="Third-Party\Mongoose">
       <UniqueIdentifier>{9f454a3f-2be3-4993-bba1-049bede3860c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\nspr">
+      <UniqueIdentifier>{8af0a2b6-e24c-482d-8279-e15bce0c5f5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\nspr\obsolete">
+      <UniqueIdentifier>{e795a80e-ef20-4f8e-b0ca-755ef69bf197}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\nspr\md">
+      <UniqueIdentifier>{8c17e98b-ff28-4842-980f-fecb8fc2019a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\nspr\private">
+      <UniqueIdentifier>{53792190-d45a-423d-88e2-1cf2a634d851}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -264,6 +276,54 @@
     </ClInclude>
     <ClInclude Include="hook_chrome.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_nspr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_freebsd.cfg">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_winnt.h">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_freebsd.h">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_linux.cfg">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_win95.cfg">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_win95.h">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\md\_winnt.cfg">
+      <Filter>Third-Party\nspr\md</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\private\pprio.h">
+      <Filter>Third-Party\nspr\private</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\obsolete\protypes.h">
+      <Filter>Third-Party\nspr\obsolete</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prinet.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prinrval.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prio.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prlong.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prtime.h">
+      <Filter>Third-Party\nspr</Filter>
+    </ClInclude>
+    <ClInclude Include="nspr\prtypes.h">
+      <Filter>Third-Party\nspr</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -637,6 +697,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_chrome.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_nspr.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

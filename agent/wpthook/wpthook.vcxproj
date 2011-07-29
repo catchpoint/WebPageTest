@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -54,6 +54,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>UninitializedLocalUsageCheck</BasicRuntimeChecks>
+      <AdditionalIncludeDirectories>nspr</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -62,6 +63,9 @@
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>nspr</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -83,6 +87,9 @@
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>nspr</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\wptdriver\wpt_test.h" />
@@ -140,6 +147,21 @@
     <ClInclude Include="NCodeHook\NCodeHook.h" />
     <ClInclude Include="NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="NCodeHook\NCodeHookItem.h" />
+    <ClInclude Include="nspr\md\_freebsd.cfg" />
+    <ClInclude Include="nspr\md\_freebsd.h" />
+    <ClInclude Include="nspr\md\_linux.cfg" />
+    <ClInclude Include="nspr\md\_win95.cfg" />
+    <ClInclude Include="nspr\md\_win95.h" />
+    <ClInclude Include="nspr\md\_winnt.cfg" />
+    <ClInclude Include="nspr\md\_winnt.h" />
+    <ClInclude Include="nspr\obsolete\protypes.h" />
+    <ClInclude Include="nspr\prinet.h" />
+    <ClInclude Include="nspr\prinrval.h" />
+    <ClInclude Include="nspr\prio.h" />
+    <ClInclude Include="nspr\private\pprio.h" />
+    <ClInclude Include="nspr\prlong.h" />
+    <ClInclude Include="nspr\prtime.h" />
+    <ClInclude Include="nspr\prtypes.h" />
     <ClInclude Include="request.h" />
     <ClInclude Include="requests.h" />
     <ClInclude Include="resource.h" />
@@ -155,6 +177,7 @@
     <ClInclude Include="window_messages.h" />
     <ClInclude Include="wpthook.h" />
     <ClInclude Include="hook_winsock.h" />
+    <ClInclude Include="hook_nspr.h" />
     <ClInclude Include="wpthook_dll.h" />
     <ClInclude Include="wpt_test_hook.h" />
   </ItemGroup>
@@ -791,6 +814,7 @@
     <ClCompile Include="track_sockets.cc" />
     <ClCompile Include="wpthook.cc" />
     <ClCompile Include="hook_winsock.cc" />
+    <ClCompile Include="hook_nspr.cc" />
     <ClCompile Include="wpt_test_hook.cc" />
   </ItemGroup>
   <ItemGroup>

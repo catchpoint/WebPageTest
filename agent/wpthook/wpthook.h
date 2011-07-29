@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 #include "hook_winsock.h"
+#include "hook_nspr.h"
 #include "hook_gdi.h"
 #include "hook_chrome.h"
 #include "requests.h"
@@ -58,6 +59,7 @@ public:
 private:
   CGDIHook  _gdi_hook;
   CWsHook   _winsock_hook;
+  NsprHook   _nspr_hook;
   HookChrome  _chrome_hook;
   HANDLE    _background_thread;
   HWND      _message_window;

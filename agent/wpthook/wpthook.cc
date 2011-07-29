@@ -49,6 +49,7 @@ WptHook::WptHook(void):
   ,_test_state(shared_test_timeout, shared_test_force_on_load, _results,
                 _screen_capture, _test)
   ,_winsock_hook(_dns, _sockets, _test_state)
+  ,_nspr_hook(_sockets, _test_state)
   ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns, _test)
@@ -100,8 +101,10 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 -----------------------------------------------------------------------------*/
 void WptHook::Init(){
   WptTrace(loglevel::kProcess, _T("[wpthook] Init()\n"));
+  //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 
   _winsock_hook.Init();
+  _nspr_hook.Init();
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
