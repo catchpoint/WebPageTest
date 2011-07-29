@@ -130,7 +130,7 @@
 <?php
 if( strlen($settings['alert']) )
 {
-    echo '<div id="alert">';
+    echo '<div class="alert bold">';
     echo $settings['alert'];
     echo '</div>';
 }

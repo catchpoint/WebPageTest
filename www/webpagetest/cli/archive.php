@@ -37,11 +37,7 @@ foreach( $years as $year )
                     {
                         $dayDir = "$monthDir/$day";
                         if( is_dir($dayDir) && $day != '.' && $day != '..' )
-                        {
-                            $dayString = "$year$month$day";
-                            if( (int)$dayString < $endDate )
-                                CheckDay($dayDir, $dayString);
-                        }
+                            CheckDay($dayDir, "$year$month$day");
                     }
                     rmdir($monthDir);
                 }
@@ -118,7 +114,7 @@ function CheckTest($testPath, $id)
     global $log;
     $logLine = "$id : ";
 
-    if( ArchiveTest($id) )
+    if( ArchiveTest($id, $hasView) )
     {
         $archiveCount++;
         $logLine .= "Archived";
@@ -127,7 +123,7 @@ function CheckTest($testPath, $id)
     // Delete tests after 3 days of no access
     $delete = false;
     $elapsed = TestLastAccessed($id);
-    if( $elapsed > 3 )
+    if( $elapsed > 3 || ($hasView && $elapsed > 0.25) )
         $delete = true;
 
     if( $delete )

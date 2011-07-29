@@ -633,6 +633,8 @@ function ValidateParameters(&$test, $locations, &$error)
         $settings = parse_ini_file('./settings/settings.ini');
         if( $_COOKIE['maxruns'] )
             $settings['maxruns'] = (int)$_COOKIE['maxruns'];
+        elseif( $_REQUEST['maxruns'] )
+            $settings['maxruns'] = (int)$_REQUEST['maxruns'];
         $maxruns = (int)$settings['maxruns'];
         if( !$maxruns )
             $maxruns = 10;
@@ -944,8 +946,10 @@ function ValidateURL(&$url, &$error, &$settings)
     $parts = parse_url($url);
     $host = $parts['host'];
     
-    if( strpos($host, '.') === FALSE )
-        $error = "Please enter a Valid URL.  <b>$host</b> is not a valid Internet host name";
+    if( strpos($url, ' ') !== FALSE || strpos($url, '>') !== FALSE || strpos($url, '<') !== FALSE )
+        $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
+    elseif( strpos($host, '.') === FALSE )
+        $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
     elseif( (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "10.", 3)) && !$settings['allowPrivate'] )
         $error = "You can not test <b>$host</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
     elseif( !strcasecmp(substr($url, -4), '.pdf') )

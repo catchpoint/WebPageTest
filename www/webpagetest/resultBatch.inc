@@ -87,7 +87,7 @@ $page_description = "Bulk website performance test result$testLabel.";
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
                                     'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
-                                    'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
+                                    'Page Speed Service Home' => 'http://code.google.com/speed/pss', 
                                     'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                     'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             }
@@ -294,6 +294,7 @@ function DisplayTest($id, $url, $label, $complete)
 
     echo '<tr>';
     $safeUrl = htmlspecialchars($url);
+    $label = htmlspecialchars($label);
     if( FRIENDLY_URLS )
         echo "<td><a href=\"/result/$id/\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
     else
@@ -345,10 +346,11 @@ function DisplayTest($id, $url, $label, $complete)
 function DisplayPSS(&$tests, $video, &$dirty)
 {
     global $complete;
-
-    echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
-            <tr>
-            <th class="empty"></th>';
+    require_once('object_detail.inc');
+    $includeRender = false;
+    if( $_REQUEST['norender'] )
+        $includeRender = false;
+    
     $fvLoadTime = array();
     $fvRenderTimes = array();
     $rvLoadTimes = array();
@@ -399,11 +401,33 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $count++;
     }
     
+    // see if there was a domain redirect for the base page
+    $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
+    if( count($requests) )
+    {
+        if($basePage = GetBasePage($requests))
+        {
+            $testedHost = $requests[0]['host'];
+            $basePageHost = $basePage['host'];
+            if( $testedHost != $basePageHost )
+            {
+                $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
+                echo '<div class="alert">';
+                echo '<h1>Domain Redirect Detected</h1>';
+                echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
+                echo '</div>';
+            }
+        }
+    }
+    
+    echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
+            <tr>
+            <th class="empty"></th>';
     // second pass, generate the header
     $count = 0;
     foreach( $tests['urls'] as &$test )
     {
-        $label = $test['l'];
+        $label = htmlspecialchars($test['l']);
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
         $id = $test['id'];
@@ -418,11 +442,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
     if( $complete )
     {
         DisplayMetric('Page Load Time', $fvLoadTimes, $count);
-        DisplayMetric('Start Render Time', $fvRenderTimes, $count);
+        if( $includeRender )
+            DisplayMetric('Start Render Time', $fvRenderTimes, $count);
         if( !$fvonly )
         {
             DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
-            DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+            if( $includeRender )
+                DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
         }
 
         // links to the test results
@@ -462,22 +488,22 @@ function DisplayPSS(&$tests, $video, &$dirty)
     if( $complete && $video )
     {
         $videoComplete = true;
-        if( !strlen($tests['videoID']) )
+        if( !strlen($tests['vID']) )
         {
-            $tests['videoID'] = CreateVideo($tests['urls']);
+            $tests['vID'] = CreateVideo($tests['urls']);
             $dirty = true;
             $videoComplete = false;
-            if( !strlen($tests['videoID']) )
+            if( !strlen($tests['vID']) )
             {
                 // bail on the video if it couldn't be created
                 $videoComplete = true;
-                $tests['videoReady'] = true;
+                $tests['vReady'] = true;
             }
         }
-        elseif( !$tests['videoReady'] )
+        elseif( !$tests['vReady'] )
         {
-            $tests['videoReady'] = CheckVideo($tests['videoID']);
-            if( $tests['videoReady'] )
+            $tests['vReady'] = CheckVideo($tests['vID']);
+            if( $tests['vReady'] )
                 $dirty = true;
             else
                 $videoComplete = false;
@@ -486,7 +512,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         if( $videoComplete )
         {
             echo '<h2>Visual Comparison</h2>';
-            VideoHtml($tests['videoID']);
+            VideoHtml($tests['vID']);
         }
         else
         {
@@ -750,7 +776,7 @@ function CreateVideo(&$tests)
     $id = null;
 
     $host  = $_SERVER['HTTP_HOST'];
-    $request = "http://$host/video/create.php?f=json&end=doc&tests=";
+    $request = "http://$host/video/create.php?f=json&force=1&end=docvisual&tests=";
 
     $count = 0;
     foreach( $tests as &$test )
@@ -854,7 +880,8 @@ function VideoHtml($id)
                                         }\n
                                     }\n
                                 ); \n
-                </script>\n<br>\n";
+                </script>\n<br>
+                (the video may extend past the measured load time if the page was still updating after it was technically loaded)\n";
 }
 
 /**
@@ -913,6 +940,7 @@ function CheckTests(&$tests, &$dirty)
 */
 function DisplayProgress(&$tests)
 {
+    global $debug;
     $elapsed = -1;
     $position = -1;
     require_once('testStatus.inc');
@@ -961,7 +989,7 @@ function DisplayProgress(&$tests)
         else
             $statusText = "Waiting at the front of the queue...";
     }
-
+    
     echo '<br><div id="statusImg">';
     echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
     echo "<div id=\"statusText\">$statusText</div>\n";

@@ -3,6 +3,8 @@
 function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $checkLocations, $includeHeaders = false)
 {
 	$requests = array();
+    $secure = false;
+    $haveLocations = false;
 	
 	$geoip;
     if( $checkLocations == true )
@@ -279,5 +281,25 @@ function CalculateComponentTimes(&$pageData, &$requests)
     }
     
     return $times;
+}
+
+/**
+* Get the request for the base page (first non-redirect)
+* 
+* @param mixed $requests
+*/
+function GetBasePage(&$requests)
+{
+    $basePage = null;
+    foreach($requests as &$request)
+    {
+        if( $request['responseCode'] < 300 || $request['responseCode'] >= 400 )
+        {
+            $basePage = $request;
+            break;
+        }
+    }
+    
+    return $basePage;
 }
 ?>

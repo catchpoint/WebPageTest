@@ -21,6 +21,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
     <table id="locations">
       <tr>
         <th class="location">Location</th>
+        <th>Idle Testers</th>
         <th>Total Tests</th>
         <th>Being Tested</th>
         <th>High Priority</th>
@@ -37,6 +38,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
       <xsl:for-each select="response/data/location">
       <tr>
         <td class="location"><xsl:value-of select="id"/></td>
+        <td><xsl:value-of select="PendingTests/Idle"/></td>
         <td><xsl:value-of select="PendingTests/Total"/></td>
         <td><xsl:value-of select="PendingTests/Testing"/></td>
         <td><xsl:value-of select="PendingTests/HighPriority"/></td>

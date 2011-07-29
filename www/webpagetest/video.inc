@@ -66,7 +66,7 @@ function BuildVideoScripts($testPath)
 * 
 * @param mixed $videoDir
 */
-function BuildVideoScript($testPath, $videoDir, $endTime = 0)
+function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
 {
     // figure out the frame range and actual file names
     $start = 20000;
@@ -87,7 +87,7 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0)
                 if( count($parts) >= 2 )
                 {
                     $index = (int)$parts[1];
-                    if( !$endTime || $index <= $endTime )
+                    if( $extend || !$endTime || $index <= $endTime )
                     {
                         if( $index < $start )
                             $start = $index;

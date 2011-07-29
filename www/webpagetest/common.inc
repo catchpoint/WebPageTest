@@ -13,9 +13,9 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 47);          // version of the sitewide css file
+define('VER_CSS', 48);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
-define('VER_JS_TEST', 19);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 
 // SEO stuff
@@ -155,11 +155,11 @@ if( $id )
             elseif (isset($test['testinfo']['uid']) && strlen($uid) && $uid == $test['testinfo']['uid'])
                 $isOwner = true;
             
-            $url = $test['testinfo']['url'];
-            $dom = $test['testinfo']['domElement'];
-            $login = $test['testinfo']['login'];
-            $blockString = $test['testinfo']['block'];
-            $label = $test['testinfo']['label'];
+            $url = htmlspecialchars($test['testinfo']['url']);
+            $dom = htmlspecialchars($test['testinfo']['domElement']);
+            $login = htmlspecialchars($test['testinfo']['login']);
+            $blockString = htmlspecialchars($test['testinfo']['block']);
+            $label = htmlspecialchars($test['testinfo']['label']);
         }
     }
 
@@ -1097,11 +1097,12 @@ function FixUrlSlash($url)
 * 
 * @param mixed $id
 */
-function ArchiveTest($id)
+function ArchiveTest($id, &$hasView)
 {
     global $settings;
     global $api_keys;
     $ret = false;
+    $hasView = false;
     if( isset($settings['archive_dir']) )
     {
         $testPath = realpath('./' . GetTestPath($id));
@@ -1112,6 +1113,8 @@ function ArchiveTest($id)
             $test = parse_ini_file("$testPath/testinfo.ini", true);
             $completed = isset($test['test']['completeTime']);
         }
+        if( $completed && strlen($testInfo['view']) )
+            $hasView = true;
         $discard = false;
         if( !isset($api_keys) )
         {

@@ -82,6 +82,7 @@ else
                 $test['id'] = $parts[0];
                 $test['cached'] = 0;
                 $test['end'] = $endTime;
+                $test['extend'] = false;
                 $test['syncStartRender'] = "";
                 $test['syncDocTime'] = "";
                 $test['syncFullyLoaded'] = "";
@@ -118,8 +119,15 @@ else
                 // figure out the real end time (in ms)
                 if( isset($test['end']) )
                 {
-                    if( !strcmp($test['end'], 'doc') )
+                    if( !strcmp($test['end'], 'doc') || !strcmp($test['end'], 'docvisual') )
+                    {
+                        if( !strcmp($test['end'], 'docvisual') )
+                        {
+                            $test['extend'] = true;
+                            $videoIdExtra .= 'e';
+                        }
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
+                    }
                     elseif( !strcmp($test['end'], 'aft') )
                     {
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
@@ -144,8 +152,8 @@ else
                     
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                 {
-                    BuildRunVideoStatsScript($test['path'], $test['run'], $test['cached'], $test ['videoPath'], $test['syncStartRender'], $test['syncDocTime'], $test['syncFullyLoad ed']);
-                    $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syn cFullyLoaded']}";
+                    BuildRunVideoStatsScript($test['path'], $test['run'], $test['cached'], $test ['videoPath'], $test['syncStartRender'], $test['syncDocTime'], $test['syncFullyLoaded']);
+                    $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
                 }
 
                 if( !strlen($test['label']) )
@@ -184,7 +192,12 @@ else
 
             $path = GetVideoPath($id);
             if( is_file("./$path/video.mp4") )
-                $exists = true;
+            {
+                if( $_REQUEST['force'] )
+                    delTree("./$path/");
+                else
+                    $exists = true;
+            }
 
             if( !$exists )
             {
@@ -207,7 +220,7 @@ else
                         foreach( $tests as $index => &$test )
                         {
                             // build an appropriate script file for this test
-                            BuildVideoScript(null, $test['videoPath'], $test['end']);
+                            BuildVideoScript(null, $test['videoPath'], $test['end'], $test['extend']);
 
                             $files = array();
                             $dir = opendir($test['videoPath']);

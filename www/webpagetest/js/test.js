@@ -246,6 +246,12 @@ function ConnectionChanged()
             $('#wait').removeClass('backlogWarn').addClass('backlogHigh');
             $('#start_test-button').hide();
         }
+        else if( wait > 120 )
+        {
+            waitText = 'Location is exceptionally busy, please select a different location or try again later';
+            $('#wait').removeClass('backlogWarn').addClass('backlogHigh');
+            $('#start_test-button').hide();
+        }
         else
         {
             $('#wait').removeClass('backlogWarn , backlogHigh');

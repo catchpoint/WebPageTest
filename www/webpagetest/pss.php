@@ -29,19 +29,12 @@ $page_description = "Comparison Test$testLabel.";
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
             if( strlen($_GET['pssid']) )
                 $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
-            $navTabs += array(  'Page Speed Servce Home' => 'http://code.google.com/speed/pss', 
+            $navTabs += array(  'Page Speed Service Home' => 'http://code.google.com/speed/pss', 
                                 'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                 'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             $tab = 'New Comparison';
             define('NAV_NO_SHARE', true);
             include 'header.inc';
-            
-            if( $supportsAuth && !($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
-            {
-                echo '<h2 class="centered">Restricted Access<br><span class="small">If you are a Googler, please lick on the "Login with Google" link at the top of the page to login through OAuth with your @google.com account</span></h2>';
-            }
-            else
-            {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
             
@@ -81,7 +74,7 @@ $page_description = "Comparison Test$testLabel.";
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
               
               if( strlen($_GET['origin']) )
-                echo '<h2 class="cufon-dincond_black"><small>Measure your original site performance for a site optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
               else
                 echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
             }
@@ -90,7 +83,13 @@ $page_description = "Comparison Test$testLabel.";
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="testurl" id="testurl" value="Enter a Website URL" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <?php
+                        $default = 'Enter a Website URL';
+                        $testurl = trim($_GET['url']);
+                        if( strlen($testurl) )
+                            $default = $testurl;
+                        echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
+                        ?>
                         <li>
                             <label for="location">Test From<br><small id="locinfo">(Using IE 8 on DSL)</small></label>
                             <select name="pssloc" id="pssloc">
@@ -207,7 +206,6 @@ $page_description = "Comparison Test$testLabel.";
             </form>
 
             <?php
-            }
             include('footer.inc'); 
             ?>
         </div>
@@ -259,8 +257,8 @@ $page_description = "Comparison Test$testLabel.";
                 
                 return true;
             }
-
-            $("#pssloc").change(function(){
+            
+            function PSSLocChanged(){
                 var loc = $('#pssloc').val(); 
                 if( loc == 'other' )
                 {
@@ -274,6 +272,11 @@ $page_description = "Comparison Test$testLabel.";
                     $('#location').val(loc); 
                     LocationChanged();
                 }
+            }
+            PSSLocChanged();
+
+            $("#pssloc").change(function(){
+                PSSLocChanged();
             });
         </script>
     </body>
@@ -288,7 +291,7 @@ $page_description = "Comparison Test$testLabel.";
 function LoadLocations()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
-    FilterLocations( $locations, 'pss', array('Chrome', 'dynaTrace') );
+    FilterLocations( $locations, 'pss' );
     
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )

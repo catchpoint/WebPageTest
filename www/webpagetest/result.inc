@@ -15,6 +15,14 @@ $page_description = "Website performance test result$testLabel.";
 <html>
     <head>
         <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
+        <script language="JavaScript">
+            <?php
+                $wpt_host = trim($_SERVER['HTTP_HOST']);
+                echo "var wpt_host='$wpt_host';\n";
+            ?>
+            if( window.location.host.length && wpt_host.length && window.location.host != wpt_host )
+                window.location = 'http://' + wpt_host + window.location.pathname;
+        </script>
         <?php if( !$testComplete ) { ?>
         <noscript>
         <meta http-equiv="refresh" content="30" />

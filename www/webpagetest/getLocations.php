@@ -121,6 +121,7 @@ function GetBacklog($dir, $locationId)
     $userCount = 0;
     $lowCount = 0;
     $testing = 0;
+    $idle = 0;
     for($i = 1; $i <= 9; $i++)
         $backlog["p$i"] = 0;
 
@@ -140,12 +141,15 @@ function GetBacklog($dir, $locationId)
     {
         if( $tester['busy'] )
             $testing++;
+        else
+            $idle++;
     }
     
     $backlog['Total'] = $userCount + $lowCount + $testing;
     $backlog['HighPriority'] = $userCount;
     $backlog['LowPriority'] = $lowCount;
     $backlog['Testing'] = $testing;
+    $backlog['Idle'] = $idle;
     
     return $backlog;
 }
