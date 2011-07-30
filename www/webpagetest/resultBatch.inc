@@ -401,12 +401,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $count++;
     }
     
-    // see if there was a domain redirect for the base page
     $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
     if( count($requests) )
     {
         if($basePage = GetBasePage($requests))
         {
+            // see if there was a domain redirect for the base page
             $testedHost = $requests[0]['host'];
             $basePageHost = $basePage['host'];
             if( $testedHost != $basePageHost )
@@ -415,6 +415,24 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 echo '<div class="alert">';
                 echo '<h1>Domain Redirect Detected</h1>';
                 echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
+                echo '</div>';
+            }
+            
+            // see if any of the requests served from the base page were over ssl
+            $ssl = false;
+            foreach( $requests as &$request )
+            {
+                if( $request['host'] == $basePageHost && $request['secure'] )
+                {
+                    $ssl = true;
+                    break;
+                }
+            }
+            if( $ssl )
+            {
+                echo '<div class="alert">';
+                echo '<h1>HTTPS Content Detected</h1>';
+                echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
                 echo '</div>';
             }
         }
@@ -511,7 +529,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         
         if( $videoComplete )
         {
-            echo '<h2>Visual Comparison</h2>';
+            echo '<h2>Visual Comparison*</h2>';
             VideoHtml($tests['vID']);
         }
         else
@@ -881,7 +899,7 @@ function VideoHtml($id)
                                     }\n
                                 ); \n
                 </script>\n<br>
-                (the video may extend past the measured load time if the page was still updating after it was technically loaded)\n";
+                * The video may extend past the measured load time if the page was still updating after it was technically loaded\n";
 }
 
 /**
