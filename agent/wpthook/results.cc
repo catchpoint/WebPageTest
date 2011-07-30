@@ -362,7 +362,17 @@ void Results::SavePageData(void){
     // Event GUID
     result += "\t";
     // Time to DOM Element (ms)
-    result += "\t";
+    if (_test_state._dom_elements_time.QuadPart > 0) {
+      int dom_elements_time = 0;
+      if (_test_state._dom_elements_time.QuadPart > _test_state._start.QuadPart)
+        dom_elements_time = (int)((_test_state._dom_elements_time.QuadPart - 
+            _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+      buff.Format("%d\t", dom_elements_time);
+      result += buff;
+    }
+    else {
+      result += "\t";
+    }
     // Includes Object Data
     result += "1\t";
     // Cache Score

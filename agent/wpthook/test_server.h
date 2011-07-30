@@ -57,4 +57,5 @@ private:
                     CStringA response_code_string,
                     CStringA response_data);
   DWORD ParseLoadTime(CStringA query_string);
+  void ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_element, DWORD& time);
 };

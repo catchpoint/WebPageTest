@@ -12,6 +12,7 @@ var g_active = false;
 var g_tabId = -1;
 var g_start = 0;
 var g_requesting_task = false;
+var g_domElements = [];
 var g_commandRunner = new wpt.commands.CommandRunner(window.chrome);
 var g_debugWindow = null;
 
@@ -84,6 +85,8 @@ function wptGetTask(){
 // notification that navigation started
 function wptOnNavigate(){
   try {
+    // update the start timestamp.
+    g_start = new Date().getTime();
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
     xhr.send();
@@ -118,13 +121,41 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
   }
 });
 
-// Add a listener for messages from script.js.
-chrome.extension.onConnect.addListener(function(port) {
-  port.onMessage.addListener(function(data) {
-    if (g_active && data.message == "wptLoad") {
-      wptOnLoad(data.load_time);
+// Add a listener for messages from script.js through message passing.
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+    LOG.info("Message from content script: " + request.message);
+    if (request.message == "DOMElementLoaded") {
+      try {
+	var dom_element_time = new Date().getTime() - g_start;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST",
+		"http://127.0.0.1:8888/event/dom_element?name_value="
+		+ encodeURIComponent(request.name_value)
+		+ "&time=" + dom_element_time,
+		true);
+        xhr.send();
+      } catch (err) {
+        LOG.warning("Error sending dom element xhr: " + err);
+      }
     }
-  });
+    else if (request.message == "AllDOMElementsLoaded") {
+      try {
+	var time = new Date().getTime() - g_start;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST",
+		"http://127.0.0.1:8888/event/all_dom_elements_loaded?load_time=" + time,
+		true);
+        xhr.send();
+      } catch (err) {
+        LOG.warning("Error sending all dom elements loaded xhr: " + err);
+      }
+    }
+    else if (request.message == "wptLoad") {
+      wptOnLoad(request.load_time);
+    }
+    // TODO: check whether calling sendResponse blocks in the content script side in page.
+    sendResponse({});
 });
 
 /***********************************************************
@@ -149,6 +180,12 @@ function wptExecuteTask(task){
       g_commandRunner.doSetCookie(task.target, task.value);
     else if (task.action == "block")
       g_commandRunner.doBlock(task.target);
+    else if (task.action == "setdomelement") {
+      // Sending request to set the DOM element has to happen only at the
+      // navigate event after the content script is loaded. So, this just sets
+      // the global variable.
+      g_domElements.push(task.target);
+    }
 
     if (!g_active)
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );

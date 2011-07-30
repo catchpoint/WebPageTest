@@ -9,6 +9,8 @@
 if (window['goog'])
 goog.provide('wpt.contentScript');
 
+var DOM_ELEMENT_POLL_INTERVAL = 100;
+
 // If the namespace is not set up by goog.provide, define the objects
 // it would set up.  We could avoid this sort of hackery by injecting
 // base.js before injecting this script, but the script injection
@@ -32,11 +34,8 @@ window.addEventListener("load", function() {
   } catch(e) {}
 
   // send the navigation timings back to the extension
-  var WPTExtensionConnection = chrome.extension.connect();
-  WPTExtensionConnection.postMessage(
-      {message: 'wptLoad', load_time: WPT_load_time});
+  chrome.extension.sendRequest({message: "wptLoad", load_time: WPT_load_time}, function(response) {});
 }, false);
-
 
 /**
  * WebPageTest's scripting language has several commands that act on
@@ -93,3 +92,53 @@ wpt.contentScript.findDomElements_ = function(root, target) {
 
   return matchingNodeList;
 };
+
+var g_intervalId = 0;
+var g_domNameValues = [];
+
+// Add a listener for messages from background.
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+    if (request.message == "setDOMElements") {
+      g_domNameValues = request.name_values;
+      g_intervalId = window.setInterval(function() { pollDOMElement(); },
+	      DOM_ELEMENT_POLL_INTERVAL);
+    }
+    sendResponse({});
+});
+
+// Poll for a DOM element periodically.
+function pollDOMElement() {
+  var loaded_dom_element_indices = [];
+  // Check for presence of each dom-element and prepare the indices of the
+  // elements present.
+  // TODO: Optimize this polling cost.
+  for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) { 
+    if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
+      postDOMElementLoaded(g_domNameValues[i]);	  
+      loaded_dom_element_indices.push(i);
+      // window.clearInterval(g_intervalId);
+    }
+  }
+  // Remove the loaded elements from backwards using splice method.
+  for (var i = loaded_dom_element_indices.length-1; i >= 0; i--) { 
+    g_domNameValues.splice(loaded_dom_element_indices[i], 1);
+  }
+
+  if (g_domNameValues.length <= 0) {
+    window.clearInterval(g_intervalId);
+    postAllDOMElementsLoaded();
+  }
+};
+
+// Post the DOM element loaded event to the extension.
+function postDOMElementLoaded(name_value) {
+  chrome.extension.sendRequest({message: "DOMElementLoaded", name_value: name_value}, function(response) {});
+}
+
+// Post all DOM elements loaded event to the extension.
+function postAllDOMElementsLoaded() {
+  chrome.extension.sendRequest({message: "AllDOMElementsLoaded"}, function(response) {});
+}
+
+

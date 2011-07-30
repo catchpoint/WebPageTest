@@ -84,12 +84,37 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
  * Implement the block command.
  * @param {string} blockPattern
  */
-wpt.commands.CommandRunner.prototype.doBlock = function(blockpattern) {
-  // Create a listener which blocks all the requests that has the patterm. Also,  pass an empty filter and "blocking" as the extraInfoSpec.
+wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
+  // Create a listener which blocks all the requests that has the patterm. Also,
+  // pass an empty filter and "blocking" as the extraInfoSpec.
   chrome.experimental.webRequest.onBeforeRequest.addListener(function(details){
-    if (details.url.indexOf(blockpattern) != -1) {
+    if (details.url.indexOf(blockPattern) != -1) {
       return { "cancel": true };
     }
     return {};
   }, {}, ["blocking"]);
 };
+
+/**
+ * Just before navigate to the url, register the setDOMElement. When this happens,
+ * the content scripts seem to be loaded. When this behaviour seems broken, then we
+ * might need to switch to "passing a sendrequest" from content script as the first
+ * step to notify the background page that it is loaded.
+ */
+chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details) {
+  wpt.commands.CommandRunner.prototype.doSetDOMElements();
+});
+
+/**
+ * Implement the setDOMElements command.
+ * @param {number} 
+ * @param {string} url
+ */
+wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
+  if (g_domElements.length > 0) {
+    chrome.tabs.sendRequest(g_tabId, {message: "setDOMElements", name_values: g_domElements },
+		    	    function(response) {} );
+    LOG.info('doSetDOMElements for :  ' + g_domElements);
+  }
+}
+

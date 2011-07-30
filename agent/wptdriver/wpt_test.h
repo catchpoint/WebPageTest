@@ -143,6 +143,8 @@ public:
   LARGE_INTEGER _perf_frequency;
   int     _combine_steps;
   int     _version;
+  // Whether we need to wait for DOM element.
+  bool    _dom_element_check;
 
 protected:
   CStringA  JSONEscape(CString src);

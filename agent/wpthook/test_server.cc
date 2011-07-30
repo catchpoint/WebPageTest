@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mongoose/mongoose.h"
 #include "wpt_test_hook.h"
 #include "hook_chrome.h"
+#include <atlutil.h>
 
 static TestServer * _global_test_server = NULL;
 
@@ -138,6 +139,17 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _hook.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/all_dom_elements_loaded") == 0) {
+      DWORD load_time = ParseLoadTime(request_info->query_string);
+      _hook.OnAllDOMElementsLoaded(load_time);
+      // TODO: Log the all dom elements loaded time into its metric.
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/dom_element") == 0) {
+      DWORD time;
+      CStringA dom_element;
+      ParseDOMElementLoadTime(request_info->query_string, dom_element, time);
+      // TODO: Store the dom element loaded time.
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 
@@ -226,7 +238,7 @@ DWORD TestServer::ParseLoadTime(CStringA query_string) {
       if (!key.CompareNoCase("load_time")) {
         load_time = atoi(value);
         WptTrace(loglevel::kFrequentEvent, 
-                _T("[wptdriver] Page load time from extension: %dms"), 
+                _T("[wptdriver] Load time from extension: %dms"), 
                 load_time);
       }
     }
@@ -234,4 +246,35 @@ DWORD TestServer::ParseLoadTime(CStringA query_string) {
   }
 
   return load_time;
+}
+
+
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestServer::ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_element, DWORD& time) {
+  time = 0;
+  dom_element = _T("");
+  int pos = 0;
+  CStringA token = query_string.Tokenize("&", pos);
+  while (pos >= 0 && (!time || dom_element != "")) {
+    int split = token.Find('=');
+    if (split > 0) {
+      CStringA key = token.Left(split).Trim();
+      CStringA value = token.Mid(split + 1).Trim();
+      if (!key.CompareNoCase("time")) {
+        time = atoi(value);
+      }
+      if (!key.CompareNoCase("name_value")) {
+        // TODO: UrlUnescape the term before using it.
+        DWORD len;
+        TCHAR buff[4096];
+        AtlUnescapeUrl((LPCTSTR) CA2T(value), buff, &len, _countof(buff));
+        dom_element = CStringA(buff);
+      }
+    }
+    token = query_string.Tokenize("&", pos);
+  }
+  WptTrace(loglevel::kFrequentEvent,
+    _T("[wptdriver] DOM element load time from extension: %s %dms"), (LPCTSTR)CA2T(dom_element), time);
 }

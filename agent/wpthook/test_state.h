@@ -66,6 +66,7 @@ public:
   void ActivityDetected();
   void OnNavigate();
   void OnLoad(DWORD load_time);
+  void OnAllDOMElementsLoaded(DWORD load_time);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();
@@ -78,6 +79,7 @@ public:
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _on_load;
+  LARGE_INTEGER _dom_elements_time;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;

@@ -104,6 +104,7 @@ void TestState::Reset(bool cascade) {
     _start.QuadPart = 0;
     _step_start.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
     _first_activity.QuadPart = 0;
     _last_activity.QuadPart = 0;
@@ -190,6 +191,7 @@ void TestState::OnNavigate() {
     FindBrowserWindow();
     GrabVideoFrame(true);
     _on_load.QuadPart = 0;
+    _dom_elements_time.QuadPart = 0;
     if (!_current_document) {
       _current_document = _next_document;
       _next_document++;
@@ -222,6 +224,36 @@ void TestState::OnLoad(DWORD load_time) {
                                     CapturedImage::DOCUMENT_COMPLETE);
     }
     _current_document = 0;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Notification from the extension that all dom elements are loaded.
+  We need to do some sanity checking here to make sure the value reported 
+  from the extension is sane
+-----------------------------------------------------------------------------*/
+void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
+  if (_active) {
+    QueryPerformanceCounter(&_dom_elements_time);
+    DWORD elapsed_test = 0;
+    if (_step_start.QuadPart && _dom_elements_time.QuadPart >= _step_start.QuadPart)
+      elapsed_test = (DWORD)((_dom_elements_time.QuadPart - _step_start.QuadPart) 
+                            / _ms_frequency.QuadPart);
+    if (load_time && load_time <= elapsed_test) {
+      _dom_elements_time.QuadPart = _step_start.QuadPart + 
+                          (_ms_frequency.QuadPart * load_time);
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wpthook] TestState::OnAllDOMElementsLoaded() from extension %dms\n"),
+        _dom_elements_time);
+
+    } else {
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wpthook] TestState::OnAllDOMElementsLoaded() recorded in hook. %ldms\n"),
+        _dom_elements_time);
+    }
+    _test._dom_element_check = false;
+    WptTrace(loglevel::kFrequentEvent, 
+      _T("[wpthook] - TestState::IsDone() Resetting dom element check state. "));
   }
 }
 
@@ -259,16 +291,21 @@ bool TestState::IsDone() {
       // the test timed out
       _test_result = TEST_RESULT_TIMEOUT;
       done = true;
-    } else if (!_current_document && _end_on_load &&
+    } else if (!_current_document && !_test._dom_element_check && _end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD){
+
       // end 1 second after onLoad regardless of activity
       done = true;
-    } else if (!_current_document && !_end_on_load &&
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wpthook] - TestState::IsDone() Page load done "));
+    } else if (!_current_document && !_test._dom_element_check && !_end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
                 elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
       // the normal mode of waiting for 2 seconds of no network activity after
       // onLoad
       done = true;
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wpthook] - TestState::IsDone() Page load done "));
     }
 
     if (done) {

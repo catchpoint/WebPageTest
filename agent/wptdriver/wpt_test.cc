@@ -82,6 +82,7 @@ void WptTest::Reset(void) {
   _run = 0;
   _clear_cache = true;
   _active = false;
+  _dom_element_check = false;
   _log_data = true;
   _sleep_end.QuadPart = 0;
   _combine_steps = 0;
@@ -293,7 +294,12 @@ void WptTest::BuildScript() {
             if (command_pos > 0 && script_command.target.GetLength()) {
               // If command is "block" then parse all the space separated patterns
               // in target into separate "block" commands.
-              if (script_command.command == _T("block")) {
+              if (script_command.command == _T("setdomelement")) {
+                _dom_element_check = true;
+                WptTrace(loglevel::kFrequentEvent, 
+                  _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
+              }
+              else if (script_command.command == _T("block")) {
                 CString patterns = script_command.target;
                 int pattern_pos = 0;
                 while (pattern_pos < patterns.GetLength()) {
