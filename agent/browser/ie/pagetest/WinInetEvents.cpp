@@ -302,6 +302,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 						{
 							r->valid = true;
 							r->fromNet = true;
+              OverrideHost(r);
 							if( !r->requestSent )
 								QueryPerformanceCounter((LARGE_INTEGER*)&(r->requestSent));
 								
@@ -481,6 +482,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							EnterCriticalSection(&cs);
 							winInetRequests.SetAt(req->hRequest, req);
 							winInetRequestList.AddHead(req);
+              OverrideHost(req);
 							
 							// keep track of the request that is actively sending on this thread
 							winInetThreadSends.SetAt(GetCurrentThreadId(), req);
