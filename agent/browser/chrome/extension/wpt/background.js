@@ -20,7 +20,7 @@ var g_debugWindow = null;
 /** @const */
 var DEBUG = false;
 
-var LOG = console;
+var LOG;
 
 if (DEBUG) {
   window.onload = function() {
@@ -31,9 +31,19 @@ if (DEBUG) {
     // Create a logger.
     LOG = goog.debug.Logger.getLogger('log');
   };
+} else {
+  LOG = console;
+
+  // The console has method warn(), and not warnning().  To keep our code
+  // consistent, always use warning(), and implement it using warn() if
+  // nessisary.  The function LOG.waring is defined to be the result of
+  // calling LOG.warn, with |this| set to |LOG|, with identical |arguments|.
+  LOG.warning = function() {
+    LOG.warn.apply(LOG, arguments);
+  };
 }
 
-// on startup, kick off our testing
+// On startup, kick off our testing
 window.setTimeout(wptStartup, STARTUP_DELAY);
 
 function wptStartup() {
@@ -45,7 +55,7 @@ function wptStartup() {
   });
 }
 
-// get the next task from the wptdriver
+// Get the next task from the wptdriver
 function wptGetTask(){
   LOG.info("wptGetTask");
   if (!g_requesting_task) {
