@@ -15,33 +15,57 @@ function trim(stringToTrim) {
  * for a complete list of the commands.
  *
  * @constructor
+ * @param {Number} tabId The id of the tab being used to load the page
+ *                       under test.  See that chrome.tabs.* docs to
+ *                       understand what methods give and use this id.
  * @param {Object} chromeApi Object which contains the chrome extension
  *                           API methods.  The real one is window.chrome
  *                           in an extension.  Tests may pass in a mock
  *                           object.
  */
-wpt.commands.CommandRunner = function(chromeApi) {
+wpt.commands.CommandRunner = function(tabId, chromeApi) {
+  this.tabId_ = tabId;
   this.chromeApi_ = chromeApi;
+};
 
-  //TODO(skerner): Add a log chanel member.
+/**
+ * Delegate a command to the InPageCommandRunner in the content script.
+ * TODO(skerner): The InPageCommandRunner has the ability to report
+ * success and failure, and this is used in unit tests to check results.
+ * Hook the reporting up to the backgrond page's logging, so that all
+ * logging can be read in a single location.
+ *
+ * @param {Object} commandObject
+ */
+wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
+    commandObj) {
+
+  console.log("Delegate a command to the content script: ", commandObj);
+
+  var code = ['console.log("qwerty"); wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
+              JSON.stringify(commandObj),
+              '); console.log("123456"); '].join('');
+  this.chromeApi_.tabs.executeScript(this.tabId_, {code:code}, function() {});
 };
 
 /**
  * Implement the exec command.
+ * TODO(skerner): Make this use SendCommandToContentScript_(), and
+ * wrap it in a try block to avoid breaking the content script on
+ * an exception.
  * @param {string} script
  */
 wpt.commands.CommandRunner.prototype.doExec = function(script) {
-  this.chromeApi_.tabs.executeScript(null, {code:script});
+  this.chromeApi_.tabs.executeScript(this.tabId_, {code:script});
 };
 
 /**
  * Implement the navigate command.
- * @param {number} tabId Id of the tab being used for testing.
  * @param {string} url
  */
-wpt.commands.CommandRunner.prototype.doNavigate = function(tabId, url) {
-  this.chromeApi_.tabs.update(tabId, {"url":url});
-}
+wpt.commands.CommandRunner.prototype.doNavigate = function(url) {
+  this.chromeApi_.tabs.update(this.tabId_, {"url":url});
+};
 
 /**
  * Implement the setcookie command.
@@ -107,14 +131,25 @@ chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details)
 
 /**
  * Implement the setDOMElements command.
- * @param {number} 
- * @param {string} url
  */
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
   if (g_domElements.length > 0) {
-    chrome.tabs.sendRequest(g_tabId, {message: "setDOMElements", name_values: g_domElements },
-		    	    function(response) {} );
+    chrome.tabs.sendRequest(
+        this.tabId_,
+        {message: "setDOMElements", name_values: g_domElements },
+        function(response) {} );
     LOG.info('doSetDOMElements for :  ' + g_domElements);
   }
-}
+};
 
+/**
+ * Click on an element.
+ * Implement the click command.
+ * @param {string} target The DOM element to click, in attribute'value form.
+ */
+wpt.commands.CommandRunner.prototype.doClick = function(target) {
+  this.SendCommandToContentScript_({
+      "command": "click",
+      "target": target
+  });
+};

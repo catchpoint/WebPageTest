@@ -113,15 +113,15 @@ function pollDOMElement() {
   // Check for presence of each dom-element and prepare the indices of the
   // elements present.
   // TODO: Optimize this polling cost.
-  for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) { 
+  for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) {
     if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
-      postDOMElementLoaded(g_domNameValues[i]);	  
+      postDOMElementLoaded(g_domNameValues[i]);
       loaded_dom_element_indices.push(i);
       // window.clearInterval(g_intervalId);
     }
   }
   // Remove the loaded elements from backwards using splice method.
-  for (var i = loaded_dom_element_indices.length-1; i >= 0; i--) { 
+  for (var i = loaded_dom_element_indices.length-1; i >= 0; i--) {
     g_domNameValues.splice(loaded_dom_element_indices[i], 1);
   }
 
@@ -141,4 +141,113 @@ function postAllDOMElementsLoaded() {
   chrome.extension.sendRequest({message: "AllDOMElementsLoaded"}, function(response) {});
 }
 
+/**
+ * Class InPageCommandRunner works on behalf of wpt.commands.CommandRunner
+ * to execute script commands.  Because it runs as a content script, it
+ * can access the DOM of the page.
+ *
+ * @constructor
+ * @param {Document} doc The document on which commands are run.
+ *                       Outside unit tests, usually window.document.
+ * @param {Object} chromeApi The base object of the chrome extension API.
+ *                           Outside unit tests, usually window.chrome.
+ * @param {Object} resultCallbacks Callbacks to run on success, failure, etc.
+ *                                 These calls are used by unit tests to check
+ *                                 results.  They are not used in production,
+ *                                 except to log to the console in the content
+ *                                 script.
+ */
+wpt.contentScript.InPageCommandRunner = function(doc,
+                                                 chromeApi,
+                                                 resultCallbacks) {
+  this.doc_ = doc;
+  this.chromeApi_ = chromeApi;
+  this.resultCallbacks_ = resultCallbacks;
+};
 
+/**
+ * Signal that the command completed without error.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
+  console.log("Command successful.");
+  if (this.resultCallbacks_.success)
+    this.resultCallbacks_.success();
+};
+
+/**
+ * Send a warning to the creator of the in-page command runner.
+ * @param {string} warning
+ */
+wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
+  console.log("Command generated warning: " + warning);
+  if (this.resultCallbacks_.warn)
+    this.resultCallbacks_.warn(warning);
+};
+
+/**
+ * Signal that the command failed because of an error.
+ * @param {string} error
+ */
+wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
+  console.log("Command generated error: " + error);
+  if (this.resultCallbacks_.error)
+    this.resultCallbacks_.error(error);
+};
+
+/**
+ * Click on a page element.
+ * @param {string} target The DOM element to click, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(target) {
+
+  var domElements;
+  try {
+    domElements = wpt.contentScript.findDomElements_(this.doc_, target);
+  } catch (err) {
+    this.FatalError_("Click failed: "+ err);
+    return;
+  }
+
+  if (!domElements || domElements.length == 0) {
+    this.FatalError_("Click failed: Could not find DOM element matching target " + target);
+    return;
+  }
+
+  if (domElements.length > 1) {
+    this.Warn_(domElements.length + " matches for target \"" +
+               target + "\".  Using first match.");
+  }
+
+  domElements[0].click();
+  this.Success_();
+};
+
+/**
+ * Run a command.  The backgrond page delegates commands to the content script
+ * by calling this method on an instance of InPageCommandRunner.
+ * @param {Object} commandObj
+ */
+wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj) {
+  console.info("InPageCommandRunner got a command: ", commandObj);
+
+  switch (commandObj['command']) {
+    case "click": {
+      this.doClick_(commandObj['target']);
+      break;
+    }
+
+    default:
+      this.FatalError_("Unknown command " + commandObj['command']);
+  }
+};
+
+
+/**
+ * An instance of InPageCommandRunner whose well-known name can be used
+ * by the background page.
+ */
+wpt.contentScript.InPageCommandRunner.Instance =
+    new wpt.contentScript.InPageCommandRunner(
+        window.document,
+        chrome,
+        {});
