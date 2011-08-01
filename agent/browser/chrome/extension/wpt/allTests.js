@@ -6,7 +6,7 @@ goog.require('goog.testing.AsyncTestCase');
 goog.provide('wpt.allTests');
 
 var asyncTestCase = goog.testing.AsyncTestCase.createAndInstall(document.title);
-asyncTestCase.stepTimeout = 20 * 1000;  // 1 second timeout
+asyncTestCase.stepTimeout = 3 * 1000;  // 3 second timeout
 
 /**
  * Open a tab, and run |callback| when it is loaded.
