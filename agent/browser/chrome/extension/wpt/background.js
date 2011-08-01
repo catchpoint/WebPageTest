@@ -172,22 +172,31 @@ function wptExecuteTask(task){
 
     // decode and execute the actual command
     LOG.info("Running task " + task.action + " " + task.target);
-    if (task.action == "navigate")
-      g_commandRunner.doNavigate(g_tabId, task.target);
-    else if (task.action == "exec")
-      g_commandRunner.doExec(task.target);
-    else if (task.action == "setcookie")
-      g_commandRunner.doSetCookie(task.target, task.value);
-    else if (task.action == "block")
-      g_commandRunner.doBlock(task.target);
-    else if (task.action == "setdomelement") {
-      // Sending request to set the DOM element has to happen only at the
-      // navigate event after the content script is loaded. So, this just sets
-      // the global variable.
-      g_domElements.push(task.target);
+    switch (task.action) {
+      case "navigate":
+        g_commandRunner.doNavigate(g_tabId, task.target);
+        break;
+      case "exec":
+        g_commandRunner.doExec(task.target);
+        break;
+      case "setcookie":
+        g_commandRunner.doSetCookie(task.target, task.value);
+        break;
+      case "block":
+        g_commandRunner.doBlock(task.target);
+        break;
+      case "setdomelement":
+        // Sending request to set the DOM element has to happen only at the
+        // navigate event after the content script is loaded. So, this just
+        // sets the global variable.
+        g_domElements.push(task.target);
+        break;
+
+      default:
+        LOG.error("Unimplemented command: ", task);
     }
 
     if (!g_active)
-      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );
+      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 }

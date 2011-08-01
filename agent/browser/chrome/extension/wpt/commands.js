@@ -107,7 +107,7 @@ chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details)
 
 /**
  * Implement the setDOMElements command.
- * @param {number} 
+ * @param {number}
  * @param {string} url
  */
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
@@ -117,4 +117,3 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
     LOG.info('doSetDOMElements for :  ' + g_domElements);
   }
 }
-
