@@ -9,17 +9,18 @@ var STARTUP_DELAY = 5000;
 var TASK_INTERVAL = 1000;
 var TASK_INTERVAL_SHORT = 0;
 var g_active = false;
+var g_tabId = -1;
 var g_start = 0;
 var g_requesting_task = false;
 var g_domElements = [];
-var g_commandRunner = null;  // Will create once we know the tab id under test.
-var g_debugWindow = null;  // May create at window onload.
+var g_commandRunner = new wpt.commands.CommandRunner(window.chrome);
+var g_debugWindow = null;
 
 // Developers can set DEBUG to true to see what commands are being run.
 /** @const */
 var DEBUG = false;
 
-var LOG;
+var LOG = console;
 
 if (DEBUG) {
   window.onload = function() {
@@ -30,31 +31,21 @@ if (DEBUG) {
     // Create a logger.
     LOG = goog.debug.Logger.getLogger('log');
   };
-} else {
-  LOG = console;
-
-  // The console has method warn(), and not warnning().  To keep our code
-  // consistent, always use warning(), and implement it using warn() if
-  // nessisary.  The function LOG.waring is defined to be the result of
-  // calling LOG.warn, with |this| set to |LOG|, with identical |arguments|.
-  LOG.warning = function() {
-    LOG.warn.apply(LOG, arguments);
-  };
 }
 
-// On startup, kick off our testing
+// on startup, kick off our testing
 window.setTimeout(wptStartup, STARTUP_DELAY);
 
 function wptStartup() {
   LOG.info("wptStartup");
   chrome.tabs.getSelected(null, function(tab){
     LOG.info("Got tab id: " + tab.id);
-    g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
+    g_tabId = tab.id;
     window.setInterval(wptGetTask, TASK_INTERVAL);
   });
 }
 
-// Get the next task from the wptdriver
+// get the next task from the wptdriver
 function wptGetTask(){
   LOG.info("wptGetTask");
   if (!g_requesting_task) {
@@ -181,34 +172,22 @@ function wptExecuteTask(task){
 
     // decode and execute the actual command
     LOG.info("Running task " + task.action + " " + task.target);
-    switch (task.action) {
-      case "navigate":
-        g_commandRunner.doNavigate(task.target);
-        break;
-      case "exec":
-        g_commandRunner.doExec(task.target);
-        break;
-      case "setcookie":
-        g_commandRunner.doSetCookie(task.target, task.value);
-        break;
-      case "block":
-        g_commandRunner.doBlock(task.target);
-        break;
-      case "setdomelement":
-        // Sending request to set the DOM element has to happen only at the
-        // navigate event after the content script is loaded. So, this just
-        // sets the global variable.
-        g_domElements.push(task.target);
-        break;
-      case "click":
-        g_commandRunner.doClick(task.target);
-        break;
-
-      default:
-        LOG.error("Unimplemented command: ", task);
+    if (task.action == "navigate")
+      g_commandRunner.doNavigate(g_tabId, task.target);
+    else if (task.action == "exec")
+      g_commandRunner.doExec(task.target);
+    else if (task.action == "setcookie")
+      g_commandRunner.doSetCookie(task.target, task.value);
+    else if (task.action == "block")
+      g_commandRunner.doBlock(task.target);
+    else if (task.action == "setdomelement") {
+      // Sending request to set the DOM element has to happen only at the
+      // navigate event after the content script is loaded. So, this just sets
+      // the global variable.
+      g_domElements.push(task.target);
     }
 
     if (!g_active)
-      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT );
   }
 }

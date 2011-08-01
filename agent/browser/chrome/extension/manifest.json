@@ -12,7 +12,7 @@
     {
       "all_frames": false,
       "js": ["wpt/script.js"],
-      "matches": ["http://*/*", "https://*/*"],
+      "matches": ["<all_urls>"],
       "run_at": "document_start"
     }
   ],
