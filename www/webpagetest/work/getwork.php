@@ -19,6 +19,8 @@ if( isset($ec2) && strlen($ec2) )
     $tester = $ec2;
 elseif( isset($pc) && strlen($pc) )
     $tester = $pc;
+else
+    $tester = trim($_SERVER['REMOTE_ADDR']);
     
 logMsg("getwork.php location:$location tester:$tester ex2:$ec2");
 
@@ -37,17 +39,6 @@ if( !$done )
 // send back a blank result if we didn't have anything
 if( !$done )
 {
-    // scale EC2 if necessary
-    if( strlen($ec2) && isset($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
-    {
-        $files = glob( $locations[$location]['localDir'] . '/testing/*.*', GLOB_NOSORT );
-        if( !count($files) )
-        {
-            require_once('./ec2/ec2.inc.php');
-            EC2_ScaleDown($location, $locations[$location]['ec2'], $ec2);
-        }
-    }
-
     header('Content-type: text/plain');
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -89,130 +80,115 @@ function GetJob()
             }
         }
         
-        if( !$offline )
+        if( $lock = LockLocation($location) )
         {
             // make sure the work directory actually exists
             if( !is_dir($workDir) )
                 mkdir($workDir, 0777, true);
-                
-            // lock the working directory for the given location
-            $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
-            if( $lockFile )
+            
+            // load the tester information
+            $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+            if( !count($testers) )
+                $testers = array();
+            if( !isset($testers[$tester]) )
+                $testers[$tester] = array();
+            elseif( !is_array($testers[$tester]) )
             {
-                if( flock($lockFile, LOCK_EX) )
+                unset($testers[$tester]);
+                $testers[$tester] = array();
+            }
+
+            // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
+            if( !$testers[$tester]['offline'] )
+            {
+                $fileName = GetJobFile($workDir);
+                
+                if( isset($fileName) && strlen($fileName) )
                 {
-                    $fileName = GetJobFile($workDir);
+                    $done = true;
                     
-                    if( isset($fileName) && strlen($fileName) )
-                    {
-                        $done = true;
-                        
-                        header('Content-type: text/plain');
-                        header("Cache-Control: no-cache, must-revalidate");
-                        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+                    header('Content-type: text/plain');
+                    header("Cache-Control: no-cache, must-revalidate");
+                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                        // send the test info to the test agent
-                        $testInfo = file_get_contents($fileName);
-                        unlink($fileName);
-                        echo $testInfo;
-                        $ok = true;
-                        
-                        // extract the test ID from the job file
-                        if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
-                            $testId = trim($matches[1]);
-
-                        if( isset($testId) )
-                        {
-                            // figure out the path to the results
-                            $testPath = './' . GetTestPath($testId);
-
-                            // flag the test with the start time
-                            $ini = file_get_contents("$testPath/testinfo.ini");
-                            $time = time();
-                            $start = "[test]\r\nstartTime=" . date("m/d/y G:i:s", $time);
-                            $out = str_replace('[test]', $start, $ini);
-                            file_put_contents("$testPath/testinfo.ini", $out);
-                            
-                            if( gz_is_file("$testPath/testinfo.json") )
-                            {
-                                $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                                $testInfoJson['started'] = $time;
-                                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-                            }
-                        }
-                    }
+                    // send the test info to the test agent
+                    $testInfo = file_get_contents($fileName);
+                    unlink($fileName);
+                    echo $testInfo;
+                    $ok = true;
                     
-                    // keep track of the last time this location reported in
-                    if( !is_dir('./tmp') )
-                        mkdir('./tmp');
-                    if( isset($tester) && strlen($tester) )
-                    {
-                        // store the last time for each PC
-                        $times = json_decode(file_get_contents("./tmp/$location.tm"), true);
-                        if( !count($times) )
-                            $times = array();
-                            
-                        // store information about what the tester is currently doing
-                        if( !isset($times[$tester]) )
-                            $times[$tester] = array();
-                        elseif( !is_array($times[$tester]) )
-                        {
-                            unset($times[$tester]);
-                            $times[$tester] = array();
-                        }
+                    // extract the test ID from the job file
+                    if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
+                        $testId = trim($matches[1]);
 
-                        $now = time();
-                        $times[$tester]['updated'] = $now;
-                        $times[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
-                        $times[$tester]['pc'] = $pc;
-                        $times[$tester]['ec2'] = $ec2;
-                        $times[$tester]['ver'] = $_GET['ver'];
-                        if( isset($testId) )
-                        {
-                            $times[$tester]['test'] = $testId;
-                            $times[$tester]['last'] = $now;
-                        }
-                        else
-                        {
-                            // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
-                            if( isset($times[$tester]['test']) && strlen($times[$tester]['test']) )
-                                $times[$tester]['last'] = $now;
-                                
-                            unset($times[$tester]['test']);
-                        }
-                        
-                        // delete any testers in this location that haven't checked in in over an hour
-                        foreach( $times as $name => &$data )
-                        {
-                            if( $now > $data['updated'] )
-                            {
-                                $elapsed = $now - $data['updated'];
-                                if( $elapsed > 3600 )
-                                    unset( $times[$name] );
-                            }
-                        }
-                        
-                        file_put_contents("./tmp/$location.tm", json_encode($times));
-                    }
-                    else
-                    {        
-                        touch( "./tmp/$location.tm" );
-                    }
-                    
-                    // zero out the tracked page loads in case some got lost
-                    if( !$done )
+                    if( isset($testId) )
                     {
-                        $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                        if( $tests )
+                        // figure out the path to the results
+                        $testPath = './' . GetTestPath($testId);
+
+                        // flag the test with the start time
+                        $ini = file_get_contents("$testPath/testinfo.ini");
+                        $time = time();
+                        $start = "[test]\r\nstartTime=" . date("m/d/y G:i:s", $time);
+                        $out = str_replace('[test]', $start, $ini);
+                        file_put_contents("$testPath/testinfo.ini", $out);
+                        
+                        if( gz_is_file("$testPath/testinfo.json") )
                         {
-                            $tests['tests'] = 0;
-                            file_put_contents("./tmp/$location.tests", json_encode($tests));
+                            $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                            $testInfoJson['started'] = $time;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
                         }
                     }
                 }
-
-                fclose($lockFile);
+                    
+                // keep track of the last time this location reported in
+                $now = time();
+                $testers[$tester]['updated'] = $now;
+                $testers[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
+                $testers[$tester]['pc'] = $pc;
+                $testers[$tester]['ec2'] = $ec2;
+                $testers[$tester]['ver'] = $_GET['ver'];
+                $testers[$tester]['test'] = $testId;
+                if( isset($testId) )
+                {
+                    $testers[$tester]['last'] = $now;
+                }
+                else
+                {
+                    // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
+                    if( isset($testers[$tester]['test']) && strlen($testers[$tester]['test']) )
+                        $testers[$tester]['last'] = $now;
+                    unset($testers[$tester]['test']);
+                }
+                        
+                // delete any testers in this location that haven't checked in in over an hour
+                foreach( $testers as $name => &$data )
+                {
+                    if( $now > $data['updated'] )
+                    {
+                        $elapsed = $now - $data['updated'];
+                        if( $elapsed > 3600 )
+                            unset( $testers[$name] );
+                    }
+                }
+                        
+                // zero out the tracked page loads in case some got lost
+                if( !$done )
+                {
+                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                    if( $tests )
+                    {
+                        $tests['tests'] = 0;
+                        file_put_contents("./tmp/$location.tests", json_encode($tests));
+                    }
+                }
             }
+            
+            if ($testers)
+                file_put_contents("./tmp/$location.tm", json_encode($testers));
+
+            UnlockLocation($lock);
         }
     }
     

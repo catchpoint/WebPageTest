@@ -1097,12 +1097,11 @@ function FixUrlSlash($url)
 * 
 * @param mixed $id
 */
-function ArchiveTest($id, &$hasView)
+function ArchiveTest($id)
 {
     global $settings;
     global $api_keys;
     $ret = false;
-    $hasView = false;
     if( isset($settings['archive_dir']) )
     {
         $testPath = realpath('./' . GetTestPath($id));
@@ -1113,31 +1112,13 @@ function ArchiveTest($id, &$hasView)
             $test = parse_ini_file("$testPath/testinfo.ini", true);
             $completed = isset($test['test']['completeTime']);
         }
-        if( $completed && strlen($testInfo['view']) )
-            $hasView = true;
-        $discard = false;
-        if( !isset($api_keys) )
-        {
-            $api_keys = parse_ini_file('./settings/keys.ini', true);
-            if( !$api_keys )
-                $api_keys = array();
-        }
-        $priority = $testInfo['priority'];
-        if( isset($testInfo['k']) && array_key_exists($testInfo['k'], $api_keys) && array_key_exists('priority', $api_keys[$testInfo['k']]) )
-            $priority = $api_keys[$testInfo['k']]['priority'];
-        if( $priority > 5  )
-            $discard = true;
         if( $testInfo['archived'] )
-        {
             $ret = true;
-        }
-        elseif( $completed && !$discard )
+        elseif( $completed || $testInfo['batch'] )
         {
             $dest = GetArchiveFile($id, true);
             if( is_file($dest) )
-            {
                 $ret = true;
-            }
             else
             {
                 // zip up the contents
@@ -1334,13 +1315,13 @@ function GetPendingTests($location, &$count, &$avgTime)
 function GetTesterCount($location)
 {
     $count = 0;
-    $times = json_decode(file_get_contents("./tmp/$location.tm"), true);
-    if( count($times) )
+    $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+    if( count($testers) )
     {
         $now = time();
-        foreach( $times as &$tester )
+        foreach( $testers as &$tester )
         {
-            if( $tester['updated'] && $now - $tester['updated'] < 3600 )
+            if( !$tester['offline'] && $tester['updated'] && $now - $tester['updated'] < 3600 )
                 $count++;
         }
     }
@@ -1515,37 +1496,69 @@ function GetTesters($locationId)
             $location['testers'] = array();
             foreach( $testers as $index => $tester )
             {
-                $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver']);
-                
-                // last time it checked in
-                if( isset($tester['updated']) )
+                if( !$tester['offline'] )
                 {
-                    $elapsed = 0;
-                    $updated = $tester['updated'];
-                    if( $now > $updated )
-                        $elapsed = $now - $updated;
-                    $entry['elapsed'] = (int)($elapsed / 60);
-                }
-                
-                // last time it got work
-                if( isset($tester['last']) )
-                {
-                    $elapsed = 0;
-                    $updated = $tester['last'];
-                    if( $now > $updated )
-                        $elapsed = $now - $updated;
-                    $entry['last'] = (int)($elapsed / 60);
-                }
-                
-                $entry['busy'] = 0;
-                if( isset( $tester['test'] ) )
-                    $entry['busy'] = 1;
+                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver']);
                     
-                $location['testers'][] = $entry;
+                    // last time it checked in
+                    if( isset($tester['updated']) )
+                    {
+                        $elapsed = 0;
+                        $updated = $tester['updated'];
+                        if( $now > $updated )
+                            $elapsed = $now - $updated;
+                        $entry['elapsed'] = (int)($elapsed / 60);
+                    }
+                    
+                    // last time it got work
+                    if( isset($tester['last']) )
+                    {
+                        $elapsed = 0;
+                        $updated = $tester['last'];
+                        if( $now > $updated )
+                            $elapsed = $now - $updated;
+                        $entry['last'] = (int)($elapsed / 60);
+                    }
+                    
+                    $entry['busy'] = 0;
+                    if( strlen( $tester['test'] ) )
+                        $entry['busy'] = 1;
+                        
+                    $location['testers'][] = $entry;
+                }
             }
         }
     }
     
     return $location;
+}
+
+/**
+* Lock the given location (make sure to unlock it when you are done)
+*/
+function LockLocation($location)
+{
+    if( !is_dir('./tmp') )
+        mkdir('./tmp');
+    $lock = fopen( "./tmp/$location.lock", 'w',  false);
+    if( $lock )
+    {
+        if( !flock($lock, LOCK_EX) )
+        {
+            fclose($lock);
+            $lock = false;
+        }
+    }
+
+    return $lock;
+}
+
+/**
+* Unlock the given location
+*/
+function UnlockLocation($lock)
+{
+    if( $lock )
+        fclose($lock);
 }
 ?>

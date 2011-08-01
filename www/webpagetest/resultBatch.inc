@@ -19,8 +19,6 @@ elseif( gz_is_file("$testPath/tests.json") )
 $view = trim(strtolower($test['testinfo']['view']));
 if( !strlen($view) )
     $view = 'bulk';
-else
-    define('NAV_NO_SHARE', true);
 
 if( $view == 'simple' )
     $view = 'pss';
@@ -28,6 +26,10 @@ if( $view == 'simple' )
 $fvonly = false;
 if( $test['test']['fvonly'] )
     $fvonly = true;
+    
+$csv = false;
+if( $_REQUEST['f'] == 'csv' )
+    $csv = true;
 
 // run a quick check to see if the tests are complete
 $dirty = false;
@@ -43,6 +45,16 @@ if( $dirty )
 
 $page_keywords = array('Bulk','Result','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Bulk website performance test result$testLabel.";
+
+if($csv && $view == 'pss')
+{
+    $testInfo = $test['testinfo'];
+    header ("Content-type: text/csv");
+    if ($complete)
+        DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+}
+else
+{
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -220,6 +232,8 @@ $page_description = "Bulk website performance test result$testLabel.";
 </html>
 
 <?php
+} // csv
+
 /**
 * Display a straight data table of the test results
 * 
@@ -345,7 +359,10 @@ function DisplayTest($id, $url, $label, $complete)
 */
 function DisplayPSS(&$tests, $video, &$dirty)
 {
+    global $id;
+    global $csv;
     global $complete;
+    global $testInfo;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -357,6 +374,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $rvRenderTimes = array();
     $count = 0;
     global $fvonly;
+    $url = '';
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
@@ -378,6 +396,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $test['fvMedian'] = $fvMedian;
                 $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
                 $fvRenderTime = $pageData[$fvMedian][0]['render'];
+                if( !strlen($url) )
+                    $url = $pageData[$fvMedian][0]['URL'];
             }
             if( CountSuccessfulTests($pageData, 1) )
             {
@@ -401,141 +421,150 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $count++;
     }
     
-    $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
-    if( count($requests) )
+    if( $csv )
     {
-        if($basePage = GetBasePage($requests))
-        {
-            // see if there was a domain redirect for the base page
-            $testedHost = $requests[0]['host'];
-            $basePageHost = $basePage['host'];
-            if( $testedHost != $basePageHost )
-            {
-                $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
-                echo '<div class="alert">';
-                echo '<h1>Domain Redirect Detected</h1>';
-                echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
-                echo '</div>';
-            }
-            
-            // see if any of the requests served from the base page were over ssl
-            $ssl = false;
-            foreach( $requests as &$request )
-            {
-                if( $request['host'] == $basePageHost && $request['secure'] )
-                {
-                    $ssl = true;
-                    break;
-                }
-            }
-            if( $ssl )
-            {
-                echo '<div class="alert">';
-                echo '<h1>HTTPS Content Detected</h1>';
-                echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
-                echo '</div>';
-            }
-        }
-    }
-    
-    echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
-            <tr>
-            <th class="empty"></th>';
-    // second pass, generate the header
-    $count = 0;
-    foreach( $tests['urls'] as &$test )
-    {
-        $label = htmlspecialchars($test['l']);
-        if( !strlen($label) )
-            $label = htmlspecialchars(ShortenUrl($test['u']));
-        $id = $test['id'];
-        echo "<th>$label</th>";
-        if( $count && $complete )
-            echo "<th>Difference</a></th>";
-        $count++;
-    }
-    echo '</tr>';
-    
-    // FV Page load time
-    if( $complete )
-    {
-        DisplayMetric('Page Load Time', $fvLoadTimes, $count);
-        if( $includeRender )
-            DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-        if( !$fvonly )
-        {
-            DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
-            if( $includeRender )
-                DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
-        }
-
-        // links to the test results
-        echo '<tr><td class="right">Full Test Result</td>';
-        $count = 0;
-        foreach( $tests['urls'] as &$test )
-        {
-            $testurl = "/results.php?test={$test['id']}";
-            if( FRIENDLY_URLS )
-                $testurl = "/result/{$test['id']}/";
-            $path = $test['path'];
-            $run = $test['fvMedian'];
-            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
-            if( $count )
-                echo "<td></td>";
-            $count++;
-        }
-        echo "</tr>";
+        echo "Test ID,URL,Location,Original Test ID,Optimized Test ID,Original FV Load Time,Optimized FV Load Time,Original RV Load Time,Optimized RV Load Time\n";
+        echo "$id,\"$url\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
+        echo "{$fvLoadTimes[0]},{$fvLoadTimes[1]},{$rvLoadTimes[0]},{$rvLoadTimes[1]}";
     }
     else
     {
-        echo "<tr><td>Test Status</td>";
-        foreach( $tests['urls'] as &$test )
+        $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
+        if( count($requests) )
         {
-            echo '<td>';
-            if( $test['c'] )
-                echo 'Complete';
-            else
-                echo $test['status'];
-            echo '</td>';
-        }
-        echo '</tr>';
-    }
-    echo '</table><br>';
-    
-    // video
-    if( $complete && $video )
-    {
-        $videoComplete = true;
-        if( !strlen($tests['vID']) )
-        {
-            $tests['vID'] = CreateVideo($tests['urls']);
-            $dirty = true;
-            $videoComplete = false;
-            if( !strlen($tests['vID']) )
+            if($basePage = GetBasePage($requests))
             {
-                // bail on the video if it couldn't be created
-                $videoComplete = true;
-                $tests['vReady'] = true;
+                // see if there was a domain redirect for the base page
+                $testedHost = $requests[0]['host'];
+                $basePageHost = $basePage['host'];
+                if( $testedHost != $basePageHost )
+                {
+                    $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
+                    echo '<div class="alert">';
+                    echo '<h1>Domain Redirect Detected</h1>';
+                    echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
+                    echo '</div>';
+                }
+                
+                // see if any of the requests served from the base page were over ssl
+                $ssl = false;
+                foreach( $requests as &$request )
+                {
+                    if( $request['host'] == $basePageHost && $request['secure'] )
+                    {
+                        $ssl = true;
+                        break;
+                    }
+                }
+                if( $ssl )
+                {
+                    echo '<div class="alert">';
+                    echo '<h1>HTTPS Content Detected</h1>';
+                    echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
+                    echo '</div>';
+                }
             }
         }
-        elseif( !$tests['vReady'] )
-        {
-            $tests['vReady'] = CheckVideo($tests['vID']);
-            if( $tests['vReady'] )
-                $dirty = true;
-            else
-                $videoComplete = false;
-        }
         
-        if( $videoComplete )
+        echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
+                <tr>
+                <th class="empty"></th>';
+        // second pass, generate the header
+        $count = 0;
+        foreach( $tests['urls'] as &$test )
         {
-            echo '<h2>Visual Comparison*</h2>';
-            VideoHtml($tests['vID']);
+            $label = htmlspecialchars($test['l']);
+            if( !strlen($label) )
+                $label = htmlspecialchars(ShortenUrl($test['u']));
+            $id = $test['id'];
+            echo "<th>$label</th>";
+            if( $count && $complete )
+                echo "<th>Difference</a></th>";
+            $count++;
+        }
+        echo '</tr>';
+        
+        // FV Page load time
+        if( $complete )
+        {
+            DisplayMetric('Page Load Time', $fvLoadTimes, $count);
+            if( $includeRender )
+                DisplayMetric('Start Render Time', $fvRenderTimes, $count);
+            if( !$fvonly )
+            {
+                DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
+                if( $includeRender )
+                    DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+            }
+
+            // links to the test results
+            echo '<tr><td class="right">Full Test Result</td>';
+            $count = 0;
+            foreach( $tests['urls'] as &$test )
+            {
+                $testurl = "/results.php?test={$test['id']}";
+                if( FRIENDLY_URLS )
+                    $testurl = "/result/{$test['id']}/";
+                $path = $test['path'];
+                $run = $test['fvMedian'];
+                echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+                if( $count )
+                    echo "<td></td>";
+                $count++;
+            }
+            echo "</tr>";
         }
         else
         {
-            echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
-            echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+            echo "<tr><td>Test Status</td>";
+            foreach( $tests['urls'] as &$test )
+            {
+                echo '<td>';
+                if( $test['c'] )
+                    echo 'Complete';
+                else
+                    echo $test['status'];
+                echo '</td>';
+            }
+            echo '</tr>';
+        }
+        echo '</table><br>';
+        
+        // video
+        if( $complete && $video )
+        {
+            $videoComplete = true;
+            if( !strlen($tests['vID']) )
+            {
+                $tests['vID'] = CreateVideo($tests['urls']);
+                $dirty = true;
+                $videoComplete = false;
+                if( !strlen($tests['vID']) )
+                {
+                    // bail on the video if it couldn't be created
+                    $videoComplete = true;
+                    $tests['vReady'] = true;
+                }
+            }
+            elseif( !$tests['vReady'] )
+            {
+                $tests['vReady'] = CheckVideo($tests['vID']);
+                if( $tests['vReady'] )
+                    $dirty = true;
+                else
+                    $videoComplete = false;
+            }
+            
+            if( $videoComplete )
+            {
+                echo '<h2>Visual Comparison*</h2>';
+                VideoHtml($tests['vID']);
+            }
+            else
+            {
+                echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+            }
         }
     }
 }

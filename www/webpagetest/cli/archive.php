@@ -114,27 +114,27 @@ function CheckTest($testPath, $id)
     global $log;
     $logLine = "$id : ";
 
-    if( ArchiveTest($id, $hasView) )
+    if( ArchiveTest($id) )
     {
         $archiveCount++;
         $logLine .= "Archived";
+
+        // Delete tests after 3 days of no access
+        $delete = false;
+        $elapsed = TestLastAccessed($id);
+        if( $elapsed > 3 )
+            $delete = true;
+
+        if( $delete )
+        {
+            delTree("$testPath/");
+            $deleted++;
+            $logLine .= " Deleted";
+        }
+        else
+            $kept++;
     }
-
-    // Delete tests after 3 days of no access
-    $delete = false;
-    $elapsed = TestLastAccessed($id);
-    if( $elapsed > 3 || ($hasView && $elapsed > 0.25) )
-        $delete = true;
-
-    if( $delete )
-    {
-        delTree("$testPath/");
-        $deleted++;
-        $logLine .= " Deleted";
-    }
-    else
-        $kept++;
-
+        
     if( $log )
     {
         $logLine .= "\n";
