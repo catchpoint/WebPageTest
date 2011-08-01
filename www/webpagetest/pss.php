@@ -33,7 +33,6 @@ $page_description = "Comparison Test$testLabel.";
                                 'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                 'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             $tab = 'New Comparison';
-            define('NAV_NO_SHARE', true);
             include 'header.inc';
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
@@ -48,12 +47,12 @@ $page_description = "Comparison Test$testLabel.";
             <?php
             if( strlen($_GET['origin']) )
             {
-                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOST%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
             }
             else
             {
-                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOST%&#09;ghs.google.com&#10;overrideHost&#09;%HOST%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"3\">\n";
             }

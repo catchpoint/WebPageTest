@@ -1022,7 +1022,30 @@ function SubmitUrl($testId, $testData, &$test, $url)
             $parts = parse_url($url);
             $host = $parts['host'];
             if( strlen($host) )
+            {
                 $script = str_ireplace('%HOST%', $host, $script);
+                if( stripos($script, '%HOSTR%') !== false )
+                {
+                    // do host substitution but also clone the command for a final redirected domain if there are redirects involved
+                    if( GetRedirectHost($url, $rhost) )
+                    {
+                        $lines = explode("\r\n", $script);
+                        $script = '';
+                        foreach( $lines as $line )
+                        {
+                            if( stripos($line, '%HOSTR%') !== false )
+                            {
+                                $script .= str_ireplace('%HOSTR%', $host, $line) . "\r\n";
+                                $script .= str_ireplace('%HOSTR%', $rhost, $line) . "\r\n";
+                            }
+                            else
+                                $script .= $line . "\r\n";
+                        }
+                    }
+                    else
+                        $script = str_ireplace('%HOSTR%', $host, $script);
+                }
+            }
         }
         $out .= "\r\n[Script]\r\n" . $script;
     }
@@ -1069,6 +1092,49 @@ function SubmitUrl($testId, $testData, &$test, $url)
     }
     
     return $ret;
+}
+
+/**
+* Detect if the given URL redirects to another host
+*/
+function GetRedirectHost($url, &$rhost)
+{
+    $redirected = false;
+    $opts = array('http' =>
+        array('user_agent' => 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)',
+                'ignore_errors' => TRUE,
+                'protocol_version' => 1.1,
+                'timeout' => 20)
+    );
+    stream_context_get_default($opts);
+        
+    // fetch the actual content
+    $headers = get_headers($url,1);
+
+    if( isset($headers['Location']) )
+    {
+        $parts = parse_url($url);
+        $original = $parts['host'];
+
+        $location = $headers['Location'];
+        if( is_array($location) )
+        {
+            $parts = parse_url($location[count($location) - 1]);
+            $final = $parts['host'];
+        }
+        elseif( strlen($location) )
+        {
+            $parts = parse_url($location);
+            $final = $parts['host'];
+        }
+        
+        if( $original !== $final )
+        {
+            $rhost = $final;
+            $redirected = true;
+        }
+    }
+    return $redirected;
 }
 
 /**
