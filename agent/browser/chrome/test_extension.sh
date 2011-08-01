@@ -45,10 +45,22 @@ COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
   --root=wpt
   --compiler_jar=${CLOSURE_COMPILER_JAR}
   --compiler_flags=--warning_level=VERBOSE
-  --compiler_flags=--externs=../externs.js
+  --compiler_flags=--externs=third_party/closure-compiler/contrib/externs/chrome_extensions.js \
+  --compiler_flags=--externs=third_party/closure-compiler/contrib/externs/webkit_console.js \
+  --compiler_flags=--externs=third_party/closure-compiler/contrib/externs/json.js \
+  --compiler_flags=--externs=../externs.js \
   --output_mode=compiled
   --output_file=/dev/null"
 
+# Compile the logging namespace.
+${COMPILE_JS} \
+  --input='wpt/logging.js' \
+  || exit $?;
+
+# Compile the command runner.
+${COMPILE_JS} \
+  --input='wpt/commands.js' \
+  || exit $?;
 
 # Compile the background page.
 ${COMPILE_JS} \
