@@ -5,18 +5,44 @@ goog.require('goog.testing.AsyncTestCase');
 
 goog.provide('wpt.allTests');
 
+var asyncTestCase = goog.testing.AsyncTestCase.createAndInstall(document.title);
+asyncTestCase.stepTimeout = 20 * 1000;  // 1 second timeout
+
+/**
+ * Open a tab, and run |callback| when it is loaded.
+ * @param {Object} options Options to pass to chrome.tabs.create().
+ * @param {Function.<Object>} callback Callback to run when the tab loads.
+ *                                     Takes the tab info as a parameter.
+ */
+wpt.allTests.createTabAndWaitForLoad = function(options, callback) {
+
+  chrome.tabs.create(options, function(tab) {
+    var tabListner = function(tabId, changeInfo) {
+      if (tabId != tab.id || changeInfo.status != 'complete')
+        return;
+
+      chrome.tabs.onUpdated.removeListener(tabListner);
+      callback(tab);
+    };
+
+    chrome.tabs.onUpdated.addListener(tabListner);
+  });
+};
+
 /**
  * Test the setcookie command.
  */
 function testSetCookie() {
   var cookieLog;
-  var commandRunner = new wpt.commands.CommandRunner({
-    cookies: {
-      set: function(setCookieObj) {
-        cookieLog.push(setCookieObj);
-      }
-    }
-  });
+  var commandRunner = new wpt.commands.CommandRunner(
+      undefined,  // Tab id should not be used.
+      {
+        cookies: {
+          set: function(setCookieObj) {
+            cookieLog.push(setCookieObj);
+          }
+        }
+      });
 
   cookieLog = [];
   commandRunner.doSetCookie(
@@ -130,7 +156,7 @@ function testFindDomElementWithGetElementByName() {
                "Anchor with name", actual[0].innerText);
 
   // If more than one name matches, the elemnts should be returned in DOM order.
-  var actual = wpt.contentScript.findDomElements_(
+  actual = wpt.contentScript.findDomElements_(
       root, "name'thitNameHasMultipleMatches");
   assertEquals("Two elements with name thisNameHasMultipleMatches",
                2, actual.length);
@@ -148,6 +174,7 @@ function testClickCommandInPage() {
   var inPageCommandRunner = new wpt.contentScript.InPageCommandRunner(
       document.getElementById('testClickCommand'),
       {},
+      undefined,  // Should not use command port.
       {
         success: function() { successCalls++; },
         warn: function() {
@@ -223,3 +250,115 @@ function testClickCommandInPage() {
   assertArrayEquals("No errors", [], errors);
 }
 
+// Test that click commands starting in the BG page can signal the CS code
+// to execute the click on a single target.
+function testClickCommandEndToEndSuccess() {
+  var mockChromeApi = {};
+
+  asyncTestCase.waitForAsync('Wait for tab hosting a content script to load.');
+  wpt.allTests.createTabAndWaitForLoad(
+      {url: chrome.extension.getURL("wpt/fakePageUnderTest.html"),
+       selected: false},
+      function(tab) {
+        asyncTestCase.continueTesting();
+        var commandRunner = new wpt.commands.CommandRunner(tab.id,
+                                                           mockChromeApi);
+
+        // In the real system, there would be a delay between creating the
+        // CommandRunner and doing a command.
+        window.setTimeout(function() { commandRunner.doClick("id'testClick"); }, 10);
+
+        asyncTestCase.waitForAsync('Sent command to content script,' +
+                                   ' wait for ack.');
+
+        commandRunner.InterceptHookForTesting = function(msg) {
+          asyncTestCase.continueTesting();
+          assertEquals("Success", msg['log']);
+
+          asyncTestCase.waitForAsync('Close the tab');
+          chrome.tabs.remove(tab.id, function() {
+            asyncTestCase.continueTesting();
+          });
+        };
+      });
+}
+
+// Test that click commands starting in the BG page can signal the CS code
+// to execute the click on a target that does not exist.  See that an error
+// is returned.
+function testClickCommandEndToEndFailure() {
+  var mockChromeApi = {};
+
+  asyncTestCase.waitForAsync('Wait for tab hosting a content script to load.');
+  wpt.allTests.createTabAndWaitForLoad(
+      {url: chrome.extension.getURL("wpt/fakePageUnderTest.html"),
+       selected: false},
+      function(tab) {
+        asyncTestCase.continueTesting();
+        var commandRunner = new wpt.commands.CommandRunner(tab.id,
+                                                           mockChromeApi);
+
+        // In the real system, there would be a delay between creating the
+        // CommandRunner and doing a command.
+        window.setTimeout(function() {
+          commandRunner.doClick("id'doesNotExist");
+        }, 10);
+
+        asyncTestCase.waitForAsync('Sent command to content script,' +
+                                   ' wait for ack.');
+
+        commandRunner.InterceptHookForTesting = function(msg) {
+          asyncTestCase.continueTesting();
+          assertEquals("error: Click failed: Could not find DOM element " +
+                       "matching target id'doesNotExist", msg['log']);
+
+          asyncTestCase.waitForAsync('Close the tab');
+          chrome.tabs.remove(tab.id, function() {
+            asyncTestCase.continueTesting();
+          });
+        };
+      });
+}
+
+// Test that click commands starting in the BG page can signal the CS code
+// to execute a click on a target with two matches.  See that a warning is
+// returned.
+function testClickCommandEndToEndMultipleTargetMatch() {
+  var mockChromeApi = {};
+
+  asyncTestCase.waitForAsync('Wait for tab hosting a content script to load.');
+  wpt.allTests.createTabAndWaitForLoad(
+      {url: chrome.extension.getURL("wpt/fakePageUnderTest.html"),
+       selected: false},
+      function(tab) {
+        asyncTestCase.continueTesting();
+        var commandRunner = new wpt.commands.CommandRunner(tab.id,
+                                                           mockChromeApi);
+
+        // In the real system, there would be a delay between creating the
+        // CommandRunner and doing a command.
+        window.setTimeout(function() {
+          commandRunner.doClick("aaaa'bbbb");
+        }, 10);
+
+        asyncTestCase.waitForAsync('Sent command to content script,' +
+                                   ' wait for ack.');
+
+        var numCallsToInterceptHook = 0;
+        commandRunner.InterceptHookForTesting = function(msg) {
+          asyncTestCase.continueTesting();
+
+          if (++numCallsToInterceptHook == 1) {
+            assertEquals("warning: 2 matches for target \"aaaa'bbbb\".  " +
+                         "Using first match.", msg['log']);
+            asyncTestCase.waitForAsync('Wait for thr second intercept call.');
+          } else if (+numCallsToInterceptHook == 2) {
+            assertEquals("Success", msg['log']);
+            asyncTestCase.waitForAsync('Close the tab');
+            chrome.tabs.remove(tab.id, function() {
+              asyncTestCase.continueTesting();
+            });
+          }
+        };
+      });
+}

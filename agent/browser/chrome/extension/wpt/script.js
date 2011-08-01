@@ -151,19 +151,45 @@ function postAllDOMElementsLoaded() {
  *                       Outside unit tests, usually window.document.
  * @param {Object} chromeApi The base object of the chrome extension API.
  *                           Outside unit tests, usually window.chrome.
+ * @param {Port} commandPort A channel over which the background page
+ *                           sends commands.
  */
 wpt.contentScript.InPageCommandRunner = function(doc,
                                                  chromeApi,
+                                                 commandPort,
                                                  resultCallbacks) {
   this.doc_ = doc;
   this.chromeApi_ = chromeApi;
+  this.commandPort_ = commandPort;
   this.resultCallbacks_ = resultCallbacks;
+
+  var self = this;
+  if (this.commandPort_) {
+    this.commandPort_.onMessage.addListener(function(msg) {
+      self.onCommandRecieved(msg);
+    });
+  }
+};
+
+wpt.contentScript.InPageCommandRunner.prototype.onCommandRecieved = function(command) {
+  console.info("InPageCommandRunner got a command: ", command);
+
+  switch (command.command) {
+    case "click": {
+      this.doClick(command.target);
+      break;
+    }
+
+    default:
+      this.FatalError_("Unknown command " + command.command);
+  }
 };
 
 /**
  * Signal that the command completed without error.
  */
 wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
+  console.log("Success!");
   this.resultCallbacks_.success();
 };
 
@@ -188,6 +214,7 @@ wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
  * @param {string} target The DOM element to click, in attribute'value form.
  */
 wpt.contentScript.InPageCommandRunner.prototype.doClick = function(target) {
+
   var domElements;
   try {
     domElements = wpt.contentScript.findDomElements_(this.doc_, target);
@@ -209,3 +236,29 @@ wpt.contentScript.InPageCommandRunner.prototype.doClick = function(target) {
   domElements[0].click();
   this.Success_();
 };
+
+var g_inPageCommandRunner;
+
+chrome.extension.onConnect.addListener(function(port) {
+  if (g_inPageCommandRunner) {
+    console.error("Trashing old command runner.");
+  }
+
+  console.log("Build InPageCommandRunner...");
+  g_inPageCommandRunner = new wpt.contentScript.InPageCommandRunner(
+      window.document,
+      chrome,
+      port,
+      {
+        success: function() {
+          console.log("success cb");
+          port.postMessage({'message': 'LogMessage', 'log': 'Success'});
+        },
+        warn: function(warning) {
+          port.postMessage({'message': 'LogMessage', 'log': 'warning: ' + warning});
+        },
+        error: function(error) {
+          port.postMessage({'message': 'LogMessage', 'log': 'error: ' + error});
+        }
+      });
+});
