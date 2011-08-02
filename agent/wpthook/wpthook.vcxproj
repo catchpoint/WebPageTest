@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -162,6 +162,7 @@
     <ClInclude Include="nspr\prlong.h" />
     <ClInclude Include="nspr\prtime.h" />
     <ClInclude Include="nspr\prtypes.h" />
+    <ClInclude Include="optimization_checks.h" />
     <ClInclude Include="request.h" />
     <ClInclude Include="requests.h" />
     <ClInclude Include="resource.h" />
@@ -799,6 +800,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="optimization_checks.cc" />
     <ClCompile Include="request.cc" />
     <ClCompile Include="requests.cc" />
     <ClCompile Include="results.cc" />

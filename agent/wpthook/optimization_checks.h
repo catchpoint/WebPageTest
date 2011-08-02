@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2010, Google Inc.
+Copyright (c) 2011, Google Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -30,42 +30,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Requests;
 class Request;
-class TestState;
 class TrackSockets;
-class ScreenCapture;
-class CxImage;
-class WptTest;
-class OptimizationChecks;
 
-class Results {
+class OptimizationChecks {
 public:
-  Results(TestState& test_state, WptTest& test, Requests& requests, 
-          TrackSockets& sockets, ScreenCapture& screen_capture);
-  ~Results(void);
+  OptimizationChecks(Requests& requests);
+  ~OptimizationChecks(void);
 
-  void Reset(void);
-  void Save(void);
+  void Check(void);
 
   // test information
-  CString _url;
+  int _cacheScore;
+
+  Requests&   _requests;
 
 private:
-  CString     _file_base;
-  Requests&   _requests;
-  TestState&  _test_state;
-  TrackSockets& _sockets;
-  ScreenCapture& _screen_capture;
-  WptTest&      _test;
-  bool        _saved;
-
-  void ProcessRequests(void);
-  void SavePageData(OptimizationChecks&);
-  void SaveRequests(OptimizationChecks&);
-  void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
-  void SaveImages(void);
-  void SaveVideo(void);
-  void SaveProgressData(void);
-  void SaveImage(CxImage& image, CString file, bool shrink, BYTE quality);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
+  void OptimizationChecks::CheckCacheStatic();
 };
-

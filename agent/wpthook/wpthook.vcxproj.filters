@@ -325,6 +325,9 @@
     <ClInclude Include="nspr\prtypes.h">
       <Filter>Third-Party\nspr</Filter>
     </ClInclude>
+    <ClInclude Include="optimization_checks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -700,6 +703,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_nspr.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="optimization_checks.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

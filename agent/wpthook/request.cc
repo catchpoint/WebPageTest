@@ -452,3 +452,50 @@ CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
   return value;
 }
 
+bool Request::IsStatic() {
+  bool is_static = false;
+  if (!_processed)
+    return is_static;
+
+  int temp_pos = 0;
+  CString mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
+  mime.MakeLower();
+  CString exp = GetResponseHeader("expires");
+  exp.MakeLower();
+  CString cache = GetResponseHeader("cache-control");
+  cache.MakeLower();
+  CString pragma = GetResponseHeader("pragma");
+  pragma.MakeLower();
+  CString object = _object;
+  object.MakeLower();
+  // TODO: Include conditions below that it is not a base page and a network request.
+  if( (_result == 304 || (_result == 200 && exp != _T("0") && exp != _T("-1") &&
+    !(cache.Find(_T("no-store")) > -1) && !(cache.Find(_T("no-cache")) > -1) &&
+    !(pragma.Find(_T("no-cache")) > -1) && !(mime.Find(_T("/html")) > -1)	&&
+    !(mime.Find(_T("/xhtml")) > -1) && (mime.Find(_T("shockwave-flash")) >= 0 ||
+    object.Right(4) == _T(".swf") || mime.Find(_T("text/")) >= 0 ||
+    mime.Find(_T("javascript")) >= 0 || mime.Find(_T("image/")) >= 0) ) ) ) {
+      is_static = true;
+  }
+  return is_static;
+}
+
+void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present) {
+  CStringA exp = GetResponseHeader("expires");
+  exp.MakeLower();
+  if( exp.GetLength() )
+    exp_present = true;
+  CStringA cache = GetResponseHeader("cache-control");
+  cache.MakeLower();
+  int index = cache.Find("max-age");
+  if( index > -1 ) {
+    cache_control_present = true;
+    // Extract the age in seconds.
+    int eq = cache.Find("=", index);
+    if( eq > -1 ) {
+      eq++;
+      CString str = cache.Right(cache.GetLength() - eq);
+      age_in_seconds = _ttol(str);
+    }
+  }
+}

@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "optimization_checks.h"
 #include "results.h"
 #include "shared_mem.h"
 #include "requests.h"
@@ -82,8 +83,11 @@ void Results::Reset(void) {
 void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved && _test._log_data) {
-    SaveRequests();
-    SavePageData();
+    ProcessRequests();
+    OptimizationChecks checks(_requests);
+    checks.Check();
+    SaveRequests(checks);
+    SavePageData(checks);
     SaveImages();
     SaveProgressData();
     _saved = true;
@@ -245,7 +249,7 @@ void Results::SaveImage(CxImage& image, CString file,
 /*-----------------------------------------------------------------------------
   Save the page-level data
 -----------------------------------------------------------------------------*/
-void Results::SavePageData(void){
+void Results::SavePageData(OptimizationChecks& checks){
   HANDLE file = CreateFile(_file_base + PAGE_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -376,7 +380,8 @@ void Results::SavePageData(void){
     // Includes Object Data
     result += "1\t";
     // Cache Score
-    result += "-1\t";
+    buff.Format("%d\t", checks._cacheScore);
+    result += buff;
     // Static CDN Score
     result += "-1\t";
     // One CDN Score
@@ -449,6 +454,7 @@ void Results::SavePageData(void){
     // Base Page Redirects
     result += "\t";
     // Optimization Checked
+    // TODO: Set the bit to 1 after all optimization checks are implemented.
     result += "0\t";
     // AFT (ms)
     result += "\t";
@@ -462,18 +468,8 @@ void Results::SavePageData(void){
   }
 }
 
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Results::SaveRequests(void) {
-  HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
-                            NULL, OPEN_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE) {
-    SetFilePointer( file, 0, 0, FILE_END );
-
-    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-
-    _requests.Lock();
+void Results::ProcessRequests(void) {
+  _requests.Lock();
     // first do all of the processing.  We want to do ALL of the processing
     // before recording the results so we can include any socket connections
     // or DNS lookups that are not associated with a request
@@ -483,9 +479,23 @@ void Results::SaveRequests(void) {
       if (request)
         request->Process();
     }
+  _requests.Unlock();
+}
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveRequests(OptimizationChecks& checks) {
+  HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
+                            NULL, OPEN_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    SetFilePointer( file, 0, 0, FILE_END );
+
+    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
+                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+
+    _requests.Lock();
     // now record the results
-    pos = _requests._requests.GetHeadPosition();
+    POSITION pos = _requests._requests.GetHeadPosition();
     int i = 0;
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
@@ -610,7 +620,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", index);
   result += buff;
   // Cache Score
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._cacheScore);
+  result += buff;
   // Static CDN Score
   result += "-1\t";
   // GZIP Score

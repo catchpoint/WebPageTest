@@ -78,6 +78,17 @@ public:
 
 typedef CAtlList<HeaderField> Fields;
 
+class OptimizationScores {
+public:
+  OptimizationScores():
+    _cacheScore(-1)
+    ,_ttl(-1)
+  {}
+  ~OptimizationScores() {}
+  int _cacheScore;
+  DWORD _ttl;
+};
+
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, 
@@ -89,6 +100,8 @@ public:
                 char * &new_buff, unsigned long &new_len);
   void SocketClosed();
   bool Process();
+  bool IsStatic();
+  void GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present);
 
   DWORD _data_sent;
   DWORD _data_received;
@@ -110,6 +123,9 @@ public:
   CStringA  _method;
   CStringA  _object;
   int       _result;
+
+  // Optimization score data.
+  OptimizationScores _scores;
 
   CStringA  GetRequestHeader(CStringA header);
   CStringA  GetResponseHeader(CStringA header);
