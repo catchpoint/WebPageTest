@@ -47,10 +47,12 @@ window.addEventListener("load", function() {
  * in DOM order.  Commands that use this function should use the
  * first element.
  *
- * @param {DOMElement} root The Element to search under. Usualy window.document.
+ * @param {HTMLElement|Document} root The document to search under.
+ *     Usually window.document, except in unit tests.
  * @param {string} target The pattern to match.
  */
 wpt.contentScript.findDomElements_ = function(root, target) {
+  // TODO(skerner): Support '=' as a delimiter.
   var delimiterIndex = target.indexOf("'");
   if (delimiterIndex == -1)
     throw ("Invalid target \"" + target + "\": delimter \' is missing.");
@@ -147,8 +149,9 @@ function postAllDOMElementsLoaded() {
  * can access the DOM of the page.
  *
  * @constructor
- * @param {Document} doc The document on which commands are run.
- *                       Outside unit tests, usually window.document.
+ * @param {?HTMLElement|Document} doc Many commands search for a DOM node.
+ *     This element is the root of the DOM tree on which commands operate.
+ *     Outside of unit tests, usually window.document.
  * @param {Object} chromeApi The base object of the chrome extension API.
  *                           Outside unit tests, usually window.chrome.
  * @param {Object} resultCallbacks Callbacks to run on success, failure, etc.

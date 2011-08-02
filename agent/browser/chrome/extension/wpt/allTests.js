@@ -35,7 +35,7 @@ wpt.allTests.createTabAndWaitForLoad = function(options, callback) {
 function testSetCookie() {
   var cookieLog;
   var commandRunner = new wpt.commands.CommandRunner(
-      undefined,  // Tab id should not be used.
+      null,  // Tab id should not be used.
       {
         cookies: {
           set: function(setCookieObj) {

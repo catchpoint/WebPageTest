@@ -47,11 +47,14 @@ if (LOG_WINDOW) {
 } else {
   LOG = console;
 
-  // The console has method warn(), and not warnning().  To keep our code
-  // consistent, always use warning(), and implement it using warn() if
-  // nessisary.  The function LOG.waring is defined to be the result of
-  // calling LOG.warn, with |this| set to |LOG|, with identical |arguments|.
-  LOG.warning = function() {
+  /**
+   * The console has method warn(), and not warnning().  To keep our code
+   * consistent, always use warning(), and implement it using warn() if
+   * nessisary.  The function LOG.waring is defined to be the result of
+   * calling LOG.warn, with |this| set to |LOG|, with identical |arguments|.
+   * param {...*} var_args
+   */
+  LOG.warning = function(var_args) {
     LOG.warn.apply(LOG, arguments);
   };
 }

@@ -15,7 +15,7 @@ function trim(stringToTrim) {
  * for a complete list of the commands.
  *
  * @constructor
- * @param {Number} tabId The id of the tab being used to load the page
+ * @param {?number} tabId The id of the tab being used to load the page
  *                       under test.  See that chrome.tabs.* docs to
  *                       understand what methods give and use this id.
  * @param {Object} chromeApi Object which contains the chrome extension
@@ -38,13 +38,13 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
  * @param {Object} commandObject
  */
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
-    commandObj) {
+    commandObject) {
 
-  console.log("Delegate a command to the content script: ", commandObj);
+  console.log("Delegate a command to the content script: ", commandObject);
 
-  var code = ['console.log("qwerty"); wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
-              JSON.stringify(commandObj),
-              '); console.log("123456"); '].join('');
+  var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
+              JSON.stringify(commandObject),
+              ');'].join('');
   this.chromeApi_.tabs.executeScript(this.tabId_, {code:code}, function() {});
 };
 
@@ -134,6 +134,10 @@ chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details)
  */
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
   if (g_domElements.length > 0) {
+    if (goog.isNull(this.tabId_))
+      throw ("It should not be posible to run the doSetDOMElements() method " +
+             "before we find the id of the tab in which pages are loaded.");
+
     chrome.tabs.sendRequest(
         this.tabId_,
         {message: "setDOMElements", name_values: g_domElements },
