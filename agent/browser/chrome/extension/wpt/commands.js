@@ -1,5 +1,7 @@
 goog.provide('wpt.commands');
 
+wpt.commands.g_domElements = [];
+
 /**
  * Remove leading and trailing whitespace.
  * @param {string} stringToTrim
@@ -133,16 +135,16 @@ chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details)
  * Implement the setDOMElements command.
  */
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
-  if (g_domElements.length > 0) {
+  if (wpt.commands.g_domElements.length > 0) {
     if (goog.isNull(this.tabId_))
       throw ("It should not be posible to run the doSetDOMElements() method " +
              "before we find the id of the tab in which pages are loaded.");
 
     chrome.tabs.sendRequest(
         this.tabId_,
-        {message: "setDOMElements", name_values: g_domElements },
+        {message: "setDOMElements", name_values: wpt.commands.g_domElements },
         function(response) {} );
-    LOG.info('doSetDOMElements for :  ' + g_domElements);
+    LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);
   }
 };
 

@@ -29,7 +29,6 @@ var RUN_FAKE_COMMAND_SEQUENCE = false;
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
-var g_domElements = [];
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 
@@ -246,7 +245,7 @@ function wptExecuteTask(task){
         // Sending request to set the DOM element has to happen only at the
         // navigate event after the content script is loaded. So, this just
         // sets the global variable.
-        g_domElements.push(task.target);
+        wpt.commands.g_domElements.push(task.target);
         break;
       case "click":
         g_commandRunner.doClick(task.target);
