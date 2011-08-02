@@ -43,7 +43,7 @@ wpt.LOG.warning = function(var_args) {
 // Until onload, debug messages will go to the console.
 if (wpt.logging.LOG_WINDOW_) {
   window.onload = function() {
-    wpt.logging.delbugWindow_ = new goog.debug.FancyWindow('main');
+    wpt.logging.debugWindow_ = new goog.debug.FancyWindow('main');
     wpt.logging.debugWindow_.setEnabled(true);
     wpt.logging.debugWindow_.init();
 
