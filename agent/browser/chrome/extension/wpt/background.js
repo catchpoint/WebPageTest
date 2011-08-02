@@ -1,10 +1,10 @@
-goog.require('goog.debug');
-goog.require('goog.debug.FancyWindow');
-goog.require('goog.debug.Logger');
 
+goog.require('wpt.logging');
 goog.require('wpt.commands');
 
 goog.provide('wpt.main');
+
+((function() {  // namespace
 
 /** @const */
 var STARTUP_DELAY = 5000;
@@ -14,11 +14,6 @@ var TASK_INTERVAL = 1000;
 
 /** @const */
 var TASK_INTERVAL_SHORT = 0;
-
-// Developers can set LOG_WINDOW to true to see a window with logs that show
-// commands and results.
-/** @const */
-var LOG_WINDOW = false;
 
 // Set this to true, and set FAKE_COMMAND_SEQUENCE below, to feed a sequence
 // of commands to run.  This makes testing new commands easy, because you do
@@ -32,39 +27,13 @@ var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 
-
-var LOG;
-if (LOG_WINDOW) {
-  window.onload = function() {
-    g_debugWindow = new goog.debug.FancyWindow('main');
-    g_debugWindow.setEnabled(true);
-    g_debugWindow.init();
-
-    // Create a logger.
-    LOG = goog.debug.Logger.getLogger('log');
-  };
-} else {
-  LOG = console;
-
-  /**
-   * The console has method warn(), and not warnning().  To keep our code
-   * consistent, always use warning(), and implement it using warn() if
-   * nessisary.  The function LOG.waring is defined to be the result of
-   * calling LOG.warn, with |this| set to |LOG|, with identical |arguments|.
-   * param {...*} var_args
-   */
-  LOG.warning = function(var_args) {
-    LOG.warn.apply(LOG, arguments);
-  };
-}
-
 // On startup, kick off our testing
 window.setTimeout(wptStartup, STARTUP_DELAY);
 
 function wptStartup() {
-  LOG.info("wptStartup");
+  wpt.LOG.info("wptStartup");
   chrome.tabs.getSelected(null, function(tab){
-    LOG.info("Got tab id: " + tab.id);
+    wpt.LOG.info("Got tab id: " + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
@@ -103,7 +72,7 @@ function wptFeedFakeTasks() {
 
 // Get the next task from the wptdriver
 function wptGetTask(){
-  LOG.info("wptGetTask");
+  wpt.LOG.info("wptGetTask");
   if (!g_requesting_task) {
     g_requesting_task = true;
     try {
@@ -113,26 +82,26 @@ function wptGetTask(){
         if (xhr.readyState != 4)
           return;
         if (xhr.status != 200) {
-          LOG.warning("Got unexpected (not 200) XHR status: " + xhr.status);
+          wpt.LOG.warning("Got unexpected (not 200) XHR status: " + xhr.status);
           return;
         }
         var resp = JSON.parse(xhr.responseText);
         if (resp.statusCode != 200) {
-          LOG.warning("Got unexpected status code " + resp.statusCode);
+          wpt.LOG.warning("Got unexpected status code " + resp.statusCode);
           return;
         }
         if (!resp.data) {
-          LOG.warning("No data?");
+          wpt.LOG.warning("No data?");
           return;
         }
         wptExecuteTask(resp.data);
       };
       xhr.onerror = function() {
-        LOG.warning("Got an XHR error!");
+        wpt.LOG.warning("Got an XHR error!");
       };
       xhr.send();
     } catch(err){
-      LOG.warning("Error getting task: " + err);
+      wpt.LOG.warning("Error getting task: " + err);
     }
     g_requesting_task = false;
   }
@@ -147,25 +116,21 @@ function wptOnNavigate(){
     xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
     xhr.send();
   } catch (err) {
-    LOG.warning("Error sending navigation XHR: " + err);
+    wpt.LOG.warning("Error sending navigation XHR: " + err);
   }
 }
 
 // notification that the page loaded
 function wptOnLoad(load_time){
   // close the debug window.
-  if (LOG_WINDOW && g_debugWindow) {
-    g_debugWindow.setEnabled(false);
-    g_debugWindow.win_.close();
-    g_debugWindow = null;
-  }
+  wpt.logging.closeWindowIfOpen();
   try {
     g_active = false;
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "http://127.0.0.1:8888/event/load?load_time="+load_time, true);
     xhr.send();
   } catch (err) {
-    LOG.warning("Error sending page load XHR: " + err);
+    wpt.LOG.warning("Error sending page load XHR: " + err);
   }
 }
 
@@ -180,7 +145,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
-    LOG.info("Message from content script: " + request.message);
+    wpt.LOG.info("Message from content script: " + request.message);
     if (request.message == "DOMElementLoaded") {
       try {
 	var dom_element_time = new Date().getTime() - g_start;
@@ -192,7 +157,7 @@ chrome.extension.onRequest.addListener(
 		true);
         xhr.send();
       } catch (err) {
-        LOG.warning("Error sending dom element xhr: " + err);
+        wpt.LOG.warning("Error sending dom element xhr: " + err);
       }
     }
     else if (request.message == "AllDOMElementsLoaded") {
@@ -204,7 +169,7 @@ chrome.extension.onRequest.addListener(
 		true);
         xhr.send();
       } catch (err) {
-        LOG.warning("Error sending all dom elements loaded xhr: " + err);
+        wpt.LOG.warning("Error sending all dom elements loaded xhr: " + err);
       }
     }
     else if (request.message == "wptLoad") {
@@ -227,7 +192,7 @@ function wptExecuteTask(task){
       g_active = false;
 
     // decode and execute the actual command
-    LOG.info("Running task " + task.action + " " + task.target);
+    wpt.LOG.info("Running task " + task.action + " " + task.target);
     switch (task.action) {
       case "navigate":
         g_commandRunner.doNavigate(task.target);
@@ -252,10 +217,12 @@ function wptExecuteTask(task){
         break;
 
       default:
-        LOG.error("Unimplemented command: ", task);
+        wpt.LOG.error("Unimplemented command: ", task);
     }
 
     if (!g_active)
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 }
+
+})());  // namespace

@@ -1,4 +1,8 @@
+goog.require('wpt.logging');
+
 goog.provide('wpt.commands');
+
+((function() {  // namespace
 
 wpt.commands.g_domElements = [];
 
@@ -144,7 +148,7 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
         this.tabId_,
         {message: "setDOMElements", name_values: wpt.commands.g_domElements },
         function(response) {} );
-    LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);
+    wpt.LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);
   }
 };
 
@@ -159,3 +163,5 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
       "target": target
   });
 };
+
+})());  // namespace

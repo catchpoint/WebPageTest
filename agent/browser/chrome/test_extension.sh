@@ -52,6 +52,11 @@ COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
   --output_mode=compiled
   --output_file=/dev/null"
 
+# Compile the logging code.
+${COMPILE_JS} \
+  --input='wpt/logging.js' \
+  || exit $?;
+
 # Compile the command runner.
 ${COMPILE_JS} \
   --input='wpt/commands.js' \
