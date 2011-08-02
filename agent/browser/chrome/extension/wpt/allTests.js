@@ -100,7 +100,11 @@ function testFindDomElements() {
                     [], wpt.contentScript.findDomElements_(root, "aaa'zzz"));
 
 
-  var actual = wpt.contentScript.findDomElements_(root, "aaa'one");
+  var actual = wpt.contentScript.findDomElements_(root, "aaa=one");
+  assertEquals("One item matching \"aaa=one\"", 1, actual.length);
+  assertEquals("First span", actual[0].innerText);
+
+  actual = wpt.contentScript.findDomElements_(root, "aaa'one");
   assertEquals("One item matching \"aaa'one\"", 1, actual.length);
   assertEquals("First span", actual[0].innerText);
 
@@ -149,7 +153,7 @@ function testFindDomElementWithGetElementByName() {
 
   // Find the one element whose name matches.
   var actual = wpt.contentScript.findDomElements_(
-      root, "name'thisNameExists");
+      root, "name=thisNameExists");
   assertEquals("One element with name thisNameExists",
                1, actual.length);
   assertEquals("Should be an anchor tag.",
@@ -164,6 +168,64 @@ function testFindDomElementWithGetElementByName() {
                "First named anchor", actual[0].innerText);
   assertEquals("Should be an anchor tag.",
                "Second named anchor", actual[1].innerText);
+}
+
+function testFindDomElementMultipleDelimiters() {
+  // For testing, we search under a div in allTests.html:
+  var root = document.getElementById('testFindDomElements');
+
+  // First ' is a delimiter, second ' is part of the value.
+  var actual = wpt.contentScript.findDomElements_(
+      root, "aaa'bbb'ccc");  // Should parse as target="aaa", value="bbb'ccc".
+  assertEquals("First ' is the delimiter.",
+               1, actual.length);
+  assertEquals(actual[0].innerText, 'Single quote in value');
+
+  // First = is a delimiter, second = is part of the value.
+  actual = wpt.contentScript.findDomElements_(
+      root, "aaa=bbb=ccc");  // Should parse as target="aaa", value="bbb=ccc".
+  assertEquals("First = is the delimiter.",
+               1, actual.length);
+  assertEquals(actual[0].innerText, 'Equals in value');
+
+  // = takes presedence over ':
+  actual = wpt.contentScript.findDomElements_(
+      root, "aaa=bbb'ccc");  // Should parse as target="aaa", value="bbb'ccc".
+  assertEquals("First = over second '.",
+               1, actual.length);
+  assertEquals(actual[0].innerText, 'Single quote in value');
+
+  // = takes presedence over ':
+  actual = wpt.contentScript.findDomElements_(
+      root, "aaa'bbb=ccc");  // Should parse as target="aaa'bbb", value="ccc".
+  assertEquals("Second = over first '.",
+               1, actual.length);
+  assertEquals(actual[0].innerText, 'Single quote in target');
+
+}
+function testFindDomElementMalformedTarget() {
+  // For testing, we search under a div in allTests.html:
+  var root = document.getElementById('testFindDomElements');
+
+  var ex = assertThrows("No delimiter",
+                        function() {
+                          wpt.contentScript.findDomElements_(
+                              root,
+                              "no Delimiter in this string");
+                        });
+  assertEquals(
+      ex,
+      'Invalid target "no Delimiter in this string": no delimiter found.');
+
+  ex = assertThrows("Empty attribute",
+                    function() {
+                      wpt.contentScript.findDomElements_(
+                          root,
+                          "=foo");
+                    });
+  assertEquals(
+      ex,
+      'Invalid target "=foo": The attribute to search for can not be empty.');
 }
 
 function testClickCommandInPage() {
@@ -225,11 +287,11 @@ function testClickCommandInPage() {
 
   // Click on a button with multiple targets.  Expect that only the first one
   // is clicked, and a warning is given.
-  doTestClick("bbbb'value");
+  doTestClick("bbbb=value");
   assertArrayEquals("Should have seen a click on input 2, and not input 3.",
                     ['2'], clicks);
   assertArrayEquals("There are multiple matches.",
-                    ['2 matches for target "bbbb\'value".  Using first match.'],
+                    ['2 matches for target "bbbb=value".  Using first match.'],
                     warnings);
   assertArrayEquals("Having multiple matches is not an error.",
                     [], errors);

@@ -50,12 +50,23 @@ window.addEventListener("load", function() {
  * @param {HTMLElement|Document} root The document to search under.
  *     Usually window.document, except in unit tests.
  * @param {string} target The pattern to match.
+ * @returns {Array.<HTMLElement>} The HTML elements that match |target|.
  */
 wpt.contentScript.findDomElements_ = function(root, target) {
-  // TODO(skerner): Support '=' as a delimiter.
-  var delimiterIndex = target.indexOf("'");
-  if (delimiterIndex == -1)
-    throw ("Invalid target \"" + target + "\": delimter \' is missing.");
+  /** @const */
+  var DELIMITERS = "='";
+
+  var delimiterFound = '';
+  for (var i = 0, ie = DELIMITERS.length; i < ie && !delimiterFound; ++i) {
+    var delimiterIndex = target.indexOf(DELIMITERS[i]);
+    if (delimiterIndex == -1)
+      continue;
+
+    delimiterFound = DELIMITERS[i];
+  }
+
+  if (!delimiterFound)
+    throw ("Invalid target \"" + target + "\": no delimiter found.");
 
   var attribute = target.substring(0, delimiterIndex);
   var value = target.substring(delimiterIndex + 1);
@@ -116,6 +127,7 @@ function pollDOMElement() {
   // elements present.
   // TODO: Optimize this polling cost.
   for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) {
+    // TODO: findDomElements_ will throw an exception on a malformed target.
     if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
       postDOMElementLoaded(g_domNameValues[i]);
       loaded_dom_element_indices.push(i);
