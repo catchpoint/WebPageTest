@@ -59,6 +59,16 @@ var FAKE_TASKS = [
   {
     'action': 'navigate',
     'target': 'http://www.google.com/news'
+  },
+  {
+    'action': 'setinnertext',
+    'target': 'class=kd-appname',
+    'value': 'This text should replace the word news!'
+  },
+  {
+    'action': 'setinnerhtml',
+    'target': 'class=kd-appname',
+    'value': 'This <b>HTML</b> should replace the word news!'
   }
 ];
 
@@ -191,7 +201,8 @@ function wptExecuteTask(task){
     else
       g_active = false;
 
-    // decode and execute the actual command
+    // Decode and execute the actual command.
+    // Commands are all lowercase at this point.
     wpt.LOG.info("Running task " + task.action + " " + task.target);
     switch (task.action) {
       case "navigate":
@@ -214,6 +225,12 @@ function wptExecuteTask(task){
         break;
       case "click":
         g_commandRunner.doClick(task.target);
+        break;
+      case "setinnerhtml":
+        g_commandRunner.doSetInnerHTML(task.target, task.value);
+        break;
+      case "setinnertext":
+        g_commandRunner.doSetInnerText(task.target, task.value);
         break;
 
       default:

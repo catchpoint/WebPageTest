@@ -203,6 +203,7 @@ function testFindDomElementMultipleDelimiters() {
   assertEquals(actual[0].innerText, 'Single quote in target');
 
 }
+
 function testFindDomElementMalformedTarget() {
   // For testing, we search under a div in allTests.html:
   var root = document.getElementById('testFindDomElements');
@@ -264,7 +265,7 @@ function testClickCommandInPage() {
     errors = [];
     warnings = [];
     clicks = [];
-    inPageCommandRunner.doClick_(target);
+    inPageCommandRunner.doClick_({'command': 'click (test)', 'target': target});
     assertEquals("Each click should cause a success call.",
                  clicks.length,
                  successCalls);
@@ -282,7 +283,8 @@ function testClickCommandInPage() {
   assertArrayEquals("No warnings", [], warnings);
   assertArrayEquals(
       "Expect an error: Nothing to click.",
-      ["Click failed: Could not find DOM element matching target aaaa'doesNotExist"],
+      ["Command click (test) failed: Could not find DOM element matching " +
+       "target aaaa'doesNotExist"],
       errors);
 
   // Click on a button with multiple targets.  Expect that only the first one
@@ -291,7 +293,8 @@ function testClickCommandInPage() {
   assertArrayEquals("Should have seen a click on input 2, and not input 3.",
                     ['2'], clicks);
   assertArrayEquals("There are multiple matches.",
-                    ['2 matches for target "bbbb=value".  Using first match.'],
+                    ['Command click (test): 2 matches for target ' +
+                     '"bbbb=value".  Using first match.'],
                     warnings);
   assertArrayEquals("Having multiple matches is not an error.",
                     [], errors);
@@ -301,7 +304,8 @@ function testClickCommandInPage() {
   assertArrayEquals("Should have seen no clicks.", [], clicks);
   assertArrayEquals(
       "Expect an error: empty attribute.",
-      ["Click failed: Invalid target \"'foo\": The attribute to search for can not be empty."],
+      ["Command click (test) failed: Invalid target \"'foo\": The attribute " +
+       "to search for can not be empty."],
       errors);
 
   // Multiple instances of the separator.
@@ -309,4 +313,84 @@ function testClickCommandInPage() {
   assertArrayEquals("Should see a click on input 4.", ['4'], clicks);
   assertArrayEquals("No warnings", [], warnings);
   assertArrayEquals("No errors", [], errors);
+}
+
+function testSetInnerText() {
+  var successCalls;
+  var errors;
+  var warnings;
+
+  var inPageCommandRunner = new wpt.contentScript.InPageCommandRunner(
+      document.getElementById('testSetInnerTextCommand'),
+      {},
+      {
+        success: function() { successCalls++; },
+        warn: function() {
+          warnings.push(Array.prototype.slice.call(arguments).join(''));
+        },
+        error: function() {
+          errors.push(Array.prototype.slice.call(arguments).join(''));
+        }
+      });
+
+
+  var doSetInnerText = function(target, value) {
+    successCalls = 0;
+    errors = [];
+    warnings = [];
+
+    inPageCommandRunner.RunCommand({
+        'command': 'setInnerText',
+        'target': target,
+        'value': value
+    });
+  };
+
+  // Test that the inner text of a unique target can be changed.
+  assertEquals('Initial text in id=uniqueDiv',
+               'Initial text', document.getElementById('uniqueDiv').innerText);
+
+  doSetInnerText('aaaa=one', 'unique!');
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('No errors', [], errors);
+  assertEquals('Changed text in id=uniqueDiv',
+               'unique!', document.getElementById('uniqueDiv').innerText);
+
+  // Test that if the target matches two nodes, the first has its inner text
+  // changed.
+  assertEquals('Initial text in id=firstDuplicateDiv',
+               'Initial text',
+               document.getElementById('firstDuplicateDiv').innerText);
+  assertEquals('Initial text in id=secondDuplicateDiv',
+               'Initial text',
+               document.getElementById('secondDuplicateDiv').innerText);
+
+  doSetInnerText('bbbb=value', 'Change first...');
+  assertArrayEquals('Warning for multiple matches',
+                    ['Command setInnerText: 2 matches for target ' +
+                     '"bbbb=value".  Using first match.'],
+                    warnings);
+  assertArrayEquals('No errors', [], errors);
+  assertEquals('Changed text in id=firstDuplicateDiv',
+               'Change first...',
+               document.getElementById('firstDuplicateDiv').innerText);
+  assertEquals('No change in text of id=secondDuplicateDiv',
+               'Initial text',
+               document.getElementById('secondDuplicateDiv').innerText);
+
+  // Test that setting text in a target that does not exist gives an error.
+  doSetInnerText('does=notExist', 'Should not be set...');
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('Expect an error',
+                    ['Command setInnerText failed: Could not find DOM ' +
+                     'element matching target does=notExist'],
+                    errors);
+
+  // Test that a malformed target gives an error.
+  doSetInnerText('thisTargetHasNoDelimiter', 'Should not be set...');
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('No errors',
+                    ['Command setInnerText failed: Invalid target ' +
+                     '"thisTargetHasNoDelimiter": no delimiter found.'],
+                    errors);
 }

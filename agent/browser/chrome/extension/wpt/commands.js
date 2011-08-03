@@ -153,7 +153,6 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
 };
 
 /**
- * Click on an element.
  * Implement the click command.
  * @param {string} target The DOM element to click, in attribute'value form.
  */
@@ -163,5 +162,33 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
       "target": target
   });
 };
+
+/**
+ * Implement the setInnerHTML command.
+ * @param {string} target The DOM element to click, in attribute'value form.
+ * @param {string} value The value to set.
+ */
+wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
+  this.SendCommandToContentScript_({
+      "command": "setInnerHTML",
+      "target": target,
+      "value": value
+  });
+};
+
+/**
+ * Implement the setInnerText command.
+ * @param {string} target The DOM element to click, in attribute'value form.
+ * @param {string} value The value to set.
+ */
+wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
+  this.SendCommandToContentScript_({
+      "command": "setInnerText",
+      "target": target,
+      "value": value
+  });
+};
+
+
 
 })());  // namespace

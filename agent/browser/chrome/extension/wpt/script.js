@@ -20,6 +20,11 @@ var DOM_ELEMENT_POLL_INTERVAL = 100;
 window['wpt'] = window['wpt'] || {};
 window.wpt['contentScript'] = window.wpt['contentScript'] || {};
 
+window['goog'] = window['goog'] || {};
+window.goog['isNull'] = window.goog['isNull'] || function(val) {
+  return (val === null);
+};
+
 // This script is automatically injected into every page before it loads.
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
@@ -47,9 +52,9 @@ window.addEventListener("load", function() {
  * in DOM order.  Commands that use this function should use the
  * first element.
  *
- * @param {HTMLElement|Document} root The document to search under.
+ * @param {!HTMLElement|Document} root The document to search under.
  *     Usually window.document, except in unit tests.
- * @param {string} target The pattern to match.
+ * @param {!string} target The pattern to match.
  * @returns {Array.<HTMLElement>} The HTML elements that match |target|.
  */
 wpt.contentScript.findDomElements_ = function(root, target) {
@@ -115,7 +120,7 @@ chrome.extension.onRequest.addListener(
     if (request.message == "setDOMElements") {
       g_domNameValues = request.name_values;
       g_intervalId = window.setInterval(function() { pollDOMElement(); },
-	      DOM_ELEMENT_POLL_INTERVAL);
+                                        DOM_ELEMENT_POLL_INTERVAL);
     }
     sendResponse({});
 });
@@ -125,7 +130,8 @@ function pollDOMElement() {
   var loaded_dom_element_indices = [];
   // Check for presence of each dom-element and prepare the indices of the
   // elements present.
-  // TODO: Optimize this polling cost.
+  // TODO: Make findDomElements_() take a set of targets.  This will allow a
+  // single DOM traversal to find all targets.
   for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) {
     // TODO: findDomElements_ will throw an exception on a malformed target.
     if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
@@ -178,6 +184,17 @@ wpt.contentScript.InPageCommandRunner = function(doc,
   this.doc_ = doc;
   this.chromeApi_ = chromeApi;
   this.resultCallbacks_ = resultCallbacks;
+
+  /**
+   * Map command names to the function that implements them.
+   * @const
+   * @type {Object.<string, Function.<Object>>}
+   */
+  this.commandMap_ = {
+    'click': this.doClick_,
+    'setInnerHTML': this.doSetInnerHTML_,
+    'setInnerText': this.doSetInnerText_
+  };
 };
 
 /**
@@ -210,32 +227,93 @@ wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
 };
 
 /**
- * Click on a page element.
- * @param {string} target The DOM element to click, in attribute'value form.
+ * Several commands act on a DOM node, specified as a target pattern.
+ * Given a target, return the first DOM node that matches, in DOM-tree order.
+ * Log a fatal error if the target is malformed, or there is no matching DOM
+ * node.  Log a warning if there is more than one matching node.  Return null
+ * if there is no matching node.
+ *
+ * @param {string} command The command to be done on |target|.  Used for
+ *     error messages.
+ * @param {string} target The target DOM node, in attribute=value form.
+ * @return {?Element} The matching DOM node.  null if there is no match.
  */
-wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(target) {
-
+wpt.contentScript.InPageCommandRunner.prototype.findTarget_ = function(
+    command, target) {
   var domElements;
   try {
     domElements = wpt.contentScript.findDomElements_(this.doc_, target);
   } catch (err) {
-    this.FatalError_("Click failed: "+ err);
-    return;
+    this.FatalError_("Command " + command + " failed: "+ err);
+    return null;
   }
 
   if (!domElements || domElements.length == 0) {
-    this.FatalError_("Click failed: Could not find DOM element matching target " + target);
-    return;
+    this.FatalError_("Command " + command + " failed: Could not find DOM " +
+                     "element matching target " + target);
+    return null;
   }
 
   if (domElements.length > 1) {
-    this.Warn_(domElements.length + " matches for target \"" +
-               target + "\".  Using first match.");
+    this.Warn_("Command " + command + ": " + domElements.length +
+               " matches for target \"" + target + "\".  Using first match.");
   }
 
-  domElements[0].click();
+  return domElements[0];
+};
+
+/**
+ * Click on a page element.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.click();
   this.Success_();
 };
+
+/**
+ * Set the innerText of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetInnerText_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.innerText = commandObject['value'];
+  this.Success_();
+};
+
+/**
+ * Set the innerHtml of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetInnerHTML_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.innerHTML = commandObject['value'];
+  this.Success_();
+};
+
+
 
 /**
  * Run a command.  The backgrond page delegates commands to the content script
@@ -245,14 +323,17 @@ wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(target) {
 wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj) {
   console.info("InPageCommandRunner got a command: ", commandObj);
 
-  switch (commandObj['command']) {
-    case "click": {
-      this.doClick_(commandObj['target']);
-      break;
-    }
+  var commandFun = this.commandMap_[commandObj['command']];
+  if (!commandFun) {
+    this.FatalError_("Unknown command " + commandObj['command']);
+    return;
+  }
 
-    default:
-      this.FatalError_("Unknown command " + commandObj['command']);
+  try {
+    commandFun.call(this, commandObj);
+  } catch (ex) {
+    this.FatalError_("Exception running command: " + ex);
+    return;
   }
 };
 
