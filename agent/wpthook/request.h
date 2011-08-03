@@ -82,11 +82,11 @@ class OptimizationScores {
 public:
   OptimizationScores():
     _cacheScore(-1)
-    ,_ttl(-1)
+    ,_keepAliveScore(-1)
   {}
   ~OptimizationScores() {}
   int _cacheScore;
-  DWORD _ttl;
+  int _keepAliveScore;
 };
 
 class Request {
@@ -101,6 +101,7 @@ public:
   void SocketClosed();
   bool Process();
   bool IsStatic();
+  CStringA GetHost();
   void GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present);
 
   DWORD _data_sent;
@@ -123,6 +124,7 @@ public:
   CStringA  _method;
   CStringA  _object;
   int       _result;
+  double       _protocol_version;
 
   // Optimization score data.
   OptimizationScores _scores;

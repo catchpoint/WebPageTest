@@ -36,7 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------*/
 OptimizationChecks::OptimizationChecks(Requests& requests):
   _requests(requests)
-  , _cacheScore(-1) {
+  , _cacheScore(-1)
+  , _keepAliveScore(-1) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -48,9 +49,73 @@ OptimizationChecks::~OptimizationChecks(void) {
  Perform the various native optimization checks.
 -----------------------------------------------------------------------------*/
 void OptimizationChecks::Check(void) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - OptimizationChecks::Check()\n"));
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptimizationChecks::Check()\n"));
+  CheckKeepAlive();
   CheckCacheStatic();
-  WptTrace(loglevel::kFunction, _T("[wpthook] - OptimizationChecks::Check() complete\n"));
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptimizationChecks::Check() complete\n"));
+}
+
+/*-----------------------------------------------------------------------------
+﻿  Check all the connections for keep-alive and reuse.
+-----------------------------------------------------------------------------*/
+void OptimizationChecks::CheckKeepAlive()
+{
+  int count = 0;
+  int total = 0;
+
+  POSITION pos = _requests._requests.GetHeadPosition();
+  while( pos ) {
+    Request *request = _requests._requests.GetNext(pos);
+    if( request && request->_processed && request->_result == 200) {
+      CStringA connection = request->GetResponseHeader("connection");
+      connection.MakeLower();
+      if( connection.Find("keep-alive") > -1 )
+        request->_scores._keepAliveScore = 100;
+      else {
+        CStringA host = request->GetHost();
+        bool needed = false;
+        bool reused = false;
+        POSITION pos2 = _requests._requests.GetHeadPosition();
+        while( pos2 ) {
+          Request *request2 = _requests._requests.GetNext(pos2);
+          if( request != request2 && request2->_processed ) {
+            CStringA host2 = request2->GetHost();
+            if( host2.GetLength() && !host2.CompareNoCase(host) ) {
+              needed = true;
+              if( request2->_socket_id == request->_socket_id )
+                reused = true;
+            }
+          }
+        }
+
+        if( reused )
+          request->_scores._keepAliveScore = 100;
+        else if( needed ) {
+          // HTTP 1.1 default to keep-alive
+          if( connection.Find("close") > -1
+            || request->_protocol_version < 1.1 )
+            request->_scores._keepAliveScore = 0;
+          else
+            request->_scores._keepAliveScore = 100;
+        }
+        else
+          request->_scores._keepAliveScore = -1;
+      }
+      if( request->_scores._keepAliveScore != -1 ) {
+        count++;
+        total += request->_scores._keepAliveScore;
+      }
+    }
+  }
+
+  // average the Cache scores of all of the objects for the page
+  if( count )
+    _keepAliveScore = total / count;
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d\n"),
+    _keepAliveScore);
 }
 
 /*-----------------------------------------------------------------------------
@@ -60,21 +125,19 @@ void OptimizationChecks::CheckCacheStatic()
 {
   int count = 0;
   int total = 0;
-  // TODO: Find a way to extract the actual scheme.
-  CStringA scheme = _T("http://");
 
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
     if( request && request->_processed ) {
-      int temp_pos = 0;
       if(request->IsStatic()) {
           count++;
           request->_scores._cacheScore = 0;
 
           long age_in_seconds  = -1;
           bool exp_present, cache_control_present;
-          request->GetExpiresTime(age_in_seconds, exp_present, cache_control_present);
+          request->GetExpiresTime(age_in_seconds, exp_present,
+            cache_control_present);
           if( cache_control_present ) {
             // If age more than month give 100
             // else if more than hour, give 50

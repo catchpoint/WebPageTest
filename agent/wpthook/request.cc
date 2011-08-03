@@ -57,6 +57,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _data_in_size(0)
   , _data_out_size(0)
   , _result(-1)
+  , _protocol_version(-1.0)
   , _sockets(sockets)
   , _dns(dns)
   , _processed(false)
@@ -396,6 +397,14 @@ void Request::ProcessResponse() {
   if (pos > -1) {
     pos = 0;
     CStringA protocol = line.Tokenize(" ", pos).Trim();
+    // Extract the version out of the protocol.
+    int version_pos = 0;
+    CStringA version_string = protocol.Tokenize("/", version_pos).Trim();
+    version_string = protocol.Tokenize("/", version_pos).Trim();
+
+    if( version_string.GetLength() )
+      _protocol_version = atof(version_string);
+    // Extract the response code into _result.
     if (pos > -1) {
       CStringA result = line.Tokenize(" ", pos).Trim();
       if (result.GetLength())
@@ -478,6 +487,13 @@ bool Request::IsStatic() {
       is_static = true;
   }
   return is_static;
+}
+
+CStringA Request::GetHost() {
+  CStringA host = GetRequestHeader("x-host");
+  if (!host.GetLength())
+    host = GetRequestHeader("host");
+  return host;
 }
 
 void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present) {

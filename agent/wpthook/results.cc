@@ -391,7 +391,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Cookie Score
     result += "-1\t";
     // Keep-Alive Score
-    result += "-1\t";
+    buff.Format("%d\t", checks._keepAliveScore);
+    result += buff;
     // DOCTYPE Score
     result += "-1\t";
     // Minify Score
@@ -629,7 +630,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Cookie Score
   result += "-1\t";
   // Keep-Alive Score
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._keepAliveScore);
+  result += buff;
   // DOCTYPE Score
   result += "-1\t";
   // Minify Score

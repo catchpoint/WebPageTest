@@ -41,9 +41,11 @@ public:
 
   // test information
   int _cacheScore;
+  int _keepAliveScore;
 
   Requests&   _requests;
 
 private:
-  void OptimizationChecks::CheckCacheStatic();
+  void CheckKeepAlive();
+  void CheckCacheStatic();
 };
