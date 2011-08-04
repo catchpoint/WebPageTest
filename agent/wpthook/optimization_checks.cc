@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
+
+#include "cximage/ximage.h"
 #include <zlib.h>
 
 /*-----------------------------------------------------------------------------
@@ -41,6 +43,7 @@ OptimizationChecks::OptimizationChecks(Requests& requests):
   , _gzipScore(-1)
   , _gzipTotal(0)
   , _gzipTarget(0)
+  , _imageCompressionScore(-1)
   , _cacheScore(-1) {
 }
 
@@ -57,6 +60,7 @@ void OptimizationChecks::Check(void) {
     _T("[wpthook] - OptimizationChecks::Check()\n"));
   CheckKeepAlive();
   CheckGzip();
+  CheckImageCompression();
   CheckCacheStatic();
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptimizationChecks::Check() complete\n"));
@@ -133,7 +137,6 @@ void OptimizationChecks::CheckGzip()
   DWORD totalBytes = 0;
   DWORD targetBytes = 0;
 
-
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
@@ -153,11 +156,13 @@ void OptimizationChecks::CheckGzip()
         request->_scores._gzipScore = 100;
 
       if( !request->_scores._gzipScore ) {
-        // Data in buffer.
-        char* body = request->_data_in;
-        DWORD bodyLen = request->_data_in_size;
+        // Strip off the headers and get only the body from data in buffer.
+        char* body = request->_data_in + request->_in_header.GetLength();;
+        DWORD bodyLen = request->_data_in_size - request->_in_header.GetLength();
 
         // Try gzipping to see how smaller it will be.
+        // TODO: Check with Patrick whether the data received need/neednot
+        // does/doesnot include headers.
         DWORD origSize = request->_data_received;
         DWORD origLen = bodyLen;
         DWORD headSize = request->_in_header.GetLength();
@@ -200,6 +205,120 @@ void OptimizationChecks::CheckGzip()
     _T("[wpthook] - OptChecks::CheckGzip() gzip score: %d\n"),
     _gzipScore);
 }
+
+/*-----------------------------------------------------------------------------
+  Protect against malformed images
+-----------------------------------------------------------------------------*/
+static bool DecodeImage(CxImage& img, uint8_t * buffer, DWORD size, DWORD imagetype)
+{
+  bool ret = false;
+  
+  __try{
+    ret = img.Decode(buffer, size, imagetype);
+  }__except(1){
+    WptTrace(loglevel::kError,
+      _T("[wpthook] - Exception when decoding image"));
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+﻿  Check whether the image compression is used well.
+-----------------------------------------------------------------------------*/
+void OptimizationChecks::CheckImageCompression()
+{
+  _imageCompressionScore = -1;
+  int count = 0;
+  int total = 0;
+  DWORD totalBytes = 0;
+  DWORD targetBytes = 0;
+  int imgNum = 0;
+
+  POSITION pos = _requests._requests.GetHeadPosition();
+  int fileCount = 0;
+  while( pos ) {
+    Request *request = _requests._requests.GetNext(pos);
+    if( request && request->_processed && request->_result == 200 ) {
+      int temp_pos = 0;
+      CStringA mime = request->GetResponseHeader("content-type").Tokenize(";",
+        temp_pos);
+      mime.MakeLower();
+
+      // Strip off the headers and get only the body from data-in buffer.
+      char* body = request->_data_in + request->_in_header.GetLength();;
+      DWORD bodyLen = request->_data_in_size - request->_in_header.GetLength();
+            
+      // If there is response body and it is an image.
+      if( mime.Find("image/") >= 0 && body && bodyLen > 0 ) {
+        DWORD targetRequestBytes = bodyLen;
+        DWORD size = targetRequestBytes;
+        count++;
+        
+        CxImage img;
+        // Decode the image with an exception protected function.
+        if( DecodeImage(img, (uint8_t*) body, bodyLen,
+          CXIMAGE_FORMAT_UNKNOWN) ) {
+          DWORD type = img.GetType();
+          switch( type )
+          {
+          // TODO: Add appropriate scores for gif and png once they are available.
+          // Currently, even DecodeImage doesn't support gif and png.
+          // case CXIMAGE_FORMAT_GIF:
+          // case CXIMAGE_FORMAT_PNG:
+          //  request->_scores._imageCompressionScore = 100;
+          //  break;
+          case CXIMAGE_FORMAT_JPG:
+            {
+              img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);
+              img.SetCodecOption(16, CXIMAGE_FORMAT_JPG);
+              img.SetJpegQuality(85);
+              BYTE* mem = NULL;
+              int32_t len = 0;
+              if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) ) {
+                img.FreeMemory(mem);
+                targetRequestBytes = (DWORD) len < size ? (DWORD) len: size;
+                // If the original was within 10%, then give 100
+                // If it's less than 50% bigger then give 50
+                // More than that is a fail
+                double orig = bodyLen;
+                double newLen = (double)len;
+                double delta = orig / newLen;
+                if( delta < 1.1 )
+                  request->_scores._imageCompressionScore = 100;
+                else if( delta < 1.5 )
+                  request->_scores._imageCompressionScore = 50;
+                else
+                  request->_scores._imageCompressionScore = 0;
+              }
+            }
+            break;
+          default:
+            request->_scores._imageCompressionScore = 0;
+          }
+          if( targetRequestBytes > size )
+            targetRequestBytes = size;
+          totalBytes += size;
+          targetBytes += targetRequestBytes;
+          
+          request->_scores._imageCompressTotal = size;
+          request->_scores._imageCompressTarget = targetRequestBytes;
+        }
+        total += request->_scores._imageCompressionScore;
+      }
+    }
+  }
+
+  _imageCompressTotal = totalBytes;
+  _imageCompressTarget = targetBytes;
+
+  // Calculate the score based on target/total.
+  if( count && totalBytes )
+    _imageCompressionScore = targetBytes * 100 / totalBytes;
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptChecks::CheckImageCompression() score: %d\n"),
+    _imageCompressionScore);
+}
+
 
 /*-----------------------------------------------------------------------------
 ﻿  Check each static element to make sure it was cachable

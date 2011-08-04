@@ -44,6 +44,9 @@ public:
   int _gzipScore;
   DWORD _gzipTotal;
   DWORD _gzipTarget;
+  int _imageCompressionScore;
+  DWORD _imageCompressTotal;
+  DWORD _imageCompressTarget;
   int _cacheScore;
   
   Requests&   _requests;
@@ -51,5 +54,6 @@ public:
 private:
   void CheckKeepAlive();
   void CheckGzip();
+  void CheckImageCompression();
   void CheckCacheStatic();
 };

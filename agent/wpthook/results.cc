@@ -424,7 +424,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Other Responses (Doc)
     result += "\t";
     // Compression Score
-    result += "-1\t";
+    buff.Format("%d\t", checks._imageCompressionScore);
+    result += buff;
     // Host
     result += "\t";
     // IP Address
@@ -451,10 +452,13 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += "\t";
     // Minify Savings
     result += "\t";
-    // Image Total Bytes
-    result += "\t";
-    // Image Savings
-    result += "\t";
+    // Image Compression Total Bytes
+    buff.Format("%d\t", checks._imageCompressTotal);
+    result += buff;
+    // Image Compression Savings
+    buff.Format("%d\t",
+      checks._imageCompressTotal - checks._imageCompressTarget);
+    result += buff;
     // Base Page Redirects
     result += "\t";
     // Optimization Checked
@@ -647,7 +651,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += "-1\t";
   // GZIP Score
   buff.Format("%d\t", request->_scores._gzipScore);
-    result += buff;
+  result += buff;
   // Cookie Score
   result += "-1\t";
   // Keep-Alive Score
@@ -659,8 +663,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += "-1\t";
   // Combine Score
   result += "-1\t";
-  // Compression Score
-  result += "-1\t";
+  // Image Compression Score
+  buff.Format("%d\t", request->_scores._imageCompressionScore);
+  result += buff;
   // ETag Score
   result += "-1\t";
   // Flagged
@@ -677,16 +682,21 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_scores._gzipTotal);
   result += buff;
   // Gzip Savings
-  buff.Format("%d\t", request->_scores._gzipTotal - request->_scores._gzipTarget);
+  buff.Format("%d\t",
+    request->_scores._gzipTotal - request->_scores._gzipTarget);
   result += buff;
   // Minify Total Bytes
   result += "0\t";
   // Minify Savings
   result += "0\t";
   // Image Compression Total Bytes
-  result += "0\t";
+  buff.Format("%d\t", request->_scores._imageCompressTotal);
+  result += buff;
   // Image Compression Savings
-  result += "0\t";
+  buff.Format("%d\t",
+    request->_scores._imageCompressTotal
+    - request->_scores._imageCompressTarget);
+  result += buff;
   // Cache Time (sec)
   result += "-1\t";
   // Real Start Time (ms)

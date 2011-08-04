@@ -85,6 +85,9 @@ public:
     , _gzipScore(-1)
     , _gzipTotal(0)
     , _gzipTarget(0)
+    , _imageCompressionScore(-1)
+    , _imageCompressTotal(0)
+    , _imageCompressTarget(0)
     , _cacheScore(-1)
   {}
   ~OptimizationScores() {}
@@ -92,6 +95,9 @@ public:
   int _gzipScore;
   DWORD _gzipTotal;
   DWORD _gzipTarget;
+  int _imageCompressionScore;
+  DWORD _imageCompressTotal;
+  DWORD _imageCompressTarget;
   int _cacheScore;
 };
 
