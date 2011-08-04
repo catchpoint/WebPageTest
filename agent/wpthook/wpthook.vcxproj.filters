@@ -59,6 +59,15 @@
     <Filter Include="Third-Party\nspr\private">
       <UniqueIdentifier>{53792190-d45a-423d-88e2-1cf2a634d851}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\zlib">
+      <UniqueIdentifier>{edda91a3-3572-4a2f-b788-d3285014efbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\zlib\Source Files">
+      <UniqueIdentifier>{fc57c46d-91b7-4f9a-a7ee-f004e2676ff8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\zlib\Header Files">
+      <UniqueIdentifier>{18d48704-6606-45a6-aadc-ba4578b6f444}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -327,6 +336,54 @@
     </ClInclude>
     <ClInclude Include="optimization_checks.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\crypt.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\ioapi.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\iowin32.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\mztools.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\unzip.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\zip.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\crc32.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\deflate.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inffast.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inffixed.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inflate.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inftrees.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\trees.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zconf.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zlib.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zutil.h">
+      <Filter>Third-Party\zlib\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -707,6 +764,57 @@
     </ClCompile>
     <ClCompile Include="optimization_checks.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\adler32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\compress.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\ioapi.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\iowin32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\mztools.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\unzip.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\zip.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\crc32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\deflate.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzio.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\infback.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inffast.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inflate.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inftrees.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\trees.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\uncompr.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\zutil.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

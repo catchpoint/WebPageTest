@@ -81,12 +81,18 @@ typedef CAtlList<HeaderField> Fields;
 class OptimizationScores {
 public:
   OptimizationScores():
-    _cacheScore(-1)
-    ,_keepAliveScore(-1)
+    _keepAliveScore(-1)
+    , _gzipScore(-1)
+    , _gzipTotal(0)
+    , _gzipTarget(0)
+    , _cacheScore(-1)
   {}
   ~OptimizationScores() {}
-  int _cacheScore;
   int _keepAliveScore;
+  int _gzipScore;
+  DWORD _gzipTotal;
+  DWORD _gzipTarget;
+  int _cacheScore;
 };
 
 class Request {
@@ -101,6 +107,7 @@ public:
   void SocketClosed();
   bool Process();
   bool IsStatic();
+  bool IsGzippable();
   CStringA GetHost();
   void GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present);
 
@@ -126,6 +133,12 @@ public:
   int       _result;
   double       _protocol_version;
 
+  // merged data chunks
+  char *  _data_in;
+  char *  _data_out;
+  DWORD   _data_in_size;
+  DWORD   _data_out_size;
+
   // Optimization score data.
   OptimizationScores _scores;
 
@@ -146,12 +159,6 @@ private:
   Fields    _in_fields;
   Fields    _out_fields;
   bool      _headers_complete;
-
-  // merged data chunks
-  char *  _data_in;
-  char *  _data_out;
-  DWORD   _data_in_size;
-  DWORD   _data_out_size;
 
   // data transmitted in the chunks as it was transmitted
   CAtlList<DataChunk> _data_chunks_in;

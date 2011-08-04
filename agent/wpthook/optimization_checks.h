@@ -40,12 +40,16 @@ public:
   void Check(void);
 
   // test information
-  int _cacheScore;
   int _keepAliveScore;
-
+  int _gzipScore;
+  DWORD _gzipTotal;
+  DWORD _gzipTarget;
+  int _cacheScore;
+  
   Requests&   _requests;
 
 private:
   void CheckKeepAlive();
+  void CheckGzip();
   void CheckCacheStatic();
 };

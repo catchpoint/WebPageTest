@@ -387,7 +387,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     // One CDN Score
     result += "-1\t";
     // GZIP Score
-    result += "-1\t";
+    buff.Format("%d\t", checks._gzipScore);
+    result += buff;
     // Cookie Score
     result += "-1\t";
     // Keep-Alive Score
@@ -441,9 +442,11 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Base Page Result
     result += "\t";
     // Gzip Total Bytes
-    result += "\t";
+    buff.Format("%d\t", checks._gzipTotal);
+    result += buff;
     // Gzip Savings
-    result += "\t";
+    buff.Format("%d\t", checks._gzipTotal - checks._gzipTarget);
+    result += buff;
     // Minify Total Bytes
     result += "\t";
     // Minify Savings
@@ -643,7 +646,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Static CDN Score
   result += "-1\t";
   // GZIP Score
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._gzipScore);
+    result += buff;
   // Cookie Score
   result += "-1\t";
   // Keep-Alive Score
@@ -670,9 +674,11 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // SSL time (ms)
   result += "-1\t";
   // Gzip Total Bytes
-  result += "0\t";
+  buff.Format("%d\t", request->_scores._gzipTotal);
+  result += buff;
   // Gzip Savings
-  result += "0\t";
+  buff.Format("%d\t", request->_scores._gzipTotal - request->_scores._gzipTarget);
+  result += buff;
   // Minify Total Bytes
   result += "0\t";
   // Minify Savings

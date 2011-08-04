@@ -462,9 +462,8 @@ CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
 }
 
 bool Request::IsStatic() {
-  bool is_static = false;
   if (!_processed)
-    return is_static;
+    return false;
 
   int temp_pos = 0;
   CString mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
@@ -484,9 +483,23 @@ bool Request::IsStatic() {
     !(mime.Find(_T("/xhtml")) > -1) && (mime.Find(_T("shockwave-flash")) >= 0 ||
     object.Right(4) == _T(".swf") || mime.Find(_T("text/")) >= 0 ||
     mime.Find(_T("javascript")) >= 0 || mime.Find(_T("image/")) >= 0) ) ) ) {
-      is_static = true;
+      return true;
   }
-  return is_static;
+  return false;
+}
+
+bool Request::IsGzippable() {
+  if (!_processed)
+    return false;
+
+  int temp_pos = 0;
+  CStringA mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
+  mime.MakeLower();
+  if( mime.Find("text/") >= 0 || mime.Find("javascript") >= 0
+    || mime.Find("json") >= 0 || mime.Find("xml") >= 0 ) {
+    return true;
+  }
+  return false;
 }
 
 CStringA Request::GetHost() {

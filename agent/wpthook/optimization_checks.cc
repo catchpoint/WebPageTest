@@ -31,13 +31,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
+#include <zlib.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 OptimizationChecks::OptimizationChecks(Requests& requests):
   _requests(requests)
-  , _cacheScore(-1)
-  , _keepAliveScore(-1) {
+  , _keepAliveScore(-1)
+  , _gzipScore(-1)
+  , _gzipTotal(0)
+  , _gzipTarget(0)
+  , _cacheScore(-1) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -52,6 +56,7 @@ void OptimizationChecks::Check(void) {
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptimizationChecks::Check()\n"));
   CheckKeepAlive();
+  CheckGzip();
   CheckCacheStatic();
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptimizationChecks::Check() complete\n"));
@@ -116,6 +121,86 @@ void OptimizationChecks::CheckKeepAlive()
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d\n"),
     _keepAliveScore);
+}
+
+/*-----------------------------------------------------------------------------
+﻿  Check whether the gzip compression is used.
+-----------------------------------------------------------------------------*/
+void OptimizationChecks::CheckGzip()
+{
+  int count = 0;
+  int total = 0;
+  DWORD totalBytes = 0;
+  DWORD targetBytes = 0;
+
+
+  POSITION pos = _requests._requests.GetHeadPosition();
+  while( pos ) {
+    Request *request = _requests._requests.GetNext(pos);
+    if( request && request->_processed
+      && request->_result == 200 && request->IsGzippable() ) {
+      CStringA encoding = request->GetResponseHeader("content-encoding");
+      encoding.MakeLower();
+      request->_scores._gzipScore = 0;
+      totalBytes += request->_data_received;
+      DWORD targetRequestBytes = request->_data_received;
+
+      // If there is gzip encoding, then we are all set.
+      // Spare small (<1 packet) responses.
+      if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
+        request->_scores._gzipScore = 100;
+      else if( request->_data_received < 1400 )
+        request->_scores._gzipScore = 100;
+
+      if( !request->_scores._gzipScore ) {
+        // Data in buffer.
+        char* body = request->_data_in;
+        DWORD bodyLen = request->_data_in_size;
+
+        // Try gzipping to see how smaller it will be.
+        DWORD origSize = request->_data_received;
+        DWORD origLen = bodyLen;
+        DWORD headSize = request->_in_header.GetLength();
+        if( origLen && body ) {
+          DWORD len = compressBound(origLen);
+          if( len ) {
+            char* buff = (char*) malloc(len);
+            if( buff ) {
+              // Do the compression and check the target bytes to set for this.
+              if( compress2((LPBYTE)buff, &len, (LPBYTE)body, origLen, 9)
+                == Z_OK )
+                targetRequestBytes = len + headSize;
+              free(buff);
+            }
+          }
+          if( targetRequestBytes >= origSize ) {
+            targetRequestBytes = origSize;
+            request->_scores._gzipScore = 100;
+          }
+        }
+      }
+
+      request->_scores._gzipTotal = request->_data_received;
+      request->_scores._gzipTarget = targetRequestBytes;
+      targetBytes += targetRequestBytes;
+            
+      // TODO: Implement Gzip compression checking.
+
+      if( request->_scores._gzipScore != -1 ) {
+        count++;
+        total += request->_scores._gzipScore;
+      }
+    }
+  }
+  _gzipTotal = totalBytes;
+  _gzipTarget = targetBytes;
+
+  // average the Cache scores of all of the objects for the page
+  if( count )
+    _gzipScore = total / count;
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptChecks::CheckGzip() gzip score: %d\n"),
+    _gzipScore);
 }
 
 /*-----------------------------------------------------------------------------
