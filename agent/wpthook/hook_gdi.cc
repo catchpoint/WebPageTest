@@ -55,6 +55,22 @@ BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   return ret;
 }
 
+BOOL __stdcall SetWindowTextA_Hook(HWND hWnd, LPCSTR text)
+{
+  BOOL ret = FALSE;
+  if(pHook)
+    ret = pHook->SetWindowTextA(hWnd, text);
+  return ret;
+}
+
+BOOL __stdcall SetWindowTextW_Hook(HWND hWnd, LPCWSTR text)
+{
+  BOOL ret = FALSE;
+  if(pHook)
+    ret = pHook->SetWindowTextW(hWnd, text);
+  return ret;
+}
+
 /******************************************************************************
 *******************************************************************************
 **																		                                    	 **
@@ -77,6 +93,10 @@ void CGDIHook::Init() {
 
   _BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
   _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+  _SetWindowTextA = hook.createHookByName("user32.dll", "SetWindowTextA", 
+                                            SetWindowTextA_Hook);
+  _SetWindowTextW = hook.createHookByName("user32.dll", "SetWindowTextW", 
+                                            SetWindowTextW_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -116,6 +136,44 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   if (!_test_state._exit && _test_state._active && 
         hWnd == _test_state._document_window)
     _test_state.CheckStartRender();
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::SetWindowTextA(HWND hWnd, LPCSTR text)
+{
+  BOOL ret = false;
+
+  if (_SetWindowTextA)
+    ret = _SetWindowTextA(hWnd, text);
+
+  if (!_test_state._exit && _test_state._active && 
+        hWnd == _test_state._frame_window) {
+    CString title((LPCTSTR)CA2T(text));
+    if( title.Left(11) != _T("about:blank") )
+      _test_state.TitleSet(title);
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::SetWindowTextW(HWND hWnd, LPCWSTR text)
+{
+  BOOL ret = false;
+
+  if (_SetWindowTextW)
+    ret = _SetWindowTextW(hWnd, text);
+
+  if (!_test_state._exit && _test_state._active && 
+        hWnd == _test_state._frame_window) {
+    CString title((LPCTSTR)CW2T(text));
+    if( title.Left(11) != _T("about:blank") )
+      _test_state.TitleSet(title);
+  }
 
   return ret;
 }

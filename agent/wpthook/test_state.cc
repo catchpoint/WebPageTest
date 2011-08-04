@@ -115,6 +115,8 @@ void TestState::Reset(bool cascade) {
     _last_cpu_user.QuadPart = 0;
     _progress_data.RemoveAll();
     _test_result = 0;
+    _title_time.QuadPart = 0;
+    _title.Empty();
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -556,4 +558,20 @@ void TestState::CollectData() {
     }
   }
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+  Keep track of the page title and when it was first set (first title only)
+-----------------------------------------------------------------------------*/
+void TestState::TitleSet(CString title) {
+  if (_active && !_title_time.QuadPart) {
+    QueryPerformanceCounter(&_title_time);
+    _title = title;
+    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
+              title);
+    // trim the browser off of the title ( - Chrome, etc)
+    int pos = _title.ReverseFind(_T('-'));
+    if (pos > 0)
+      _title = _title.Left(pos).Trim();
+  }
 }

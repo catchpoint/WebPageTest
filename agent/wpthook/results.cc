@@ -459,6 +459,23 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += "0\t";
     // AFT (ms)
     result += "\t";
+    // DOM Element Count
+    result += "\t";
+    // Page Speed Version
+    result += "\t";
+    // Page Title
+    if (!_test_state._title.IsEmpty()) {
+      _test_state._title.Replace(_T('\t'), _T(' '));
+      result += _test_state._title;
+    }
+    result += "\t";
+    // Time to title (ms)
+    int title_time = 0;
+    if (_test_state._title_time.QuadPart > _test_state._start.QuadPart)
+      title_time = (int)((_test_state._title_time.QuadPart - 
+          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    buff.Format("%d\t", title_time);
+    result += buff;
 
     result += "\r\n";
 

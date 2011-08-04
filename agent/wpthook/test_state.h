@@ -74,6 +74,7 @@ public:
   void CollectData();
   void Reset(bool cascade = true);
   void Init();
+  void TitleSet(CString title);
 
   // times
   LARGE_INTEGER _start;
@@ -84,6 +85,7 @@ public:
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
+  LARGE_INTEGER _title_time;
   SYSTEMTIME    _start_time;
 
   LARGE_INTEGER _first_byte;
@@ -95,6 +97,7 @@ public:
   int _bytes_out;
   int _last_bytes_in;
   int _test_result;
+  CString _title;
 
   bool  _active;
   int   _current_document;

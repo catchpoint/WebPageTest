@@ -43,6 +43,8 @@ class TestState;
 typedef BOOL(__stdcall * LPBITBLT)( HDC hdc, int x, int y, int cx, int cy, 
                                         HDC hdcSrc, int x1, int y1, DWORD rop);
 typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+typedef BOOL(__stdcall * LPSETWINDOWTEXTA)(HWND hWnd, LPCSTR text);
+typedef BOOL(__stdcall * LPSETWINDOWTEXTW)(HWND hWnd, LPCWSTR text);
 
 /******************************************************************************
 *******************************************************************************
@@ -61,6 +63,8 @@ public:
                                                             int y1, DWORD rop);
   HDC		BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
   BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+  BOOL  SetWindowTextA(HWND hWnd, LPCSTR text);
+  BOOL  SetWindowTextW(HWND hWnd, LPCWSTR text);
 
 private:
   NCodeHookIA32	hook;
@@ -68,4 +72,6 @@ private:
 
   LPBITBLT		    _BitBlt;
   LPENDPAINT		  _EndPaint;
+  LPSETWINDOWTEXTA  _SetWindowTextA;
+  LPSETWINDOWTEXTW  _SetWindowTextW;
 };
