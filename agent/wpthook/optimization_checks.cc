@@ -184,8 +184,6 @@ void OptimizationChecks::CheckGzip()
       request->_scores._gzipTarget = targetRequestBytes;
       targetBytes += targetRequestBytes;
             
-      // TODO: Implement Gzip compression checking.
-
       if( request->_scores._gzipScore != -1 ) {
         count++;
         total += request->_scores._gzipScore;
@@ -196,8 +194,8 @@ void OptimizationChecks::CheckGzip()
   _gzipTarget = targetBytes;
 
   // average the Cache scores of all of the objects for the page
-  if( count )
-    _gzipScore = total / count;
+  if( count && totalBytes )
+    _gzipScore = targetBytes * 100 / totalBytes;
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptChecks::CheckGzip() gzip score: %d\n"),
     _gzipScore);
