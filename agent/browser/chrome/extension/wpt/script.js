@@ -193,7 +193,9 @@ wpt.contentScript.InPageCommandRunner = function(doc,
   this.commandMap_ = {
     'click': this.doClick_,
     'setInnerHTML': this.doSetInnerHTML_,
-    'setInnerText': this.doSetInnerText_
+    'setInnerText': this.doSetInnerText_,
+    'setValue': this.doSetValue_,
+    'submitForm': this.doSubmitForm_
   };
 };
 
@@ -313,7 +315,75 @@ wpt.contentScript.InPageCommandRunner.prototype.doSetInnerHTML_ = function(
   this.Success_();
 };
 
+/**
+ * Test if an HTML tag type string is in a set of HTML tag type strings.  The
+ * test is case-insensitive.
+ *
+ * @param {string} tagType The type of an HTML tag.  Typically the nodeName
+ *     property of a DOM element.
+ * @param {Array.<string>} tagSet The set of tag types to look for.
+ * @returns {boolean} Is |tagType| in |tagSet|?
+ */
+wpt.contentScript.isTagNameInSet_ = function(tagType, tagSet) {
+  var normalizedTagType = tagType.toUpperCase();
+  for (var i = 0, ie = tagSet.length; i < ie; ++i) {
+    if (tagSet[i].toUpperCase() == normalizedTagType)
+      return true;
+  }
+  return false;
+};
 
+/**
+ * Set the value of an attribute of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetValue_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  // Currently, only "input" and "textArea" element types are supported.
+  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName,
+                                        ['INPUT', 'TEXTAREA'])) {
+    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
+                     'an INPUT or TEXTAREA tag.  Matched tag is of type ' +
+                     domElement.nodeName);
+    return;
+  }
+
+  domElement.setAttribute('value', commandObject['value']);
+
+  this.Success_();
+};
+
+/**
+ * Submit a form.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to submit, in attribute'value form.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSubmitForm_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName, ['FORM'])) {
+    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
+                     'a FORM tag.  Matched tag is of type ' +
+                     domElement.nodeName);
+    return;
+  }
+
+  domElement.submit();
+
+  this.Success_();
+};
 
 /**
  * Run a command.  The backgrond page delegates commands to the content script

@@ -49,6 +49,26 @@
         <div id='firstDuplicateDiv' bbbb=value>Initial text</div>
         <div id='secondDuplicateDiv' bbbb=value>Initial text</div>
       </div>
+
+      <!-- testSetInnerHtml -->
+      <div id="testSetInnerHtmlCommand">
+        <div id='innerHtmlSubDiv' ggg='ggg'>
+          <div id='testSetInnerHtmlCommandInitialDiv'>initial</div>
+        </div>
+      </div>
+
+      <!-- testSetValue -->
+      <div id="testSetValueCommand">
+        <div testKey=wrongTagType></div>
+        <form method="get">
+          <input testKey=inputTag value=initial />
+        </form>
+      </div>
+
+      <!-- testSubmitForm -->
+      <div id="testSubmitFormCommand">
+        <div testKey=cantSubmitADiv></div>
+      </div>
     </div>
 
     <!-- allTests.js will append test results to the page body.  -->

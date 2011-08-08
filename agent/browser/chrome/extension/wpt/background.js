@@ -50,7 +50,20 @@ var FAKE_TASKS_IDX = 0;
 var FAKE_TASKS = [
   {
     'action': 'navigate',
-    'target': 'http://www.google.com'
+    'target': 'http://www.youtube.com/'
+  },
+  {
+    'action': 'setvalue',
+    'target': 'id=masthead-search-term',
+    'value': 'boston mspca legend'
+  },
+  {
+    'action': 'submitform',
+    'target': 'id=masthead-search'
+  },
+  {
+    'action': 'navigate',
+    'target': 'http://www.google.com/'
   },
   {
     'action': 'click',
@@ -69,6 +82,15 @@ var FAKE_TASKS = [
     'action': 'setinnerhtml',
     'target': 'class=kd-appname',
     'value': 'This <b>HTML</b> should replace the word news!'
+  },
+  {
+    'action': 'setvalue',
+    'target': 'class=searchField',
+    'value': 'Susie, the Qmiester'
+  },
+  {
+    'action': 'submitform',
+    'target': 'id=search-hd'
   }
 ];
 
@@ -162,7 +184,7 @@ chrome.extension.onRequest.addListener(
         var xhr = new XMLHttpRequest();
         xhr.open("POST",
 		"http://127.0.0.1:8888/event/dom_element?name_value="
-		+ encodeURIComponent(request.name_value)
+		+ encodeURIComponent(request['name_value'])
 		+ "&time=" + dom_element_time,
 		true);
         xhr.send();
@@ -183,7 +205,7 @@ chrome.extension.onRequest.addListener(
       }
     }
     else if (request.message == "wptLoad") {
-      wptOnLoad(request.load_time);
+      wptOnLoad(request['load_time']);
     }
     // TODO: check whether calling sendResponse blocks in the content script side in page.
     sendResponse({});
@@ -231,6 +253,12 @@ function wptExecuteTask(task){
         break;
       case "setinnertext":
         g_commandRunner.doSetInnerText(task.target, task.value);
+        break;
+      case "setvalue":
+        g_commandRunner.doSetValue(task.target, task.value);
+        break;
+      case "submitform":
+        g_commandRunner.doSubmitForm(task.target);
         break;
 
       default:

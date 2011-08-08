@@ -252,6 +252,7 @@ function testClickCommandInPage() {
   var clicks = [];
   var inputs = document.getElementsByClassName("testClickCommand");
   for (var i = 0, ie = inputs.length; i < ie; ++i) {
+    /** @this {Element} */
     inputs[i].onclick = function() {
       clicks.push(this.getAttribute('index'));
     };
@@ -393,4 +394,144 @@ function testSetInnerText() {
                     ['Command setInnerText failed: Invalid target ' +
                      '"thisTargetHasNoDelimiter": no delimiter found.'],
                     errors);
+}
+
+function testSetInnerHtml() {
+  var successCalls;
+  var errors;
+  var warnings;
+
+  var inPageCommandRunner = new wpt.contentScript.InPageCommandRunner(
+      document.getElementById('testSetInnerHtmlCommand'),
+      {},
+      {
+        success: function() { successCalls++; },
+        warn: function() {
+          warnings.push(Array.prototype.slice.call(arguments).join(''));
+        },
+        error: function() {
+          errors.push(Array.prototype.slice.call(arguments).join(''));
+        }
+      });
+
+  var doSetInnerHtml = function(target, value) {
+    successCalls = 0;
+    errors = [];
+    warnings = [];
+
+    inPageCommandRunner.RunCommand({
+        'command': 'setInnerHTML',
+        'target': target,
+        'value': value
+    });
+  };
+
+  // Test that the inner text of a unique target can be changed.
+  assertEquals('Initial text in id=testSetInnerHtmlCommandInitialDiv',
+               'initial',
+               document.getElementById(
+                   'testSetInnerHtmlCommandInitialDiv').innerText);
+  doSetInnerHtml('ggg=ggg', '<div id="insertedHtmlDiv">newnewnew</div>');
+  assertEquals('Should succeed.', 1, successCalls);
+  assertArrayEquals("No warnings", [], warnings);
+  assertArrayEquals("No errors", [], errors);
+
+  assertEquals('newnewnew',
+               document.getElementById('insertedHtmlDiv').innerText);
+}
+
+/**
+ * @constructor
+ * @param {string} domId The id of a DOM element that the test will read/modify.
+ * @param {Object} fakeChromeApi The root object of the chrome API.
+ *
+ */
+wpt.allTests.CreateInPageCommandRunner = function(domId, fakeChromeApi) {
+  this.successCalls = 0;
+  this.errors = [];
+  this.warnings = [];
+
+  var self = this;
+  this.inPageCommandRunner_ = new wpt.contentScript.InPageCommandRunner(
+      document.getElementById(domId),
+      fakeChromeApi,
+      {
+        success: function() { self.successCalls++; },
+        warn: function() {
+          self.warnings.push(Array.prototype.slice.call(arguments).join(''));
+        },
+        error: function() {
+          self.errors.push(Array.prototype.slice.call(arguments).join(''));
+        }
+      });
+};
+
+/**
+ * @param {Object} commandObj
+ */
+wpt.allTests.CreateInPageCommandRunner.prototype.RunCommand = function(
+    commandObj) {
+  this.successCalls = 0;
+  this.errors = [];
+  this.warnings = [];
+
+  this.inPageCommandRunner_.RunCommand(commandObj);
+
+  // Caller can now test that successCalls, errors, and warnings have expected
+  // values.
+};
+
+
+function testSetValueCommand() {
+  var ipcr = new wpt.allTests.CreateInPageCommandRunner(
+      'testSetValueCommand',
+      {});
+
+  // Test that trying to set the value of a div fails because of the tag type.
+  ipcr.RunCommand({
+      'command': 'setValue',
+      'target': 'testKey=wrongTagType',
+      'value': 'Should fail'
+  });
+
+  assertArrayEquals("No warnings", [], ipcr.warnings);
+  assertArrayEquals(
+      ['Target to setValue must match an INPUT or TEXTAREA tag.  Matched tag ' +
+       'is of type DIV'],
+      ipcr.errors);
+  assertEquals('Should fail.', 0, ipcr.successCalls);
+
+
+  // Test that trying to set the value of an input tag works.
+  ipcr.RunCommand({
+      'command': 'setValue',
+      'target': 'testkey=inputTag',
+      'value': 'new input value'
+  });
+
+  assertArrayEquals("No warnings", [], ipcr.warnings);
+  assertArrayEquals("No errors", [], ipcr.errors);
+  assertEquals('Should work.', 1, ipcr.successCalls);
+}
+
+function testSubmitFormCommand() {
+  var ipcr = new wpt.allTests.CreateInPageCommandRunner(
+      'testSubmitFormCommand',
+      {});
+
+  // Test that trying to submit a div fails because of the tag type.
+  ipcr.RunCommand({
+      'command': 'submitForm',
+      'target': 'testKey=cantSubmitADiv'
+  });
+
+  assertArrayEquals("No warnings", [], ipcr.warnings);
+  assertArrayEquals(
+      ['Target to submitForm must match a FORM tag.  Matched tag is of type DIV'],
+      ipcr.errors);
+  assertEquals('Should fail.', 0, ipcr.successCalls);
+
+  // TODO: Test a successful submission.  Tricky because a submitted form
+  // will cause navigation, unloading the test page.  Consider holding the form
+  // in an iframe.
 }

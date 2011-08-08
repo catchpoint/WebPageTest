@@ -189,6 +189,28 @@ wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
   });
 };
 
+/**
+ * Implement the setValue command.
+ * @param {string} target The DOM element to set, in attribute'value form.
+ * @param {string} value The value to set the target to.
+ */
+wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
+  this.SendCommandToContentScript_({
+      "command": "setValue",
+      "target": target,
+      "value": value
+  });
+};
 
+/**
+ * Implement the submitForm command.
+ * @param {string} target The DOM element to set, in attribute'value form.
+ */
+wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
+  this.SendCommandToContentScript_({
+      "command": "submitForm",
+      "target": target
+  });
+};
 
 })());  // namespace
