@@ -141,6 +141,7 @@ public:
   DWORD _data_received;
   DWORD _socket_id;
   bool  _processed;
+  bool  _is_ssl;
 
   // times (in ms from the test start)
   int _ms_start;
@@ -205,4 +206,3 @@ private:
   CStringA GetHeaderValue(Fields& fields, CStringA header);
   void DechunkResponse();
 };
-

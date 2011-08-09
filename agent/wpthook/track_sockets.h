@@ -36,17 +36,21 @@ public:
   SocketInfo():
     _id(0)
     , _accounted_for(false)
-    , _during_test(false) {
+    , _during_test(false)
+    , _is_ssl(false) {
     memset(&_addr, 0, sizeof(_addr));
     _connect_start.QuadPart = 0;
     _connect_end.QuadPart = 0;
   }
   ~SocketInfo(void){}
 
+  bool IsLocalhost();
+
   DWORD               _id;
   struct sockaddr_in  _addr;
   bool                _accounted_for;
   bool                _during_test;
+  bool                _is_ssl;
   LARGE_INTEGER       _connect_start;
   LARGE_INTEGER       _connect_end;
 };
@@ -65,13 +69,19 @@ public:
   void DataOut(SOCKET s, const char * data, unsigned long data_len,
                           char * &new_buff, unsigned long &new_len);
   void AfterDataOut(char * new_buff);
-  void Reset();
-  bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
-                      LONGLONG& end);
-  ULONG GetPeerAddress(DWORD socket_id);
-  
+
   void SetIsSsl(SOCKET s, bool is_ssl);
   bool IsSsl(SOCKET s);
+  bool IsSslById(DWORD socket_id);
+
+  void Reset();
+
+  SocketInfo* GetSocketInfo(SOCKET s, const struct sockaddr_in* ip_name=NULL);
+  SocketInfo* GetSocketInfoById(DWORD socket_id);
+
+  bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
+                    LONGLONG& end);
+  ULONG GetPeerAddress(DWORD socket_id);
 
 private:
   CRITICAL_SECTION cs;

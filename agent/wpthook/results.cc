@@ -675,7 +675,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Flagged
   result += "0\t";
   // Secure
-  result += "0\t";
+  result += request->_is_ssl ? "1\t" : "0\t";
   // DNS Time (ms)
   result += "-1\t";
   // Socket Connect time (ms)
@@ -743,4 +743,3 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
     WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
   }
 }
-

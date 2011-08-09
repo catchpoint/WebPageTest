@@ -58,7 +58,6 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _data_out_size(0)
   , _result(-1)
   , _protocol_version(-1.0)
-  , _peer_address(0)
   , _sockets(sockets)
   , _dns(dns)
   , _processed(false)
@@ -70,6 +69,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
   _peer_address = sockets.GetPeerAddress(socket_id);
+  _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
 
   WptTrace(loglevel::kFunction, _T("[wpthook] - new request on socket %d\n"), 

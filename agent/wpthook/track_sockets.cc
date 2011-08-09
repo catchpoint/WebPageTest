@@ -35,6 +35,15 @@ const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool SocketInfo::IsLocalhost() {
+  if (_addr.sin_addr.S_un.S_addr == LOCALHOST) {
+    return true;
+  }
+  return false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
   _nextSocketId(1)
   , _requests(requests)
@@ -75,20 +84,13 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
-  // we only care about IP sockets at this point
-  if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET)
-  {
-    struct sockaddr_in * ipName = (struct sockaddr_in *)name;
+  // We only care about IP sockets at this point.
+  if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
+    struct sockaddr_in* ipName = (struct sockaddr_in *)name;
 
     EnterCriticalSection(&cs);
-    SocketInfo * info = new SocketInfo;
-    info->_id = _nextSocketId;
-    info->_during_test = _test_state._active;
-    memcpy(&info->_addr, ipName, sizeof(info->_addr));
+    SocketInfo* info = GetSocketInfo(s, ipName);
     QueryPerformanceCounter(&info->_connect_start);
-    _socketInfo.SetAt(info->_id, info);
-    _openSockets.SetAt(s, info->_id);
-    _nextSocketId++;
     LeaveCriticalSection(&cs);
   }
 }
@@ -98,15 +100,9 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
 void TrackSockets::Connected(SOCKET s) {
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - TrackSockets::Connected(%d)\n"), s);
-
   EnterCriticalSection(&cs);
-  DWORD socket_id = 0;
-  _openSockets.Lookup(s, socket_id);
-  if (socket_id) {
-    SocketInfo * info = NULL;
-    if (_socketInfo.Lookup(socket_id, info) && info )
-      QueryPerformanceCounter(&info->_connect_end);
-  }
+  SocketInfo* info = GetSocketInfo(s);
+  QueryPerformanceCounter(&info->_connect_end);
   LeaveCriticalSection(&cs);
 }
 
@@ -115,32 +111,15 @@ void TrackSockets::Connected(SOCKET s) {
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
 void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
-  bool localhost = false;
   EnterCriticalSection(&cs);
-  DWORD socket_id = 0;
-  _openSockets.Lookup(s, socket_id);
-  SocketInfo * info = NULL;
-  if (!socket_id) {
-    socket_id = _nextSocketId;
-    _openSockets.SetAt(s, socket_id);
-    _nextSocketId++;
-  } else {
-    _socketInfo.Lookup(socket_id, info);
-  }
-  if (!info) {
-    info = new SocketInfo;
-    info->_id = socket_id;
-    info->_during_test = _test_state._active;
-    int len = sizeof(info->_addr);
-    getpeername(s, (sockaddr *)&info->_addr, &len);
-    _socketInfo.SetAt(info->_id, info);
-  }
-  if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
-    localhost = true;
+  SocketInfo* info = GetSocketInfo(s);
+  DWORD socket_id = info->_id;
+  bool is_localhost = info->IsLocalhost();
   LeaveCriticalSection(&cs);
 
-  if (!localhost )
+  if (!is_localhost) {
     _requests.DataIn(socket_id, data, data_len);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -151,35 +130,18 @@ void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
 -----------------------------------------------------------------------------*/
 void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len,
                                 char * &new_buff, unsigned long &new_len) {
-  bool localhost = false;
   EnterCriticalSection(&cs);
-  DWORD socket_id = 0;
-  _openSockets.Lookup(s, socket_id);
-  SocketInfo * info = NULL;
-  if (!socket_id) {
-    socket_id = _nextSocketId;
-    _openSockets.SetAt(s, socket_id);
-    _nextSocketId++;
-  } else {
-    if (_socketInfo.Lookup(socket_id, info) && info) {
-      if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart)
-        QueryPerformanceCounter(&info->_connect_end);
-    }
+  SocketInfo* info = GetSocketInfo(s);
+  if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart) {
+    QueryPerformanceCounter(&info->_connect_end);
   }
-  if (!info) {
-    info = new SocketInfo;
-    info->_id = socket_id;
-    info->_during_test = _test_state._active;
-    int len = sizeof(info->_addr);
-    getpeername(s, (sockaddr *)&info->_addr, &len);
-    _socketInfo.SetAt(info->_id, info);
-  }
-  if (info->_addr.sin_addr.S_un.S_addr == LOCALHOST)
-    localhost = true;
+  DWORD socket_id = info->_id;
+  bool is_localhost = info->IsLocalhost();
   LeaveCriticalSection(&cs);
 
-  if (!localhost )
+  if (!is_localhost) {
     _requests.DataOut(socket_id, data, data_len, new_buff, new_len);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -195,8 +157,8 @@ void TrackSockets::Reset() {
   EnterCriticalSection(&cs);
   POSITION pos = _socketInfo.GetStartPosition();
   while (pos) {
-    SocketInfo * info = NULL;
     DWORD id = 0;
+    SocketInfo* info = NULL;
     _socketInfo.GetNextAssoc(pos, id, info);
     if (info)
       delete info;
@@ -230,30 +192,82 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LONGLONG before,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
-  ULONG ret = 0;
+  ULONG peer_address = 0;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
   if (_socketInfo.Lookup(socket_id, info) && info) {
-    ret = info->_addr.sin_addr.S_un.S_addr;
+    peer_address = info->_addr.sin_addr.S_un.S_addr;
   }
   LeaveCriticalSection(&cs);
-  return ret;
+  return peer_address;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::SetIsSsl(SOCKET s, bool is_ssl) {
-  if (is_ssl) {
-    bool unused = true;
-    _sslSockets.SetAt(s, unused);
-  } else if (IsSsl(s)) {
-    _sslSockets.RemoveKey(s);
-  }
+  EnterCriticalSection(&cs);
+  SocketInfo* info = GetSocketInfo(s);
+  info->_is_ssl = is_ssl;
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool TrackSockets::IsSsl(SOCKET s) {
-  bool unused;
-  return _sslSockets.Lookup(s, unused);
+  EnterCriticalSection(&cs);
+  SocketInfo* info = GetSocketInfo(s);
+  bool is_ssl = info->_is_ssl;
+  LeaveCriticalSection(&cs);
+  return is_ssl;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::IsSslById(DWORD socket_id) {
+  EnterCriticalSection(&cs);
+  SocketInfo* info = GetSocketInfoById(socket_id);
+  bool is_ssl = false;
+  if (info != NULL) {
+    is_ssl = info->_is_ssl;
+  }
+  LeaveCriticalSection(&cs);
+  return is_ssl;
+}
+
+/*-----------------------------------------------------------------------------
+  This must always be called from within a critical section.
+-----------------------------------------------------------------------------*/
+SocketInfo* TrackSockets::GetSocketInfo(
+    SOCKET s, const struct sockaddr_in* ip_name) {
+  DWORD socket_id = 0;
+  _openSockets.Lookup(s, socket_id);
+  SocketInfo* info = NULL;
+  if (!socket_id) {
+    socket_id = _nextSocketId;
+    _openSockets.SetAt(s, socket_id);
+    _nextSocketId++;
+  } else {
+    _socketInfo.Lookup(socket_id, info);
+  }
+  if (!info) {
+    info = new SocketInfo;
+    info->_id = socket_id;
+    info->_during_test = _test_state._active;
+    int addr_len = sizeof(info->_addr);
+    if (ip_name != NULL) {
+      memcpy(&info->_addr, ip_name, addr_len);
+    } else {
+      getpeername(s, (sockaddr *)&info->_addr, &addr_len);
+    }
+    _socketInfo.SetAt(info->_id, info);
+  }
+  return info;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+SocketInfo* TrackSockets::GetSocketInfoById(DWORD socket_id) {
+  SocketInfo* info = NULL;
+  _socketInfo.Lookup(socket_id, info);
+  return info;
 }
