@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;WPTHOOK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>nspr</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\wptdriver\zlib;..\wptdriver\zlib\contrib;..\wptdriver\zlib\contrib\minizip;nspr</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
