@@ -42,6 +42,16 @@ To use a profile zip:
   2. Run firefox:
      $ firefox -profile PROFILE_DIR
 
+When developing, you can avoid rebuilding the extension using --link_extension:
+  1. Run this program:
+     $ ./profile_setup.py --profile_zip profile.zip --profile_dir PROFILE_DIR \
+         --extension_dir=./extension --link_extension
+  2. Run firefox:
+     $ firefox -profile PROFILE_DIR
+  3. Find and fix a bug.
+  4. Restart firefox, and your changes are reflected without re-running
+     this script.
+
 Additional profile_setup.py options:
   --extension_dir EXTENSION_DIR:  add an extension.
   --extension_debug: add preferences for debugging extensions.
@@ -50,6 +60,7 @@ Additional profile_setup.py options:
 import logging
 import optparse
 import os
+import platform
 import re
 import shutil
 import zipfile
@@ -137,8 +148,60 @@ class FirefoxProfile(object):
       profile_zip: the path name of the profile zip file.
     """
     if os.path.exists(self.profile_dir):
+      logging.warning('Remove existing profile directory %s.', self.profile_dir)
       shutil.rmtree(self.profile_dir)
+
     zipfile.ZipFile(profile_zip).extractall(self.profile_dir)
+
+  def LinkExtension(self, extension_dir):
+    """Set up profile so that |extension_dir| is read as an extension.
+
+    A proxy file is used to create the link.  This is documented at:
+    https://developer.mozilla.org/en/Setting_up_extension_development_environment#Firefox_extension_proxy_file
+
+    Args:
+      extension_dir: the directory that contains the extension file.
+    """
+    extension_id = self.GetExtensionId(extension_dir) or 'extension'
+    profile_extensions_dir = os.path.join(self.profile_dir, 'extensions')
+    proxy_file_path = os.path.join(profile_extensions_dir, extension_id)
+
+    if os.path.exists(proxy_file_path):
+      logging.info('Removing exisiting extension dir %s', proxy_file_path)
+      shutil.rmtree(proxy_file_path)
+
+    if not os.path.exists(profile_extensions_dir):
+      logging.warn('Create extensions directory %s', profile_extensions_dir)
+      os.mkdir(profile_extensions_dir)
+
+    # We need to generate a path that firefox can use.  On windows, we
+    # need to use the NT-specific implementation of os.path.  Because
+    # cygwin python uses cygwin's POSIX emulation layer, the paths
+    # os.path produces will not work when firefox tries to use them.
+    # We need to use the NT paths module under cygwin.
+    is_running_in_cygwin = 'cygwin' in platform.system().lower()
+    if is_running_in_cygwin:
+      logging.error('Cygwin python can\'t create the path we need.  '
+                    'Use the native windows python.')
+      raise RuntimeError('Cygwin python can\'t create a link to an extension.')
+
+    # Firefox is picky about the contents of the proxy file.  Path
+    # must follow these rules, or the extension will silently not load:
+    #  * No whitespace.  Even newlines are not allowed.
+    #  * The path must be absolute.
+    #  * The path must end in a path separator.
+    #  * On windows:
+    #    * The drive letter must exist and be capitalized.
+    #    * Path separators must be forward slashes.
+    proxy_extension_path = (
+        os.path.normcase(os.path.realpath(extension_dir)) +
+        os.path.sep)
+
+    logging.info('Using the following path in the link: %s',
+                 proxy_extension_path)
+
+    with open(proxy_file_path, 'w') as fh:
+      fh.write(proxy_extension_path)
 
   def CopyExtension(self, extension_dir):
     """Copy extension files into the profile directory.
@@ -149,7 +212,9 @@ class FirefoxProfile(object):
     extension_id = self.GetExtensionId(extension_dir) or 'extension'
     target_dir = os.path.join(self.profile_dir, 'extensions', extension_id)
     if os.path.exists(target_dir):
+      logging.warn('Removing exisiting extension dir %s', target_dir)
       shutil.rmtree(target_dir)
+
     shutil.copytree(extension_dir, target_dir)
 
   def GetExtensionId(self, extension_dir):
@@ -199,29 +264,51 @@ def ParseOptions():
       usage='%prog [options]',
       formatter=PlainHelpFormatter(),
       description=__doc__)
-  option_parser.add_option('-p', '--profile_dir', default='',
+  option_parser.add_option('-p', '--profile_dir', default=None,
       action='store',
       type='string',
       help='Profile directory firefox will use.')
-  option_parser.add_option('-z', '--profile_zip', default='',
+  option_parser.add_option('-z', '--profile_zip', default=None,
       action='store',
       type='string',
       help='File name for a zip of a clean profile.')
   option_parser.add_option('-e', '--extension_dir', default='',
       action='store',
       type='string',
-      help='Directory of a firefox extension.')
+      help=('Directory of a firefox extension.  By default, copy '
+            'the extension into the profile.  Use --link_extension '
+            'to install using a link.'))
+  option_parser.add_option('-l', '--link_extension', default=False,
+      action='store_true',
+      help=('Set up a link to the path |--extension_dir|.  An extension '
+            'installed by a link is not copied.  Firefox will read the '
+            'extension files from the path given to --extension_dir.'))
   option_parser.add_option('-d', '--extension_debug', default=False,
       action='store_true',
       help='Add preferences for debugging extensions.')
   options, args = option_parser.parse_args()
+
+  if args:
+    raise ValueError('Unparsed command line options: ' + ' '.join(args));
+
+  if options.profile_dir is None:
+    raise ValueError('Command line option --profile_dir is required.');
+
+  if options.profile_zip is None:
+    raise ValueError('Command line option --profile_zip is required.');
+
   return options
 
 def main(options):
   profile = FirefoxProfile(options.profile_dir)
   profile.UnzipProfile(options.profile_zip)
+
   if options.extension_dir:
-    profile.CopyExtension(options.extension_dir)
+    if options.link_extension:
+      profile.LinkExtension(options.extension_dir)
+    else:
+      profile.CopyExtension(options.extension_dir)
+
   profile.AddPreferences(PREFERENCES)
   if options.extension_debug:
     profile.AddPreferences(DEBUG_PREFERENCES)
