@@ -84,7 +84,7 @@ void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved && _test._log_data) {
     ProcessRequests();
-    OptimizationChecks checks(_requests);
+    OptimizationChecks checks(_requests, _test_state);
     checks.Check();
     SaveRequests(checks);
     SavePageData(checks);
@@ -380,26 +380,29 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Includes Object Data
     result += "1\t";
     // Cache Score
-    buff.Format("%d\t", checks._cacheScore);
+    buff.Format("%d\t", checks._cache_score);
     result += buff;
     // Static CDN Score
-    result += "-1\t";
-    // One CDN Score
+    buff.Format("%d\t", checks._static_cdn_score);
+    result += buff;
+    // One CDN Score.
+    // TODO: Eliminate it completely (both client and wpt server).
     result += "-1\t";
     // GZIP Score
-    buff.Format("%d\t", checks._gzipScore);
+    buff.Format("%d\t", checks._gzip_score);
     result += buff;
     // Cookie Score
     result += "-1\t";
     // Keep-Alive Score
-    buff.Format("%d\t", checks._keepAliveScore);
+    buff.Format("%d\t", checks._keep_alive_score);
     result += buff;
     // DOCTYPE Score
     result += "-1\t";
     // Minify Score
     result += "-1\t";
     // Combine Score
-    result += "-1\t";
+    buff.Format("%d\t", checks._combine_score);
+    result += buff;
     // Bytes Out (Doc)
     buff.Format("%d\t", _test_state._doc_bytes_out);
     result += buff;
@@ -424,7 +427,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Other Responses (Doc)
     result += "\t";
     // Compression Score
-    buff.Format("%d\t", checks._imageCompressionScore);
+    buff.Format("%d\t", checks._image_compression_score);
     result += buff;
     // Host
     result += "\t";
@@ -443,26 +446,25 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Base Page Result
     result += "\t";
     // Gzip Total Bytes
-    buff.Format("%d\t", checks._gzipTotal);
+    buff.Format("%d\t", checks._gzip_total);
     result += buff;
     // Gzip Savings
-    buff.Format("%d\t", checks._gzipTotal - checks._gzipTarget);
+    buff.Format("%d\t", checks._gzip_total - checks._gzip_target);
     result += buff;
     // Minify Total Bytes
     result += "\t";
     // Minify Savings
     result += "\t";
     // Image Compression Total Bytes
-    buff.Format("%d\t", checks._imageCompressTotal);
+    buff.Format("%d\t", checks._image_compress_total);
     result += buff;
     // Image Compression Savings
     buff.Format("%d\t",
-      checks._imageCompressTotal - checks._imageCompressTarget);
+      checks._image_compress_total - checks._image_compress_target);
     result += buff;
     // Base Page Redirects
     result += "\t";
-    // Optimization Checked
-    // TODO: Set the bit to 1 after all optimization checks are implemented.
+    // Optimization Checked (all optimization checks are implemented).
     result += "1\t";
     // AFT (ms)
     result += "\t";
@@ -645,26 +647,28 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", index);
   result += buff;
   // Cache Score
-  buff.Format("%d\t", request->_scores._cacheScore);
+  buff.Format("%d\t", request->_scores._cache_score);
   result += buff;
   // Static CDN Score
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._static_cdn_score);
+  result += buff;
   // GZIP Score
-  buff.Format("%d\t", request->_scores._gzipScore);
+  buff.Format("%d\t", request->_scores._gzip_score);
   result += buff;
   // Cookie Score
   result += "-1\t";
   // Keep-Alive Score
-  buff.Format("%d\t", request->_scores._keepAliveScore);
+  buff.Format("%d\t", request->_scores._keep_alive_score);
   result += buff;
   // DOCTYPE Score
   result += "-1\t";
   // Minify Score
   result += "-1\t";
   // Combine Score
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._combine_score);
+  result += buff;
   // Image Compression Score
-  buff.Format("%d\t", request->_scores._imageCompressionScore);
+  buff.Format("%d\t", request->_scores._image_compression_score);
   result += buff;
   // ETag Score
   result += "-1\t";
@@ -679,26 +683,27 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // SSL time (ms)
   result += "-1\t";
   // Gzip Total Bytes
-  buff.Format("%d\t", request->_scores._gzipTotal);
+  buff.Format("%d\t", request->_scores._gzip_total);
   result += buff;
   // Gzip Savings
   buff.Format("%d\t",
-    request->_scores._gzipTotal - request->_scores._gzipTarget);
+    request->_scores._gzip_total - request->_scores._gzip_target);
   result += buff;
   // Minify Total Bytes
   result += "0\t";
   // Minify Savings
   result += "0\t";
   // Image Compression Total Bytes
-  buff.Format("%d\t", request->_scores._imageCompressTotal);
+  buff.Format("%d\t", request->_scores._image_compress_total);
   result += buff;
   // Image Compression Savings
   buff.Format("%d\t",
-    request->_scores._imageCompressTotal
-    - request->_scores._imageCompressTarget);
+    request->_scores._image_compress_total
+    - request->_scores._image_compress_target);
   result += buff;
   // Cache Time (sec)
-  result += "-1\t";
+  buff.Format("%d\t", request->_scores._cache_time_secs);
+  result += buff;
   // Real Start Time (ms)
   result += "\t";
   // Full Time to Load (ms)
@@ -706,7 +711,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Optimization Checked
   result += "0\t";
   // CDN Provider
-  result += "\t";
+  result += request->_scores._cdn_provider + "\t";
   // DNS start
   buff.Format("%d\t", request->_ms_dns_start);
   result += buff;

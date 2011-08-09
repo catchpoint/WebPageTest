@@ -110,6 +110,7 @@
     <ClInclude Include="..\wptdriver\zlib\zconf.h" />
     <ClInclude Include="..\wptdriver\zlib\zlib.h" />
     <ClInclude Include="..\wptdriver\zlib\zutil.h" />
+    <ClInclude Include="cdn.h" />
     <ClInclude Include="cximage\stdint.h" />
     <ClInclude Include="cximage\xfile.h" />
     <ClInclude Include="cximage\ximabmp.h" />

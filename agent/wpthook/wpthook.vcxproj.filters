@@ -385,6 +385,9 @@
     <ClInclude Include="..\wptdriver\zlib\zutil.h">
       <Filter>Third-Party\zlib\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cdn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">

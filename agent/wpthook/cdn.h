@@ -28,70 +28,46 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-class Requests;
-class TestState;
-class Request;
-class TrackSockets;
+/*typedef struct {
+  char* pattern;
+  TCHAR* name;
+} CDN_PROVIDER;*/
+typedef struct {
+  CStringA pattern;
+  CStringA name;
+} CDN_PROVIDER;
 
-class CDNEntry
-{
-public:
-  CDNEntry(void):_is_cdn(false){}
-  CDNEntry(const CDNEntry& src){ *this = src; }
-  ~CDNEntry(void){}
-  const CDNEntry& operator =(const CDNEntry& src)
-  {
-    _name = src._name;
-    _is_cdn = src._is_cdn;
-    _provider = src._provider;
-    return src;
-  }
-  
-  CStringA _name;
-  CStringA _provider;
-  bool  _is_cdn;
-};
-
-
-class OptimizationChecks {
-public:
-  OptimizationChecks(Requests& requests, TestState& test_state);
-  ~OptimizationChecks(void);
-
-  void Check(void);
-
-  // Internal helper thread.
-  void CdnLookupThread(DWORD index);
-
-  // test information
-  int _keep_alive_score;
-  int _gzip_score;
-  DWORD _gzip_total;
-  DWORD _gzip_target;
-  int _image_compression_score;
-  DWORD _image_compress_total;
-  DWORD _image_compress_target;
-  int _cache_score;
-  int _combine_score;
-  int _static_cdn_score;
-  
-  // Helper member for CDN checking.
-  CAtlArray<Request*> _cdn_requests;
-  CAtlList<CDNEntry> _cdn_lookups;
-  CAtlArray<HANDLE> _h_cdn_threads;
-  CRITICAL_SECTION _cs_cdn;
-    
-  Requests&   _requests;
-  TestState&   _test_state;
-
-
-private:
-  void CheckKeepAlive();
-  void CheckGzip();
-  void CheckImageCompression();
-  void CheckCacheStatic();
-  void CheckCombine();
-  void StartCDNLookups();
-  void CheckCDN();
-  bool IsCDN(CStringA host, SOCKADDR_IN &server, CStringA &provider);
+CDN_PROVIDER cdnList[] = {
+  {".akamai.net", "Akamai"},
+  {".akamaiedge.net", "Akamai"},
+  {".llnwd.net", "Limelight"},
+  {"edgecastcdn.net", "Edgecast"},
+  {"hwcdn.net", "Highwinds"},
+  {".panthercdn.com", "Panther"},
+  {".simplecdn.net", "Simple CDN"},
+  {".instacontent.net", "Mirror Image"},
+  {".footprint.net", "Level 3"},
+  {".ay1.b.yahoo.com", "Yahoo"},
+  {".yimg.", "Yahoo"},
+  {".google.", "Google"},
+  {"googlesyndication.", "Google"},
+  {"youtube.", "Google"},
+  {".googleusercontent.com", "Google"},
+  {".internapcdn.net", "Internap"},
+  {".cloudfront.net", "Amazon CloudFront"},
+  {".netdna-cdn.com", "MaxCDN"},
+  {".netdna.com", "MaxCDN"},
+  {".cotcdn.net", "Cotendo CDN"},
+  {".cachefly.net", "Cachefly"},
+  {"bo.lt", "BO.LT"},
+  {".cloudflare.com", "Cloudflare"},
+  {".afxcdn.net", "afxcdn.net"},
+  {".lxdns.com", "lxdns.com"},
+  {".att-dsa.net", "AT&T"},
+  {".vo.msecnd.net", "Windows Azure"},
+  {".voxcdn.net", "VoxCDN"},
+  {".bluehatnetwork.com", "Blue Hat Network"},
+  {".swiftcdn1.com", "SwiftCDN"},
+  {".rncdn1.com", "Reflected Networks"},
+  {"END_MARKER", "END_MARKER"}
 };

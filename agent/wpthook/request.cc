@@ -58,6 +58,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _data_out_size(0)
   , _result(-1)
   , _protocol_version(-1.0)
+  , _peer_address(0)
   , _sockets(sockets)
   , _dns(dns)
   , _processed(false)
@@ -68,6 +69,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
+  _peer_address = sockets.GetPeerAddress(socket_id);
   InitializeCriticalSection(&cs);
 
   WptTrace(loglevel::kFunction, _T("[wpthook] - new request on socket %d\n"), 
@@ -469,20 +471,16 @@ CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
 }
 
 /*-----------------------------------------------------------------------------
+  Check whether the request is a static resource.
 -----------------------------------------------------------------------------*/
 bool Request::IsStatic() {
   if (!_processed)
     return false;
 
-  int temp_pos = 0;
-  CString mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
-  mime.MakeLower();
-  CString exp = GetResponseHeader("expires");
-  exp.MakeLower();
-  CString cache = GetResponseHeader("cache-control");
-  cache.MakeLower();
-  CString pragma = GetResponseHeader("pragma");
-  pragma.MakeLower();
+  CString mime = GetMime().MakeLower();
+  CString exp = GetResponseHeader("expires").MakeLower();
+  CString cache = GetResponseHeader("cache-control").MakeLower();
+  CString pragma = GetResponseHeader("pragma").MakeLower();
   CString object = _object;
   object.MakeLower();
   // TODO: Include conditions below that it is not a base page and a network request.
@@ -498,14 +496,14 @@ bool Request::IsStatic() {
 }
 
 /*-----------------------------------------------------------------------------
+  Check whether the request is gzippable.
 -----------------------------------------------------------------------------*/
-bool Request::IsGzippable() {
+bool Request::IsText() {
   if (!_processed)
     return false;
 
   int temp_pos = 0;
-  CStringA mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
-  mime.MakeLower();
+  CStringA mime = GetMime().MakeLower();
   if( mime.Find("text/") >= 0 || mime.Find("javascript") >= 0
     || mime.Find("json") >= 0 || mime.Find("xml") >= 0 ) {
     return true;
@@ -514,6 +512,7 @@ bool Request::IsGzippable() {
 }
 
 /*-----------------------------------------------------------------------------
+  Parse out the host from the headers.
 -----------------------------------------------------------------------------*/
 CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
@@ -523,11 +522,22 @@ CStringA Request::GetHost() {
 }
 
 /*-----------------------------------------------------------------------------
+  Parse out the mime from the headers.
 -----------------------------------------------------------------------------*/
-void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present) {
+CStringA Request::GetMime() {
+  int temp_pos = 0;
+  CStringA mime = GetResponseHeader("content-type").Tokenize(";", temp_pos);
+  return mime;
+}
+
+/*-----------------------------------------------------------------------------
+  Parse out the expires time in seconds.
+-----------------------------------------------------------------------------*/
+void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present,
+  bool& cache_control_present) {
   CStringA exp = GetResponseHeader("expires");
   exp.MakeLower();
-  if( exp.GetLength() )
+  if( !exp.IsEmpty() )
     exp_present = true;
   CStringA cache = GetResponseHeader("cache-control");
   cache.MakeLower();
@@ -538,10 +548,28 @@ void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cach
     int eq = cache.Find("=", index);
     if( eq > -1 ) {
       eq++;
-      CString str = cache.Right(cache.GetLength() - eq);
-      age_in_seconds = _ttol(str);
+      CStringA str = cache.Right(cache.GetLength() - eq);
+      // Strip off the ", public" etc from the string.
+      int temp_pos = 0;
+      CStringA age_str = str.Tokenize(",", temp_pos);
+      age_in_seconds = _ttol(CA2T(age_str));
     }
   }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Get the start time of this request.
+-----------------------------------------------------------------------------*/
+LARGE_INTEGER Request::GetStartTime() {
+  return _start;
+}
+
+/*-----------------------------------------------------------------------------
+  Get the peer ip address for this request in ULONG.
+-----------------------------------------------------------------------------*/
+ULONG Request::GetPeerAddress() {
+  return _peer_address;
 }
 
 /*-----------------------------------------------------------------------------

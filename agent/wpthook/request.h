@@ -91,24 +91,31 @@ typedef CAtlList<HeaderField> Fields;
 class OptimizationScores {
 public:
   OptimizationScores():
-    _keepAliveScore(-1)
-    , _gzipScore(-1)
-    , _gzipTotal(0)
-    , _gzipTarget(0)
-    , _imageCompressionScore(-1)
-    , _imageCompressTotal(0)
-    , _imageCompressTarget(0)
-    , _cacheScore(-1)
+    _keep_alive_score(-1)
+    , _gzip_score(-1)
+    , _gzip_total(0)
+    , _gzip_target(0)
+    , _image_compression_score(-1)
+    , _image_compress_total(0)
+    , _image_compress_target(0)
+    , _cache_score(-1)
+    , _cache_time_secs(-1)
+    , _combine_score(-1)
+    , _static_cdn_score(-1)
   {}
   ~OptimizationScores() {}
-  int _keepAliveScore;
-  int _gzipScore;
-  DWORD _gzipTotal;
-  DWORD _gzipTarget;
-  int _imageCompressionScore;
-  DWORD _imageCompressTotal;
-  DWORD _imageCompressTarget;
-  int _cacheScore;
+  int _keep_alive_score;
+  int _gzip_score;
+  DWORD _gzip_total;
+  DWORD _gzip_target;
+  int _image_compression_score;
+  DWORD _image_compress_total;
+  DWORD _image_compress_target;
+  int _cache_score;
+  DWORD _cache_time_secs;
+  int _combine_score;
+  int _static_cdn_score;
+  CStringA _cdn_provider;
 };
 
 class Request {
@@ -123,9 +130,12 @@ public:
   void SocketClosed();
   bool Process();
   bool IsStatic();
-  bool IsGzippable();
+  bool IsText();
   CStringA GetHost();
+  CStringA GetMime();
+  LARGE_INTEGER GetStartTime();
   void GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present);
+  ULONG GetPeerAddress();
 
   DWORD _data_sent;
   DWORD _data_received;
@@ -147,7 +157,8 @@ public:
   CStringA  _method;
   CStringA  _object;
   int       _result;
-  double       _protocol_version;
+  double    _protocol_version;
+  ULONG     _peer_address;
 
   // processed data
   unsigned char * _body_in;
@@ -169,7 +180,7 @@ private:
   LARGE_INTEGER _end;
 
   CRITICAL_SECTION cs;
-  bool          _active;
+  bool      _active;
   Fields    _in_fields;
   Fields    _out_fields;
   bool      _headers_complete;
