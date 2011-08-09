@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "../wptdriver/wpt_test.h"
 
-const DWORD MAX_DATA_TO_RETAIN = 1048576;  // 1MB
+const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -61,7 +61,10 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _sockets(sockets)
   , _dns(dns)
   , _processed(false)
-  , _headers_complete(false) {
+  , _headers_complete(false)
+  , _body_in_allocated(false)
+  , _body_in(NULL)
+  , _body_in_size(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -81,6 +84,8 @@ Request::~Request(void) {
     free(_data_in);
   if (_data_out)
     free(_data_out);
+  if (_body_in_allocated && _body_in)
+    free(_body_in);
   LeaveCriticalSection(&cs);
   DeleteCriticalSection(&cs);
 }
@@ -411,6 +416,8 @@ void Request::ProcessResponse() {
         _result = atoi(result);
     }
   }
+
+  DechunkResponse();
 }
 
 /*-----------------------------------------------------------------------------
@@ -461,6 +468,8 @@ CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
   return value;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool Request::IsStatic() {
   if (!_processed)
     return false;
@@ -488,6 +497,8 @@ bool Request::IsStatic() {
   return false;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool Request::IsGzippable() {
   if (!_processed)
     return false;
@@ -502,6 +513,8 @@ bool Request::IsGzippable() {
   return false;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
   if (!host.GetLength())
@@ -509,6 +522,8 @@ CStringA Request::GetHost() {
   return host;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present) {
   CStringA exp = GetResponseHeader("expires");
   exp.MakeLower();
@@ -525,6 +540,67 @@ void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cach
       eq++;
       CString str = cache.Right(cache.GetLength() - eq);
       age_in_seconds = _ttol(str);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Dechunk a chunked response if necessary.  Regardless, at the end the
+  _data_in member will point to the response data
+-----------------------------------------------------------------------------*/
+void Request::DechunkResponse() {
+  if (_data_in && _data_in_size) {
+    const char * header_end = strstr(_data_in, "\r\n\r\n");
+    if (header_end) {
+      DWORD header_len = (header_end - _data_in) + 4;
+      if (_data_in_size > header_len) {
+        if (GetResponseHeader("transfer-encoding").Find("chunked") > -1) {
+          // build a list of the data chunks before allocating the memory
+          CAtlList<DataChunk> chunks;
+          DWORD data_size = 0;
+          char * end = _data_in + _data_in_size;
+          char * data = _data_in + header_len;
+          while (data < end) {
+            char * data_chunk = strstr(data, "\r\n");
+            if (data_chunk) {
+              data_chunk += 2;
+              if (data_chunk < end) {
+                int chunk_len = strtoul(data, NULL, 16);
+                if (chunk_len > 0 && data_chunk + chunk_len < end) {
+                  DataChunk chunk(data_chunk, chunk_len, false);
+                  chunks.AddTail(chunk);
+                  data = data_chunk + chunk_len + 2;
+                  data_size += chunk_len;
+                } else {
+                  break;
+                }
+              } else {
+                break;
+              }
+            } else {
+              break;
+            }
+          }
+          // allocate a new buffer to hold the dechunked body
+          if (data_size) {
+            _body_in = (unsigned char *)malloc(data_size + 1);
+            _body_in_size = data_size;
+            _body_in_allocated = true;
+            data = (char *)_body_in;
+            POSITION pos = chunks.GetHeadPosition();
+            while (pos) {
+              DataChunk chunk = chunks.GetNext(pos);
+              memcpy(data, chunk._data, chunk._data_len);
+              data += chunk._data_len;
+            }
+            // NULL-terminate it for convenience for string processing
+            _body_in[data_size] = NULL;
+          }
+        } else {
+          _body_in = (unsigned char *)_data_in + header_len;
+          _body_in_size = _data_in_size - header_len;
+        }
+      }
     }
   }
 }

@@ -35,12 +35,19 @@ class WptTest;
 
 class DataChunk {
 public:
-  DataChunk():_data(NULL),_data_len(0){}
-  DataChunk(const char * data, DWORD data_len):_data(NULL),_data_len(0) {
+  DataChunk():_data(NULL),_data_len(0),_allocated(false) {}
+  DataChunk(const char * data, DWORD data_len, bool copy = true):
+    _data(NULL),_data_len(0) {
     if (data && data_len) {
-      _data_len = data_len;
-      _data = (char *)malloc(data_len);
-      memcpy(_data, data, data_len);
+      if (copy) {
+        _allocated = true;
+        _data_len = data_len;
+        _data = (char *)malloc(data_len);
+        memcpy(_data, data, data_len);
+      } else {
+        _data_len = data_len;
+        _data = (char *)data;
+      }
     }
   }
   DataChunk(const DataChunk& src){*this = src;}
@@ -48,17 +55,20 @@ public:
   const DataChunk& operator =(const DataChunk& src) {
     _data = src._data;
     _data_len = src._data_len;
+    _allocated = src._allocated;
     return src;
   }
   void Free(void) {
-    if (_data)
+    if (_data && _allocated)
       free(_data);
     _data = NULL;
     _data_len = 0;
+    _allocated = false;
   }
 
   char *  _data;
   DWORD   _data_len;
+  bool    _allocated;
 };
 
 class HeaderField {
@@ -139,11 +149,9 @@ public:
   int       _result;
   double       _protocol_version;
 
-  // merged data chunks
-  char *  _data_in;
-  char *  _data_out;
-  DWORD   _data_in_size;
-  DWORD   _data_out_size;
+  // processed data
+  unsigned char * _body_in;
+  DWORD           _body_in_size;
 
   // Optimization score data.
   OptimizationScores _scores;
@@ -166,6 +174,13 @@ private:
   Fields    _out_fields;
   bool      _headers_complete;
 
+  // merged data chunks
+  char *  _data_in;
+  char *  _data_out;
+  DWORD   _data_in_size;
+  DWORD   _data_out_size;
+  bool    _body_in_allocated;
+
   // data transmitted in the chunks as it was transmitted
   CAtlList<DataChunk> _data_chunks_in;
   CAtlList<DataChunk> _data_chunks_out;
@@ -177,5 +192,6 @@ private:
   void ProcessResponse();
   void ExtractFields(CStringA& header, Fields& fields);
   CStringA GetHeaderValue(Fields& fields, CStringA header);
+  void DechunkResponse();
 };
 

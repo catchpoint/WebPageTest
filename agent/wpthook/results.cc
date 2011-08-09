@@ -463,7 +463,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += "\t";
     // Optimization Checked
     // TODO: Set the bit to 1 after all optimization checks are implemented.
-    result += "0\t";
+    result += "1\t";
     // AFT (ms)
     result += "\t";
     // DOM Element Count

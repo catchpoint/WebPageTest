@@ -156,24 +156,18 @@ void OptimizationChecks::CheckGzip()
         request->_scores._gzipScore = 100;
 
       if( !request->_scores._gzipScore ) {
-        // Strip off the headers and get only the body from data in buffer.
-        char* body = request->_data_in + request->_in_header.GetLength();;
-        DWORD bodyLen = request->_data_in_size - request->_in_header.GetLength();
-
         // Try gzipping to see how smaller it will be.
-        // TODO: Check with Patrick whether the data received need/neednot
-        // does/doesnot include headers.
         DWORD origSize = request->_data_received;
-        DWORD origLen = bodyLen;
+        DWORD origLen = request->_body_in_size;
         DWORD headSize = request->_in_header.GetLength();
-        if( origLen && body ) {
+        if( origLen && request->_body_in ) {
           DWORD len = compressBound(origLen);
           if( len ) {
             char* buff = (char*) malloc(len);
             if( buff ) {
               // Do the compression and check the target bytes to set for this.
-              if( compress2((LPBYTE)buff, &len, (LPBYTE)body, origLen, 9)
-                == Z_OK )
+              if( compress2((LPBYTE)buff, &len, (LPBYTE)request->_body_in, 
+                  origLen, 9) == Z_OK )
                 targetRequestBytes = len + headSize;
               free(buff);
             }
@@ -244,20 +238,17 @@ void OptimizationChecks::CheckImageCompression()
         temp_pos);
       mime.MakeLower();
 
-      // Strip off the headers and get only the body from data-in buffer.
-      char* body = request->_data_in + request->_in_header.GetLength();;
-      DWORD bodyLen = request->_data_in_size - request->_in_header.GetLength();
-            
       // If there is response body and it is an image.
-      if( mime.Find("image/") >= 0 && body && bodyLen > 0 ) {
-        DWORD targetRequestBytes = bodyLen;
+      if( mime.Find("image/") >= 0 && request->_body_in && 
+        request->_body_in_size > 0 ) {
+        DWORD targetRequestBytes = request->_body_in_size;
         DWORD size = targetRequestBytes;
         count++;
         
         CxImage img;
         // Decode the image with an exception protected function.
-        if( DecodeImage(img, (uint8_t*) body, bodyLen,
-          CXIMAGE_FORMAT_UNKNOWN) ) {
+        if( DecodeImage(img, (uint8_t*) request->_body_in, 
+            request->_body_in_size, CXIMAGE_FORMAT_UNKNOWN) ) {
           DWORD type = img.GetType();
           switch( type )
           {
@@ -280,7 +271,7 @@ void OptimizationChecks::CheckImageCompression()
                 // If the original was within 10%, then give 100
                 // If it's less than 50% bigger then give 50
                 // More than that is a fail
-                double orig = bodyLen;
+                double orig = request->_body_in_size;
                 double newLen = (double)len;
                 double delta = orig / newLen;
                 if( delta < 1.1 )
