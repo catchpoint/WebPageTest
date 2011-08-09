@@ -13,7 +13,7 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 48);          // version of the sitewide css file
+define('VER_CSS', 50);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
@@ -503,14 +503,23 @@ function gz_file_get_contents($file)
 */
 function gz_file_put_contents($filename, &$data)
 {
+    global $settings;
     $ret = false;
     
-    $zip = gzopen("$filename.gz", 'wb9');
-    if( $zip !== false )
+    if( !$settings['nogzip'] )
     {
-        if( gzwrite($zip, $data) )
+        $zip = gzopen("$filename.gz", 'wb9');
+        if( $zip !== false )
+        {
+            if( gzwrite($zip, $data) )
+                $ret = true;
+            gzclose($zip);
+        }
+    }
+    else
+    {
+        if( file_put_contents($filename, $data) )
             $ret = true;
-        gzclose($zip);
     }
     
     return $ret;
@@ -540,12 +549,16 @@ function gz_file($filename)
 */
 function gz_compress($filename)
 {
+    global $settings;
     $ret = false;
     
-    $data = file_get_contents($filename);
-    if( $data ){
-        $ret = gz_file_put_contents($filename, $data);
-        unset($data);
+    if( !$settings['nogzip'] )
+    {
+        $data = file_get_contents($filename);
+        if( $data ){
+            $ret = gz_file_put_contents($filename, $data);
+            unset($data);
+        }
     }
     
     return $ret;

@@ -92,6 +92,18 @@
         $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
         $test['queue_limit'] = 0;
         
+        // modify the script to include additional headers (if appropriate)
+        if( strlen($req_addheaders) && strlen($test['script']) )
+        {
+            $headers = explode("\n", $req_addheaders);
+            foreach( $headers as $header )
+            {
+                $header = trim($header);
+                if( strpos($header, ':') )
+                    $test['script'] = "addHeader\t$header\r\n" . $test['script'];
+            }
+        }
+        
         // see if it is a batch test
         $test['batch'] = 0;
         if( (isset($req_bulkurls) && strlen($req_bulkurls)) || 
@@ -1120,15 +1132,15 @@ function GetRedirectHost($url, &$rhost)
         if( is_array($location) )
         {
             $parts = parse_url($location[count($location) - 1]);
-            $final = $parts['host'];
+            $final = trim($parts['host']);
         }
         elseif( strlen($location) )
         {
             $parts = parse_url($location);
-            $final = $parts['host'];
+            $final = trim($parts['host']);
         }
         
-        if( $original !== $final )
+        if( strlen($final) && $original !== $final )
         {
             $rhost = $final;
             $redirected = true;

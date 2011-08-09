@@ -172,6 +172,17 @@ $page_description = "Comparison Test$testLabel.";
                             <label for="wait">Expected Wait</label>
                             <span id="wait"></span>
                         </li>
+                        <?php
+                        if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
+                        {
+                        ?>
+                        <li>
+                            <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-Expt-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
+                            <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
+                        </li>
+                        <?php
+                        }
+                        ?>
                     </ul>
                 </div>
             </div>
