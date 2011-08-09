@@ -89,7 +89,7 @@ else
             }
         </style>
         </style>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/player/flowplayer-3.2.6.min.js"></script>
+        <script type="text/javascript" src="/video/player/flowplayer-3.2.6.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -893,7 +893,7 @@ function VideoHtml($id)
     echo "<script>\n
                     flowplayer(\"player$videoCount\", \n
                                     {\n
-                                        src: \"{$GLOBALS['cdnPath']}/video/player/flowplayer-3.2.7.swf\",\n
+                                        src: \"/video/player/flowplayer-3.2.7.swf\",\n
                                         cachebusting: true,\n
                                         version: [9, 115]\n
                                     } , \n
@@ -904,11 +904,11 @@ function VideoHtml($id)
                                         playlist: [";
     if( $hasThumb )
     {
-        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.png'} ,\n";
-        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
+        echo "{ url: '/$dir/video.png'} ,\n";
+        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
     }
     else
-        echo "{ url: '{$GLOBALS['cdnPath']}/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
+        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
     echo "                          ],\n
                                         plugins: {\n
                                             controls: {\n
