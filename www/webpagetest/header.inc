@@ -81,7 +81,7 @@
             if( is_dir('forums') && !$settings['disableMybb'] )
                 $navTabs['Forums'] = '/forums/';
             
-            $navTabs['Documentation'] = 'http://www.webperformancecentral.com/wiki/WebPagetest';
+            $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
                 
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
