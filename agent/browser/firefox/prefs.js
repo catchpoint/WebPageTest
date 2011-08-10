@@ -11,6 +11,8 @@
 
 user_pref("app.update.enabled", false);
 user_pref("browser.bookmarks.restore_default_bookmarks", false);
+user_pref("browser.bookmarks.added_static_root", true);
+user_pref("browser.places.importBookmarksHTML", false);
 user_pref("browser.cache.disk.capacity", 1048576);
 user_pref("browser.cache.disk.smart_size.first_run", false);
 user_pref("browser.cache.disk.smart_size_cached_value", 1048576);
@@ -44,3 +46,5 @@ user_pref("services.sync.migrated", true);
 user_pref("services.sync.engine.bookmarks", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("gfx.direct2d.disabled", true);
+user_pref("xpinstall.whitelist.add", "");
+user_pref("xpinstall.whitelist.add.36", "");
