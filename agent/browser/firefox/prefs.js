@@ -41,5 +41,6 @@ user_pref("security.warn_entering_secure", false);
 user_pref("security.warn_leaving_secure", false);
 user_pref("security.warn_submit_insecure", false);
 user_pref("services.sync.migrated", true);
+user_pref("services.sync.engine.bookmarks", false);
 user_pref("layers.acceleration.disabled", true);
 user_pref("gfx.direct2d.disabled", true);
