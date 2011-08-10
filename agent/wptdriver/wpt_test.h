@@ -50,35 +50,35 @@ public:
 
 class CDNSEntry {
 public:
-	CDNSEntry():addr(0){}
-	CDNSEntry(CString nm, LPCTSTR address) {
-		name = nm;
-		addr = inet_addr(CT2A(address));
-	}
-	CDNSEntry( const CDNSEntry& src){*this = src;}
-	~CDNSEntry(void){}
-	const CDNSEntry& operator =(const CDNSEntry& src)	{
-		name = src.name;
-		addr = src.addr;
-		return src;
-	}
-	CString	name;
-	ULONG	  addr;
+  CDNSEntry():addr(0){}
+  CDNSEntry(CString nm, LPCTSTR address) {
+    name = nm;
+    addr = inet_addr(CT2A(address));
+  }
+  CDNSEntry( const CDNSEntry& src){*this = src;}
+  ~CDNSEntry(void){}
+  const CDNSEntry& operator =(const CDNSEntry& src)	{
+    name = src.name;
+    addr = src.addr;
+    return src;
+  }
+  CString	name;
+  ULONG	  addr;
 };
 
 class CDNSName {
 public:
-	CDNSName(){}
-	CDNSName(CString nm, CString rn):name(nm),realName(rn){}
-	CDNSName( const CDNSName& src){*this = src;}
-	~CDNSName(void){}
-	const CDNSName& operator =(const CDNSName& src)	{
-		name = src.name;
-		realName = src.realName;
-		return src;
-	}
-	CString	name;
-	CString	realName;
+  CDNSName(){}
+  CDNSName(CString nm, CString rn):name(nm),realName(rn){}
+  CDNSName( const CDNSName& src){*this = src;}
+  ~CDNSName(void){}
+  const CDNSName& operator =(const CDNSName& src)	{
+    name = src.name;
+    realName = src.realName;
+    return src;
+  }
+  CString	name;
+  CString	realName;
 };
 
 class HttpHeaderValue {
@@ -158,8 +158,8 @@ protected:
   CAtlList<ScriptCommand> _script_commands;
 
   // DNS overrides
-	CAtlList<CDNSEntry>			_dns_override;
-	CAtlList<CDNSName>			_dns_name_override;
+  CAtlList<CDNSEntry>			_dns_override;
+  CAtlList<CDNSName>			_dns_name_override;
 
   // header overrides
   CStringA  _user_agent;

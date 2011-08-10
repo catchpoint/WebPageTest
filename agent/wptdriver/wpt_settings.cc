@@ -56,6 +56,7 @@ bool WptSettings::Load(void) {
   iniFile[0] = 0;
   GetModuleFileName(NULL, iniFile, _countof(iniFile));
   lstrcpy( PathFindFileName(iniFile), _T("wptdriver.ini") );
+  _ini_file = iniFile;
   lstrcpy(logFile, iniFile);
   lstrcpy( PathFindFileName(logFile), _T("wpt.log") );
   DeleteFile(logFile);
@@ -99,16 +100,25 @@ bool WptSettings::Load(void) {
     _web_page_replay_host = buff;
   }
 
-  // Load the browser settings.
-  CString browser("chrome");  // default to "chrome" to support older ini files
-  if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
-    _countof(buff), iniFile )) {
-    browser = buff;
-  }
-  if (!_browser.Load(browser, iniFile)) {
-    ret = false;
-  }
+  return ret;
+}
 
+/*-----------------------------------------------------------------------------
+  Load the settings for the specified browser 
+  (this will be done on every test run in order to support 
+  multi-browser testing)
+-----------------------------------------------------------------------------*/
+bool WptSettings::SetBrowser(CString browser) {
+  TCHAR buff[1024];
+  if (!browser.GetLength()) {
+    browser = _T("chrome");  // default to "chrome" to support older ini file
+    if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
+      _countof(buff), _ini_file )) {
+      browser = buff;
+    }
+  }
+  // try loading the settings for the specified browser
+  bool ret = _browser.Load(browser, _ini_file);
   return ret;
 }
 

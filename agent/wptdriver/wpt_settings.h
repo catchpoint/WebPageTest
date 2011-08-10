@@ -60,6 +60,7 @@ public:
   WptSettings(void);
   ~WptSettings(void);
   bool Load(void);
+  bool SetBrowser(CString browser);
 
   CString _server;
   CString _location;
@@ -69,7 +70,7 @@ public:
   DWORD   _polling_delay;
   int     _debug;
   CString _web_page_replay_host;
+  CString _ini_file;
 
-  // TODO(slamm): Change to a map for multi-browser support.
   BrowserSettings _browser;
 };

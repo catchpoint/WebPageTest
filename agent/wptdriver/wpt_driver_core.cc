@@ -122,26 +122,28 @@ void WptDriverCore::WorkThread(void) {
     WptTestDriver test;
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
-      WebBrowser browser(_settings, test, _status, _settings._browser);
-      if (SetupWebPageReplay(test, browser) &&
-          !TracerouteTest(test) &&
-          ConfigureIpfw(test)) {
-        for (test._run = 1; test._run <= test._runs; test._run++) {
-          test._clear_cache = true;
-          BrowserTest(test, browser);
-          if (!test._fv_only) {
-            test._clear_cache = false;
+      if (_settings.SetBrowser(test._browser)) {
+        WebBrowser browser(_settings, test, _status, _settings._browser);
+        if (SetupWebPageReplay(test, browser) &&
+            !TracerouteTest(test) &&
+            ConfigureIpfw(test)) {
+          for (test._run = 1; test._run <= test._runs; test._run++) {
+            test._clear_cache = true;
             BrowserTest(test, browser);
+            if (!test._fv_only) {
+              test._clear_cache = false;
+              BrowserTest(test, browser);
+            }
           }
         }
-      }
-      ResetIpfw();
+        ResetIpfw();
 
-      bool uploaded = false;
-      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-        uploaded = _webpagetest.TestDone(test);
-        if( !uploaded )
-          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+        bool uploaded = false;
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
+          uploaded = _webpagetest.TestDone(test);
+          if( !uploaded )
+            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+        }
       }
       ReleaseMutex(_testing_mutex);
     } else {
