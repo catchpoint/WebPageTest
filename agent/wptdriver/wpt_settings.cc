@@ -127,12 +127,21 @@ bool WptSettings::SetBrowser(CString browser) {
 bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   bool ret = false;
   TCHAR buff[4096];
+  _browser = browser;
 
-  CString wpt_directory;
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
-  wpt_directory = buff;
-  wpt_directory.Trim(_T("\\"));
+  _wpt_directory = buff;
+  _wpt_directory.Trim(_T("\\"));
+
+  // create a profile directory for the given browser
+  _profile_directory = _wpt_directory + _T("\\profiles\\");
+  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, buff)) ) {
+    PathAppend(buff, _T("webpagetest_profiles\\"));
+    _profile_directory = buff;
+  }
+  _profile_directory += browser;
 
   if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
     _countof(buff), iniFile )) {
@@ -150,21 +159,21 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _countof(buff), iniFile )) {
     _options = buff;
     _options.Trim(_T("\""));
-    _options.Replace(_T("%WPTDIR%"), wpt_directory);
+    _options.Replace(_T("%WPTDIR%"), _wpt_directory);
+    _options.Replace(_T("%PROFILE%"), _profile_directory);
   }
 
-  if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    _cache = buff;
-    _cache.Trim(_T("\""));
-    _cache.Replace(_T("%WPTDIR%"), wpt_directory);
-  }
-
-  if (GetPrivateProfileString(browser, _T("setup_cmd"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    _setup_cmd = buff;
-    _setup_cmd.Trim(_T("\""));
-    _setup_cmd.Replace(_T("%WPTDIR%"), wpt_directory);
-  }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Reset the browser user profile (nuke the directory, copy the template over)
+-----------------------------------------------------------------------------*/
+void BrowserSettings::ResetProfile() {
+  if (_profile_directory.GetLength() ) {
+    SHCreateDirectoryEx(NULL, _profile_directory, NULL);
+    DeleteDirectory(_profile_directory, false);
+    CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\")) + _browser,
+                      _profile_directory);
+  }
 }

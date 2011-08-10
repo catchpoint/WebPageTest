@@ -62,8 +62,10 @@
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\\"
-xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
+      <Command>copy /Y *.ini "$(outdir)\"
+mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
+xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -92,8 +94,9 @@ xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\extension"
-xcopy /Y /E /S /I "..\browser\firefox" "$(outdir)\firefox"
+mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
+xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>

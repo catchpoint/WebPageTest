@@ -46,12 +46,14 @@ public:
   BrowserSettings(){}
   ~BrowserSettings(){}
   bool Load(const TCHAR * browser, const TCHAR * iniFile);
+  void ResetProfile();
 
+  CString _browser;
   CString _exe;
   CString _options;
-  CString _cache;
+  CString _wpt_directory;
   CString _exe_directory;
-  CString _setup_cmd;
+  CString _profile_directory;
 };
 
 // dynamic settings loaded from file

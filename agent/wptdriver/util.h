@@ -42,6 +42,7 @@ namespace loglevel {
 
 bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL);
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
+void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
                           HWND& document_window);
 void WptTrace(int level, LPCTSTR format, ...);

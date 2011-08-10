@@ -12,10 +12,8 @@ exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 ; of copying the extension when doing a build.
 ; Note: --enable-experimental-extension-apis is used for block command in wpt
 ; scripting and it works only in the dev channel of chrome.
-options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-data-dir="%WPTDIR%\chrome_user_data" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
-cache="%WPTDIR%\chrome_user_data"
+options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
 
 [firefox]
 exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-options='-profile "%WPTDIR%\firefox_profile" -no-remote'
-setup_cmd='C:\Python26\python.exe "%WPTDIR%\firefox\profile_setup.py" --profile_zip="%WPTDIR%\firefox\firefox5_profile.zip" --profile_dir="%WPTDIR%\firefox_profile" --extension_dir="%WPTDIR%\firefox\extension"'
+options='-profile "%PROFILE%" -no-remote'

@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tchar.h>
 #include <Ws2tcpip.h>
 
+#include <shlobj.h>
 #include <atlstr.h>
 #include <atlcoll.h>
 #include "../wptdriver/util.h"

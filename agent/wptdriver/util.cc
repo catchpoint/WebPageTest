@@ -98,6 +98,30 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
 }
 
 /*-----------------------------------------------------------------------------
+  recursively copy a directory and it's files
+-----------------------------------------------------------------------------*/
+void CopyDirectoryTree(CString source, CString destination) {
+  if (source.GetLength() && destination.GetLength()) {
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = FindFirstFile(source + _T("\\*.*"), &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      SHCreateDirectoryEx(NULL, destination, NULL);
+      do {
+        if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName,_T(".."))) {
+          CString src = source + CString(_T("\\")) + fd.cFileName;
+          CString dest = destination + CString(_T("\\")) + fd.cFileName;
+          if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            CopyDirectoryTree(src, dest);
+          else
+            CopyFile(src, dest, FALSE);
+        }
+      }while(FindNextFile(hFind, &fd));
+      FindClose(hFind);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Find what we assume is the browser document window:
   Largest child window that:
   - Is visible
@@ -173,22 +197,22 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window,
 -----------------------------------------------------------------------------*/
 void WptTrace(int level, LPCTSTR format, ...) {
   if (WptCheckLogLevel(level)) {
-	  va_list args;
-	  va_start( args, format );
+    va_list args;
+    va_start( args, format );
 
-	  int len = _vsctprintf( format, args ) + 1;
-	  if (len) {
-		  TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
-		  if (msg) {
-			  if (_vstprintf_s( msg, len, format, args ) > 0) {
+    int len = _vsctprintf( format, args ) + 1;
+    if (len) {
+      TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
+      if (msg) {
+        if (_vstprintf_s( msg, len, format, args ) > 0) {
           #ifdef DEBUG
-				  OutputDebugString(msg);
+          OutputDebugString(msg);
           #endif
           WptLogMessage(msg);
         }
 
-			  free( msg );
-		  }
-	  }
+        free( msg );
+      }
+    }
   }
 }
