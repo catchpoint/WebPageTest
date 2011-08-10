@@ -17,5 +17,5 @@ cache="%WPTDIR%\chrome_user_data"
 
 [firefox]
 exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-options='-profile="%WPTDIR%\firefox_profile" -no-remote'
+options='-profile "%WPTDIR%\firefox_profile" -no-remote'
 setup_cmd='C:\Python26\python.exe "%WPTDIR%\firefox\profile_setup.py" --profile_zip="%WPTDIR%\firefox\firefox5_profile.zip" --profile_dir="%WPTDIR%\firefox_profile" --extension_dir="%WPTDIR%\firefox\extension"'
