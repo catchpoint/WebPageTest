@@ -9,6 +9,12 @@ $counts = array();
 foreach($regions as $region => &$regionData)
     $counts[$region] = 0;
 
+// we only terminate instances at the top of the hour, but we can add instances at other times
+$addOnly = true;
+$minute = (int)date('i');
+if( $minute < 5 || $minute > 55 )
+    $addOnly = false;
+
 echo "Fetching list of running instances...\n";
 $ec2 = new AmazonEC2($keyID, $secret);
 if( $ec2 )
@@ -38,11 +44,11 @@ if( $ec2 )
                     if( $instance->instanceState->code <= 16 )
                     {
                         $id = (string)$instance->instanceId;
-                        if( array_key_exists($id, $testers) )
+                        if( array_key_exists($id, $testers) || $addOnly )
                         {
                             if( $testers[$id]['offline'] )
                                 $offlineCount++;
-                            elseif( strlen($testers[$id]['test']) )
+                            elseif( strlen($testers[$id]['test']) || $addOnly )
                                 $activeCount++;
                             else
                                 $idleCount++;
@@ -102,7 +108,7 @@ if( $ec2 )
             }
             else
                 echo "failed\n";
-        } elseif( $needed < 0 ) {
+        } elseif( $needed < 0 && !$addOnly ) {
             // lock the location while we mark some free instances for decomm
             $count = abs($needed);
             if( $lock = LockLocation($location) )
@@ -127,18 +133,21 @@ if( $ec2 )
         }
         
         // final step, terminate the instances we don't need
-        $termCount = count($terminate);
-        echo "Terminating $termCount out of {$counts[$region]} instances running in $region...";
-        if( $termCount )
+        if( !$addOnly )
         {
-            $response = $ec2->terminate_instances($terminate);
-            if( $response->isOK() )
-                echo "ok\n";
+            $termCount = count($terminate);
+            echo "Terminating $termCount out of {$counts[$region]} instances running in $region...";
+            if( $termCount )
+            {
+                $response = $ec2->terminate_instances($terminate);
+                if( $response->isOK() )
+                    echo "ok\n";
+                else
+                    echo "failed\n";
+            }
             else
-                echo "failed\n";
+                echo "ok\n";
         }
-        else
-            echo "ok\n";
     }
 }
 
@@ -153,5 +162,6 @@ foreach( $counts as $region => $count )
 echo $countsTxt;
 
 // send out a mail message with the current counts (until we get comfortable with it)
-mail('pmeenan@webpagetest.org', $summary, $countsTxt );
+if( !$addOnly )
+    mail('pmeenan@webpagetest.org', $summary, $countsTxt );
 ?>

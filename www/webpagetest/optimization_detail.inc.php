@@ -133,7 +133,7 @@ function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
         if( !isset($score) )
         {
             $target = getTargetTTFB($pageData, $test, $id, $run, $cached);
-            $score = (int)max(100 - (($ttfb - $target) / 10), 0);
+            $score = (int)min(max(100 - (($ttfb - $target) / 10), 0), 100);
         }
     }
     
@@ -182,7 +182,7 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
                 $sslTime = $requests[0]['sslTime'];
             
             // RTT's: DNS + Socket Connect + HTTP Request
-            $target =  ($rtt * 3) + sslTime;
+            $target =  ($rtt * 3) + $sslTime;
         }
     }
     
