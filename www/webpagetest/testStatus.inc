@@ -2,9 +2,6 @@
 require_once('common.inc');
 require_once('page_data.inc');
 
-$locations = parse_ini_file('./settings/locations.ini', true);
-BuildLocations($locations);
-
 $testQueue = array();
 
 /**
@@ -13,7 +10,6 @@ $testQueue = array();
 */
 function GetTestStatus($id, $includePosition = true)
 {
-    global $locations;
     global $testQueue;
     
     $ret = array('statusCode' => 400, 'statusText' => 'Test not found');

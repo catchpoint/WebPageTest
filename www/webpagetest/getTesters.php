@@ -84,7 +84,7 @@ function LoadLocations()
         $j = 1;
         while( isset($group[$j]) )
         {
-            $locations[$group[$j]] = array();
+            $locations[$loc[$group[$j]]['location']] = array();
 
             $j++;
         }

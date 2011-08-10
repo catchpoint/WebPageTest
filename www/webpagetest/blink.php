@@ -263,8 +263,6 @@ $page_description = "Comparison Test$testLabel.";
 function LoadLocations()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
-    
     FilterLocations( $locations, 'blink', array('IE', '6', '7', '8', '9', 'dynaTrace') );
     //FilterLocations( $locations);
     

@@ -183,8 +183,6 @@ $page_description = "Test network path from multiple locations around the world 
 function LoadLocations()
 {
     $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
-    
     FilterLocations( $locations );
     
     // strip out any sensitive information

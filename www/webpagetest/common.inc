@@ -667,15 +667,94 @@ function CountTests($path)
 */
 function BuildLocations( &$locations )
 {
-    // build the path to the work queue dynamically
-    foreach( $locations as $name => &$loc )
+    if( !$locations['processed'] )
     {
-        if( isset($loc['browser']) )
+        // dynamically create a whole new tree based on the data from the locations
+        // the main reason for this is to be able to support multiple browsers in each "location"
+        $original = $locations;
+        $locations = array();
+        
+        // start from the top-level locations
+        foreach( $original as $name => $loc )
         {
-            $loc['localDir'] = "./work/jobs/$name";
-            if( !is_dir($loc['localDir']) )
-                mkdir($loc['localDir'], 0777, true);
+            // just the top-level locations
+            if( isset($loc['browser']) )
+            {
+                // clone the existing locations over for code that just accesses them directly
+                $loc['localDir'] = "./work/jobs/$name";
+                $loc['location'] = $name;
+                if( !is_dir($loc['localDir']) )
+                    mkdir($loc['localDir'], 0777, true);
+                $locations[$name] = $loc;
+            }
+            else
+            {
+                if( $name == 'locations' )
+                    $locations[$name] = $loc;
+                else
+                {    
+                    $index = 1;
+                    $default = $loc['default'];
+                    $location = array();
+                    foreach( $loc as $key => $value )
+                    {
+                        if( is_numeric($key) )
+                        {
+                            // make sure we have a default
+                            if( !strlen($default) )
+                                $default = $value;
+
+                            // clone the individual configuration based on the available browsers
+                            $configuration = $original[$value];
+                            if( strlen($configuration['browser']) )
+                            {
+                                $configuration['localDir'] = "./work/jobs/$value";
+                                $configuration['location'] = $value;
+                                if( !is_dir($configuration['localDir']) )
+                                    mkdir($configuration['localDir'], 0777, true);
+
+                                $browsers = array();
+                                $parts = explode(',', $configuration['browser']);
+                                foreach( $parts as $browser )
+                                    $browsers[] = trim($browser);
+                                if( count($browsers) > 1 )
+                                {
+                                    // default to the first browser in the list
+                                    if( $default == $value )
+                                        $default .= ':' . $browsers[0];
+
+                                    // build the actual configurations
+                                    foreach( $browsers as $browser )
+                                    {
+                                        $label = $value . ':' . $browser;
+                                        $location[$index] = $label;
+                                        $index++;
+                                        $cfg = $configuration;
+                                        $cfg['browser'] = $browser;
+                                        $cfg['label'] = $cfg['label'] . " - $browser";
+                                        $locations[$label] = $cfg;
+                                    }
+                                }
+                                else
+                                {
+                                    // for single-browser locations, just copy it over as it exists
+                                    $location[$index] = $value;
+                                    $index++;
+                                }
+                            }
+                        }
+                        elseif( $key !== 'default' )
+                            $location[$key] = $value;
+                    }
+                    if( $index > 1 )
+                    {
+                        $location['default'] = $default;
+                        $locations[$name] = $location;
+                    }
+                }
+            }
         }
+        $locations['processed'] = true;
     }
 }
 
@@ -1125,9 +1204,7 @@ function ArchiveTest($id)
             $test = parse_ini_file("$testPath/testinfo.ini", true);
             $completed = isset($test['test']['completeTime']);
         }
-        if( $testInfo['archived'] )
-            $ret = true;
-        elseif( $completed || $testInfo['batch'] )
+        if( $completed || $testInfo['batch'] )
         {
             $dest = GetArchiveFile($id, true);
             if( is_file($dest) )
@@ -1140,8 +1217,6 @@ function ArchiveTest($id)
                     $zip = new ZipArchive();
                     if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
                     {
-                        $ret = true;
-
                         // add the files (skip the ones we don't want to archive long-term)
                         $files = scandir($testPath);
                         foreach( $files as $file )
@@ -1180,21 +1255,21 @@ function ArchiveTest($id)
                                     {
                                         $filePath = "$videoDir/$file";
                                         if( is_file($filePath) )
-                                            if( $zip->addFile($filePath, "$relativeDir/$file") === false )
-                                                $ret = false;
+                                            $zip->addFile($filePath, "$relativeDir/$file");
                                     }
                                 }
                             }
                         }
                         
-                        if( $zip->close() === false )
-                            $ret = false;
-                        
-                        if( $ret )
-                        {
-                            $testInfo['archived'] = true;
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                        }
+                        $zip->close();
+                    }
+
+                    // only consider it successful if the archive file was actually created
+                    if( is_file($dest) )
+                    {
+                        $ret = true;
+                        $testInfo['archived'] = true;
+                        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                     }
                 }
             }

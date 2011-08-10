@@ -27,10 +27,15 @@
         $test = array();
         $test['url'] = trim($req_url);
         
-        // Extract the location and connectivity.
+        // Extract the location, browser and connectivity.
         $parts = explode('.', trim($req_location));
-        $test['location'] = $parts[0];
-        $test['connectivity'] = $parts[1];
+        $test['location'] = trim($parts[0]);
+        $test['connectivity'] = trim($parts[1]);
+        if( strpos($test['location'], ':') !== false )
+        {
+            $parts = explode(':', $test['location']);
+            $test['browser'] = trim($parts[1]);
+        }
         
         // Extract the multiple locations.
         if ( isset($req_multiple_locations)) 
@@ -341,13 +346,6 @@
         // redirect the browser to the test results page
         if( !$error )
         {
-            // scale EC2 if necessary
-            if( isset($locations[$test['location']]['ec2']) && is_file('./ec2/ec2.inc.php') )
-            {
-                require_once('./ec2/ec2.inc.php');
-                EC2_ScaleUp($test['location'], $locations[$test['location']]['ec2']);
-            }
-            
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
@@ -505,7 +503,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
     
   // see if we need to override the browser
   if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
-    $test['browser'] = $locations[$test['location']]['browserExe'];
+    $test['browserExe'] = $locations[$test['location']]['browserExe'];
                 
   // figure out what the location working directory and friendly name are
   $test['locationText'] = $locations[$test['location']]['label'];
@@ -731,7 +729,7 @@ function ValidateParameters(&$test, $locations, &$error)
             
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
-                $test['browser'] = $locations[$test['location']]['browserExe'];
+                $test['browserExe'] = $locations[$test['location']]['browserExe'];
                 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
@@ -1395,6 +1393,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "plr={$test['plr']}\r\n";
         }
 
+        if( isset($test['browserExe']) && strlen($test['browserExe']) )
+            $testFile .= "browser={$test['browserExe']}\r\n";
         if( isset($test['browser']) && strlen($test['browser']) )
             $testFile .= "browser={$test['browser']}\r\n";
 

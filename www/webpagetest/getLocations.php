@@ -7,7 +7,7 @@ $locations = &LoadLocations();
 // get the backlog for each location
 foreach( $locations as $id => &$location )
 {
-    $location['PendingTests'] = GetBacklog($location['localDir'], $id);
+    $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
     
     // strip out any sensitive data
     unset($location['localDir']);
@@ -92,6 +92,7 @@ function LoadLocations()
             while( isset($group[$j]) )
             {
                 $locations[$group[$j]] = array( 'Label' => $label, 
+                                                'location' => $loc[$group[$j]]['location'],
                                                 'Browser' => $loc[$group[$j]]['browser'],
                                                 'localDir' => $loc[$group[$j]]['localDir']
                                                 );
