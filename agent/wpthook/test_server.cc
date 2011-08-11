@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mongoose/mongoose.h"
 #include "wpt_test_hook.h"
 #include "hook_chrome.h"
+#include "test_state.h"
 #include <atlutil.h>
 
 static TestServer * _global_test_server = NULL;
@@ -51,11 +52,12 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestServer::TestServer(WptHook& hook, WptTestHook &test, 
-                        HookChrome& chrome_hook):
+                        HookChrome& chrome_hook, TestState& test_state):
   _mongoose_context(NULL)
   ,_hook(hook)
   ,_test(test)
-  ,_chrome_hook(chrome_hook) {
+  ,_chrome_hook(chrome_hook)
+  ,_test_state(test_state) {
   InitializeCriticalSection(&cs);
 }
 
@@ -139,7 +141,7 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _hook.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/all_dom_elements_loaded") == 0) {
+    } else if (strcmp(request_info->uri,"/event/all_dom_elements_loaded")==0) {
       DWORD load_time = ParseLoadTime(request_info->query_string);
       _hook.OnAllDOMElementsLoaded(load_time);
       // TODO: Log the all dom elements loaded time into its metric.
@@ -149,6 +151,14 @@ void TestServer::MongooseCallback(enum mg_event event,
       CStringA dom_element;
       ParseDOMElementLoadTime(request_info->query_string, dom_element, time);
       // TODO: Store the dom element loaded time.
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/title") == 0) {
+      char title[4096];
+      if (mg_get_var(request_info->query_string, 
+                  strlen(request_info->query_string), 
+                  "title", title, _countof(title)) >= 0) {
+        _test_state.TitleSet(CString(CA2T(title)));
+      }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
@@ -248,8 +258,6 @@ DWORD TestServer::ParseLoadTime(CStringA query_string) {
   return load_time;
 }
 
-
-
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestServer::ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_element, DWORD& time) {
@@ -278,3 +286,4 @@ void TestServer::ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_el
   WptTrace(loglevel::kFrequentEvent,
     _T("[wptdriver] DOM element load time from extension: %s %dms"), (LPCTSTR)CA2T(dom_element), time);
 }
+

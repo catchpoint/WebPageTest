@@ -574,13 +574,13 @@ void TestState::CollectData() {
 void TestState::TitleSet(CString title) {
   if (_active && !_title_time.QuadPart) {
     QueryPerformanceCounter(&_title_time);
-    _title = title;
-    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
-              title);
+    _title = title.Trim();
     // trim the browser off of the title ( - Chrome, etc)
     int pos = _title.ReverseFind(_T('-'));
     if (pos > 0)
       _title = _title.Left(pos).Trim();
+    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
+              _title);
   }
 }
 

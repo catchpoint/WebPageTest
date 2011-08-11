@@ -289,7 +289,7 @@ PRInt32 NsprHook::PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flag
 PRAddrInfo* NsprHook::PR_GetAddrInfoByName(const char *hostname, PRUint16 af, PRIntn flags) {
   PRAddrInfo* ret = NULL;
   if (_PR_GetAddrInfoByName) {
-    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetAddrInfoByName(%s)\n"), hostname);
+    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetAddrInfoByName(%S)\n"), hostname);
     ret = _PR_GetAddrInfoByName(hostname, af, flags);
   }
   return ret;
@@ -298,7 +298,7 @@ PRAddrInfo* NsprHook::PR_GetAddrInfoByName(const char *hostname, PRUint16 af, PR
 PRStatus NsprHook::PR_GetHostByName(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry) {
   PRStatus ret = PR_FAILURE;
   if (_PR_GetHostByName) {
-    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetHostByName(%s)\n"), hostname);
+    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetHostByName(%S)\n"), hostname);
     ret = _PR_GetHostByName(hostname, buf, bufsize, hostentry);
   }
   return ret;

@@ -34,6 +34,26 @@ var g_requesting_task = false;
 // Load a task.
 setTimeout("WPTDRIVER.getTask()", STARTUP_DELAY);
 
+// monitor for page title changes
+// TODO: only track changes for the main browser window (alert boxes will fire as well)
+(function() {
+	var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+	var listener = {
+		onWindowTitleChange: function(aWindow, aNewTitle) {
+			try {
+				var xhr = new XMLHttpRequest();
+				xhr.open("POST", "http://127.0.0.1:8888/event/title?title="+encodeURIComponent(aNewTitle), true);
+				xhr.send();
+			} catch(err) {}
+		},
+		onOpenWindow: function( aWindow ) {
+		},
+		onCloseWindow: function( aWindow ) {
+		}
+	}
+	windowMediator.addListener(listener);
+})();
+
 // Get the next task from the wptdriver.
 WPTDRIVER.getTask = function() {
   if (!g_requesting_task) {
