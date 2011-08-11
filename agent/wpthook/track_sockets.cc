@@ -85,11 +85,16 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
             _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
   // We only care about IP sockets at this point.
+  if (name->sa_family == AF_INET6) {
+    WptTrace(
+        loglevel::kFunction, 
+        _T("[wpthook] - TrackSockets::Connect: Warning: IPv6 unsupported!\n"));
+  }
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
-    struct sockaddr_in* ipName = (struct sockaddr_in *)name;
-
     EnterCriticalSection(&cs);
-    SocketInfo* info = GetSocketInfo(s, ipName);
+    SocketInfo* info = GetSocketInfo(s);
+    struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
+    memcpy(&info->_addr, ip_name, sizeof(ip_name));
     QueryPerformanceCounter(&info->_connect_start);
     LeaveCriticalSection(&cs);
   }
@@ -132,6 +137,10 @@ void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len,
                                 char * &new_buff, unsigned long &new_len) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
+  if (info->_addr.sin_addr.S_un.S_addr == 0) {
+    int addr_len = sizeof(info->_addr);
+    getpeername(s, (sockaddr *)&info->_addr, &addr_len);
+  }
   if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart) {
     QueryPerformanceCounter(&info->_connect_end);
   }
@@ -171,7 +180,8 @@ void TrackSockets::Reset() {
   Claim ownership of a connection (associate it with a request)
 -----------------------------------------------------------------------------*/
 bool TrackSockets::ClaimConnect(DWORD socket_id, LONGLONG before, 
-                                LONGLONG& start, LONGLONG& end) {
+                                LONGLONG& start, LONGLONG& end,
+                                LONGLONG& ssl_start, LONGLONG& ssl_end) {
   bool claimed = false;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
@@ -183,6 +193,8 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LONGLONG before,
       info->_accounted_for = true;
       start = info->_connect_start.QuadPart;
       end = info->_connect_end.QuadPart;
+      ssl_start = info->_ssl_start.QuadPart;
+      ssl_end = info->_ssl_end.QuadPart;
     }
   }
   LeaveCriticalSection(&cs);
@@ -237,8 +249,7 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
 /*-----------------------------------------------------------------------------
   This must always be called from within a critical section.
 -----------------------------------------------------------------------------*/
-SocketInfo* TrackSockets::GetSocketInfo(
-    SOCKET s, const struct sockaddr_in* ip_name) {
+SocketInfo* TrackSockets::GetSocketInfo(SOCKET s) {
   DWORD socket_id = 0;
   _openSockets.Lookup(s, socket_id);
   SocketInfo* info = NULL;
@@ -253,12 +264,6 @@ SocketInfo* TrackSockets::GetSocketInfo(
     info = new SocketInfo;
     info->_id = socket_id;
     info->_during_test = _test_state._active;
-    int addr_len = sizeof(info->_addr);
-    if (ip_name != NULL) {
-      memcpy(&info->_addr, ip_name, addr_len);
-    } else {
-      getpeername(s, (sockaddr *)&info->_addr, &addr_len);
-    }
     _socketInfo.SetAt(info->_id, info);
   }
   return info;

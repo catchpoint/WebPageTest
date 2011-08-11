@@ -48,6 +48,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _ms_end(0)
   , _ms_connect_start(0)
   , _ms_connect_end(0)
+  , _ms_ssl_start(0)
+  , _ms_ssl_end(0)
   , _ms_dns_start(0)
   , _ms_dns_end(0)
   , _socket_id(socket_id)
@@ -247,7 +249,7 @@ bool Request::Process() {
 
     // find the matching socket connect and DNS lookup (if they exist)
     LONGLONG before = _start.QuadPart;
-    LONGLONG start, end;
+    LONGLONG start, end, ssl_start, ssl_end;
     CString host = CA2T(GetRequestHeader("host"));
     if (_dns.Claim(host, before, start, end) && 
         start > _test_state._start.QuadPart &&
@@ -257,13 +259,21 @@ bool Request::Process() {
       _ms_dns_end = (DWORD)((end - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
     }
-    if (_sockets.ClaimConnect(_socket_id, before, start, end) && 
+    if (_sockets.ClaimConnect(_socket_id, before, start, end,
+                              ssl_start, ssl_end) && 
         start > _test_state._start.QuadPart &&
         end > _test_state._start.QuadPart) {
       _ms_connect_start = (DWORD)((start - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
       _ms_connect_end = (DWORD)((end - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
+      if (ssl_start > _test_state._start.QuadPart &&
+          ssl_end > _test_state._start.QuadPart) {
+        _ms_ssl_start = (DWORD)((ssl_start - _test_state._start.QuadPart)
+                    / _test_state._ms_frequency.QuadPart);
+        _ms_ssl_end = (DWORD)((ssl_end - _test_state._start.QuadPart)
+                    / _test_state._ms_frequency.QuadPart);
+      }
     }
 
     // update the overall stats

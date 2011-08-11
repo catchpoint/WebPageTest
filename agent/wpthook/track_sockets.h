@@ -41,6 +41,8 @@ public:
     memset(&_addr, 0, sizeof(_addr));
     _connect_start.QuadPart = 0;
     _connect_end.QuadPart = 0;
+    _ssl_start.QuadPart = 0;
+    _ssl_end.QuadPart = 0;
   }
   ~SocketInfo(void){}
 
@@ -53,6 +55,8 @@ public:
   bool                _is_ssl;
   LARGE_INTEGER       _connect_start;
   LARGE_INTEGER       _connect_end;
+  LARGE_INTEGER       _ssl_start;
+  LARGE_INTEGER       _ssl_end;
 };
 
 class TrackSockets {
@@ -76,11 +80,11 @@ public:
 
   void Reset();
 
-  SocketInfo* GetSocketInfo(SOCKET s, const struct sockaddr_in* ip_name=NULL);
+  SocketInfo* GetSocketInfo(SOCKET s);
   SocketInfo* GetSocketInfoById(DWORD socket_id);
 
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
-                    LONGLONG& end);
+                    LONGLONG& end, LONGLONG& ssl_start, LONGLONG& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
 
 private:

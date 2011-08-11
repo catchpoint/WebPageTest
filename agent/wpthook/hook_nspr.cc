@@ -215,6 +215,10 @@ PRStatus NsprHook::PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags) {
   if (_PR_ConnectContinue) {
     ret = _PR_ConnectContinue(fd, out_flags);
     DumpOsfd(_T("_PR_ConnectContinue"), fd);
+    if (!ret) {
+      SOCKET s = _PR_FileDesc2NativeHandle(fd);
+      _sockets.Connected(s);
+    }
   }
   return ret;
 }
@@ -225,13 +229,22 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
   if (_PR_Write) {
     ret = _PR_Write(fd, buf, amount);
     DumpOsfd(_T("_PR_Write"), fd);
-    if (ret > 0 && buf && !_test_state._exit) {
+    if (buf && !_test_state._exit) {
       SOCKET s = _PR_FileDesc2NativeHandle(fd);
       if (_sockets.IsSsl(s)) {
-        char * new_buff = NULL;
-        unsigned long new_len = 0;
-        _sockets.DataOut(s, (const char *)buf, ret, new_buff, new_len);
-        _sockets.AfterDataOut(new_buff);
+        if (ret > 0) {
+           char * new_buff = NULL;
+           unsigned long new_len = 0;
+           _sockets.DataOut(s, (const char *)buf, ret, new_buff, new_len);
+           _sockets.AfterDataOut(new_buff);
+        }
+        SocketInfo* info = _sockets.GetSocketInfo(s);
+        if (ret == -1 && !info->_ssl_start.QuadPart) {
+           QueryPerformanceCounter(&info->_ssl_start);
+        } else if (ret > 0 && info->_ssl_start.QuadPart &&
+                   !info->_ssl_end.QuadPart) {
+           QueryPerformanceCounter(&info->_ssl_end);
+        }
       }
     }
   }

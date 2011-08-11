@@ -724,6 +724,12 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // connect end
   buff.Format("%d\t", request->_ms_connect_end);
   result += buff;
+  // ssl negotiation start
+  buff.Format("%d\t", request->_ms_ssl_start);
+  result += buff;
+  // ssl negotiation end
+  buff.Format("%d\t", request->_ms_ssl_end);
+  result += buff;
 
   result += "\r\n";
 

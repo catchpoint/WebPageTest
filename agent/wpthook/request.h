@@ -151,6 +151,8 @@ public:
   int _ms_connect_end;
   int _ms_dns_start;
   int _ms_dns_end;
+  int _ms_ssl_start;
+  int _ms_ssl_end;
 
   // header data
   CStringA  _in_header;
