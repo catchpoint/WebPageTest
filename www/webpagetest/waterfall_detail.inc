@@ -100,7 +100,17 @@ foreach($requests as $reqNum => $request)
             $time = $request['connect_end'] - $request['connect_start'];
             echo '<td class="reqSocket ' . $highlight . '">' . $time . ' ms</td>';
             if( $secure )
-                echo '<td class="reqSSL ' . $highlight . '">-</td>';
+	    {
+	        if( $request['ssl_end'] > 0 )
+		{
+		    $time = $request['ssl_end'] - $request['ssl_start'];
+		    echo '<td class="reqSSL ' . $highlight . '">' . $time . ' ms</td>';
+		}
+		else
+		{
+		    echo '<td class="reqSSL ' . $highlight . '">-</td>';
+		}
+	    }
         }
         else
 		{
@@ -206,11 +216,26 @@ foreach($requests as $reqNum => $request)
 						    echo '<b>Start Offset: </b>' . $request['offset'] / 1000.0 . " s<br>\n";
 						    if( $request['dnsTime'] && (int)$request['dnsTime'] !== -1 )
 							    echo '<b>DNS Lookup: </b>' . $request['dnsTime'] . " ms<br>\n";
+						    elseif( $request['dns_end'] > 0 )
+						    {
+							    $time = $request['dns_end'] - $request['dns_start'];
+							    echo '<b>DNS Lookup: </b>' . $time . " ms<br>\n";
+						    }
 						    if( $request['socketTime'] && (int)$request['socketTime'] !== -1 )
 						    {
 							    echo '<b>Initial Connection: </b>' . $request['socketTime'] . " ms<br>\n";
 							    if( $request['secure'] && $request['secure'] == 1 )
 								    echo '<b>SSL Negotiation: </b>' . (int)$request['sslTime'] . " ms<br>\n";
+						    }
+						    elseif( $request['connect_end'] > 0 )
+						    {
+							    $time = $request['connect_end'] - $request['connect_start'];
+							    echo '<b>Initial Connection: </b>' . $time . " ms<br>\n";
+							    if( $request['ssl_end'] > 0 )
+							    {
+								    $time = $request['ssl_end'] - $request['ssl_start'];
+								    echo '<b>SSL Negotiation: </b>' . $time . " ms<br>\n";
+							    }
 						    }
 						    echo '<b>Time to First Byte: </b>' . $request['ttfb'] . " ms<br>\n";
 						    if( $request['loadTime'] )
