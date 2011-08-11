@@ -205,10 +205,12 @@ void WptTrace(int level, LPCTSTR format, ...) {
       TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
       if (msg) {
         if (_vstprintf_s( msg, len, format, args ) > 0) {
-          #ifdef DEBUG
-          OutputDebugString(msg);
-          #endif
-          WptLogMessage(msg);
+          if (lstrlen(msg)) {
+            #ifdef DEBUG
+            OutputDebugString(msg);
+            #endif
+            WptLogMessage(msg);
+          }
         }
 
         free( msg );

@@ -135,4 +135,5 @@ private:
   void Done(bool force = false);
   void FindBrowserWindow(void);
   void CollectSystemStats(DWORD ms_from_start);
+  void FindViewport();
 };

@@ -117,7 +117,7 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc,
   if( _BitBlt )
     ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
 
-  if (!_test_state._exit && _test_state._active && 
+  if (wnd && !_test_state._exit && _test_state._active && 
       wnd == _test_state._document_window) {
     _test_state._screen_updated = true;
   }

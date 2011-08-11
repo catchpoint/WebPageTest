@@ -157,8 +157,12 @@ void TestState::Start() {
   FindBrowserWindow();  // the document window may not be available yet
 
   // position the browser window
-  ::ShowWindow(_frame_window, SW_RESTORE);
-  ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
+  if (_frame_window) {
+    ::ShowWindow(_frame_window, SW_RESTORE);
+    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
+    ::UpdateWindow(_frame_window);
+    FindViewport();
+  }
 
   if (!_render_check_thread) {
     _exit = false;
@@ -419,7 +423,8 @@ void TestState::RenderCheckThread() {
 
       // grab a screen shot
       bool found = false;
-      CapturedImage captured_img(_document_window,CapturedImage::START_RENDER);
+      CapturedImage captured_img = _screen_capture.CaptureImage(
+                                _document_window, CapturedImage::START_RENDER);
       CxImage img;
       if (captured_img.Get(img) && 
           img.GetWidth() > START_RENDER_MARGIN * 2 &&
@@ -430,18 +435,21 @@ void TestState::RenderCheckThread() {
           int width = img.GetWidth();
           // 24-bit gets a fast-path where we can just compare full rows
           if (bpp <= 24 ) {
-            DWORD row_bytes = 3 * (width - (START_RENDER_MARGIN * 2));
-            char * white = (char *)malloc(row_bytes);
-            if (white) {
-              memset(white, 0xFFFFFFFF, row_bytes);
+            DWORD row_bytes = img.GetEffWidth();
+            DWORD compare_bytes = (bpp>>3) * (width-(START_RENDER_MARGIN * 2));
+            char * background = (char *)malloc(compare_bytes);
+            if (background) {
+              char * image_bytes = (char *)img.GetBits(START_RENDER_MARGIN)
+                                     + START_RENDER_MARGIN * (bpp >> 3);
+              memcpy(background, image_bytes, compare_bytes);
               for (DWORD row = START_RENDER_MARGIN; 
                     row < height - START_RENDER_MARGIN && !found; row++) {
-                char * image_bytes = (char *)img.GetBits(row) 
-                                      + START_RENDER_MARGIN;
-                if (memcmp(image_bytes, white, row_bytes))
+                if (memcmp(image_bytes, background, compare_bytes))
                   found = true;
+                else
+                  image_bytes += row_bytes;
               }
-              free (white);
+              free (background);
             }
           } else {
             for (DWORD row = START_RENDER_MARGIN; 
@@ -573,5 +581,58 @@ void TestState::TitleSet(CString title) {
     int pos = _title.ReverseFind(_T('-'));
     if (pos > 0)
       _title = _title.Left(pos).Trim();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Find the portion of the document window that represents the document
+-----------------------------------------------------------------------------*/
+void TestState::FindViewport() {
+  if (_document_window == _frame_window && !_screen_capture.IsViewportSet()) {
+    CapturedImage captured = _screen_capture.CaptureImage(_document_window);
+    CxImage image;
+    if (captured.Get(image)) {
+      // start in the middle of the image and go in each direction 
+      // until we get a pixel of a different color
+      DWORD width = image.GetWidth();
+      DWORD height = image.GetHeight();
+      if (width > 100 && height > 100) {
+        DWORD x = width / 2;
+        DWORD y = height / 2;
+        RECT viewport = {0,0,0,0}; 
+        viewport.right = width - 1;
+        DWORD row_bytes = image.GetEffWidth();
+        unsigned char * middle = image.GetBits(y);
+        if (middle) {
+          middle += row_bytes / 2;
+          unsigned char background[3];
+          memcpy(background, middle, 3);
+          // find the top
+          unsigned char * pixel = middle;
+          while (y < height - 1 && !viewport.top) {
+            if (memcmp(background, pixel, 3))
+              viewport.top = height - y;
+            pixel += row_bytes;
+            y++;
+          }
+          // find the top
+          y = height / 2;
+          pixel = middle;
+          while (y && !viewport.bottom) {
+            if (memcmp(background, pixel, 3))
+              viewport.bottom = height - y;
+            pixel -= row_bytes;
+            y--;
+          }
+          if (!viewport.bottom)
+            viewport.bottom = height - 1;
+        }
+        if (viewport.right - viewport.left > (long)width / 2 &&
+          viewport.bottom - viewport.top > (long)height / 2) {
+          _screen_capture.SetViewport(viewport);
+        }
+      }
+    }
+    captured.Free();
   }
 }

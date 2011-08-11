@@ -42,7 +42,7 @@ public:
 
   CapturedImage();
   CapturedImage(const CapturedImage& src){*this = src;}
-  CapturedImage(HWND wnd, TYPE type);
+  CapturedImage(HWND wnd, TYPE type = UNKNOWN, RECT * rect = NULL);
   ~CapturedImage();
   const CapturedImage& operator =(const CapturedImage& src);
   void Free();
@@ -58,13 +58,19 @@ public:
   ScreenCapture();
   ~ScreenCapture(void);
   void Capture(HWND wnd, CapturedImage::TYPE type);
+  CapturedImage CaptureImage(HWND wnd, 
+                    CapturedImage::TYPE type = CapturedImage::UNKNOWN);
   bool GetImage(CapturedImage::TYPE type, CxImage& image);
   void Lock();
   void Unlock();
   void Reset();
+  void SetViewport(RECT& viewport);
+  bool IsViewportSet();
 
   CAtlList<CapturedImage> _captured_images;
 
 private:
   CRITICAL_SECTION cs;
+  RECT _viewport;
+  bool _viewport_set;
 };

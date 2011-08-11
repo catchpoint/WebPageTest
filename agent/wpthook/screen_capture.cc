@@ -34,8 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-ScreenCapture::ScreenCapture() {
+ScreenCapture::ScreenCapture():_viewport_set(false) {
   InitializeCriticalSection(&cs);
+  memset(&_viewport, 0, sizeof(_viewport));
 }
 
 /*-----------------------------------------------------------------------------
@@ -57,14 +58,35 @@ void ScreenCapture::Reset() {
 }
 
 /*-----------------------------------------------------------------------------
+  Capture a screen shot and save it in our list
 -----------------------------------------------------------------------------*/
 void ScreenCapture::Capture(HWND wnd, CapturedImage::TYPE type) {
   if (wnd) {
     EnterCriticalSection(&cs);
-    CapturedImage image(wnd, type);
+    RECT * rect = NULL;
+    if (_viewport_set)
+      rect = &_viewport;
+    CapturedImage image(wnd, type, rect);
     _captured_images.AddTail(image);
     LeaveCriticalSection(&cs);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Capture a screen shot and return it without saving it
+-----------------------------------------------------------------------------*/
+CapturedImage ScreenCapture::CaptureImage(HWND wnd, CapturedImage::TYPE type) {
+  CapturedImage ret;
+  if (wnd) {
+    EnterCriticalSection(&cs);
+    RECT * rect = NULL;
+    if (_viewport_set)
+      rect = &_viewport;
+    CapturedImage captured(wnd, type, rect);
+    ret = captured;
+    LeaveCriticalSection(&cs);
+  }
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -99,13 +121,26 @@ void ScreenCapture::Unlock() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void ScreenCapture::SetViewport(RECT& viewport) {
+  memcpy(&_viewport, &viewport, sizeof(_viewport));
+  _viewport_set = true;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool ScreenCapture::IsViewportSet() {
+  return _viewport_set;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CapturedImage::CapturedImage():_bitmap_handle(NULL), _type(UNKNOWN) {
   _capture_time.QuadPart=0;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CapturedImage::CapturedImage(HWND wnd, TYPE type):
+CapturedImage::CapturedImage(HWND wnd, TYPE type, RECT * rect):
   _bitmap_handle(NULL)
   , _type(UNKNOWN) {
   _capture_time.QuadPart = 0;
@@ -114,10 +149,18 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
     if (src) {
       HDC dc = CreateCompatibleDC(src);
       if (dc) {
-        RECT rect;
-        GetWindowRect(wnd, &rect);
-        int width = abs(rect.right - rect.left);
-        int height = abs(rect.top - rect.bottom);
+        RECT window_rect;
+        GetClientRect(wnd, &window_rect);
+        int left = 0;
+        int top = 0;
+        int width = abs(window_rect.right - window_rect.left);
+        int height = abs(window_rect.top - window_rect.bottom);
+        if (rect) {
+          left = rect->left;
+          top = rect->top;
+          width = rect->right - rect->left;
+          height = rect->bottom - rect->top;
+        }
         if (width && height) {
           _bitmap_handle = CreateCompatibleBitmap(src, width, height); 
           if (_bitmap_handle) {
@@ -125,7 +168,7 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
             _type = type;
 
             HBITMAP hOriginal = (HBITMAP)SelectObject(dc, _bitmap_handle);
-            BitBlt(dc, 0, 0, width, height, src, 0, 0, SRCCOPY | CAPTUREBLT);
+            BitBlt(dc, 0, 0, width, height, src, left, top,SRCCOPY|CAPTUREBLT);
 
             SelectObject(dc, hOriginal);
           }
