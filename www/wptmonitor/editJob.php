@@ -89,10 +89,10 @@
   }
   $q = Doctrine_Query::create()->from('Alert a')->orderBy('a.Label');
 
-  if ($folderId > -1 && hasPermission('Alert', $folderId, PERMISSION_UPDATE)) {
+  if (!empty($alertFolderIds) && $folderId > -1 && hasPermission('Alert', $folderId, PERMISSION_UPDATE)) {
     $q->andWhereIn('a.AlertFolderId', $alertFolderIds);
   } else {
-    $q->andWhere('a.UserId = ?', $user_id);
+    $q->andWhere('a.UserId = ?', $userId);
   }
   $alerts = $q->fetchArray();
   $q->free(true);
