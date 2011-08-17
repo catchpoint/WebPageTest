@@ -30,54 +30,87 @@ var g_tabId = -1;
 var g_start = 0;
 var g_requesting_task = false;
 
+// Enable fake commands to do testing during development.
+var run_fake_commands = false;
+var fake_command_idx = 0;
+var fake_commands = [
+  {
+    'action': 'navigate',
+    'target': 'http://www.example.com/'
+  },
+  {
+    'action': 'setcookie',
+    'target': 'http://www.zol.com',
+    'value': 'zip = 20166'
+  },
+  {
+    'action': 'setcookie',
+    'target': 'http://www.bol.com/',
+    'value': 'TestData=bTest; expires=Fri Aug 12 2030 18:50:34 GMT-0400 (EDT)'
+  },
+  {
+    'action': 'setcookie',
+    'target': 'http://www.col.com/path',
+    'value': 'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)'
+  }
+];
+
 
 // Load a task.
-setTimeout("WPTDRIVER.getTask()", STARTUP_DELAY);
+setTimeout(function() {WPTDRIVER.getTask();}, STARTUP_DELAY);
 
 // monitor for page title changes
 // TODO: only track changes for the main browser window (alert boxes will fire as well)
 (function() {
-	var windowMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
-	var listener = {
-		onWindowTitleChange: function(aWindow, aNewTitle) {
-			try {
-				var xhr = new XMLHttpRequest();
-				xhr.open("POST", "http://127.0.0.1:8888/event/title?title="+encodeURIComponent(aNewTitle), true);
-				xhr.send();
-			} catch(err) {}
-		},
-		onOpenWindow: function( aWindow ) {
-		},
-		onCloseWindow: function( aWindow ) {
-		}
-	}
-	windowMediator.addListener(listener);
+  var windowMediator = wpt.moz.getService('@mozilla.org/appshell/window-mediator;1',
+                                          'nsIWindowMediator');
+  var listener = {
+    onWindowTitleChange: function(aWindow, aNewTitle) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://127.0.0.1:8888/event/title?title="+encodeURIComponent(aNewTitle), true);
+        xhr.send();
+      } catch(err) {}
+    },
+    onOpenWindow: function( aWindow ) {
+    },
+    onCloseWindow: function( aWindow ) {
+    }
+  }
+  windowMediator.addListener(listener);
 })();
 
 // Get the next task from the wptdriver.
 WPTDRIVER.getTask = function() {
   if (!g_requesting_task) {
     g_requesting_task = true;
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "http://127.0.0.1:8888/task", true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) {
-          if (xhr.responseText.length > 0) {
-            try {
-              var resp = JSON.parse(xhr.responseText);
-            } catch(err) {
-              throw('Error parsing response as JSON: ' +
-                    xhr.responseText.substr(0, 120) + "[...]\n");
-            }
-            if (resp.statusCode == 200) {
-              wptExecuteTask(resp.data);
+
+    if (run_fake_commands) {
+      if (fake_command_idx < fake_commands.length) {
+        wptExecuteTask(fake_commands[fake_command_idx++]);
+      }
+    } else {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://127.0.0.1:8888/task", true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState == 4) {
+            if (xhr.responseText.length > 0) {
+              try {
+                var resp = JSON.parse(xhr.responseText);
+              } catch(err) {
+                throw('Error parsing response as JSON: ' +
+                      xhr.responseText.substr(0, 120) + "[...]\n");
+              }
+              if (resp.statusCode == 200) {
+                wptExecuteTask(resp.data);
+              }
             }
           }
         }
-      }
-      xhr.send();
-    } catch(err) {}
+        xhr.send();
+      } catch(err) {}
+    }
     g_requesting_task = false;
   }
 }
@@ -191,7 +224,7 @@ function wptExecuteTask(task) {
       wptSetCookie(task.target, task.value);
 
     if (!g_active) {
-      setTimeout("wptGetTask()", TASK_INTERVAL);
+      setTimeout(function() {WPTDRIVER.getTask();}, TASK_INTERVAL);
     }
   }
 }
@@ -212,13 +245,12 @@ function wptNavigate(url) {
 }
 
 function wptSetCookie(cookie_path, data) {
-  // TODO(slamm): port wptSetCooke to firefox
-  return;
   var pos = data.indexOf(';');
   var val = data;
   var cookie_expires = '';
+
   if (pos > 0) {
-    val = data.substring(0,pos);
+    val = data.substring(0, pos);
     var exp = trim(data.substring(pos + 1));
     pos = exp.indexOf('=');
     if (pos > 0) {
@@ -227,15 +259,20 @@ function wptSetCookie(cookie_path, data) {
   }
   pos = val.indexOf('=');
   if (pos > 0) {
-    var cookie_name = trim(val.substring(0,pos));
+    var cookie_name = trim(val.substring(0, pos));
     var cookie_value = trim(val.substring(pos + 1));
     if (cookie_name.length && cookie_value.length && cookie_path.length) {
-      var cookie = {url:cookie_path, name:cookie_name, value: cookie_value};
+      var cookie = {
+        'url': cookie_path,
+        'name': cookie_name,
+        'value': cookie_value
+      };
+
       if (cookie_expires.length) {
         var date = new Date(cookie_expires);
-        cookie.expirationDate = date.getTime();
+        cookie['expirationDate'] = date.getTime();
       }
-      chrome.cookies.set(cookie);
+      wpt.moz.setCookie(cookie);
     }
   }
 }
@@ -244,12 +281,13 @@ function wptSetCookie(cookie_path, data) {
 // nuke all of the bookmarks to prevent any live feeds from updating
 // TODO: possibly be more forgiving and query for a list of live bookmarks
 (function() {  // Begin closure
-	var bookmarksService = Components.classes["@mozilla.org/browser/nav-bookmarks-service;1"]
-												.getService(Components.interfaces.nsINavBookmarksService);
-	bookmarksService.removeFolderChildren(bookmarksService.toolbarFolder);
-	bookmarksService.removeFolderChildren(bookmarksService.bookmarksMenuFolder);
-	bookmarksService.removeFolderChildren(bookmarksService.tagsFolder);
-	bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
+  var bookmarksService = wpt.moz.getService('@mozilla.org/browser/nav-bookmarks-service;1',
+                                            'nsINavBookmarksService');
+
+  bookmarksService.removeFolderChildren(bookmarksService.toolbarFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.bookmarksMenuFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.tagsFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
 })();
 
 })();  // End closure
