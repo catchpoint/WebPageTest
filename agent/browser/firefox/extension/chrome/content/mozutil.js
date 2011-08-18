@@ -67,6 +67,37 @@ wpt.moz.setCookie = function(cookieObj) {
       null);  // The channel used to load the document.
 };
 
+wpt.moz.execScriptInSelectedTab = function(scriptText) {
+  // Mozilla's Components.utils.sandbox object allows javascript to be run
+  // with limited privlages.  Any javascript we run directly can do anything
+  // extension javascript can do, including reading and writing to the
+  // filesystem.  The sandbox imposes a the same limits on javascript that
+  // the page has.  Docs are here:
+  // https://developer.mozilla.org/en/Components.utils.evalInSandbox .
+
+  // Get the window object of the foremosst tab.
+  var wrappedWindow = gBrowser.contentWindow;
+  var sandbox = new CU.Sandbox(
+      wrappedWindow,  // Same limitations as the javascript in the window.
+      {sandboxPrototype: wrappedWindow});  // Window is the prototype of the global
+                                           // object.  A global reference that is
+                                           // not defined on the sandbox will refer
+                                           // to the item on the window.
+
+  // If the script we are running throws, we need some way to see the exception.
+  // Wrap the script in a try block, and dump any exceptions we catch.
+  var scriptWithExceptionDumping = [
+      'try {',
+      '  (function() {',
+      scriptText,
+      '  })();',
+      '} catch (ex) {',
+      '  dump("\\n\\nUncaught exception in exec script: " + ex + "\\n\\n");',
+      '}'].join('\n');
+
+  CU.evalInSandbox(scriptWithExceptionDumping, sandbox);
+};
+
 wpt.moz.clearAllBookmarks = function() {
   var bookmarksService = wpt.moz.getService(
       '@mozilla.org/browser/nav-bookmarks-service;1',

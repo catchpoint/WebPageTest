@@ -30,29 +30,52 @@ var g_tabId = -1;
 var g_start = 0;
 var g_requesting_task = false;
 
+function FakeCommand(action, target, opt_value) {
+  result = {
+    'action': action,
+    'target': target
+  };
+  if (typeof opt_value != 'undefined')
+    result['value'] = opt_value;
+
+  return result;
+}
+
 // Enable fake commands to do testing during development.
 var run_fake_commands = false;
 var fake_command_idx = 0;
 var fake_commands = [
-  {
-    'action': 'navigate',
-    'target': 'http://www.example.com/'
-  },
-  {
-    'action': 'setcookie',
-    'target': 'http://www.zol.com',
-    'value': 'zip = 20166'
-  },
-  {
-    'action': 'setcookie',
-    'target': 'http://www.bol.com/',
-    'value': 'TestData=bTest; expires=Fri Aug 12 2030 18:50:34 GMT-0400 (EDT)'
-  },
-  {
-    'action': 'setcookie',
-    'target': 'http://www.col.com/path',
-    'value': 'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)'
-  }
+    // Can we navigate?
+    FakeCommand('navigate', 'http://www.example.com/'),
+
+    // Can exec read the DOM of the page?
+    FakeCommand('exec', 'dump("window.location.href is: " + window.location.href);'),
+
+    // Can exec alter the DOM of the page?
+    FakeCommand('exec', 'window.document.title = "This title is from an exec command"'),
+
+    // Is exec in a page limited to the permissions of that page?
+    FakeCommand('exec', [
+        'try {',
+        '  var foo = "" + gBrowser;',
+        '  alert("BUG: Accessed gBroser without throwing?");',
+        '} catch (ex) {',
+        '  dump("Got ex:" + ex);',
+        '}'].join('\n')),
+    FakeCommand('exec', [
+        'try {',
+        '  var foo = Components.classes["@mozilla.org/network/standard-url;1"];',
+        '  alert("BUG: Accessed Components.classes[...] from a web page?");',
+        '} catch (ex) {',
+        '  dump("Got ex:" + ex);',
+        '}'].join('\n')),
+
+    // Test that we can set cookies.
+    FakeCommand('setcookie', 'http://www.xol.com', 'zip = 20166'),
+    FakeCommand('setcookie', 'http://www.yol.com',
+                'TestData=bTest; expires=Fri Aug 12 2030 18:50:34 GMT-0400 (EDT)'),
+    FakeCommand('setcookie', 'http://www.zol.com',
+                'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)')
 ];
 
 
@@ -212,6 +235,7 @@ function trim(stringToTrim) {
 
 // execute a single task/script command
 function wptExecuteTask(task) {
+  dump('Exec: ' + JSON.stringify(task, null, 2) + '\n');
   if (task.action.length) {
     g_active = Boolean(task.record);
 
@@ -222,7 +246,8 @@ function wptExecuteTask(task) {
       wptExec(task.target);
     else if (task.action == 'setcookie')
       wptSetCookie(task.target, task.value);
-
+    else
+      dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
     if (!g_active) {
       setTimeout(function() {WPTDRIVER.getTask();}, TASK_INTERVAL);
     }
@@ -231,8 +256,7 @@ function wptExecuteTask(task) {
 
 // exec
 function wptExec(script) {
-  // TODO(slamm): Port wptExec to firefox.
-  //chrome.tabs.executeScript(null, {code:script});
+  wpt.moz.execScriptInSelectedTab(script);
 }
 
 // navigate
