@@ -67,4 +67,15 @@ wpt.moz.setCookie = function(cookieObj) {
       null);  // The channel used to load the document.
 };
 
+wpt.moz.clearAllBookmarks = function() {
+  var bookmarksService = wpt.moz.getService(
+      '@mozilla.org/browser/nav-bookmarks-service;1',
+      'nsINavBookmarksService');
+
+  bookmarksService.removeFolderChildren(bookmarksService.toolbarFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.bookmarksMenuFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.tagsFolder);
+  bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
+};
+
 })();  // End closure

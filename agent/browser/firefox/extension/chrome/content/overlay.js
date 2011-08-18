@@ -280,14 +280,6 @@ function wptSetCookie(cookie_path, data) {
 
 // nuke all of the bookmarks to prevent any live feeds from updating
 // TODO: possibly be more forgiving and query for a list of live bookmarks
-(function() {  // Begin closure
-  var bookmarksService = wpt.moz.getService('@mozilla.org/browser/nav-bookmarks-service;1',
-                                            'nsINavBookmarksService');
-
-  bookmarksService.removeFolderChildren(bookmarksService.toolbarFolder);
-  bookmarksService.removeFolderChildren(bookmarksService.bookmarksMenuFolder);
-  bookmarksService.removeFolderChildren(bookmarksService.tagsFolder);
-  bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
-})();
+wpt.moz.clearAllBookmarks();
 
 })();  // End closure
