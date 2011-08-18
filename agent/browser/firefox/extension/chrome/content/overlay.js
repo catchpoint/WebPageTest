@@ -68,7 +68,7 @@ setTimeout(function() {WPTDRIVER.getTask();}, STARTUP_DELAY);
     onWindowTitleChange: function(aWindow, aNewTitle) {
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://127.0.0.1:8888/event/title?title="+encodeURIComponent(aNewTitle), true);
+        xhr.open('POST', 'http://127.0.0.1:8888/event/title?title='+encodeURIComponent(aNewTitle), true);
         xhr.send();
       } catch(err) {}
     },
@@ -92,7 +92,7 @@ WPTDRIVER.getTask = function() {
     } else {
       try {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "http://127.0.0.1:8888/task", true);
+        xhr.open('GET', 'http://127.0.0.1:8888/task', true);
         xhr.onreadystatechange = function() {
           if (xhr.readyState == 4) {
             if (xhr.responseText.length > 0) {
@@ -100,7 +100,7 @@ WPTDRIVER.getTask = function() {
                 var resp = JSON.parse(xhr.responseText);
               } catch(err) {
                 throw('Error parsing response as JSON: ' +
-                      xhr.responseText.substr(0, 120) + "[...]\n");
+                      xhr.responseText.substr(0, 120) + '[...]\n');
               }
               if (resp.statusCode == 200) {
                 wptExecuteTask(resp.data);
@@ -119,7 +119,7 @@ WPTDRIVER.getTask = function() {
 function wptOnNavigate() {
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
+    xhr.open('POST', 'http://127.0.0.1:8888/event/navigate', true);
     xhr.send();
   } catch(err) {}
 }
@@ -129,7 +129,7 @@ function wptOnLoad(load_time) {
   try {
     g_active = false;
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://127.0.0.1:8888/event/load?load_time=" + load_time,
+    xhr.open('POST', 'http://127.0.0.1:8888/event/load?load_time=' + load_time,
              true);
     xhr.send();
   } catch(err) {}
@@ -191,19 +191,19 @@ var wptExtension = {
     if (g_active) {
       var loadTime = (new Date()).getTime() - this.startTime;
       wptOnLoad(loadTime);
-      dump("load time:  " + loadTime + "\n");
+      dump('load time:  ' + loadTime + '\n');
     }
   }
 };
-window.addEventListener("load", function() {wptExtension.init()}, false);
-window.addEventListener("unload", function() {wptExtension.uninit()}, false);
+window.addEventListener('load', function() {wptExtension.init()}, false);
+window.addEventListener('unload', function() {wptExtension.uninit()}, false);
 
 
 /***********************************************************
                       Utility Functions
 ***********************************************************/
 function trim(stringToTrim) {
-  return stringToTrim.replace(/^\s+|\s+$/g,"");
+  return stringToTrim.replace(/^\s+|\s+$/g,'');
 }
 
 /***********************************************************
@@ -216,11 +216,11 @@ function wptExecuteTask(task) {
     g_active = Boolean(task.record);
 
     // decode and execute the actual command
-    if (task.action == "navigate")
+    if (task.action == 'navigate')
       wptNavigate(task.target);
-    else if (task.action == "exec")
+    else if (task.action == 'exec')
       wptExec(task.target);
-    else if (task.action == "setcookie")
+    else if (task.action == 'setcookie')
       wptSetCookie(task.target, task.value);
 
     if (!g_active) {
@@ -237,10 +237,10 @@ function wptExec(script) {
 
 // navigate
 function wptNavigate(url) {
-  var where = "current";  // current tab
+  var where = 'current';  // current tab
   var isThirdPartyFixupAllowed = false;
   var postData = {};
-  var referrerUrl = "";
+  var referrerUrl = '';
   openUILink(url, where, isThirdPartyFixupAllowed, postData, referrerUrl);
 }
 
