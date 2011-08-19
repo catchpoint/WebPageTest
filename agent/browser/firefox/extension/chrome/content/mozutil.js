@@ -67,7 +67,7 @@ wpt.moz.setCookie = function(cookieObj) {
       null);  // The channel used to load the document.
 };
 
-wpt.moz.execScriptInSelectedTab = function(scriptText) {
+wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
   // Mozilla's Components.utils.sandbox object allows javascript to be run
   // with limited privlages.  Any javascript we run directly can do anything
   // extension javascript can do, including reading and writing to the
@@ -83,6 +83,10 @@ wpt.moz.execScriptInSelectedTab = function(scriptText) {
                                            // object.  A global reference that is
                                            // not defined on the sandbox will refer
                                            // to the item on the window.
+
+  for (var fnName in exportedFunctions) {
+    sandbox[fnName] = exportedFunctions[fnName];
+  }
 
   // If the script we are running throws, we need some way to see the exception.
   // Wrap the script in a try block, and dump any exceptions we catch.

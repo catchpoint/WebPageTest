@@ -1,4 +1,26 @@
 /**
+ * Copyright 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This file defines a namespace wpt.moz, which holds mozilla-specific
+ * menthods used by webpagetest.
+ *
+ *
+ * Code to find and run commands on DOM elements.  Users should
+ * run this code in a sandbox to avoid evil pages doing privileged things
+ * in event handlers called by this code.
+ *
  * This file defines a static list of fake commands.  These commands excersize
  * the code without talking to the wptdriver, allowing a simple test of basic
  * functionality without entering data in the web interface.
@@ -49,6 +71,26 @@ var FAKE_COMMANDS = [
         '} catch (ex) {',
         '  dump("Got ex:" + ex);',
         '}'].join('\n')),
+
+    // Search for a cute dog on youtube.
+    FakeCommand('navigate', 'http://www.youtube.com/'),
+    FakeCommand('setvalue', 'id=masthead-search-term', 'boston mspca legend'),
+    FakeCommand('submitform', 'id=masthead-search'),
+
+    // See some doodles on google.com.
+    FakeCommand('navigate', 'http://www.google.com/'),
+    FakeCommand('click', 'name\'btnI'),
+
+    // Alter the heading on news.google.com.
+    FakeCommand('navigate', 'http://www.google.com/news'),
+    FakeCommand('setinnertext', 'class=kd-appname',
+                'This text should replace the word news!'),
+
+    FakeCommand('setinnerhtml', 'class=kd-appname',
+                'This <b>HTML</b> should replace the word news!'),
+
+    FakeCommand('setvalue', 'class=searchField', 'Susie, the Qmiester'),
+    FakeCommand('submitform', 'id=search-hd'),
 
     // Test that we can set cookies.
     FakeCommand('setcookie', 'http://www.xol.com', 'zip = 20166'),

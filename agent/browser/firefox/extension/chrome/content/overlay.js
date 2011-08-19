@@ -34,6 +34,9 @@ var g_requesting_task = false;
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var run_fake_commands = false;
 
+// nuke all of the bookmarks to prevent any live feeds from updating
+// TODO: possibly be more forgiving and query for a list of live bookmarks
+wpt.moz.clearAllBookmarks();
 
 // Load a task.
 setTimeout(function() {WPTDRIVER.getTask();}, STARTUP_DELAY);
@@ -196,15 +199,35 @@ function wptExecuteTask(task) {
   if (task.action.length) {
     g_active = Boolean(task.record);
 
-    // decode and execute the actual command
-    if (task.action == 'navigate')
-      wptNavigate(task.target);
-    else if (task.action == 'exec')
-      wptExec(task.target);
-    else if (task.action == 'setcookie')
-      wptSetCookie(task.target, task.value);
-    else
-      dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
+    switch (task.action) {
+      case 'navigate':
+        wptNavigate(task.target);
+        break;
+      case 'exec':
+        wptExec(task.target);
+        break;
+      case 'setcookie':
+        wptSetCookie(task.target, task.value);
+        break;
+      case 'setvalue':
+        wptSetValue(task.target, task.value);
+        break;
+      case 'submitform':
+        wptSubmitform(task.target);
+        break;
+      case 'click':
+        wptClick(task.target);
+        break;
+      case 'setinnerhtml':
+        wptSetInnerHtml(task.target, task.value);
+        break;
+      case 'setinnertext':
+        wptSetInnerText(task.target, task.value);
+        break;
+      default:
+        dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
+    }
+
     if (!g_active) {
       setTimeout(function() {WPTDRIVER.getTask();}, TASK_INTERVAL);
     }
@@ -259,8 +282,72 @@ function wptSetCookie(cookie_path, data) {
 }
 
 
-// nuke all of the bookmarks to prevent any live feeds from updating
-// TODO: possibly be more forgiving and query for a list of live bookmarks
-wpt.moz.clearAllBookmarks();
+
+function RunCommandInSandbox(doc, commandObj) {
+  var ipcr = new wpt.contentScript.InPageCommandRunner(
+      doc,
+      null,  // No chrome API.
+      {
+        success: function() { dump('SUCCESS\n'); },
+        warn: function() {
+          dump('Warn: ' + Array.prototype.slice.call(arguments).join('') + '\n');
+        },
+        error: function() {
+          dump('Error: ' + Array.prototype.slice.call(arguments).join('') + '\n');
+        }
+      });
+  ipcr.RunCommand(commandObj);
+}
+
+function SendCommandToContentScript_(commandObj) {
+  var exportedFunctions = {
+    'RunCommandInSandbox': RunCommandInSandbox
+  };
+
+  var inPageScript = [
+      'RunCommandInSandbox(window.document, ', JSON.stringify(commandObj), ');'
+  ].join('');
+
+  wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
+}
+
+function wptSetValue(target, value) {
+  SendCommandToContentScript_({
+      'command': 'setValue',
+      'target': target,
+      'value': value
+  });
+}
+
+function wptSubmitform(target) {
+  SendCommandToContentScript_({
+      'command': 'submitForm',
+      'target': target
+  });
+}
+
+function wptClick(target, value) {
+  SendCommandToContentScript_({
+      'command': 'click',
+      'target': target,
+      'value': value
+  });
+}
+
+function wptSetInnerText(target, value) {
+  SendCommandToContentScript_({
+      'command': 'setInnerText',
+      'target': target,
+      'value': value
+  });
+}
+
+function wptSetInnerHtml(target, value) {
+  SendCommandToContentScript_({
+      'command': 'setInnerHTML',
+      'target': target,
+      'value': value
+  });
+}
 
 })();  // End closure
