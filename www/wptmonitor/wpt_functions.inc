@@ -1045,7 +1045,7 @@ function checkQueueGrowthCountAndEmailAlert(){
   $config = $configTable->find(1);
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
-    if ($status['QueueGrowthCount'] > 4 ){
+    if ($status['QueueGrowthCount'] > 6 ){
       logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 4 times for: '.$key);
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
@@ -1062,7 +1062,7 @@ function checkQueueGrowthCountAndEmailAlert(){
         $queueStatus[$key]['LastQueueGrowthAlertTime'] = current_seconds();
         writeIniFile($queueStatus, $queueStatusFilename ,true);
       } else {
-        logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck for: '.$key.' alert interval has not passed. Last Alert: '.$status["LastQueueGrowthAlertTime"]);
+//        logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck for: '.$key.' alert interval has not passed. Last Alert: '.$status["LastQueueGrowthAlertTime"]);
       }
     }
   }
@@ -1115,7 +1115,8 @@ function updateQueueProcessRate(){
               logOutput('[INFO] [updateQueueProcessRate] Incrementing count QueueGrowthCheck to '. $location['QueueGrowthCount'].' for: '.$key);
             } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
               logOutput('[INFO] [updateQueueProcessRate] Decrementing count QueueGrowthCheck for: '.$key);
-              $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']-1;
+//              $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']-1;
+              $location['QueueGrowthCount'];
             }
           }
           $location['QueueGrowthCheckTimeStamp'] = $currentTime;
