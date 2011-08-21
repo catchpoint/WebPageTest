@@ -167,7 +167,7 @@ class Smarty extends Smarty_Internal_Data {
     public $security_class = 'Smarty_Security';
     public $security_policy = null;
     public $php_handling = self::PHP_PASSTHRU;
-    public $allow_php_tag = false;
+    public $allow_php_tag = true;
     public $allow_php_templates = false;
     public $direct_access_security = true; 
     public $trusted_dir = array();
