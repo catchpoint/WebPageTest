@@ -72,7 +72,7 @@ else
             if( @strlen($test['testinfo']['completed']) )
                 echo "<completed>" . date("r",$test['testinfo']['completed']) . "</completed>";
         }
-        $runs = count($pageData);
+        $runs = max(array_keys($pageData));
         echo "<runs>$runs</runs>";
         echo "<average>";
         echo "<firstView>";

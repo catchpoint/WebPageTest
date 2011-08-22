@@ -54,7 +54,7 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
                 </p>
                 <?php 
-                $runs = count($pageData);
+                $runs = max(array_keys($pageData));
                 echo "<h3>Test is partially complete ($runs of {$test['test']['runs']} runs).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
             }
             else 
@@ -288,7 +288,7 @@ $page_description = "Website performance test result$testLabel.";
             if( count($pageData) > 1) 
                 echo '<h3 style="text-align:center;">Test Results</h3>';
 
-            $runs = count($pageData);
+            $runs = max(array_keys($pageData));
             $fvonly = 1;
             if( isset($rv) )
                 $fvonly = 0;
