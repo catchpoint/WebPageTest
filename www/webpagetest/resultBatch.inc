@@ -372,6 +372,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $fvRenderTimes = array();
     $rvLoadTimes = array();
     $rvRenderTimes = array();
+    $original = array();
+    $optimized = array();
     $count = 0;
     global $fvonly;
     $url = '';
@@ -396,6 +398,16 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $test['fvMedian'] = $fvMedian;
                 $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
                 $fvRenderTime = $pageData[$fvMedian][0]['render'];
+                if( $count )
+                {
+                    $optimized[0] = $pageData[$fvMedian][0];
+                    $optimized[0]['request_data'] = getRequests($id, $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                }
+                else
+                {
+                    $original[0] = $pageData[$fvMedian][0];
+                    $original[0]['request_data'] = getRequests($id, $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                }
                 if( !strlen($url) )
                     $url = $pageData[$fvMedian][0]['URL'];
             }
@@ -405,6 +417,16 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $test['rvMedian'] = $rvMedian;
                 $rvLoadTime = $pageData[$rvMedian][1]['loadTime'];
                 $rvRenderTime = $pageData[$rvMedian][1]['render'];
+                if( $count )
+                {
+                    $optimized[1] = $pageData[$rvMedian][1];
+                    $optimized[1]['request_data'] = getRequests($id, $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                }
+                else
+                {
+                    $original[1] = $pageData[$rvMedian][1];
+                    $original[1]['request_data'] = getRequests($id, $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                }
             }
         }
         else
@@ -420,50 +442,71 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         $count++;
     }
-    
+
+    $baseDomainRedirect = false;
+    $baseDomainSSL = false;
+    $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
+    if( count($requests) )
+    {
+        if($basePage = GetBasePage($requests))
+        {
+            // see if there was a domain redirect for the base page
+            $testedHost = $requests[0]['host'];
+            $basePageHost = $basePage['host'];
+            if( $testedHost != $basePageHost )
+                $baseDomainRedirect = true;
+            
+            // see if any of the requests served from the base page were over ssl
+            foreach( $requests as &$request )
+            {
+                if( $request['host'] == $basePageHost && $request['secure'] )
+                {
+                    $baseDomainSSL = true;
+                    break;
+                }
+            }
+        }
+    }
+
     if( $csv )
     {
-        echo "Test ID,URL,Location,Original Test ID,Optimized Test ID,Original FV Load Time,Optimized FV Load Time,Original RV Load Time,Optimized RV Load Time\n";
-        echo "$id,\"$url\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
-        echo "{$fvLoadTimes[0]},{$fvLoadTimes[1]},{$rvLoadTimes[0]},{$rvLoadTimes[1]}";
+        $testIssues = 0;
+        if ($baseDomainRedirect)
+            $testIssues |= 1;
+        if ($baseDomainSSL)
+            $testIssues |= 2;
+        echo "Test ID,URL,Location,Original Test ID,Optimized Test ID,";
+        echo "Original FV Load Time,Optimized FV Load Time,Original RV Load Time,Optimized RV Load Time,Base Domain Test Issues,";
+        echo "Original FV TTFB,Optimized FV TTFB,Original RV TTFB,Optimized RV TTFB,";
+        echo "Original FV Render,Optimized FV Render,Original RV Render,Optimized RV Render,";
+        echo "Original FV Socket Connect,Optimized FV Socket Connect,Original RV Socket Connect,Optimized RV Socket Connect,";
+        echo "Original FV Requests,Optimized FV Requests,Original RV Requests,Optimized RV Requests,";
+        echo "Original FV Bytes,Optimized FV Bytes,Original RV Bytes,Optimized RV Bytes,";
+        echo "\n$id,\"$url\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
+        echo "{$original[0]['loadTime']},{$optimized[0]['loadTime']},{$original[1]['loadTime']},{$optimized[1]['loadTime']},$testIssues,";
+        echo "{$original[0]['TTFB']},{$optimized[0]['TTFB']},{$original[1]['TTFB']},{$optimized[1]['TTFB']},";
+        echo "{$original[0]['render']},{$optimized[0]['render']},{$original[1]['render']},{$optimized[1]['render']},";
+        echo "{$original[0]['request_data'][0]['msSocket']},{$optimized[0]['request_data'][0]['msSocket']},{$original[1]['request_data'][0]['msSocket']},{$optimized[1]['request_data'][0]['msSocket']},";
+        echo "{$original[0]['requestsDoc']},{$optimized[0]['requestsDoc']},{$original[1]['requestsDoc']},{$optimized[1]['requestsDoc']},";
+        echo "{$original[0]['bytesInDoc']},{$optimized[0]['bytesInDoc']},{$original[1]['bytesInDoc']},{$optimized[1]['bytesInDoc']},";
     }
     else
     {
-        $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
-        if( count($requests) )
+        if ($baseDomainRedirect)
         {
-            if($basePage = GetBasePage($requests))
-            {
-                // see if there was a domain redirect for the base page
-                $testedHost = $requests[0]['host'];
-                $basePageHost = $basePage['host'];
-                if( $testedHost != $basePageHost )
-                {
-                    $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
-                    echo '<div class="alert">';
-                    echo '<h1>Domain Redirect Detected</h1>';
-                    echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
-                    echo '</div>';
-                }
-                
-                // see if any of the requests served from the base page were over ssl
-                $ssl = false;
-                foreach( $requests as &$request )
-                {
-                    if( $request['host'] == $basePageHost && $request['secure'] )
-                    {
-                        $ssl = true;
-                        break;
-                    }
-                }
-                if( $ssl )
-                {
-                    echo '<div class="alert">';
-                    echo '<h1>HTTPS Content Detected</h1>';
-                    echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
-                    echo '</div>';
-                }
-            }
+            $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
+            echo '<div class="alert">';
+            echo '<h1>Domain Redirect Detected</h1>';
+            echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
+            echo '</div>';
+        }
+        
+        if( $baseDomainSSL )
+        {
+            echo '<div class="alert">';
+            echo '<h1>HTTPS Content Detected</h1>';
+            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
+            echo '</div>';
         }
         
         echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
@@ -927,8 +970,9 @@ function VideoHtml($id)
                                         }\n
                                     }\n
                                 ); \n
-                </script>\n<br>
-                * The video may extend past the measured load time if the page was still updating after it was technically loaded\n";
+                </script>\n
+                <br>* The video may extend past the measured load time if the page was still updating after it was technically loaded\n
+                <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
 /**
