@@ -21,6 +21,8 @@
  * run this code in a sandbox to avoid evil pages doing privileged things
  * in event handlers called by this code.
  *
+ * Author: Sam Kerner (skerner at google dot com)
+ *
  * TODO(skerner): This code is a slightly altered version of the chrome
  * extension content script.  Factor out common code.
  */

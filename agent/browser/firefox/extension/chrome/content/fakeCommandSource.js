@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This file defines a namespace wpt.moz, which holds mozilla-specific
- * menthods used by webpagetest.
- *
- *
- * Code to find and run commands on DOM elements.  Users should
- * run this code in a sandbox to avoid evil pages doing privileged things
- * in event handlers called by this code.
- *
  * This file defines a static list of fake commands.  These commands excersize
  * the code without talking to the wptdriver, allowing a simple test of basic
  * functionality without entering data in the web interface.
+ *
+ * Author: Sam Kerner (skerner at google dot com)
  */
 
 // Namespace wpt.fakeCommandSource:

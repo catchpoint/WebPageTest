@@ -19,7 +19,10 @@
  * http://code.google.com/p/page-speed/source/browse/firefox_addon/trunk/src/pagespeed_firefox/js/pagespeed/pageLoadTimer.js
  */
 
-var WPTDRIVER = {};
+// Namespace wpt.moz.main:
+window['wpt'] = window['wpt'] || {};
+window.wpt['moz'] = window.wpt['moz'] || {};
+window.wpt.moz['main'] = window.wpt.moz['main'] || {};
 
 (function() {  // Begin closure
 
@@ -39,7 +42,7 @@ var run_fake_commands = false;
 wpt.moz.clearAllBookmarks();
 
 // Load a task.
-setTimeout(function() {WPTDRIVER.getTask();}, STARTUP_DELAY);
+setTimeout(function() {wpt.moz.main.getTask();}, STARTUP_DELAY);
 
 // monitor for page title changes
 // TODO: only track changes for the main browser window (alert boxes will fire as well)
@@ -63,14 +66,14 @@ setTimeout(function() {WPTDRIVER.getTask();}, STARTUP_DELAY);
 })();
 
 // Get the next task from the wptdriver.
-WPTDRIVER.getTask = function() {
+wpt.moz.main.getTask = function() {
   if (!g_requesting_task) {
     g_requesting_task = true;
 
     if (run_fake_commands) {
       var nextCommand = wpt.fakeCommandSource.next();
       if (nextCommand)
-        wptExecuteTask(nextCommand);
+        wpt.moz.main.executeTask(nextCommand);
 
     } else {
       try {
@@ -86,7 +89,7 @@ WPTDRIVER.getTask = function() {
                       xhr.responseText.substr(0, 120) + '[...]\n');
               }
               if (resp.statusCode == 200) {
-                wptExecuteTask(resp.data);
+                wpt.moz.main.executeTask(resp.data);
               }
             }
           }
@@ -99,7 +102,7 @@ WPTDRIVER.getTask = function() {
 }
 
 // notification that navigation started
-function wptOnNavigate() {
+wpt.moz.main.onNavigate = function() {
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:8888/event/navigate', true);
@@ -108,7 +111,7 @@ function wptOnNavigate() {
 }
 
 // notification that the page loaded
-function wptOnLoad(load_time) {
+wpt.moz.main.onLoad = function(load_time) {
   try {
     g_active = false;
     var xhr = new XMLHttpRequest();
@@ -167,13 +170,13 @@ var wptExtension = {
   loadStart: function() {
     if (g_active) {
       this.startTime = (new Date()).getTime();
-      wptOnNavigate();
+      wpt.moz.main.onNavigate();
     }
   },
   loadStop: function() {
     if (g_active) {
       var loadTime = (new Date()).getTime() - this.startTime;
-      wptOnLoad(loadTime);
+      wpt.moz.main.onLoad(loadTime);
       dump('load time:  ' + loadTime + '\n');
     }
   }
@@ -194,61 +197,61 @@ function trim(stringToTrim) {
 ***********************************************************/
 
 // execute a single task/script command
-function wptExecuteTask(task) {
+wpt.moz.main.executeTask = function(task) {
   dump('Exec: ' + JSON.stringify(task, null, 2) + '\n');
   if (task.action.length) {
     g_active = Boolean(task.record);
 
     switch (task.action) {
       case 'navigate':
-        wptNavigate(task.target);
+        wpt.moz.main.navigate(task.target);
         break;
       case 'exec':
-        wptExec(task.target);
+        wpt.moz.main.exec(task.target);
         break;
       case 'setcookie':
-        wptSetCookie(task.target, task.value);
+        wpt.moz.main.setCookie(task.target, task.value);
         break;
       case 'setvalue':
-        wptSetValue(task.target, task.value);
+        wpt.moz.main.setValue(task.target, task.value);
         break;
       case 'submitform':
-        wptSubmitform(task.target);
+        wpt.moz.main.submitform(task.target);
         break;
       case 'click':
-        wptClick(task.target);
+        wpt.moz.main.click(task.target);
         break;
       case 'setinnerhtml':
-        wptSetInnerHtml(task.target, task.value);
+        wpt.moz.main.setInnerHtml(task.target, task.value);
         break;
       case 'setinnertext':
-        wptSetInnerText(task.target, task.value);
+        wpt.moz.main.setInnerText(task.target, task.value);
         break;
       default:
         dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
     }
 
     if (!g_active) {
-      setTimeout(function() {WPTDRIVER.getTask();}, TASK_INTERVAL);
+      setTimeout(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
     }
   }
 }
 
 // exec
-function wptExec(script) {
+wpt.moz.main.exec = function(script) {
   wpt.moz.execScriptInSelectedTab(script);
 }
 
 // navigate
-function wptNavigate(url) {
+wpt.moz.main.navigate = function(url) {
   var where = 'current';  // current tab
   var isThirdPartyFixupAllowed = false;
   var postData = {};
   var referrerUrl = '';
   openUILink(url, where, isThirdPartyFixupAllowed, postData, referrerUrl);
-}
+};
 
-function wptSetCookie(cookie_path, data) {
+wpt.moz.main.setCookie = function(cookie_path, data) {
   var pos = data.indexOf(';');
   var val = data;
   var cookie_expires = '';
@@ -281,9 +284,14 @@ function wptSetCookie(cookie_path, data) {
   }
 }
 
-
-
-function RunCommandInSandbox(doc, commandObj) {
+/**
+ * Run a command that touches the DOM of a page.  The work is done
+ * by code in class wpt.contentScript.InPageCommandRunner.  This
+ * function should be called within a sandbox, limited to the context
+ * of a selected tab.  DON'T use this directly:  Use it by calling
+ * SendCommandToContentScript(), which runs it in a sandbox.
+ */
+function RunCommand_(doc, commandObj) {
   var ipcr = new wpt.contentScript.InPageCommandRunner(
       doc,
       null,  // No chrome API.
@@ -299,19 +307,24 @@ function RunCommandInSandbox(doc, commandObj) {
   ipcr.RunCommand(commandObj);
 }
 
+/**
+ * Run a command by instantiating an InPageCommandRunner()
+ * in a sandbox scoped to the window of the current tab,
+ * and passing it an object that specifies a command to invoke.
+ */
 function SendCommandToContentScript_(commandObj) {
   var exportedFunctions = {
-    'RunCommandInSandbox': RunCommandInSandbox
+    'RunCommand_': RunCommand_
   };
 
   var inPageScript = [
-      'RunCommandInSandbox(window.document, ', JSON.stringify(commandObj), ');'
+      'RunCommand_(window.document, ', JSON.stringify(commandObj), ');'
   ].join('');
 
   wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
 }
 
-function wptSetValue(target, value) {
+wpt.moz.main.setValue = function(target, value) {
   SendCommandToContentScript_({
       'command': 'setValue',
       'target': target,
@@ -319,14 +332,14 @@ function wptSetValue(target, value) {
   });
 }
 
-function wptSubmitform(target) {
+wpt.moz.main.submitform = function(target) {
   SendCommandToContentScript_({
       'command': 'submitForm',
       'target': target
   });
 }
 
-function wptClick(target, value) {
+wpt.moz.main.click = function(target, value) {
   SendCommandToContentScript_({
       'command': 'click',
       'target': target,
@@ -334,7 +347,7 @@ function wptClick(target, value) {
   });
 }
 
-function wptSetInnerText(target, value) {
+wpt.moz.main.setInnerText = function(target, value) {
   SendCommandToContentScript_({
       'command': 'setInnerText',
       'target': target,
@@ -342,7 +355,7 @@ function wptSetInnerText(target, value) {
   });
 }
 
-function wptSetInnerHtml(target, value) {
+wpt.moz.main.setInnerHtml = function(target, value) {
   SendCommandToContentScript_({
       'command': 'setInnerHTML',
       'target': target,
