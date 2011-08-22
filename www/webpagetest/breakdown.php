@@ -172,8 +172,8 @@ if( (int)$test[test][fvonly] == 0 )
                 </tr>
             </table>
             <br>
-            <img class="progress" usemap="#connection_map_rv" id="connectionView" src="<?php 
-                echo "/connectionView.$extension?width=930&test=$id&run=$run&mime=1&cached=1";?>">
+            <img class="progress" usemap="#connection_map_rv" id="connectionViewRv" src="<?php 
+                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=1";?>">
             </div>
             <?php } ?>
         </div>
