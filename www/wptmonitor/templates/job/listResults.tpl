@@ -312,8 +312,8 @@
     0{/if}
     <hr>{if $res.AvgRepeatViewDocCompleteRequests}{$res.AvgRepeatViewDocCompleteRequests}{else}0{/if}</td>
   <td style="opacity:0.7;background-color:#fdf5e6;" align="right"
-      valign="top">{$res.AvgFirstViewDocCompleteBytesIn/1000|number_format}K
-    <hr>{$res.AvgRepeatViewDocCompleteBytesIn/1000|number_format}K
+      valign="top">{($res.AvgFirstViewDocCompleteBytesIn/1000)|string_format:"%d"}K
+    <hr>{($res.AvgRepeatViewDocCompleteBytesIn/1000)|string_format:"%d"}K
   </td>
   <td style="opacity:0.7;background-color:#dcdcdc;" align="right"
       valign="top">{$res.AvgFirstViewFullyLoadedTime/1000}
@@ -323,8 +323,8 @@
     0{/if}
     <hr>{if $res.AvgRepeatViewFullyLoadedRequests}{$res.AvgRepeatViewFullyLoadedRequests}{else}0{/if}</td>
   <td style="opacity:0.7;background-color:#dcdcdc;" align="right"
-      valign="top">{$res.AvgFirstViewFullyLoadedBytesIn/1000|number_format}K
-    <hr>{$res.AvgRepeatViewFullyLoadedBytesIn/1000|number_format}K
+      valign="top">{($res.AvgFirstViewFullyLoadedBytesIn/1000)|string_format:"%d"}K
+    <hr>{($res.AvgRepeatViewFullyLoadedBytesIn/1000)|string_format:"%d"}K
   </td>
 </tr>
 {if ($showResultsThumbs eq 'true' || $showWaterfallThumbs eq 'true') && $res.Status != 100}
