@@ -1,5 +1,6 @@
 <?php
 $msStart = microtime(true);
+define('RESTORE_DATA_ONLY', true);
 
 //$debug=true;
 include 'common.inc';

@@ -2,6 +2,12 @@
 set_time_limit(300);
 if( !defined('BARE_UI') )
     define('BARE_UI', true);
+$csv = false;
+if( $_REQUEST['f'] == 'csv' )
+{
+    define('RESTORE_DATA_ONLY', true);
+    $csv = true;
+}
 require_once('testStatus.inc');
 $tests = null;
 if( gz_is_file("$testPath/bulk.json") )
@@ -27,10 +33,6 @@ $fvonly = false;
 if( $test['test']['fvonly'] )
     $fvonly = true;
     
-$csv = false;
-if( $_REQUEST['f'] == 'csv' )
-    $csv = true;
-
 // run a quick check to see if the tests are complete
 $dirty = false;
 $complete = CheckTests($tests, $dirty);
