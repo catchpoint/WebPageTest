@@ -385,9 +385,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $fvRenderTime = null;
         $rvLoadTime = null;
         $rvRenderTime = null;
-        $id = $test['id'];
-        RestoreTest($id);
-        $test['path'] = GetTestPath($id);
+        RestoreTest($test['id']);
+        $test['path'] = GetTestPath($test['id']);
         $testPath = './' . $test['path'];
         if( $test['c'] )
         {
@@ -401,12 +400,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if( $count )
                 {
                     $optimized[0] = $pageData[$fvMedian][0];
-                    $optimized[0]['request_data'] = getRequests($id, $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                    $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                 }
                 else
                 {
                     $original[0] = $pageData[$fvMedian][0];
-                    $original[0]['request_data'] = getRequests($id, $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                    $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                 }
                 if( !strlen($url) )
                     $url = $pageData[$fvMedian][0]['URL'];
@@ -420,18 +419,18 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if( $count )
                 {
                     $optimized[1] = $pageData[$rvMedian][1];
-                    $optimized[1]['request_data'] = getRequests($id, $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                    $optimized[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
                 }
                 else
                 {
                     $original[1] = $pageData[$rvMedian][1];
-                    $original[1]['request_data'] = getRequests($id, $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                    $original[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
                 }
             }
         }
         else
         {
-            $test['status'] = GetTestStatusText($id);
+            $test['status'] = GetTestStatusText($test['id']);
         }
         $fvLoadTimes[$count] = $fvLoadTime;
         $fvRenderTimes[$count] = $fvRenderTime;
@@ -519,7 +518,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $label = htmlspecialchars($test['l']);
             if( !strlen($label) )
                 $label = htmlspecialchars(ShortenUrl($test['u']));
-            $id = $test['id'];
             echo "<th>$label</th>";
             if( $count && $complete )
                 echo "<th>Difference</a></th>";
