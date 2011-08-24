@@ -717,7 +717,8 @@ void CTestState::CheckReadyState(void)
 		  }
   		
 		  CString buff;
-		  buff.Format(_T("[Pagetest] * Browser ReadyState changed to %s\n"), (LPCTSTR)state);
+		  buff.Format(_T("Browser ReadyState changed to %s\n"), (LPCTSTR)state);
+      StatusUpdate(buff);
 		  OutputDebugString(buff);
 	  }
   }

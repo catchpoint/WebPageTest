@@ -473,6 +473,7 @@ void CPagetestReporting::FlushResults(void)
 			CComPtr<IWebBrowser2>	browser;
 			
 			ATLTRACE(_T("[Pagetest] - Exiting\n"));
+      available = false;
 			EnterCriticalSection(&cs);
 			POSITION pos = browsers.GetHeadPosition();
 			while(pos)

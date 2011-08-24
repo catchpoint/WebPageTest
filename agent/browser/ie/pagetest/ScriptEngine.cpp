@@ -122,6 +122,7 @@ void CScriptEngine::ScriptComplete(void)
 	if( exitWhenDone )
 	{
 		ATLTRACE(_T("[Pagetest] Exiting\n"));
+    available = false;
 		POSITION pos = browsers.GetHeadPosition();
 		while(pos)
 		{
@@ -357,7 +358,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("navigate")) )
 			{
-				done = IncrementStep(true);	// implicit wait with any navigations
+				done = IncrementStep();	// implicit wait with any navigations
 
 				// navigate to the given url
 				if( !browsers.IsEmpty() )

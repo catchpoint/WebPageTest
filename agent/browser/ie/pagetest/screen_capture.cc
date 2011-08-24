@@ -112,7 +112,7 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
       HDC dc = CreateCompatibleDC(src);
       if (dc) {
         RECT rect;
-        GetWindowRect(wnd, &rect);
+        GetClientRect(wnd, &rect);
         int width = abs(rect.right - rect.left);
         int height = abs(rect.top - rect.bottom);
         if (width && height) {

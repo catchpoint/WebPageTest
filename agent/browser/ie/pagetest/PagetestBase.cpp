@@ -756,7 +756,7 @@ DWORD CPagetestBase::CountDOMElements(CComQIPtr<IHTMLDocument2> &doc)
   Find what we assume is the browser document window:
   Largest child window that:
   - Is visible
-  - Takes > 50% of the parent window's space
+  - Takes > 80% of the parent window's space
   - Recursively checks the largest child
 -----------------------------------------------------------------------------*/
 HWND CPagetestBase::FindBrowserDocument(HWND parent_window) 
@@ -768,7 +768,7 @@ HWND CPagetestBase::FindBrowserDocument(HWND parent_window)
   if (GetWindowRect(parent_window, &rect)) 
   {
     DWORD parent_pixels = abs(rect.right - rect.left) * abs(rect.top - rect.bottom);
-    DWORD cutoff = parent_pixels / 2;
+    DWORD cutoff = (DWORD)((double)parent_pixels * 0.8);
     if (parent_pixels) 
     {
       HWND child = GetWindow(parent_window, GW_CHILD);

@@ -66,7 +66,7 @@ function loadPageData($file)
     $lines = gz_file($file);
     if( $lines)
     {
-        // loop through each line in the file
+        // loop through each line in the file until we get a data record
         foreach($lines as $linenum => $line) 
         {
             $parseLine = str_replace("\t", "\t ", $line);
@@ -116,6 +116,8 @@ function loadPageData($file)
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))
                     $ret['pageSpeedVersion'] = '1.9';
+
+                break;
             }
         }
     }

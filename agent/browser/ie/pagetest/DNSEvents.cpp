@@ -53,9 +53,6 @@ bool CDNSEvents::DnsLookupStart(CString &name, void *&context, CAtlArray<DWORD> 
 	bool overrideDNS = false;
 	context = NULL;
 	
-	if( !active && available && CheckABM() )
-		DoStartup(name);
-
 	// make sure we are timing something
 	if( active )
 	{

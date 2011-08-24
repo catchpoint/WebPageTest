@@ -144,15 +144,6 @@ void CSocketEvents::CloseSocket(SOCKET s)
 -----------------------------------------------------------------------------*/
 void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 {
-	if( !active && available )
-	{
-		if(!IsFakeSocket(s, len, buff) && CheckABM() )
-		{
-			CString url(_T("Data Transmitted"));
-			DoStartup(url);
-		}
-	}
-
 	// make sure we are timing something
 	if( active )
 	{
@@ -386,18 +377,6 @@ void CSocketEvents::SocketRecv(SOCKET s, DWORD len, LPBYTE buff)
 -----------------------------------------------------------------------------*/
 void CSocketEvents::SocketConnect(SOCKET s, struct sockaddr_in * addr)
 {
-	// if we're doing activity based measurement then start tracking
-	if( !active && available && addr )
-	{
-		// make sure it's not the loopback socket
-		if( addr->sin_addr.S_un.S_addr != 0x0100007F && CheckABM() )
-		{
-			ATLTRACE(_T("[Pagetest] - CWatchDlg::SocketConnect outside of active doc, doing startup"));
-			CString url(_T("Socket Connected"));
-			DoStartup(url);
-		}
-	}
-	
 	// create the new connect attempt
 	CSocketConnect * c = new CSocketConnect(s, *addr, currentDoc);
 

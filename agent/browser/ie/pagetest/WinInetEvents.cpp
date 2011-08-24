@@ -635,12 +635,6 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 	
 	ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - BeforeHttpOpenRequest : flags - 0x%08X %s %s\n"), GetCurrentThreadId(), hConnect, dwFlags, (LPCTSTR)verb, (LPCTSTR)object);
 
-
-	if( !active && available && CheckABM() )
-	{
-		DoStartup(object);
-	}
-		
 	if( active )
 	{
     if( !hostOverride.IsEmpty() ||
