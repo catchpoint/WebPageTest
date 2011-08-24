@@ -458,6 +458,9 @@ void CPagetestReporting::FlushResults(void)
 
 	ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - done with results processing\n"));
 
+  // reset the test state
+  Reset();
+
 	// are we running a script?
 	if( runningScript )
 		ContinueScript(true);

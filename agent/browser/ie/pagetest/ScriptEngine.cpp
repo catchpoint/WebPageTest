@@ -382,6 +382,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("setValue")) )
 			{
+        IncrementStep();
 				// set the value of a given HTML element
 				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
 				
@@ -410,6 +411,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("setInnerText")) )
 			{
+        IncrementStep();
 				// set the innerText of a given HTML element
 				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
 				if( element )
@@ -421,6 +423,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("setInnerHTML")) )
 			{
+        IncrementStep();
 				// set the innerText of a given HTML element
 				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
 				if( element )
@@ -432,6 +435,7 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("selectValue")) )
 			{
+        IncrementStep();
 				// Set the value of a drop-down list
 				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
 				if( element )
@@ -465,6 +469,8 @@ void CScriptEngine::ContinueScript(bool reset)
 			{
 				if( !item.command.CompareNoCase(_T("clickAndWait")) )
 					done = IncrementStep();
+        else
+          IncrementStep();
 
 				// Click on the element
 				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
@@ -593,6 +599,8 @@ void CScriptEngine::ContinueScript(bool reset)
 			{
 				if( !item.command.CompareNoCase(_T("execAndWait")) )
 					done = IncrementStep();
+        else
+          IncrementStep();
 					
 				// replace all of the line feeds with spaces
 				item.target.Replace(_T("\r"), _T(" "));
@@ -744,7 +752,8 @@ void CScriptEngine::ContinueScript(bool reset)
 -----------------------------------------------------------------------------*/
 bool CScriptEngine::IncrementStep(bool waitForActivity)
 {
-  if( !script_combineSteps || !start )
+  ATLTRACE(_T("[Pagetest] - CScriptEngine::IncrementStep()"));
+  if( !active && (!script_combineSteps || !start) )
   {
 	  scriptStep++;
 	  if( newEventName.IsEmpty() )
@@ -754,12 +763,24 @@ bool CScriptEngine::IncrementStep(bool waitForActivity)
 
 	  if( !waitForActivity )
 	  {
+      ATLTRACE(_T("[Pagetest] - CScriptEngine::IncrementStep() - Starting measurement"));
 		  CString url(_T("Script Event"));
 		  DoStartup(url);
 		  StartMeasuring();
 		  QueryPerformanceCounter((LARGE_INTEGER *)&start);
 		  firstByte = 0;
 	  }
+  }
+  else
+  {
+    if( active )
+    {
+      ATLTRACE(_T("[Pagetest] - CScriptEngine::IncrementStep() - Already active"));
+    }
+    else if(script_combineSteps && start)
+    {
+      ATLTRACE(_T("[Pagetest] - CScriptEngine::IncrementStep() - Already started"));
+    }
   }
 
 	return true;
@@ -1269,6 +1290,8 @@ void CScriptEngine::SendKeyCommand(const OLECHAR * command, CScriptItem & item, 
 			cmd.MakeLower();
 			if( cmd.Find(_T("andwait")) >= 0 )
 				done = IncrementStep();
+      else
+        IncrementStep();
 
 			VARIANT eventObject;
 			VariantInit(&eventObject);
@@ -1362,6 +1385,8 @@ void CScriptEngine::SendMouseCommand(const OLECHAR * command, CScriptItem & item
 		cmd.MakeLower();
 		if( cmd.Find(_T("andwait")) >= 0 )
 			done = IncrementStep();
+    else
+      IncrementStep();
 
 		VARIANT eventObject;
 		VariantInit(&eventObject);
@@ -1426,6 +1451,8 @@ void CScriptEngine::SendCommand(CScriptItem & item, bool & err, bool & done)
 			cmd.MakeLower();
 			if( cmd.Find(_T("andwait")) >= 0 )
 				done = IncrementStep();
+      else
+        IncrementStep();
 
 			VARIANT eventObject;
 			VariantInit(&eventObject);
