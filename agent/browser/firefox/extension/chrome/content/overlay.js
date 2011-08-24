@@ -28,6 +28,8 @@ window.wpt.moz['main'] = window.wpt.moz['main'] || {};
 
 var STARTUP_DELAY = 5000;
 var TASK_INTERVAL = 1000;
+var TASK_INTERVAL_SHORT = 0;
+
 var g_active = false;
 var g_tabId = -1;
 var g_start = 0;
@@ -35,14 +37,35 @@ var g_requesting_task = false;
 
 
 // Set to true to pull commands from a static list in fakeCommandSource.js.
-var run_fake_commands = false;
+var RUN_FAKE_COMMAND_SEQUENCE = false;
 
 // nuke all of the bookmarks to prevent any live feeds from updating
 // TODO: possibly be more forgiving and query for a list of live bookmarks
 wpt.moz.clearAllBookmarks();
 
+wpt.moz.main.onStartup = function() {
+  if (RUN_FAKE_COMMAND_SEQUENCE) {
+    // Run the tasks in FAKE_TASKS.
+    window.setInterval(function() {
+      var nextCommand = wpt.fakeCommandSource.next();
+      if (nextCommand)
+        wpt.moz.main.executeTask(nextCommand);
+    }, TASK_INTERVAL);
+  } else {
+    // Fetch tasks from wptdriver.exe .
+    window.setInterval(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
+  }
+};
+
+function wptFeedFakeTasks() {
+  if (FAKE_TASKS.length == FAKE_TASKS_IDX) {
+    return;
+  }
+  wpt.moz.main.executeTask(FAKE_TASKS[FAKE_TASKS_IDX++]);
+};
+
 // Load a task.
-setTimeout(function() {wpt.moz.main.getTask();}, STARTUP_DELAY);
+setTimeout(function() {wpt.moz.main.onStartup();}, STARTUP_DELAY);
 
 // monitor for page title changes
 // TODO: only track changes for the main browser window (alert boxes will fire as well)
@@ -69,37 +92,29 @@ setTimeout(function() {wpt.moz.main.getTask();}, STARTUP_DELAY);
 wpt.moz.main.getTask = function() {
   if (!g_requesting_task) {
     g_requesting_task = true;
-
-    if (run_fake_commands) {
-      var nextCommand = wpt.fakeCommandSource.next();
-      if (nextCommand)
-        wpt.moz.main.executeTask(nextCommand);
-
-    } else {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', 'http://127.0.0.1:8888/task', true);
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState == 4) {
-            if (xhr.responseText.length > 0) {
-              try {
-                var resp = JSON.parse(xhr.responseText);
-              } catch(err) {
-                throw('Error parsing response as JSON: ' +
-                      xhr.responseText.substr(0, 120) + '[...]\n');
-              }
-              if (resp.statusCode == 200) {
-                wpt.moz.main.executeTask(resp.data);
-              }
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'http://127.0.0.1:8888/task', true);
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          if (xhr.responseText.length > 0) {
+            try {
+              var resp = JSON.parse(xhr.responseText);
+            } catch(err) {
+              alert('Error parsing response as JSON: ' +
+                    xhr.responseText.substr(0, 120) + '[...]\n');
+            }
+            if (resp.statusCode == 200 && resp.data) {
+              wpt.moz.main.executeTask(resp.data);
             }
           }
         }
-        xhr.send();
-      } catch(err) {}
-    }
+      };
+      xhr.send();
+    } catch(err) {}
     g_requesting_task = false;
   }
-}
+};
 
 // notification that navigation started
 wpt.moz.main.onNavigate = function() {
@@ -199,9 +214,9 @@ function trim(stringToTrim) {
 // execute a single task/script command
 wpt.moz.main.executeTask = function(task) {
   dump('Exec: ' + JSON.stringify(task, null, 2) + '\n');
-  if (task.action.length) {
-    g_active = Boolean(task.record);
 
+  if (task.action && task.action.length) {
+    g_active = !!task.record;  // "record" shoudl be named "blocking".  If true, don't ask for another command.
     switch (task.action) {
       case 'navigate':
         wpt.moz.main.navigate(task.target);
@@ -232,7 +247,7 @@ wpt.moz.main.executeTask = function(task) {
     }
 
     if (!g_active) {
-      setTimeout(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
+      setTimeout(function() {wpt.moz.main.getTask();}, TASK_INTERVAL_SHORT);
     }
   }
 }
