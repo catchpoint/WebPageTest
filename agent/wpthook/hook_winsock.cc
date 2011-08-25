@@ -363,6 +363,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       chunk.TakeOwnership(new_data, original_len);
 
       is_modified = _sockets.ModifyDataOut(s, chunk);
+      _sockets.DataOut(s, chunk);
     }
     if (is_modified) {
       WSABUF out;
