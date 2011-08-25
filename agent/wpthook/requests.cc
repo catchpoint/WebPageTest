@@ -98,17 +98,20 @@ void Requests::SocketClosed(DWORD socket_id) {
 -----------------------------------------------------------------------------*/
 void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-           _T("[wpthook] - Requests::DataIn() %d bytes\n"), chunk.GetLength());
+           _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),
+           socket_id, chunk.GetLength());
   if (_test_state._active) {
     _test_state.ActivityDetected();
-    // see if it maps to a known request
     EnterCriticalSection(&cs);
+    // See if socket maps to a known request.
     Request * request = NULL;
     if (_active_requests.Lookup(socket_id, request) && request) {
       request->DataIn(chunk);
     } else {
-      WptTrace(loglevel::kFrequentEvent, _T("[wpthook] - Requests::DataIn()")
-               _T(" not associated with a known request\n"));
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)")
+               _T("   not associated with a known request"),
+               socket_id, chunk.GetLength());
     }
     LeaveCriticalSection(&cs);
   }
@@ -121,7 +124,6 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
   bool is_modified = false;
   if (_test_state._active) {
     _test_state.ActivityDetected();
-    // See if it maps to a known request.
     EnterCriticalSection(&cs);
     Request * request = GetOrCreateRequest(socket_id, chunk);
     if (request) {
@@ -129,13 +131,13 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
     } else {
       WptTrace(loglevel::kFrequentEvent,
                _T("[wpthook] - Requests::ModifyDataOut(socket_id=%d, len=%d)")
-               _T(" not associated with a known request\n"),
+               _T("  Non-HTTP traffic detected"),
                socket_id, chunk.GetLength());
     }
     LeaveCriticalSection(&cs);
   }
   WptTrace(loglevel::kFunction,
-      _T("[wpthook] - Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d\n"),
+      _T("[wpthook] - Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d"),
       socket_id, chunk.GetLength(), is_modified);
   return is_modified;
 }
@@ -144,18 +146,19 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
 -----------------------------------------------------------------------------*/
 void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-           _T("[wpthook] - Requests::DataOut %d bytes\n"), chunk.GetLength());
+           _T("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)"),
+           socket_id, chunk.GetLength());
   if (_test_state._active) {
     _test_state.ActivityDetected();
-    // see if we are starting a new http request
     EnterCriticalSection(&cs);
     Request * request = GetOrCreateRequest(socket_id, chunk);
-    if (_active_requests.Lookup(socket_id, request) && request) {
+    if (request) {
       request->DataOut(chunk);
     } else {
       WptTrace(loglevel::kFrequentEvent, 
-                _T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
-                _T(" on socket %d"), socket_id);
+               _T("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)")
+               _T("  Non-HTTP traffic detected"),
+               socket_id, chunk.GetLength());
     }
     LeaveCriticalSection(&cs);
   }

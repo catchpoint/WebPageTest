@@ -98,7 +98,7 @@ Request::~Request(void) {
 -----------------------------------------------------------------------------*/
 void Request::DataIn(DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - Request::DataIn() - %d bytes\n"), chunk.GetLength());
+      _T("[wpthook] - Request::DataIn(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (_active) {
@@ -171,7 +171,7 @@ bool Request::ModifyDataOut(DataChunk& chunk) {
 -----------------------------------------------------------------------------*/
 void Request::DataOut(DataChunk& chunk) {
   WptTrace(loglevel::kFunction,
-      _T("[wpthook] - Request::DataOut() - %d bytes\n"), chunk.GetLength());
+      _T("[wpthook] - Request::DataOut(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (_active) {
