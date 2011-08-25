@@ -37,10 +37,9 @@ const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool SocketInfo::IsLocalhost() {
-  if (_addr.sin_addr.S_un.S_addr == LOCALHOST) {
-    return true;
-  }
-  return false;
+  return (_addr.sin_addr.S_un.S_addr == LOCALHOST ||
+          // In Chrome, some Connect's are never seen for the local connections.
+          _connect_start.QuadPart == 0);
 }
 
 /*-----------------------------------------------------------------------------
