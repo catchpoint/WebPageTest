@@ -63,7 +63,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _sockets(sockets)
   , _dns(dns)
   , _processed(false)
-  , _headers_complete(false)
+  , _are_headers_complete(false)
   , _body_in_allocated(false)
   , _body_in(NULL)
   , _body_in_size(0) {
@@ -96,9 +96,9 @@ Request::~Request(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::DataIn(const char * data, unsigned long data_len) {
+void Request::DataIn(DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - Request::DataIn() - %d bytes\n"), data_len);
+      _T("[wpthook] - Request::DataIn() - %d bytes\n"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (_active) {
@@ -106,93 +106,87 @@ void Request::DataIn(const char * data, unsigned long data_len) {
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
 
-    _data_received += data_len;
+    _data_received += chunk.GetLength();
     if (_data_received < MAX_DATA_TO_RETAIN) {
-      DataChunk chunk(data, data_len);
-      _data_chunks_in.AddTail(chunk);
+      _data_chunks_in.AddTail(chunk.GiveAwayOwnership());
     }
 
     // Track for BW statistics.
-    _test_state._bytes_in += data_len;
+    _test_state._bytes_in += chunk.GetLength();
   }
   LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::DataOut(const char * data, unsigned long data_len,
-                      char * &new_buff, unsigned long &new_len) {
-  WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Request::DataOut() - %d bytes\n"), data_len);
-  
+bool Request::ModifyDataOut(DataChunk& chunk) {
+  bool is_modified = false;
+  EnterCriticalSection(&cs);
+  const char * data = chunk.GetData();
+  unsigned long data_len = chunk.GetLength();
+  if (_active && !_are_headers_complete && data && data_len > 0) {
+    CStringA headers;
+    CStringA line;
+    const char * current_data = data;
+    unsigned long current_data_len = data_len;
+    while(current_data_len) {
+      if (*current_data == '\r' || *current_data == '\n') {
+        if(!line.IsEmpty()) {
+          if (_test.ModifyRequestHeader(line))
+            is_modified = true;
+          if (line.GetLength()) {
+            headers += line;
+            headers += "\r\n";
+          }
+          line.Empty();
+        }
+        if (current_data_len >= 4 && !strncmp(current_data, "\r\n\r\n", 4)) {
+          headers += "\r\n";
+          current_data += 4;
+          current_data_len -= 4;
+          break;
+        }
+      } else {
+        line += *current_data;
+      }
+      current_data++;
+      current_data_len--;
+    }
+    if (is_modified) {
+      DWORD headers_len = headers.GetLength();
+      DWORD new_len = headers_len + current_data_len;
+      LPSTR new_data = (char *)malloc(new_len);
+      memcpy(new_data, (LPCSTR)headers, headers_len);
+      if (current_data_len) {
+        memcpy(new_data + headers_len, current_data, current_data_len);
+      }
+      chunk.TakeOwnership(new_data, new_len);
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return is_modified;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::DataOut(DataChunk& chunk) {
+  WptTrace(loglevel::kFunction,
+      _T("[wpthook] - Request::DataOut() - %d bytes\n"), chunk.GetLength());
+
   EnterCriticalSection(&cs);
   if (_active) {
-    if (new_buff) {
-      // TODO: implement support for multiple-buffer sends
-    }
-    // see if we need to modify any of the data on it's way out
-    if (!_headers_complete && data && data_len && !new_buff) {
-      CStringA headers;
-      bool modified = false;
-      CStringA line;
-      unsigned long bytes = data_len;
-      unsigned long header_len = 0;
-      const char * current_data = data;
-      while( !_headers_complete && bytes ) {
-        if (*current_data == '\r' || *current_data == '\n') {
-          if( !line.IsEmpty() ) {
-            if (_test.ModifyRequestHeader(line))
-              modified = true;
-            if (line.GetLength()) {
-              headers += line;
-              headers += "\r\n";
-            }
-            line.Empty();
-          }
-          if (bytes >= 4 && !strncmp(current_data, "\r\n\r\n", 4)) {
-            headers += "\r\n";
-            header_len = data_len - bytes + 4;
-            _headers_complete = true;
-          }
-        } else {
-          line += *current_data;
-        }
-        current_data++;
-        bytes--;
+    // Keep track of the data that was actually sent.
+    unsigned long chunk_len = chunk.GetLength();
+    if (chunk_len > 0) {
+      if (!_are_headers_complete &&
+          chunk_len >= 4 && strstr(chunk.GetData(), "\r\n\r\n")) {
+        _are_headers_complete = true;
       }
-      if (modified) {
-        new_len = headers.GetLength();
-        unsigned long delta = 0;
-        if (header_len < data_len) {
-          CString buff;
-          delta = data_len - header_len;
-        }
-        new_len += delta;
-        new_buff = (char *)malloc(new_len);
-        memcpy(new_buff, (LPCSTR)headers, headers.GetLength());
-        if (delta) {
-          char * dest = new_buff + headers.GetLength();
-          const char * src = data + header_len;
-          memcpy(dest, src, delta);
-        }
-      }
-    }
-
-    // keep track of the data that was actually sent
-    if (new_buff) {
-      _data_sent += new_len;
+      _data_sent += chunk_len;
       if (_data_sent < MAX_DATA_TO_RETAIN) {
-        DataChunk chunk(new_buff, new_len);
-        _data_chunks_out.AddTail(chunk);
+        _data_chunks_out.AddTail(chunk.GiveAwayOwnership());
       }
-      _test_state._bytes_out += new_len;
-    } else {
-      _data_sent += data_len;
-      if (_data_sent < MAX_DATA_TO_RETAIN) {
-        DataChunk chunk(data, data_len);
-        _data_chunks_out.AddTail(chunk);
-      }
-      _test_state._bytes_out += data_len;
+      _test_state._bytes_out += chunk_len;
     }
   }
   LeaveCriticalSection(&cs);
@@ -325,7 +319,7 @@ void Request::CombineChunks() {
     POSITION pos = _data_chunks_in.GetHeadPosition();
     while (pos) {
       DataChunk chunk = _data_chunks_in.GetNext(pos);
-      _data_in_size += chunk._data_len;
+      _data_in_size += chunk.GetLength();
     }
     if (_data_in_size) {
       _data_in = (char *)malloc(_data_in_size + 1);
@@ -333,8 +327,8 @@ void Request::CombineChunks() {
         char * data = _data_in;
         while (!_data_chunks_in.IsEmpty()) {
           DataChunk chunk = _data_chunks_in.RemoveHead();
-          memcpy(data, chunk._data, chunk._data_len);
-          data += chunk._data_len;
+          memcpy(data, chunk.GetData(), chunk.GetLength());
+          data += chunk.GetLength();
         }
         *data = NULL;
       }
@@ -347,7 +341,7 @@ void Request::CombineChunks() {
     POSITION pos = _data_chunks_out.GetHeadPosition();
     while (pos) {
       DataChunk chunk = _data_chunks_out.GetNext(pos);
-      _data_out_size += chunk._data_len;
+      _data_out_size += chunk.GetLength();
     }
     if (_data_out_size) {
       _data_out = (char *)malloc(_data_out_size + 1);
@@ -355,8 +349,8 @@ void Request::CombineChunks() {
         char * data = _data_out;
         while (!_data_chunks_out.IsEmpty()) {
           DataChunk chunk = _data_chunks_out.RemoveHead();
-          memcpy(data, chunk._data, chunk._data_len);
-          data += chunk._data_len;
+          memcpy(data, chunk.GetData(), chunk.GetLength());
+          data += chunk.GetLength();
         }
         *data = NULL;
       }
@@ -605,7 +599,7 @@ void Request::DechunkResponse() {
               if (data_chunk < end) {
                 int chunk_len = strtoul(data, NULL, 16);
                 if (chunk_len > 0 && data_chunk + chunk_len < end) {
-                  DataChunk chunk(data_chunk, chunk_len, false);
+                  DataChunk chunk(data_chunk, chunk_len);
                   chunks.AddTail(chunk);
                   data = data_chunk + chunk_len + 2;
                   data_size += chunk_len;
@@ -628,8 +622,8 @@ void Request::DechunkResponse() {
             POSITION pos = chunks.GetHeadPosition();
             while (pos) {
               DataChunk chunk = chunks.GetNext(pos);
-              memcpy(data, chunk._data, chunk._data_len);
-              data += chunk._data_len;
+              memcpy(data, chunk.GetData(), chunk.GetLength());
+              data += chunk.GetLength();
             }
             // NULL-terminate it for convenience for string processing
             _body_in[data_size] = NULL;

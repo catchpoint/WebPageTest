@@ -35,40 +35,64 @@ class WptTest;
 
 class DataChunk {
 public:
-  DataChunk():_data(NULL),_data_len(0),_allocated(false) {}
-  DataChunk(const char * data, DWORD data_len, bool copy = true):
-    _data(NULL),_data_len(0) {
-    if (data && data_len) {
-      if (copy) {
-        _allocated = true;
-        _data_len = data_len;
-        _data = (char *)malloc(data_len);
-        memcpy(_data, data, data_len);
-      } else {
-        _data_len = data_len;
-        _data = (char *)data;
-      }
+  DataChunk() : _unowned_data(NULL), _data(NULL), _data_len(0) {}
+  DataChunk(const char * unowned_data, DWORD data_len) :
+      _unowned_data(NULL), _data(NULL), _data_len(0) {
+    if (unowned_data && data_len) {
+      _unowned_data = unowned_data;
+      _data_len = data_len;
     }
   }
-  DataChunk(const DataChunk& src){*this = src;}
+  DataChunk(const DataChunk& src) { *this = src; }
   ~DataChunk(){}
-  const DataChunk& operator =(const DataChunk& src) {
+  const DataChunk& operator=(const DataChunk& src) {
+    _unowned_data = src._unowned_data;
     _data = src._data;
     _data_len = src._data_len;
-    _allocated = src._allocated;
-    return src;
+    return *this;
   }
-  void Free(void) {
-    if (_data && _allocated)
+  void Free() {
+    if (_data) {
       free(_data);
+    }
+    _unowned_data = NULL;
     _data = NULL;
     _data_len = 0;
-    _allocated = false;
   }
 
-  char *  _data;
-  DWORD   _data_len;
-  bool    _allocated;
+  /*---------------------------------------------------------------------------
+     The caller must always call Free() on the returned DataChunk.
+     If |this| has unowned data, the data is copied to the return value.
+  ---------------------------------------------------------------------------*/
+  DataChunk GiveAwayOwnership() {
+    DataChunk new_chunk;
+    if (_unowned_data) {
+      char *new_data = (char *)malloc(_data_len);
+      memcpy(new_data, _unowned_data, _data_len);
+      new_chunk.TakeOwnership(new_data, _data_len);
+    } else {
+      new_chunk.TakeOwnership(_data, _data_len);
+      _unowned_data = _data;
+      _data = NULL;
+    }
+    return new_chunk;
+  }
+  /*---------------------------------------------------------------------------
+     |data| is expected to be malloc'd memory. Call Free() to free it.
+  ---------------------------------------------------------------------------*/
+  void TakeOwnership(char *data, DWORD data_len) {
+    Free();
+    _unowned_data = NULL;
+    _data = data;
+    _data_len = data_len;
+  }
+  const char * GetData() { return _unowned_data ? _unowned_data : _data; }
+  DWORD GetLength() { return _data_len; }
+
+private:
+  const char * _unowned_data;
+  char *       _data;
+  DWORD        _data_len;
 };
 
 class HeaderField {
@@ -124,9 +148,9 @@ public:
           TrackSockets& sockets, TrackDns& dns, WptTest& test);
   ~Request(void);
 
-  void DataIn(const char * data, unsigned long data_len);
-  void DataOut(const char * data, unsigned long data_len,
-                char * &new_buff, unsigned long &new_len);
+  void DataIn(DataChunk& chunk);
+  bool ModifyDataOut(DataChunk& chunk);
+  void DataOut(DataChunk& chunk);
   void SocketClosed();
   bool Process();
   bool IsStatic();
@@ -186,7 +210,7 @@ private:
   bool      _active;
   Fields    _in_fields;
   Fields    _out_fields;
-  bool      _headers_complete;
+  bool      _are_headers_complete;
 
   // merged data chunks
   char *  _data_in;

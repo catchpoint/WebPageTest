@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+class DataChunk;
 class Requests;
 class TestState;
 
@@ -69,10 +70,9 @@ public:
   void Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Connected(SOCKET s);
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
-  void DataIn(SOCKET s, const char * data, unsigned long data_len);
-  void DataOut(SOCKET s, const char * data, unsigned long data_len,
-                          char * &new_buff, unsigned long &new_len);
-  void AfterDataOut(char * new_buff);
+  void DataIn(SOCKET s, DataChunk& chunk);
+  bool ModifyDataOut(SOCKET s, DataChunk& chunk);
+  void DataOut(SOCKET s, DataChunk& chunk);
 
   void SetIsSsl(SOCKET s, bool is_ssl);
   bool IsSsl(SOCKET s);

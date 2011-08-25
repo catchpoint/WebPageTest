@@ -1,3 +1,4 @@
+
 /******************************************************************************
 Copyright (c) 2010, Google Inc.
 All rights reserved.
@@ -115,7 +116,7 @@ void TrackSockets::Connected(SOCKET s) {
   Look up the socket ID (or create one if it doesn't already exist)
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
-void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
+void TrackSockets::DataIn(SOCKET s, DataChunk& chunk) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
@@ -123,23 +124,43 @@ void TrackSockets::DataIn(SOCKET s, const char * data,unsigned long data_len) {
   LeaveCriticalSection(&cs);
 
   if (!is_localhost) {
-    _requests.DataIn(socket_id, data, data_len);
+    _requests.DataIn(socket_id, chunk);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Allow data to be modified.
+-----------------------------------------------------------------------------*/
+bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
+  bool is_modified = false;
+
+  EnterCriticalSection(&cs);
+  SocketInfo* info = GetSocketInfo(s);
+  if (info->_is_ssl && !info->_ssl_start.QuadPart) {
+    QueryPerformanceCounter(&info->_ssl_start);
+  }
+  DWORD socket_id = info->_id;
+  bool is_localhost = info->IsLocalhost();
+  LeaveCriticalSection(&cs);
+
+  if (!is_localhost) {
+    is_modified = _requests.ModifyDataOut(socket_id, chunk);
+    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::ModifyDataOut")
+        _T("(socket=%d, socket_id=%d, len=%d) -> %d"),
+        s, socket_id, chunk.GetLength(), is_modified);
+  }
+  return is_modified;
 }
 
 /*-----------------------------------------------------------------------------
   Look up the socket ID (or create one if it doesn't already exist)
   and pass the data on to the request tracker
-
-  Allow for the data to be overridden with a new buffer
 -----------------------------------------------------------------------------*/
-void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len,
-                                char * &new_buff, unsigned long &new_len) {
+void TrackSockets::DataOut(SOCKET s, DataChunk& chunk) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
-  if (info->_addr.sin_addr.S_un.S_addr == 0) {
-    int addr_len = sizeof(info->_addr);
-    getpeername(s, (sockaddr *)&info->_addr, &addr_len);
+  if (info->_is_ssl && info->_ssl_start.QuadPart && !info->_ssl_end.QuadPart) {
+    QueryPerformanceCounter(&info->_ssl_end);
   }
   if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart) {
     QueryPerformanceCounter(&info->_connect_end);
@@ -149,15 +170,8 @@ void TrackSockets::DataOut(SOCKET s, const char * data, unsigned long data_len,
   LeaveCriticalSection(&cs);
 
   if (!is_localhost) {
-    _requests.DataOut(socket_id, data, data_len, new_buff, new_len);
+    _requests.DataOut(socket_id, chunk);
   }
-}
-
-/*-----------------------------------------------------------------------------
-  Free up the custom buffer if we allocated one
------------------------------------------------------------------------------*/
-void TrackSockets::AfterDataOut(char * new_buff) {
-  _requests.AfterDataOut(new_buff);
 }
 
 /*-----------------------------------------------------------------------------
@@ -265,6 +279,10 @@ SocketInfo* TrackSockets::GetSocketInfo(SOCKET s) {
     info->_id = socket_id;
     info->_during_test = _test_state._active;
     _socketInfo.SetAt(info->_id, info);
+  }
+  if (info->_addr.sin_addr.S_un.S_addr == 0 && info->_connect_start.QuadPart) {
+    int addr_len = sizeof(info->_addr);
+    getpeername(s, (sockaddr *)&info->_addr, &addr_len);
   }
   return info;
 }

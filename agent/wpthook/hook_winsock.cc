@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "hook_winsock.h"
+#include "request.h"
 #include "track_dns.h"
 #include "track_sockets.h"
 #include "test_state.h"
@@ -276,7 +277,7 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
     ret = _recv(s, buf, len, flags);
   if( ret > 0 && !flags && buf && len && !_test_state._exit &&
      !_sockets.IsSsl(s) )
-    _sockets.DataIn(s, buf, ret);
+    _sockets.DataIn(s, DataChunk(buf, ret));
   return ret;
 }
 
@@ -300,7 +301,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         if (chunk) {
           bytes -= chunk;
           if( lpBuffers[i].buf )
-            _sockets.DataIn(s, lpBuffers[i].buf, chunk);
+            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, lpBuffers[i].len));
         }
         i++;
       }
@@ -316,22 +317,20 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
+int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  char * new_buff = NULL;
-  unsigned long new_len = 0;
-  if (len && !_test_state._exit && !_sockets.IsSsl(s))
-    _sockets.DataOut(s, buf, len, new_buff, new_len);
-  if( _send ) {
-    if (new_buff) {
-      ret = _send(s, new_buff, new_len, flags);
-      ret = len;
+  if (_send) {
+    DataChunk chunk(buf, len);
+    int original_len = len;
+    if (len && !_test_state._exit && !_sockets.IsSsl(s)) {
+      _sockets.ModifyDataOut(s, chunk);
+      _sockets.DataOut(s, chunk);
     }
-    else
-      ret = _send(s, buf, len, flags);
-  }
-  if (new_buff && !_test_state._exit && !_sockets.IsSsl(s)) {
-    _sockets.AfterDataOut(new_buff);
+    ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
+    WptTrace(loglevel::kProcess, _T(
+        "[wpthook] CWsHook::send(socket=%d, len=%d, orig_len=%d) -> %d"),
+        s, chunk.GetLength(), original_len, ret);
+    ret = original_len;
   }
   return ret;
 }
@@ -343,48 +342,48 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  char * new_buff = NULL;
-  unsigned long new_len = 0;
-  unsigned original_len = 0;
-  if (!_test_state._exit && !_sockets.IsSsl(s)) {
-    for (DWORD i = 0; i < dwBufferCount; i++) {
-      if (lpBuffers[i].len && lpBuffers[i].buf) {
-        _sockets.DataOut(s, lpBuffers[i].buf, lpBuffers[i].len,new_buff,new_len);
+  if (_WSASend) {
+    bool is_modified = 0;
+    unsigned original_len = 0;
+    DataChunk chunk;
+    if (!_test_state._exit && !_sockets.IsSsl(s)) {
+      for (DWORD i = 0; i < dwBufferCount; i++) {
         original_len += lpBuffers[i].len;
       }
+      // Concatenate all the buffers together.
+      LPSTR new_data = (char *)malloc(original_len);
+      LPSTR data = new_data;
+      for (DWORD i = 0; i < dwBufferCount; i++) {
+        DWORD buffer_len = lpBuffers[i].len;
+        if (buffer_len && lpBuffers[i].buf) {
+          memcpy(data, lpBuffers[i].buf, buffer_len);
+        }
+        data += buffer_len;
+      }
+      chunk.TakeOwnership(new_data, original_len);
+
+      is_modified = _sockets.ModifyDataOut(s, chunk);
     }
-  }
-  if (_WSASend) {
-    if (new_buff && new_len) {
+    if (is_modified) {
       WSABUF out;
-      out.buf = new_buff;
-      out.len = new_len;
+      out.buf = (char *)chunk.GetData();
+      out.len = chunk.GetLength();
       ret = _WSASend(s, &out, 1, lpNumberOfBytesSent, dwFlags, lpOverlapped,
-                      lpCompletionRoutine);
+                     lpCompletionRoutine);
       // Respond with the number of bytes the sending app was expecting
       // to be written.  It can get confused if you write more data than
       // they provided.
       if (lpNumberOfBytesSent)
         *lpNumberOfBytesSent = original_len;
-    }
-    else
-      ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
-                    dwFlags, lpOverlapped, lpCompletionRoutine);
-  }
-  if (new_buff && !_test_state._exit && !_sockets.IsSsl(s)) {
-    if (!ret) {
-      if (new_buff) {
-        _sockets.AfterDataOut(new_buff);
-      }
-    } else {
       if (WSAGetLastError() == WSA_IO_PENDING) {
         // TODO: figure out how to delete the buffer later and return the real
         // number of bytes transmitted to the calling app
-      } else {
-        if (new_buff)
-          _sockets.AfterDataOut(new_buff);
       }
+    } else {
+      ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
+                     dwFlags, lpOverlapped, lpCompletionRoutine);
     }
+    chunk.Free();
   }
   return ret;
 }
@@ -548,7 +547,7 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
       for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
         DWORD data_bytes = min(bytes, buff._buffers[i].len);
         if (data_bytes && buff._buffers[i].buf) {
-          _sockets.DataIn(s, buff._buffers[i].buf, data_bytes);
+          _sockets.DataIn(s, DataChunk(buff._buffers[i].buf, data_bytes));
           bytes -= data_bytes;
         }
       }

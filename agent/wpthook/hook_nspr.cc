@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 
+#include "request.h"
 #include "test_state.h"
 #include "track_sockets.h"
 
@@ -39,34 +40,10 @@ static NsprHook* pHook = NULL;
 
 // Stub Functions
 
-PRFileDesc* PR_Socket_Hook(PRInt32 domain, PRInt32 type, PRInt32 proto) {
-  PRFileDesc* ret = NULL;
-  if (pHook) {
-    ret = pHook->PR_Socket(domain, type, proto);
-  }
-  return ret;
-}
-
 PRFileDesc* SSL_ImportFD_Hook(PRFileDesc *model, PRFileDesc *fd) {
   PRFileDesc* ret = NULL;
   if (pHook) {
     ret = pHook->SSL_ImportFD(model, fd);
-  }
-  return ret;
-}
-
-SECStatus SSL_SetURL_Hook(PRFileDesc *fd, const char *url) {
-  SECStatus ret = SECFailure;
-  if (pHook) {
-    ret = pHook->SSL_SetURL(fd, url);
-  }
-  return ret;
-}
-
-PRStatus PR_Connect_Hook(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout) {
-  PRStatus ret = PR_FAILURE;
-  if (pHook) {
-    ret = pHook->PR_Connect(fd, addr, timeout);
   }
   return ret;
 }
@@ -79,7 +56,16 @@ PRStatus PR_ConnectContinue_Hook(PRFileDesc *fd, PRInt16 out_flags) {
   return ret;
 }
 
-PRInt32 PR_Send_Hook(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout) {
+PRStatus PR_Close_Hook(PRFileDesc *fd) {
+  PRStatus ret = PR_FAILURE;
+  if (pHook) {
+    ret = pHook->PR_Close(fd);
+  }
+  return ret;
+}
+
+PRInt32 PR_Send_Hook(PRFileDesc *fd, const void *buf, PRInt32 amount,
+                     PRIntn flags, PRIntervalTime timeout) {
   PRInt32 ret = -1;
   if (pHook) {
     ret = pHook->PR_Send(fd, buf, amount, flags, timeout);
@@ -103,26 +89,11 @@ PRInt32 PR_Read_Hook(PRFileDesc *fd, void *buf, PRInt32 amount) {
   return ret;
 }
 
-PRInt32 PR_Recv_Hook(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout) {
+PRInt32 PR_Recv_Hook(PRFileDesc *fd, void *buf, PRInt32 amount,
+                     PRIntn flags, PRIntervalTime timeout) {
   PRInt32 ret = -1;
   if (pHook) {
     ret = pHook->PR_Recv(fd, buf, amount, flags, timeout);
-  }
-  return ret;
-}
-
-PRAddrInfo* PR_GetAddrInfoByName_Hook(const char *hostname, PRUint16 af, PRIntn flags) {
-  PRAddrInfo* ret = NULL;
-  if (pHook) {
-    ret = pHook->PR_GetAddrInfoByName(hostname, af, flags);
-  }
-  return ret;
-}
-
-PRStatus PR_GetHostByName_Hook(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry) {
-  PRStatus ret = PR_FAILURE;
-  if (pHook) {
-    ret = pHook->PR_GetHostByName(hostname, buf, bufsize, hostentry);
   }
   return ret;
 }
@@ -131,8 +102,9 @@ PRStatus PR_GetHostByName_Hook(const char *hostname, char *buf, PRIntn bufsize, 
 
 
 NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state) :
-  _sockets(sockets),
-  _test_state(test_state) {
+    _sockets(sockets),
+    _test_state(test_state) {
+  _ssl_sockets.InitHashTable(257);
 }
 
 NsprHook::~NsprHook() {
@@ -145,67 +117,34 @@ void NsprHook::Init() {
   if (!pHook) {
     pHook = this;
   }
-  GetFunctionByName("nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
-  if (_PR_FileDesc2NativeHandle == NULL) {
-    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init(): NSPR is not found. Skipping hooks.\n"));
-  } else {
+  GetFunctionByName(
+      "nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+  if (_PR_FileDesc2NativeHandle != NULL) {
     WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init()\n"));
-    // TODO(slamm): Remove unused hooks: PR_Socket, SSL_SetURL
-    // TODO(slamm): Remove unused hooks: Connect, ConnectContinue
-    // TODO(slamm): Remove unused hooks: GetAddrInfoByName, GetHostByName
-    _PR_Socket = hook.createHookByName("nspr4.dll", "PR_Socket", PR_Socket_Hook);
-    _SSL_ImportFD = hook.createHookByName("ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
-    _SSL_SetURL = hook.createHookByName("ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook);
-    _PR_Connect = hook.createHookByName("nspr4.dll", "PR_Connect", PR_Connect_Hook);
-    _PR_ConnectContinue = hook.createHookByName("nspr4.dll", "PR_ConnectContinue", PR_ConnectContinue_Hook);
-
+    _SSL_ImportFD = hook.createHookByName(
+        "ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+    _PR_ConnectContinue = hook.createHookByName(
+        "nspr4.dll", "PR_ConnectContinue", PR_ConnectContinue_Hook);
+    _PR_Close = hook.createHookByName("nspr4.dll", "PR_Close", PR_Close_Hook);
     _PR_Send = hook.createHookByName("nspr4.dll", "PR_Send", PR_Send_Hook);
     _PR_Write = hook.createHookByName("nspr4.dll", "PR_Write", PR_Write_Hook);
     _PR_Read = hook.createHookByName("nspr4.dll", "PR_Read", PR_Read_Hook);
     _PR_Recv = hook.createHookByName("nspr4.dll", "PR_Recv", PR_Recv_Hook);
-
-    _PR_GetAddrInfoByName = hook.createHookByName("nspr4.dll", "PR_GetAddrInfoByName", PR_GetAddrInfoByName_Hook);
-    _PR_GetHostByName = hook.createHookByName("nspr4.dll", "PR_GetHostByName", PR_GetHostByName_Hook);
   }
 }
 
 // NSPR hooks
-PRFileDesc* NsprHook::PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto) {
-  PRFileDesc* ret = NULL;
-  if (_PR_Socket) {
-    ret = _PR_Socket(domain, type, proto);
-    DumpOsfd(_T("_PR_Socket"), ret);
-  }
-  return ret;
-}
-
 PRFileDesc* NsprHook::SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd) {
   PRFileDesc* ret = NULL;
   if (_SSL_ImportFD) {
     ret = _SSL_ImportFD(model, fd);
-    DumpOsfd(_T("_SSL_ImportFD"), fd);
     if (ret != NULL) {
       SOCKET s = _PR_FileDesc2NativeHandle(fd);
       _sockets.SetIsSsl(s, true);
+      _ssl_sockets.SetAt(fd, s);
+      WptTrace(loglevel::kProcess,
+               _T("[wpthook] NsprHook::SSL_ImportFD(fd=%d, socket=%d)"), fd, s);
     }
-  }
-  return ret;
-}
-
-SECStatus NsprHook::SSL_SetURL(PRFileDesc *fd, const char *url) {
-  SECStatus ret = SECFailure;
-  if (_SSL_SetURL) {
-    ret = _SSL_SetURL(fd, url);
-    DumpOsfd(_T("_SSL_SetURL"), fd);
-  }
-  return ret;
-}
-
-PRStatus NsprHook::PR_Connect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout) {
-  PRStatus ret = PR_FAILURE;
-  if (_PR_Connect) {
-    ret = _PR_Connect(fd, addr, timeout);
-    DumpOsfd(_T("_PR_Connect"), fd);
   }
   return ret;
 }
@@ -214,57 +153,73 @@ PRStatus NsprHook::PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags) {
   PRStatus ret = PR_FAILURE;
   if (_PR_ConnectContinue) {
     ret = _PR_ConnectContinue(fd, out_flags);
-    DumpOsfd(_T("_PR_ConnectContinue"), fd);
     if (!ret) {
       SOCKET s = _PR_FileDesc2NativeHandle(fd);
       _sockets.Connected(s);
+      WptTrace(loglevel::kProcess,
+         _T("[wpthook] NsprHook::PR_ConnectContinue(fd=%d, socket=%d)"), fd, s);
     }
   }
   return ret;
 }
 
+PRStatus NsprHook::PR_Close(PRFileDesc *fd) {
+  PRStatus ret = PR_FAILURE;
+  if (_PR_Close) {
+    ret = _PR_Close(fd);
+    _ssl_sockets.RemoveKey(fd);
+    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Close(fd=%d)"), fd);
+  }
+  return ret;
+}
 
+/*-----------------------------------------------------------------------------
+  For SSL connections on Firefox, PR_Write fails for the first few calls while
+  SSL handshake takes place. During the handshake, PR_FileDesc2NativeHandle
+  returns a different number that is not the SSL socket number. The workaround
+  is to keep a mapping of file descriptors to SSL socket numbers.
+-----------------------------------------------------------------------------*/
 PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
   PRInt32 ret = -1;
   if (_PR_Write) {
-    ret = _PR_Write(fd, buf, amount);
-    DumpOsfd(_T("_PR_Write"), fd);
-    if (buf && !_test_state._exit) {
-      SOCKET s = _PR_FileDesc2NativeHandle(fd);
-      if (_sockets.IsSsl(s)) {
-        if (ret > 0) {
-           char * new_buff = NULL;
-           unsigned long new_len = 0;
-           _sockets.DataOut(s, (const char *)buf, ret, new_buff, new_len);
-           _sockets.AfterDataOut(new_buff);
-        }
-        SocketInfo* info = _sockets.GetSocketInfo(s);
-        if (ret == -1 && !info->_ssl_start.QuadPart) {
-           QueryPerformanceCounter(&info->_ssl_start);
-        } else if (ret > 0 && info->_ssl_start.QuadPart &&
-                   !info->_ssl_end.QuadPart) {
-           QueryPerformanceCounter(&info->_ssl_end);
-        }
-      }
+    DataChunk chunk((LPCSTR)buf, amount);
+    PRInt32 original_amount = amount;
+    SOCKET s = INVALID_SOCKET;
+    if (buf && !_test_state._exit && _ssl_sockets.Lookup(fd, s)) {
+      _sockets.ModifyDataOut(s, chunk);
     }
+    ret = _PR_Write(fd, chunk.GetData(), chunk.GetLength());
+    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Write")
+        _T("(fd=%d, socket=%d, amount=%d, orig_amount=%d) -> %d"),
+       fd, s, amount, original_amount, ret);
+    if (ret > 0 && s != INVALID_SOCKET) {
+      _sockets.DataOut(s, chunk);
+      ret = original_amount;
+    }
+    chunk.Free();
   }
   return ret;
 }
 
-PRInt32 NsprHook::PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout) {
+PRInt32 NsprHook::PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount,
+                          PRIntn flags, PRIntervalTime timeout) {
   PRInt32 ret = -1;
   if (_PR_Send) {
-    ret = _PR_Send(fd, buf, amount, flags, timeout);
-    DumpOsfd(_T("_PR_Send"), fd);
-    if (ret > 0 && buf && !_test_state._exit) {
-      SOCKET s = _PR_FileDesc2NativeHandle(fd);
-      if (_sockets.IsSsl(s)) {
-        char * new_buff = NULL;
-        unsigned long new_len = 0;
-        _sockets.DataOut(s, (const char *)buf, ret, new_buff, new_len);
-        _sockets.AfterDataOut(new_buff);
-      }
+    DataChunk chunk((LPCSTR)buf, amount);
+    PRInt32 original_amount = amount;
+    SOCKET s = INVALID_SOCKET;
+    if (buf && !_test_state._exit && _ssl_sockets.Lookup(fd, s)) {
+      _sockets.ModifyDataOut(s, chunk);
     }
+    ret = _PR_Send(fd, chunk.GetData(), chunk.GetLength(), flags, timeout);
+    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Send")
+        _T("(fd=%d, socket=%d, amount=%d, orig_amount=%d) -> %d"),
+       fd, s, amount, original_amount, ret);
+    if (ret > 0 && s != INVALID_SOCKET) {
+      _sockets.DataOut(s, chunk);
+      ret = original_amount;
+    }
+    chunk.Free();
   }
   return ret;
 }
@@ -273,72 +228,40 @@ PRInt32 NsprHook::PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount) {
   PRInt32 ret = -1;
   if (_PR_Read) {
     ret = _PR_Read(fd, buf, amount);
-    DumpOsfd(_T("_PR_Read"), fd);
     if (ret > 0 && buf && !_test_state._exit) {
-      SOCKET s = _PR_FileDesc2NativeHandle(fd);
-      if (_sockets.IsSsl(s)) {
-        _sockets.DataIn(s, (char *)buf, ret);
+      SOCKET s = INVALID_SOCKET;
+      if (_ssl_sockets.Lookup(fd, s)) {
+        WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Read")
+                 _T("(fd=%d, socket=%d, amount=%d) -> %d"),
+                 fd, s, amount, ret);
+        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret));
       }
     }
   }
   return ret;
 }
 
-PRInt32 NsprHook::PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, PRIntervalTime timeout) {
+PRInt32 NsprHook::PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount,
+                          PRIntn flags, PRIntervalTime timeout) {
   PRInt32 ret = -1;
   if (_PR_Send) {
     ret = _PR_Recv(fd, buf, amount, flags, timeout);
-    DumpOsfd(_T("_PR_Recv"), fd);
     if (ret > 0 && buf && !_test_state._exit) {
-      SOCKET s = _PR_FileDesc2NativeHandle(fd);
-      if (_sockets.IsSsl(s)) {
-        _sockets.DataIn(s, (char *)buf, ret);
+      SOCKET s = INVALID_SOCKET;
+      if (_ssl_sockets.Lookup(fd, s)) {
+        WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Recv")
+                 _T("(fd=%d, socket=%d, amount=%d) -> %d"),
+                 fd, s, amount, ret);
+        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret));
       }
     }
   }
   return ret;
 }
 
-PRAddrInfo* NsprHook::PR_GetAddrInfoByName(const char *hostname, PRUint16 af, PRIntn flags) {
-  PRAddrInfo* ret = NULL;
-  if (_PR_GetAddrInfoByName) {
-    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetAddrInfoByName(%S)\n"), hostname);
-    ret = _PR_GetAddrInfoByName(hostname, af, flags);
-  }
-  return ret;
-}
-
-PRStatus NsprHook::PR_GetHostByName(const char *hostname, char *buf, PRIntn bufsize, PRHostEnt *hostentry) {
-  PRStatus ret = PR_FAILURE;
-  if (_PR_GetHostByName) {
-    WptTrace(loglevel::kProcess, _T("[wpthook] Call _PR_GetHostByName(%S)\n"), hostname);
-    ret = _PR_GetHostByName(hostname, buf, bufsize, hostentry);
-  }
-  return ret;
-}
-
-
-void NsprHook::DumpOsfd(LPCTSTR name, PRFileDesc *fd) {
-  // TODO(slamm): Remove when wrapping up SSL implementation.
-#ifdef DEBUG
-  CString message = name;
-  message.Format(_T("%s: 0:(fd=%d, osfd=%d)"), name, (int)fd, _PR_FileDesc2NativeHandle(fd));
-  int i = -1;
-  for (PRFileDesc* t = fd->higher; t; t = t->higher) {
-    message.AppendFormat(_T(", %d:(%d, %d)"), i, (int)t, _PR_FileDesc2NativeHandle(t));
-    i--;
-  }
-  i = 1;
-  for (PRFileDesc* t = fd->lower; t; t = t->lower) {
-    message.AppendFormat(_T(", %d:(%d, %d)"), i, (int)t, _PR_FileDesc2NativeHandle(t));
-    i++;
-  }
-  WptTrace(loglevel::kProcess, message);
-#endif
-}
-
 template <typename U>
-void NsprHook::GetFunctionByName(const string& dll_name, const string& function_name, U& function_ptr) {
+void NsprHook::GetFunctionByName(const string& dll_name,
+                                 const string& function_name, U& function_ptr) {
   HMODULE dll = LoadLibraryA(dll_name.c_str());
   if (dll) {
     function_ptr = (U)GetProcAddress(dll, function_name.c_str());

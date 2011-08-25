@@ -41,10 +41,9 @@ public:
   ~Requests(void);
 
   void SocketClosed(DWORD socket_id);
-  void DataIn(DWORD socket_id, const char * data, unsigned long data_len);
-  void DataOut(DWORD socket_id, const char * data, unsigned long data_len,
-                char * &new_buff, unsigned long &new_len);
-  void AfterDataOut(char * new_buff);
+  void DataIn(DWORD socket_id, DataChunk& chunk);
+  bool ModifyDataOut(DWORD socket_id, DataChunk& chunk);
+  void DataOut(DWORD socket_id, DataChunk& chunk);
   void Lock();
   void Unlock();
   void Reset();
@@ -59,9 +58,9 @@ private:
   TrackDns&         _dns;
   WptTest&          _test;
 
-  bool IsHttpRequest(const char * data, unsigned long data_len);
+  bool IsHttpRequest(DataChunk& chunk) const;
 
-  // internal only and must be protected with a critical section by the caller
-  Request * NewRequest(DWORD socket_id);  
+  // GetOrCreateRequest must be called within a critical section.
+  Request * GetOrCreateRequest(DWORD socket_id, DataChunk& chunk);
+  Request * NewRequest(DWORD socket_id);
 };
-

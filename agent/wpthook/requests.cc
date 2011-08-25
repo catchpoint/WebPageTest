@@ -96,17 +96,16 @@ void Requests::SocketClosed(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Requests::DataIn(DWORD socket_id, const char * data, 
-                                                      unsigned long data_len) {
+void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-              _T("[wpthook] - Requests::DataIn() %d bytes\n"), data_len);
+           _T("[wpthook] - Requests::DataIn() %d bytes\n"), chunk.GetLength());
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if it maps to a known request
     EnterCriticalSection(&cs);
     Request * request = NULL;
     if (_active_requests.Lookup(socket_id, request) && request) {
-      request->DataIn(data, data_len);
+      request->DataIn(chunk);
     } else {
       WptTrace(loglevel::kFrequentEvent, _T("[wpthook] - Requests::DataIn()")
                _T(" not associated with a known request\n"));
@@ -116,29 +115,43 @@ void Requests::DataIn(DWORD socket_id, const char * data,
 }
 
 /*-----------------------------------------------------------------------------
+  Allow data to be modified.
 -----------------------------------------------------------------------------*/
-void Requests::DataOut(DWORD socket_id, const char * data, 
-           unsigned long data_len, char * &new_buff, unsigned long &new_len) {
+bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
+  bool is_modified = false;
+  if (_test_state._active) {
+    _test_state.ActivityDetected();
+    // See if it maps to a known request.
+    EnterCriticalSection(&cs);
+    Request * request = GetOrCreateRequest(socket_id, chunk);
+    if (request) {
+      is_modified = request->ModifyDataOut(chunk);
+    } else {
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Requests::ModifyDataOut(socket_id=%d, len=%d)")
+               _T(" not associated with a known request\n"),
+               socket_id, chunk.GetLength());
+    }
+    LeaveCriticalSection(&cs);
+  }
+  WptTrace(loglevel::kFunction,
+      _T("[wpthook] - Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d\n"),
+      socket_id, chunk.GetLength(), is_modified);
+  return is_modified;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - Requests::DataOut() %d bytes\n"), data_len);
-  new_buff = NULL;
-  new_len = 0;
+           _T("[wpthook] - Requests::DataOut %d bytes\n"), chunk.GetLength());
   if (_test_state._active) {
     _test_state.ActivityDetected();
     // see if we are starting a new http request
     EnterCriticalSection(&cs);
-    Request * request = NULL;
+    Request * request = GetOrCreateRequest(socket_id, chunk);
     if (_active_requests.Lookup(socket_id, request) && request) {
-      // we have an existing request on this socket, if data has not been
-      // received then this HAS to be a continuation of the existing request
-      if (request->_data_received && IsHttpRequest(data, data_len))
-        request = NewRequest(socket_id);
-    } else if (IsHttpRequest(data, data_len)) {
-        request = NewRequest(socket_id);
-    }
-
-    if (request) {
-      request->DataOut(data, data_len, new_buff, new_len);
+      request->DataOut(chunk);
     } else {
       WptTrace(loglevel::kFrequentEvent, 
                 _T("[wpthook] - Requests::DataOut() Non-HTTP traffic detected")
@@ -149,28 +162,38 @@ void Requests::DataOut(DWORD socket_id, const char * data,
 }
 
 /*-----------------------------------------------------------------------------
-  Free up the custom buffer if we allocated one
------------------------------------------------------------------------------*/
-void Requests::AfterDataOut(char * new_buff) {
-  if (new_buff)
-    free(new_buff);
-}
-
-/*-----------------------------------------------------------------------------
   See if the beginning of the bugger matches any known HTTP method
   TODO: See if there is a more reliable way to detect HTTP traffic
 -----------------------------------------------------------------------------*/
-bool Requests::IsHttpRequest(const char * data, unsigned long data_len) {
+bool Requests::IsHttpRequest(DataChunk& chunk) const {
   bool ret = false;
-
   for (int i = 0; i < _countof(HTTP_METHODS) && !ret; i++) {
     const char * method = HTTP_METHODS[i];
     unsigned long method_len = strlen(method);
-    if (data_len >= method_len && !memcmp(data, method, method_len))
+    if (chunk.GetLength() >= method_len &&
+        !memcmp(chunk.GetData(), method, method_len)) {
       ret = true;
+    }
   }
-
   return ret;
+}
+
+
+ /*-----------------------------------------------------------------------------
+   Find an existing request, or create a new one if appropriate.
+ -----------------------------------------------------------------------------*/
+Request * Requests::GetOrCreateRequest(DWORD socket_id, DataChunk& chunk) {
+  Request * request = NULL;
+  if (_active_requests.Lookup(socket_id, request) && request) {
+    // We have an existing request on this socket, however, if data has been
+    // received already, then this may be a new request.
+    if (request->_data_received && IsHttpRequest(chunk)) {
+      request = NewRequest(socket_id);
+    }
+  } else if (IsHttpRequest(chunk)) {
+      request = NewRequest(socket_id);
+  }
+  return request;
 }
 
 /*-----------------------------------------------------------------------------
