@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::WptTest(void):_version(0) {
+WptTest::WptTest(void):_version(0),_test_timeout(120000) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -419,6 +419,10 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _sleep_end.QuadPart += seconds * _perf_frequency.QuadPart;
       continue_processing = false;
     }
+  } else if (cmd == _T("settimeout")) {
+    int seconds = _ttoi(command.target);
+    if (seconds > 0 && seconds < 600)
+      _test_timeout = seconds * 1000;
   } else if (cmd == _T("setuseragent")) {
     _user_agent = CT2A(command.target);
   } else if (cmd == _T("addheader")) {

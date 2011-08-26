@@ -58,7 +58,7 @@ public:
 
 class TestState {
 public:
-  TestState(int test_timeout, bool end_on_load, Results& results,
+  TestState(bool end_on_load, Results& results,
             ScreenCapture& screen_capture, WptTestHook &test);
   ~TestState(void);
 
@@ -113,7 +113,6 @@ public:
   CAtlList<CProgressData> _progress_data;
 
 private:
-  int   _test_timeout; 
   bool  _end_on_load;
   int   _next_document;
   Results&  _results;

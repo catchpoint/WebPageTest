@@ -133,6 +133,7 @@ public:
   CString _script;
   CString _test_file;
   bool    _log_data;
+  DWORD   _test_timeout;
   
   // current state
   int     _run;

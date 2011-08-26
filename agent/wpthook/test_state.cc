@@ -46,10 +46,9 @@ static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestState::TestState(int test_timeout, bool end_on_load, Results& results,
+TestState::TestState(bool end_on_load, Results& results,
                       ScreenCapture& screen_capture, WptTestHook &test):
-  _test_timeout(test_timeout)
-  ,_end_on_load(end_on_load)
+  _end_on_load(end_on_load)
   ,_results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
@@ -183,6 +182,7 @@ void TestState::Start() {
 -----------------------------------------------------------------------------*/
 void TestState::ActivityDetected() {
   if (_active) {
+    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::ActivityDetected()\n"));
     QueryPerformanceCounter(&_last_activity);
     if (!_first_activity.QuadPart)
       _first_activity.QuadPart = _last_activity.QuadPart;
@@ -293,7 +293,7 @@ bool TestState::IsDone() {
               _T("doc: %d ms, activity: %d ms\n"), elapsed_test, elapsed_doc,
               elapsed_activity);
 
-    if ((int)elapsed_test > _test_timeout){
+    if ((int)elapsed_test > _test._test_timeout){
       // the test timed out
       _test_result = TEST_RESULT_TIMEOUT;
       done = true;

@@ -5,7 +5,7 @@ class WptTestHook :
   public WptTest
 {
 public:
-  WptTestHook(void);
+  WptTestHook(DWORD test_timeout);
   virtual ~WptTestHook(void);
   void LoadFromFile();
 };

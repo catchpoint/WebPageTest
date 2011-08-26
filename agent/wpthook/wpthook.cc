@@ -46,8 +46,7 @@ static const DWORD TIMER_DONE_INTERVAL = 100;
 WptHook::WptHook(void):
   _background_thread(NULL)
   ,_message_window(NULL)
-  ,_test_state(shared_test_timeout, shared_test_force_on_load, _results,
-                _screen_capture, _test)
+  ,_test_state(shared_test_force_on_load, _results, _screen_capture, _test)
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_nspr_hook(_sockets, _test_state)
   ,_gdi_hook(_test_state)
@@ -56,7 +55,8 @@ WptHook::WptHook(void):
   ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
   ,_dns(_test_state, _test)
   ,_done(false)
-  ,_test_server(*this, _test, _chrome_hook, _test_state) {
+  ,_test_server(*this, _test, _chrome_hook, _test_state)
+  ,_test(shared_test_timeout) {
   _file_base = shared_results_file_base;
   // grab the version number of the dll
   TCHAR file[MAX_PATH];
