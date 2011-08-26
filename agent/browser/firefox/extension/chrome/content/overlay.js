@@ -242,6 +242,10 @@ wpt.moz.main.executeTask = function(task) {
       case 'setinnertext':
         wpt.moz.main.setInnerText(task.target, task.value);
         break;
+      case 'block':
+        wpt.moz.main.block(task.target);
+        break;
+
       default:
         dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
     }
@@ -250,12 +254,12 @@ wpt.moz.main.executeTask = function(task) {
       setTimeout(function() {wpt.moz.main.getTask();}, TASK_INTERVAL_SHORT);
     }
   }
-}
+};
 
 // exec
 wpt.moz.main.exec = function(script) {
   wpt.moz.execScriptInSelectedTab(script);
-}
+};
 
 // navigate
 wpt.moz.main.navigate = function(url) {
@@ -297,7 +301,7 @@ wpt.moz.main.setCookie = function(cookie_path, data) {
       wpt.moz.setCookie(cookie);
     }
   }
-}
+};
 
 /**
  * Run a command that touches the DOM of a page.  The work is done
@@ -345,14 +349,14 @@ wpt.moz.main.setValue = function(target, value) {
       'target': target,
       'value': value
   });
-}
+};
 
 wpt.moz.main.submitform = function(target) {
   SendCommandToContentScript_({
       'command': 'submitForm',
       'target': target
   });
-}
+};
 
 wpt.moz.main.click = function(target, value) {
   SendCommandToContentScript_({
@@ -360,7 +364,7 @@ wpt.moz.main.click = function(target, value) {
       'target': target,
       'value': value
   });
-}
+};
 
 wpt.moz.main.setInnerText = function(target, value) {
   SendCommandToContentScript_({
@@ -368,7 +372,7 @@ wpt.moz.main.setInnerText = function(target, value) {
       'target': target,
       'value': value
   });
-}
+};
 
 wpt.moz.main.setInnerHtml = function(target, value) {
   SendCommandToContentScript_({
@@ -376,6 +380,10 @@ wpt.moz.main.setInnerHtml = function(target, value) {
       'target': target,
       'value': value
   });
-}
+};
+
+wpt.moz.main.block = function(target) {
+  wpt.moz.blockContentMatching(target);
+};
 
 })();  // End closure

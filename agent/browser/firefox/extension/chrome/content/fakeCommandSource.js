@@ -41,6 +41,8 @@ function FakeCommand(action, target, opt_value) {
 }
 
 var FAKE_COMMANDS = [
+    FakeCommand('block', 'iana-logo-pageheader.png'),
+
     // Can we navigate?
     FakeCommand('navigate', 'http://www.example.com/'),
 

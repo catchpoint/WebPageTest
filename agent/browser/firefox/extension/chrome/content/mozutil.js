@@ -113,4 +113,85 @@ wpt.moz.clearAllBookmarks = function() {
   bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
 };
 
+wpt.moz.nsUriIsWptController = function(uri) {
+  if (uri.host != '127.0.0.1' && uri.host != 'localhost')
+    return false;
+
+  if (uri.scheme != 'http')
+    return false;
+
+  // Checking the port matters because we might be testing a dev server
+  // running on the same machine.
+  if (uri.port != 8888)
+    return false;
+
+  return true;
+};
+
+/**
+ * The following object observes all http requests.
+ */
+wpt.moz.RequestBlockerSinglton_ = {
+  isObserving: false,  // Set to true when installed and observing.
+
+  // Add strings to block by pushing into this array.
+  UrlBlockStrings: [],
+
+  observe: function(subject, topic, data) {
+    if (topic != 'http-on-modify-request')
+      return;
+
+    // Get the original URI (before redirects).
+    var httpChannel = subject.QueryInterface(CI.nsIHttpChannel);
+    var originalUri = httpChannel.originalURI.spec;
+
+    // Get the final URI (after redirects).
+    var chanel = subject.QueryInterface(CI.nsIChannel);
+    var currentUri = chanel.URI.spec;
+
+    // We shoudl never block XHRs to webpagetest.  Because the hook is in-process,
+    // these requests will always be to localhost.
+    if (wpt.moz.nsUriIsWptController(httpChannel.originalURI)) {
+      //dump('Saw WPT traffic.  Do not block.  url = ' + originalUri + '\n');
+      return;
+    }
+
+    for (var i = 0, ie = wpt.moz.RequestBlockerSinglton_.UrlBlockStrings.length;i < ie; ++i) {
+      var blockString = wpt.moz.RequestBlockerSinglton_.UrlBlockStrings[i];
+      if (originalUri.indexOf(blockString) != -1) {
+        dump('BLOCK original URI ' + originalUri + ' because it matched block string ' +
+             blockString + '\n');
+        subject.cancel(Components.results.NS_BINDING_ABORTED);
+        return;
+      }
+
+      if (currentUri.indexOf(blockString) != -1) {
+        dump('BLOCK current URI ' + currentUri + ' because it matched block string ' +
+             blockString + '\n');
+        subject.cancel(Components.results.NS_BINDING_ABORTED);
+        return;
+      }
+    }
+  }
+};
+
+/**
+ * Observe network retuests, and block requests that have |blockString| in
+ * their URI.
+ */
+wpt.moz.blockContentMatching = function(blockString) {
+  // Install the observer if it is not already installed.
+  if (!wpt.moz.RequestBlockerSinglton_.isObserving) {
+    wpt.moz.RequestBlockerSinglton_.isObserving = true;
+
+    var observerService = wpt.moz.getService('@mozilla.org/observer-service;1',
+                                             'nsIObserverService');
+    observerService.addObserver(wpt.moz.RequestBlockerSinglton_,
+                                'http-on-modify-request',
+                                false);
+  }
+
+  wpt.moz.RequestBlockerSinglton_.UrlBlockStrings.push(blockString);
+};
+
 })();  // End closure
