@@ -37,9 +37,7 @@ const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool SocketInfo::IsLocalhost() {
-  return (_addr.sin_addr.S_un.S_addr == LOCALHOST ||
-          // In Chrome, some Connect's are never seen for the local connections.
-          _connect_start.QuadPart == 0);
+  return _addr.sin_addr.S_un.S_addr == LOCALHOST;
 }
 
 /*-----------------------------------------------------------------------------
@@ -96,6 +94,8 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
     memcpy(&info->_addr, ip_name, sizeof(ip_name));
     QueryPerformanceCounter(&info->_connect_start);
+    WptTrace(loglevel::kFunction, 
+      _T("[wpthook] - TrackSockets::Connect start %d\n"), s);
     LeaveCriticalSection(&cs);
   }
 }
@@ -279,7 +279,7 @@ SocketInfo* TrackSockets::GetSocketInfo(SOCKET s) {
     info->_during_test = _test_state._active;
     _socketInfo.SetAt(info->_id, info);
   }
-  if (info->_addr.sin_addr.S_un.S_addr == 0 && info->_connect_start.QuadPart) {
+  if (info->_addr.sin_addr.S_un.S_addr == 0) {
     int addr_len = sizeof(info->_addr);
     getpeername(s, (sockaddr *)&info->_addr, &addr_len);
   }
