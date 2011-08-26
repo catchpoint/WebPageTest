@@ -1,6 +1,7 @@
 Debug
 Release
 *.vcxproj.user
+*.vcproj.*.user
 *~
 *.pyc
 Local.testsettings
