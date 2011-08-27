@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "aft.h"
 #include "optimization_checks.h"
 #include "results.h"
 #include "shared_mem.h"
@@ -44,6 +45,7 @@ static const TCHAR * PROGRESS_DATA_FILE = _T("_progress.csv");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
+static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
 
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const BYTE JPEG_VIDEO_QUALITY = 30;
@@ -86,6 +88,8 @@ void Results::Save(void) {
     ProcessRequests();
     OptimizationChecks checks(_requests, _test_state);
     checks.Check();
+    if( _test._aft )
+      CalculateAFT();
     SaveRequests(checks);
     SavePageData(checks);
     SaveImages();
@@ -95,6 +99,59 @@ void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
 
+
+/*-----------------------------------------------------------------------------
+  Save the cpu, memory and bandwidth progress data during the test.
+-----------------------------------------------------------------------------*/
+void Results::CalculateAFT(void) {
+  DWORD msAFT = 0;
+  ATLTRACE(_T("[wpthook] - Results - CalculateAFT\n"));
+  AFT aftEngine(_test._aft_min_changes, _test._aft_early_cutoff);
+  aftEngine.SetCrop(0, 12, 12, 0);
+
+  _screen_capture.Lock();
+  CxImage * last_image = NULL;
+  CString file_name;
+  POSITION pos = _screen_capture._captured_images.GetHeadPosition();
+  while( pos ) {
+    CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
+    DWORD image_time = 0;
+    if( image._capture_time.QuadPart > _test_state._start.QuadPart )
+      image_time = (DWORD)((image._capture_time.QuadPart -
+      _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    CxImage * img = new CxImage;
+    if( image.Get(*img) ) {
+      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
+      if( last_image ) {
+        if( ImagesAreDifferent(last_image, img) ) {
+          aftEngine.AddImage( img, image_time );
+        }
+      } 
+      else 
+        aftEngine.AddImage( img, image_time );
+
+      if (last_image)
+        delete last_image;
+      last_image = img;
+    }
+    else
+      delete img;
+  }
+
+  bool confidence;
+  CxImage imgAft;
+  aftEngine.Calculate(msAFT, confidence, &imgAft);
+  imgAft.Save(_test._file_base + IMAGE_AFT, CXIMAGE_FORMAT_JPG);
+
+  if (last_image)
+    delete last_image;
+  _screen_capture.Unlock();
+
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - Results::CalculateAFT() %d ms\n"),
+    msAFT);
+  _test_state._aft_time_ms = msAFT;
+}
 
 
 /*-----------------------------------------------------------------------------
@@ -239,8 +296,8 @@ void Results::SaveImage(CxImage& image, CString file,
     if (shrink)
       image.Resample2(image.GetWidth() / 2, image.GetHeight() / 2);
 
-    image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
-    image.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
+    image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+    image.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
     image.SetJpegQuality((BYTE)quality);
     image.Save(file, CXIMAGE_FORMAT_JPG);
   }
@@ -467,7 +524,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Optimization Checked (all optimization checks are implemented).
     result += "1\t";
     // AFT (ms)
-    result += "\t";
+    // TODO: Calc the AFT timestamp and calculate it while writing instead of
+    // calculate the ms value directly.
+    buff.Format("%d\t", _test_state._aft_time_ms);
+    result += buff;
     // DOM Element Count
     result += "\t";
     // Page Speed Version

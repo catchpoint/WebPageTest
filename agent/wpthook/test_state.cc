@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test_hook.h"
 
 static const DWORD ACTIVITY_TIMEOUT = 2000;
+// TODO: Keep the test running till aft timeout.
+static const DWORD AFT_TIMEOUT = 240 * 1000;
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
@@ -115,6 +117,7 @@ void TestState::Reset(bool cascade) {
     _progress_data.RemoveAll();
     _test_result = 0;
     _title_time.QuadPart = 0;
+    _aft_time_ms = 0;
     _title.Empty();
     GetSystemTime(&_start_time);
   }
@@ -259,7 +262,7 @@ void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
     }
     _test._dom_element_check = false;
     WptTrace(loglevel::kFrequentEvent, 
-      _T("[wpthook] - TestState::IsDone() Resetting dom element check state. "));
+      _T("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state. "));
   }
 }
 
@@ -289,9 +292,10 @@ bool TestState::IsDone() {
                                   / _ms_frequency.QuadPart);
 
     WptTrace(loglevel::kFunction, 
-              _T("[wpthook] - TestState::IsDone() test: %d ms, ") 
-              _T("doc: %d ms, activity: %d ms\n"), elapsed_test, elapsed_doc,
-              elapsed_activity);
+      _T("[wpthook] - TestState::IsDone() test: %d ms, ") 
+      _T("doc: %d ms, activity: %d ms, test timeout:%d\n"),
+      elapsed_test, elapsed_doc,
+      elapsed_activity, _test._aft ? AFT_TIMEOUT : _test._test_timeout);
 
     if ((int)elapsed_test > _test._test_timeout){
       // the test timed out
@@ -301,7 +305,6 @@ bool TestState::IsDone() {
         _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
     } else if (!_current_document && !_test._dom_element_check && _end_on_load &&
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD){
-
       // end 1 second after onLoad regardless of activity
       done = true;
       WptTrace(loglevel::kFrequentEvent, 

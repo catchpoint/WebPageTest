@@ -122,6 +122,8 @@ public:
   bool    _tcpdump;
   bool    _video;
   bool    _aft;
+  DWORD   _aft_early_cutoff;
+  DWORD   _aft_min_changes;
   CString _test_type;
   CString _block;
   DWORD   _bwIn;

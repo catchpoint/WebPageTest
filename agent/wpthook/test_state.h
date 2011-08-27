@@ -86,6 +86,7 @@ public:
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
   LARGE_INTEGER _title_time;
+  DWORD _aft_time_ms;
   SYSTEMTIME    _start_time;
 
   LARGE_INTEGER _first_byte;

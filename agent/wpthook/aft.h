@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2010, Google Inc.
+Copyright (c) 2011, Google Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -28,45 +28,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-class Requests;
-class Request;
-class TestState;
-class TrackSockets;
-class ScreenCapture;
 class CxImage;
-class WptTest;
-class OptimizationChecks;
 
-class Results {
+class AFT
+{
 public:
-  Results(TestState& test_state, WptTest& test, Requests& requests, 
-          TrackSockets& sockets, ScreenCapture& screen_capture);
-  ~Results(void);
+  AFT(DWORD minChanges = 0, DWORD earlyCutoff = 25,
+    DWORD pixelChangesThreshold = 5);
+  ~AFT(void);
 
-  void Reset(void);
-  void Save(void);
+  void SetCrop( DWORD top, DWORD right, DWORD bottom, DWORD left );
+  void AddImage( CxImage * img, DWORD ms );
+  bool Calculate( DWORD &ms, bool &confident, CxImage * imgAft = NULL );
 
-  // test information
-  CString _url;
+  DWORD pixel_changes_threshold;
+  DWORD early_cutoff;
+  DWORD min_changes;
 
 private:
-  CString     _file_base;
-  Requests&   _requests;
-  TestState&  _test_state;
-  TrackSockets& _sockets;
-  ScreenCapture& _screen_capture;
-  WptTest&      _test;
-  bool        _saved;
-
-  void ProcessRequests(void);
-  void CalculateAFT(void);
-  void SavePageData(OptimizationChecks&);
-  void SaveRequests(OptimizationChecks&);
-  void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
-  void SaveImages(void);
-  void SaveVideo(void);
-  void SaveProgressData(void);
-  void SaveImage(CxImage& image, CString file, bool shrink, BYTE quality);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
+  // stores the previos image in the sequence as images are submitted
+  CxImage * lastImg;
+  // expected width of video images (all must be the same size)
+  DWORD width;
+  // expected height of video images (all must be the same size)
+  DWORD height;
+  // For each pixel, the latest time the pixel changed (in ms)
+  DWORD * pixelChangeTime;
+  // For each pixel, the first time it changed
+  DWORD * firstPixelChangeTime;
+  // For each pixel, the number of times it changed
+  DWORD * pixelChangeCount;
+  // number of pixels to crop from each side
+  RECT  crop;
 };
 

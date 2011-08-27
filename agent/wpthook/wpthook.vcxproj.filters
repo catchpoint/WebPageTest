@@ -388,6 +388,9 @@
     <ClInclude Include="cdn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="aft.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -818,6 +821,9 @@
     </ClCompile>
     <ClCompile Include="..\wptdriver\zlib\zutil.c">
       <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aft.cc">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

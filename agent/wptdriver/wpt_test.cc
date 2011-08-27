@@ -31,6 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ShlObj.h>
 #include "util.h"
 
+static const DWORD AFT_EARLY_CUTOFF_SECS = 25;
+static const DWORD AFT_MIN_CHANGES_THRESHOLD = 100;
+
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void):_version(0),_test_timeout(120000) {
@@ -70,6 +74,8 @@ void WptTest::Reset(void) {
   _tcpdump = false;
   _video = false;
   _aft = false;
+  _aft_early_cutoff = AFT_EARLY_CUTOFF_SECS;
+  _aft_min_changes = AFT_MIN_CHANGES_THRESHOLD;
   _test_type.Empty();
   _block.Empty();
   _bwIn = 0;
@@ -133,6 +139,10 @@ bool WptTest::Load(CString& test) {
           _video = true;
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim()))
           _aft = true;
+        else if (!key.CompareNoCase(_T("aftEarlyCutoff")))
+          _aft_early_cutoff = _ttoi(value.Trim());
+        else if (!key.CompareNoCase(_T("aftMinChanges")))
+          _aft_min_changes = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("type")))
           _test_type = value.Trim();
         else if (!key.CompareNoCase(_T("block")))
