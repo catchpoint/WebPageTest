@@ -357,11 +357,16 @@ $loc = ParseLocations($locations);
                                         if(!$aftCutoff)
                                             $aftCutoff = 25;
                                         ?>
-                                        <input id="aftec" type="text" name="aftec" class="text" style="width: 3em;" value="<?php echo (int)$settings['aftEarlyCutoff']; ?>"> Seconds
+                                        <input id="aftec" type="text" name="aftec" class="text" style="width: 3em;" value="<?php echo (int)$aftCutoff; ?>"> Seconds
                                     </p>
                                     <p>
                                         <label for="aftmc" class="auto_width">Ignore changes smaller than</label>
-                                        <input id="aftmc" type="text" name="aftmc" class="text" style="width: 3em;" value="<?php echo (int)$settings['aftMinChanges']; ?>"> Pixels
+                                        <?php
+                                        $aftMinChanges = (int)$settings['aftMinChanges'];
+                                        if(!$aftMinChanges)
+                                            $aftMinChanges = 25;
+                                        ?>
+                                        <input id="aftmc" type="text" name="aftmc" class="text" style="width: 3em;" value="<?php echo (int)$aftMinChanges; ?>"> Pixels
                                     </p>
                                 </div>
                             </div>
