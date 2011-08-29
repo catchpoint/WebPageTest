@@ -87,7 +87,9 @@ void Results::Save(void) {
   if (!_saved && _test._log_data) {
     ProcessRequests();
     OptimizationChecks checks(_requests, _test_state);
+#ifdef DEBUG
     checks.Check();
+#endif
     if( _test._aft )
       CalculateAFT();
     SaveRequests(checks);
@@ -522,7 +524,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Base Page Redirects
     result += "\t";
     // Optimization Checked (all optimization checks are implemented).
-    result += "1\t";
+    if (checks._checked)
+      result += "1\t";
+    else
+      result += "0\t";
     // AFT (ms)
     // TODO: Calc the AFT timestamp and calculate it while writing instead of
     // calculate the ms value directly.

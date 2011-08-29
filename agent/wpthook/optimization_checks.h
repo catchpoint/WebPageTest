@@ -64,16 +64,17 @@ public:
   void CdnLookupThread(DWORD index);
 
   // test information
-  int _keep_alive_score;
-  int _gzip_score;
+  int   _keep_alive_score;
+  int   _gzip_score;
   DWORD _gzip_total;
   DWORD _gzip_target;
-  int _image_compression_score;
+  int   _image_compression_score;
   DWORD _image_compress_total;
   DWORD _image_compress_target;
-  int _cache_score;
-  int _combine_score;
-  int _static_cdn_score;
+  int   _cache_score;
+  int   _combine_score;
+  int   _static_cdn_score;
+  bool  _checked;
   
   // Helper member for CDN checking.
   CAtlArray<Request*> _cdn_requests;

@@ -57,7 +57,8 @@ OptimizationChecks::OptimizationChecks(Requests& requests,
   , _image_compression_score(-1)
   , _cache_score(-1)
   , _combine_score(-1)
-  , _static_cdn_score(-1) {
+  , _static_cdn_score(-1)
+  , _checked(false) {
   InitializeCriticalSection(&_cs_cdn);
 }
 
@@ -81,6 +82,7 @@ void OptimizationChecks::Check(void) {
   CheckCacheStatic();
   CheckCombine();
   CheckCDN();
+  _checked = true;
 
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptimizationChecks::Check() complete\n"));
