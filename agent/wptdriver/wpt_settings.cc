@@ -142,6 +142,11 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _profile_directory = buff;
   }
   _profile_directory += browser;
+  if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
+    _countof(buff), iniFile )) {
+    _profile_directory = buff;
+    _profile_directory.Replace(_T("%WPTDIR%"), _wpt_directory);
+  }
 
   if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
     _countof(buff), iniFile )) {
