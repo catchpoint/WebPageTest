@@ -1214,6 +1214,7 @@ function ArchiveTest($id)
                 // zip up the contents
                 if(is_dir($testPath) === true)
                 {
+                    $count = 0;
                     $zip = new ZipArchive();
                     if ($zip->open($dest, ZIPARCHIVE::CREATE) === true)
                     {
@@ -1227,12 +1228,13 @@ function ArchiveTest($id)
                                 strpos($file, '_render.jpg') === false &&
                                 strpos($file, '_status.txt') === false )
                             {
+                                $count++;
                                 $zip->addFile($filePath, $file);
                             }
                         }
                         
                         // if it is a video test, save the median first view video
-                        if( $testInfo['video'] )
+                        if( $count && $testInfo['video'] )
                         {
                             $run = $testInfo['medianRun'];
                             if( !$run )
@@ -1267,9 +1269,14 @@ function ArchiveTest($id)
                     // only consider it successful if the archive file was actually created
                     if( is_file($dest) )
                     {
-                        $ret = true;
-                        $testInfo['archived'] = true;
-                        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        if( $count )
+                        {
+                            $ret = true;
+                            $testInfo['archived'] = true;
+                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                        }
+                        else
+                            unlink($dest);
                     }
                 }
             }
@@ -1359,11 +1366,15 @@ function GetArchiveFile($id, $create_directory = false)
     $file = null;
     if( isset($settings['archive_dir']) && strlen($id) )
     {
-        $file = $settings['archive_dir'] . GetTestPath($id) . '.zip';
-        if( $create_directory )
+        $testPath = GetTestPath($id);
+        if( strlen($testPath) )
         {
-            $dir = dirname($file);
-            mkdir($dir, 0777, true);
+            $file = $settings['archive_dir'] . $testPath . '.zip';
+            if( $create_directory )
+            {
+                $dir = dirname($file);
+                mkdir($dir, 0777, true);
+            }
         }
     }
     return $file;

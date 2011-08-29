@@ -4,6 +4,7 @@ include 'common.inc';
 include './cli/ec2-keys.inc.php';
 include './ec2/sdk.class.php';
 set_time_limit(0);
+$minimum = true;
 
 $counts = array();
 foreach($regions as $region => &$regionData)
@@ -85,6 +86,8 @@ if( $ec2 )
                 $targetCount = (int)($backlog / $targetBacklog);
         }
         $targetCount = max(min($targetCount,$regionData['max']), $regionData['min']);
+        if( $targetCount > $regionData['min'] )
+            $minimum = false;
         echo "Target: $targetCount\n";
         
         $needed = $targetCount - $counts[$region];
@@ -161,7 +164,7 @@ foreach( $counts as $region => $count )
 }
 echo $countsTxt;
 
-// send out a mail message with the current counts (until we get comfortable with it)
-if( !$addOnly )
+// send out a mail message if we are not running at the minimum levels
+if( !$addOnly && !$minimum )
     mail('pmeenan@webpagetest.org', $summary, $countsTxt );
 ?>
