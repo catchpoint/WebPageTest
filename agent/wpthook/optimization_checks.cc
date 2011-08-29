@@ -604,6 +604,7 @@ void OptimizationChecks::CdnLookupThread(DWORD index)
 bool OptimizationChecks::IsCDN(CStringA host, SOCKADDR_IN &server,
   CStringA &provider)
 {
+  provider.Empty();
   bool ret = false;
   if( host.IsEmpty() )
     return ret;
@@ -681,15 +682,13 @@ bool OptimizationChecks::IsCDN(CStringA host, SOCKADDR_IN &server,
     }
 
     // Add it to the list of resolved names cache.
-    if( !provider.IsEmpty() ) {
-      EnterCriticalSection(&_cs_cdn);
-      CDNEntry entry;
-      entry._name = host;
-      entry._is_cdn = ret;
-      entry._provider = provider;
-      _cdn_lookups.AddHead(entry);
-      LeaveCriticalSection(&_cs_cdn);
-    }
+    EnterCriticalSection(&_cs_cdn);
+    CDNEntry entry;
+    entry._name = host;
+    entry._is_cdn = ret;
+    entry._provider = provider;
+    _cdn_lookups.AddHead(entry);
+    LeaveCriticalSection(&_cs_cdn);
   }
   return ret;
 }
