@@ -126,12 +126,11 @@ wpt.moz.main.onNavigate = function() {
 }
 
 // notification that the page loaded
-wpt.moz.main.onLoad = function(load_time) {
+wpt.moz.main.onLoad = function() {
   try {
     g_active = false;
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/load?load_time=' + load_time,
-             true);
+    xhr.open('POST', 'http://127.0.0.1:8888/event/load', true);
     xhr.send();
   } catch(err) {}
 }
@@ -173,7 +172,6 @@ var wptListener = {
 
 var wptExtension = {
   oldURL: null,
-  startTime: null,
   init: function() {
     gBrowser.addProgressListener(
         wptListener,
@@ -184,15 +182,12 @@ var wptExtension = {
   },
   loadStart: function() {
     if (g_active) {
-      this.startTime = (new Date()).getTime();
       wpt.moz.main.onNavigate();
     }
   },
   loadStop: function() {
     if (g_active) {
-      var loadTime = (new Date()).getTime() - this.startTime;
-      wpt.moz.main.onLoad(loadTime);
-      dump('load time:  ' + loadTime + '\n');
+      wpt.moz.main.onLoad();
     }
   }
 };
