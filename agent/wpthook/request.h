@@ -35,64 +35,60 @@ class WptTest;
 
 class DataChunk {
 public:
-  DataChunk() : _unowned_data(NULL), _data(NULL), _data_len(0) {}
-  DataChunk(const char * unowned_data, DWORD data_len) :
-      _unowned_data(NULL), _data(NULL), _data_len(0) {
-    if (unowned_data && data_len) {
-      _unowned_data = unowned_data;
-      _data_len = data_len;
-    }
+  DataChunk() { _value = new DataChunkValue(NULL, NULL, 0); }
+  DataChunk(const char * unowned_data, DWORD data_len) {
+    _value = new DataChunkValue(unowned_data, NULL, data_len);
   }
-  DataChunk(const DataChunk& src) { *this = src; }
-  ~DataChunk(){}
+  DataChunk(const DataChunk& src): _value(src._value) { ++_value->_ref_count; }
+  ~DataChunk() { if (--_value->_ref_count == 0) delete _value; }
   const DataChunk& operator=(const DataChunk& src) {
-    _unowned_data = src._unowned_data;
-    _data = src._data;
-    _data_len = src._data_len;
+    if (_value != src._value) {
+      if (--_value->_ref_count == 0) {
+        delete _value;
+      }
+      _value = src._value;
+      ++_value->_ref_count;
+    }
     return *this;
   }
-  void Free() {
-    if (_data) {
-      free(_data);
+  void CopyDataIfUnowned() {
+    if (_value->_unowned_data) {
+      DWORD len = _value->_data_len;
+      char *new_data = new char[len];
+      memcpy(new_data, _value->_unowned_data, len);
+      _value->_unowned_data = NULL;
+      _value->_data = new_data;
+      _value->_data_len = len;    }
+  }
+  char * AllocateLength(DWORD len) {
+    if (--_value->_ref_count == 0) {
+      delete _value;
     }
-    _unowned_data = NULL;
-    _data = NULL;
-    _data_len = 0;
+    _value = new DataChunkValue(NULL, new char[len], len);
+    return _value->_data;
   }
-
-  /*---------------------------------------------------------------------------
-     The caller must always call Free() on the returned DataChunk.
-     If |this| has unowned data, the data is copied to the return value.
-  ---------------------------------------------------------------------------*/
-  DataChunk GiveAwayOwnership() {
-    DataChunk new_chunk;
-    if (_unowned_data) {
-      char *new_data = (char *)malloc(_data_len);
-      memcpy(new_data, _unowned_data, _data_len);
-      new_chunk.TakeOwnership(new_data, _data_len);
-    } else {
-      new_chunk.TakeOwnership(_data, _data_len);
-      _unowned_data = _data;
-      _data = NULL;
-    }
-    return new_chunk;
+  const char * GetData() {
+    return _value->_data ? _value->_data : _value->_unowned_data;
   }
-  /*---------------------------------------------------------------------------
-     |data| is expected to be malloc'd memory. Call Free() to free it.
-  ---------------------------------------------------------------------------*/
-  void TakeOwnership(char *data, DWORD data_len) {
-    Free();
-    _unowned_data = NULL;
-    _data = data;
-    _data_len = data_len;
-  }
-  const char * GetData() { return _unowned_data ? _unowned_data : _data; }
-  DWORD GetLength() { return _data_len; }
+  DWORD GetLength() { return _value->_data_len; }
 
 private:
-  const char * _unowned_data;
-  char *       _data;
-  DWORD        _data_len;
+  class DataChunkValue {
+   public:
+    const char * _unowned_data;
+    char *       _data;
+    DWORD        _data_len;
+    int          _ref_count;
+    DataChunkValue(const char * unowned_data, char * data, DWORD data_len) :
+        _unowned_data(unowned_data), _data(data), _data_len(data_len),
+        _ref_count(1) {
+      _unowned_data = unowned_data;
+      _data = data;
+      _data_len = data_len;
+    }
+    ~DataChunkValue() { delete [] _data; }
+  };
+  DataChunkValue * _value;
 };
 
 class HeaderField {

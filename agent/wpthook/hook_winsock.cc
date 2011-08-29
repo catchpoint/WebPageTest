@@ -351,8 +351,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         original_len += lpBuffers[i].len;
       }
       // Concatenate all the buffers together.
-      LPSTR new_data = (char *)malloc(original_len);
-      LPSTR data = new_data;
+      LPSTR data = chunk.AllocateLength(original_len);
       for (DWORD i = 0; i < dwBufferCount; i++) {
         DWORD buffer_len = lpBuffers[i].len;
         if (buffer_len && lpBuffers[i].buf) {
@@ -360,8 +359,6 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         }
         data += buffer_len;
       }
-      chunk.TakeOwnership(new_data, original_len);
-
       is_modified = _sockets.ModifyDataOut(s, chunk);
       _sockets.DataOut(s, chunk);
     }
@@ -384,7 +381,6 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                      dwFlags, lpOverlapped, lpCompletionRoutine);
     }
-    chunk.Free();
   }
   return ret;
 }

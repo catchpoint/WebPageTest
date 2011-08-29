@@ -83,7 +83,6 @@ Request::Request(TestState& test_state, DWORD socket_id,
 -----------------------------------------------------------------------------*/
 Request::~Request(void) {
   EnterCriticalSection(&cs);
-  FreeChunkMem();
   if (_data_in)
     free(_data_in);
   if (_data_out)
@@ -108,7 +107,8 @@ void Request::DataIn(DataChunk& chunk) {
 
     _data_received += chunk.GetLength();
     if (_data_received < MAX_DATA_TO_RETAIN) {
-      _data_chunks_in.AddTail(chunk.GiveAwayOwnership());
+      chunk.CopyDataIfUnowned();
+      _data_chunks_in.AddTail(chunk);
     }
 
     // Track for BW statistics.
@@ -153,14 +153,15 @@ bool Request::ModifyDataOut(DataChunk& chunk) {
       current_data_len--;
     }
     if (is_modified) {
+      DataChunk new_chunk;
       DWORD headers_len = headers.GetLength();
       DWORD new_len = headers_len + current_data_len;
-      LPSTR new_data = (char *)malloc(new_len);
+      LPSTR new_data = new_chunk.AllocateLength(new_len);
       memcpy(new_data, (LPCSTR)headers, headers_len);
       if (current_data_len) {
         memcpy(new_data + headers_len, current_data, current_data_len);
       }
-      chunk.TakeOwnership(new_data, new_len);
+      chunk = new_chunk;
     }
   }
   LeaveCriticalSection(&cs);
@@ -184,7 +185,8 @@ void Request::DataOut(DataChunk& chunk) {
       }
       _data_sent += chunk_len;
       if (_data_sent < MAX_DATA_TO_RETAIN) {
-        _data_chunks_out.AddTail(chunk.GiveAwayOwnership());
+        chunk.CopyDataIfUnowned();
+        _data_chunks_out.AddTail(chunk);
       }
       _test_state._bytes_out += chunk_len;
     }
@@ -293,19 +295,6 @@ bool Request::Process() {
 
   _processed = ret;
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Request::FreeChunkMem() {
-  while (!_data_chunks_in.IsEmpty()) {
-    DataChunk chunk = _data_chunks_in.RemoveHead();
-    chunk.Free();
-  }
-  while (!_data_chunks_out.IsEmpty()) {
-    DataChunk chunk = _data_chunks_out.RemoveHead();
-    chunk.Free();
-  }
 }
 
 /*-----------------------------------------------------------------------------

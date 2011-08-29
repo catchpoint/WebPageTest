@@ -196,7 +196,6 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
       _sockets.DataOut(s, chunk);
       ret = original_amount;
     }
-    chunk.Free();
   }
   return ret;
 }
@@ -219,7 +218,6 @@ PRInt32 NsprHook::PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount,
       _sockets.DataOut(s, chunk);
       ret = original_amount;
     }
-    chunk.Free();
   }
   return ret;
 }
