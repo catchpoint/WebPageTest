@@ -136,17 +136,21 @@ wpt.moz.main.onLoad = function() {
 }
 
 // Start timing on a start event that applies to a document.
+// We test that *ALL* of these bits are set.
 var START_FILTER = (
     Components.interfaces.nsIWebProgressListener.STATE_START |
     Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT);
 
 // Stop timing on a stop event that ends a network event from a window.
+// We test that *ALL* of these bits are set.
 var STOP_FILTER = (
     Components.interfaces.nsIWebProgressListener.STATE_STOP |
     Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK |
     Components.interfaces.nsIWebProgressListener.STATE_IS_WINDOW);
 
 var wptListener = {
+  debugDumpEvents_: false,    // Log on* methods of this object.
+
   QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -154,28 +158,49 @@ var wptListener = {
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
+
   onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
+    if (this.debugDumpEvents_) {
+      dump('===== onStateChange:\n' +
+           '    aRequest = ' + (aRequest===null ? 'null' : aRequest.name) + '\n' +
+           '    aFlag = ' + wpt.moz.stringifyFlags('nsIWebProgressListener', /^STATE/, aFlag).join(' | ') + '\n' +
+           '\n\n');
+      if (!aWebProgress.DOMWindow) {
+        dump('   === No dom window.\n');
+      } else {
+        dump('   === aWebProgress.DOMWindow location is '+ aWebProgress.DOMWindow.location.href + '\n');
+      }
+    }
+
     // If you used for more than one tab/window, use aWebProgress.DOMWindow
     // to obtain the tab/window which triggers the state change.
     if (aRequest && (!aRequest.name || !/^https?:/.test(aRequest.name)))
       return;
-    if ((aFlag & START_FILTER) == START_FILTER)
+
+    if (wpt.moz.allBitsSet(START_FILTER, aFlag)) {
       wptExtension.loadStart();
-    if ((aFlag & STOP_FILTER) == STOP_FILTER)
+    }
+
+    if (wpt.moz.allBitsSet(STOP_FILTER, aFlag)) {
       wptExtension.loadStop();
+    }
   },
-  onLocationChange: function(aProgress, aRequest, aURI) {return;},
+
+  // Redirects cause a call to onLocationChange.  |aURI.spec| is the new URL.
+  onLocationChange: function(aProgress, aRequest, aURI) {
+    if (this.debugDumpEvents_) {
+      dump('===== onLocationChange: '+ aURI.spec + '\n');
+    }
+    return;
+  },
   onProgressChange: function(a, b, c, d, e, f) {return;},
   onStatusChange: function(a, b, c, d) {return;},
   onSecurityChange: function(a, b, c) {return;}
 };
 
 var wptExtension = {
-  oldURL: null,
   init: function() {
-    gBrowser.addProgressListener(
-        wptListener,
-        Components.interfaces.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+    gBrowser.addProgressListener(wptListener);
   },
   uninit: function() {
     gBrowser.removeProgressListener(wptListener);

@@ -71,6 +71,10 @@ wpt.moz.stringifyFlags = function(interfaceName, flagMatcher, flagValue) {
   return result;
 };
 
+wpt.moz.allBitsSet = function(bitmask, data) {
+  return ((data & bitmask) == bitmask);
+};
+
 /**
  * Take an object with parameters that specify a cookie, and set it.
  * The format of the object is the same as the object passed to
