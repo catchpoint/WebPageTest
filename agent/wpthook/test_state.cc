@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static const DWORD ACTIVITY_TIMEOUT = 2000;
 // TODO: Keep the test running till aft timeout.
-static const DWORD AFT_TIMEOUT = 240 * 1000;
+static const DWORD AFT_TIMEOUT = 10 * 1000;
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
@@ -89,6 +89,7 @@ void TestState::Reset(bool cascade) {
     _step_start.QuadPart = 0;
   } else {
     _active = false;
+    _capturing_aft = false;
     _next_document = 1;
     _current_document = 0;
     _doc_requests = 0;
@@ -153,6 +154,8 @@ void TestState::Start() {
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
   _active = true;
+  if( _test._aft )
+    _capturing_aft = true;
   _current_document = _next_document;
   _next_document++;
   FindBrowserWindow();  // the document window may not be available yet
@@ -268,9 +271,10 @@ void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool TestState::IsDone() {
-  bool done = false;
+  bool page_load_done = false;
+  bool aft_timed_out = false;
 
-  if (_active){
+  if (_active || _capturing_aft){
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     DWORD elapsed_test = 0;
@@ -295,43 +299,58 @@ bool TestState::IsDone() {
       _T("doc: %d ms, activity: %d ms, measurement timeout:%d\n"),
       elapsed_test, elapsed_doc, elapsed_activity, _test._measurement_timeout);
 
-    if ((int)elapsed_test > _test._measurement_timeout){
-      // the test timed out
-      _test_result = TEST_RESULT_TIMEOUT;
-      done = true;
+    // Check for AFT timeout first.
+    if (_capturing_aft && (int)elapsed_test > AFT_TIMEOUT) {
+      aft_timed_out = true;
       WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
-    } else if (!_current_document && !_test._dom_element_check && 
-                _test._doc_complete && elapsed_doc && 
-                elapsed_doc > ON_LOAD_GRACE_PERIOD){
-      // end 1 second after onLoad regardless of activity
-      done = true;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
-    } else if (!_current_document && !_test._dom_element_check && 
-                !_test._doc_complete && 
-                elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
-                elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
-      // the normal mode of waiting for 2 seconds of no network activity after
-      // onLoad
-      done = true;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - TestState::IsDone() -> true; 2 seconds no activity"));
+        _T("[wpthook] - TestState::IsDone() -> true; AFT timed out."));
+    } else if (_active) { 
+      if ((int)elapsed_test > _test._measurement_timeout) {
+        // the test timed out
+        _test_result = TEST_RESULT_TIMEOUT;
+        page_load_done = true;
+        WptTrace(loglevel::kFrequentEvent, 
+          _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
+      } else if (!_current_document && !_test._dom_element_check && 
+                  _test._doc_complete && elapsed_doc && 
+                  elapsed_doc > ON_LOAD_GRACE_PERIOD){
+        // end 1 second after onLoad regardless of activity
+        page_load_done = true;
+        WptTrace(loglevel::kFrequentEvent, 
+          _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
+      } else if (!_current_document && !_test._dom_element_check && 
+                  !_test._doc_complete && 
+                  elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
+                  elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
+        // the normal mode of waiting for 2 seconds of no network activity after
+        // onLoad
+        page_load_done = true;
+        WptTrace(loglevel::kFrequentEvent, 
+          _T("[wpthook] - TestState::IsDone() -> true; 2 seconds no activity"));
+      }
     }
 
-    if (done) {
+    // AFT timed-out, then mark the page as done.
+    if (aft_timed_out) {
       Done();
     }
+    else if (_active && page_load_done) {
+      // Page load is done normally. If we are not capturing AFT, mark it as 
+      // done. Else, just mark active as false to continue video capturing.
+      if (!_capturing_aft)
+        Done();
+      else
+        _active = false;
+    }
   }
-
-  return done;
+  return aft_timed_out || (!_capturing_aft && page_load_done);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
-  if (_active) {
+  if (_active || _capturing_aft) {
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
@@ -353,6 +372,7 @@ void TestState::Done(bool force) {
     }
 
     _active = false;
+    _capturing_aft = false;
   }
 }
 
@@ -375,7 +395,7 @@ void TestState::FindBrowserWindow(void) {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && _test._video) {
+  if ((_active || _capturing_aft) && _document_window && _test._video) {
     if (force || (_screen_updated && _render_start.QuadPart)) {
       // use a falloff on the resolution with which we capture video
       bool grab_video = false;

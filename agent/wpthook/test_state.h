@@ -100,6 +100,7 @@ public:
   CString _title;
 
   bool  _active;
+  bool _capturing_aft;
   int   _current_document;
   bool  _exit;
 
