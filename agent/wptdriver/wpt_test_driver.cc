@@ -28,9 +28,8 @@ bool WptTestDriver::Start() {
     if (_directory.GetLength()) {
       SetFileBase();
       SetClearedCache(_clear_cache);
-      // TODO: Need to add an option to force test at doc complete.
+      SetForceDocComplete(_doc_complete);
       SetCurrentRun(_run);
-
       ret = true;
     }
   }
