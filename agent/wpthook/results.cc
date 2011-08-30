@@ -413,7 +413,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Pagetest Build
     result += "\t";
     // Measurement Type
-    if (shared_test_force_on_load)
+    if (_test._doc_complete)
       result += "1\t";
     else
       result += "2\t";

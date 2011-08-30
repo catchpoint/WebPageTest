@@ -48,10 +48,9 @@ static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestState::TestState(bool end_on_load, Results& results,
-                      ScreenCapture& screen_capture, WptTestHook &test):
-  _end_on_load(end_on_load)
-  ,_results(results)
+TestState::TestState(Results& results, ScreenCapture& screen_capture, 
+                      WptTestHook &test):
+  _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
   ,_document_window(NULL)
@@ -293,23 +292,24 @@ bool TestState::IsDone() {
 
     WptTrace(loglevel::kFunction, 
       _T("[wpthook] - TestState::IsDone() test: %d ms, ") 
-      _T("doc: %d ms, activity: %d ms, test timeout:%d\n"),
-      elapsed_test, elapsed_doc,
-      elapsed_activity, _test._aft ? AFT_TIMEOUT : _test._test_timeout);
+      _T("doc: %d ms, activity: %d ms, measurement timeout:%d\n"),
+      elapsed_test, elapsed_doc, elapsed_activity, _test._measurement_timeout);
 
-    if ((int)elapsed_test > _test._test_timeout){
+    if ((int)elapsed_test > _test._measurement_timeout){
       // the test timed out
       _test_result = TEST_RESULT_TIMEOUT;
       done = true;
       WptTrace(loglevel::kFrequentEvent, 
         _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
-    } else if (!_current_document && !_test._dom_element_check && _end_on_load &&
-                elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD){
+    } else if (!_current_document && !_test._dom_element_check && 
+                _test._doc_complete && elapsed_doc && 
+                elapsed_doc > ON_LOAD_GRACE_PERIOD){
       // end 1 second after onLoad regardless of activity
       done = true;
       WptTrace(loglevel::kFrequentEvent, 
         _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
-    } else if (!_current_document && !_test._dom_element_check && !_end_on_load &&
+    } else if (!_current_document && !_test._dom_element_check && 
+                !_test._doc_complete && 
                 elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
                 elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
       // the normal mode of waiting for 2 seconds of no network activity after

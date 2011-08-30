@@ -33,6 +33,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern HHOOK	shared_hook_handle;
 extern WCHAR  shared_results_file_base[MAX_PATH];
 extern DWORD  shared_test_timeout;
-extern bool   shared_test_force_on_load;
 extern bool   shared_cleared_cache;
 extern DWORD  shared_current_run;

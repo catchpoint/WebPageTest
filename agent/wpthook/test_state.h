@@ -58,8 +58,7 @@ public:
 
 class TestState {
 public:
-  TestState(bool end_on_load, Results& results,
-            ScreenCapture& screen_capture, WptTestHook &test);
+  TestState(Results& results,ScreenCapture& screen_capture, WptTestHook &test);
   ~TestState(void);
 
   void Start();
@@ -114,7 +113,6 @@ public:
   CAtlList<CProgressData> _progress_data;
 
 private:
-  bool  _end_on_load;
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;
