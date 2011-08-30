@@ -301,7 +301,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         if (chunk) {
           bytes -= chunk;
           if( lpBuffers[i].buf )
-            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, lpBuffers[i].len));
+            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, chunk));
         }
         i++;
       }
