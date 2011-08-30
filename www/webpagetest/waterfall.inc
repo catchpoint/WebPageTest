@@ -636,7 +636,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['ssl_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['ssl_end'] / $range));
-                drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colSSL);
+                drawBar($im, $xStart, $y, $xEnd, $barBottom, $colSSL);
             }
 
             // new-style connection reporting
