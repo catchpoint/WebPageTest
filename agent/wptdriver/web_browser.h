@@ -41,6 +41,7 @@ public:
 
 private:
   void InjectDll();
+  void FindHookFunctions(HANDLE process);
 
   WptSettings&    _settings;
   WptTestDriver&  _test;

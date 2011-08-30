@@ -136,6 +136,7 @@ public:
   CString _test_file;
   bool    _log_data;
   DWORD   _test_timeout;
+  DWORD   _measurement_timeout;
   
   // current state
   int     _run;

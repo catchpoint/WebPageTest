@@ -41,6 +41,8 @@ const DWORD UPLOAD_RETRY_DELAY = 10;
 // conversions
 const DWORD SECONDS_TO_MS = 1000;
 
+class WptTest;
+
 class BrowserSettings {
 public:
   BrowserSettings(){}
@@ -49,6 +51,7 @@ public:
   void ResetProfile();
 
   CString _browser;
+  CString _template;
   CString _exe;
   CString _options;
   CString _wpt_directory;
@@ -63,6 +66,7 @@ public:
   ~WptSettings(void);
   bool Load(void);
   bool SetBrowser(CString browser);
+  bool PrepareTest(WptTest& test);
 
   CString _server;
   CString _location;

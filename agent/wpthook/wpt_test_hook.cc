@@ -5,8 +5,8 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestHook::WptTestHook(DWORD test_timeout) {
-  _test_timeout = test_timeout;
+WptTestHook::WptTestHook(DWORD timeout) {
+  _measurement_timeout = timeout;
 }
 
 /*-----------------------------------------------------------------------------

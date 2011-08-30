@@ -90,7 +90,8 @@ bool WptSettings::Load(void) {
   SetDebugLevel(_debug, logFile);
 
   // load the test parameters
-  _timeout = GetPrivateProfileInt(_T("Test"), _T("Timeout"),_timeout, iniFile);
+  _timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("Time Limit"),
+                                  _timeout, iniFile);
   SetTestTimeout(_timeout * SECONDS_TO_MS);
 
   // load the Web Page Replay host
@@ -128,6 +129,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   bool ret = false;
   TCHAR buff[4096];
   _browser = browser;
+  _template = _browser;
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
@@ -145,7 +147,14 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _profile_directory = buff;
+    _profile_directory.Trim();
     _profile_directory.Replace(_T("%WPTDIR%"), _wpt_directory);
+  }
+
+  if (GetPrivateProfileString(browser, _T("template"), _T(""), buff, 
+    _countof(buff), iniFile )) {
+    _template = buff;
+    _template.Trim();
   }
 
   if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
@@ -178,7 +187,7 @@ void BrowserSettings::ResetProfile() {
   if (_profile_directory.GetLength() ) {
     SHCreateDirectoryEx(NULL, _profile_directory, NULL);
     DeleteDirectory(_profile_directory, false);
-    CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\")) + _browser,
+    CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\"))+_template,
                       _profile_directory);
   }
 }

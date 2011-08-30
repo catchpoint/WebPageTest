@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "stdafx.h"
 #include "../wpthook/wpthook_dll.h"
+#include <Wincrypt.h>
 
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
@@ -73,7 +74,7 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
     TCHAR * path = new TCHAR[MAX_PATH];	
     lstrcpy( path, directory );
     PathAppend( path, _T("*.*") );
-    
+
     WIN32_FIND_DATA fd;
     HANDLE hFind = FindFirstFile(path, &fd);
     if (hFind != INVALID_HANDLE_VALUE) {
@@ -125,7 +126,7 @@ void CopyDirectoryTree(CString source, CString destination) {
   Find what we assume is the browser document window:
   Largest child window that:
   - Is visible
-  - Takes > 50% of the parent window's space
+  - Takes > 80% of the parent window's space
   - Recursively checks the largest child
 -----------------------------------------------------------------------------*/
 static HWND FindBrowserDocument(HWND parent_window) {
@@ -136,7 +137,7 @@ static HWND FindBrowserDocument(HWND parent_window) {
   if (GetWindowRect(parent_window, &rect)) {
     DWORD parent_pixels = abs(rect.right - rect.left) * 
                           abs(rect.top - rect.bottom);
-    DWORD cutoff = parent_pixels / 2;
+    DWORD cutoff = (DWORD)((double)parent_pixels * 0.8);
     if (parent_pixels) {
       HWND child = GetWindow(parent_window, GW_CHILD);
       while (child) {
@@ -217,4 +218,50 @@ void WptTrace(int level, LPCTSTR format, ...) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Generate a md5 hash of the provided file
+-----------------------------------------------------------------------------*/
+bool HashFile(LPCTSTR file, CString& hash) {
+  bool ret = false;
+
+  HCRYPTPROV crypto = 0;
+  if (CryptAcquireContext(&crypto, NULL, NULL, PROV_RSA_FULL, 
+                          CRYPT_VERIFYCONTEXT)) {
+    HCRYPTHASH crypto_hash = 0;
+    if (CryptCreateHash(crypto, CALG_MD5, 0, 0, &crypto_hash)) {
+      HANDLE file_handle = CreateFile( file, GENERIC_READ, FILE_SHARE_READ, 0, 
+                                OPEN_EXISTING, 0, 0);
+      if (file != INVALID_HANDLE_VALUE) {
+        ret = true;
+        BYTE buff[4096];
+        DWORD bytes = 0;
+        while (ReadFile(file_handle, buff, sizeof(buff), &bytes, 0) && bytes)
+          if (!CryptHashData(crypto_hash, buff, bytes, 0))
+            ret = false;
+
+        if (ret) {
+          BYTE h[16];
+          TCHAR file_hash[100];
+          DWORD len = 16;
+          if (CryptGetHashParam(crypto_hash, HP_HASHVAL, 
+                                h, &len, 0)) {
+            wsprintf(file_hash, _T("%02X%02X%02X%02X%02X%02X%02X%02X")
+                      _T("%02X%02X%02X%02X%02X%02X%02X%02X"),
+                h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7], 
+                h[8], h[9], h[10], h[11], h[12], h[13], h[14], h[15]);
+            hash = file_hash;
+          } else
+            ret = false;
+        }
+
+        CloseHandle(file_handle);
+      }
+      CryptDestroyHash(crypto_hash);
+    }
+    CryptReleaseContext(crypto,0);
+  }
+
+  return ret;
 }

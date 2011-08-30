@@ -46,3 +46,4 @@ void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
                           HWND& document_window);
 void WptTrace(int level, LPCTSTR format, ...);
+bool HashFile(LPCTSTR file, CString& hash);

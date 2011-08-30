@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
 #include "web_browser.h"
+#include <Tlhelp32.h>
+#include "dbghelp/dbghelp.h"
 
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 
@@ -63,7 +65,7 @@ bool WebBrowser::RunAndWait() {
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
       lstrcat ( cmdLine, _T(" about:blank"));
 
-      _status.Set(_T("[wptdriver] Launching: %s\n"), cmdLine);
+      _status.Set(_T("Launching: %s\n"), cmdLine);
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
@@ -86,6 +88,7 @@ bool WebBrowser::RunAndWait() {
         WaitForInputIdle(pi.hProcess, 120000);
         SuspendThread(pi.hThread);
 
+        //FindHookFunctions(pi.hProcess);
         InstallHook(pi.hProcess);
 
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
@@ -95,18 +98,20 @@ bool WebBrowser::RunAndWait() {
       LeaveCriticalSection(&cs);
 
       // wait for the browser to finish (infinite timeout if we are debugging)
-      #ifdef DEBUG
-      if( _browser_process && 
-          WaitForSingleObject(_browser_process, INFINITE ) == WAIT_OBJECT_0 ){
-        ret = true;
+      if (_browser_process) {
+        _status.Set(_T("Waiting up to %d seconds for the test to complete\n"), 
+                    (_test._test_timeout / SECONDS_TO_MS) * 2);
+        #ifdef DEBUG
+        if (WaitForSingleObject(_browser_process, INFINITE )==WAIT_OBJECT_0 ) {
+          ret = true;
+        }
+        #else
+        if (WaitForSingleObject(_browser_process, _test._test_timeout * 2) == 
+            WAIT_OBJECT_0 ) {
+          ret = true;
+        }
+        #endif
       }
-      #else
-      if( _browser_process && 
-          WaitForSingleObject(_browser_process, _settings._timeout * 2 *
-          SECONDS_TO_MS ) == WAIT_OBJECT_0 ){
-        ret = true;
-      }
-      #endif
 
       // kill the browser if it is still running
       EnterCriticalSection(&cs);
@@ -131,4 +136,78 @@ bool WebBrowser::RunAndWait() {
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
   _browser.ResetProfile();
+}
+
+// dump all of the symbols to the debugger
+BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID ctx) {
+  if( sym->NameLen && sym->Name ) {
+    CStringA buff;
+    DWORD address = (DWORD)sym->Address;
+    buff.Format("(0x%08X) 0x%08X - %s\n", sym->Flags, address, sym->Name);
+    OutputDebugStringA(buff);
+  }
+  return TRUE;
+}
+
+/*-----------------------------------------------------------------------------
+  Find the addresses of functions we care about inside of the browser
+  (this is just for chrome where we need debug symbols)
+-----------------------------------------------------------------------------*/
+void WebBrowser::FindHookFunctions(HANDLE process) {
+  // figure out the name of the ini file where we cache the offsets
+  TCHAR ini_file[MAX_PATH];
+  TCHAR sym_cache[MAX_PATH];
+  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, ini_file)) ) {
+    PathAppend(ini_file, _T("webpagetest_data"));
+    CreateDirectory(ini_file, NULL);
+    lstrcpy(sym_cache, ini_file);
+    lstrcat(sym_cache, _T("\\symbols"));
+    CreateDirectory(sym_cache, NULL);
+    lstrcat(ini_file, _T("\\offsets.dat"));
+    // find the chrome dll
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
+                                                        GetProcessId(process));
+    if (snap != INVALID_HANDLE_VALUE) {
+      bool found = false;
+      MODULEENTRY32 module;
+      module.dwSize = sizeof(module);
+      if (Module32First(snap, &module)) {
+        do {
+          if (!lstrcmpi(module.szModule, _T("chrome.dll"))) {
+            found = true;
+          }
+        } while(!found && Module32Next(snap, &module));
+      }
+      if (found) {
+        // generate a md5 hash of the dll
+        CString hash;
+        if (HashFile(module.szExePath, hash)) {
+          SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
+                        SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
+                        SYMOPT_NO_PROMPTS);
+          char sympath[1024];
+          wsprintfA(sympath,"SRV*%S*"
+            "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
+            sym_cache);
+          if (SymInitialize(process, sympath, FALSE)) {
+            DWORD64 mod = SymLoadModuleEx(process, NULL, 
+                            CT2A(module.szExePath), NULL, 
+                            (DWORD64)module.modBaseAddr, module.modBaseSize, 
+                            NULL, 0);
+            if (mod) {
+              SymEnumSymbols(process, mod, "ssl_*", EnumSymProc, this);
+              //SymEnumSymbols(process, mod, "*", EnumSymProc, NULL);
+              // find the NSS routines
+
+              SymUnloadModule64(process, mod);
+            }
+            SymCleanup(process);
+            //DeleteDirectory(sym_cache);
+          }
+        }
+      }
+      CloseHandle(snap);
+    }
+  }
 }

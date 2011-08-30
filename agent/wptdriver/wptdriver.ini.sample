@@ -2,6 +2,7 @@
 url=http://staging.webpagetest.org/
 location=Dev_Pat
 browser=chrome
+time limit=60
 ;debug=1
 ;web_page_replay_host=192.168.0.11
 
@@ -17,3 +18,8 @@ options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-da
 [firefox]
 exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
 options='-profile "%PROFILE%" -no-remote'
+
+[Firefox 4]
+exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+options='-profile "%PROFILE%" -no-remote'
+template=firefox

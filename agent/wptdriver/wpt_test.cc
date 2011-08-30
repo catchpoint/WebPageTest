@@ -30,14 +30,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test.h"
 #include <ShlObj.h>
 #include "util.h"
+#include "../wpthook/shared_mem.h"
+#include "wpt_settings.h"
 
 static const DWORD AFT_EARLY_CUTOFF_SECS = 25;
 static const DWORD AFT_MIN_CHANGES_THRESHOLD = 100;
-
+static const DWORD AFT_TIMEOUT = 240000;
+static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::WptTest(void):_version(0),_test_timeout(120000) {
+WptTest::WptTest(void):_version(0),
+  _test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS),
+  _measurement_timeout(DEFAULT_TEST_TIMEOUT) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -135,11 +140,12 @@ bool WptTest::Load(CString& test) {
           _ignore_ssl = true;
         else if (!key.CompareNoCase(_T("tcpdump")) && _ttoi(value.Trim()))
           _tcpdump = true;
-        else if (!key.CompareNoCase(_T("Capture Video")) && _ttoi(value.Trim()))
+        else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
-        else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim()))
+        else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {
+          _test_timeout = AFT_TIMEOUT;
           _aft = true;
-        else if (!key.CompareNoCase(_T("aftEarlyCutoff")))
+        } else if (!key.CompareNoCase(_T("aftEarlyCutoff")))
           _aft_early_cutoff = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("aftMinChanges")))
           _aft_min_changes = _ttoi(value.Trim());
@@ -168,6 +174,9 @@ bool WptTest::Load(CString& test) {
 
     line = test.Tokenize(_T("\r\n"), linePos);
   }
+
+  if (_script.GetLength())
+    _test_timeout *= SCRIPT_TIMEOUT_MULTIPLIER;
 
   WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
                                                                 (LPCTSTR)_id);
@@ -432,7 +441,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if (cmd == _T("settimeout")) {
     int seconds = _ttoi(command.target);
     if (seconds > 0 && seconds < 600)
-      _test_timeout = seconds * 1000;
+      _measurement_timeout = seconds * 1000;
   } else if (cmd == _T("setuseragent")) {
     _user_agent = CT2A(command.target);
   } else if (cmd == _T("addheader")) {

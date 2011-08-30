@@ -5,7 +5,7 @@ class WptTestDriver :
   public WptTest
 {
 public:
-  WptTestDriver(void);
+  WptTestDriver(DWORD default_timeout);
   virtual ~WptTestDriver(void);
   virtual bool  Load(CString& test);
   bool  Start();

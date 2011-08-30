@@ -3,8 +3,10 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestDriver::WptTestDriver(void)
+WptTestDriver::WptTestDriver(DWORD default_timeout)
 {
+  _test_timeout = default_timeout;
+  _measurement_timeout = default_timeout;
 }
 
 /*-----------------------------------------------------------------------------
@@ -28,7 +30,6 @@ bool WptTestDriver::Start() {
     if (_directory.GetLength()) {
       SetFileBase();
       SetClearedCache(_clear_cache);
-      SetForceDocComplete(_doc_complete);
       SetCurrentRun(_run);
       ret = true;
     }

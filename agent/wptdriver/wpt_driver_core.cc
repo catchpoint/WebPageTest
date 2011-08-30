@@ -119,7 +119,7 @@ void WptDriverCore::WorkThread(void) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for work..."));
 
-    WptTestDriver test;
+    WptTestDriver test(_settings._timeout * SECONDS_TO_MS);
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser)) {
