@@ -36,6 +36,42 @@ wpt.moz.getService = function(mozClass, mozInterface) {
 };
 
 /**
+ * Mozilla interfaces often have bitflags.  This function takes an integer
+ * and an interface with bitmasks, and turns it into an array of the string
+ * name of the bitmasks that are set.
+ *
+ * Example:
+ *   var bitsSet = wpt.moz.stringifyFlags(
+ *       'nsIWebProgressListener',  // Bit masks are defined on this interface
+ *       /^STATE/,                  // and their names match STATE_*
+ *       aFlag);                    // The value whose bits will be parsed.
+ *   dump('Here are the flags in |aFlag|: ' + bitsSet.join(' | ') + '\n');
+ */
+wpt.moz.stringifyFlags = function(interfaceName, flagMatcher, flagValue) {
+  var result = [];
+  var baseInterface = CI[interfaceName];
+  var printAndClear = function(flagName) {
+    var mask = baseInterface[flagName];
+    if (flagValue & mask) {
+      result.push(flagName);
+      flagValue = flagValue & ~mask;
+    }
+  };
+
+  for (var key in baseInterface) {
+    if (flagMatcher.test(key)) {
+      printAndClear(key);
+    }
+  }
+
+  // We masked out all the bits that were printed.  If any are left,
+  // add a string that shows them in hex.
+  if (flagValue != 0)
+    result.push('<Leftover bits: '+ flagValue.toString(16) + '>');
+  return result;
+};
+
+/**
  * Take an object with parameters that specify a cookie, and set it.
  * The format of the object is the same as the object passed to
  * chrome.cookies.set() in a chrome extension.

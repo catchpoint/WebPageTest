@@ -58,7 +58,6 @@ window.addEventListener("load", function() {
  * @returns {Array.<HTMLElement>} The HTML elements that match |target|.
  */
 wpt.contentScript.findDomElements_ = function(root, target) {
-  /** @const */
   var DELIMITERS = "='";
 
   var delimiterFound = '';

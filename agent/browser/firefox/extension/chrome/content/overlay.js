@@ -211,7 +211,7 @@ wpt.moz.main.executeTask = function(task) {
   dump('Exec: ' + JSON.stringify(task, null, 2) + '\n');
 
   if (task.action && task.action.length) {
-    g_active = !!task.record;  // "record" shoudl be named "blocking".  If true, don't ask for another command.
+    g_active = !!task.record;  // "record" should be named "blocking".  If true, don't ask for another command.
     switch (task.action) {
       case 'navigate':
         wpt.moz.main.navigate(task.target);
