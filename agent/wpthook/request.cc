@@ -37,12 +37,182 @@ const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void HttpData::AddChunk(DataChunk& chunk) {
+  if (_data_size < MAX_DATA_TO_RETAIN) {
+    chunk.CopyDataIfUnowned();
+    _data_chunks.AddTail(chunk);
+    _data_size += chunk.GetLength();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA HttpData::GetHeader(CStringA field_name) {
+  ExtractHeaderFields();
+  CStringA value;
+  POSITION pos = _header_fields.GetHeadPosition();
+  while (pos && value.IsEmpty()) {
+    HeaderField field = _header_fields.GetNext(pos);
+    if (field.Matches(field_name)) {
+      value = field._value;
+    }
+  }
+  return value;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void HttpData::CopyData() {
+  if (_data == NULL && _data_size) {
+    char * data = new char[_data_size + 1];  // +1 to NULL terminate
+    _data = data;
+    while (!_data_chunks.IsEmpty()) {
+      DataChunk chunk = _data_chunks.RemoveHead();
+      memcpy(data, chunk.GetData(), chunk.GetLength());
+      data += chunk.GetLength();
+    }
+    *data = NULL;
+
+    // Copy headers boundary (if any).
+    const char * header_end = strstr(_data, "\r\n\r\n");
+    if (header_end) {
+      _headers.Empty();
+      _headers.Append(_data, header_end - _data + 4);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void HttpData::ExtractHeaderFields() {
+  CopyData();
+  if (!_headers.IsEmpty() && _header_fields.IsEmpty()) {
+    // Process each line (except the first).
+    int pos = 0;
+    int line_number = 0;
+    CStringA line = _headers.Tokenize("\r\n", pos);
+    while (pos > 0) {
+      if (line_number > 0) {
+        line.Trim();
+        int separator = line.Find(':');
+        if (separator > 0) {
+          _header_fields.AddTail(
+              HeaderField(line.Left(separator),
+                          line.Mid(separator + 1).Trim()));
+        }
+      }
+      line_number++;
+      line = _headers.Tokenize("\r\n", pos);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void RequestData::ProcessRequestLine() {
+  CopyData();
+  if (!_headers.IsEmpty() && _method.IsEmpty()) {
+    // Process the first line of the request.
+    int pos = 0;
+    CStringA line = _headers.Tokenize("\r\n", pos);
+    if (pos > -1) {
+      pos = 0;
+      _method = line.Tokenize(" ", pos).Trim();
+      if (pos > -1) {
+        _object = line.Tokenize(" ", pos).Trim();
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ResponseData::ProcessStatusLine() {
+  CopyData();
+  if (!_headers.IsEmpty() && _result == -2) {
+    // Process the first line of the response.
+    int pos = 0;
+    CStringA line = _headers.Tokenize("\r\n", pos);
+    if (pos > -1) {
+      pos = 0;
+      CStringA protocol = line.Tokenize(" ", pos).Trim();
+      // Extract the version out of the protocol.
+      int version_pos = 0;
+      CStringA version_string = protocol.Tokenize("/", version_pos).Trim();
+      version_string = protocol.Tokenize("/", version_pos).Trim();
+
+      if (version_string.GetLength()) {
+        _protocol_version = atof(version_string);
+      }
+      // Extract the response code into _result.
+      if (pos > -1) {
+        CStringA result = line.Tokenize(" ", pos).Trim();
+        if (result.GetLength()) {
+          _result = atoi(result);
+        }
+      }
+    }
+    if (_result == -2) {
+      // Avoid reprocessing the first line.
+      _result = -1;
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------
+  Dechunk a chunked response if necessary.  Regardless, at the end the
+  _data_in member will point to the response data
+---------------------------------------------------------------------------*/
+void ResponseData::Dechunk() {
+  CopyData();
+  if (!_headers.IsEmpty()) {
+    DWORD headers_len = _headers.GetLength();
+    if (_data_size > headers_len && _body.GetLength() == 0) {
+      if (GetHeader("transfer-encoding").Find("chunked") > -1) {
+        // Build a list of the data chunks before allocating the memory.
+        CAtlList<DataChunk> chunks;
+        DWORD data_size = 0;
+        const char * data = _data + headers_len;
+        const char * end = _data + _data_size;
+        while (data < end) {
+          const char * data_chunk = strstr(data, "\r\n");
+          if (data_chunk) {
+            data_chunk += 2;
+            int chunk_len = strtoul(data, NULL, 16);
+            if (chunk_len > 0 && data_chunk + chunk_len < end) {
+              chunks.AddTail(DataChunk(data_chunk, chunk_len));
+              data = data_chunk + chunk_len + 2;
+              data_size += chunk_len;
+              continue;
+            }
+          }
+          break;
+        }
+        // Allocate a new buffer to hold the dechunked body.
+        if (data_size) {
+          char * data = _body.AllocateLength(data_size);
+          POSITION pos = chunks.GetHeadPosition();
+          while (pos) {
+            DataChunk chunk = chunks.GetNext(pos);
+            memcpy(data, chunk.GetData(), chunk.GetLength());
+            data += chunk.GetLength();
+          }
+        }
+      } else {
+        // Point to a substring in _data (data is not copied).
+        _body = DataChunk(_data + headers_len, _data_size - headers_len);
+      }
+    }
+  }
+}
+
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id,
                   TrackSockets& sockets, TrackDns& dns, WptTest& test):
-  _test_state(test_state)
-  , _test(test)
-  , _data_sent(0)
-  ,_data_received(0)
+  _processed(false)
+  , _socket_id(socket_id)
   , _ms_start(0)
   , _ms_first_byte(0)
   , _ms_end(0)
@@ -52,21 +222,12 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _ms_ssl_end(0)
   , _ms_dns_start(0)
   , _ms_dns_end(0)
-  , _socket_id(socket_id)
-  , _active(true)
-  , _data_in(NULL)
-  , _data_out(NULL)
-  , _data_in_size(0)
-  , _data_out_size(0)
-  , _result(-1)
-  , _protocol_version(-1.0)
+  , _test_state(test_state)
+  , _test(test)
   , _sockets(sockets)
   , _dns(dns)
-  , _processed(false)
-  , _are_headers_complete(false)
-  , _body_in_allocated(false)
-  , _body_in(NULL)
-  , _body_in_size(0) {
+  , _is_active(true)
+  , _are_headers_complete(false) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -82,14 +243,6 @@ Request::Request(TestState& test_state, DWORD socket_id,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::~Request(void) {
-  EnterCriticalSection(&cs);
-  if (_data_in)
-    free(_data_in);
-  if (_data_out)
-    free(_data_out);
-  if (_body_in_allocated && _body_in)
-    free(_body_in);
-  LeaveCriticalSection(&cs);
   DeleteCriticalSection(&cs);
 }
 
@@ -100,19 +253,12 @@ void Request::DataIn(DataChunk& chunk) {
       _T("[wpthook] - Request::DataIn(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
-  if (_active) {
+  if (_is_active) {
     QueryPerformanceCounter(&_end);
-    if (!_first_byte.QuadPart)
+    if (!_first_byte.QuadPart) {
       _first_byte.QuadPart = _end.QuadPart;
-
-    _data_received += chunk.GetLength();
-    if (_data_received < MAX_DATA_TO_RETAIN) {
-      chunk.CopyDataIfUnowned();
-      _data_chunks_in.AddTail(chunk);
     }
-
-    // Track for BW statistics.
-    _test_state._bytes_in += chunk.GetLength();
+    _response_data.AddChunk(chunk);
   }
   LeaveCriticalSection(&cs);
 }
@@ -124,7 +270,7 @@ bool Request::ModifyDataOut(DataChunk& chunk) {
   EnterCriticalSection(&cs);
   const char * data = chunk.GetData();
   unsigned long data_len = chunk.GetLength();
-  if (_active && !_are_headers_complete && data && data_len > 0) {
+  if (_is_active && !_are_headers_complete && data && data_len > 0) {
     CStringA headers;
     CStringA line;
     const char * current_data = data;
@@ -175,7 +321,7 @@ void Request::DataOut(DataChunk& chunk) {
       _T("[wpthook] - Request::DataOut(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
-  if (_active) {
+  if (_is_active) {
     // Keep track of the data that was actually sent.
     unsigned long chunk_len = chunk.GetLength();
     if (chunk_len > 0) {
@@ -183,12 +329,7 @@ void Request::DataOut(DataChunk& chunk) {
           chunk_len >= 4 && strstr(chunk.GetData(), "\r\n\r\n")) {
         _are_headers_complete = true;
       }
-      _data_sent += chunk_len;
-      if (_data_sent < MAX_DATA_TO_RETAIN) {
-        chunk.CopyDataIfUnowned();
-        _data_chunks_out.AddTail(chunk);
-      }
-      _test_state._bytes_out += chunk_len;
+      _request_data.AddChunk(chunk);
     }
   }
   LeaveCriticalSection(&cs);
@@ -200,7 +341,7 @@ void Request::SocketClosed() {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SocketClosed()\n"));
 
   EnterCriticalSection(&cs);
-  if (_active) {
+  if (_is_active) {
     if (!_end.QuadPart)
       QueryPerformanceCounter(&_end);
     if (!_first_byte.QuadPart)
@@ -215,8 +356,11 @@ bool Request::Process() {
   bool ret = false;
 
   EnterCriticalSection(&cs);
-  if (_active) {
-    _active = false;
+  if (_is_active) {
+    _is_active = false;
+
+    _test_state._bytes_out = _request_data.GetDataSize();
+    _test_state._bytes_in = _response_data.GetDataSize();
 
     // calculate the times
     if (_start.QuadPart && _end.QuadPart) {
@@ -235,13 +379,6 @@ bool Request::Process() {
 
       ret = true;
     }
-
-    // process the actual data
-    CombineChunks();
-    FindHeader(_data_in, _in_header);
-    FindHeader(_data_out, _out_header);
-    ProcessRequest();
-    ProcessResponse();
 
     // find the matching socket connect and DNS lookup (if they exist)
     LONGLONG before = _start.QuadPart;
@@ -273,18 +410,19 @@ bool Request::Process() {
     }
 
     // update the overall stats
-    if (!_test_state._first_byte.QuadPart && _result == 200 && 
+    int result = GetResult();
+    if (!_test_state._first_byte.QuadPart && result == 200 && 
         _first_byte.QuadPart )
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
 
     _test_state._requests++;
     if (_start.QuadPart <= _test_state._on_load.QuadPart) {
-      _test_state._doc_bytes_in += _data_received;
-      _test_state._doc_bytes_out += _data_sent;
+      _test_state._doc_bytes_in += _response_data.GetDataSize();
+      _test_state._doc_bytes_out += _request_data.GetDataSize();
       _test_state._doc_requests++;
     }
 
-    if (_result >= 400 || _result < 0) {
+    if (result >= 400 || result < 0) {
       if (_test_state._test_result == TEST_RESULT_NO_ERROR)
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
       else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
@@ -298,169 +436,15 @@ bool Request::Process() {
 }
 
 /*-----------------------------------------------------------------------------
-  Combine the individual chunks of data into contiguous memory blocks
-  (null terminated for easier string processing)
 -----------------------------------------------------------------------------*/
-void Request::CombineChunks() {
-  // incoming data
-  if (!_data_in) {
-    _data_in_size = 0;
-    POSITION pos = _data_chunks_in.GetHeadPosition();
-    while (pos) {
-      DataChunk chunk = _data_chunks_in.GetNext(pos);
-      _data_in_size += chunk.GetLength();
-    }
-    if (_data_in_size) {
-      _data_in = (char *)malloc(_data_in_size + 1);
-      if (_data_in) {
-        char * data = _data_in;
-        while (!_data_chunks_in.IsEmpty()) {
-          DataChunk chunk = _data_chunks_in.RemoveHead();
-          memcpy(data, chunk.GetData(), chunk.GetLength());
-          data += chunk.GetLength();
-        }
-        *data = NULL;
-      }
-    }
-  }
-
-  // outgoing data
-  if (!_data_out) {
-    _data_out_size = 0;
-    POSITION pos = _data_chunks_out.GetHeadPosition();
-    while (pos) {
-      DataChunk chunk = _data_chunks_out.GetNext(pos);
-      _data_out_size += chunk.GetLength();
-    }
-    if (_data_out_size) {
-      _data_out = (char *)malloc(_data_out_size + 1);
-      if (_data_out) {
-        char * data = _data_out;
-        while (!_data_chunks_out.IsEmpty()) {
-          DataChunk chunk = _data_chunks_out.RemoveHead();
-          memcpy(data, chunk.GetData(), chunk.GetLength());
-          data += chunk.GetLength();
-        }
-        *data = NULL;
-      }
-    }
-  }
+CStringA Request::GetRequestHeader(CStringA field_name) {
+  return _request_data.GetHeader(field_name);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool Request::FindHeader(const char * data, CStringA& header) {
-  bool found = false;
-
-  if (data) {
-    const char * header_end = strstr(data, "\r\n\r\n");
-    if (header_end) {
-      DWORD header_len = (header_end - data) + 4;
-      char * header_data = (char *)malloc(header_len + 1);
-      if (header_data) {
-        memcpy(header_data, data, header_len);
-        header_data[header_len] = NULL; // NULL-terminate the string
-        header = header_data;
-        free(header_data);
-      }
-    }
-  }
-
-  return found;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Request::ProcessRequest() {
-  ExtractFields(_out_header, _out_fields);
-
-  // process the first line of the request
-  int pos = 0;
-  CStringA line = _out_header.Tokenize("\r\n", pos);
-  if (pos > -1) {
-    pos = 0;
-    _method = line.Tokenize(" ", pos).Trim();
-    if (pos > -1) {
-      _object = line.Tokenize(" ", pos).Trim();
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Request::ProcessResponse() {
-  ExtractFields(_in_header, _in_fields);
-
-  // process the first line of the response
-  int pos = 0;
-  CStringA line = _in_header.Tokenize("\r\n", pos);
-  if (pos > -1) {
-    pos = 0;
-    CStringA protocol = line.Tokenize(" ", pos).Trim();
-    // Extract the version out of the protocol.
-    int version_pos = 0;
-    CStringA version_string = protocol.Tokenize("/", version_pos).Trim();
-    version_string = protocol.Tokenize("/", version_pos).Trim();
-
-    if( version_string.GetLength() )
-      _protocol_version = atof(version_string);
-    // Extract the response code into _result.
-    if (pos > -1) {
-      CStringA result = line.Tokenize(" ", pos).Trim();
-      if (result.GetLength())
-        _result = atoi(result);
-    }
-  }
-
-  DechunkResponse();
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Request::ExtractFields(CStringA& header, Fields& fields) {
-  // Process each line of data (skipping the first)
-  int pos = 0;
-  int line_number = 0;
-  CStringA line = header.Tokenize("\r\n", pos);
-  while (pos > 0) {
-    if (line_number > 0) {
-      line.Trim();
-      int separator = line.Find(':');
-      if (separator > 0) {
-        HeaderField field;
-        field._field = line.Left(separator);
-        field._value = line.Mid(separator + 1).Trim();
-        fields.AddTail(field);
-      }
-    }
-    line_number++;
-    line = header.Tokenize("\r\n", pos);
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-CStringA Request::GetRequestHeader(CStringA header) {
-  return GetHeaderValue(_out_fields, header);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-CStringA Request::GetResponseHeader(CStringA header) {
-  return GetHeaderValue(_in_fields, header);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-CStringA Request::GetHeaderValue(Fields& fields, CStringA header) {
-  CStringA value;
-  POSITION pos = fields.GetHeadPosition();
-  while (pos && value.IsEmpty()) {
-    HeaderField field = fields.GetNext(pos);
-    if (!field._field.CompareNoCase(header))
-      value = field._value;
-  }
-  return value;
+CStringA Request::GetResponseHeader(CStringA field_name) {
+  return _response_data.GetHeader(field_name);
 }
 
 /*-----------------------------------------------------------------------------
@@ -474,18 +458,25 @@ bool Request::IsStatic() {
   CString exp = GetResponseHeader("expires").MakeLower();
   CString cache = GetResponseHeader("cache-control").MakeLower();
   CString pragma = GetResponseHeader("pragma").MakeLower();
-  CString object = _object;
-  object.MakeLower();
+  CString object = _request_data.GetObject().MakeLower();
+  int result = GetResult();
   // TODO: Include conditions below that it is not a base page and a network request.
-  if( (_result == 304 || (_result == 200 && exp != _T("0") && exp != _T("-1") &&
-    !(cache.Find(_T("no-store")) > -1) && !(cache.Find(_T("no-cache")) > -1) &&
-    !(pragma.Find(_T("no-cache")) > -1) && !(mime.Find(_T("/html")) > -1)	&&
-    !(mime.Find(_T("/xhtml")) > -1) && (mime.Find(_T("shockwave-flash")) >= 0 ||
-    object.Right(4) == _T(".swf") || mime.Find(_T("text/")) >= 0 ||
-    mime.Find(_T("javascript")) >= 0 || mime.Find(_T("image/")) >= 0) ) ) ) {
-      return true;
-  }
-  return false;
+  return (
+    result == 304 ||
+    (result == 200 && exp != _T("0") && exp != _T("-1") &&
+     cache.Find(_T("no-store")) == -1 && cache.Find(_T("no-cache")) == -1 &&
+     pragma.Find(_T("no-cache")) == -1 && mime.Find(_T("/html")) == -1 &&
+     mime.Find(_T("/xhtml")) == -1 &&
+     (mime.Find(_T("shockwave-flash")) >= 0 || object.Right(4) == _T(".swf") ||
+      mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 ||
+      mime.Find(_T("image/")) >= 0)));
+}
+
+/*-----------------------------------------------------------------------------
+  Get the response code.
+-----------------------------------------------------------------------------*/
+int Request::GetResult() {
+  return _response_data.GetResult();
 }
 
 /*-----------------------------------------------------------------------------
@@ -563,65 +554,4 @@ LARGE_INTEGER Request::GetStartTime() {
 -----------------------------------------------------------------------------*/
 ULONG Request::GetPeerAddress() {
   return _peer_address;
-}
-
-/*-----------------------------------------------------------------------------
-  Dechunk a chunked response if necessary.  Regardless, at the end the
-  _data_in member will point to the response data
------------------------------------------------------------------------------*/
-void Request::DechunkResponse() {
-  if (_data_in && _data_in_size) {
-    const char * header_end = strstr(_data_in, "\r\n\r\n");
-    if (header_end) {
-      DWORD header_len = (header_end - _data_in) + 4;
-      if (_data_in_size > header_len) {
-        if (GetResponseHeader("transfer-encoding").Find("chunked") > -1) {
-          // build a list of the data chunks before allocating the memory
-          CAtlList<DataChunk> chunks;
-          DWORD data_size = 0;
-          char * end = _data_in + _data_in_size;
-          char * data = _data_in + header_len;
-          while (data < end) {
-            char * data_chunk = strstr(data, "\r\n");
-            if (data_chunk) {
-              data_chunk += 2;
-              if (data_chunk < end) {
-                int chunk_len = strtoul(data, NULL, 16);
-                if (chunk_len > 0 && data_chunk + chunk_len < end) {
-                  DataChunk chunk(data_chunk, chunk_len);
-                  chunks.AddTail(chunk);
-                  data = data_chunk + chunk_len + 2;
-                  data_size += chunk_len;
-                } else {
-                  break;
-                }
-              } else {
-                break;
-              }
-            } else {
-              break;
-            }
-          }
-          // allocate a new buffer to hold the dechunked body
-          if (data_size) {
-            _body_in = (unsigned char *)malloc(data_size + 1);
-            _body_in_size = data_size;
-            _body_in_allocated = true;
-            data = (char *)_body_in;
-            POSITION pos = chunks.GetHeadPosition();
-            while (pos) {
-              DataChunk chunk = chunks.GetNext(pos);
-              memcpy(data, chunk.GetData(), chunk.GetLength());
-              data += chunk.GetLength();
-            }
-            // NULL-terminate it for convenience for string processing
-            _body_in[data_size] = NULL;
-          }
-        } else {
-          _body_in = (unsigned char *)_data_in + header_len;
-          _body_in_size = _data_in_size - header_len;
-        }
-      }
-    }
-  }
 }

@@ -93,20 +93,73 @@ private:
 
 class HeaderField {
 public:
-  HeaderField(){}
+  HeaderField(CStringA fn, CStringA value): _field_name(fn), _value(value) {}
   HeaderField(const HeaderField& src){*this = src;}
   ~HeaderField(){}
   const HeaderField& operator=(const HeaderField& src) {
-    _field = src._field;
+    _field_name = src._field_name;
     _value = src._value;
     return src;
   }
+  bool Matches(const CStringA& field_name) {
+    return _field_name.CompareNoCase(field_name) == 0;
+  }
 
-  CStringA  _field;
+  CStringA  _field_name;
   CStringA  _value;
 };
 
 typedef CAtlList<HeaderField> Fields;
+
+class HttpData {
+ public:
+  HttpData(): _data(NULL), _data_size(0) {}
+  ~HttpData() { delete _data; }
+
+  CStringA GetHeaders() { CopyData(); return _headers; }
+  DWORD GetDataSize() { return _data_size; }
+
+  void AddChunk(DataChunk& chunk);
+  CStringA GetHeader(CStringA field_name);
+
+protected:
+  void CopyData();
+  void ExtractHeaderFields();
+
+  CAtlList<DataChunk> _data_chunks;
+  const char * _data;
+  DWORD _data_size;
+  CStringA _headers;
+  Fields _header_fields;
+};
+
+class RequestData : public HttpData {
+ public:
+   CStringA GetMethod() { ProcessRequestLine(); return _method; }
+   CStringA GetObject() { ProcessRequestLine(); return _object; }
+
+ private:
+   void ProcessRequestLine();
+
+   CStringA _method;
+   CStringA _object;
+};
+
+class ResponseData : public HttpData {
+ public:
+  ResponseData(): HttpData(), _result(-2), _protocol_version(-1.0) {}
+
+  int GetResult() { ProcessStatusLine(); return _result; }
+  double GetProtocolVersion() { ProcessStatusLine(); return _protocol_version;}
+  DataChunk GetBody() { Dechunk(); return _body; }
+private:
+  void ProcessStatusLine();
+  void Dechunk();
+
+  DataChunk _body;
+  int       _result;
+  double    _protocol_version;
+};
 
 class OptimizationScores {
 public:
@@ -140,7 +193,7 @@ public:
 
 class Request {
 public:
-  Request(TestState& test_state, DWORD socket_id, 
+  Request(TestState& test_state, DWORD socket_id,
           TrackSockets& sockets, TrackDns& dns, WptTest& test);
   ~Request(void);
 
@@ -148,22 +201,29 @@ public:
   bool ModifyDataOut(DataChunk& chunk);
   void DataOut(DataChunk& chunk);
   void SocketClosed();
+
   bool Process();
+  CStringA GetRequestHeader(CStringA header);
+  CStringA GetResponseHeader(CStringA header);
   bool IsStatic();
   bool IsText();
+  int GetResult();
   CStringA GetHost();
   CStringA GetMime();
   LARGE_INTEGER GetStartTime();
-  void GetExpiresTime(long& age_in_seconds, bool& exp_present, bool& cache_control_present);
+  void GetExpiresTime(long& age_in_seconds, bool& exp_present,
+                      bool& cache_control_present);
   ULONG GetPeerAddress();
 
-  DWORD _data_sent;
-  DWORD _data_received;
-  DWORD _socket_id;
   bool  _processed;
+  DWORD _socket_id;
+  ULONG _peer_address;
   bool  _is_ssl;
 
-  // times (in ms from the test start)
+  RequestData  _request_data;
+  ResponseData _response_data;
+
+  // Times in ms from the test start.
   int _ms_start;
   int _ms_first_byte;
   int _ms_end;
@@ -174,24 +234,7 @@ public:
   int _ms_ssl_start;
   int _ms_ssl_end;
 
-  // header data
-  CStringA  _in_header;
-  CStringA  _out_header;
-  CStringA  _method;
-  CStringA  _object;
-  int       _result;
-  double    _protocol_version;
-  ULONG     _peer_address;
-
-  // processed data
-  unsigned char * _body_in;
-  DWORD           _body_in_size;
-
-  // Optimization score data.
   OptimizationScores _scores;
-
-  CStringA  GetRequestHeader(CStringA header);
-  CStringA  GetResponseHeader(CStringA header);
 
 private:
   TestState&    _test_state;
@@ -203,28 +246,6 @@ private:
   LARGE_INTEGER _end;
 
   CRITICAL_SECTION cs;
-  bool      _active;
-  Fields    _in_fields;
-  Fields    _out_fields;
-  bool      _are_headers_complete;
-
-  // merged data chunks
-  char *  _data_in;
-  char *  _data_out;
-  DWORD   _data_in_size;
-  DWORD   _data_out_size;
-  bool    _body_in_allocated;
-
-  // data transmitted in the chunks as it was transmitted
-  CAtlList<DataChunk> _data_chunks_in;
-  CAtlList<DataChunk> _data_chunks_out;
-
-  void FreeChunkMem();
-  void CombineChunks();
-  bool FindHeader(const char * data, CStringA& header);
-  void ProcessRequest();
-  void ProcessResponse();
-  void ExtractFields(CStringA& header, Fields& fields);
-  CStringA GetHeaderValue(Fields& fields, CStringA header);
-  void DechunkResponse();
+  bool _is_active;
+  bool _are_headers_complete;
 };

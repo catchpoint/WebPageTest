@@ -100,7 +100,7 @@ void OptimizationChecks::CheckKeepAlive()
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
-    if( request && request->_processed && request->_result == 200) {
+    if (request && request->_processed && request->GetResult() == 200) {
       CStringA connection = request->GetResponseHeader("connection");
       connection.MakeLower();
       if( connection.Find("keep-alive") > -1 )
@@ -126,8 +126,8 @@ void OptimizationChecks::CheckKeepAlive()
           request->_scores._keep_alive_score = 100;
         else if( needed ) {
           // HTTP 1.1 default to keep-alive
-          if( connection.Find("close") > -1
-            || request->_protocol_version < 1.1 )
+          if (connection.Find("close") > -1 ||
+              request->_response_data.GetProtocolVersion() < 1.1)
             request->_scores._keep_alive_score = 0;
           else
             request->_scores._keep_alive_score = 100;
@@ -166,34 +166,36 @@ void OptimizationChecks::CheckGzip()
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
-    if( request && request->_processed
-      && request->_result == 200 && request->IsText() ) {
+    if (request && request->_processed &&
+        request->GetResult() == 200 && request->IsText()) {
       CStringA encoding = request->GetResponseHeader("content-encoding");
       encoding.MakeLower();
       request->_scores._gzip_score = 0;
-      totalBytes += request->_data_received;
-      DWORD targetRequestBytes = request->_data_received;
+      DWORD numRequestBytes = request->_response_data.GetDataSize();
+      totalBytes += numRequestBytes;
+      DWORD targetRequestBytes = numRequestBytes;
 
       // If there is gzip encoding, then we are all set.
       // Spare small (<1 packet) responses.
       if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
         request->_scores._gzip_score = 100;
-      else if( request->_data_received < 1400 )
+      else if (numRequestBytes < 1400)
         request->_scores._gzip_score = 100;
 
       if( !request->_scores._gzip_score ) {
         // Try gzipping to see how smaller it will be.
-        DWORD origSize = request->_data_received;
-        DWORD origLen = request->_body_in_size;
-        DWORD headSize = request->_in_header.GetLength();
-        if( origLen && request->_body_in ) {
-          DWORD len = compressBound(origLen);
+        DWORD origSize = numRequestBytes;
+        DataChunk body = request->_response_data.GetBody();
+        LPBYTE bodyData = (LPBYTE)body.GetData();
+        DWORD bodyLen = body.GetLength();
+        DWORD headSize = request->_response_data.GetHeaders().GetLength();
+        if (bodyLen && bodyData) {
+          DWORD len = compressBound(bodyLen);
           if( len ) {
             char* buff = (char*) malloc(len);
             if( buff ) {
               // Do the compression and check the target bytes to set for this.
-              if( compress2((LPBYTE)buff, &len, (LPBYTE)request->_body_in, 
-                  origLen, 9) == Z_OK )
+              if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 9) == Z_OK)
                 targetRequestBytes = len + headSize;
               free(buff);
             }
@@ -205,7 +207,7 @@ void OptimizationChecks::CheckGzip()
         }
       }
 
-      request->_scores._gzip_total = request->_data_received;
+      request->_scores._gzip_total = numRequestBytes;
       request->_scores._gzip_target = targetRequestBytes;
       targetBytes += targetRequestBytes;
             
@@ -261,23 +263,23 @@ void OptimizationChecks::CheckImageCompression()
   int fileCount = 0;
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
-    if( request && request->_processed && request->_result == 200 ) {
+    if (request && request->_processed && request->GetResult() == 200) {
       int temp_pos = 0;
       CStringA mime = request->GetResponseHeader("content-type").Tokenize(";",
         temp_pos);
       mime.MakeLower();
 
       // If there is response body and it is an image.
-      if( mime.Find("image/") >= 0 && request->_body_in && 
-        request->_body_in_size > 0 ) {
-        DWORD targetRequestBytes = request->_body_in_size;
+      DataChunk body = request->_response_data.GetBody();
+      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 0 ) {
+        DWORD targetRequestBytes = body.GetLength();
         DWORD size = targetRequestBytes;
         count++;
         
         CxImage img;
         // Decode the image with an exception protected function.
-        if( DecodeImage(img, (uint8_t*) request->_body_in, 
-            request->_body_in_size, CXIMAGE_FORMAT_UNKNOWN) ) {
+        if (DecodeImage(img, (uint8_t*)body.GetData(),
+                        body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
           DWORD type = img.GetType();
           switch( type )
           {
@@ -300,7 +302,7 @@ void OptimizationChecks::CheckImageCompression()
                 // If the original was within 10%, then give 100
                 // If it's less than 50% bigger then give 50
                 // More than that is a fail
-                double orig = request->_body_in_size;
+                double orig = body.GetLength();
                 double newLen = (double)len;
                 double delta = orig / newLen;
                 if( delta < 1.1 )
@@ -372,7 +374,7 @@ void OptimizationChecks::CheckCacheStatic()
         else if( age_in_seconds >= 3600 )
           request->_scores._cache_score = 50;
       }
-      else if( exp_present && request->_result != 304)
+      else if (exp_present && request->GetResult() != 304)
         request->_scores._cache_score = 100;
 
       // Add the score to the total.
@@ -408,9 +410,10 @@ void OptimizationChecks::CheckCombine() {
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
     // We consider only static results that come before start render.
-    if( request && request->_processed && request->_result == 200
-      && request->GetStartTime().QuadPart <= _test_state._render_start.QuadPart
-      && request->IsStatic() ) {
+    if (request && request->_processed && request->GetResult() == 200 &&
+        (request->GetStartTime().QuadPart <= 
+         _test_state._render_start.QuadPart) &&
+        request->IsStatic()) {
       CStringA  mime = request->GetMime().MakeLower();;
       // Consider only css and js.
       if( mime.Find("/css") < 0 && mime.Find("javascript") < 0 )
@@ -489,8 +492,8 @@ void OptimizationChecks::CheckCDN() {
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
     // We consider only static results
-    if( request && request->_processed && request->_result == 200
-      && request->IsStatic() ) {
+    if (request && request->_processed && request->GetResult() == 200 &&
+        request->IsStatic() ) {
       request->_scores._static_cdn_score = 0;
       CStringA host = request->GetHost();
       host.MakeLower();

@@ -190,7 +190,7 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id, DataChunk& chunk) {
   if (_active_requests.Lookup(socket_id, request) && request) {
     // We have an existing request on this socket, however, if data has been
     // received already, then this may be a new request.
-    if (request->_data_received && IsHttpRequest(chunk)) {
+    if (request->_response_data.GetDataSize() && IsHttpRequest(chunk)) {
       request = NewRequest(socket_id);
     }
   } else if (IsHttpRequest(chunk)) {

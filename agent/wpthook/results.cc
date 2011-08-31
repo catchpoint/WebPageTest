@@ -631,16 +631,16 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   }
   result += "\t";
   // Action
-  result += request->_method + "\t";
+  result += request->_request_data.GetMethod() + "\t";
   // Host
   CStringA host = request->GetRequestHeader("x-host");
   if (!host.GetLength())
     host = request->GetRequestHeader("host");
   result += host + "\t";
   // URL
-  result += request->_object + "\t";
+  result += request->_request_data.GetObject() + "\t";
   // Response Code
-  buff.Format("%d\t", request->_result);
+  buff.Format("%d\t", request->_response_data.GetResult());
   result += buff;
   // Time to Load (ms)
   buff.Format("%d\t", request->_ms_end - request->_ms_start);
@@ -652,16 +652,13 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_ms_start);
   result += buff;
   // Bytes Out
-  buff.Format("%d\t", request->_data_sent);
+  buff.Format("%d\t", request->_request_data.GetDataSize());
   result += buff;
   // Bytes In
-  buff.Format("%d\t", request->_data_received);
+  buff.Format("%d\t", request->_response_data.GetDataSize());
   result += buff;
   // Object Size
-  DWORD size = 0;
-  if (request->_data_received && 
-      request->_data_received > (DWORD)request->_in_header.GetLength())
-      size = request->_data_received - request->_in_header.GetLength();
+  DWORD size = request->_response_data.GetBody().GetLength();
   buff.Format("%d\t", size);
   result += buff;
   // Cookie Size (out)
@@ -805,10 +802,10 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   if (headers != INVALID_HANDLE_VALUE) {
     buff.Format("Request details:\r\nRequest %d:\r\nRequest Headers:\r\n", 
                   index);
-    buff += request->_out_header;
+    buff += request->_request_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\nResponse Headers:\r\n";
-    buff += request->_in_header;
+    buff += request->_response_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\n";
     WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
