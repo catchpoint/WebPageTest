@@ -31,6 +31,8 @@
         $parts = explode('.', trim($req_location));
         $test['location'] = trim($parts[0]);
         $test['connectivity'] = trim($parts[1]);
+        if( !strlen($test['connectivity']) )
+            unset($test['connectivity']);
         if( strpos($test['location'], ':') !== false )
         {
             $parts = explode(':', $test['location']);
