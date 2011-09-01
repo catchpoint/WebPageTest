@@ -87,9 +87,7 @@ void Results::Save(void) {
   if (!_saved && _test._log_data) {
     ProcessRequests();
     OptimizationChecks checks(_requests, _test_state);
-#ifdef DEBUG
     checks.Check();
-#endif
     if( _test._aft )
       CalculateAFT();
     SaveRequests(checks);
@@ -540,7 +538,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Page Title
     if (!_test_state._title.IsEmpty()) {
       _test_state._title.Replace(_T('\t'), _T(' '));
-      result += _test_state._title;
+      result += CT2A(_test_state._title, CP_UTF8);
     }
     result += "\t";
     // Time to title (ms)
