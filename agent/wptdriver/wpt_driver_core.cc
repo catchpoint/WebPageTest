@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_driver_core.h"
 #include "zlib/contrib/minizip/unzip.h"
 #include <Wtsapi32.h>
-#include "dbghelp/dbghelp.h"
 
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
@@ -228,36 +227,6 @@ void WptDriverCore::Init(void){
   _winpcap.Initialize();
 
   KillBrowsers();
-
-  // copy dbghelp.dll and symsrv.dll to the chrome directory
-/*
-  TCHAR src_dir[MAX_PATH];
-  GetModuleFileName(NULL, src_dir, _countof(src_dir));
-  *PathFindFileName(src_dir) = _T('\0');
-  CString src = src_dir;
-  CopyFile(src + _T("dbghelp.dll"), 
-            _settings._browser._exe_directory + _T("\\dbghelp.dll"), FALSE);
-  CopyFile(src + _T("symsrv.dll"), 
-            _settings._browser._exe_directory + _T("\\symsrv.dll"), FALSE);
-
-  // download the symbol files for the browsers
-  // we'll just be caching it here and downloading it for real in wpthook
-  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
-                SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
-                SYMOPT_NO_PROMPTS);
-  char symcache[MAX_PATH] = {'\0'};
-  char sympath[1024];
-  GetModuleFileNameA(NULL, symcache, _countof(symcache));
-  lstrcpyA(PathFindFileNameA(symcache), "symbols");
-  CreateDirectoryA(symcache, NULL);
-  wsprintfA(sympath,"SRV*%s*"
-    "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
-    symcache);
-  if (SymInitialize(GetCurrentProcess(), sympath, FALSE)) {
-    DownloadSymbols(_settings._browser._exe_directory);
-    SymCleanup(GetCurrentProcess());
-  }
-*/
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();
@@ -433,39 +402,6 @@ bool WptDriverCore::ExtractZipFile(CString file) {
   }
 
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Download the debug symbols for Chrome so they will be ready when 
-  the browser needs them
------------------------------------------------------------------------------*/
-void WptDriverCore::DownloadSymbols(CString directory) {
-  _status.Set(_T("Downloading debug symbols..."));
-
-  WptTrace(loglevel::kFunction, 
-            _T("[wptdriver] - Downloading debug symbols in %s\n"), 
-              (LPCTSTR)directory);
-  WIN32_FIND_DATA fd;
-  HANDLE find = FindFirstFile(directory + _T("\\*.*"), &fd);
-  if (find != INVALID_HANDLE_VALUE) {
-    do {
-      if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        if (lstrcmp(fd.cFileName, _T(".")) && 
-            lstrcmp(fd.cFileName, _T("..")) )
-          DownloadSymbols(directory + CString(_T("\\")) + fd.cFileName);
-      } else if (!lstrcmpi(fd.cFileName, _T("chrome.dll"))) {
-        WptTrace(loglevel::kFunction, 
-                  _T("[wptdriver] - Downloading debug symbols for %s\n"), 
-                  fd.cFileName);
-        CStringA dll_path = CT2A(directory + CString(_T("\\")) + fd.cFileName);
-        DWORD64 mod = SymLoadModuleEx(GetCurrentProcess(), NULL, dll_path, 
-                        NULL, 0, 0, NULL, 0);
-        if (mod)
-          SymUnloadModule64(GetCurrentProcess(), mod);
-      }
-    } while (FindNextFile(find, &fd));
-    FindClose(find);
-  }
 }
 
 /*-----------------------------------------------------------------------------

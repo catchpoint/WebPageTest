@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "wpthook.h"
 #include "window_messages.h"
-#include "../wptdriver/dbghelp/dbghelp.h"
 
 WptHook * global_hook = NULL;
 extern HINSTANCE global_dll_handle;
@@ -84,7 +83,6 @@ WptHook::WptHook(void):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::~WptHook(void) {
-  SymCleanup(GetCurrentProcess());
 }
 
 /*-----------------------------------------------------------------------------
@@ -109,25 +107,6 @@ void WptHook::Init(){
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
-
-/*
-  // prepare the symbol server and debughelp options
-  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
-                SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
-                SYMOPT_NO_PROMPTS);
-  char symcache[MAX_PATH] = {'\0'};
-  char sympath[1024];
-  GetModuleFileNameA(global_dll_handle, symcache, _countof(symcache));
-  lstrcpyA(PathFindFileNameA(symcache), "symbols");
-  CreateDirectoryA(symcache, NULL);
-  wsprintfA(sympath,"SRV*%s*"
-    "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
-    symcache);
-  SymInitialize(GetCurrentProcess(), sympath, FALSE);
-
-  // install the hooks that depend on debug symbols
-  _chrome_hook.InstallHooks();
-*/
   _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
 }
 
