@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cdn.h"
 #include "zlib/zlib.h"
 #include "jsmin/JSMin.h"
+/* PAGESPEED
 #include "base/at_exit.h"
 #include "PageSpeed/pagespeed/core/engine.h"
 #include "PageSpeed/pagespeed/core/pagespeed_input.h"
@@ -46,6 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PageSpeed/pagespeed/platform/ie/ie_dom.h"
 #include "PageSpeed/pagespeed/proto/pagespeed_output.pb.h"
 #include "PageSpeed/pagespeed/rules/rule_provider.h"
+PAGESPEED */
 #include <regex>
 #include <string>
 #include <sstream>
@@ -80,7 +82,9 @@ CPagetestReporting::CPagetestReporting(void):
 	, minifyTarget(0)
 	, compressTotal(0)
 	, compressTarget(0)
+  /* PAGESPEED
 	, pagespeedResults(NULL)
+  PAGESPEED */
 {
 	descriptor[0] = 0;
 	logUrl[0] = 0;
@@ -188,11 +192,12 @@ void CPagetestReporting::Reset(void)
 		
 		blockedRequests.RemoveAll();
 		blockedAdRequests.RemoveAll();
-
+/* PAGESPEED
 		if (pagespeedResults != NULL) {
 			delete pagespeedResults;
 			pagespeedResults = NULL;
 		}
+PAGESPEED */
 	}__except(EXCEPTION_EXECUTE_HANDLER)
 	{
 	}
@@ -200,6 +205,7 @@ void CPagetestReporting::Reset(void)
 	LeaveCriticalSection(&cs);
 }
 
+/* PAGESPEED
 // Helper that populates the set of Page Speed rules used by Page Test.
 void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 {
@@ -224,10 +230,12 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 			incompatible_rule_names.size());
 	}
 }
+PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	Protected formatting - crashes at times when running against amazon.com
 -----------------------------------------------------------------------------*/
+/* PAGESPEED
 bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pagespeedResults, pagespeed::RuleFormatter * formatter)
 {
   bool ret = false;
@@ -245,6 +253,7 @@ bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pages
 
   return ret;
 }
+PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	OK, time to generate any results
@@ -344,6 +353,7 @@ void CPagetestReporting::FlushResults(void)
 						  }
             }
 						
+            /* PAGESPEED
 						// save the page speed report
 						hFile = CreateFile(logFile+step+_T("_pagespeed.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
 						if( hFile != INVALID_HANDLE_VALUE )
@@ -373,6 +383,7 @@ void CPagetestReporting::FlushResults(void)
 							}
 							CloseHandle(hFile);
 						}
+            PAGESPEED */
 
 						// save out the status updates
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
@@ -950,10 +961,12 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 
   // get the Page Speed version
   CString pageSpeedVersion;
+  /* PAGESPEED
   pagespeed::Version  ver;
   pagespeed::GetPageSpeedVersion(&ver);
   if( ver.has_major() && ver.has_minor() )
     pageSpeedVersion.Format(_T("%d.%d"), ver.major(), ver.minor());
+  PAGESPEED */
 	
 	if( fIncludeHeader )
 	{
@@ -1571,6 +1584,7 @@ CString SynthesizeDateHeaderForResource(const CString& url)
 	Copy the necessary data about resources (i.e. headers, response bodies,
 	etc) into the PagespeedInput structure.
 -----------------------------------------------------------------------------*/
+/* PAGESPEED
 void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input)
 {
 	ATLTRACE(_T("[Pagetest] - PopulatePageSpeedInput\n"));
@@ -1701,12 +1715,14 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 
 	ATLTRACE(_T("[Pagetest] - CPagetestReporting::PopulatePageSpeedInput - complete\n"));
 }
+PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	Run Page Speed checks
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::CheckPageSpeed(CString &buff)
 {
+  /* PAGESPEED
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed\n"));
 	buff = _T("\nPage Speed results:\n");
 
@@ -1753,6 +1769,7 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 	}
 
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed complete\n"));
+  PAGESPEED */
 }
 
 /*-----------------------------------------------------------------------------

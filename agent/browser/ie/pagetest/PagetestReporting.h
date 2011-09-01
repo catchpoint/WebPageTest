@@ -31,10 +31,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "ScriptEngine.h"
 
+/* PAGESPEED
 namespace pagespeed {
 	class PagespeedInput;
 	class Results;
 }
+PAGESPEED */
 
 class CReportItem
 {
@@ -206,7 +208,9 @@ protected:
 	void SaveHTML(void);
 	void SaveCookies(void);
 	void Log404s(void);
+  /* PAGESPEED
 	void PopulatePageSpeedInput(pagespeed::PagespeedInput* input);
+  PAGESPEED */ 
 	void StartCDNLookups(void);
 	CRITICAL_SECTION csCDN;
 	CAtlArray<CWinInetRequest *> cdnRequests;
@@ -214,7 +218,9 @@ protected:
 
 	CAtlList<DWORD>	otherResponseCodes;
 	CStringA html;
+  /* PAGESPEED
 	pagespeed::Results* pagespeedResults;
+  PAGESPEED */
 
 	bool IsCDN(CString host, SOCKADDR_IN &server, CString &provider);
 	CAtlList<CCDNEntry> cdnLookups;

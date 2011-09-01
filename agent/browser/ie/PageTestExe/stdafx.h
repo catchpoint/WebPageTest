@@ -56,7 +56,7 @@
 #include <mmsystem.h>
 
 #include "../pagetest/CxImage/ximage.h"
-#include "zlib/zlib.h"
+#include "../pagetest/zlib/zlib.h"
 
 
 #ifdef _UNICODE
