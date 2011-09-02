@@ -113,6 +113,10 @@ if( !$id )
 $testLabel = '';    
 if( $id )
 {
+    // see if we are serving a relay request, if so - munge the id
+    if( strlen($req_rkey) )
+        $id = trim(htmlspecialchars($req_rkey)) . '.' . $id;
+        
     // set the test ID cookie (session cookie) if we're looking at a different test
     if( strcmp($id, $_COOKIE['tid']) )
         setcookie('tid', $id);
@@ -213,7 +217,23 @@ function GetFileUrl($url)
 function GetTestPath($id)
 {
     global $settings;
-    $testPath = "results/$id";
+    $base = 'results';
+    $testPath = "$base/$id";
+    // see if it is a relay test (includes the key)
+    if( strpos($id, '.') !== false )
+    {
+        $parts = explode('.', $id);
+        if( count($parts) == 2 )
+        {
+            $key = trim($parts[0]);
+            if( strlen($key) )
+            {
+                $base .= "/relay/$key";
+                $id = trim($parts[1]);
+            }
+        }
+    }
+    
     if( strpos($id, '_') == 6 )
     {
         $parts = explode('_', $id);
@@ -223,14 +243,14 @@ function GetTestPath($id)
         if( count($parts) > 2 && strlen($parts[2]))
             $dir .= '/' . $parts[2];
         
-        $testPath = 'results/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
+        $testPath = "$base/" . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
     }
     elseif( strlen($settings['olddir']) )
     {
         if( $settings['oldsubdir'] )
-            $testPath = "results/{$settings['olddir']}/_" . strtoupper(substr($id, 0, 1)) . "/$id";
+            $testPath = "$base/{$settings['olddir']}/_" . strtoupper(substr($id, 0, 1)) . "/$id";
         else
-            $testPath = "results/{$settings['olddir']}/$id";
+            $testPath = "$base/{$settings['olddir']}/$id";
     }
 
     return $testPath;
@@ -368,6 +388,7 @@ function delTree($dir)
             unlink( $file );
     }
    
+    $dir = trim($dir, '/');
     if( is_dir($dir) ) 
         rmdir( $dir );
 } 
