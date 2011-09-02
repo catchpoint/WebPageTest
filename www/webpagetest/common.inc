@@ -768,27 +768,27 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
     BuildLocations( $locations );
     
     // drop the main index of any hidden locations so they don't show up in the map view
-    foreach( $locations as $name => $loc )
+    foreach( $locations as $name => &$locRef )
     {
-        if( $loc['hidden'] && !$_REQUEST['hidden'] )
+        if( $locRef['hidden'] && !$_REQUEST['hidden'] )
         {
             $hide = true;
-            if( strlen($includeHidden) && stripos($loc['hidden'], $includeHidden) !== false )
+            if( strlen($includeHidden) && stripos($locRef['hidden'], $includeHidden) !== false )
                 $hide = false;
             
             if( $hide )
                 unset( $locations[$name] );
         }
-        unset($loc['hidden']);
+        unset($locRef['hidden']);
     }
     
     // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
     if( !$_REQUEST['hidden'] && (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows'))
     {
         // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
-        foreach( $locations as $name => &$loc )
+        foreach( $locations as $name => &$locRef )
         {
-            if( isset($loc['browser']) )
+            if( isset($locRef['browser']) )
             {
                 // now check the times
                 $file = "./tmp/$name.tm";
@@ -810,14 +810,14 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
     // next pass, filter browsers if we were asked to
     if( isset($stripBrowser) )
     {
-        foreach( $locations as $name => &$loc )
+        foreach( $locations as $name => &$locRef )
         {
-            if( isset($loc['browser']) )
+            if( isset($locRef['browser']) )
             {
                 $remove = false;
                 foreach( $stripBrowser as $browser )
                 {
-                    $pos = stripos($loc['browser'], $browser);
+                    $pos = stripos($locRef['browser'], $browser);
                     if( $pos !== false )
                     {
                         $remove = true;
@@ -834,17 +834,17 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
             {
                 // strip the browsers from the label
                 foreach( $stripBrowser as $browser )
-                    $loc['label'] = preg_replace("/[, -]*$browser/i", '', $loc['label']);
+                    $locRef['label'] = preg_replace("/[, -]*$browser/i", '', $locRef['label']);
             }
         }
     }
         
     // next pass, remove any top-level locations whose sub-locations have all been removed
-    foreach( $locations as $name => $loc )
+    foreach( $locations as $name => &$locRef )
     {
         // top-level locations do not have the browser specified
         // and "locations" is the uber-top-level grouping
-        if( $name != 'locations' && !isset($loc['browser']) )
+        if( $name != 'locations' && !isset($locRef['browser']) )
         {
             $ok = false;        // default to deleting the location
             $newLoc = array();  // new, filtered copy of the location
@@ -852,7 +852,7 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
             
             // remove any of the child locations that don't exist
             $index = 0;
-            foreach( $loc as $key => $val )
+            foreach( $locRef as $key => $val )
             {
                 // the sub-locations are identified with numeric keys (1, 2, 3)
                 if( is_numeric($key) )
@@ -863,13 +863,13 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
                         $ok = true;
                         $index++;
                         $newLoc[$index] = $val;
-                        if( isset($loc['default']) && $loc['default'] == $val )
+                        if( isset($locRef['default']) && $locRef['default'] == $val )
                             $default = $val;
                     }
                     else
                     {
-                        if( isset($loc['default']) && $loc['default'] == $val )
-                            unset($loc['default']);
+                        if( isset($locRef['default']) && $locRef['default'] == $val )
+                            unset($locRef['default']);
                     }
                 }
                 elseif( $key != 'default' )
