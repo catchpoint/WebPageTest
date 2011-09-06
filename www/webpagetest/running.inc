@@ -37,7 +37,8 @@
                 </p>
                 <h3>Testing...</h3>
                 <?php
-                if ( !$test['test']['startTime'] )
+                $status = GetTestStatus($id, true);
+                if ( !$status['startTime'] )
                 {
                     ?>
                     <form action="/cancelTest.php" method="get">
@@ -49,12 +50,12 @@
                 ?>
             </div>
             <?php
-              $statusText = GetTestStatusText($id);
+              $statusText = $status['statusText'];
             ?>
             <div id="statusImg">
                 <?php
                     $img = "waiting";
-                    if( $test['test']['startTime'] )
+                    if( $status['startTime'] )
                         $img = "testing";
                     echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
                     echo "<div id=\"statusText\">$statusText</div>\n";

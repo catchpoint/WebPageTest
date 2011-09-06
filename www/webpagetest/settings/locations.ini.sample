@@ -1,15 +1,31 @@
 [locations]
 1=Test_loc
+2=Public
 default=Test_loc
 
 [Test_loc]
-1=Test
-default=Test
+1=IE
+2=Chrome
 label=Test Location
 
-[Test]
-browser=IE 7
-;browserExe=pagetest.exe
+[Public]
+1=Dulles_IE8
+label="WebPagetest.org"
+
+[IE]
+browser=IE 8
 latency=0
-label="Test Location"
-key=TestKey123
+label="Test Location - IE 8"
+;browserExe=pagetest.exe
+;key=TestKey123
+
+[Chrome]
+browser=Chrome
+label="Test Location - Chrome"
+
+[Dulles_IE8]
+browser=IE 8
+label="WebPagetest.org IE8"
+relayServer="http://www.webpagetest.org/"
+relayKey=<your API key>
+relayLocation=Dulles_IE8

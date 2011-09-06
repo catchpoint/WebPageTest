@@ -14,140 +14,142 @@ function GetTestStatus($id, $includePosition = true)
     
     $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
     $testPath = './' . GetTestPath($id);
-    $test = @parse_ini_file("$testPath/testinfo.ini",true);
-    if( isset($test) && isset($test['test']) )
+    $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if( isset($testInfoJson['relayId']) )
+        $ret = GetRelayStatus($id, $testPath, $testInfoJson);
+    else
     {
-        $ret['testId'] = $id;
-        $ret['runs'] = (int)$test['test']['runs'];
-        $ret['fvonly'] = (int)$test['test']['fvonly'];
-        
-        if( isset($test['test']['loc']) )
-            $ret['location'] = $test['test']['loc'];
-
-        // see if it is a bulk test
-        if( $test['test']['batch'] || $test['test']['batch_locations'] )
-            GetBatchStatus($ret);
-        else
+        $test = @parse_ini_file("$testPath/testinfo.ini",true);
+        if( isset($test) && isset($test['test']) )
         {
-            // Ignore the cancelled tests.
-            if( gz_is_file("$testPath/testinfo.json") )
-            {
-              $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-              if( isset($testInfoJson['cancelled']) )
-              {
-                $ret['statusCode'] = 402;
-                $ret['statusText'] = 'Test Cancelled';
-                return $ret;
-              }
-            }
-            if( isset($test['test']['startTime']) || isset($test['test']['completeTime']) )
-            {
-                $ret['startTime'] = $test['test']['startTime'];
-                $start = $testInfoJson['started'];
-                $now = time();
-                $elapsed = 0;
-                if( $now > $start )
-                  $elapsed = $now - $start;
-                $ret['elapsed'] = $elapsed;
+            $ret['testId'] = $id;
+            $ret['runs'] = (int)$test['test']['runs'];
+            $ret['fvonly'] = (int)$test['test']['fvonly'];
+            
+            if( isset($test['test']['loc']) )
+                $ret['location'] = $test['test']['loc'];
 
-                if( isset($test['test']['completeTime']) )
-                {
-                    $ret['statusCode'] = 200;
-                    $ret['statusText'] = 'Test Complete';
-                    $ret['completeTime'] = $test['test']['completeTime'];
-                }
-                else
-                {
-                    $ret['statusCode'] = 100;
-                    if( $elapsed == 0 )
-                      $ret['statusText'] = "Test just started";
-                    elseif( $elapsed == 1 )
-                      $ret['statusText'] = "Test Started $elapsed second ago";
-                    elseif( $elapsed < 60 )
-                      $ret['statusText'] = "Test Started $elapsed seconds ago";
-                    else
-                    {
-                      $elapsed = floor($elapsed / 60);
-                      if( $elapsed == 1 )
-                        $ret['statusText'] = "Test Started $elapsed minute ago";
-                      elseif( $elapsed < 60 )
-                        $ret['statusText'] = "Test Started $elapsed minutes ago";
-                      else
-                        $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
-                        
-                      // force the test to end if it started but we haven't seen progress in the last 10 minutes
-                      if( $elapsed > 10 )
-                      {
-                          $elapsedUpdate = 100;
-                          if( isset($testInfoJson['last_update']) )
-                            $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
-                          if( $elapsedUpdate > 10 )
-                          {
-                                // force the test to end
-                                $testInfoJson['completed'] = $now;
-                                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-                                $test = file_get_contents("$testPath/testinfo.ini");
-                                $date = date("m/d/y G:i:s", $now);
-
-                                // update the completion time if it isn't already set
-                                if( !strpos($test, 'completeTime') )
-                                {
-                                    $complete = "[test]\r\ncompleteTime=$date";
-                                    $out = str_replace('[test]', $complete, $test);
-                                    file_put_contents("$testPath/testinfo.ini", $out);
-                                }
-                          }
-                      }
-                    }
-                }
-
-                if( $includePosition )
-                {
-                    $pageData = loadAllPageData($testPath);
-                    
-                    // count the number of fv and rv tests that have completed
-                    $fvRuns = 0;
-                    $rvRuns = 0;
-                    foreach( $pageData as &$run )
-                    {
-                        if( isset($run[0]) )
-                            $fvRuns++;
-                        if( isset($run[1]) )
-                            $rvRuns++;
-                    }
-                    
-                    $ret['fvRunsCompleted'] = $fvRuns;
-                    $ret['rvRunsCompleted'] = $rvRuns;
-                    
-                    // TODO: Add actual summary result information
-                }
-            }
+            // see if it is a bulk test
+            if( $test['test']['batch'] || $test['test']['batch_locations'] )
+                GetBatchStatus($ret);
             else
             {
-                if( $includePosition )
+                // Ignore the cancelled tests.
+                if( isset($testInfoJson['cancelled']) )
                 {
-                    $count = FindJobPosition($testInfoJson['workdir'], $id);
-                    if( $count >= 0 )
+                    $ret['statusCode'] = 402;
+                    $ret['statusText'] = 'Test Cancelled';
+                    return $ret;
+                }
+                if( isset($test['test']['startTime']) || isset($test['test']['completeTime']) )
+                {
+                    $ret['startTime'] = $test['test']['startTime'];
+                    $start = $testInfoJson['started'];
+                    $now = time();
+                    $elapsed = 0;
+                    if( $now > $start )
+                      $elapsed = $now - $start;
+                    $ret['elapsed'] = $elapsed;
+
+                    if( isset($test['test']['completeTime']) )
                     {
-                        $ret['statusCode'] = 101;
-                        $ret['behindCount'] = $count;
-                        if( $count > 1 )
-                            $ret['statusText'] = "Waiting behind $count other tests...";
-                        elseif( $count == 1 )
-                            $ret['statusText'] = "Waiting behind 1 other test...";
-                        else
-                            $ret['statusText'] = "Waiting at the front of the queue...";
+                        $ret['statusCode'] = 200;
+                        $ret['statusText'] = 'Test Complete';
+                        $ret['completeTime'] = $test['test']['completeTime'];
                     }
                     else
                     {
-                        $ret['statusCode'] = 401;
-                        $ret['statusText'] = 'Test request not found';
+                        $ret['statusCode'] = 100;
+                        if( $elapsed == 0 )
+                          $ret['statusText'] = "Test just started";
+                        elseif( $elapsed == 1 )
+                          $ret['statusText'] = "Test Started $elapsed second ago";
+                        elseif( $elapsed < 60 )
+                          $ret['statusText'] = "Test Started $elapsed seconds ago";
+                        else
+                        {
+                          $elapsed = floor($elapsed / 60);
+                          if( $elapsed == 1 )
+                            $ret['statusText'] = "Test Started $elapsed minute ago";
+                          elseif( $elapsed < 60 )
+                            $ret['statusText'] = "Test Started $elapsed minutes ago";
+                          else
+                            $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
+                            
+                          // force the test to end if it started but we haven't seen progress in the last 10 minutes
+                          if( $elapsed > 10 )
+                          {
+                              $elapsedUpdate = 100;
+                              if( isset($testInfoJson['last_update']) )
+                                $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
+                              if( $elapsedUpdate > 10 )
+                              {
+                                    // force the test to end
+                                    $testInfoJson['completed'] = $now;
+                                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
+                                    $test = file_get_contents("$testPath/testinfo.ini");
+                                    $date = date("m/d/y G:i:s", $now);
+
+                                    // update the completion time if it isn't already set
+                                    if( !strpos($test, 'completeTime') )
+                                    {
+                                        $complete = "[test]\r\ncompleteTime=$date";
+                                        $out = str_replace('[test]', $complete, $test);
+                                        file_put_contents("$testPath/testinfo.ini", $out);
+                                    }
+                              }
+                          }
+                        }
+                    }
+
+                    if( $includePosition )
+                    {
+                        $pageData = loadAllPageData($testPath);
+                        
+                        // count the number of fv and rv tests that have completed
+                        $fvRuns = 0;
+                        $rvRuns = 0;
+                        foreach( $pageData as &$run )
+                        {
+                            if( isset($run[0]) )
+                                $fvRuns++;
+                            if( isset($run[1]) )
+                                $rvRuns++;
+                        }
+                        
+                        $ret['fvRunsCompleted'] = $fvRuns;
+                        $ret['rvRunsCompleted'] = $rvRuns;
+                        
+                        // TODO: Add actual summary result information
                     }
                 }
                 else
                 {
-                    $ret['statusCode'] = 101;
-                    $ret['statusText'] = 'Test Pending';
+                    if( $includePosition )
+                    {
+                        $count = FindJobPosition($testInfoJson['workdir'], $id);
+                        if( $count >= 0 )
+                        {
+                            $ret['statusCode'] = 101;
+                            $ret['behindCount'] = $count;
+                            if( $count > 1 )
+                                $ret['statusText'] = "Waiting behind $count other tests...";
+                            elseif( $count == 1 )
+                                $ret['statusText'] = "Waiting behind 1 other test...";
+                            else
+                                $ret['statusText'] = "Waiting at the front of the queue...";
+                        }
+                        else
+                        {
+                            $ret['statusCode'] = 401;
+                            $ret['statusText'] = 'Test request not found';
+                        }
+                    }
+                    else
+                    {
+                        $ret['statusCode'] = 101;
+                        $ret['statusText'] = 'Test Pending';
+                    }
                 }
             }
         }
@@ -263,4 +265,46 @@ function GetBatchStatus(&$status)
     }
 }
 
+/**
+* Get the status of a test from a remote relay
+*/
+function GetRelayStatus($id, $testPath, &$test)
+{
+    $ret = null;
+    $locations = parse_ini_file('./settings/locations.ini', true);
+    $server = $locations[$test['location']]['relayServer'];
+    $key = $locations[$test['location']]['relayKey'];
+    
+    $status = json_decode(file_get_contents("{$server}testStatus.php?test=$id&rkey=$key&pos=1"), true);
+    if( is_array($status) )
+    {
+        if( $status['statusCode'] == 200 )
+        {
+            // download the test result and delete it from the relay server
+            $tmp = tempnam(realpath('./tmp'), 'relay');
+            if( file_put_contents($tmp, file_get_contents("{$server}download.php?test=$id&rkey=$key")) )
+            {
+                $zip = new ZipArchive();
+                if ($zip->open($tmp) === true)
+                {
+                    if( $zip->extractTo($testPath) )
+                    {
+                        file_get_contents("{$server}delete.php?test=$id&rkey=$key");
+                        $ret = $status['data'];
+                    }
+                        
+                    $zip->close();
+                }
+            }
+            @unlink($tmp);
+        }
+        else
+            $ret = $status['data'];
+    }
+    
+    if( !isset($ret) )
+        $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
+    
+    return $ret;
+}
 ?>

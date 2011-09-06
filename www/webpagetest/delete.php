@@ -5,13 +5,9 @@ include 'common.inc';
 $ok = false;
 if( strpos($testPath, 'relay') && is_dir($testPath) )
 {
-    // make sure the keys match
-    if( strlen($req_rkey) && $test['testinfo']['rkey'] == $req_rkey )
-    {
-        // delete the test directory
-        DelTree($testPath);
-        $ok = true;
-    }
+    // delete the test directory
+    DelTree($testPath);
+    $ok = true;
 }
 
 if( !$ok )

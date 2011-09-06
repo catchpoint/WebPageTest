@@ -5,41 +5,37 @@ include 'common.inc';
 $ok = false;
 if( strpos($testPath, 'relay') && is_dir($testPath) )
 {
-    // make sure the keys match
-    if( strlen($req_rkey) && $test['testinfo']['rkey'] == $req_rkey )
+    // zip the test up and download it
+    $zipFile = "$testPath.zip";
+    $zip = new ZipArchive();
+    if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true)
     {
-        // zip the test up and download it
-        $zipFile = "$testPath.zip";
-        $zip = new ZipArchive();
-        if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true)
+        $files = scandir($testPath);
+        foreach( $files as $file )
         {
-            $files = scandir($testPath);
-            foreach( $files as $file )
+            $filePath = "$testPath/$file";
+            if( is_file($filePath) )
+                $zip->addFile($filePath, $file);
+            elseif( $file != '.' && $file != '..' )
             {
-                $filePath = "$testPath/$file";
-                if( is_file($filePath) )
-                    $zip->addFile($filePath, $file);
-                elseif( $file != '.' && $file != '..' )
+                $videoFiles = scandir($filePath);
+                if( $videoFiles )
                 {
-                    $videoFiles = scandir($filePath);
-                    if( $videoFiles )
+                    $zip->addEmptyDir($file);
+                    foreach($videoFiles as $videoFile)
                     {
-                        $zip->addEmptyDir($file);
-                        foreach($videoFiles as $videoFile)
-                        {
-                            $videoFilePath = "$filePath/$videoFile";
-                            if( is_file($videoFilePath) )
-                                $zip->addFile($videoFilePath, "$file/$videoFile");
-                        }
+                        $videoFilePath = "$filePath/$videoFile";
+                        if( is_file($videoFilePath) )
+                            $zip->addFile($videoFilePath, "$file/$videoFile");
                     }
                 }
             }
-            $ok = true;
-            $zip->close();
-            header('Content-type: application/zip');
-            readfile_chunked($zipFile);
-            unlink($zipFile);
-        }        
+        }
+        $ok = true;
+        $zip->close();
+        header('Content-type: application/zip');
+        readfile_chunked($zipFile);
+        unlink($zipFile);
     }
 }
 

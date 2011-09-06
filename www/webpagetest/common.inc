@@ -1537,7 +1537,7 @@ function FindJobPosition($workDir, $testId)
 {
     $count = 0;
     $found = false;
-
+    
     if( LoadJobQueue($workDir, $queue) )
     {
         $priority = 0;

@@ -1641,6 +1641,7 @@ function ParseBulkScript(&$script)
 function RelayTest()
 {
     global $error;
+    global $locations;
     $error = null;
     $ret = array();
     $ret['statusCode'] = 200;
@@ -1650,6 +1651,7 @@ function RelayTest()
     $job = trim($_POST['job']);
     $ini = trim($_POST['ini']);
     $location = trim($_POST['location']);
+    $test['workdir'] = $locations[$location]['localDir'];
     
     ValidateKey($testinfo, $error, $rkey);
     if( !isset($error) )

@@ -7,6 +7,9 @@ $ret['statusCode'] = 400;
 $ret['statusText'] = 'Test not found';
 if( isset($_REQUEST['r']) && strlen($_REQUEST['r']) )
     $ret['requestId'] = $req_r;
+$position = false;
+if( $_REQUEST['pos'] )
+    $position = true;
 
 // see if we are dealing with multiple tests or a single test
 if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
@@ -14,7 +17,7 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 }
 else
 {
-    $ret['data'] = GetTestStatus($id, false);
+    $ret['data'] = GetTestStatus($id, $position);
     $ret['statusCode'] = $ret['data']['statusCode'];
     $ret['statusText'] = $ret['data']['statusText'];
 }
