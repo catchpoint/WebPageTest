@@ -157,7 +157,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (mg_get_var(request_info->query_string, 
                   strlen(request_info->query_string), 
                   "title", title, _countof(title)) >= 0) {
-        _test_state.TitleSet(CString(CA2T(title)));
+        _test_state.TitleSet(CString(CA2T(title, CP_UTF8)));
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {

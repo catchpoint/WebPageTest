@@ -347,7 +347,7 @@ void CPagetestReporting::FlushResults(void)
 							  CString szReport;
 							  GenerateReport(szReport);
 							  DWORD written;
-							  CT2A str((LPCTSTR)szReport);
+							  CT2A str((LPCTSTR)szReport, CP_UTF8);
 							  WriteFile(hFile, (LPCSTR)str, szReport.GetLength(), &written, 0);
 							  CloseHandle(hFile);
 						  }
@@ -871,7 +871,7 @@ void CPagetestReporting::GenerateLabReport(bool fIncludeHeader, CString &szLogFi
 			ReportPageData(result, header);
 			if( !result.IsEmpty() )
 			{
-				CT2A str((LPCTSTR)result);
+				CT2A str((LPCTSTR)result, CP_UTF8);
 				WriteFile( hPageFile, (LPCSTR)str, result.GetLength(), &written, 0 );
 			}
 			
@@ -888,7 +888,7 @@ void CPagetestReporting::GenerateLabReport(bool fIncludeHeader, CString &szLogFi
 				ReportObjectData(result, header);
 				if( !result.IsEmpty() )
 				{
-					CT2A str((LPCTSTR)result);
+					CT2A str((LPCTSTR)result, CP_UTF8);
 					WriteFile( hObjectFile, (LPCSTR)str, result.GetLength(), &written, 0 );
 				}
 			
@@ -3557,7 +3557,7 @@ void CPagetestReporting::SaveStatusUpdates(CString file)
 					buff += _T("\r\n");
 
 					DWORD bytes;
-					WriteFile(hFile, (LPCSTR)CT2A(buff), buff.GetLength(), &bytes, 0 );
+					WriteFile(hFile, (LPCSTR)CT2A(buff, CP_UTF8), buff.GetLength(), &bytes, 0 );
 				}
 			}
 
