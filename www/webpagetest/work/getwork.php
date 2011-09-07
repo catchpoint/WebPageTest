@@ -12,6 +12,7 @@ set_time_limit(600);
 
 $location = $_GET['location'];
 $key = $_GET['key'];
+$recover = $_GET['recover'];
 $pc = $_GET['pc'];
 $ec2 = $_GET['ec2'];
 $tester = null;
@@ -22,7 +23,7 @@ elseif( isset($pc) && strlen($pc) )
 else
     $tester = trim($_SERVER['REMOTE_ADDR']);
     
-logMsg("getwork.php location:$location tester:$tester ex2:$ec2");
+logMsg("getwork.php location:$location tester:$tester ex2:$ec2 recover:$recover");
 
 // see if there is an update
 $done = false;
@@ -58,6 +59,7 @@ function GetJob()
     global $pc;
     global $ec2;
     global $tester;
+    global $recover;
     
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
@@ -101,7 +103,41 @@ function GetJob()
             // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
             if( !$testers[$tester]['offline'] )
             {
-                $fileName = GetJobFile($workDir);
+                // go through the backup directory and restore any that are over an hour old
+                // We prefix the files with an underscore to identify that they have been recovered 
+                // so we don't try to back them up
+                $fileName = null;
+                $recovered = false;
+                $backupDir = "$workDir/testing";
+                $backups = scandir($backupDir);
+                $now = time();
+                foreach( $backups as $file )
+                {
+                    if( is_file( "$backupDir/$file" ) )
+                    {
+                        $fileTime = filemtime("$backupDir/$file");
+                        if( $fileTime && $fileTime < $now )
+                        {
+                            // Check if the file should be recovered due to time or if a given tester requested it
+                            $elapsed = $now - $fileTime;
+                            if( $elapsed > 3600 )
+                            {
+                                $fileName = "$backupDir/$file";
+                                $recovered = true;
+                                break;
+                            }
+                            elseif (isset($recover) && $recover && strlen($tester) && strpos($file,$tester) === 0) 
+                            {
+                                $fileName = "$backupDir/$file";
+                                $recovered = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if( !isset($fileName) )
+                    $fileName = GetJobFile($workDir);
                 
                 if( isset($fileName) && strlen($fileName) )
                 {
@@ -113,7 +149,19 @@ function GetJob()
 
                     // send the test info to the test agent
                     $testInfo = file_get_contents($fileName);
-                    unlink($fileName);
+                    if( isset($recover) && $recover && !$recovered )
+                    {
+                        if( !is_dir($backupDir) )
+                            mkdir($backupDir, 0777, true);
+                        $fileBase = basename($fileName);
+                        $backupFile = $backupDir . '/' . $tester . "_" . $fileBase;
+                        if( rename($fileName, $backupFile) )
+                            touch($backupFile);
+                        else
+                            unlink($fileName);
+                    }
+                    else
+                        unlink($fileName);
                     echo $testInfo;
                     $ok = true;
                     

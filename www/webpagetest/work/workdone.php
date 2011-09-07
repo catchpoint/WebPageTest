@@ -183,6 +183,15 @@ else
                 }
             }
             
+            // clean up the backup of the job file
+            $backupDir = $locations[$location]['localDir'] . '/testing';
+            if( is_dir($backupDir) )
+            {
+                $files = glob("$backupDir/*$id.*", GLOB_NOSORT);
+                foreach($files as $file)
+                    unlink($file);
+            }
+            
             // see if it is an industry benchmark test
             if( strlen($ini['industry']) && strlen($ini['industry_page']) )
             {
