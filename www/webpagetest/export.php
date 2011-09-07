@@ -257,10 +257,7 @@ function BuildResult(&$pageData)
                     $timings['connect'] = -1;
                 $timings['send'] = 0;
                 $timings['wait'] = (int)$r['ttfb'];
-                if( $r['loadTime'] && $r['ttfb'] )
-                    $timings['receive'] = $r['loadTime'] - $r['ttfb'];
-                else
-                    $timings['receive'] = 0;
+                $timings['receive'] = max(0,(int)($r['loadTime'] - $r['ttfb']));
                 $entry['timings'] = $timings;
 
                 $entry['time'] = (int)($r['dnsTime'] + $r['socketTime'] + $r['sslTime'] +  $r['ttfb'] + $timings['receive']);
