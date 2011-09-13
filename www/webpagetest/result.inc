@@ -21,7 +21,7 @@ $page_description = "Website performance test result$testLabel.";
                 echo "var wpt_host='$wpt_host';\n";
             ?>
             if( window.location.host.length && wpt_host.length && window.location.host != wpt_host )
-                window.location = 'http://' + wpt_host + window.location.pathname;
+                window.location = document.location.protocol + '//' + wpt_host + window.location.pathname;
         </script>
         <?php if( !$testComplete ) { ?>
         <noscript>

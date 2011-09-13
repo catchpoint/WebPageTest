@@ -39,9 +39,13 @@ if( $req_bulk )
     $settings['noBulk'] = 0;
 
 $cdnPath = '';
-if( isset($settings['cdn']) )
+if( isset($settings['cdn']) && $_SERVER['HTTP_SSL'] != 'On' )
     $cdnPath = $settings['cdn'];
 $GLOBALS['cdnPath'] = $cdnPath;
+
+$GLOBALS['ptotocol'] = 'http';
+if( $_SERVER['HTTP_SSL'] == 'On' )
+    $GLOBALS['ptotocol'] = 'https';
 
 $tz_offset = null;
 if( isset($_COOKIE['tzo']) )

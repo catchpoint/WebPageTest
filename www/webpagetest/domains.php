@@ -102,7 +102,7 @@ if( (int)$test[test][fvonly] == 0 )
         </div>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.

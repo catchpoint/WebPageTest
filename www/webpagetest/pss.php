@@ -166,6 +166,22 @@ $page_description = "Comparison Test$testLabel.";
                                 </tr>
                             </table>
                         </li>
+                        <?php
+                        if( !strlen($_GET['origin']) )
+                        {
+                        ?>
+                        <li>
+                            <label for="shard">Shard Domains</label>
+                            <select name="shard" id="shard">
+                                <option value="1" selected>1 domain (default)</option>
+                                <option value="2">2 domains</option>
+                                <option value="3">3 domains</option>
+                                <option value="4">4 domains</option>
+                            </select>
+                        </li>
+                        <?php
+                        }
+                        ?>
                     </ul>
                     <ul class="input_fields">
                         <li>
@@ -264,6 +280,14 @@ $page_description = "Comparison Test$testLabel.";
                 ?>
                 
                 form.bulkurls.value=batch;
+                
+                var shard = form.shard.value;
+                if (shard != 1)
+                {
+                    var script = form.script.value;
+                    script = "addHeader\tX-Expt-NumDomainShards: " + shard + "\n" + script;
+                    form.script.value = script;
+                }
                 
                 return true;
             }

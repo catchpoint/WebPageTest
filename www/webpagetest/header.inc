@@ -45,7 +45,7 @@
             
             if( strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
                 include("./custom/$testLoc/headerAd.inc");
-            elseif( is_file('./ads/header.inc') )
+            elseif( is_file('./ads/header.inc') && $_SERVER['HTTP_SSL'] != 'On' )
                 include('./ads/header.inc');
         }
     ?>
@@ -106,7 +106,7 @@
             }
         }
 
-        if (!$privateInstall && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
+        if (!$privateInstall && $_SERVER['HTTP_SSL'] != 'On' && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
         {
             echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/"></g:plusone>&nbsp;
                 <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
