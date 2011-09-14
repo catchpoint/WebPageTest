@@ -1,0 +1,13 @@
+<?php
+$keyID = '<your AWS API Key ID>';
+$secret = '<your AWS API Key Secret>';
+
+$targetBacklog = 26;    // Optimal backlog of tests for each location
+
+$regions = array();
+$regions['us-east-1']['ami-406f9429'] = array('location' => 'EC2_US_East', 'min' => 8, 'max' => 80, 'price' => '0.16', 'userdata' => 'wpt_server=www.webpagetest.org wpt_location=EC2_US_East wpt_key=<key>');
+$regions['us-west-1']['ami-5982d01c'] = array('location' => 'EC2_US_West', 'min' => 2, 'max' => 30, 'price' => '0.16', 'userdata' => 'wpt_server=www.webpagetest.org wpt_location=EC2_US_West wpt_key=<key>');
+$regions['eu-west-1']['ami-00b18074'] = array('location' => 'EC2_Europe', 'min' => 2, 'max' => 50, 'price' => '0.16', 'userdata' => 'wpt_server=www.webpagetest.org wpt_location=EC2_Europe wpt_key=<key>');
+$regions['ap-southeast-1']['ami-92bac2c0'] = array('location' => 'EC2_Singapore', 'min' => 2, 'max' => 30, 'price' => '0.16', 'userdata' => 'wpt_server=www.webpagetest.org wpt_location=EC2_Singapore wpt_key=<key>');
+$regions['ap-northeast-1']['ami-bc16bcbd'] = array('location' => 'EC2_Tokyo', 'min' => 2, 'max' => 30, 'price' => '0.16', 'userdata' => 'wpt_server=www.webpagetest.org wpt_location=EC2_Tokyo wpt_key=<key>');
+?>
