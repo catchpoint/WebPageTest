@@ -351,6 +351,7 @@ function GetVideoJob()
 */
 function GetUpdate()
 {
+    global $location;
     $ret = false;
     
     // see if the client sent a version number
@@ -359,18 +360,22 @@ function GetUpdate()
         $fileBase = '';
         if( isset($_GET['software']) && strlen($_GET['software']) )
             $fileBase = trim($_GET['software']);
+        
+        $updateDir = './work/update';
+        if( is_dir("$updateDir/$location") )
+            $updateDir = "$updateDir/$location";
             
         // see if we have any software updates
-        if( is_file("./work/update/{$fileBase}update.ini") && is_file("./work/update/{$fileBase}update.zip") )
+        if( is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip") )
         {
-            $update = parse_ini_file("./work/update/{$fileBase}update.ini");
+            $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
             if( $update['ver'] && (int)$update['ver'] != (int)$_GET['ver'] )
             {
                 header('Content-Type: application/zip');
                 header("Cache-Control: no-cache, must-revalidate");
                 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                readfile_chunked("./work/update/{$fileBase}update.zip");
+                readfile_chunked("$updateDir/{$fileBase}update.zip");
                 $ret = true;
             }
         }
