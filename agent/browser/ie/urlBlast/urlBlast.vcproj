@@ -429,11 +429,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File
@@ -552,14 +552,13 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\pagetest\zlib\gzio.c"
+					RelativePath="..\pagetest\zlib\gzclose.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -568,7 +567,66 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\pagetest\zlib\gzlib.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\pagetest\zlib\gzread.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\pagetest\zlib\gzwrite.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -736,6 +794,10 @@
 					</File>
 					<File
 						RelativePath="..\pagetest\zlib\deflate.h"
+						>
+					</File>
+					<File
+						RelativePath="..\pagetest\zlib\gzguts.h"
 						>
 					</File>
 					<File

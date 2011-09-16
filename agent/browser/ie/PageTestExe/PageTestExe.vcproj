@@ -1072,28 +1072,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\pagetest\zlib\gzio.c"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\pagetest\zlib\infback.c"
 						>
 						<FileConfiguration
@@ -1276,14 +1254,6 @@
 						</File>
 						<File
 							RelativePath="..\pagetest\zlib\trees.h"
-							>
-						</File>
-						<File
-							RelativePath="..\pagetest\zlib\zconf.h"
-							>
-						</File>
-						<File
-							RelativePath="..\pagetest\zlib\zconf.in.h"
 							>
 						</File>
 						<File
