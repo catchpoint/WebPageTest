@@ -1616,6 +1616,26 @@
 					Name="jpeg"
 					>
 					<File
+						RelativePath="..\pagetest\jpeg\jaricom.c"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="..\pagetest\jpeg\jcapimin.c"
 						>
 						<FileConfiguration
@@ -1655,6 +1675,26 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\pagetest\jpeg\jcarith.c"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 							/>
 						</FileConfiguration>
@@ -1880,28 +1920,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\pagetest\jpeg\jcphuff.c"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\pagetest\jpeg\jcprepct.c"
 						>
 						<FileConfiguration
@@ -2007,6 +2025,26 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\pagetest\jpeg\jdarith.c"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								UsePrecompiledHeader="0"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 							/>
 						</FileConfiguration>
@@ -2254,28 +2292,6 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="..\pagetest\jpeg\jdphuff.c"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
 						RelativePath="..\pagetest\jpeg\jdpostct.c"
 						>
 						<FileConfiguration
@@ -2475,28 +2491,6 @@
 					</File>
 					<File
 						RelativePath="..\pagetest\jpeg\jidctint.c"
-						>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-								UsePrecompiledHeader="0"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\pagetest\jpeg\jidctred.c"
 						>
 						<FileConfiguration
 							Name="Debug|Win32"

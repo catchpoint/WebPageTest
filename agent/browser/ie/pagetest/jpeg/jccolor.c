@@ -12,6 +12,7 @@
 #include "jinclude.h"
 #include "jpeglib.h"
 
+
 /* Private subobject */
 
 typedef struct {

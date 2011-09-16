@@ -381,7 +381,7 @@ jinit_color_deconverter (j_decompress_ptr cinfo)
 
   default:
     /* Permit null conversion to same output space */
-    if ((cinfo->out_color_space == cinfo->jpeg_color_space)||(cinfo->out_color_space = cinfo->jpeg_color_space)) {
+    if (cinfo->out_color_space == cinfo->jpeg_color_space) {
       cinfo->out_color_components = cinfo->num_components;
       cconvert->pub.color_convert = null_convert;
     } else			/* unsupported non-null conversion */
