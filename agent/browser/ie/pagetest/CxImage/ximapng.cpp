@@ -11,11 +11,19 @@
 
 #include "ximaiter.h"
 
+extern "C" {
+#include "pnginfo.h"
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 void CxImagePNG::ima_png_error(png_struct *png_ptr, char *message)
 {
 	strcpy(info.szLastError,message);
+#if PNG_LIBPNG_VER >= 10400
+	png_longjmp(png_ptr, 1);
+#else
 	longjmp(png_ptr->jmpbuf, 1);
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
 void CxImagePNG::expand2to4bpp(BYTE* prow)
@@ -61,7 +69,7 @@ bool CxImagePNG::Decode(CxFile *hFile)
     * the normal method of doing things with libpng).  REQUIRED unless you
     * set up your own error handlers in the png_create_read_struct() earlier.
     */
-	if (setjmp(png_ptr->jmpbuf)) {
+	if (setjmp(png_jmpbuf(png_ptr))) {
 		/* Free all of the memory associated with the png_ptr and info_ptr */
 		if (row_pointers) delete[] row_pointers;
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
@@ -141,7 +149,8 @@ bool CxImagePNG::Decode(CxFile *hFile)
 		if (pal){
 			DWORD ip;
 			for (ip=0;ip<min(head.biClrUsed,(unsigned long)info_ptr->num_trans);ip++)
-				pal[ip].rgbReserved=info_ptr->trans[ip];
+				// Should use png_get_tRNS.
+				pal[ip].rgbReserved=info_ptr->trans_alpha[ip];
 			if (info_ptr->num_trans==1 && pal[0].rgbReserved==0){
 				info.nBkgndIndex = 0;
 			} else {
@@ -170,7 +179,12 @@ bool CxImagePNG::Decode(CxFile *hFile)
 	if (info_ptr->color_type & PNG_COLOR_MASK_COLOR) png_set_bgr(png_ptr);
 
 	// <vho> - handle cancel
-	if (info.nEscape) longjmp(png_ptr->jmpbuf, 1);
+	if (info.nEscape)
+#if PNG_LIBPNG_VER >= 10400
+		png_longjmp(png_ptr, 1);
+#else
+		longjmp(png_ptr->jmpbuf, 1);
+#endif
 
 	//allocate the buffer
 	int row_stride = info_ptr->width * ((info_ptr->pixel_depth+7)>>3);
@@ -191,7 +205,12 @@ bool CxImagePNG::Decode(CxFile *hFile)
 		do	{
 
 			// <vho> - handle cancel
-			if (info.nEscape) longjmp(png_ptr->jmpbuf, 1);
+			if (info.nEscape)
+#if PNG_LIBPNG_VER >= 10400
+				png_longjmp(png_ptr, 1);
+#else
+				longjmp(png_ptr->jmpbuf, 1);
+#endif
 
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
 			if (!AlphaIsValid())
@@ -289,7 +308,7 @@ bool CxImagePNG::Encode(CxFile *hFile)
    /* Set error handling.  REQUIRED if you aren't supplying your own
     * error hadnling functions in the png_create_write_struct() call.
     */
-	if (setjmp(png_ptr->jmpbuf)){
+	if (setjmp(png_jmpbuf(png_ptr))){
 		/* If we get here, we had a problem reading the file */
 		if (info_ptr->palette) free(info_ptr->palette);
 		png_destroy_write_struct(&png_ptr,  (png_infopp)&info_ptr);
@@ -347,9 +366,7 @@ bool CxImagePNG::Encode(CxFile *hFile)
 		//<DP> simple transparency
 		if (info.nBkgndIndex != -1){
 			trans[0]=0;
-			info_ptr->num_trans = 1;
-			info_ptr->valid |= PNG_INFO_tRNS;
-			info_ptr->trans = trans;
+			png_set_tRNS(png_ptr, info_ptr, trans, 1, NULL);
 			// the transparency indexes start from 0
 			if (info.nBkgndIndex){
 				SwapIndex(0,(BYTE)info.nBkgndIndex);
@@ -377,9 +394,7 @@ bool CxImagePNG::Encode(CxFile *hFile)
 		if (info.bAlphaPaletteEnabled){
 			for(WORD ip=0; ip<nc;ip++)
 				trans[ip]=GetPaletteColor((BYTE)ip).rgbReserved;
-			info_ptr->num_trans = (WORD)nc;
-			info_ptr->valid |= PNG_INFO_tRNS;
-			info_ptr->trans = trans;
+			png_set_tRNS(png_ptr, info_ptr, trans, nc, NULL);
 		}
 
 		// copy the palette colors

@@ -1327,28 +1327,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\png\pnggccrd.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath=".\png\pngget.c"
 					>
 					<FileConfiguration
@@ -1526,28 +1504,6 @@
 				</File>
 				<File
 					RelativePath=".\png\pngtrans.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\png\pngvcrd.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
