@@ -19,8 +19,6 @@
 #if !defined(__ximatif_h)
 #define __ximatif_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_TIF
 
 #include "../tiff/tiffio.h"

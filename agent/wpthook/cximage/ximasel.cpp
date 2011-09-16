@@ -5,6 +5,8 @@
 
 #include "ximage.h"
 
+#if CXIMAGE_SUPPORT_SELECTION
+
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Checks if the image has a valid selection.
@@ -13,8 +15,6 @@ bool CxImage::SelectionIsValid()
 {
 	return pSelection!=0;
 }
-
-#if CXIMAGE_SUPPORT_SELECTION
 
 ////////////////////////////////////////////////////////////////////////////////
 /**

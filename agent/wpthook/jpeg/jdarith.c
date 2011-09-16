@@ -150,8 +150,8 @@ arith_decode (j_decompress_ptr cinfo, unsigned char *st)
    */
   sv = *st;
   qe = jpeg_aritab[sv & 0x7F];	/* => Qe_Value */
-  nl = (unsigned char)(qe & 0xFF); qe >>= 8;	/* Next_Index_LPS + Switch_MPS */
-  nm = (unsigned char)(qe & 0xFF); qe >>= 8;	/* Next_Index_MPS */
+  nl = qe & 0xFF; qe >>= 8;	/* Next_Index_LPS + Switch_MPS */
+  nm = qe & 0xFF; qe >>= 8;	/* Next_Index_MPS */
 
   /* Decode & estimation procedures per sections D.2.4 & D.2.5 */
   temp = e->a - qe;

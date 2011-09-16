@@ -99,6 +99,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   }
   if (_computer_name.GetLength())
     url += CString(_T("&pc=")) + _computer_name;
+  if (_settings._ec2_instance.GetLength())
+    url += CString(_T("&ec2=")) + _settings._ec2_instance;
 
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {

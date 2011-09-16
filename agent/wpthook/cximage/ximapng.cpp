@@ -2,34 +2,41 @@
  * File:	ximapng.cpp
  * Purpose:	Platform Independent PNG Image Class Loader and Writer
  * 07/Aug/2001 Davide Pizzolato - www.xdp.it
- * CxImage version 7.0.1 07/Jan/2011
+ * CxImage version 5.99c 17/Oct/2004
  */
 
+#include "ximage.h"
 #include "ximapng.h"
 
 #if CXIMAGE_SUPPORT_PNG
 
 #include "ximaiter.h"
 
+extern "C" {
+#include "pnginfo.h"
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 void CxImagePNG::ima_png_error(png_struct *png_ptr, char *message)
 {
 	strcpy(info.szLastError,message);
-	longjmp(png_ptr->png_jmpbuf, 1);
+#if PNG_LIBPNG_VER >= 10400
+	png_longjmp(png_ptr, 1);
+#else
+	longjmp(png_ptr->jmpbuf, 1);
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////
-#if CXIMAGE_SUPPORT_DECODE
-////////////////////////////////////////////////////////////////////////////////
-void CxImagePNG::expand2to4bpp(uint8_t* prow)
+void CxImagePNG::expand2to4bpp(BYTE* prow)
 {
-	uint8_t *psrc,*pdst;
-	uint8_t pos,idx;
-	for(int32_t x=head.biWidth-1;x>=0;x--){
+	BYTE *psrc,*pdst;
+	BYTE pos,idx;
+	for(long x=head.biWidth-1;x>=0;x--){
 		psrc = prow + ((2*x)>>3);
 		pdst = prow + ((4*x)>>3);
-		pos = (uint8_t)(2*(3-x%4));
-		idx = (uint8_t)((*psrc & (0x03<<pos))>>pos);
-		pos = (uint8_t)(4*(1-x%2));
+		pos = (BYTE)(2*(3-x%4));
+		idx = (BYTE)((*psrc & (0x03<<pos))>>pos);
+		pos = (BYTE)(4*(1-x%2));
 		*pdst &= ~(0x0F<<pos);
 		*pdst |= (idx & 0x0F)<<pos;
 	}
@@ -37,82 +44,82 @@ void CxImagePNG::expand2to4bpp(uint8_t* prow)
 ////////////////////////////////////////////////////////////////////////////////
 bool CxImagePNG::Decode(CxFile *hFile)
 {
+	int number_passes;
 	png_struct *png_ptr;
 	png_info *info_ptr;
-	uint8_t *row_pointers=NULL;
+	BYTE *row_pointers=NULL;
 	CImageIterator iter(this);
 
-  cx_try
-  {
-    /* Create and initialize the png_struct with the desired error handler
+	/* Create and initialize the png_struct with the desired error handler
     * functions.  If you want to use the default stderr and longjump method,
     * you can supply NULL for the last three parameters.  We also supply the
     * the compiler header file version, so that we know if the application
-    * was compiled with a compatible version of the library.  REQUIRED    */
+    * was compiled with a compatible version of the library.  REQUIRED
+    */
 	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,(void *)NULL,NULL,NULL);
-	if (png_ptr == NULL)  cx_throw("Failed to create PNG structure");
+	if (png_ptr == NULL)  return FALSE;
 
 	/* Allocate/initialize the memory for image information.  REQUIRED. */
 	info_ptr = png_create_info_struct(png_ptr);
 	if (info_ptr == NULL) {
 		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-		cx_throw("Failed to initialize PNG info structure");
+		return FALSE;
 	}
 
     /* Set error handling if you are using the setjmp/longjmp method (this is
     * the normal method of doing things with libpng).  REQUIRED unless you
-    * set up your own error handlers in the png_create_read_struct() earlier. */
-	if (setjmp(png_ptr->png_jmpbuf)) {
+    * set up your own error handlers in the png_create_read_struct() earlier.
+    */
+	if (setjmp(png_jmpbuf(png_ptr))) {
 		/* Free all of the memory associated with the png_ptr and info_ptr */
-		delete [] row_pointers;
+		if (row_pointers) delete[] row_pointers;
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
-		cx_throw("");
+		return FALSE;
 	}
+	/* set up the input control */
+	//png_init_io(png_ptr, hFile);
 
 	// use custom I/O functions
-    png_set_read_fn(png_ptr, hFile, /*(png_rw_ptr)*/user_read_data);
-	png_set_error_fn(png_ptr,info.szLastError,/*(png_error_ptr)*/user_error_fn,NULL);
+    png_set_read_fn(png_ptr, hFile, (png_rw_ptr)user_read_data);
+	png_set_error_fn(png_ptr,info.szLastError,(png_error_ptr)user_error_fn,NULL);
 
 	/* read the file information */
 	png_read_info(png_ptr, info_ptr);
 
-	if (info.nEscape == -1){
-		head.biWidth = info_ptr->width;
-		head.biHeight= info_ptr->height;
-		info.dwType = CXIMAGE_FORMAT_PNG;
-		longjmp(png_ptr->png_jmpbuf, 1);
+	/* allocate the memory to hold the image using the fields of png_info. */
+	png_color_16 my_background={ 0, 192, 192, 192, 0 };
+	png_color_16 *image_background;
+
+	if (info_ptr->pixel_depth != 32){
+		//<yeonjun jeong> preserve original background info.
+		if (png_get_bKGD(png_ptr, info_ptr, &image_background))
+			png_set_background(png_ptr, image_background,PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
+		else
+			png_set_background(png_ptr, &my_background,PNG_BACKGROUND_GAMMA_SCREEN, 0, 1.0);
+// <vho> - we call png_set_bgr() below
+// <vho>	//<yeonjun jeong> safe check
+// <vho>	if (info_ptr->pixel_depth > 16 ) info_ptr->color_type = COLORTYPE_COLOR;
 	}
 
-	/* calculate new number of channels */
-	int32_t channels=0;
-	switch(info_ptr->color_type){
-	case PNG_COLOR_TYPE_GRAY:
-	case PNG_COLOR_TYPE_PALETTE:
-		channels = 1;
-		break;
-	case PNG_COLOR_TYPE_GRAY_ALPHA:
-		channels = 2;
-		break;
-	case PNG_COLOR_TYPE_RGB:
-		channels = 3;
-		break;
-	case PNG_COLOR_TYPE_RGB_ALPHA:
-		channels = 4;
-		break;
-	default:
-		strcpy(info.szLastError,"unknown PNG color type");
-		longjmp(png_ptr->png_jmpbuf, 1);
+	//<DP> hack for images with alpha channel
+	if (info_ptr->pixel_depth == 32){
+//		info.nBkgndIndex = 0; //enable transparency
+		if (png_get_bKGD(png_ptr, info_ptr, &image_background)){
+			info.nBkgndColor.rgbRed   = (BYTE)image_background->red;
+			info.nBkgndColor.rgbGreen = (BYTE)image_background->green;
+			info.nBkgndColor.rgbBlue  = (BYTE)image_background->blue;
+			info.nBkgndColor.rgbReserved = 0;	// <vho>
+		}
 	}
 
-	//find the right pixel depth used for cximage
-	int32_t pixel_depth = info_ptr->pixel_depth;
-	if (channels == 1 && pixel_depth>8) pixel_depth=8;
-	if (channels == 2) pixel_depth=8;
-	if (channels >= 3) pixel_depth=24;
+	/* tell libpng to strip 16 bit depth files down to 8 bits */
+	if (info_ptr->bit_depth == 16)	png_set_strip_16(png_ptr);
 
-	if (!Create(info_ptr->width, info_ptr->height, pixel_depth, CXIMAGE_FORMAT_PNG)){
-		longjmp(png_ptr->png_jmpbuf, 1);
-	}
+	int pixel_depth=info_ptr->pixel_depth;
+	if (pixel_depth >  16 ) pixel_depth=24;
+	if (pixel_depth == 16 ) pixel_depth=8;
+
+	Create(info_ptr->width, info_ptr->height, pixel_depth, CXIMAGE_FORMAT_PNG);
 
 	/* get metrics */
 	switch (info_ptr->phys_unit_type)
@@ -122,120 +129,126 @@ bool CxImagePNG::Decode(CxFile *hFile)
 		SetYDPI(info_ptr->y_pixels_per_unit);
 		break;
 	case PNG_RESOLUTION_METER:
-		SetXDPI((int32_t)floor(info_ptr->x_pixels_per_unit * 254.0 / 10000.0 + 0.5));
-		SetYDPI((int32_t)floor(info_ptr->y_pixels_per_unit * 254.0 / 10000.0 + 0.5));
+		SetXDPI((long)floor(info_ptr->x_pixels_per_unit * 254.0 / 10000.0 + 0.5));
+		SetYDPI((long)floor(info_ptr->y_pixels_per_unit * 254.0 / 10000.0 + 0.5));
 		break;
 	}
 
-	if (info_ptr->num_palette>0){
-		SetPalette((rgb_color*)info_ptr->palette,info_ptr->num_palette);
-		SetClrImportant(info_ptr->num_palette);
-	} else if (info_ptr->bit_depth ==2) { //<DP> needed for 2 bpp grayscale PNGs
+	if (info_ptr->num_palette>0)
+	  SetPalette((rgb_color*)info_ptr->palette,info_ptr->num_palette);
+	else if (info_ptr->bit_depth ==2) { //<DP> needed for 2 bpp grayscale PNGs
 		SetPaletteColor(0,0,0,0);
 		SetPaletteColor(1,85,85,85);
 		SetPaletteColor(2,170,170,170);
 		SetPaletteColor(3,255,255,255);
 	} else SetGrayPalette(); //<DP> needed for grayscale PNGs
-	
-	int32_t nshift = max(0,(info_ptr->bit_depth>>3)-1)<<3;
 
-	if (info_ptr->num_trans!=0){ //palette transparency
-		if (info_ptr->num_trans==1){
-			if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE){
-				info.nBkgndIndex = info_ptr->trans_color.index;
-			} else{
-				info.nBkgndIndex = info_ptr->trans_color.gray>>nshift;
-			}
-		}
-		if (info_ptr->num_trans>1){
-			RGBQUAD* pal=GetPalette();
-			if (pal){
-				uint32_t ip;
-				for (ip=0;ip<min(head.biClrUsed,(uint32_t)info_ptr->num_trans);ip++)
-					pal[ip].rgbReserved=info_ptr->trans_alpha[ip];
-				for (ip=info_ptr->num_trans;ip<head.biClrUsed;ip++){
-					pal[ip].rgbReserved=255;
-				}
+	// simple transparency (the real PGN transparency is more complex)
+	if (info_ptr->num_trans!=0){
+		//palette transparency
+		RGBQUAD* pal=GetPalette();
+		if (pal){
+			DWORD ip;
+			for (ip=0;ip<min(head.biClrUsed,(unsigned long)info_ptr->num_trans);ip++)
+				// Should use png_get_tRNS.
+				pal[ip].rgbReserved=info_ptr->trans_alpha[ip];
+			if (info_ptr->num_trans==1 && pal[0].rgbReserved==0){
+				info.nBkgndIndex = 0;
+			} else {
 				info.bAlphaPaletteEnabled=true;
+				for (;ip<head.biClrUsed;ip++)
+					pal[ip].rgbReserved=255;
 			}
 		}
 	}
 
-	if (channels == 3){ //check RGB binary transparency
-		png_bytep trans;
-		int32_t num_trans;
-		png_color_16 *image_background;
-		if (png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &image_background)){
-			info.nBkgndColor.rgbRed   = (uint8_t)(info_ptr->trans_color.red>>nshift);
-			info.nBkgndColor.rgbGreen = (uint8_t)(info_ptr->trans_color.green>>nshift);
-			info.nBkgndColor.rgbBlue  = (uint8_t)(info_ptr->trans_color.blue>>nshift);
-			info.nBkgndColor.rgbReserved = 0;
-			info.nBkgndIndex = 0;
+	if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA || //Alpha channel
+		(info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA && info_ptr->pixel_depth == 32)){
+		if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA){
+			png_set_gray_to_rgb(png_ptr);
+			png_set_expand(png_ptr);
 		}
-	}
-
-	int32_t alpha_present = (channels - 1) % 2;
-	if (alpha_present){
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
+		png_set_filler(png_ptr, 0xff, PNG_FILLER_AFTER);
 		AlphaCreate();
 #else
 		png_set_strip_alpha(png_ptr);
-#endif //CXIMAGE_SUPPORT_ALPHA
+#endif	//CXIMAGE_SUPPORT_ALPHA
 	}
 
 	// <vho> - flip the RGB pixels to BGR (or RGBA to BGRA)
-	if (info_ptr->color_type & PNG_COLOR_MASK_COLOR){
-		png_set_bgr(png_ptr);
-	}
+	if (info_ptr->color_type & PNG_COLOR_MASK_COLOR) png_set_bgr(png_ptr);
 
 	// <vho> - handle cancel
-	if (info.nEscape) longjmp(png_ptr->png_jmpbuf, 1);
+	if (info.nEscape)
+#if PNG_LIBPNG_VER >= 10400
+		png_longjmp(png_ptr, 1);
+#else
+		longjmp(png_ptr->jmpbuf, 1);
+#endif
 
-	// row_bytes is the width x number of channels x (bit-depth / 8)
-	row_pointers = new uint8_t[info_ptr->rowbytes + 8];
+	//allocate the buffer
+	int row_stride = info_ptr->width * ((info_ptr->pixel_depth+7)>>3);
+	row_pointers = new BYTE[10+row_stride];
 
 	// turn on interlace handling
-	int32_t number_passes = png_set_interlace_handling(png_ptr);
+	number_passes = png_set_interlace_handling(png_ptr);
 
 	if (number_passes>1){
-		SetCodecOption( (ENCODE_INTERLACE) | GetCodecOption(CXIMAGE_FORMAT_PNG));
+		SetCodecOption(1);
 	} else {
-		SetCodecOption(~(ENCODE_INTERLACE) & GetCodecOption(CXIMAGE_FORMAT_PNG));
+		SetCodecOption(0);
 	}
 
-	int32_t chan_offset = info_ptr->bit_depth >> 3;
-	int32_t pixel_offset = info_ptr->pixel_depth >> 3;
-
-	for (int32_t pass=0; pass < number_passes; pass++) {
+	for (int pass=0; pass< number_passes; pass++) {
 		iter.Upset();
-		int32_t y=0;
+		int y=0;
 		do	{
 
 			// <vho> - handle cancel
-			if (info.nEscape) longjmp(png_ptr->png_jmpbuf, 1);
+			if (info.nEscape)
+#if PNG_LIBPNG_VER >= 10400
+				png_longjmp(png_ptr, 1);
+#else
+				longjmp(png_ptr->jmpbuf, 1);
+#endif
 
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
-			if (AlphaIsValid()) {
+			if (!AlphaIsValid())
+#endif // CXIMAGE_SUPPORT_ALPHA
+			{
+				//recover data from previous scan
+				if (info_ptr->interlace_type && pass>0)
+					iter.GetRow(row_pointers, info.dwEffWidth);
+				//read next row
+				png_read_row(png_ptr, row_pointers, NULL);
+// <vho> - already done by png_set_bgr()
+// <vho>			//HACK BY OP && (<DP> for interlace, swap only in the last pass)
+// <vho>			if (info_ptr->color_type==COLORTYPE_COLOR && pass==(number_passes-1))
+// <vho>				RGBtoBGR(row_pointers, info.dwEffWidth);
+				//<DP> expand 2 bpp images only in the last pass
+				if (info_ptr->bit_depth==2 && pass==(number_passes-1))
+					expand2to4bpp(row_pointers);
+				//copy the pixels
+				iter.SetRow(row_pointers, info.dwEffWidth);
+				//go on
+				iter.PrevRow();
+			}
+#if CXIMAGE_SUPPORT_ALPHA	// <vho>
+			else { //alpha blend
 
 				//compute the correct position of the line
-				int32_t ax,ay;
+				long ax,ay;
 				ay = head.biHeight-1-y;
-				uint8_t* prow= iter.GetRow(ay);
+				BYTE* prow= iter.GetRow(ay);
 
 				//recover data from previous scan
 				if (info_ptr->interlace_type && pass>0 && pass!=7){
-					for(ax=0;ax<head.biWidth;ax++){
-						int32_t px = ax * pixel_offset;
-						if (channels == 2){
-							row_pointers[px] = prow[ax];
-							row_pointers[px+chan_offset]=AlphaGet(ax,ay);
-						} else {
-							int32_t qx = ax * 3;
-							row_pointers[px]              =prow[qx];
-							row_pointers[px+chan_offset]  =prow[qx+1];
-							row_pointers[px+chan_offset*2]=prow[qx+2];
-							row_pointers[px+chan_offset*3]=AlphaGet(ax,ay);
-						}
+					for(ax=head.biWidth;ax>=0;ax--){
+						row_pointers[ax*4]=prow[3*ax];
+						row_pointers[ax*4+1]=prow[3*ax+1];
+						row_pointers[ax*4+2]=prow[3*ax+2];
+						row_pointers[ax*4+3]=AlphaGet(ax,ay);
 					}
 				}
 
@@ -244,73 +257,27 @@ bool CxImagePNG::Decode(CxFile *hFile)
 
 				//RGBA -> RGB + A
 				for(ax=0;ax<head.biWidth;ax++){
-					int32_t px = ax * pixel_offset;
-					if (channels == 2){
-						prow[ax] = row_pointers[px];
-						AlphaSet(ax,ay,row_pointers[px+chan_offset]);
-					} else {
-						int32_t qx = ax * 3;
-						prow[qx]  =row_pointers[px];
-						prow[qx+1]=row_pointers[px+chan_offset];
-						prow[qx+2]=row_pointers[px+chan_offset*2];
-						AlphaSet(ax,ay,row_pointers[px+chan_offset*3]);
-					}
+					prow[3*ax]=row_pointers[ax*4];
+					prow[3*ax+1]=row_pointers[ax*4+1];
+					prow[3*ax+2]=row_pointers[ax*4+2];
+					AlphaSet(ax,ay,row_pointers[ax*4+3]);
 				}
-			} else
-#endif // CXIMAGE_SUPPORT_ALPHA		// vho
-			{
-				//recover data from previous scan
-				if (info_ptr->interlace_type && pass>0){
-					iter.GetRow(row_pointers, info_ptr->rowbytes);
-					//re-expand buffer for images with bit depth > 8
-					if (info_ptr->bit_depth > 8){
-						for(int32_t ax=(head.biWidth*channels-1);ax>=0;ax--)
-							row_pointers[ax*chan_offset] = row_pointers[ax];
-					}
-				}
-
-				//read next row
-				png_read_row(png_ptr, row_pointers, NULL);
-
-				//shrink 16 bit depth images down to 8 bits
-				if (info_ptr->bit_depth > 8){
-					for(int32_t ax=0;ax<(head.biWidth*channels);ax++)
-						row_pointers[ax] = row_pointers[ax*chan_offset];
-				}
-
-				//copy the pixels
-				iter.SetRow(row_pointers, info_ptr->rowbytes);
-				//<DP> expand 2 bpp images only in the last pass
-				if (info_ptr->bit_depth==2 && pass==(number_passes-1))
-					expand2to4bpp(iter.GetRow());
-
-				//go on
-				iter.PrevRow();
 			}
-
+#endif // CXIMAGE_SUPPORT_ALPHA		// vho
 			y++;
 		} while(y<head.biHeight);
 	}
+	delete[] row_pointers;
 
-	delete [] row_pointers;
-	row_pointers = NULL;
-
-	/* read the rest of the file, getting any additional chunks in info_ptr - REQUIRED */
+	/* read the rest of the file, getting any additional chunks in info_ptr */
 	png_read_end(png_ptr, info_ptr);
 
 	/* clean up after the read, and free any memory allocated - REQUIRED */
 	png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 
-  } cx_catch {
-	if (strcmp(message,"")) strncpy(info.szLastError,message,255);
-	if (info.nEscape == -1 && info.dwType == CXIMAGE_FORMAT_PNG) return true;
-	return false;
-  }
 	/* that's it */
-	return true;
+	return TRUE;
 }
-////////////////////////////////////////////////////////////////////////////////
-#endif //CXIMAGE_SUPPORT_DECODE
 ////////////////////////////////////////////////////////////////////////////////
 #if CXIMAGE_SUPPORT_ENCODE
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,12 +286,10 @@ bool CxImagePNG::Encode(CxFile *hFile)
 	if (EncodeSafeCheck(hFile)) return false;
 
 	CImageIterator iter(this);
-	uint8_t trans[256];	//for transparency (don't move)
+	BYTE trans[256];	//for transparency (don't move)
 	png_struct *png_ptr;
 	png_info *info_ptr;
 
-  cx_try
-  {
    /* Create and initialize the png_struct with the desired error handler
     * functions.  If you want to use the default stderr and longjump method,
     * you can supply NULL for the last three parameters.  We also check that
@@ -332,218 +297,213 @@ bool CxImagePNG::Encode(CxFile *hFile)
     * in case we are using dynamically linked libraries.  REQUIRED.
     */
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,(void *)NULL,NULL,NULL);
-	if (png_ptr == NULL) cx_throw("Failed to create PNG structure");
+	if (png_ptr == NULL) return FALSE;
 
 	/* Allocate/initialize the image information data.  REQUIRED */
 	info_ptr = png_create_info_struct(png_ptr);
 	if (info_ptr == NULL){
 		png_destroy_write_struct(&png_ptr,  (png_infopp)NULL);
-		cx_throw("Failed to initialize PNG info structure");
+		return FALSE;
 	}
 
    /* Set error handling.  REQUIRED if you aren't supplying your own
     * error hadnling functions in the png_create_write_struct() call.
     */
-	if (setjmp(png_ptr->png_jmpbuf)){
+	if (setjmp(png_jmpbuf(png_ptr))){
 		/* If we get here, we had a problem reading the file */
 		if (info_ptr->palette) free(info_ptr->palette);
 		png_destroy_write_struct(&png_ptr,  (png_infopp)&info_ptr);
-		cx_throw("Error saving PNG file");
+		return FALSE;
 	}
             
+	int row_stride = info.dwEffWidth;
 	/* set up the output control */
 	//png_init_io(png_ptr, hFile);
 
 	// use custom I/O functions
-    png_set_write_fn(png_ptr,hFile,/*(png_rw_ptr)*/user_write_data,/*(png_flush_ptr)*/user_flush_data);
+    png_set_write_fn(png_ptr,hFile,(png_rw_ptr)user_write_data,(png_flush_ptr)user_flush_data);
 
 	/* set the file information here */
 	info_ptr->width = GetWidth();
 	info_ptr->height = GetHeight();
-	info_ptr->pixel_depth = (uint8_t)GetBpp();
-	info_ptr->channels = (GetBpp()>8) ? (uint8_t)3: (uint8_t)1;
-	info_ptr->bit_depth = (uint8_t)(GetBpp()/info_ptr->channels);
+	info_ptr->pixel_depth = (BYTE)GetBpp();
+	info_ptr->channels = (GetBpp()>8) ? (BYTE)3: (BYTE)1;
+	info_ptr->bit_depth = (BYTE)(GetBpp()/info_ptr->channels);
+	info_ptr->color_type = GetColorType();
 	info_ptr->compression_type = info_ptr->filter_type = 0;
 	info_ptr->valid = 0;
+	info_ptr->rowbytes = row_stride;
 
-	// set interlace type
-	DWORD codec_opt = GetCodecOption(CXIMAGE_FORMAT_PNG);
-	if (codec_opt & CxImagePNG::ENCODE_INTERLACE)
+	switch(GetCodecOption(CXIMAGE_FORMAT_PNG)){
+	case 1:
 		info_ptr->interlace_type = PNG_INTERLACE_ADAM7;
-	else
-		info_ptr->interlace_type = PNG_INTERLACE_NONE;
-
-	/* set compression level */
-	int32_t compress_level;
-	switch (codec_opt & CxImagePNG::ENCODE_COMPRESSION_MASK)
-	{
-	case ENCODE_NO_COMPRESSION:
-		compress_level = Z_NO_COMPRESSION;
-		break;
-	case ENCODE_BEST_SPEED:
-		compress_level = Z_BEST_SPEED;
-		break;
-	case ENCODE_BEST_COMPRESSION:
-		compress_level = Z_BEST_COMPRESSION;
 		break;
 	default:
-		compress_level = Z_DEFAULT_COMPRESSION;
-		break;
+		info_ptr->interlace_type = PNG_INTERLACE_NONE;
 	}
-	png_set_compression_level(png_ptr, compress_level);
 
-	bool bGrayScale = IsGrayScale();
-
-	if (GetNumColors()){
-		if (bGrayScale){
-			info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
-		} else {
-			info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
-		}
-	} else {
-		info_ptr->color_type = PNG_COLOR_TYPE_RGB;
-	}
-#if CXIMAGE_SUPPORT_ALPHA
-	if (AlphaIsValid()){
-		info_ptr->color_type |= PNG_COLOR_MASK_ALPHA;
-		info_ptr->channels++;
-		info_ptr->bit_depth = 8;
-		info_ptr->pixel_depth += 8;
-	}
-#endif
+	/* set compression level */
+	//png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
 
 	/* set background */
 	png_color_16 image_background={ 0, 255, 255, 255, 0 };
-	RGBQUAD tc = GetTransColor();
-	if (info.nBkgndIndex>=0) {
-		image_background.blue  = tc.rgbBlue;
-		image_background.green = tc.rgbGreen;
-		image_background.red   = tc.rgbRed;
+	if (info.nBkgndIndex!=-1) {
+		image_background.blue = info.nBkgndColor.rgbBlue;
+		image_background.green = info.nBkgndColor.rgbGreen;
+		image_background.red = info.nBkgndColor.rgbRed;
 	}
 	png_set_bKGD(png_ptr, info_ptr, &image_background);
 
 	/* set metrics */
 	png_set_pHYs(png_ptr, info_ptr, head.biXPelsPerMeter, head.biYPelsPerMeter, PNG_RESOLUTION_METER);
 
-	png_set_IHDR(png_ptr, info_ptr, info_ptr->width, info_ptr->height, info_ptr->bit_depth,
-				info_ptr->color_type, info_ptr->interlace_type,
-				PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-	//<DP> simple transparency
-	if (info.nBkgndIndex >= 0){
-		info_ptr->num_trans = 1;
-		info_ptr->valid |= PNG_INFO_tRNS;
-		info_ptr->trans_alpha = trans;
-		info_ptr->trans_color.index = (uint8_t)info.nBkgndIndex;
-		info_ptr->trans_color.red   = tc.rgbRed;
-		info_ptr->trans_color.green = tc.rgbGreen;
-		info_ptr->trans_color.blue  = tc.rgbBlue;
-		info_ptr->trans_color.gray  = info_ptr->trans_color.index;
-
-		// the transparency indexes start from 0 for non grayscale palette
-		if (!bGrayScale && head.biClrUsed && info.nBkgndIndex)
-			SwapIndex(0,(uint8_t)info.nBkgndIndex);
-	}
-
 	/* set the palette if there is one */
 	if (GetPalette()){
-		if (!bGrayScale){
-			info_ptr->valid |= PNG_INFO_PLTE;
+		png_set_IHDR(png_ptr, info_ptr, info_ptr->width, info_ptr->height, info_ptr->bit_depth, 
+					PNG_COLOR_TYPE_PALETTE, info_ptr->interlace_type, 
+					PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+		info_ptr->valid |= PNG_INFO_PLTE;
+
+		//<DP> simple transparency
+		if (info.nBkgndIndex != -1){
+			trans[0]=0;
+			png_set_tRNS(png_ptr, info_ptr, trans, 1, NULL);
+			// the transparency indexes start from 0
+			if (info.nBkgndIndex){
+				SwapIndex(0,(BYTE)info.nBkgndIndex);
+				// the ghost must set the changed attributes in the body
+				if (info.pGhost) info.pGhost->SetTransIndex(0);
+			}
 		}
 
-		int32_t nc = GetClrImportant();
-		if (nc==0) nc = GetNumColors();
+		int nc = GetNumColors();
+
+		/* We not need to write unused colors! <Basara>*/
+		/* only for small images <DP>*/
+		if ((nc>2)&&((head.biWidth*head.biHeight)<65536)){
+			nc = 0;
+			for (DWORD y=0;y<GetHeight();y++){
+				for (DWORD x=0;x<GetWidth();x++){
+					if (GetPixelIndex(x,y)>nc){
+						nc=GetPixelIndex(x,y);
+					}
+				}
+			}
+			nc++;
+		}
 
 		if (info.bAlphaPaletteEnabled){
-			for(uint16_t ip=0; ip<nc;ip++)
-				trans[ip]=GetPaletteColor((uint8_t)ip).rgbReserved;
-			info_ptr->num_trans = (uint16_t)nc;
-			info_ptr->valid |= PNG_INFO_tRNS;
-			info_ptr->trans_alpha = trans;
+			for(WORD ip=0; ip<nc;ip++)
+				trans[ip]=GetPaletteColor((BYTE)ip).rgbReserved;
+			png_set_tRNS(png_ptr, info_ptr, trans, nc, NULL);
 		}
 
 		// copy the palette colors
 		info_ptr->palette = new png_color[nc];
 		info_ptr->num_palette = (png_uint_16) nc;
-		for (int32_t i=0; i<nc; i++)
+		for (int i=0; i<nc; i++)
 			GetPaletteColor(i, &info_ptr->palette[i].red, &info_ptr->palette[i].green, &info_ptr->palette[i].blue);
+
 	}  
 
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
 	//Merge the transparent color with the alpha channel
-	if (AlphaIsValid() && head.biBitCount==24 && info.nBkgndIndex>=0){
-		for(int32_t y=0; y < head.biHeight; y++){
-			for(int32_t x=0; x < head.biWidth ; x++){
-				RGBQUAD c=GetPixelColor(x,y,false);
-				if (*(int32_t*)&c==*(int32_t*)&tc)
+	bool bNeedTempAlpha = false;
+	if (head.biBitCount==24 && info.nBkgndIndex>=0){
+		if (!AlphaIsValid()){
+			bNeedTempAlpha = true;
+			AlphaCreate();
+		}
+		RGBQUAD c,ct=GetTransColor();
+		for(long y=0; y < head.biHeight; y++){
+			for(long x=0; x < head.biWidth ; x++){
+				c=GetPixelColor(x,y,false);
+				if (*(long*)&c==*(long*)&ct)
 					AlphaSet(x,y,0);
-	}	}	}
+		}}
+	}
 #endif // CXIMAGE_SUPPORT_ALPHA	// <vho>
 
-	int32_t row_size = max(info.dwEffWidth, info_ptr->width*info_ptr->channels*(info_ptr->bit_depth/8));
-	info_ptr->rowbytes = row_size;
-	uint8_t *row_pointers = new uint8_t[row_size];
-
-	/* write the file information */
-	png_write_info(png_ptr, info_ptr);
-
-	//interlace handling
-	int32_t num_pass = png_set_interlace_handling(png_ptr);
-	for (int32_t pass = 0; pass < num_pass; pass++){
-		//write image
-		iter.Upset();
-		int32_t ay=head.biHeight-1;
-		do	{
 #if CXIMAGE_SUPPORT_ALPHA	// <vho>
+	if (AlphaIsValid()){
+		row_stride = 4 * head.biWidth;
+
+		info_ptr->pixel_depth = 32;
+		info_ptr->channels = 4;
+		info_ptr->bit_depth = 8;
+		info_ptr->color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+		info_ptr->rowbytes = row_stride;
+
+		/* write the file information */
+		png_write_info(png_ptr, info_ptr);
+		
+		//<Ranger> "10+row_stride" fix heap deallocation problem during debug???
+		BYTE *row_pointers = new BYTE[10+row_stride];
+
+		//interlace handling
+		int num_pass = png_set_interlace_handling(png_ptr);
+		for (int pass = 0; pass < num_pass; pass++){
+
+			//write image
+  			iter.Upset();
+			long ay=head.biHeight-1;
 			RGBQUAD c;
-			if (AlphaIsValid()){
-				for (int32_t ax=head.biWidth-1; ax>=0;ax--){
-					c = BlindGetPixelColor(ax,ay);
-					int32_t px = ax * info_ptr->channels;
-					if (!bGrayScale){
-						row_pointers[px++]=c.rgbRed;
-						row_pointers[px++]=c.rgbGreen;
-					}
-					row_pointers[px++]=c.rgbBlue;
-					row_pointers[px] = AlphaGet(ax,ay);
+			do	{
+				for (long ax=head.biWidth-1; ax>=0;ax--){
+					c=GetPixelColor(ax,ay);
+					row_pointers[ax*4+3]=(BYTE)((AlphaGet(ax,ay)*info.nAlphaMax)/255);
+					row_pointers[ax*4+2]=c.rgbBlue;
+					row_pointers[ax*4+1]=c.rgbGreen;
+					row_pointers[ax*4]=c.rgbRed;
 				}
 				png_write_row(png_ptr, row_pointers);
 				ay--;
-			}
-			else
+			} while(iter.PrevRow());
+		}
+		
+		delete [] row_pointers;
+	}
+	else
 #endif //CXIMAGE_SUPPORT_ALPHA	// <vho>
-			{
-				iter.GetRow(row_pointers, row_size);
-				if (info_ptr->color_type == PNG_COLOR_TYPE_RGB) //HACK BY OP
-					RGBtoBGR(row_pointers, row_size);
+	{
+		/* write the file information */
+		png_write_info(png_ptr, info_ptr);
+		/* If you are only writing one row at a time, this works */
+		BYTE *row_pointers = new BYTE[10+row_stride];
+ 
+		//interlace handling
+		int num_pass = png_set_interlace_handling(png_ptr);
+		for (int pass = 0; pass < num_pass; pass++){
+			
+			//write image
+			iter.Upset();
+			do	{
+				iter.GetRow(row_pointers, row_stride);
+				//HACK BY OP
+				if (info_ptr->color_type == 2 /*COLORTYPE_COLOR*/)
+					RGBtoBGR(row_pointers, row_stride);
 				png_write_row(png_ptr, row_pointers);
-			}
-		} while(iter.PrevRow());
+			} while(iter.PrevRow());
+
+		}
+		
+		delete [] row_pointers;
 	}
 
-	delete [] row_pointers;
-	row_pointers = NULL;
-
-	//if necessary, restore the original palette
-	if (!bGrayScale && head.biClrUsed && info.nBkgndIndex>0)
-		SwapIndex((uint8_t)info.nBkgndIndex,0);
+#if CXIMAGE_SUPPORT_ALPHA	// <vho>
+	/* remove the temporary alpha channel*/
+	if (bNeedTempAlpha) AlphaDelete();
+#endif // CXIMAGE_SUPPORT_ALPHA	// <vho>
 
 	/* It is REQUIRED to call this to finish writing the rest of the file */
 	png_write_end(png_ptr, info_ptr);
 
 	/* if you malloced the palette, free it here */
-	if (info_ptr->palette){
-		delete [] (info_ptr->palette);
-		info_ptr->palette = NULL;
-	}
+	if (info_ptr->palette)	delete[] (info_ptr->palette);
 
 	/* clean up after the write, and free any memory allocated */
 	png_destroy_write_struct(&png_ptr, (png_infopp)&info_ptr);
 
-  } cx_catch {
-	if (strcmp(message,"")) strncpy(info.szLastError,message,255);
-	return FALSE;
-  }
 	/* that's it */
 	return TRUE;
 }

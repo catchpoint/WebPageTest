@@ -5,6 +5,7 @@
  * CxImage version 7.0.1 07/Jan/2011
  */
 
+#include "ximage.h"
 #include "ximatga.h"
 
 #if CXIMAGE_SUPPORT_TGA

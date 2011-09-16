@@ -10,8 +10,6 @@
 #if !defined(__ximaICO_h)
 #define __ximaICO_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_ICO
 
 class CxImageICO: public CxImage

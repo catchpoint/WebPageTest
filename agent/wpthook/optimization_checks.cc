@@ -233,7 +233,7 @@ void OptimizationChecks::CheckGzip()
 /*-----------------------------------------------------------------------------
   Protect against malformed images
 -----------------------------------------------------------------------------*/
-static bool DecodeImage(CxImage& img, uint8_t * buffer, DWORD size, DWORD imagetype)
+static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size, DWORD imagetype)
 {
   bool ret = false;
   
@@ -278,7 +278,7 @@ void OptimizationChecks::CheckImageCompression()
         
         CxImage img;
         // Decode the image with an exception protected function.
-        if (DecodeImage(img, (uint8_t*)body.GetData(),
+        if (DecodeImage(img, (BYTE*)body.GetData(),
                         body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
           DWORD type = img.GetType();
           switch( type )
@@ -295,7 +295,7 @@ void OptimizationChecks::CheckImageCompression()
               img.SetCodecOption(16, CXIMAGE_FORMAT_JPG);
               img.SetJpegQuality(85);
               BYTE* mem = NULL;
-              int32_t len = 0;
+              long len = 0;
               if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) ) {
                 img.FreeMemory(mem);
                 targetRequestBytes = (DWORD) len < size ? (DWORD) len: size;

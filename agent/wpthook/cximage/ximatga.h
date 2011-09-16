@@ -12,8 +12,6 @@
 #if !defined(__ximaTGA_h)
 #define __ximaTGA_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_TGA
 
 class CxImageTGA: public CxImage

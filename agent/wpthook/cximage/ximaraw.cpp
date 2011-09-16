@@ -10,6 +10,7 @@
  * Copyright 1997-2007 by Dave Coffin, dcoffin a cybercom o net
  */
 
+#include "ximage.h"
 #include "ximaraw.h"
 
 #if CXIMAGE_SUPPORT_RAW

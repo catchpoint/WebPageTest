@@ -44,11 +44,9 @@ static const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
 static const TCHAR * PROGRESS_DATA_FILE = _T("_progress.csv");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
+static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
-
-static const BYTE JPEG_DEFAULT_QUALITY = 30;
-static const BYTE JPEG_VIDEO_QUALITY = 30;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -141,7 +139,7 @@ void Results::CalculateAFT(void) {
   bool confidence;
   CxImage imgAft;
   aftEngine.Calculate(msAFT, confidence, &imgAft);
-  imgAft.Save(_test._file_base + IMAGE_AFT, CXIMAGE_FORMAT_JPG);
+  imgAft.Save(_test._file_base + IMAGE_AFT, CXIMAGE_FORMAT_PNG);
 
   if (last_image)
     delete last_image;
@@ -185,15 +183,16 @@ void Results::SaveImages(void) {
   CxImage image;
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
     SaveImage(image, _file_base + IMAGE_START_RENDER, true, 
-              JPEG_DEFAULT_QUALITY);
+              _test._image_quality);
   }
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
     SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, true, 
-              JPEG_DEFAULT_QUALITY);
+              _test._image_quality);
   }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
+    image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
     SaveImage(image, _file_base + IMAGE_FULLY_LOADED, true, 
-              JPEG_DEFAULT_QUALITY);
+              _test._image_quality);
   }
 
   if (_test._video)
@@ -237,14 +236,14 @@ void Results::SaveVideo(void) {
         if (ImagesAreDifferent(last_image, img)) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                             image_time);
-          SaveImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+          SaveImage(*img, file_name, false, _test._image_quality);
         }
       } else {
         width = img->GetWidth();
         height = img->GetHeight();
         // always save the first image at time zero
         file_name = _file_base + _T("_progress_0000.jpg");
-        SaveImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+        SaveImage(*img, file_name, false, _test._image_quality);
       }
 
       if (last_image)

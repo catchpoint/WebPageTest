@@ -2,21 +2,18 @@
  * File:	ximajpg.cpp
  * Purpose:	Platform Independent JPEG Image Class Loader and Writer
  * 07/Aug/2001 Davide Pizzolato - www.xdp.it
- * CxImage version 7.0.1 07/Jan/2011
+ * CxImage version 5.99c 17/Oct/2004
  */
  
+#include "ximage.h"
 #include "ximajpg.h"
 
 #if CXIMAGE_SUPPORT_JPG
 
-#ifdef _LINUX
- #include <jmorecfg.h>
-#else
- #include "../jpeg/jmorecfg.h"
-#endif
+#include "jmorecfg.h"
 
 #include "ximaiter.h"
-
+         
 #include <setjmp.h>
 
 struct jpg_error_mgr {
@@ -45,7 +42,7 @@ CxImageJPG::CxImageJPG(): CxImage(CXIMAGE_FORMAT_JPG)
 {
 #if CXIMAGEJPG_SUPPORT_EXIF
 	m_exif = NULL;
-	memset(&info.ExifInfo, 0, sizeof(EXIFINFO));
+	memset(&m_exifinfo, 0, sizeof(EXIFINFO));
 #endif
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,9 +56,9 @@ CxImageJPG::~CxImageJPG()
 #if CXIMAGEJPG_SUPPORT_EXIF
 bool CxImageJPG::DecodeExif(CxFile * hFile)
 {
-	m_exif = new CxExifInfo(&info.ExifInfo);
+	m_exif = new CxExifInfo(&m_exifinfo);
 	if (m_exif){
-		int32_t pos=hFile->Tell();
+		long pos=hFile->Tell();
 		m_exif->DecodeExif(hFile);
 		hFile->Seek(pos,SEEK_SET);
 		return m_exif->m_exifinfo->IsExif;
@@ -69,47 +66,7 @@ bool CxImageJPG::DecodeExif(CxFile * hFile)
 		return false;
 	}
 }
-////////////////////////////////////////////////////////////////////////////////
-bool CxImageJPG::GetExifThumbnail(const TCHAR *filename, const TCHAR *outname, int32_t type)
-{
-  CxIOFile file;
-  if (!file.Open(filename, _T("rb"))) return false;
-	CxExifInfo exif(&info.ExifInfo);
-	exif.DecodeExif(&file);
-  if (info.ExifInfo.IsExif && info.ExifInfo.ThumbnailPointer && info.ExifInfo.ThumbnailSize > 0)
-  { // have a thumbnail - check whether it needs rotating or resizing
-    // TODO: Write a fast routine to read the jpeg header to get the width and height
-    CxImage image(info.ExifInfo.ThumbnailPointer, info.ExifInfo.ThumbnailSize, CXIMAGE_FORMAT_JPG);
-    if (image.IsValid())
-    {
-      if (image.GetWidth() > 256 || image.GetHeight() > 256)
-      { // resize the image
-//        float amount = 256.0f / max(image.GetWidth(), image.GetHeight());
-//        image.Resample((int32_t)(image.GetWidth() * amount), (int32_t)(image.GetHeight() * amount), 0);
-      }
-#if CXIMAGE_SUPPORT_TRANSFORMATION
-      if (info.ExifInfo.Orientation != 1)
-        image.RotateExif(info.ExifInfo.Orientation);
-#endif
-#if CXIMAGE_SUPPORT_ENCODE
-      return image.Save(outname, CXIMAGE_FORMAT_JPG);
-#endif
-    }
-    // nice and fast, but we can't resize :(
-    /*
-    FILE *hFileWrite;
-    if ((hFileWrite=fopen(outname, "wb")) != NULL)
-    {
-      fwrite(m_exifinfo.ThumbnailPointer, m_exifinfo.ThumbnailSize, 1, hFileWrite);
-      fclose(hFileWrite);
-      return true;
-    }*/
-  }
-  return false;
-}
 #endif //CXIMAGEJPG_SUPPORT_EXIF
-////////////////////////////////////////////////////////////////////////////////
-#if CXIMAGE_SUPPORT_DECODE
 ////////////////////////////////////////////////////////////////////////////////
 bool CxImageJPG::Decode(CxFile * hFile)
 {
@@ -129,7 +86,7 @@ bool CxImageJPG::Decode(CxFile * hFile)
 	jerr.buffer=info.szLastError;
 	/* More stuff */
 	JSAMPARRAY buffer;	/* Output row buffer */
-	int32_t row_stride;		/* physical row width in output buffer */
+	int row_stride;		/* physical row width in output buffer */
 
 	/* In this example we want to open the input file before doing anything else,
 	* so that the setjmp() error recovery below can assume the file is open.
@@ -141,8 +98,6 @@ bool CxImageJPG::Decode(CxFile * hFile)
 	/* We set up the normal JPEG error routines, then override error_exit. */
 	cinfo.err = jpeg_std_error(&jerr.pub);
 	jerr.pub.error_exit = ima_jpeg_error_exit;
-
-	CxFileJpg src(hFile);
 
 	/* Establish the setjmp return context for my_error_exit to use. */
 	if (setjmp(jerr.setjmp_buffer)) {
@@ -157,24 +112,24 @@ bool CxImageJPG::Decode(CxFile * hFile)
 
 	/* Step 2: specify data source (eg, a file) */
 	//jpeg_stdio_src(&cinfo, infile);
+	CxFileJpg src(hFile);
     cinfo.src = &src;
 
 	/* Step 3: read file parameters with jpeg_read_header() */
 	(void) jpeg_read_header(&cinfo, TRUE);
 
 	/* Step 4 <chupeev> handle decoder options*/
-	uint32_t dwCodecOptions = GetCodecOption(CXIMAGE_FORMAT_JPG); //[nm_114]
-	if ((dwCodecOptions & DECODE_GRAYSCALE) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & DECODE_GRAYSCALE) != 0)
 		cinfo.out_color_space = JCS_GRAYSCALE;
-	if ((dwCodecOptions & DECODE_QUANTIZE) != 0) {
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & DECODE_QUANTIZE) != 0) {
 		cinfo.quantize_colors = TRUE;
-		cinfo.desired_number_of_colors = GetJpegQuality();
+		cinfo.desired_number_of_colors = info.nQuality;
 	}
-	if ((dwCodecOptions & DECODE_DITHER) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & DECODE_DITHER) != 0)
 		cinfo.dither_mode = m_nDither;
-	if ((dwCodecOptions & DECODE_ONEPASS) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & DECODE_ONEPASS) != 0)
 		cinfo.two_pass_quantize = FALSE;
-	if ((dwCodecOptions & DECODE_NOSMOOTH) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & DECODE_NOSMOOTH) != 0)
 		cinfo.do_fancy_upsampling = FALSE;
 
 //<DP>: Load true color images as RGB (no quantize) 
@@ -185,7 +140,6 @@ bool CxImageJPG::Decode(CxFile * hFile)
  *}
  */ //</DP>
 
-	cinfo.scale_num = 1;
 	// Set the scale <ignacio>
 	cinfo.scale_denom = GetJpegScale();
 
@@ -195,7 +149,6 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		jpeg_calc_output_dimensions(&cinfo);
 		head.biWidth = cinfo.output_width;
 		head.biHeight = cinfo.output_height;
-		info.dwType = CXIMAGE_FORMAT_JPG;
 		jpeg_destroy_decompress(&cinfo);
 		return true;
 	}
@@ -216,23 +169,16 @@ bool CxImageJPG::Decode(CxFile * hFile)
 
 	if (is_exif){
 #if CXIMAGEJPG_SUPPORT_EXIF
-	if ((info.ExifInfo.Xresolution != 0.0) && (info.ExifInfo.ResolutionUnit != 0))
-		SetXDPI((int32_t)(info.ExifInfo.Xresolution/info.ExifInfo.ResolutionUnit));
-	if ((info.ExifInfo.Yresolution != 0.0) && (info.ExifInfo.ResolutionUnit != 0))
-		SetYDPI((int32_t)(info.ExifInfo.Yresolution/info.ExifInfo.ResolutionUnit));
+	if ((m_exifinfo.Xresolution != 0.0) && (m_exifinfo.ResolutionUnit != 0))
+		SetXDPI((long)(m_exifinfo.Xresolution/m_exifinfo.ResolutionUnit));
+	if ((m_exifinfo.Yresolution != 0.0) && (m_exifinfo.ResolutionUnit != 0))
+		SetYDPI((long)(m_exifinfo.Yresolution/m_exifinfo.ResolutionUnit));
 #endif
 	} else {
-		switch (cinfo.density_unit) {
-		case 0:	// [andy] fix for aspect ratio...
-			if((cinfo.Y_density > 0) && (cinfo.X_density > 0)){
-				SetYDPI((int32_t)(GetXDPI()*(float(cinfo.Y_density)/float(cinfo.X_density))));
-			}
-			break;
-		case 2: // [andy] fix: cinfo.X/Y_density is pixels per centimeter
-			SetXDPI((int32_t)floor(cinfo.X_density * 2.54 + 0.5));
-			SetYDPI((int32_t)floor(cinfo.Y_density * 2.54 + 0.5));
-			break;
-		default:
+		if (cinfo.density_unit==2){
+			SetXDPI((long)floor(cinfo.X_density * 254.0 / 10000.0 + 0.5));
+			SetYDPI((long)floor(cinfo.Y_density * 254.0 / 10000.0 + 0.5));
+		} else {
 			SetXDPI(cinfo.X_density);
 			SetYDPI(cinfo.Y_density);
 		}
@@ -242,7 +188,7 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		SetGrayPalette();
 		head.biClrUsed =256;
 	} else {
-		if (cinfo.quantize_colors){
+		if (cinfo.quantize_colors==TRUE){
 			SetPalette(cinfo.actual_number_of_colors, cinfo.colormap[0], cinfo.colormap[1], cinfo.colormap[2]);
 			head.biClrUsed=cinfo.actual_number_of_colors;
 		} else {
@@ -268,17 +214,17 @@ bool CxImageJPG::Decode(CxFile * hFile)
 		if (info.nEscape) longjmp(jerr.setjmp_buffer, 1); // <vho> - cancel decoding
 		
 		(void) jpeg_read_scanlines(&cinfo, buffer, 1);
-		// info.nProgress = (int32_t)(100*cinfo.output_scanline/cinfo.output_height);
+		// info.nProgress = (long)(100*cinfo.output_scanline/cinfo.output_height);
 		//<DP> Step 6a: CMYK->RGB */ 
 		if ((cinfo.num_components==4)&&(cinfo.quantize_colors==FALSE)){
-			uint8_t k,*dst,*src;
+			BYTE k,*dst,*src;
 			dst=iter.GetRow();
 			src=buffer[0];
-			for(int32_t x3=0,x4=0; x3<(int32_t)info.dwEffWidth && x4<row_stride; x3+=3, x4+=4){
+			for(long x3=0,x4=0; x3<(long)info.dwEffWidth && x4<row_stride; x3+=3, x4+=4){
 				k=src[x4+3];
-				dst[x3]  =(uint8_t)((k * src[x4+2])/255);
-				dst[x3+1]=(uint8_t)((k * src[x4+1])/255);
-				dst[x3+2]=(uint8_t)((k * src[x4+0])/255);
+				dst[x3]  =(BYTE)((k * src[x4+2])/255);
+				dst[x3+1]=(BYTE)((k * src[x4+1])/255);
+				dst[x3+2]=(BYTE)((k * src[x4+0])/255);
 			}
 		} else {
 			/* Assume put_scanline_someplace wants a pointer and sample count. */
@@ -296,8 +242,8 @@ bool CxImageJPG::Decode(CxFile * hFile)
 	//<DP> Step 7A: Swap red and blue components
 	// not necessary if swapped red and blue definition in jmorecfg.h;ln322 <W. Morrison>
 	if ((cinfo.num_components==3)&&(cinfo.quantize_colors==FALSE)){
-		uint8_t* r0=GetBits();
-		for(int32_t y=0;y<head.biHeight;y++){
+		BYTE* r0=GetBits();
+		for(long y=0;y<head.biHeight;y++){
 			if (info.nEscape) longjmp(jerr.setjmp_buffer, 1); // <vho> - cancel decoding
 			RGBtoBGR(r0,3*head.biWidth);
 			r0+=info.dwEffWidth;
@@ -316,8 +262,6 @@ bool CxImageJPG::Decode(CxFile * hFile)
 	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
-#endif //CXIMAGE_SUPPORT_DECODE
-////////////////////////////////////////////////////////////////////////////////
 #if CXIMAGE_SUPPORT_ENCODE
 ////////////////////////////////////////////////////////////////////////////////
 bool CxImageJPG::Encode(CxFile * hFile)
@@ -330,7 +274,7 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	}	
 
 	// necessary for EXIF, and for roll backs
-	int32_t pos=hFile->Tell();
+	long pos=hFile->Tell();
 
 	/* This struct contains the JPEG compression parameters and pointers to
 	* working space (which is allocated as needed by the JPEG library).
@@ -344,7 +288,7 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	* (see the second half of this file for an example).  But here we just
 	* take the easy way out and use the standard error handler, which will
 	* print a message on stderr and call exit() if compression fails.
-	* Note that this struct must live as int32_t as the main JPEG parameter
+	* Note that this struct must live as long as the main JPEG parameter
 	* struct, to avoid dangling-pointer problems.
 	*/
 	//struct jpeg_error_mgr jerr;
@@ -352,7 +296,7 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	struct jpg_error_mgr jerr;
 	jerr.buffer=info.szLastError;
 	/* More stuff */
-	int32_t row_stride;		/* physical row width in image buffer */
+	int row_stride;		/* physical row width in image buffer */
 	JSAMPARRAY buffer;		/* Output row buffer */
 
 	/* Step 1: allocate and initialize JPEG compression object */
@@ -414,68 +358,37 @@ bool CxImageJPG::Encode(CxFile * hFile)
 	* Here we just illustrate the use of quality (quantization table) scaling:
 	*/
 
-	uint32_t dwCodecOptions = GetCodecOption(CXIMAGE_FORMAT_JPG); //[nm_114]
 //#ifdef C_ARITH_CODING_SUPPORTED
-	if ((dwCodecOptions & ENCODE_ARITHMETIC) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_ARITHMETIC) != 0)
 		cinfo.arith_code = TRUE;
 //#endif
 
 //#ifdef ENTROPY_OPT_SUPPORTED
-	if ((dwCodecOptions & ENCODE_OPTIMIZE) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_OPTIMIZE) != 0)
 		cinfo.optimize_coding = TRUE;
 //#endif
 
-	if ((dwCodecOptions & ENCODE_GRAYSCALE) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_GRAYSCALE) != 0)
 		jpeg_set_colorspace(&cinfo, JCS_GRAYSCALE);
 
-	if ((dwCodecOptions & ENCODE_SMOOTHING) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_SMOOTHING) != 0)
 		cinfo.smoothing_factor = m_nSmoothing;
 
-	jpeg_set_quality(&cinfo, GetJpegQuality(), (dwCodecOptions & ENCODE_BASELINE) != 0);
+	jpeg_set_quality(&cinfo, GetJpegQuality(), (GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_BASELINE) != 0);
 
 //#ifdef C_PROGRESSIVE_SUPPORTED
-	if ((dwCodecOptions & ENCODE_PROGRESSIVE) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_PROGRESSIVE) != 0)
 		jpeg_simple_progression(&cinfo);
 //#endif
 
 #ifdef C_LOSSLESS_SUPPORTED
-	if ((dwCodecOptions & ENCODE_LOSSLESS) != 0)
+	if ((GetCodecOption(CXIMAGE_FORMAT_JPG) & ENCODE_LOSSLESS) != 0)
 		jpeg_simple_lossless(&cinfo, m_nPredictor, m_nPointTransform);
 #endif
 
-	//SetCodecOption(ENCODE_SUBSAMPLE_444 | GetCodecOption(CXIMAGE_FORMAT_JPG),CXIMAGE_FORMAT_JPG);
-
-		// 2x2, 1x1, 1x1 (4:1:1) : High (default sub sampling)
-		cinfo.comp_info[0].h_samp_factor = 2;
-		cinfo.comp_info[0].v_samp_factor = 2;
-		cinfo.comp_info[1].h_samp_factor = 1;
-		cinfo.comp_info[1].v_samp_factor = 1;
-		cinfo.comp_info[2].h_samp_factor = 1;
-		cinfo.comp_info[2].v_samp_factor = 1;
-
-	if ((dwCodecOptions & ENCODE_SUBSAMPLE_422) != 0){
-		// 2x1, 1x1, 1x1 (4:2:2) : Medium
-		cinfo.comp_info[0].h_samp_factor = 2;
-		cinfo.comp_info[0].v_samp_factor = 1;
-		cinfo.comp_info[1].h_samp_factor = 1;
-		cinfo.comp_info[1].v_samp_factor = 1;
-		cinfo.comp_info[2].h_samp_factor = 1;
-		cinfo.comp_info[2].v_samp_factor = 1;
-	}
-
-	if ((dwCodecOptions & ENCODE_SUBSAMPLE_444) != 0){
-		// 1x1 1x1 1x1 (4:4:4) : None
-		cinfo.comp_info[0].h_samp_factor = 1;
-		cinfo.comp_info[0].v_samp_factor = 1;
-		cinfo.comp_info[1].h_samp_factor = 1;
-		cinfo.comp_info[1].v_samp_factor = 1;
-		cinfo.comp_info[2].h_samp_factor = 1;
-		cinfo.comp_info[2].v_samp_factor = 1;
-	}
-
 	cinfo.density_unit=1;
-	cinfo.X_density=(uint16_t)GetXDPI();
-	cinfo.Y_density=(uint16_t)GetYDPI();
+	cinfo.X_density=(unsigned short)GetXDPI();
+	cinfo.Y_density=(unsigned short)GetYDPI();
 
 	/* Step 4: Start compressor */
 	/* TRUE ensures that we will write a complete interchange-JPEG file.
@@ -500,7 +413,7 @@ bool CxImageJPG::Encode(CxFile * hFile)
 
 	iter.Upset();
 	while (cinfo.next_scanline < cinfo.image_height) {
-		// info.nProgress = (int32_t)(100*cinfo.next_scanline/cinfo.image_height);
+		// info.nProgress = (long)(100*cinfo.next_scanline/cinfo.image_height);
 		iter.GetRow(buffer[0], row_stride);
 		// not necessary if swapped red and blue definition in jmorecfg.h;ln322 <W. Morrison>
 		if (head.biClrUsed==0){				 // swap R & B for RGB images

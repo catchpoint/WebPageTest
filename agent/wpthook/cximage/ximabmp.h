@@ -17,12 +17,10 @@
 #if !defined(__ximaBMP_h)
 #define __ximaBMP_h
 
-#include "ximage.h"
-
-const int32_t RLE_COMMAND     = 0;
-const int32_t RLE_ENDOFLINE   = 0;
-const int32_t RLE_ENDOFBITMAP = 1;
-const int32_t RLE_DELTA       = 2;
+const int RLE_COMMAND     = 0;
+const int RLE_ENDOFLINE   = 0;
+const int RLE_ENDOFBITMAP = 1;
+const int RLE_DELTA       = 2;
 
 #if !defined(BI_RLE8)
  #define BI_RLE8  1L
@@ -60,16 +58,16 @@ protected:
 
 #endif
 
-#define DibWidthBytesN(lpbi, n) (uint32_t)WIDTHBYTES((uint32_t)(lpbi)->biWidth * (uint32_t)(n))
+#define DibWidthBytesN(lpbi, n) (UINT)WIDTHBYTES((UINT)(lpbi)->biWidth * (UINT)(n))
 #define DibWidthBytes(lpbi)     DibWidthBytesN(lpbi, (lpbi)->biBitCount)
 
 #define DibSizeImage(lpbi)      ((lpbi)->biSizeImage == 0 \
-                                    ? ((uint32_t)(uint32_t)DibWidthBytes(lpbi) * (uint32_t)(uint32_t)(lpbi)->biHeight) \
+                                    ? ((DWORD)(UINT)DibWidthBytes(lpbi) * (DWORD)(UINT)(lpbi)->biHeight) \
                                     : (lpbi)->biSizeImage)
 
 #define DibNumColors(lpbi)      ((lpbi)->biClrUsed == 0 && (lpbi)->biBitCount <= 8 \
-                                    ? (int32_t)(1 << (int32_t)(lpbi)->biBitCount)          \
-                                    : (int32_t)(lpbi)->biClrUsed)
+                                    ? (int)(1 << (int)(lpbi)->biBitCount)          \
+                                    : (int)(lpbi)->biClrUsed)
 
 #define FixBitmapInfo(lpbi)     if ((lpbi)->biSizeImage == 0)                 \
 												(lpbi)->biSizeImage = DibSizeImage(lpbi); \

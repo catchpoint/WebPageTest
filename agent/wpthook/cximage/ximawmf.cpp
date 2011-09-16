@@ -45,6 +45,7 @@
 *********************************************************************
 */
 
+#include "ximage.h"
 #include "ximawmf.h"
 
 #if CXIMAGE_SUPPORT_WMF && CXIMAGE_SUPPORT_WINDOWS

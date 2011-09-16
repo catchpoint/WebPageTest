@@ -12,6 +12,7 @@
  * Send feedback to vitaly(dot)ovchinnikov(at)gmail.com
  */
 
+#include "ximage.h"
 #include "ximapsd.h"
 
 #if CXIMAGE_SUPPORT_PSD

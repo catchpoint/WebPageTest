@@ -43,9 +43,6 @@
     <ClCompile Include="zlib\deflate.c">
       <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="zlib\gzio.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="zlib\infback.c">
       <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
@@ -93,6 +90,18 @@
     </ClCompile>
     <ClCompile Include="web_page_replay.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzclose.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzlib.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzread.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzwrite.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -265,3 +265,4 @@ bool HashFile(LPCTSTR file, CString& hash) {
 
   return ret;
 }
+

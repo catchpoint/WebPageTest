@@ -37,6 +37,8 @@ static const DWORD AFT_EARLY_CUTOFF_SECS = 25;
 static const DWORD AFT_MIN_CHANGES_THRESHOLD = 100;
 static const DWORD AFT_TIMEOUT = 240000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
+static const BYTE JPEG_DEFAULT_QUALITY = 30;
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -97,6 +99,8 @@ void WptTest::Reset(void) {
   _log_data = true;
   _sleep_end.QuadPart = 0;
   _combine_steps = 0;
+  _image_quality = JPEG_DEFAULT_QUALITY;
+  _png_screen_shot = false;
   _upload_incremental_results = true;
   _user_agent.Empty();
   _add_headers.RemoveAll();
@@ -165,6 +169,11 @@ bool WptTest::Load(CString& test) {
           _browser = value.Trim();
         else if (!key.CompareNoCase(_T("Basic Auth")))
           _basic_auth = value.Trim();
+        else if (!key.CompareNoCase(_T("imageQuality")))
+          _image_quality = (BYTE)max(_image_quality, 
+                                     min(100, _ttoi(value.Trim())));
+        else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
+          _png_screen_shot = true;
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script

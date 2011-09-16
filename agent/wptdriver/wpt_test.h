@@ -137,6 +137,8 @@ public:
   bool    _log_data;
   DWORD   _test_timeout;
   DWORD   _measurement_timeout;
+  BYTE    _image_quality;
+  bool    _png_screen_shot;
   
   // current state
   int     _run;

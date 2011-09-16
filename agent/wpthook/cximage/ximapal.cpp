@@ -1,6 +1,6 @@
 // xImaPal.cpp : Palette and Pixel functions
 /* 07/08/2001 v1.00 - Davide Pizzolato - www.xdp.it
- * CxImage version 7.0.1 07/Jan/2011
+ * CxImage version 5.99c 17/Oct/2004
  */
 
 #include "ximage.h"
@@ -9,51 +9,51 @@
 /**
  * returns the palette dimension in byte
  */
-uint32_t CxImage::GetPaletteSize()
+DWORD CxImage::GetPaletteSize()
 {
 	return (head.biClrUsed * sizeof(RGBQUAD));
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPaletteColor(uint8_t idx, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha)
+void CxImage::SetPaletteColor(BYTE idx, BYTE r, BYTE g, BYTE b, BYTE alpha)
 {
 	if ((pDib)&&(head.biClrUsed)){
-		uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
+		BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
 		if (idx<head.biClrUsed){
-			int32_t ldx=idx*sizeof(RGBQUAD);
-			iDst[ldx++] = (uint8_t) b;
-			iDst[ldx++] = (uint8_t) g;
-			iDst[ldx++] = (uint8_t) r;
-			iDst[ldx] = (uint8_t) alpha;
+			long ldx=idx*sizeof(RGBQUAD);
+			iDst[ldx++] = (BYTE) b;
+			iDst[ldx++] = (BYTE) g;
+			iDst[ldx++] = (BYTE) r;
+			iDst[ldx] = (BYTE) alpha;
 			info.last_c_isvalid = false;
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPaletteColor(uint8_t idx, RGBQUAD c)
+void CxImage::SetPaletteColor(BYTE idx, RGBQUAD c)
 {
 	if ((pDib)&&(head.biClrUsed)){
-		uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
+		BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
 		if (idx<head.biClrUsed){
-			int32_t ldx=idx*sizeof(RGBQUAD);
-			iDst[ldx++] = (uint8_t) c.rgbBlue;
-			iDst[ldx++] = (uint8_t) c.rgbGreen;
-			iDst[ldx++] = (uint8_t) c.rgbRed;
-			iDst[ldx] = (uint8_t) c.rgbReserved;
+			long ldx=idx*sizeof(RGBQUAD);
+			iDst[ldx++] = (BYTE) c.rgbBlue;
+			iDst[ldx++] = (BYTE) c.rgbGreen;
+			iDst[ldx++] = (BYTE) c.rgbRed;
+			iDst[ldx] = (BYTE) c.rgbReserved;
 			info.last_c_isvalid = false;
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPaletteColor(uint8_t idx, COLORREF cr)
+void CxImage::SetPaletteColor(BYTE idx, COLORREF cr)
 {
 	if ((pDib)&&(head.biClrUsed)){
-		uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
+		BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
 		if (idx<head.biClrUsed){
-			int32_t ldx=idx*sizeof(RGBQUAD);
-			iDst[ldx++] = (uint8_t) GetBValue(cr);
-			iDst[ldx++] = (uint8_t) GetGValue(cr);
-			iDst[ldx++] = (uint8_t) GetRValue(cr);
-			iDst[ldx] = (uint8_t) 0;
+			long ldx=idx*sizeof(RGBQUAD);
+			iDst[ldx++] = (BYTE) GetBValue(cr);
+			iDst[ldx++] = (BYTE) GetGValue(cr);
+			iDst[ldx++] = (BYTE) GetRValue(cr);
+			iDst[ldx] = (BYTE) 0;
 			info.last_c_isvalid = false;
 		}
 	}
@@ -65,20 +65,20 @@ void CxImage::SetPaletteColor(uint8_t idx, COLORREF cr)
 RGBQUAD* CxImage::GetPalette() const
 {
 	if ((pDib)&&(head.biClrUsed))
-		return (RGBQUAD*)((uint8_t*)pDib + sizeof(BITMAPINFOHEADER));
+		return (RGBQUAD*)((BYTE*)pDib + sizeof(BITMAPINFOHEADER));
 	return NULL;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Returns the color of the specified index.
  */
-RGBQUAD CxImage::GetPaletteColor(uint8_t idx)
+RGBQUAD CxImage::GetPaletteColor(BYTE idx)
 {
 	RGBQUAD rgb = {0,0,0,0};
 	if ((pDib)&&(head.biClrUsed)){
-		uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
+		BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
 		if (idx<head.biClrUsed){
-			int32_t ldx=idx*sizeof(RGBQUAD);
+			long ldx=idx*sizeof(RGBQUAD);
 			rgb.rgbBlue = iDst[ldx++];
 			rgb.rgbGreen=iDst[ldx++];
 			rgb.rgbRed =iDst[ldx++];
@@ -91,84 +91,79 @@ RGBQUAD CxImage::GetPaletteColor(uint8_t idx)
 /**
  * Returns the palette index of the specified pixel.
  */
-uint8_t CxImage::GetPixelIndex(int32_t x,int32_t y)
+BYTE CxImage::GetPixelIndex(long x,long y)
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return 0;
 
 	if ((x<0)||(y<0)||(x>=head.biWidth)||(y>=head.biHeight)) {
-		if (info.nBkgndIndex >= 0)	return (uint8_t)info.nBkgndIndex;
+		if (info.nBkgndIndex != -1)	return (BYTE)info.nBkgndIndex;
 		else return *info.pImage;
 	}
 	if (head.biBitCount==8){
 		return info.pImage[y*info.dwEffWidth + x];
 	} else {
-		uint8_t pos;
-		uint8_t iDst= info.pImage[y*info.dwEffWidth + (x*head.biBitCount >> 3)];
+		BYTE pos;
+		BYTE iDst= info.pImage[y*info.dwEffWidth + (x*head.biBitCount >> 3)];
 		if (head.biBitCount==4){
-			pos = (uint8_t)(4*(1-x%2));
+			pos = (BYTE)(4*(1-x%2));
 			iDst &= (0x0F<<pos);
-			return (uint8_t)(iDst >> pos);
+			return (BYTE)(iDst >> pos);
 		} else if (head.biBitCount==1){
-			pos = (uint8_t)(7-x%8);
+			pos = (BYTE)(7-x%8);
 			iDst &= (0x01<<pos);
-			return (uint8_t)(iDst >> pos);
+			return (BYTE)(iDst >> pos);
 		}
 	}
 	return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t CxImage::BlindGetPixelIndex(const int32_t x,const int32_t y)
+BYTE CxImage::BlindGetPixelIndex(const long x,const long y)
 {
 #ifdef _DEBUG
-	if ((pDib==NULL) || (head.biClrUsed==0) || !IsInside(x,y))
-  #if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
-		throw 0;
-  #else
-		return 0;
-  #endif
+	if ((pDib==NULL) || (head.biClrUsed==0) || !IsInside(x,y)) throw 0;
 #endif
 
 	if (head.biBitCount==8){
 		return info.pImage[y*info.dwEffWidth + x];
 	} else {
-		uint8_t pos;
-		uint8_t iDst= info.pImage[y*info.dwEffWidth + (x*head.biBitCount >> 3)];
+		BYTE pos;
+		BYTE iDst= info.pImage[y*info.dwEffWidth + (x*head.biBitCount >> 3)];
 		if (head.biBitCount==4){
-			pos = (uint8_t)(4*(1-x%2));
+			pos = (BYTE)(4*(1-x%2));
 			iDst &= (0x0F<<pos);
-			return (uint8_t)(iDst >> pos);
+			return (BYTE)(iDst >> pos);
 		} else if (head.biBitCount==1){
-			pos = (uint8_t)(7-x%8);
+			pos = (BYTE)(7-x%8);
 			iDst &= (0x01<<pos);
-			return (uint8_t)(iDst >> pos);
+			return (BYTE)(iDst >> pos);
 		}
 	}
 	return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
-RGBQUAD CxImage::GetPixelColor(int32_t x,int32_t y, bool bGetAlpha)
+RGBQUAD CxImage::GetPixelColor(long x,long y, bool bGetAlpha)
 {
 //	RGBQUAD rgb={0,0,0,0};
 	RGBQUAD rgb=info.nBkgndColor; //<mpwolski>
 	if ((pDib==NULL)||(x<0)||(y<0)||
 		(x>=head.biWidth)||(y>=head.biHeight)){
-		if (info.nBkgndIndex >= 0){
-			if (head.biBitCount<24) return GetPaletteColor((uint8_t)info.nBkgndIndex);
+		if (info.nBkgndIndex != -1){
+			if (head.biBitCount<24) return GetPaletteColor((BYTE)info.nBkgndIndex);
 			else return info.nBkgndColor;
 		} else if (pDib) return GetPixelColor(0,0);
 		return rgb;
 	}
 
 	if (head.biClrUsed){
-		rgb = GetPaletteColor(BlindGetPixelIndex(x,y));
+		rgb = GetPaletteColor(GetPixelIndex(x,y));
 	} else {
-		uint8_t* iDst  = info.pImage + y*info.dwEffWidth + x*3;
+		BYTE* iDst  = info.pImage + y*info.dwEffWidth + x*3;
 		rgb.rgbBlue = *iDst++;
 		rgb.rgbGreen= *iDst++;
 		rgb.rgbRed  = *iDst;
 	}
 #if CXIMAGE_SUPPORT_ALPHA
-	if (pAlpha && bGetAlpha) rgb.rgbReserved = BlindAlphaGet(x,y);
+	if (pAlpha && bGetAlpha) rgb.rgbReserved = AlphaGet(x,y);
 #else
 	rgb.rgbReserved = 0;
 #endif //CXIMAGE_SUPPORT_ALPHA
@@ -183,74 +178,36 @@ RGBQUAD CxImage::GetPixelColor(int32_t x,int32_t y, bool bGetAlpha)
  * In DEBUG mode an exception will be thrown, and data will be violated in non-DEBUG mode. 
  * \author ***bd*** 2.2004
  */
-RGBQUAD CxImage::BlindGetPixelColor(const int32_t x,const int32_t y, bool bGetAlpha)
+RGBQUAD CxImage::BlindGetPixelColor(const long x,const long y)
 {
   RGBQUAD rgb;
 #ifdef _DEBUG
-	if ((pDib==NULL) || !IsInside(x,y))
-  #if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
-		throw 0;
-  #else
-		{rgb.rgbReserved = 0; return rgb;}
-  #endif
+	if ((pDib==NULL) || !IsInside(x,y)) throw 0;
 #endif
 
 	if (head.biClrUsed){
-		rgb = GetPaletteColor(BlindGetPixelIndex(x,y));
-	} else {
-		uint8_t* iDst  = info.pImage + y*info.dwEffWidth + x*3;
-		rgb.rgbBlue = *iDst++;
-		rgb.rgbGreen= *iDst++;
-		rgb.rgbRed  = *iDst;
-		rgb.rgbReserved = 0; //needed for images without alpha layer
+		return GetPaletteColor(BlindGetPixelIndex(x,y));
 	}
+
+	BYTE* iDst  = info.pImage + y*info.dwEffWidth + x*3;
+	rgb.rgbBlue = *iDst++;
+	rgb.rgbGreen= *iDst++;
+	rgb.rgbRed  = *iDst;
 #if CXIMAGE_SUPPORT_ALPHA
-	if (pAlpha && bGetAlpha) rgb.rgbReserved = BlindAlphaGet(x,y);
+	if (pAlpha) rgb.rgbReserved = pAlpha[x+y*head.biWidth];
 #else
 	rgb.rgbReserved = 0;
 #endif //CXIMAGE_SUPPORT_ALPHA
 	return rgb;
 }
 ////////////////////////////////////////////////////////////////////////////////
-uint8_t CxImage::GetPixelGray(int32_t x, int32_t y)
+BYTE CxImage::GetPixelGray(long x, long y)
 {
 	RGBQUAD color = GetPixelColor(x,y);
-	return (uint8_t)RGB2GRAY(color.rgbRed,color.rgbGreen,color.rgbBlue);
+	return (BYTE)RGB2GRAY(color.rgbRed,color.rgbGreen,color.rgbBlue);
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::BlindSetPixelIndex(int32_t x,int32_t y,uint8_t i)
-{
-#ifdef _DEBUG
-	if ((pDib==NULL)||(head.biClrUsed==0)||
-		(x<0)||(y<0)||(x>=head.biWidth)||(y>=head.biHeight))
-  #if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
-		throw 0;
-  #else
-		return;
-  #endif
-#endif
-
-	if (head.biBitCount==8){
-		info.pImage[y*info.dwEffWidth + x]=i;
-		return;
-	} else {
-		uint8_t pos;
-		uint8_t* iDst= info.pImage + y*info.dwEffWidth + (x*head.biBitCount >> 3);
-		if (head.biBitCount==4){
-			pos = (uint8_t)(4*(1-x%2));
-			*iDst &= ~(0x0F<<pos);
-			*iDst |= ((i & 0x0F)<<pos);
-			return;
-		} else if (head.biBitCount==1){
-			pos = (uint8_t)(7-x%8);
-			*iDst &= ~(0x01<<pos);
-			*iDst |= ((i & 0x01)<<pos);
-			return;
-		}
-	}
-}
-////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPixelIndex(int32_t x,int32_t y,uint8_t i)
+void CxImage::SetPixelIndex(long x,long y,BYTE i)
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)||
 		(x<0)||(y<0)||(x>=head.biWidth)||(y>=head.biHeight)) return ;
@@ -259,15 +216,15 @@ void CxImage::SetPixelIndex(int32_t x,int32_t y,uint8_t i)
 		info.pImage[y*info.dwEffWidth + x]=i;
 		return;
 	} else {
-		uint8_t pos;
-		uint8_t* iDst= info.pImage + y*info.dwEffWidth + (x*head.biBitCount >> 3);
+		BYTE pos;
+		BYTE* iDst= info.pImage + y*info.dwEffWidth + (x*head.biBitCount >> 3);
 		if (head.biBitCount==4){
-			pos = (uint8_t)(4*(1-x%2));
+			pos = (BYTE)(4*(1-x%2));
 			*iDst &= ~(0x0F<<pos);
 			*iDst |= ((i & 0x0F)<<pos);
 			return;
 		} else if (head.biBitCount==1){
-			pos = (uint8_t)(7-x%8);
+			pos = (BYTE)(7-x%8);
 			*iDst &= ~(0x01<<pos);
 			*iDst |= ((i & 0x01)<<pos);
 			return;
@@ -275,50 +232,26 @@ void CxImage::SetPixelIndex(int32_t x,int32_t y,uint8_t i)
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPixelColor(int32_t x,int32_t y,COLORREF cr)
+void CxImage::SetPixelColor(long x,long y,COLORREF cr)
 {
 	SetPixelColor(x,y,RGBtoRGBQUAD(cr));
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::BlindSetPixelColor(int32_t x,int32_t y,RGBQUAD c, bool bSetAlpha)
-{
-#ifdef _DEBUG
-	if ((pDib==NULL)||(x<0)||(y<0)||
-		(x>=head.biWidth)||(y>=head.biHeight))
-  #if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
-		throw 0;
-  #else
-		return;
-  #endif
-#endif
-	if (head.biClrUsed)
-		BlindSetPixelIndex(x,y,GetNearestIndex(c));
-	else {
-		uint8_t* iDst = info.pImage + y*info.dwEffWidth + x*3;
-		*iDst++ = c.rgbBlue;
-		*iDst++ = c.rgbGreen;
-		*iDst   = c.rgbRed;
-	}
-#if CXIMAGE_SUPPORT_ALPHA
-	if (bSetAlpha) AlphaSet(x,y,c.rgbReserved);
-#endif //CXIMAGE_SUPPORT_ALPHA
-}
-////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPixelColor(int32_t x,int32_t y,RGBQUAD c, bool bSetAlpha)
+void CxImage::SetPixelColor(long x,long y,RGBQUAD c, bool bSetAlpha)
 {
 	if ((pDib==NULL)||(x<0)||(y<0)||
 		(x>=head.biWidth)||(y>=head.biHeight)) return;
 	if (head.biClrUsed)
-		BlindSetPixelIndex(x,y,GetNearestIndex(c));
+		SetPixelIndex(x,y,GetNearestIndex(c));
 	else {
-		uint8_t* iDst = info.pImage + y*info.dwEffWidth + x*3;
+		BYTE* iDst = info.pImage + y*info.dwEffWidth + x*3;
 		*iDst++ = c.rgbBlue;
 		*iDst++ = c.rgbGreen;
 		*iDst   = c.rgbRed;
-	}
 #if CXIMAGE_SUPPORT_ALPHA
-	if (bSetAlpha) AlphaSet(x,y,c.rgbReserved);
+		if (bSetAlpha) AlphaSet(x,y,c.rgbReserved);
 #endif //CXIMAGE_SUPPORT_ALPHA
+	}
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -328,23 +261,23 @@ void CxImage::SetPixelColor(int32_t x,int32_t y,RGBQUAD c, bool bSetAlpha)
  * \param blend = can be from 0 (no effect) to 1 (full effect).
  * \param bSetAlpha = if true, blends also the alpha component stored in c.rgbReserved
  */
-void CxImage::BlendPixelColor(int32_t x,int32_t y,RGBQUAD c, float blend, bool bSetAlpha)
+void CxImage::BlendPixelColor(long x,long y,RGBQUAD c, float blend, bool bSetAlpha)
 {
 	if ((pDib==NULL)||(x<0)||(y<0)||
 		(x>=head.biWidth)||(y>=head.biHeight)) return;
 
-	int32_t a0 = (int32_t)(256*blend);
-	int32_t a1 = 256 - a0;
+	int a0 = (int)(256*blend);
+	int a1 = 256 - a0;
 
 	RGBQUAD c0 = BlindGetPixelColor(x,y);
-	c.rgbRed  = (uint8_t)((c.rgbRed * a0 + c0.rgbRed * a1)>>8);
-	c.rgbBlue  = (uint8_t)((c.rgbBlue * a0 + c0.rgbBlue * a1)>>8);
-	c.rgbGreen  = (uint8_t)((c.rgbGreen * a0 + c0.rgbGreen * a1)>>8);
+	c.rgbRed  = (BYTE)((c.rgbRed * a0 + c0.rgbRed * a1)>>8);
+	c.rgbBlue  = (BYTE)((c.rgbBlue * a0 + c0.rgbBlue * a1)>>8);
+	c.rgbGreen  = (BYTE)((c.rgbGreen * a0 + c0.rgbGreen * a1)>>8);
 
 	if (head.biClrUsed)
-		BlindSetPixelIndex(x,y,GetNearestIndex(c));
+		SetPixelIndex(x,y,GetNearestIndex(c));
 	else {
-		uint8_t* iDst = info.pImage + y*info.dwEffWidth + x*3;
+		BYTE* iDst = info.pImage + y*info.dwEffWidth + x*3;
 		*iDst++ = c.rgbBlue;
 		*iDst++ = c.rgbGreen;
 		*iDst   = c.rgbRed;
@@ -357,20 +290,20 @@ void CxImage::BlendPixelColor(int32_t x,int32_t y,RGBQUAD c, float blend, bool b
 /**
  * Returns the best palette index that matches a specified color.
  */
-uint8_t CxImage::GetNearestIndex(RGBQUAD c)
+BYTE CxImage::GetNearestIndex(RGBQUAD c)
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return 0;
 
 	// <RJ> check matching with the previous result
-	if (info.last_c_isvalid && (*(int32_t*)&info.last_c == *(int32_t*)&c)) return info.last_c_index;
+	if (info.last_c_isvalid && (*(long*)&info.last_c == *(long*)&c)) return info.last_c_index;
 	info.last_c = c;
 	info.last_c_isvalid = true;
 
-	uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
-	int32_t distance=200000;
-	int32_t i,j = 0;
-	int32_t k,l;
-	int32_t m = (int32_t)(head.biClrImportant==0 ? head.biClrUsed : head.biClrImportant);
+	BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
+	long distance=200000;
+	int i,j = 0;
+	long k,l;
+	int m = (int)(head.biClrImportant==0 ? head.biClrUsed : head.biClrImportant);
 	for(i=0,l=0;i<m;i++,l+=sizeof(RGBQUAD)){
 		k = (iDst[l]-c.rgbBlue)*(iDst[l]-c.rgbBlue)+
 			(iDst[l+1]-c.rgbGreen)*(iDst[l+1]-c.rgbGreen)+
@@ -385,8 +318,8 @@ uint8_t CxImage::GetNearestIndex(RGBQUAD c)
 			j=i;
 		}
 	}
-	info.last_c_index = (uint8_t)j;
-	return (uint8_t)j;
+	info.last_c_index = j;
+	return (BYTE)j;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -394,13 +327,12 @@ uint8_t CxImage::GetNearestIndex(RGBQUAD c)
  * \param buffer : pointer to the pixels
  * \param length : number of bytes to swap. lenght may not exceed the scan line.
  */
-void CxImage::RGBtoBGR(uint8_t *buffer, int32_t length)
+void CxImage::RGBtoBGR(BYTE *buffer, int length)
 {
 	if (buffer && (head.biClrUsed==0)){
-		uint8_t temp;
-		length = min(length,(int32_t)info.dwEffWidth);
-		length = min(length,(int32_t)(3*head.biWidth));
-		for (int32_t i=0;i<length;i+=3){
+		BYTE temp;
+		length = min(length,(int)info.dwEffWidth);
+		for (int i=0;i<length;i+=3){
 			temp = buffer[i]; buffer[i] = buffer[i+2]; buffer[i+2] = temp;
 		}
 	}
@@ -409,7 +341,7 @@ void CxImage::RGBtoBGR(uint8_t *buffer, int32_t length)
 RGBQUAD CxImage::RGBtoRGBQUAD(COLORREF cr)
 {
 	RGBQUAD c;
-	c.rgbRed = GetRValue(cr);	/* get R, G, and B out of uint32_t */
+	c.rgbRed = GetRValue(cr);	/* get R, G, and B out of DWORD */
 	c.rgbGreen = GetGValue(cr);
 	c.rgbBlue = GetBValue(cr);
 	c.rgbReserved=0;
@@ -426,7 +358,7 @@ COLORREF CxImage::RGBQUADtoRGB (RGBQUAD c)
  * \param i = palette index
  * \param r, g, b = output color channels
  */
-bool CxImage::GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b)
+bool CxImage::GetPaletteColor(BYTE i, BYTE* r, BYTE* g, BYTE* b)
 {
 	RGBQUAD* ppal=GetPalette();
 	if (ppal) {
@@ -438,14 +370,14 @@ bool CxImage::GetPaletteColor(uint8_t i, uint8_t* r, uint8_t* g, uint8_t* b)
 	return false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
+void CxImage::SetPalette(DWORD n, BYTE *r, BYTE *g, BYTE *b)
 {
 	if ((!r)||(pDib==NULL)||(head.biClrUsed==0)) return;
 	if (!g) g = r;
 	if (!b) b = g;
 	RGBQUAD* ppal=GetPalette();
-	uint32_t m=min(n,head.biClrUsed);
-	for (uint32_t i=0; i<m;i++){
+	DWORD m=min(n,head.biClrUsed);
+	for (DWORD i=0; i<m;i++){
 		ppal[i].rgbRed=r[i];
 		ppal[i].rgbGreen=g[i];
 		ppal[i].rgbBlue=b[i];
@@ -453,12 +385,12 @@ void CxImage::SetPalette(uint32_t n, uint8_t *r, uint8_t *g, uint8_t *b)
 	info.last_c_isvalid = false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
+void CxImage::SetPalette(rgb_color *rgb,DWORD nColors)
 {
 	if ((!rgb)||(pDib==NULL)||(head.biClrUsed==0)) return;
 	RGBQUAD* ppal=GetPalette();
-	uint32_t m=min(nColors,head.biClrUsed);
-	for (uint32_t i=0; i<m;i++){
+	DWORD m=min(nColors,head.biClrUsed);
+	for (DWORD i=0; i<m;i++){
 		ppal[i].rgbRed=rgb[i].r;
 		ppal[i].rgbGreen=rgb[i].g;
 		ppal[i].rgbBlue=rgb[i].b;
@@ -466,7 +398,7 @@ void CxImage::SetPalette(rgb_color *rgb,uint32_t nColors)
 	info.last_c_isvalid = false;
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::SetPalette(RGBQUAD* pPal,uint32_t nColors)
+void CxImage::SetPalette(RGBQUAD* pPal,DWORD nColors)
 {
 	if ((pPal==NULL)||(pDib==NULL)||(head.biClrUsed==0)) return;
 	memcpy(GetPalette(),pPal,min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
@@ -482,28 +414,28 @@ void CxImage::SetGrayPalette()
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return;
 	RGBQUAD* pal=GetPalette();
-	for (uint32_t ni=0;ni<head.biClrUsed;ni++)
-		pal[ni].rgbBlue=pal[ni].rgbGreen = pal[ni].rgbRed = (uint8_t)(ni*(255/(head.biClrUsed-1)));
+	for (DWORD ni=0;ni<head.biClrUsed;ni++)
+		pal[ni].rgbBlue=pal[ni].rgbGreen = pal[ni].rgbRed = (BYTE)(ni*(255/(head.biClrUsed-1)));
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Colorize the palette.
  * \sa Colorize
  */
-void CxImage::BlendPalette(COLORREF cr,int32_t perc)
+void CxImage::BlendPalette(COLORREF cr,long perc)
 {
 	if ((pDib==NULL)||(head.biClrUsed==0)) return;
-	uint8_t* iDst = (uint8_t*)(pDib) + sizeof(BITMAPINFOHEADER);
-	uint32_t i,r,g,b;
+	BYTE* iDst = (BYTE*)(pDib) + sizeof(BITMAPINFOHEADER);
+	DWORD i,r,g,b;
 	RGBQUAD* pPal=(RGBQUAD*)iDst;
 	r = GetRValue(cr);
 	g = GetGValue(cr);
 	b = GetBValue(cr);
 	if (perc>100) perc=100;
 	for(i=0;i<head.biClrUsed;i++){
-		pPal[i].rgbBlue=(uint8_t)((pPal[i].rgbBlue*(100-perc)+b*perc)/100);
-		pPal[i].rgbGreen =(uint8_t)((pPal[i].rgbGreen*(100-perc)+g*perc)/100);
-		pPal[i].rgbRed =(uint8_t)((pPal[i].rgbRed*(100-perc)+r*perc)/100);
+		pPal[i].rgbBlue=(BYTE)((pPal[i].rgbBlue*(100-perc)+b*perc)/100);
+		pPal[i].rgbGreen =(BYTE)((pPal[i].rgbGreen*(100-perc)+g*perc)/100);
+		pPal[i].rgbRed =(BYTE)((pPal[i].rgbRed*(100-perc)+r*perc)/100);
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -514,7 +446,7 @@ bool CxImage::IsGrayScale()
 {
 	RGBQUAD* ppal=GetPalette();
 	if(!(pDib && ppal && head.biClrUsed)) return false;
-	for(uint32_t i=0;i<head.biClrUsed;i++){
+	for(DWORD i=0;i<head.biClrUsed;i++){
 		if (ppal[i].rgbBlue!=i || ppal[i].rgbGreen!=i || ppal[i].rgbRed!=i) return false;
 	}
 	return true;
@@ -523,7 +455,7 @@ bool CxImage::IsGrayScale()
 /**
  * swap two indexes in the image and their colors in the palette
  */
-void CxImage::SwapIndex(uint8_t idx1, uint8_t idx2)
+void CxImage::SwapIndex(BYTE idx1, BYTE idx2)
 {
 	RGBQUAD* ppal=GetPalette();
 	if(!(pDib && ppal)) return;
@@ -532,38 +464,17 @@ void CxImage::SwapIndex(uint8_t idx1, uint8_t idx2)
 	SetPaletteColor(idx1,GetPaletteColor(idx2));
 	SetPaletteColor(idx2,tempRGB);
 	//swap the pixels
-	uint8_t idx;
-	for(int32_t y=0; y < head.biHeight; y++){
-		for(int32_t x=0; x < head.biWidth; x++){
-			idx=BlindGetPixelIndex(x,y);
-			if (idx==idx1) BlindSetPixelIndex(x,y,idx2);
-			if (idx==idx2) BlindSetPixelIndex(x,y,idx1);
+	BYTE idx;
+	for(long y=0; y < head.biHeight; y++){
+		for(long x=0; x <= head.biWidth; x++){
+			idx=GetPixelIndex(x,y);
+			if (idx==idx1) SetPixelIndex(x,y,idx2);
+			if (idx==idx2) SetPixelIndex(x,y,idx1);
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * swap Red and Blue colors
- */
-void CxImage::SwapRGB2BGR()
-{
-	if (!pDib) return;
-
-	if (head.biClrUsed){
-		RGBQUAD* ppal=GetPalette();
-		uint8_t b;
-		if(!ppal) return;
-		for(uint16_t a=0;a<head.biClrUsed;a++){
-			b=ppal[a].rgbBlue; ppal[a].rgbBlue=ppal[a].rgbRed; ppal[a].rgbRed=b;
-		}
-	} else {
-		for(int32_t y=0;y<head.biHeight;y++){
-			RGBtoBGR(GetBits(y),3*head.biWidth);
-		}
-	}
-}
-////////////////////////////////////////////////////////////////////////////////
-bool CxImage::IsTransparent(int32_t x, int32_t y)
+bool CxImage::IsTransparent(long x, long y)
 {
 	if (!pDib) return false;
 
@@ -573,7 +484,7 @@ bool CxImage::IsTransparent(int32_t x, int32_t y)
 		} else {
 			RGBQUAD ct = info.nBkgndColor;
 			RGBQUAD c = GetPixelColor(x,y,false);
-			if (*(int32_t*)&c==*(int32_t*)&ct) return true;
+			if (*(long*)&c==*(long*)&ct) return true;
 		}
 	}
 
@@ -582,29 +493,6 @@ bool CxImage::IsTransparent(int32_t x, int32_t y)
 #endif
 
 	return false;
-}
-////////////////////////////////////////////////////////////////////////////////
-bool CxImage::GetTransparentMask(CxImage* iDst)
-{
-	if (!pDib) return false;
-
-	CxImage tmp;
-	tmp.Create(head.biWidth, head.biHeight, 1, GetType());
-	tmp.SetStdPalette();
-	tmp.Clear(0);
-
-	for(int32_t y=0; y<head.biHeight; y++){
-		for(int32_t x=0; x<head.biWidth; x++){
-			if (IsTransparent(x,y)){
-				tmp.BlindSetPixelIndex(x,y,1);
-			}
-		}
-	}
-
-	if (iDst) iDst->Transfer(tmp);
-	else Transfer(tmp);
-
-	return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -620,9 +508,9 @@ bool CxImage::IsSamePalette(CxImage &img, bool bCheckAlpha)
 		return false;
 
 	RGBQUAD c1,c2;
-	for (uint32_t n=0; n<head.biClrUsed; n++){
-		c1 = GetPaletteColor((uint8_t)n);
-		c2 = img.GetPaletteColor((uint8_t)n);
+	for (DWORD n=0; n<head.biClrUsed; n++){
+		c1 = GetPaletteColor((BYTE)n);
+		c2 = img.GetPaletteColor((BYTE)n);
 		if (c1.rgbRed != c2.rgbRed) return false;
 		if (c1.rgbBlue != c2.rgbBlue) return false;
 		if (c1.rgbGreen != c2.rgbGreen) return false;
@@ -634,7 +522,7 @@ bool CxImage::IsSamePalette(CxImage &img, bool bCheckAlpha)
 /**
  * \sa SetClrImportant
  */
-uint32_t CxImage::GetClrImportant() const
+DWORD CxImage::GetClrImportant() const
 {
 	return head.biClrImportant;
 }
@@ -645,7 +533,7 @@ uint32_t CxImage::GetClrImportant() const
  * \param ncolors should be less than 2^bpp,
  * or 0 if all the colors are important.
  */
-void CxImage::SetClrImportant(uint32_t ncolors)
+void CxImage::SetClrImportant(DWORD ncolors)
 {
 	if (ncolors==0 || ncolors>256) {
 		head.biClrImportant = 0;
@@ -675,45 +563,37 @@ void CxImage::SetClrImportant(uint32_t ncolors)
  *
  * \author ***bd*** 2.2004
  */
-void* CxImage::BlindGetPixelPointer(const int32_t x, const int32_t y)
+void* CxImage::BlindGetPixelPointer(const long x, const long y)
 {
-#ifdef _DEBUG
-	if ((pDib==NULL) || !IsInside(x,y))
-  #if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
-		throw 0;
-  #else
-		return 0;
-  #endif
-#endif
   if (!IsIndexed())
     return info.pImage + y*info.dwEffWidth + x*3;
   else
     return 0;
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::DrawLine(int32_t StartX, int32_t EndX, int32_t StartY, int32_t EndY, COLORREF cr)
+void CxImage::DrawLine(int StartX, int EndX, int StartY, int EndY, COLORREF cr)
 {
 	DrawLine(StartX, EndX, StartY, EndY, RGBtoRGBQUAD(cr));
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImage::DrawLine(int32_t StartX, int32_t EndX, int32_t StartY, int32_t EndY, RGBQUAD color, bool bSetAlpha)
+void CxImage::DrawLine(int StartX, int EndX, int StartY, int EndY, RGBQUAD color, bool bSetAlpha)
 {
 	if (!pDib) return;
 	//////////////////////////////////////////////////////
 	// Draws a line using the Bresenham line algorithm
 	// Thanks to Jordan DeLozier <JDL>
 	//////////////////////////////////////////////////////
-	int32_t x1 = StartX;
-	int32_t y1 = StartY;
-	int32_t x = x1;                       // Start x off at the first pixel
-	int32_t y = y1;                       // Start y off at the first pixel
-	int32_t x2 = EndX;
-	int32_t y2 = EndY;
+	int x1 = StartX;
+	int y1 = StartY;
+	int x = x1;                       // Start x off at the first pixel
+	int y = y1;                       // Start y off at the first pixel
+	int x2 = EndX;
+	int y2 = EndY;
 
-	int32_t xinc1,xinc2,yinc1,yinc2;      // Increasing values
-	int32_t den, num, numadd,numpixels;   
-	int32_t deltax = abs(x2 - x1);        // The difference between the x's
-	int32_t deltay = abs(y2 - y1);        // The difference between the y's
+	int xinc1,xinc2,yinc1,yinc2;      // Increasing values
+	int den, num, numadd,numpixels;   
+	int deltax = abs(x2 - x1);        // The difference between the x's
+	int deltay = abs(y2 - y1);        // The difference between the y's
 
 	// Get Increasing Values
 	if (x2 >= x1) {                // The x-values are increasing
@@ -752,7 +632,7 @@ void CxImage::DrawLine(int32_t StartX, int32_t EndX, int32_t StartY, int32_t End
 		numpixels = deltay;         // There are more y-values than x-values
 	}
 	
-	for (int32_t curpixel = 0; curpixel <= numpixels; curpixel++)
+	for (int curpixel = 0; curpixel <= numpixels; curpixel++)
 	{
 		// Draw the current pixel
 		SetPixelColor(x,y,color,bSetAlpha);
@@ -770,7 +650,7 @@ void CxImage::DrawLine(int32_t StartX, int32_t EndX, int32_t StartY, int32_t End
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * Sets a palette with standard colors for 1, 4 and 8 bpp images.
+ * Sets a palette with standard colors for 4 and 8 bpp images.
  */
 void CxImage::SetStdPalette()
 {
@@ -778,7 +658,7 @@ void CxImage::SetStdPalette()
 	switch (head.biBitCount){
 	case 8:
 		{
-			const uint8_t pal256[1024] = {0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
+			const BYTE pal256[1024] = {0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
 			192,220,192,0,240,202,166,0,212,240,255,0,177,226,255,0,142,212,255,0,107,198,255,0,
 			72,184,255,0,37,170,255,0,0,170,255,0,0,146,220,0,0,122,185,0,0,98,150,0,0,74,115,0,0,
 			50,80,0,212,227,255,0,177,199,255,0,142,171,255,0,107,143,255,0,72,115,255,0,37,87,255,0,0,
@@ -816,19 +696,12 @@ void CxImage::SetStdPalette()
 		}
 	case 4:
 		{
-			const uint8_t pal16[64]={0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
+			const BYTE pal16[64]={0,0,0,0,0,0,128,0,0,128,0,0,0,128,128,0,128,0,0,0,128,0,128,0,128,128,0,0,192,192,192,0,
 								128,128,128,0,0,0,255,0,0,255,0,0,0,255,255,0,255,0,0,0,255,0,255,0,255,255,0,0,255,255,255,0};
 			memcpy(GetPalette(),pal16,64);
 			break;
 		}
-	case 1:
-		{
-			const uint8_t pal2[8]={0,0,0,0,255,255,255,0};
-			memcpy(GetPalette(),pal2,8);
-			break;
-		}
 	}
-	info.last_c_isvalid = false;
 	return;
 }
 ////////////////////////////////////////////////////////////////////////////////

@@ -68,6 +68,15 @@
     <Filter Include="Third-Party\zlib\Header Files">
       <UniqueIdentifier>{18d48704-6606-45a6-aadc-ba4578b6f444}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\png">
+      <UniqueIdentifier>{84bbfb46-a9fc-4fb8-8297-1e195eaefb74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\png\Header Files">
+      <UniqueIdentifier>{4f432ead-c5f7-43c2-bea4-8072fb49adfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\png\Source Files">
+      <UniqueIdentifier>{8a708e57-9471-459e-82d8-984447e3452d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -232,42 +241,6 @@
     <ClInclude Include="cximage\xmemfile.h">
       <Filter>Third-Party\CxImage\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="jpeg\cderror.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\cdjpeg.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jdct.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jerror.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jinclude.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jmemsys.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jmorecfg.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jpegint.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jpeglib.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jversion.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\transupp.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jconfig.h">
-      <Filter>Third-Party\jpeg\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -391,6 +364,54 @@
     <ClInclude Include="aft.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="png\png.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pngconf.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pngdebug.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pnginfo.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pnglibconf.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pngpriv.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="png\pngstruct.h">
+      <Filter>Third-Party\png\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jconfig.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jdct.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jerror.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jinclude.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jmemsys.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jmorecfg.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jpegint.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jpeglib.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jpeg\jversion.h">
+      <Filter>Third-Party\jpeg\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -467,9 +488,6 @@
     </ClCompile>
     <ClCompile Include="screen_capture.cc">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cximage\tif_xfile.cpp">
-      <Filter>Third-Party\CxImage\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cximage\xmemfile.cpp">
       <Filter>Third-Party\CxImage\Source Files</Filter>
@@ -564,11 +582,128 @@
     <ClCompile Include="cximage\ximawnd.cpp">
       <Filter>Third-Party\CxImage\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="jpeg\wrtarga.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
+    <ClCompile Include="..\wptdriver\util.cc">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="jpeg\cdjpeg.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
+    <ClCompile Include="inject.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mongoose\mongoose.c">
+      <Filter>Third-Party\Mongoose</Filter>
+    </ClCompile>
+    <ClCompile Include="test_server.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_test_hook.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\wpt_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_chrome.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_nspr.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="optimization_checks.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\adler32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\compress.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\ioapi.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\iowin32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\mztools.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\unzip.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\zip.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\crc32.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\deflate.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\infback.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inffast.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inflate.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inftrees.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\trees.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\uncompr.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\zutil.c">
+      <Filter>Third-Party\zlib\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="aft.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\png.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngerror.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngget.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngmem.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngpread.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngread.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrio.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrtran.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngrutil.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngset.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngtrans.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngwio.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngwrite.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngwtran.c">
+      <Filter>Third-Party\png\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="png\pngwutil.c">
+      <Filter>Third-Party\png\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="jpeg\jaricom.c">
       <Filter>Third-Party\jpeg\Source Files</Filter>
@@ -707,123 +842,6 @@
     </ClCompile>
     <ClCompile Include="jpeg\jutils.c">
       <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdbmp.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdcolmap.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdgif.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdppm.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdrle.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdswitch.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\rdtarga.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\transupp.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\wrbmp.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\wrgif.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\wrppm.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\wrrle.c">
-      <Filter>Third-Party\jpeg\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\util.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inject.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mongoose\mongoose.c">
-      <Filter>Third-Party\Mongoose</Filter>
-    </ClCompile>
-    <ClCompile Include="test_server.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="wpt_test_hook.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\wpt_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hook_chrome.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hook_nspr.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="optimization_checks.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\adler32.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\compress.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\ioapi.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\iowin32.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\mztools.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\unzip.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\zip.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\crc32.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\deflate.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\gzio.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\infback.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\inffast.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\inflate.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\inftrees.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\trees.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\uncompr.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\wptdriver\zlib\zutil.c">
-      <Filter>Third-Party\zlib\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="aft.cc">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

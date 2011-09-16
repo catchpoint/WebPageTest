@@ -9,6 +9,7 @@
  * based on ppmtopcx.c by Michael Davidson
  */
 
+#include "ximage.h"
 #include "ximapcx.h"
 
 #if CXIMAGE_SUPPORT_PCX
