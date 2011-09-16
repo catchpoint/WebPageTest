@@ -50,6 +50,8 @@ CPagetestBase::CPagetestBase(void):
 	, ieMajorVer(0)
 	, ignoreSSL(0)
 	, blockads(0)
+  , imageQuality(JPEG_DEFAULT_QUALITY)
+  , pngScreenShot(0)
   , clearShortTermCacheSecs(0)
   , _SetGDIWindow(NULL)
   , _SetGDIWindowUpdated(NULL)

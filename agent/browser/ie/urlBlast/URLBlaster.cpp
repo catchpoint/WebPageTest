@@ -940,6 +940,8 @@ void CURLBlaster::ConfigurePagetest(void)
 		  RegSetValueEx(hKey, _T("AFT"), 0, REG_DWORD, (const LPBYTE)&info.aft, sizeof(info.aft));
 		  RegSetValueEx(hKey, _T("aftMinChanges"), 0, REG_DWORD, (const LPBYTE)&info.aftMinChanges, sizeof(info.aftMinChanges));
 		  RegSetValueEx(hKey, _T("aftEarlyCutoff"), 0, REG_DWORD, (const LPBYTE)&info.aftEarlyCutoff, sizeof(info.aftEarlyCutoff));
+		  RegSetValueEx(hKey, _T("pngScreenShot"), 0, REG_DWORD, (const LPBYTE)&info.pngScreenShot, sizeof(info.pngScreenShot));
+		  RegSetValueEx(hKey, _T("imageQuality"), 0, REG_DWORD, (const LPBYTE)&info.imageQuality, sizeof(info.imageQuality));
 
 		  // Add the blockads bit.
 		  RegSetValueEx(hKey, _T("blockads"), 0, REG_DWORD, (const LPBYTE)&info.blockads, sizeof(info.blockads));

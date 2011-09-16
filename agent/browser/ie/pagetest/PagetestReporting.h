@@ -227,7 +227,7 @@ protected:
 private:
 	void SaveUrls(void);
 	void GetLinks(CComQIPtr<IHTMLDocument2> &doc, CAtlList<CStringA> &urls);
-	void SaveProgressImage(CxImage &img, CString file, bool resize=true, BYTE quality = JPEG_DEFAULT_QUALITY);
+	void SaveProgressImage(CxImage &img, CString file, bool resize, DWORD quality);
 	void SaveStatusUpdates(CString file);
 	void SortEvents();
   DWORD CalculateAFT();

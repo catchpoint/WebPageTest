@@ -35,7 +35,7 @@ public:
 		host.Empty();
     browser.Empty();
     tcpdump = false;
-	blockads = 0;
+	  blockads = 0;
     aft = 0;
     aftMinChanges = 0;
     aftEarlyCutoff = 25;
@@ -44,6 +44,8 @@ public:
     noOpt = 0;
     noImages = 0;
     noHeaders = 0;
+    pngScreenShot = 0;
+    imageQuality = 0;
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -75,6 +77,8 @@ public:
   DWORD noOpt;              // disable optimization checks?
   DWORD noImages;           // disable screen shots
   DWORD noHeaders;          // disable storing the full headers
+  DWORD pngScreenShot;       // High-quality screen shot (png)
+  DWORD imageQuality;       // Quality of jpeg images
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

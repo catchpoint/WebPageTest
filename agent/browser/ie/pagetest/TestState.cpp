@@ -254,6 +254,11 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("ignoreSSL"), ignoreSSL);
 					blockads = 0;
 					key.QueryDWORDValue(_T("blockads"), blockads);
+					pngScreenShot = 0;
+					key.QueryDWORDValue(_T("pngScreenShot"), pngScreenShot);
+					imageQuality = JPEG_DEFAULT_QUALITY;
+					key.QueryDWORDValue(_T("imageQuality"), imageQuality);
+          imageQuality = max(JPEG_DEFAULT_QUALITY, min(100, imageQuality));
 					clearShortTermCacheSecs = 0;
 					key.QueryDWORDValue(_T("clearShortTermCacheSecs"), clearShortTermCacheSecs);
 			        aft = 0;

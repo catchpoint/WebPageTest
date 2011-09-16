@@ -169,6 +169,8 @@ public:
 	CAtlList<CString>			blockRequests;	// which requests to block
 	CString						basicAuth;		// basic auth login to use
   DWORD           blockads;
+  DWORD           imageQuality;
+  DWORD           pngScreenShot;
   CAtlList<CString>	adPatterns;
   DWORD           aft;          // above-the fold measurement enabled?
   DWORD           aftMinChanges;

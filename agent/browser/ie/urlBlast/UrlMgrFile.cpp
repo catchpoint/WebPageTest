@@ -184,6 +184,10 @@ bool CUrlMgrFile::GetNextUrl(CTestInfo &info)
 												}
 												else if( !key.CompareNoCase(_T("Host")) )
 													info.host = value;
+												else if( !key.CompareNoCase(_T("imageQuality")) )
+                          info.imageQuality = max(0, min(100, _ttol(value)));
+												else if( !key.CompareNoCase(_T("pngScreenShot")) )
+                          info.pngScreenShot = _ttol(value);
 											}
 										}
 									}

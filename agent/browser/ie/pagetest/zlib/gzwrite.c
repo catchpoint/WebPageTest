@@ -76,7 +76,7 @@ local int gz_comp(state, flush)
         if (strm->avail_out == 0 || (flush != Z_NO_FLUSH &&
             (flush != Z_FINISH || ret == Z_STREAM_END))) {
             have = (unsigned)(strm->next_out - state->next);
-            if (have && ((got = write(state->fd, state->next, have)) < 0 ||
+            if (have && ((got = _write(state->fd, state->next, have)) < 0 ||
                          (unsigned)got != have)) {
                 gz_error(state, Z_ERRNO, zstrerror());
                 return -1;
@@ -525,7 +525,7 @@ int ZEXPORT gzclose_w(file)
     free(state->in);
     gz_error(state, Z_OK, NULL);
     free(state->path);
-    ret += close(state->fd);
+    ret += _close(state->fd);
     free(state);
     return ret ? Z_ERRNO : Z_OK;
 }

@@ -304,6 +304,10 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.noHeaders = _ttol(value);
 							else if( !key.CompareNoCase(_T("discard")) )
                 context->discard = _ttol(value);
+							else if( !key.CompareNoCase(_T("imageQuality")) )
+                info.imageQuality = max(0, min(100, _ttol(value)));
+							else if( !key.CompareNoCase(_T("pngScreenShot")) )
+                info.pngScreenShot = _ttol(value);
 						}
 					}
 

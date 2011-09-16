@@ -324,15 +324,19 @@ void CPagetestReporting::FlushResults(void)
             {
               CxImage image;
               if( screenCapture.GetImage(CapturedImage::FULLY_LOADED, image) )
-						    SaveProgressImage(image, logFile+step+_T("_screen.jpg"));
+              {
+                if (pngScreenShot)
+                  image.Save(logFile+step+_T("_screen.png"), CXIMAGE_FORMAT_PNG);
+						    SaveProgressImage(image, logFile+step+_T("_screen.jpg"), true, imageQuality);
+              }
   						
 						  // save out the other screen shots we have gathered
               if( screenCapture.GetImage(CapturedImage::START_RENDER, image) )
-						    SaveProgressImage(image, logFile+step+_T("_screen_render.jpg"));
+						    SaveProgressImage(image, logFile+step+_T("_screen_render.jpg"), true, imageQuality);
               if( screenCapture.GetImage(CapturedImage::DOM_ELEMENT, image) )
-						    SaveProgressImage(image, logFile+step+_T("_screen_dom.jpg"));
+						    SaveProgressImage(image, logFile+step+_T("_screen_dom.jpg"), true, imageQuality);
               if( screenCapture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image) )
-						    SaveProgressImage(image, logFile+step+_T("_screen_doc.jpg"));
+						    SaveProgressImage(image, logFile+step+_T("_screen_doc.jpg"), true, imageQuality);
             }
 
 						ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Reports\n"));
@@ -3516,7 +3520,7 @@ void CPagetestReporting::SaveCookies()
 /*-----------------------------------------------------------------------------
 	Save out one of the intermediate screen shots
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resize, BYTE quality)
+void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resize, DWORD quality)
 {
 	if( img.IsValid() )
 	{
@@ -3529,7 +3533,7 @@ void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resi
 		// save it out
 		img2.SetCodecOption(8, CXIMAGE_FORMAT_JPG);	// optimized encoding
 		img2.SetCodecOption(16, CXIMAGE_FORMAT_JPG);	// progressive
-		img2.SetJpegQuality(quality);
+		img2.SetJpegQuality((BYTE)min(quality, 100));
 		img2.Save(file, CXIMAGE_FORMAT_JPG);
 	}
 }
@@ -3857,14 +3861,14 @@ void CPagetestReporting::SaveVideo()
       {
         if (ImagesAreDifferent(last_image, img)) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
-          SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+          SaveProgressImage(*img, file_name, false, imageQuality);
         }
       } 
       else 
       {
         // always save the first image at time zero
         file_name = logFile + _T("_progress_0000.jpg");
-        SaveProgressImage(*img, file_name, false, JPEG_VIDEO_QUALITY);
+        SaveProgressImage(*img, file_name, false, imageQuality);
       }
 
       if (last_image)

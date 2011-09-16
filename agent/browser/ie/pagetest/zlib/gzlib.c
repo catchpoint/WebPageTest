@@ -8,7 +8,7 @@
 #if defined(_LARGEFILE64_SOURCE) && _LFS64_LARGEFILE-0
 #  define LSEEK lseek64
 #else
-#  define LSEEK lseek
+#  define LSEEK _lseek
 #endif
 
 /* Local functions */
@@ -157,7 +157,7 @@ local gzFile gz_open(path, fd, mode)
 
     /* open the file with the appropriate mode (or just use fd) */
     state->fd = fd != -1 ? fd :
-        open(path,
+        _open(path,
 #ifdef O_LARGEFILE
             O_LARGEFILE |
 #endif

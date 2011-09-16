@@ -429,11 +429,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File
@@ -559,6 +559,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -567,6 +568,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -579,6 +581,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -587,6 +590,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -599,6 +603,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -607,6 +612,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -619,6 +625,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -627,6 +634,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
 						/>
 					</FileConfiguration>
@@ -797,10 +805,6 @@
 						>
 					</File>
 					<File
-						RelativePath="..\pagetest\zlib\gzguts.h"
-						>
-					</File>
-					<File
 						RelativePath="..\pagetest\zlib\inffast.h"
 						>
 					</File>
@@ -822,10 +826,6 @@
 					</File>
 					<File
 						RelativePath="..\pagetest\zlib\zconf.h"
-						>
-					</File>
-					<File
-						RelativePath="..\pagetest\zlib\zconf.in.h"
 						>
 					</File>
 					<File

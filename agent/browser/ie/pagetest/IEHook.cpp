@@ -451,6 +451,7 @@ STDMETHODIMP_(void) CIEHook::OnStatusTextChange( BSTR bstrStatus )
 STDMETHODIMP_(void) CIEHook::OnTitleChange( BSTR bstrTitle )
 {
 	CString title(bstrTitle);
+  OutputDebugString(CString(_T("Title Set: ")) + title);
   if( dlg && title.CompareNoCase(_T("about:blank")) )
 		dlg->TitleChange(title);
 }
