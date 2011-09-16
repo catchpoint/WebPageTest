@@ -65,8 +65,10 @@ public:
   WptSettings(void);
   ~WptSettings(void);
   bool Load(void);
+  void LoadFromEC2(void);
   bool SetBrowser(CString browser);
   bool PrepareTest(WptTest& test);
+  bool GetUrlText(CString url, CString &response);
 
   CString _server;
   CString _location;
@@ -77,6 +79,7 @@ public:
   int     _debug;
   CString _web_page_replay_host;
   CString _ini_file;
+  CString _ec2_instance;
 
   BrowserSettings _browser;
 };

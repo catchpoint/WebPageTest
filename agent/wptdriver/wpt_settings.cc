@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "wpt_settings.h"
-
+#include <WinInet.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -79,9 +79,6 @@ bool WptSettings::Load(void) {
     _key = buff;
   }
 
-  if (_server.GetLength() && _location.GetLength())
-    ret = true;
-
   #ifdef DEBUG
   _debug = 9;
   #else
@@ -92,7 +89,6 @@ bool WptSettings::Load(void) {
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("Time Limit"),
                                   _timeout, iniFile);
-  SetTestTimeout(_timeout * SECONDS_TO_MS);
 
   // load the Web Page Replay host
   if (GetPrivateProfileString(
@@ -101,8 +97,94 @@ bool WptSettings::Load(void) {
     _web_page_replay_host = buff;
   }
 
+  // see if we need to load settings from EC2 (server and location)
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("ec2"), 0, iniFile)) {
+    LoadFromEC2();
+  }
+
+  SetTestTimeout(_timeout * SECONDS_TO_MS);
+  if (_server.GetLength() && _location.GetLength())
+    ret = true;
+
   return ret;
 }
+
+/*-----------------------------------------------------------------------------
+  Load the settings from EC2 User Data
+  We have to support the old "urlblast" format settings because both may
+  be running on the same machine
+-----------------------------------------------------------------------------*/
+void WptSettings::LoadFromEC2(void) {
+
+  CString userData;
+  if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
+    int pos = 0;
+    do {
+      CString token = userData.Tokenize(_T(" &"), pos).Trim();
+      if (token.GetLength()) {
+        int split = token.Find(_T('='), 0);
+        if (split > 0) {
+          CString key = token.Left(split).Trim();
+          CString value = token.Mid(split + 1).Trim();
+
+          if (key.GetLength() && value.GetLength()) {
+            if (!key.CompareNoCase(_T("wpt_server")))
+              _server = CString(_T("http://")) + value + _T("/");
+            else if (!key.CompareNoCase(_T("wpt_location")))
+              _location = value + _T("_wptdriver"); 
+            else if (!key.CompareNoCase(_T("wpt_key")) )
+              _key = value; 
+            else if (!key.CompareNoCase(_T("wpt_timeout")))
+              _timeout = _ttol(value); 
+          }
+        }
+      }
+    } while (pos > 0);
+  }
+
+  GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
+    _ec2_instance);
+  _ec2_instance = _ec2_instance.Trim();
+}
+
+/*-----------------------------------------------------------------------------
+  Get a string response from the given url
+-----------------------------------------------------------------------------*/
+bool WptSettings::GetUrlText(CString url, CString &response)
+{
+  bool ret = false;
+  response.Empty();
+
+  HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+                                    INTERNET_OPEN_TYPE_PRECONFIG,
+                                    NULL, NULL, 0);
+  if (internet) {
+    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+                                INTERNET_FLAG_NO_CACHE_WRITE | 
+                                INTERNET_FLAG_NO_UI | 
+                                INTERNET_FLAG_PRAGMA_NOCACHE | 
+                                INTERNET_FLAG_RELOAD, NULL);
+    if (http_request) {
+      ret = true;
+      char buff[4097];
+      DWORD bytes_read;
+      HANDLE file = INVALID_HANDLE_VALUE;
+      while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
+              &bytes_read) && bytes_read) {
+        // NULL-terminate it and add it to our response string
+        buff[bytes_read] = 0;
+        response += CA2T(buff);
+      }
+      if (file != INVALID_HANDLE_VALUE)
+        CloseHandle(file);
+      InternetCloseHandle(http_request);
+    }
+    InternetCloseHandle(internet);
+  }
+
+  return ret;
+}
+
 
 /*-----------------------------------------------------------------------------
   Load the settings for the specified browser 
