@@ -216,7 +216,7 @@ function getCurrentRunRateInfo(){
     $runRateInfo['users'][] = $user['Username'];
   }
 
-  $q = Doctrine_Query::create()->select('j.UserId, SUM(j.Runs * 60/j.Frequency) as runrate')
+  $q = Doctrine_Query::create()->select('j.UserId, j.FirstViewOnly, SUM(j.Runs * 60/j.Frequency) as runrate')
       ->from('WPTJob j')
       ->where('j.Active = ?',true)
       ->orderBy('j.UserId')
@@ -225,9 +225,13 @@ function getCurrentRunRateInfo(){
   $totalRunRate = 0;
   $runRatePerUser = array();
   foreach($result as $res){
-    $totalRunRate += $res['runrate'];
     $user = $userTable->find($res['UserId']);
-    $runRatePerUser[$user['Username']] = $res['runrate'];
+    if ( !$res['FirstViewOnly']){
+      $runRatePerUser[$user['Username']] = $res['runrate']*2;
+    }else {
+      $runRatePerUser[$user['Username']] = $res['runrate'];
+    }
+    $totalRunRate += $runRatePerUser[$user['Username']];
   }
   $runRateInfo['runRatePerUser'] = $runRatePerUser;
   $runRateInfo['hourlyRunRate'] = $totalRunRate;
@@ -367,7 +371,7 @@ function getLocationInformation($host = null) {
       $locations["'".$id."'"] = $location;
     }
   }
-  $q = Doctrine_Query::create()->select('j.Location, SUM(j.Runs * 60/j.Frequency) as runrate')
+  $q = Doctrine_Query::create()->select('j.Location, j.FirstViewOnly, SUM(j.Runs * 60/j.Frequency) as runrate')
       ->from('WPTJob j')
       ->where('j.Active = ?',true)
       ->groupBy('j.Location');
@@ -375,7 +379,11 @@ function getLocationInformation($host = null) {
   $result = $q->fetchArray();
 
   foreach ($result as $res){
-    $locations["'".$res['Location']."'"]['runRate'] = $res['runrate'];
+    if (!$res['FirstViewOnly']){
+      $locations["'".$res['Location']."'"]['runRate'] = $res['runrate'] * 2;
+    } else{
+      $locations["'".$res['Location']."'"]['runRate'] = $res['runrate'];
+    }
   }
 
 
