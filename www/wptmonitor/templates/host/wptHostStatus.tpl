@@ -47,7 +47,7 @@
             {/foreach}
           </table>
           <br>
-          <h2 class="cufon-dincond_black">WPTMonitor Status</h2>
+          <h2 class="cufon-dincond_black">User Status</h2>
           <table class="pretty" style="border-collapse::collapse" width="100%">
             <thead>
             <th align="left">Username</th>
