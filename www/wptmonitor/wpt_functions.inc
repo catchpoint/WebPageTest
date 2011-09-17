@@ -1116,7 +1116,7 @@ function updateQueueProcessRate(){
             } elseif ( $location['PendingTests'] < $previousLocation['PendingTests'] && $location['QueueGrowthCount'] > 0){
               logOutput('[INFO] [updateQueueProcessRate] Decrementing count QueueGrowthCheck for: '.$key);
 //              $location['QueueGrowthCount'] = $previousLocation['QueueGrowthCount']-1;
-              $location['QueueGrowthCount'];
+              $location['QueueGrowthCount'] = '0';
             }
           }
           $location['QueueGrowthCheckTimeStamp'] = $currentTime;
