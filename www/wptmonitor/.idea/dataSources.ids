@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="Cp1252"?><component name="dataSourceStorage">
+<?xml version="1.0" encoding="UTF-8"?><component name="dataSourceStorage">
   <data-source source="LOCAL" name="Data Source" product="SQLite" version="3.6.3" jdbc-version="2.1" driver-version="native" uuid="aa0fdf3b-153d-4125-8089-e56a82abdcf6">
     <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
     <jdbc-url>jdbc:sqlite:/wamp/www/wptmonitor/db/wpt_monitor.sqlite</jdbc-url>
