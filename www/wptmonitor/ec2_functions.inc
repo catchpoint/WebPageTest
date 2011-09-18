@@ -161,12 +161,11 @@ function getEC2TesterStatus(){
   foreach ($amazonAMIForRegion as $key=>$regionAmi){
     $ami = $regionAmi["IE_7"];
     $response = $wptmEC2->getInstances($key,$ami);
-    echo sizeof($response->body->reservationSet->item)."\n";
+//    echo sizeof($response->body->reservationSet->item)."\n";
     $ami = $regionAmi["IE_8"];
     $response = $wptmEC2->getInstances($key,$ami);
-    echo sizeof($response->body->reservationSet->item)."\n";
+//    echo sizeof($response->body->reservationSet->item)."\n";
 
   }
 }
-getEC2TesterStatus();
 ?>
