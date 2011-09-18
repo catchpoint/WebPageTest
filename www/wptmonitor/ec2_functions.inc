@@ -136,7 +136,7 @@ function terminateDeadEC2Testers(){
     if ($location['AgentCount']>0){
       foreach($location['XML']->testers->tester as $tester){
         if (empty($tester->elapsed)|| $tester->elapsed >120){
-          logOutput("[INFO] [ec2_functions] Terminating non responsive instance: ".$tester->ec2);
+          logOutput("[INFO] [ec2_functions] Terminating non responsive Region: [".$region."] Instance: [".$tester->ec2."]");
           $response = $wptmec2->terminateInstance($region,$tester->ec2);
           if ( $response->status != "200" ){
            logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while terminating non responsive instance: ".$tester->ec2);
