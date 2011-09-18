@@ -43,5 +43,10 @@
   updateQueueProcessRate();
   checkTesterRatioAndEmailAlert();
 
+  // TODO: Make Only executes if EC2 integration is active
+  terminateDeadEC2Testers();
+  adjustEC2InstanceCountIfRequired();
+
+
 ?>
  

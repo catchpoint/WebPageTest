@@ -1160,9 +1160,9 @@ function checkTesterRatioAndEmailAlert(){
     $runRate = $location['runRate'];
     $agentCount = $location['AgentCount'];
     if ( empty($agentCount) ) $agentCount = '0';
-    $requiredAdditionalTesters = ($runRate / TARGET_RUN_RATE) - $agentCount;
+    $requiredAdditionalTesters = ($runRate / TARGET_RUN_RATE_RATIO) - $agentCount;
     if ( $location['runRate'] ){
-      if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > TARGET_RUN_RATE )){
+      if ( $location['AgentCount'] < 1 || ($location['runRate']/$location['AgentCount'] > TARGET_RUN_RATE_RATIO )){
         // Only alert once per hour
         if (!array_key_exists('LastTesterRatioAlertTime',$queueStat) ||
             ( current_seconds() > $queueStat['LastTesterRatioAlertTime'] + 3600 )){
@@ -1178,7 +1178,7 @@ function checkTesterRatioAndEmailAlert(){
             $message .= "Ratio: NO TESTERS SERVING THIS REGION\n";
           }
           $message .= "--------------------------------------------\n";
-          $message .= "Target Ratio: ".TARGET_RUN_RATE."\n";
+          $message .= "Target Ratio: ".TARGET_RUN_RATE_RATIO."\n";
           $message .= "Please add ".ceil($requiredAdditionalTesters)." additional agents for this location.";
           // Update time stamp
           $queueStatus["'".$id."'"]['LastTesterRatioAlertTime'] = current_seconds();
