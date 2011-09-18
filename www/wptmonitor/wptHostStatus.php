@@ -6,7 +6,7 @@
   $testers = getTestersInformation();
   $locations = getLocationInformation();
   $runRateInfo = getCurrentRunRateInfo();
-  $ec2TesterStatus = getEC2TesterStatus();
+//  $ec2TesterStatus = getEC2TesterStatus();
 
   $smarty->assign('locations',$locations);
   $smarty->assign('testers',$testers);
