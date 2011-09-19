@@ -208,6 +208,11 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 	// Don't save the optimized versions of resources in the 
 	// results structure, in order to conserve memory.
 	const bool save_optimized_content = false;
+	pagespeed::rule_provider::AppendPageSpeedRules(
+		save_optimized_content,
+		rules);
+
+	// Now remove any incompatible rules.
 	std::vector<std::string> incompatible_rule_names;
 	pagespeed::InputCapabilities capabilities(
 		pagespeed::InputCapabilities::DOM |
@@ -216,8 +221,7 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 		pagespeed::InputCapabilities::REQUEST_HEADERS |
 		pagespeed::InputCapabilities::RESPONSE_BODY |
 		pagespeed::InputCapabilities::REQUEST_START_TIMES);
-	pagespeed::rule_provider::AppendCompatibleRules(
-		save_optimized_content,
+	pagespeed::rule_provider::RemoveIncompatibleRules(
 		rules,
 		&incompatible_rule_names,
 		capabilities);
