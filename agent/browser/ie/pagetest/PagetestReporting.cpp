@@ -36,18 +36,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cdn.h"
 #include "zlib/zlib.h"
 #include "jsmin/JSMin.h"
-/* PAGESPEED
-#include "base/at_exit.h"
-#include "PageSpeed/pagespeed/core/engine.h"
-#include "PageSpeed/pagespeed/core/pagespeed_input.h"
-#include "PageSpeed/pagespeed/core/pagespeed_version.h"
-#include "PageSpeed/pagespeed/formatters/json_formatter.h"
-#include "PageSpeed/pagespeed/formatters/text_formatter.h"
-#include "PageSpeed/pagespeed/image_compression/image_attributes_factory.h"
-#include "PageSpeed/pagespeed/platform/ie/ie_dom.h"
-#include "PageSpeed/pagespeed/proto/pagespeed_output.pb.h"
-#include "PageSpeed/pagespeed/rules/rule_provider.h"
-PAGESPEED */
+#include "PageSpeed/include/pagespeed/core/engine.h"
+#include "PageSpeed/include/pagespeed/core/pagespeed_init.h"
+#include "PageSpeed/include/pagespeed/core/pagespeed_input.h"
+#include "PageSpeed/include/pagespeed/core/pagespeed_version.h"
+#include "PageSpeed/include/pagespeed/formatters/proto_formatter.h"
+#include "PageSpeed/include/pagespeed/image_compression/image_attributes_factory.h"
+#include "PageSpeed/include/pagespeed/l10n/localizer.h"
+#include "PageSpeed/include/pagespeed/platform/ie/ie_dom.h"
+#include "PageSpeed/include/pagespeed/proto/formatted_results_to_json_converter.h"
+#include "PageSpeed/include/pagespeed/proto/formatted_results_to_text_converter.h"
+#include "PageSpeed/include/pagespeed/proto/pagespeed_output.pb.h"
+#include "PageSpeed/include/pagespeed/proto/pagespeed_proto_formatter.pb.h"
+#include "PageSpeed/include/pagespeed/rules/rule_provider.h"
 #include <regex>
 #include <string>
 #include <sstream>
@@ -82,9 +83,7 @@ CPagetestReporting::CPagetestReporting(void):
 	, minifyTarget(0)
 	, compressTotal(0)
 	, compressTarget(0)
-  /* PAGESPEED
 	, pagespeedResults(NULL)
-  PAGESPEED */
 {
 	descriptor[0] = 0;
 	logUrl[0] = 0;
@@ -192,12 +191,10 @@ void CPagetestReporting::Reset(void)
 		
 		blockedRequests.RemoveAll();
 		blockedAdRequests.RemoveAll();
-/* PAGESPEED
 		if (pagespeedResults != NULL) {
 			delete pagespeedResults;
 			pagespeedResults = NULL;
 		}
-PAGESPEED */
 	}__except(EXCEPTION_EXECUTE_HANDLER)
 	{
 	}
@@ -205,7 +202,6 @@ PAGESPEED */
 	LeaveCriticalSection(&cs);
 }
 
-/* PAGESPEED
 // Helper that populates the set of Page Speed rules used by Page Test.
 void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 {
@@ -215,10 +211,11 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 	std::vector<std::string> incompatible_rule_names;
 	pagespeed::InputCapabilities capabilities(
 		pagespeed::InputCapabilities::DOM |
-		pagespeed::InputCapabilities::LAZY_LOADED |
+		pagespeed::InputCapabilities::ONLOAD |
 		pagespeed::InputCapabilities::PARENT_CHILD_RESOURCE_MAP |
 		pagespeed::InputCapabilities::REQUEST_HEADERS |
-		pagespeed::InputCapabilities::RESPONSE_BODY);
+		pagespeed::InputCapabilities::RESPONSE_BODY |
+		pagespeed::InputCapabilities::REQUEST_START_TIMES);
 	pagespeed::rule_provider::AppendCompatibleRules(
 		save_optimized_content,
 		rules,
@@ -230,13 +227,11 @@ void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
 			incompatible_rule_names.size());
 	}
 }
-PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	Protected formatting - crashes at times when running against amazon.com
 -----------------------------------------------------------------------------*/
-/* PAGESPEED
-bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pagespeedResults, pagespeed::RuleFormatter * formatter)
+bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pagespeedResults, pagespeed::Formatter * formatter)
 {
   bool ret = false;
 
@@ -253,7 +248,6 @@ bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pages
 
   return ret;
 }
-PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	OK, time to generate any results
@@ -357,7 +351,6 @@ void CPagetestReporting::FlushResults(void)
 						  }
             }
 						
-            /* PAGESPEED
 						// save the page speed report
 						hFile = CreateFile(logFile+step+_T("_pagespeed.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
 						if( hFile != INVALID_HANDLE_VALUE )
@@ -365,21 +358,24 @@ void CPagetestReporting::FlushResults(void)
 							std::vector<pagespeed::Rule*> rules;
 							PopulatePageSpeedRules(&rules);
 	
-						  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Initializing Page Speed engine\n"));
+							ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Initializing Page Speed engine\n"));
 
 							// Ownership of rules is transferred to the Engine instance.
 							pagespeed::Engine engine(&rules);
 							engine.Init();
 
-						  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Formatting Page Speed results\n"));
+							ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Formatting Page Speed results\n"));
 
-              std::ostringstream formattedResults;
-							pagespeed::formatters::JsonFormatter formatter(&formattedResults, NULL);
+							pagespeed::l10n::BasicLocalizer localizer;
+							pagespeed::FormattedResults formatted_results;
+							formatted_results.set_locale(localizer.GetLocale());
+							pagespeed::formatters::ProtoFormatter formatter(&localizer, &formatted_results);
 							if ( pagespeedResults && PageSpeedFormatResults(engine, *pagespeedResults, &formatter) )
 							{
-							  DWORD written;
-							  std::string pagespeedReport = formattedResults.str();
-							  WriteFile(hFile, pagespeedReport.c_str(), pagespeedReport.size(), &written, 0);
+								DWORD written;
+								std::string pagespeedReport;
+								pagespeed::proto::FormattedResultsToJsonConverter::Convert(formatted_results, &pagespeedReport);
+								WriteFile(hFile, pagespeedReport.c_str(), pagespeedReport.size(), &written, 0);
 							}
 							else
 							{
@@ -387,7 +383,6 @@ void CPagetestReporting::FlushResults(void)
 							}
 							CloseHandle(hFile);
 						}
-            PAGESPEED */
 
 						// save out the status updates
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
@@ -965,12 +960,10 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 
   // get the Page Speed version
   CString pageSpeedVersion;
-  /* PAGESPEED
-  pagespeed::Version  ver;
+  pagespeed::Version ver;
   pagespeed::GetPageSpeedVersion(&ver);
   if( ver.has_major() && ver.has_minor() )
     pageSpeedVersion.Format(_T("%d.%d"), ver.major(), ver.minor());
-  PAGESPEED */
 	
 	if( fIncludeHeader )
 	{
@@ -1588,7 +1581,6 @@ CString SynthesizeDateHeaderForResource(const CString& url)
 	Copy the necessary data about resources (i.e. headers, response bodies,
 	etc) into the PagespeedInput structure.
 -----------------------------------------------------------------------------*/
-/* PAGESPEED
 void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input)
 {
 	ATLTRACE(_T("[Pagetest] - PopulatePageSpeedInput\n"));
@@ -1605,10 +1597,10 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 			const std::string response_body(reinterpret_cast<char*>(w->body), w->bodyLen);
 			resource->SetResponseBody(response_body);
 
-			if ( endDoc > 0 && w->start > endDoc )
+			if ( w->start > 0 )
 			{
-				// Resoures loaded after onload are "lazy loaded".
-				resource->SetLazyLoaded();
+				int startMillis = (int)((w->start - start)/msFreq);
+				resource->SetRequestStartTimeMillis(startMillis);
 			}
 
 			resource->SetRequestMethod(static_cast<LPSTR>(CT2CA(w->verb)));
@@ -1690,8 +1682,20 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 					resource->AddResponseHeader("Date", static_cast<LPSTR>(CT2CA(dateStr)));
 				}
 			}
-			input->AddResource(resource);
+			if (input->AddResource(resource)) {
+				if (w->basePage)
+					input->SetPrimaryResourceUrl(resource->GetRequestUrl());
+			}
 		}
+	}
+
+	if (endDoc > 0) {
+		if (endDoc > start) {
+			input->SetOnloadTimeMillis((int)((endDoc - start)/msFreq));
+		}
+	} else {
+		// Onload didn't fire yet.
+		input->SetOnloadState(pagespeed::PagespeedInput::ONLOAD_NOT_YET_FIRED);
 	}
 
 	pos = browsers.GetHeadPosition();
@@ -1719,25 +1723,30 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 
 	ATLTRACE(_T("[Pagetest] - CPagetestReporting::PopulatePageSpeedInput - complete\n"));
 }
-PAGESPEED */
 
 /*-----------------------------------------------------------------------------
 	Run Page Speed checks
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::CheckPageSpeed(CString &buff)
 {
-  /* PAGESPEED
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed\n"));
 	buff = _T("\nPage Speed results:\n");
 
 	// Instantiate an AtExitManager, which is required by some of the
 	// internals of the Page Speed ruleset.
-	base::AtExitManager at_exit;
 	if ( pagespeedResults != NULL ) 
 	{
 		delete pagespeedResults;
 	}
 	pagespeedResults = new pagespeed::Results();
+
+	// TODO(bmcquade): we should only do this once, and should ShutDown on exit.
+	// Ask Pat if there is a hook that gets invoked just once at startup.
+	static bool didInit = false;
+	if (!didInit) {
+		didInit = true;
+		pagespeed::Init();
+	}
 
 	std::vector<pagespeed::Rule*> rules;
 	PopulatePageSpeedRules(&rules);
@@ -1761,11 +1770,15 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 
 	// Generate a plaintext version of the results to include with the text
 	// optimization report (appended to buff).
-	std::ostringstream formattedResults;
-	pagespeed::formatters::TextFormatter formatter(&formattedResults);
+	pagespeed::l10n::BasicLocalizer localizer;
+	pagespeed::FormattedResults formatted_results;
+	formatted_results.set_locale(localizer.GetLocale());
+	pagespeed::formatters::ProtoFormatter formatter(&localizer, &formatted_results);
 	if ( engine.FormatResults(*pagespeedResults, &formatter) )
 	{
-		buff += formattedResults.str().c_str();
+		std::string pagespeedReport;
+		pagespeed::proto::FormattedResultsToTextConverter::Convert(formatted_results, &pagespeedReport);
+		buff += pagespeedReport.c_str();
 	}
 	else 
 	{
@@ -1773,7 +1786,6 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 	}
 
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed complete\n"));
-  PAGESPEED */
 }
 
 /*-----------------------------------------------------------------------------
