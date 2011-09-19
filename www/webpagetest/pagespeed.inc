@@ -9,41 +9,78 @@ function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
     $pagespeed = LoadPageSpeedData($file);
     if( $pagespeed )
     {
-        $html .= '<div class="pagespeed_container">';
-        // build an array of the scores to sort
         $scores = array();
-        $total = 0;
-        $count = 0;
-        foreach( $pagespeed as $index => &$check )
+        $newFormat = false;
+        $html .= '<div class="pagespeed_container">';
+        $score = 0;
+        if( isset($pagespeed['score']) )
         {
-            $scores[$index] = $check['score'];
-            $total += (double)$check['score'];
-            $count++;
+            $score = $pagespeed['score'];
+            $newFormat = true;
+            foreach( $pagespeed['rule_results'] as $index => &$result )
+            {
+                if( !array_key_exists('experimental', $result) || !$result['experimental'] )
+                    $scores[$index] = $result['rule_impact'];
+            }
         }
-        if( $count )
-            $html .= "Page Speed $ver Score: <b>" . ceil($total / $count) . '/100</b>*<br>';
+        else
+        {
+            // build an array of the scores to sort
+            $total = 0;
+            $count = 0;
+            foreach( $pagespeed as $index => &$check )
+            {
+                $scores[$index] = $check['score'];
+                $total += (double)$check['score'];
+                $count++;
+            }
+            if( $count )
+                $score = ceil($total / $count);
+        }
+        $html .= "Page Speed $ver Score: <b>" . $score . '/100</b>*<br>';
 
         $html .= '<ul id="pagespeed_tree" class="pagespeed_treeview">';
         
-        // sort by score ascending
-        asort($scores);
+        // sort by score
+        if( $newFormat )
+            arsort($scores);
+        else
+            asort($scores);
         $count = count($scores);
         $current = 0;
         foreach( $scores as $index => $score )
         {
             $current++;
-            $label = FormatLabel($pagespeed[$index]['format']);
-            if( $pagespeed[$index]['url'] )
+            if( $newFormat )
             {
-                $url = 'http://code.google.com/speed/page-speed/docs/' . $pagespeed[$index]['url'];
-                $label = "<a href=\"$url\" target=\"_blank\">$label</a>";
+                $color = 'pagespeed_score-green';
+                if( $score >= 10 )
+                    $color = 'pagespeed_score-red';
+                elseif( $score >= 3 )
+                    $color = 'pagespeed_score-yellow';
+                $score = $pagespeed['rule_results'][$index]['rule_score'];
+                $label = $pagespeed['rule_results'][$index]['localized_rule_name'];
+                $url = PageSpeedGetRuleDoc($pagespeed['rule_results'][$index]['rule_name']);
+                if( isset($url) )
+                    $label = "<a href=\"$url\" target=\"_blank\">$label</a>";
+                $children = &$pagespeed['rule_results'][$index]['url_blocks'];
+            }
+            else
+            {
+                $label = FormatLabel($pagespeed[$index]['format'], $newFormat);
+                if( $pagespeed[$index]['url'] )
+                {
+                    $url = 'http://code.google.com/speed/page-speed/docs/' . $pagespeed[$index]['url'];
+                    $label = "<a href=\"$url\" target=\"_blank\">$label</a>";
+                }
+                $children = &$pagespeed[$index]['children'];
+                $color = 'pagespeed_score-green';
+                if( $score < 50 )
+                    $color = 'pagespeed_score-red';
+                elseif( $score < 80 )
+                    $color = 'pagespeed_score-yellow';
             }
 
-            $color = 'pagespeed_score-green';
-            if( $score < 50 )
-                $color = 'pagespeed_score-red';
-            elseif( $score < 80 )
-                $color = 'pagespeed_score-yellow';
             $img = "<img src=\"$docRoot/images/cleardot.gif\" class=\"pagespeed_score pagespeed_score-icon $color\">";
             
             $last = '';
@@ -53,19 +90,21 @@ function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
             $childCount = 0;
             $expand = '';
             $div = '';
-            if( $pagespeed[$index]['children'] && count($pagespeed[$index]['children']) )
+            if( $children && count($children) )
             {
-                $childCount = count($pagespeed[$index]['children']);
+                $childCount = count($children);
                 $expand = ' closed expandable';
                 $div = '<div class="hitarea pagespeed_check-hitarea closed-hitarea expandable-hitarea"></div>';
                 if( strlen($last) )
                     $last .= 'Collapsable';
             }
             
-            $html .= "<li class=\"pagespeed_check{$expand}{$last}\">$div$img $label ($score/100)";
+            $html .= "<li class=\"pagespeed_check{$expand}{$last}\">$div$img $label";
+            if( !$newFormat )
+                $html .= " ($score/100)";
                 
             if( $childCount )
-                $html .= DisplayChildren($pagespeed[$index]['children'], true);
+                $html .= DisplayChildren($children, true, $newFormat);
                 
             $html .= '</li>';
         }
@@ -76,14 +115,62 @@ function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
 }
 
 /**
+* Return the URL for the given rule
+* 
+* @param mixed $rule
+*/
+function PageSpeedGetRuleDoc($rule)
+{
+    $rules = array(
+          'AvoidBadRequests' => 'rtt.html#AvoidBadRequests',
+          'AvoidCssImport' => 'rtt.html#AvoidCssImport',
+          'AvoidDocumentWrite' => 'rtt.html#AvoidDocumentWrite',
+          'CombineExternalCss' => 'rtt.html#CombineExternalCSS',
+          'CombineExternalJavaScript' => 'rtt.html#CombineExternalJS',
+          'EnableGzipCompression' => 'payload.html#GzipCompression',
+          'EnableKeepAlive' => 'rtt.html#EnableKeepAlive',
+          'InlineSmallCss' => 'caching.html#InlineSmallResources',
+          'InlineSmallJavaScript' => 'caching.html#InlineSmallResources',
+          'LeverageBrowserCaching' => 'caching.html#LeverageBrowserCaching',
+          'MinifyCss' => 'payload.html#MinifyCSS',
+          'MinifyHTML' => 'payload.html#MinifyHTML',
+          'MinifyJavaScript' => 'payload.html#MinifyJS',
+          'MinimizeDnsLookups' => 'rtt.html#MinimizeDNSLookups',
+          'MinimizeRedirects' => 'rtt.html#AvoidRedirects',
+          'MinimizeRequestSize' => 'request.html#MinimizeRequestSize',
+          'OptimizeImages' => 'payload.html#CompressImages',
+          'OptimizeTheOrderOfStylesAndScripts' => 'rtt.html#PutStylesBeforeScripts',
+          'ParallelizeDownloadsAcrossHostnames' => 'rtt.html#ParallelizeDownloads',
+          'PreferAsyncResources' => 'rtt.html#PreferAsyncResources',
+          'PutCssInTheDocumentHead' => 'rendering.html#PutCSSInHead',
+          'RemoveQueryStringsFromStaticResources' => 'caching.html#LeverageProxyCaching',
+          'ServeResourcesFromAConsistentUrl' => 'payload.html#duplicate_resources',
+          'ServeScaledImages' => 'payload.html#ScaleImages',
+          'SpecifyACacheValidator' => 'caching.html#LeverageBrowserCaching',
+          'SpecifyAVaryAcceptEncodingHeader' => 'caching.html#LeverageProxyCaching',
+          'SpecifyCharsetEarly' => 'rendering.html#SpecifyCharsetEarly',
+          'SpecifyImageDimensions' => 'rendering.html#SpecifyImageDimensions',
+          'SpriteImages' => 'rtt.html#SpriteImages');
+
+    $url = null;
+    if( isset($rules[$rule]) )
+        $url = 'http://code.google.com/speed/page-speed/docs/' . $rules[$rule];
+    
+    return $url;
+}
+
+/**
 * Recursively display the children
 * 
 * @param mixed $children
 */
-function DisplayChildren(&$children, $hide)
+function DisplayChildren(&$children, $hide, $newFormat)
 {
     $html = '';
     $hidden = '';
+    $sub_children = 'children';
+    if( $newFormat )
+        $sub_children = 'urls';
     if( $hide )
         $hidden = 'style="display:none;"';
     $html .= "<ul class=\"pagespeed_children\"$hidden>";
@@ -93,8 +180,18 @@ function DisplayChildren(&$children, $hide)
     {
         $current++;
         
-        $type = $child['format'][0]['type'];
-        $label = FormatLabel($child['format']);
+        if( $newFormat )
+        {
+            if( array_key_exists('header', $child) )
+                $label = FormatLabel($child['header'], $newFormat);
+            else
+                $label = FormatLabel($child['result'], $newFormat);
+        }
+        else
+        {
+            $type = $child['format'][0]['type'];
+            $label = FormatLabel($child['format'], $newFormat);
+        }
 
         $last = '';
         if( $current == $count )
@@ -103,9 +200,9 @@ function DisplayChildren(&$children, $hide)
         $childCount = 0;
         $expand = '';
         $div = '';
-        if( $child['children'] && count($child['children']) )
+        if( $child[$sub_children] && count($child[$sub_children]) )
         {
-            $childCount = count($child['children']);
+            $childCount = count($child[$sub_children]);
             $expand = ' open collapsable';
             if( strlen($last) )
             {
@@ -118,7 +215,7 @@ function DisplayChildren(&$children, $hide)
 
         $html .= "<li class=\"pagespeed_child{$expand}{$last}\">$div $label";
         if( $childCount )
-            $html .= DisplayChildren($child['children'], false);
+            $html .= DisplayChildren($child[$sub_children], false, $newFormat);
         $html .= '</li>';
     }
     $html .= '</ul>';
@@ -131,19 +228,37 @@ function DisplayChildren(&$children, $hide)
 * 
 * @param mixed $format
 */
-function FormatLabel(&$format)
+function FormatLabel(&$format, $newFormat)
 {
     $ret = '';
     
-    foreach( $format as &$item )
+    if( $newFormat )
     {
-        $type = $item['type'];
-        if( $type == 'url' )
+        $ret = $format['format'];
+        foreach( $format['args'] as $index => &$arg )
         {
-            $ret .= "<a rel=\"nofollow\" href=\"{$item['value']}\" target=\"_blank\">" . htmlspecialchars(FitText($item['value'],80)) . '</a>';
+            $key = $index + 1;
+            $key = '$' . $key;
+            $type = $arg['type'];
+            if( $type == 'url' )
+                $value = "<a rel=\"nofollow\" href=\"{$arg['localized_value']}\" target=\"_blank\">" . htmlspecialchars(FitText($arg['localized_value'],80)) . '</a>';
+            else
+                $value = htmlspecialchars($arg['localized_value']);
+            $ret = str_replace($key, $value, $ret);
         }
-        else
-            $ret .= htmlspecialchars($item['value']);
+    }
+    else
+    {
+        foreach( $format as &$item )
+        {
+            $type = $item['type'];
+            if( $type == 'url' )
+            {
+                $ret .= "<a rel=\"nofollow\" href=\"{$item['value']}\" target=\"_blank\">" . htmlspecialchars(FitText($item['value'],80)) . '</a>';
+            }
+            else
+                $ret .= htmlspecialchars($item['value']);
+        }
     }
     
     return $ret;

@@ -612,15 +612,20 @@ function GetPageSpeedScore($file)
 
     if( $pagespeed )
     {
-        $total = 0;
-        $count = 0;
-        foreach( $pagespeed as &$check )
+        if( isset($pagespeed['score']) )
+            $score = $pagespeed['score'];
+        else
         {
-            $total += (double)$check['score'];
-            $count++;
+            $total = 0;
+            $count = 0;
+            foreach( $pagespeed as &$check )
+            {
+                $total += (double)$check['score'];
+                $count++;
+            }
+            if( $count )
+                $score = ceil($total / $count);
         }
-        if( $count )
-            $score = ceil($total / $count);
     }
     
     return $score;
