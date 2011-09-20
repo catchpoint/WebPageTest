@@ -6,6 +6,7 @@
  * based on jhead-1.8 by Matthias Wandel <mwandel(at)rim(dot)net>
  */
 
+#include "ximage.h"
 #include "ximajpg.h"
 
 #if CXIMAGEJPG_SUPPORT_EXIF

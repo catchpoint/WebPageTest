@@ -17,8 +17,6 @@
 #if !defined(__ximaPNG_h)
 #define __ximaPNG_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_PNG
 
 extern "C" {

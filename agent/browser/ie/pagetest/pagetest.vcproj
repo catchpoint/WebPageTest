@@ -65,12 +65,14 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
+				AdditionalOptions="/ignore:4099"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib  comsuppwd.lib msimg32.lib winmm.lib Psapi.lib distormd.lib libcaresd.lib &quot;PageSpeed\lib\Debug\pagespeed.lib&quot;"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="ncodehook;&quot;c-ares/vc/cares/lib-debug&quot;"
 				MergedIDLBaseFileName="_Pagetest.idl"
 				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName)_dll.pdb"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -153,12 +155,14 @@
 				Name="VCLinkerTool"
 				RegisterOutput="true"
 				IgnoreImportLibrary="true"
+				AdditionalOptions="/ignore:4099"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib  comsuppw.lib msimg32.lib winmm.lib Psapi.lib distorm.lib libcares.lib &quot;PageSpeed\lib\Release\pagespeed.lib&quot;"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="ncodehook;&quot;c-ares/vc/cares/lib-release&quot;"
 				MergedIDLBaseFileName="_Pagetest.idl"
 				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(TargetDir)$(TargetName)_dll.pdb"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -533,7 +537,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -542,7 +548,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -555,7 +563,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -564,7 +574,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -577,7 +589,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -586,7 +600,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -599,7 +615,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -608,7 +626,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -621,7 +641,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -630,7 +652,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -643,7 +667,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -652,7 +678,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -665,7 +693,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -674,7 +704,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -687,7 +719,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -696,7 +730,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -709,7 +745,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -718,7 +756,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -731,7 +771,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -740,7 +782,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -753,7 +797,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -762,7 +808,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -775,7 +823,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -784,7 +834,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -797,7 +849,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -806,7 +860,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -819,7 +875,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -828,7 +886,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -841,7 +901,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -850,7 +912,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -863,7 +927,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -872,7 +938,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="ximage.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_ximage.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1291,7 +1359,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1300,7 +1370,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1313,7 +1385,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1322,7 +1396,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1335,7 +1411,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1344,7 +1422,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1357,7 +1437,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1366,7 +1448,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1379,7 +1463,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1388,7 +1474,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1401,7 +1489,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1410,7 +1500,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1423,7 +1515,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1432,7 +1526,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1445,7 +1541,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1454,7 +1552,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1467,7 +1567,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1476,7 +1578,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1489,7 +1593,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1498,7 +1604,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1511,7 +1619,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1520,7 +1630,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1533,7 +1645,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1542,7 +1656,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1555,7 +1671,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1564,7 +1682,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1577,7 +1697,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1586,7 +1708,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1599,7 +1723,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1608,7 +1734,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="pngpriv.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_png.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1636,7 +1764,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1644,7 +1775,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="1"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1657,7 +1791,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1666,7 +1802,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1679,7 +1817,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1688,7 +1828,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1700,7 +1842,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1708,7 +1853,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1721,7 +1869,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1730,7 +1880,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1743,7 +1895,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1752,7 +1906,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1765,7 +1921,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1774,7 +1932,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1787,7 +1947,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1796,7 +1958,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1809,7 +1973,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1818,7 +1984,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1831,7 +1999,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1840,7 +2010,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1853,7 +2025,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1862,7 +2036,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1875,7 +2051,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1884,7 +2062,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1897,7 +2077,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1906,7 +2088,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1919,7 +2103,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1928,7 +2114,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1941,7 +2129,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1950,7 +2140,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1963,7 +2155,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1972,7 +2166,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1985,7 +2181,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1994,7 +2192,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2007,7 +2207,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2016,7 +2218,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2029,7 +2233,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2038,7 +2244,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2050,7 +2258,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2058,7 +2269,10 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
+							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2071,7 +2285,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2080,7 +2296,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2093,7 +2311,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2102,7 +2322,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2115,7 +2337,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2124,7 +2348,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2137,7 +2363,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2146,7 +2374,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2159,7 +2389,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2168,7 +2400,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2181,7 +2415,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2190,7 +2426,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2203,7 +2441,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2212,7 +2452,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2225,7 +2467,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2234,7 +2478,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2247,7 +2493,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2256,7 +2504,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2269,7 +2519,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2278,7 +2530,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2291,7 +2545,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2300,7 +2556,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2313,7 +2571,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2322,7 +2582,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2335,7 +2597,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2344,7 +2608,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2357,7 +2623,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2366,7 +2634,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2379,7 +2649,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2388,7 +2660,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2401,7 +2675,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2410,7 +2686,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2423,7 +2701,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2432,7 +2712,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2445,7 +2727,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2454,7 +2738,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2467,7 +2753,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2476,7 +2764,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2489,7 +2779,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2498,7 +2790,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2511,7 +2805,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2520,7 +2816,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2534,6 +2832,8 @@
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2543,6 +2843,8 @@
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
 							UsePrecompiledHeader="0"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2555,7 +2857,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2564,7 +2868,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2577,7 +2883,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2586,7 +2894,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2599,7 +2909,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2608,7 +2920,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>
@@ -2621,7 +2935,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2630,7 +2946,9 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
-							UsePrecompiledHeader="0"
+							UsePrecompiledHeader="2"
+							PrecompiledHeaderThrough="jpeglib.h"
+							PrecompiledHeaderFile="$(IntDir)\$(TargetName)_jpeg.pch"
 						/>
 					</FileConfiguration>
 				</File>

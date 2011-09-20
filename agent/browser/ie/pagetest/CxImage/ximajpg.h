@@ -22,8 +22,6 @@
 #if !defined(__ximaJPEG_h)
 #define __ixmaJPEG_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_JPG
 
 #define CXIMAGEJPG_SUPPORT_EXIF 1

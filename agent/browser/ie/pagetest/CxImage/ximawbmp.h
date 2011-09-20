@@ -10,8 +10,6 @@
 #if !defined(__ximaWBMP_h)
 #define __ximaWBMP_h
 
-#include "ximage.h"
-
 #if CXIMAGE_SUPPORT_WBMP
 
 class CxImageWBMP: public CxImage

@@ -17,8 +17,6 @@
 #if !defined(__ximaBMP_h)
 #define __ximaBMP_h
 
-#include "ximage.h"
-
 const int RLE_COMMAND     = 0;
 const int RLE_ENDOFLINE   = 0;
 const int RLE_ENDOFBITMAP = 1;

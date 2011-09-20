@@ -5,6 +5,7 @@
  * CxImage version 5.99c 17/Oct/2004
  */
 
+#include "ximage.h"
 #include "ximawbmp.h"
 
 #if CXIMAGE_SUPPORT_WBMP

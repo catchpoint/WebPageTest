@@ -5,6 +5,7 @@
  * CxImage version 5.99c 17/Oct/2004
  */
  
+#include "ximage.h"
 #include "ximajpg.h"
 
 #if CXIMAGE_SUPPORT_JPG
