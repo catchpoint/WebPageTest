@@ -238,8 +238,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,2,0,298
- PRODUCTVERSION 2,2,0,298
+ FILEVERSION 2,2,0,299
+ PRODUCTVERSION 2,2,0,299
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -256,12 +256,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WebPagetest LLC"
             VALUE "FileDescription", "PageTest Web Site Testing"
-            VALUE "FileVersion", "2.2.0.298"
+            VALUE "FileVersion", "2.2.0.299"
             VALUE "InternalName", "PageTestExe.exe"
             VALUE "LegalCopyright", "(c) 2011 WebPagetest LLC,  All rights reserved."
             VALUE "OriginalFilename", "PageTest.exe"
             VALUE "ProductName", "Pagetest"
-            VALUE "ProductVersion", "2.2.0.298"
+            VALUE "ProductVersion", "2.2.0.299"
         END
     END
     BLOCK "VarFileInfo"
