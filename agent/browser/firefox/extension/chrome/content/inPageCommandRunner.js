@@ -153,7 +153,8 @@ wpt.contentScript.InPageCommandRunner = function(doc,
     'setInnerHTML': this.doSetInnerHTML_,
     'setInnerText': this.doSetInnerText_,
     'setValue': this.doSetValue_,
-    'submitForm': this.doSubmitForm_
+    'submitForm': this.doSubmitForm_,
+    'isTargetInDom': this.doIsTargetInDom_
   };
 };
 
@@ -350,14 +351,28 @@ wpt.contentScript.InPageCommandRunner.prototype.doSubmitForm_ = function(
   this.Success_();
 };
 
+wpt.contentScript.InPageCommandRunner.prototype.doIsTargetInDom_ = function(
+    commandObject) {
+  var domElements;
+  var command = commandObject['command'];
+  var target = commandObject['target'];
+
+  try {
+    domElements = wpt.contentScript.findDomElements_(this.doc_, target);
+  } catch (err) {
+    this.FatalError_("Command " + command + " failed: "+ err);
+    return undefined;
+  }
+
+  return (domElements && domElements.length > 0);
+};
+
 /**
  * Run a command.  The backgrond page delegates commands to the content script
  * by calling this method on an instance of InPageCommandRunner.
  * @param {Object} commandObj
  */
 wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj) {
-  console.info("InPageCommandRunner got a command: ", commandObj);
-
   var commandFun = this.commandMap_[commandObj['command']];
   if (!commandFun) {
     this.FatalError_("Unknown command " + commandObj['command']);

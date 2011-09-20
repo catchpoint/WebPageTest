@@ -29,12 +29,11 @@ window.wpt.moz['main'] = window.wpt.moz['main'] || {};
 var STARTUP_DELAY = 5000;
 var TASK_INTERVAL = 1000;
 var TASK_INTERVAL_SHORT = 0;
+var DOM_ELEMENT_POLL_INTERVAL = 100;
 
 var g_active = false;
 var g_tabId = -1;
-var g_start = 0;
 var g_requesting_task = false;
-
 
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
@@ -42,6 +41,43 @@ var RUN_FAKE_COMMAND_SEQUENCE = false;
 // nuke all of the bookmarks to prevent any live feeds from updating
 // TODO: possibly be more forgiving and query for a list of live bookmarks
 wpt.moz.clearAllBookmarks();
+
+/**
+ * Inform the driver that an event occurred.
+ */
+wpt.moz.main.sendEventToDriver_ = function(eventName, opt_params) {
+  var url = ('http://127.0.0.1:8888/event/' + eventName);
+  if (opt_params) {
+    var paramArray = [];
+    for (var key in opt_params) {
+      paramArray.push(
+          encodeURIComponent(key) + '=' + encodeURIComponent(opt_params[key]));
+    }
+    if (paramArray.length > 0) {
+      url = url + '?' + paramArray.join('&');
+    }
+  }
+  dump('POST event:  url = ' + url + '\n');
+
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.send();
+
+  } catch (err) {
+    dump("Error sending dom element xhr: " + err);
+  }
+
+
+  if (RUN_FAKE_COMMAND_SEQUENCE) {
+    // The real driver stops sending commands until an event happens in some
+    // cases.  For example, after sending setdomelement, no commands are sent
+    // until an event tells the driver that all dom elements loaded.
+    // The fake command source needs to know about events to emulate this
+    // behavior.
+    wpt.fakeCommandSource.onEvent(eventName, opt_params);
+  }
+};
 
 wpt.moz.main.onStartup = function() {
   if (RUN_FAKE_COMMAND_SEQUENCE) {
@@ -74,11 +110,7 @@ setTimeout(function() {wpt.moz.main.onStartup();}, STARTUP_DELAY);
                                           'nsIWindowMediator');
   var listener = {
     onWindowTitleChange: function(aWindow, aNewTitle) {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://127.0.0.1:8888/event/title?title='+encodeURIComponent(aNewTitle), true);
-        xhr.send();
-      } catch(err) {}
+      wpt.moz.main.sendEventToDriver_('title', {'title': aNewTitle});
     },
     onOpenWindow: function( aWindow ) {
     },
@@ -118,22 +150,19 @@ wpt.moz.main.getTask = function() {
 
 // notification that navigation started
 wpt.moz.main.onNavigate = function() {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/navigate', true);
-    xhr.send();
-  } catch(err) {}
-}
+  wpt.moz.main.sendEventToDriver_('navigate');
+  // We used to record the time here, so that events could send
+  // a time since navigation.  This was removed: The driver computes
+  // times when it receives events.  When firefox implements the web
+  // timing spec, consider re-adding it.  Chrome implements the spec,
+  // and the chrome extension sends times based on it.
+};
 
 // notification that the page loaded
 wpt.moz.main.onLoad = function() {
-  try {
-    g_active = false;
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/load', true);
-    xhr.send();
-  } catch(err) {}
-}
+  g_active = false;
+  wpt.moz.main.sendEventToDriver_('load');
+};
 
 // Start timing on a start event that applies to a document.
 // We test that *ALL* of these bits are set.
@@ -265,6 +294,9 @@ wpt.moz.main.executeTask = function(task) {
       case 'block':
         wpt.moz.main.block(task.target);
         break;
+      case 'setdomelement':
+        wpt.moz.main.setDomElement(task.target);
+        break;
 
       default:
         dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
@@ -357,10 +389,10 @@ function SendCommandToContentScript_(commandObj) {
   };
 
   var inPageScript = [
-      'RunCommand_(window.document, ', JSON.stringify(commandObj), ');'
+      'return RunCommand_(window.document, ', JSON.stringify(commandObj), ');'
   ].join('');
 
-  var result = wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
+  return wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
 }
 
 wpt.moz.main.setValue = function(target, value) {
@@ -404,6 +436,65 @@ wpt.moz.main.setInnerHtml = function(target, value) {
 
 wpt.moz.main.block = function(target) {
   wpt.moz.blockContentMatching(target);
+};
+
+/**
+ * The DOM targets we are waiting on.  Used to implement the setDomElement
+ * command.
+ */
+wpt.moz.main.domElementsToWaitOn_ = [];
+
+/**
+ * When we are waiting on DOM elements to appear, setInterval is used
+ * to poll for them.  The id of that interval is stored here, so that
+ * we can cancel it when all DOM elements are found.  When we are not
+ * polling, this variable is undefined.
+ */
+wpt.moz.main.domElementsPollingId_ = undefined;
+
+wpt.moz.main.setDomElement = function(target) {
+  wpt.moz.main.domElementsToWaitOn_.push(target);
+
+  // If we are not already polling for the dom elements, start doing so.
+  if (typeof(wpt.moz.main.domElementsPollingId_) == 'undefined') {
+    wpt.moz.main.domElementsPollingId_ = window.setInterval(
+        function() {
+          wpt.moz.main.pollForDomElements();
+        },
+        DOM_ELEMENT_POLL_INTERVAL);
+  }
+};
+
+wpt.moz.main.pollForDomElements = function() {
+  var missingDomElements = [];
+  for (var i = 0, ie = wpt.moz.main.domElementsToWaitOn_.length; i < ie; i++) {
+    var target = wpt.moz.main.domElementsToWaitOn_[i];
+    var targetInPage = SendCommandToContentScript_({
+      'command': 'isTargetInDom',
+      'target': target
+    });
+
+    if (targetInPage) {
+      var domElementParams = {
+        'name_value': target
+      };
+      wpt.moz.main.sendEventToDriver_('dom_element', domElementParams);
+    } else {
+      // If we did not find |target|, save it for the next poll.
+      missingDomElements.push(target);
+    }
+  }
+
+  // Replace the set of dom elements to wait on with the subset that we did
+  // not find.
+  wpt.moz.main.domElementsToWaitOn_ = missingDomElements;
+
+  // If all targets have been found, stop polling and signal completion.
+  if (missingDomElements.length == 0) {
+    window.clearInterval(wpt.moz.main.domElementsPollingId_);
+    wpt.moz.main.domElementsPollingId_ = undefined;
+    wpt.moz.main.sendEventToDriver_('all_dom_elements_loaded', {});
+  }
 };
 
 })();  // End closure

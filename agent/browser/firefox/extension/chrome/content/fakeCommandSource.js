@@ -41,13 +41,29 @@ function FakeCommand(action, target, opt_value) {
 }
 
 var FAKE_COMMANDS = [
+    FakeCommand('navigate', 'http://www.example.com/'),
+
+    FakeCommand('setdomelement', 'doneWaiting=yes'),
+    //FakeCommand('setdomelement', 'doneWaiting=no'),
+
+    // Add a div including the done waiting marker.
+    FakeCommand('exec',
+                'var el = window.document.createElement("div"); ' +
+                'el.setAttribute("id", "testInjectionElement"); ' +
+                'el.setAttribute("doneWaiting", "yes"); ' +
+                'el.innerText = "See this text??????????????????????"; ' +
+                'window.document.body.appendChild(el); '),
+
+    FakeCommand('exec',
+                'alert("done waiting.");'),
+
     FakeCommand('block', 'iana-logo-pageheader.png'),
 
     // Can we navigate?
     FakeCommand('navigate', 'http://www.example.com/'),
 
     // Can exec read the DOM of the page?
-    FakeCommand('exec', 'dump("window.location.href is: " + window.location.href);'),
+    FakeCommand('exec', 'dump("window.location.href is: " + window.location.href + "\\n");'),
 
     // Can exec alter the DOM of the page?
     FakeCommand('exec', 'window.document.title = "This title is from an exec command"'),
@@ -71,6 +87,7 @@ var FAKE_COMMANDS = [
     // Search for a cute dog on youtube.
     FakeCommand('navigate', 'http://www.youtube.com/'),
     FakeCommand('setvalue', 'id=masthead-search-term', 'boston mspca legend'),
+
     FakeCommand('submitform', 'id=masthead-search'),
 
     // See some doodles on google.com.
@@ -96,12 +113,48 @@ var FAKE_COMMANDS = [
                 'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)')
 ];
 
+
+wpt.fakeCommandSource.waitingForDomNodesLoadedEvent_ = false;
+
+/** If defined, block at this index.  Some event should unblock eventually. */
+wpt.fakeCommandSource.blockIndex_ = undefined;
+
+/**
+ * Some commands block new commands until
+ */
+wpt.fakeCommandSource.onEvent = function(eventName, opt_params) {
+  if (wpt.fakeCommandSource.waitingForDomNodesLoadedEvent_ &&
+      eventName == 'all_dom_elements_loaded') {
+    wpt.fakeCommandSource.waitingForDomNodesLoadedEvent_ = true;
+    wpt.fakeCommandSource.blockIndex_ = undefined;
+  }
+};
+
+
 var fakeCommandIdx = 0;
+
 wpt.fakeCommandSource.next = function() {
   if (fakeCommandIdx >= FAKE_COMMANDS.length)
     return null;
 
-  return FAKE_COMMANDS[fakeCommandIdx++];
+  if (typeof(wpt.fakeCommandSource.blockIndex_) != 'undefined' &&
+      fakeCommandIdx == wpt.fakeCommandSource.blockIndex_) {
+    return null;
+  }
+
+  var cmd = FAKE_COMMANDS[fakeCommandIdx];
+
+  // Block commands in the same way the driver would.
+  if (cmd['action'] == 'setdomelement') {
+    wpt.fakeCommandSource.waitingForDomNodesLoadedEvent_ = true;
+
+    // Allow the next command, but block after it until the target appears.
+    wpt.fakeCommandSource.blockIndex_ = fakeCommandIdx + 2;
+  }
+
+  fakeCommandIdx++;
+
+  return cmd;
 };
 
 })();  // End closure

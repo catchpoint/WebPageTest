@@ -133,13 +133,14 @@ wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
   var scriptWithExceptionDumping = [
       '(function() {  // Begin closure',
       '  try {',
-      '    return ' + scriptText,
+      '    ' + scriptText,
       '  } catch (ex) {',
       '    dump("\\n\\nUncaught exception in exec script: " + ex + "\\n\\n");',
       '  }',
       '})();'
    ].join('\n');
 
+  // Check that the type is safe.  Only primitive types should be returned.
   var result = CU.evalInSandbox(scriptWithExceptionDumping, sandbox);
   switch (typeof result) {
     case 'string':
@@ -154,7 +155,6 @@ wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
            'function.  Results dumped.\n');
       return undefined;
   }
-
   return result;
 };
 
