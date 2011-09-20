@@ -68,12 +68,20 @@ $page_description = "Website performance test screen shots$testLabel.";
                     
                 if($cached == 1)
                     $cachedText='_Cached';
-            ?>
-            <h1>Fully Loaded</h1>
-		    <a href="<?php echo substr($testPath, 1) . '/' . $run . $cachedText; ?>_screen.jpg">
-            <img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="<?php echo substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg'; ?>">
-            </a>
-            <?php
+                if( is_file($testPath . '/' . $run . $cachedText . '_screen.png') )
+                {
+                    echo '<h1>Fully Loaded</h1>';
+                    echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
+                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
+                    echo '</a>';
+                }
+                elseif( is_file($testPath . '/' . $run . $cachedText . '_screen.jpg') )
+                {
+                    echo '<h1>Fully Loaded</h1>';
+		            echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
+                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
+                    echo '</a>';
+                }
                 // display the last status message if we have one
                 if( count($messages) )
                 {

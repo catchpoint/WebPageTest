@@ -193,6 +193,13 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
+                            <label for="backend">Back-End</label>
+                            <select name="backend" id="backend">
+                                <option value="PSS" selected>Production</option>
+                                <option value="PSA">PSA</option>
+                            </select>
+                        </li>
+                        <li>
                             <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-Expt-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>
@@ -286,6 +293,14 @@ $page_description = "Comparison Test$testLabel.";
                 {
                     var script = form.script.value;
                     script = "addHeader\tX-Expt-NumDomainShards: " + shard + "\n" + script;
+                    form.script.value = script;
+                }
+                
+                var backend = form.backend.value;
+                if (backend == 'PSA')
+                {
+                    var script = form.script.value;
+                    script = script.replace('wpt.pssdemos.com', 'psa.pssdemos.com');
                     form.script.value = script;
                 }
                 

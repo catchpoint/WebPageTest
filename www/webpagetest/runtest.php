@@ -107,6 +107,8 @@
             $test['view'] = trim($req_view);
             $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
             $test['queue_limit'] = 0;
+            $test['pngss'] = (int)$req_pngss;
+            $test['iq'] = (int)$req_iq;
             
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
@@ -1367,6 +1369,7 @@ function ShardKey()
 */
 function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
+    global $settings;
     $testId = null;
     
     // generate the test ID
@@ -1491,6 +1494,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "browser={$test['browserExe']}\r\n";
         if( isset($test['browser']) && strlen($test['browser']) )
             $testFile .= "browser={$test['browser']}\r\n";
+        if( $test['pngss'] || $settings['pngss'] )
+            $testFile .= "pngScreenShot=1\r\n";
+        if( $test['iq'] )
+            $testFile .= "imageQuality={$test['iq']}\r\n";
+        elseif( $settings['iq'] )
+            $testFile .= "imageQuality={$settings['iq']}\r\n";
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )

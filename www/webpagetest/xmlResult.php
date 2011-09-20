@@ -190,6 +190,8 @@ else
                     echo "<connectionView>http://$host$uri$path/{$i}_connection.png</connectionView>";
                     echo "<checklist>http://$host$uri$path/{$i}_optimization.png</checklist>";
                     echo "<screenShot>http://$host$uri$path/{$i}_screen.jpg</screenShot>";
+                    if( is_file("$testPath/{$i}_screen.png") )
+                        echo "<screenShotPng>http://$host$uri$path/{$i}_screen.png</screenShotPng>";
                     echo "</images>";
 
                     // raw results
