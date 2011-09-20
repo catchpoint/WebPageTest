@@ -343,7 +343,7 @@ function RunCommand_(doc, commandObj) {
           dump('Error: ' + Array.prototype.slice.call(arguments).join('') + '\n');
         }
       });
-  ipcr.RunCommand(commandObj);
+  return ipcr.RunCommand(commandObj);
 }
 
 /**
@@ -360,7 +360,7 @@ function SendCommandToContentScript_(commandObj) {
       'RunCommand_(window.document, ', JSON.stringify(commandObj), ');'
   ].join('');
 
-  wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
+  var result = wpt.moz.execScriptInSelectedTab(inPageScript, exportedFunctions);
 }
 
 wpt.moz.main.setValue = function(target, value) {

@@ -131,15 +131,31 @@ wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
   // If the script we are running throws, we need some way to see the exception.
   // Wrap the script in a try block, and dump any exceptions we catch.
   var scriptWithExceptionDumping = [
-      'try {',
-      '  (function() {',
-      scriptText,
-      '  })();',
-      '} catch (ex) {',
-      '  dump("\\n\\nUncaught exception in exec script: " + ex + "\\n\\n");',
-      '}'].join('\n');
+      '(function() {  // Begin closure',
+      '  try {',
+      '    return ' + scriptText,
+      '  } catch (ex) {',
+      '    dump("\\n\\nUncaught exception in exec script: " + ex + "\\n\\n");',
+      '  }',
+      '})();'
+   ].join('\n');
 
-  CU.evalInSandbox(scriptWithExceptionDumping, sandbox);
+  var result = CU.evalInSandbox(scriptWithExceptionDumping, sandbox);
+  switch (typeof result) {
+    case 'string':
+    case 'boolean':
+    case 'number':
+    case 'undefined':
+      // Okay to return these primitive types.
+      break;
+
+    default:
+      dump('DANGER: Complex types should not be returned from a sandboxed ' +
+           'function.  Results dumped.\n');
+      return undefined;
+  }
+
+  return result;
 };
 
 wpt.moz.clearAllBookmarks = function() {

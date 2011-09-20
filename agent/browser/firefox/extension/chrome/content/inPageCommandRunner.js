@@ -361,13 +361,13 @@ wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj
   var commandFun = this.commandMap_[commandObj['command']];
   if (!commandFun) {
     this.FatalError_("Unknown command " + commandObj['command']);
-    return;
+    return undefined;
   }
 
   try {
-    commandFun.call(this, commandObj);
+    return commandFun.call(this, commandObj);
   } catch (ex) {
     this.FatalError_("Exception running command: " + ex);
-    return;
+    return undefined;
   }
 };
