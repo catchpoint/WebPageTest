@@ -26,6 +26,7 @@ window.wpt['moz'] = window.wpt['moz'] || {};
 var CI = Components.interfaces;
 var CC = Components.classes;
 var CU = Components.utils;
+var CR = Components.results;
 
 wpt.moz.createInst = function(mozClass, mozInstance) {
   return CC[mozClass].createInstance(CI[mozInstance]);
@@ -212,19 +213,20 @@ wpt.moz.RequestBlockerSinglton_ = {
       return;
     }
 
-    for (var i = 0, ie = wpt.moz.RequestBlockerSinglton_.UrlBlockStrings.length;i < ie; ++i) {
+    for (var i = 0, ie = wpt.moz.RequestBlockerSinglton_.UrlBlockStrings.length;
+         i < ie; ++i) {
       var blockString = wpt.moz.RequestBlockerSinglton_.UrlBlockStrings[i];
       if (originalUri.indexOf(blockString) != -1) {
-        dump('BLOCK original URI ' + originalUri + ' because it matched block string ' +
-             blockString + '\n');
-        subject.cancel(Components.results.NS_BINDING_ABORTED);
+        wpt.moz.logInfo('BLOCK original URI ', originalUri,
+                        ' because it matched block string ', blockString);
+        subject.cancel(CR.NS_BINDING_ABORTED);
         return;
       }
 
       if (currentUri.indexOf(blockString) != -1) {
-        dump('BLOCK current URI ' + currentUri + ' because it matched block string ' +
-             blockString + '\n');
-        subject.cancel(Components.results.NS_BINDING_ABORTED);
+        wpt.moz.logInfo('BLOCK current URI ', currentUri, ' because it matched ',
+                        'block string ', blockString);
+        subject.cancel(CR.NS_BINDING_ABORTED);
         return;
       }
     }
@@ -248,6 +250,23 @@ wpt.moz.blockContentMatching = function(blockString) {
   }
 
   wpt.moz.RequestBlockerSinglton_.UrlBlockStrings.push(blockString);
+};
+
+var consoleService = wpt.moz.getService('@mozilla.org/consoleservice;1',
+                                        'nsIConsoleService');
+wpt.moz.logInfo = function() {
+  consoleService.logStringMessage(
+      Array.prototype.slice.call(arguments).join(''));
+};
+
+wpt.moz.logError = function() {
+  Components.utils.reportError(
+      Array.prototype.slice.call(arguments).join(''));
+};
+
+wpt.moz.logJson = function() {
+  consoleService.logStringMessage(
+      JSON.stringify(Array.prototype.slice.call(arguments), null, 2));
 };
 
 })();  // End closure

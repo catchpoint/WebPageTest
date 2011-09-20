@@ -74,14 +74,14 @@ var FAKE_COMMANDS = [
         '  var foo = "" + gBrowser;',
         '  alert("BUG: Sandbox should not allow access to gBroser.");',
         '} catch (ex) {',
-        '  dump("Got ex:" + ex);',
+        '  dump("GOOD: Got ex:" + ex);',
         '}'].join('\n')),
     FakeCommand('exec', [
         'try {',
         '  var foo = Components.classes["@mozilla.org/network/standard-url;1"];',
         '  alert("BUG: sandbox should hide Components.classes[...] from a web page.");',
         '} catch (ex) {',
-        '  dump("Got ex:" + ex);',
+        '  dump("GOOD: Got ex:" + ex);',
         '}'].join('\n')),
 
     // Search for a cute dog on youtube.

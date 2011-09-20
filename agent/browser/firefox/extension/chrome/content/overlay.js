@@ -57,7 +57,7 @@ wpt.moz.main.sendEventToDriver_ = function(eventName, opt_params) {
       url = url + '?' + paramArray.join('&');
     }
   }
-  dump('POST event:  url = ' + url + '\n');
+  wpt.moz.logInfo('POST event:  url = ', url);
 
   try {
     var xhr = new XMLHttpRequest();
@@ -65,7 +65,7 @@ wpt.moz.main.sendEventToDriver_ = function(eventName, opt_params) {
     xhr.send();
 
   } catch (err) {
-    dump("Error sending dom element xhr: " + err);
+    wpt.moz.logInfo("Error sending dom element xhr: " + err);
   }
 
 
@@ -260,12 +260,14 @@ function trim(stringToTrim) {
                       Script Commands
 ***********************************************************/
 
-// execute a single task/script command
+/** execute a single task/script command */
 wpt.moz.main.executeTask = function(task) {
-  dump('Exec: ' + JSON.stringify(task, null, 2) + '\n');
+  wpt.moz.logJson('Exec task object: ', task);
 
   if (task.action && task.action.length) {
-    g_active = !!task.record;  // "record" should be named "blocking".  If true, don't ask for another command.
+    // |task.record| should be named "blocking".  If true, don't ask for
+    // another command.
+    g_active = !!task.record;
     switch (task.action) {
       case 'navigate':
         wpt.moz.main.navigate(task.target);
@@ -299,7 +301,7 @@ wpt.moz.main.executeTask = function(task) {
         break;
 
       default:
-        dump('Unknown command: ' + JSON.stringify(task, null, 2) + '\n');
+        wpt.moz.logError('Unknown command: ', JSON.stringify(task, null, 2));
     }
 
     if (!g_active) {
@@ -367,12 +369,15 @@ function RunCommand_(doc, commandObj) {
       doc,
       null,  // No chrome API.
       {
-        success: function() { dump('SUCCESS\n'); },
+        success: function() {
+          wpt.moz.logInfo('SUCCESS');
+        },
         warn: function() {
-          dump('Warn: ' + Array.prototype.slice.call(arguments).join('') + '\n');
+          wpt.moz.logInfo('Warn: ',
+                          Array.prototype.slice.call(arguments).join(''));
         },
         error: function() {
-          dump('Error: ' + Array.prototype.slice.call(arguments).join('') + '\n');
+          wpt.moz.logError(Array.prototype.slice.call(arguments).join(''));
         }
       });
   return ipcr.RunCommand(commandObj);
