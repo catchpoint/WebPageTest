@@ -36,7 +36,7 @@ wpt.moz.getService = function(mozClass, mozInterface) {
 };
 
 /**
- * Mozilla interfaces often have bitflags.  This function takes an integer
+ * Mozilla interfaces often have bitflags.  This function takes a number
  * and an interface with bitmasks, and turns it into an array of the string
  * name of the bitmasks that are set.
  *
@@ -109,7 +109,7 @@ wpt.moz.setCookie = function(cookieObj) {
 
 wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
   // Mozilla's Components.utils.sandbox object allows javascript to be run
-  // with limited privlages.  Any javascript we run directly can do anything
+  // with limited privileges.  Any javascript we run directly can do anything
   // extension javascript can do, including reading and writing to the
   // filesystem.  The sandbox imposes a the same limits on javascript that
   // the page has.  Docs are here:
@@ -216,7 +216,7 @@ wpt.moz.RequestBlockerSinglton_ = {
 };
 
 /**
- * Observe network retuests, and block requests that have |blockString| in
+ * Observe network requests, and block requests that have |blockString| in
  * their URI.
  */
 wpt.moz.blockContentMatching = function(blockString) {

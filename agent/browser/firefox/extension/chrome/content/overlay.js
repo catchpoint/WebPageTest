@@ -278,7 +278,7 @@ wpt.moz.main.executeTask = function(task) {
 
 // exec
 wpt.moz.main.exec = function(script) {
-  wpt.moz.execScriptInSelectedTab(script);
+  wpt.moz.execScriptInSelectedTab(script, {});
 };
 
 // navigate

@@ -118,8 +118,9 @@ chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     if (request.message == "setDOMElements") {
       g_domNameValues = request.name_values;
-      g_intervalId = window.setInterval(function() { pollDOMElement(); },
-                                        DOM_ELEMENT_POLL_INTERVAL);
+      g_intervalId = window.setInterval(
+          function() { pollDOMElement(); },
+          DOM_ELEMENT_POLL_INTERVAL);
     }
     sendResponse({});
 });
@@ -136,7 +137,6 @@ function pollDOMElement() {
     if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
       postDOMElementLoaded(g_domNameValues[i]);
       loaded_dom_element_indices.push(i);
-      // window.clearInterval(g_intervalId);
     }
   }
   // Remove the loaded elements from backwards using splice method.
