@@ -141,6 +141,9 @@ void TerminateProcs(void)
 		, _T("internet explorer")
 		, _T("pagetest")
 	};
+  const TCHAR * szKeep[] = {
+    _T("wptdriver")
+  };
 
 	// Send close messages to everything
 	while(hWnd)
@@ -155,6 +158,12 @@ void TerminateProcs(void)
 				{
 					if(_tcsstr(szTitle, szClose[i]))
 						bKill = true;
+				}
+				if( bKill )
+				for(int i = 0; i < _countof(szKeep) && bKill; i++)
+				{
+					if(_tcsstr(szTitle, szKeep[i]))
+						bKill = false;
 				}
 				
 				if( bKill )
