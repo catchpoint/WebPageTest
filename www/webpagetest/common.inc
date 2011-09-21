@@ -1254,6 +1254,7 @@ function ArchiveTest($id)
                         {
                             $filePath = "$testPath/$file";
                             if( is_file($filePath) && 
+                                strpos($file, '_screen.png') === false &&
                                 strpos($file, '_doc.jpg') === false &&
                                 strpos($file, '_render.jpg') === false &&
                                 strpos($file, '_status.txt') === false )
