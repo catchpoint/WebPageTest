@@ -167,6 +167,7 @@ public:
   CAtlList<CString>       headersAdd;       // list of headers to add
   CAtlList<CString>       headersSet;       // list of headers to set/override
   CAtlList<CHostOverride> hostOverride;     // host headers to override
+  CAtlList<CHostOverride> overrideHostUrls; // override the given host, redirect it's DNS and add the header to the actual URL
 
 protected:
 	bool LoadScript(CString file);

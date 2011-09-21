@@ -683,7 +683,22 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 					block = true;
 			}
 			
-			if( is_ad && block )
+      // see if we need to add the original host name into the URL itself
+      CString addHost;
+      pos = overrideHostUrls.GetHeadPosition();
+      while( pos && addHost.IsEmpty() )
+      {
+        CHostOverride target = overrideHostUrls.GetNext(pos);
+        if( !target.originalHost.CompareNoCase(host) )
+        {
+          addHost = host;
+          host = target.newHost;
+        }
+      }
+      if( !addHost.IsEmpty() )
+        object = CString(_T("/")) + addHost + object;
+
+      if( is_ad && block )
 				blockedAdRequests.AddTail(fullUrl);
 			else if( block )
 				blockedRequests.AddTail(fullUrl);
@@ -939,12 +954,26 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void CWinInetEvents::BeforeInternetConnect(HINTERNET hInternet, CString &server)
+{
+  // see if we need to override the server
+  POSITION pos = overrideHostUrls.GetHeadPosition();
+  while( pos )
+  {
+    CHostOverride target = overrideHostUrls.GetNext(pos);
+    if( !target.originalHost.CompareNoCase(server) )
+      server = target.newHost;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void CWinInetEvents::OnInternetConnect(HINTERNET hConnect, CString &server, HINTERNET hInternet)
 {
 	// for each connection, keep track of the server associated with it
 	ATLTRACE(_T("[Pagetest] - *** 0x%p - OnInternetConnect - 0x%p - %s\n"), hConnect, hInternet, (LPCTSTR)server);
 	winInetConnections.SetAt(hConnect, server);
-	
+
 	bool async = true;
 	if( winInetAsync.Lookup(hInternet, async) )
 		winInetAsync.SetAt(hConnect, async);

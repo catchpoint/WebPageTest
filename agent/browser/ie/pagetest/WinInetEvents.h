@@ -46,6 +46,7 @@ public:
 	virtual void * BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, CString &object, CString &version, CString &referrer, CString &accept, DWORD &dwFlags, DWORD_PTR dwContext, bool &block);
 	virtual void AfterHttpOpenRequest(HINTERNET hRequest, void * context);
 	virtual void OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPVOID lpOptional, DWORD dwOptionalLength);
+  virtual void BeforeInternetConnect(HINTERNET hInternet, CString &server);
 	virtual void OnInternetConnect(HINTERNET hConnect, CString &server, HINTERNET hInternet);
 	virtual void linkSocketRequestConnect(CSocketConnect * c);
 	virtual void linkSocketRequestSend(CSocketRequest * r);
