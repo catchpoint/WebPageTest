@@ -118,6 +118,16 @@ HINTERNET __stdcall InternetConnectA_Hook(HINTERNET hInternet, LPCSTR lpszServer
 	return ret;
 }
 
+HINTERNET __stdcall HttpOpenRequestW_Hook(HINTERNET hConnect, LPCWSTR lpszVerb, LPCWSTR lpszObjectName, LPCWSTR lpszVersion, LPCWSTR lpszReferrer, LPCWSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext)
+{
+	HINTERNET ret = NULL;
+	__try{
+		if(pHook)
+			ret = pHook->HttpOpenRequestW(hConnect, lpszVerb, lpszObjectName, lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
+	}__except(1){}
+	return ret;
+}
+
 HINTERNET __stdcall HttpOpenRequestA_Hook(HINTERNET hConnect, LPCSTR lpszVerb, LPCSTR lpszObjectName, LPCSTR lpszVersion, LPCSTR lpszReferrer, LPCSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext)
 {
 	HINTERNET ret = NULL;
@@ -231,6 +241,7 @@ BOOL __stdcall HttpAddRequestHeadersA_Hook(HINTERNET hRequest, LPCSTR lpszHeader
 -----------------------------------------------------------------------------*/
 CWinInetHook::CWinInetHook(void):
 	hookReadA(true)
+  ,hookOpenA(true)
 {
 	InitializeCriticalSection(&cs);
 
@@ -244,6 +255,7 @@ CWinInetHook::CWinInetHook(void):
 	_InternetSetStatusCallback = hook.createHookByName("wininet.dll", "InternetSetStatusCallback", InternetSetStatusCallback_Hook);
 	_InternetConnectW = hook.createHookByName("wininet.dll", "InternetConnectW", InternetConnectW_Hook);
 	_InternetConnectA = hook.createHookByName("wininet.dll", "InternetConnectA", InternetConnectA_Hook);
+	_HttpOpenRequestW = hook.createHookByName("wininet.dll", "HttpOpenRequestW", HttpOpenRequestW_Hook);
 	_HttpOpenRequestA = hook.createHookByName("wininet.dll", "HttpOpenRequestA", HttpOpenRequestA_Hook);
 	_HttpSendRequestW = hook.createHookByName("wininet.dll", "HttpSendRequestW", HttpSendRequestW_Hook);
 	_HttpSendRequestA = hook.createHookByName("wininet.dll", "HttpSendRequestA", HttpSendRequestA_Hook);
@@ -461,6 +473,63 @@ HINTERNET CWinInetHook::InternetConnectA(HINTERNET hInternet, LPCSTR lpszServerN
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+HINTERNET CWinInetHook::HttpOpenRequestW(HINTERNET hConnect, LPCWSTR lpszVerb, LPCWSTR lpszObjectName, LPCWSTR lpszVersion, LPCWSTR lpszReferrer, LPCWSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext)
+{
+	HINTERNET ret = NULL;
+	void * dlgContext = NULL;
+	bool block = false;
+
+	hookOpenA = false;	// if we ever get the W version, DO NOT HOOK the A version or you will get duplicate requests
+
+  CString object(lpszObjectName);
+	if( dlg )
+	{
+		CString verb(lpszVerb);
+		CString version(lpszVersion);
+		CString referrer(lpszReferrer);
+		CString accept;
+		if(lplpszAcceptTypes)
+			accept = *lplpszAcceptTypes;
+		
+		dlgContext = dlg->BeforeHttpOpenRequest(hConnect, verb, object, version, referrer, accept, dwFlags, dwContext, block);
+	}
+	
+	if( block )
+	{
+		ret = NULL;
+		SetLastError(ERROR_INTERNET_INVALID_URL);
+	}
+	else
+	{	
+		if( _HttpOpenRequestW )
+			ret = _HttpOpenRequestW(hConnect, lpszVerb, (LPCWSTR)object, lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
+			
+		// add a mapping of the new handle back to the parent
+		if( ret )
+		{
+			EnterCriticalSection(&cs);
+			parents.SetAt(ret, hConnect);
+			LeaveCriticalSection(&cs);
+		}
+		else
+		{
+			DWORD err = GetLastError();
+			DWORD len = 0;
+			if( lpszObjectName )
+				len = lstrlenW(lpszObjectName);
+			ATLTRACE(_T("[Pagetest] - *** HttpOpenRequestW Error: %d, Object Length = %d\n"), err, len);
+		}
+		
+		// let the dialog know about the new handle
+		if( dlg )
+			dlg->AfterHttpOpenRequest(ret, dlgContext);
+	}
+
+	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 HINTERNET CWinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb, LPCSTR lpszObjectName, LPCSTR lpszVersion, LPCSTR lpszReferrer, LPCSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext)
 {
 	HINTERNET ret = NULL;
@@ -468,7 +537,8 @@ HINTERNET CWinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb, LP
 	bool block = false;
 	
   CString object((LPCTSTR)CA2T(lpszObjectName));
-	if( dlg )
+
+  if( dlg && hookOpenA )
 	{
 		CString verb((LPCTSTR)CA2T(lpszVerb));
 		CString version((LPCTSTR)CA2T(lpszVersion));
@@ -490,25 +560,28 @@ HINTERNET CWinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb, LP
 		if( _HttpOpenRequestA )
 			ret = _HttpOpenRequestA(hConnect, lpszVerb, (LPCSTR)CT2A(object), lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
 			
-		// add a mapping of the new handle back to the parent
-		if( ret )
-		{
-			EnterCriticalSection(&cs);
-			parents.SetAt(ret, hConnect);
-			LeaveCriticalSection(&cs);
-		}
-		else
-		{
-			DWORD err = GetLastError();
-			DWORD len = 0;
-			if( lpszObjectName )
-				len = lstrlenA(lpszObjectName);
-			ATLTRACE(_T("[Pagetest] - *** HttpOpenRequestA Error: %d, Object Length = %d\n"), err, len);
-		}
-		
-		// let the dialog know about the new handle
-		if( dlg )
-			dlg->AfterHttpOpenRequest(ret, dlgContext);
+    if( hookOpenA )
+    {
+		  // add a mapping of the new handle back to the parent
+		  if( ret )
+		  {
+			  EnterCriticalSection(&cs);
+			  parents.SetAt(ret, hConnect);
+			  LeaveCriticalSection(&cs);
+		  }
+		  else
+		  {
+			  DWORD err = GetLastError();
+			  DWORD len = 0;
+			  if( lpszObjectName )
+				  len = lstrlenA(lpszObjectName);
+			  ATLTRACE(_T("[Pagetest] - *** HttpOpenRequestA Error: %d, Object Length = %d\n"), err, len);
+		  }
+  		
+		  // let the dialog know about the new handle
+		  if( dlg )
+			  dlg->AfterHttpOpenRequest(ret, dlgContext);
+    }
 	}
 
 	return ret;
