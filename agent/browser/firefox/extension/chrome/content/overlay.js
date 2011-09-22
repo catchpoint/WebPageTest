@@ -93,14 +93,7 @@ wpt.moz.main.onStartup = function() {
   }
 };
 
-function wptFeedFakeTasks() {
-  if (FAKE_TASKS.length == FAKE_TASKS_IDX) {
-    return;
-  }
-  wpt.moz.main.executeTask(FAKE_TASKS[FAKE_TASKS_IDX++]);
-};
-
-// Load a task.
+// Start loading tasks.
 setTimeout(function() {wpt.moz.main.onStartup();}, STARTUP_DELAY);
 
 // monitor for page title changes
@@ -164,75 +157,53 @@ wpt.moz.main.onLoad = function() {
   wpt.moz.main.sendEventToDriver_('load');
 };
 
-// Start timing on a start event that applies to a document.
-// We test that *ALL* of these bits are set.
-var START_FILTER = (
-    Components.interfaces.nsIWebProgressListener.STATE_START |
-    Components.interfaces.nsIWebProgressListener.STATE_IS_DOCUMENT);
-
-// Stop timing on a stop event that ends a network event from a window.
-// We test that *ALL* of these bits are set.
-var STOP_FILTER = (
-    Components.interfaces.nsIWebProgressListener.STATE_STOP |
-    Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK |
-    Components.interfaces.nsIWebProgressListener.STATE_IS_WINDOW);
-
-var wptListener = {
-  debugDumpEvents_: false,    // Log on* methods of this object.
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
-        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
-        aIID.equals(Components.interfaces.nsISupports))
-      return this;
-    throw Components.results.NS_NOINTERFACE;
-  },
-
-  onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {
-    if (this.debugDumpEvents_) {
-      dump('===== onStateChange:\n' +
-           '    aRequest = ' + (aRequest===null ? 'null' : aRequest.name) + '\n' +
-           '    aFlag = ' + wpt.moz.stringifyFlags('nsIWebProgressListener', /^STATE/, aFlag).join(' | ') + '\n' +
-           '\n\n');
-      if (!aWebProgress.DOMWindow) {
-        dump('   === No dom window.\n');
-      } else {
-        dump('   === aWebProgress.DOMWindow location is '+ aWebProgress.DOMWindow.location.href + '\n');
-      }
-    }
-
-    // If you used for more than one tab/window, use aWebProgress.DOMWindow
-    // to obtain the tab/window which triggers the state change.
-    if (aRequest && (!aRequest.name || !/^https?:/.test(aRequest.name)))
-      return;
-
-    if (wpt.moz.allBitsSet(START_FILTER, aFlag)) {
-      wptExtension.loadStart();
-    }
-
-    if (wpt.moz.allBitsSet(STOP_FILTER, aFlag)) {
-      wptExtension.loadStop();
-    }
-  },
-
-  // Redirects cause a call to onLocationChange.  |aURI.spec| is the new URL.
-  onLocationChange: function(aProgress, aRequest, aURI) {
-    if (this.debugDumpEvents_) {
-      dump('===== onLocationChange: '+ aURI.spec + '\n');
-    }
+/**
+ * Fired when gBrowser receives a load event, this function
+ * calls wptExtension.loadStop() when a page is ready to call onload
+ * handlers.
+ */
+function onPageLoad(event) {
+  // We only care about events aimed at the document.
+  if (!event.originalTarget instanceof HTMLDocument)
     return;
-  },
-  onProgressChange: function(a, b, c, d, e, f) {return;},
-  onStatusChange: function(a, b, c, d) {return;},
-  onSecurityChange: function(a, b, c) {return;}
-};
+
+  // Filter events from frames by checking that this event references the top
+  // window in the page.
+  var win = event.originalTarget.defaultView;
+  if (!win || win !== win.top)
+    return;
+
+  wptExtension.loadStop();
+}
+
+/**
+ * Fired when gBrowser receives a pagehide event, this function
+ * calls wptExtension.loadStart() to indicate that navigation is
+ * starting.
+ */
+function onPageHide(event) {
+  // We only care about events aimed at the document.
+  if (!event.originalTarget instanceof HTMLDocument)
+    return;
+
+  var win = event.originalTarget.defaultView;
+  if (!win || win !== win.top)
+    return;
+
+  wptExtension.loadStart();
+}
 
 var wptExtension = {
   init: function() {
-    gBrowser.addProgressListener(wptListener);
+    // Use the load event on the global browser object to see when the
+    // page gets the onload event.
+    gBrowser.addEventListener('load', onPageLoad, true);
+    gBrowser.addEventListener('pagehide', onPageHide, true);
   },
   uninit: function() {
-    gBrowser.removeProgressListener(wptListener);
+    gBrowser.removeEventListener('load', onPageLoad, true);
+    gBrowser.removeEventListener('pagehide', onPageHide, true);
+
   },
   loadStart: function() {
     if (g_active) {
@@ -245,8 +216,8 @@ var wptExtension = {
     }
   }
 };
-window.addEventListener('load', function() {wptExtension.init()}, false);
-window.addEventListener('unload', function() {wptExtension.uninit()}, false);
+window.addEventListener('load', function() { wptExtension.init(); }, false);
+window.addEventListener('unload', function() { wptExtension.uninit(); }, false);
 
 
 /***********************************************************
