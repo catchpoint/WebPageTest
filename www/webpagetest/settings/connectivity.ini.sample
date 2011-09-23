@@ -6,8 +6,16 @@ latency=50
 plr=0
 aftCutoff=45
 
+[Cable]
+label="Cable (5/1 Mbps 28ms RTT)"
+bwIn=5000000
+bwOut=1000000
+latency=28
+plr=0
+aftCutoff=45
+
 [FIOS]
-label="FIOS (20 Mbps/5 Mbps 4ms RTT)"
+label="FIOS (20/5 Mbps 4ms RTT)"
 bwIn=20000000
 bwOut=5000000
 latency=4
@@ -15,7 +23,7 @@ plr=0
 aftCutoff=25
 
 [Dial]
-label="56K Dial-Up (49 Kbps/30 Kbps 120ms RTT)"
+label="56K Dial-Up (49/30 Kbps 120ms RTT)"
 bwIn=49000
 bwOut=30000
 latency=120
