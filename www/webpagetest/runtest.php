@@ -592,33 +592,47 @@ function ValidateKey(&$test, &$error, $key = null)
             $test['priority'] = $keys[$key]['priority'];
         if( isset($keys[$key]['limit']) ){
           $limit = (int)$keys[$key]['limit'];
-          if( $limit > 0 ){
+
             // update the number of tests they have submitted today
             if( !is_dir('./dat') )
               mkdir('./dat', 0777, true);
               
-            $keyfile = './dat/keys_' . date('Ymd') . '.dat';
-            $usage = null;
-            if( is_file($keyfile) )
-              $usage = json_decode(file_get_contents($keyfile), true);
-            if( !isset($usage) )
-              $usage = array();
-            if( isset($usage[$key]) )
-              $used = (int)$usage[$key];
-            else
-              $used = 0;
-            
-            $runcount = $test['runs'];
-            if( !$test['fvonly'] )
-              $runcount *= 2;
-              
-            if( $used + $runcount <= $limit ){
-              $used += $runcount;
-              $usage[$key] = $used;
-              file_put_contents($keyfile, json_encode($usage));
-            }else{
-              $error = 'The test request will exceed the daily test limit for the given API key';
+          $lock = fopen( "./dat/keys.lock", 'w',  false);
+          if( $lock )
+          {
+            if( flock($lock, LOCK_EX) )
+            {
+                $keyfile = './dat/keys_' . date('Ymd') . '.dat';
+                $usage = null;
+                if( is_file($keyfile) )
+                  $usage = json_decode(file_get_contents($keyfile), true);
+                if( !isset($usage) )
+                  $usage = array();
+                if( isset($usage[$key]) )
+                  $used = (int)$usage[$key];
+                else
+                  $used = 0;
+
+                $runcount = max(1, $test['runs']);
+                if( !$test['fvonly'] )
+                  $runcount *= 2;
+                  
+              if( $limit > 0 ){
+                if( $used + $runcount <= $limit ){
+                  $used += $runcount;
+                  $usage[$key] = $used;
+                }else{
+                  $error = 'The test request will exceed the daily test limit for the given API key';
+                }
+              }
+              else {
+                  $used += $runcount;
+                  $usage[$key] = $used;
+              }
+              if( !strlen($error) )
+                file_put_contents($keyfile, json_encode($usage));
             }
+            fclose($lock);
           }
         }
         // check to see if we need to limit queue lengths from this API key
@@ -1268,7 +1282,8 @@ function LogTest(&$test, $testId, $url)
         
         $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
         $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
-        $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}" . "\r\n";
+        $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
+        $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\r\n";
 
         // flock will block until we acquire the lock or the script times out and is killed
         if( flock($file, LOCK_EX) )
