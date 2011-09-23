@@ -135,6 +135,8 @@ $page_description = "Website performance test result$testLabel.";
                             $cols++;
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             $cols++;
+                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0)
+                            $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
                         <?php
@@ -150,6 +152,9 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" valign="middle">Start Render</th>
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
+                        <?php } ?>
+                        <?php if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0) { ?>
+                        <th align="center" valign="middle">Visually Complete</th>
                         <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>
@@ -180,6 +185,8 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
                         }
+                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0)
+                            echo "<td id=\"fvVisual\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['visualComplete'] / 1000.0, 1) . "s</td>\n";
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
@@ -209,7 +216,13 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"rvAFT\" class=\"even\" valign=\"middle\">$aft</th>";
                         }
-                        if((float)$pageData[$rvMedian][0]['domTime'] > 0.0)
+                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0) {
+                            $disp = '-';
+                            if((float)$pageData[$rvMedian][1]['visualComplete'] > 0.0)
+                                $disp = number_format($pageData[$rvMedian][1]['visualComplete'] / 1000.0, 1) . 's';
+                            echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
+                        }
+                        if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"rvDomElement\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['domTime'] / 1000.0, 3) . "s</td>\n";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             echo "<td id=\"rvDomElements\" class=\"even\" valign=\"middle\">{$pageData[$rvMedian][1]['domElements']}</td>\n";

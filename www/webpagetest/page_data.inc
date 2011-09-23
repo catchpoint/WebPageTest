@@ -122,6 +122,25 @@ function loadPageData($file)
         }
     }
     
+    // see if we have video files to calculate a visually complete time from
+    if( isset($ret) && !array_key_exists('visualComplete', $ret) )
+    {
+        $video_dir = dirname($file) . '/video_';
+        $filename = basename($file);
+        $video_dir .= (int)$filename;
+        if (stripos($filename, 'Cached') !== false)
+            $video_dir .= '_cached';
+        if( is_dir($video_dir) ) {
+            $frames = loadVideo($video_dir);
+            if( $frames && count($frames) )
+            {
+                $last = end(array_keys($frames));
+                if( $last )
+                    $ret['visualComplete'] = $last * 100;
+            }
+        }
+    }
+    
     return $ret;
 }
 

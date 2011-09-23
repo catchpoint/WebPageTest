@@ -342,41 +342,6 @@ else
 }
 
 /**
-* Load and sort the video frame files into an arrray
-* 
-* @param mixed $path
-*/
-function loadVideo($path)
-{
-    $frames = null;
-    
-    if( is_dir($path) )
-    {
-        $files = glob( $path . '/frame_*.jpg', GLOB_NOSORT );
-        if( $files && count($files) )
-        {
-            $frames = array();
-            foreach( $files as $file )
-            {
-                $file = basename($file);
-                $parts = explode('_', $file);
-                if( count($parts) >= 2 )
-                {
-                    $index = (int)$parts[1];
-                    $frames[$index] = $file;
-                }
-            }
-            
-            
-            // sort the frames in order
-            ksort($frames, SORT_NUMERIC);
-        }
-    }
-    
-    return $frames;
-}
-
-/**
 * Send back the data for a batch test (just the list of test ID's)
 * 
 * @param mixed $id

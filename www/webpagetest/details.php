@@ -125,6 +125,8 @@ $page_description = "Website performance test details$testLabel";
                             $cols++;
                         if($data['domElements'] > 0)
                             $cols++;
+                        if((float)$data['visualComplete'] > 0.0)
+                            $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
                         <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
@@ -136,6 +138,9 @@ $page_description = "Website performance test details$testLabel";
                         <th align="center" valign="middle">Start Render</th>
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
+                        <?php } ?>
+                        <?php if( (float)$data['visualComplete'] > 0.0 ) { ?>
+                        <th align="center" valign="middle">Visually Complete</th>
                         <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
@@ -164,6 +169,8 @@ $page_description = "Website performance test details$testLabel";
                                 $aft = 'N/A';
                             echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
                         }
+                        if( (float)$data['visualComplete'] > 0.0 )
+                            echo "<td id=\"visualComplate\" valign=\"middle\">" . number_format($data['visualComplete'] / 1000.0, 1) . "s</td>\n";
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . number_format($data['domTime'] / 1000.0, 3) . "s</td>\n";
                         if( $data['domElements'] > 0 )
