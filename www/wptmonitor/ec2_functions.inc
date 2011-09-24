@@ -233,6 +233,7 @@ function getEC2TesterStatus(){
             $imageId = (string)$i->instancesSet->item->imageId;
             $state = (string)$i->instancesSet->item->instanceState->name;
             $launchTime = (string)$i->instancesSet->item->launchTime;
+            $tester['region']=$key;
             $tester['browser']=$browser;
             $tester['instanceId']=$instanceId;
             $tester['imageId']=$imageId;
