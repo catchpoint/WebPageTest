@@ -390,21 +390,16 @@ function getLocationInformation($host = null) {
   return $locations;
 }
 
-function logOutput($msg, $anchorName = null) {
+function logOutput($msg, $file="jobProcessor_log.html") {
   $timeStamp = date("m/d/Y h:i:s");
-  //  if ( $anchorName ){
-  //    $a = '<a name="'.$anchorName.'"></a>'."\n";
-  //  } else {
   $a = "";
-  //  }
   $m = "[ " . $timeStamp . " ] " . $msg . "\n";
-  if (!($fp = fopen('jobProcessor_log.html', 'a'))) {
+  if (!($fp = fopen($file, 'a'))) {
     echo "[ERROR] [logOutput] Cannot open log file";
   } else {
     fwrite($fp, $a . "" . $m);
   }
   fclose($fp);
-  //  echo $a.''.$m;
 }
 
 function get_tz_options($selectedzone, $name = "edited_user_timezone", $label = '', $desc = '', $onChange = '') {

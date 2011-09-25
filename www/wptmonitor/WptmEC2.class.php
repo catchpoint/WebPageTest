@@ -112,7 +112,7 @@ class WptmEC2
                                                 array('Name' => 'image-id', 'Value' => $ami)
                                               )));
     if ( $response->status != "200" ){
-     logOutput("[ERROR] [WptmEC2.class] EC2 Error [".$response->body->Errors->Error->Message."] while getting instance count");
+     logOutput("[ERROR] [WptmEC2.class] EC2 Error [".$response->body->Errors->Error->Message."] while getting instance count","ec2Processor.log");
     }
     return sizeof($response->body->reservationSet->item);
   }

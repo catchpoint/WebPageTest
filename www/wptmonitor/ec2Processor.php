@@ -17,7 +17,7 @@
     print "Invalid Key";
     exit;
   }
-
+  logOutput("[INFO] [ec2Processor] ec2 Processor checking Amazon EC2 Status");
   // TODO: Make Only executes if EC2 integration is active
   echo "Termination<br>";
   terminateDeadEC2Testers();

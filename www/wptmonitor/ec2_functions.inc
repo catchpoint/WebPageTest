@@ -97,17 +97,17 @@ function adjustEC2InstanceCountIfRequired(){
     // Log error
     // TODO: Add alerting on these types of errors
     if (empty($region)){
-      logOutput("[ERROR] [ec2_functions] Can not determine Amazon EC2 Region Region");
+      logOutput("[ERROR] [ec2_functions] Can not determine Amazon EC2 Region Region","ec2Processor.log");
       continue;
     }
 
     if ($runRateRatio > TARGET_RUN_RATE_RATIO){
       // Ramp up slowly to avoid over allocating instances
       if ( $currentInstanceCount >= EC2_MAXIMUM_INSTANCES_PER_REGION ){
-        logOutput("[WARN] [ec2_functions] Maximum instance count reached while trying to Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."] Max Agents Allowed: [".EC2_MAXIMUM_INSTANCES_PER_REGION."]");
+        logOutput("[WARN] [ec2_functions] Maximum instance count reached while trying to Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."] Max Agents Allowed: [".EC2_MAXIMUM_INSTANCES_PER_REGION."]","ec2Processor.log");
         continue;
       }
-      logOutput("[INFO] [ec2_functions] Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]");
+      logOutput("[INFO] [ec2_functions] Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
 
       $opts = array(
                   'Type' => 'one-time',
@@ -119,27 +119,29 @@ function adjustEC2InstanceCountIfRequired(){
 
       $response=$wptmEC2->requestSpotInstances( $region,EC2_MAXIMUM_SPOT_PRICE, $opts );
       if ( $response->status != "200" ){
-        logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]");
+        logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       }
     } else if (($currentInstanceCount - ($runRate/TARGET_RUN_RATE_RATIO) > 1)){
+      logOutput("[INFO] [ec2_functions] Found excess instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       if ( $testerInfo[$k]['AgentCount'] > 0){
-        // Find agent that's been idle the longest
-        $last = 0;
-        $id = 0;
+        // Find agent that's not busy
+        unset($id);
         foreach($testerInfo[$k]['XML']->testers->tester as $tester){
-          if ($tester->last > $last){
-            $last = $tester->last;
-            $id = $tester->ec2;
+          if ($tester->busy == "0"){
+            $id = (string)$tester->ec2;
+            break;
+          }else {
+            continue;
           }
         }
-      // Only kill it if it's been idle over 20 minutes.
-      if ($last > 10){
-        logOutput("[INFO] [ec2_functions] Terminating excess instance for Region: [".$region."] ID: [".$id."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]");
 
-        $response = $wptmEC2->terminateInstance($region,$id);
-        if ( $response->status != "200" ){
-          logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while terminating excess instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]");
-        }
+        if (isset($id)){
+          logOutput("[INFO] [ec2_functions] Terminating excess instance for Region: [".$region."] ID: [".$id."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
+
+          $response = $wptmEC2->terminateInstance($region,$id);
+          if ( $response->status != "200" ){
+            logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while terminating excess instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
+          }
         }
       }
     }
@@ -149,7 +151,7 @@ function adjustEC2InstanceCountIfRequired(){
  * Terminates instance that have not checked in in over 2 hours.
  *
  */
-function terminateDeadAndIdleEC2Testers(){
+function terminateDeadEC2Testers(){
   // TODO: Add switch to enable/disable EC2 control from wptmonitor
   $locations = getTestersInformation();
   $wptmec2 = new WptmEC2();
@@ -157,22 +159,23 @@ function terminateDeadAndIdleEC2Testers(){
   foreach($locations as $key=>$location){
     $region = determineEC2Region($key);
     if (empty($region)){
-      logOutput("[ERROR] [ec2_functions] Can not determine Amazon EC2 Region Region");
+      logOutput("[ERROR] [ec2_functions] Can not determine Amazon EC2 Region Region","ec2Processor.log");
       exit;
     }
     if ($location['AgentCount']>0){
       foreach($location['XML']->testers->tester as $tester){
-        if (empty($tester->elapsed)|| $tester->elapsed >30 || empty($tester->last)|| $tester->last > 30){
-          $terminate = true;
+        if (!isset($tester->elapsed)|| $tester->elapsed >30 ){
+            //|| !isset($tester->last)|| $tester->last > 30){
+
           if (empty($tester->elapsed)|| $tester->elapsed >30){
             $msg = "non responsive";
           } else {
             $msg = "idle";
           }
-          logOutput("[INFO] [ec2_functions] Terminating ".$msg." instance. Region: [".$region."] Instance: [".$tester->ec2."]");
+          logOutput("[INFO] [ec2_functions] Terminating ".$msg." instance. Region: [".$region."] Instance: [".$tester->ec2."]","ec2Processor.log");
           $response = $wptmec2->terminateInstance($region,$tester->ec2);
           if ( !$response->isOK( ) ){
-           logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while terminating non responsive instance: ".$tester->ec2);
+           logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while terminating non responsive instance: ".$tester->ec2,"ec2Processor.log");
           }
         }
       }
@@ -205,7 +208,7 @@ function getEC2TesterStatus(){
       $ami = $regionAmi[$browser];
       $response = $wptmEC2->getInstances($key,$ami);
       if ( !$response->isOK()){
-        logOutput("[ERROR] [ec2_functions:getEC2TesterStatus] EC2 Error [".$response->body->Errors->Error->Message."] while describing instances for Region: [".$key."]");
+        logOutput("[ERROR] [ec2_functions:getEC2TesterStatus] EC2 Error [".$response->body->Errors->Error->Message."] while describing instances for Region: [".$key."]","ec2Processor.log");
       }
       if (sizeof($response->body->reservationSet->item) < 1){
         continue;
@@ -248,10 +251,8 @@ function getEC2TesterStatus(){
     }
   }
   // Update file cache
-  writeIniFile($testers,"temp/tester_status.ini",true);
+  writeIniFile($testers,"temp/ec2_tester_status.ini",true);
   return $testers;
 }
-
-//print_r(terminateDeadAndIdleEC2Testers());
-//adjustEC2InstanceCountIfRequired();
+logOutput("test","ec2Processor.log")
 ?>
