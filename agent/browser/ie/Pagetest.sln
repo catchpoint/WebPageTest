@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cares", "pagetest\c-ares\vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptghook", "wptghook\wptghook.vcproj", "{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ptReboot", "ptReboot\ptReboot.vcproj", "{7955C66F-126C-44A6-B732-FAE412A72767}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -194,6 +196,24 @@ Global
 		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|Win32.ActiveCfg = Release|Win32
 		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|Win32.Build.0 = Release|Win32
 		{DB7FC97A-75DB-416D-81D9-EDE1E7D05E23}.Release|x64.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Debug|Win32.Build.0 = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Debug|x64.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Debug|Win32.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Debug|Win32.Build.0 = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Debug|x64.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Release|Win32.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Release|Win32.Build.0 = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.DLL Release|x64.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Debug|Win32.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Debug|Win32.Build.0 = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Debug|x64.ActiveCfg = Debug|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Release|Win32.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Release|Win32.Build.0 = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.LIB Release|x64.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Release|Win32.ActiveCfg = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Release|Win32.Build.0 = Release|Win32
+		{7955C66F-126C-44A6-B732-FAE412A72767}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
