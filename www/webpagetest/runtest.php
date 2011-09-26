@@ -382,7 +382,7 @@
                         echo "<xmlUrl>http://$host$uri/xmlResult.php?test={$test['id']}</xmlUrl>\n";
                         echo "<userUrl>http://$host$uri/results.php?test={$test['id']}</userUrl>\n";
                         echo "<summaryCSV>http://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
-                        echo "<detailCSV>http://$host$uri/csv.php?test={$test['id']}&requests=1</detailCSV>\n";
+                        echo "<detailCSV>http://$host$uri/csv.php?test={$test['id']}&amp;requests=1</detailCSV>\n";
                     }
                     echo "</data>\n";
                     echo "</response>\n";
@@ -410,7 +410,7 @@
                         $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
                         $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
                         $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
-                        $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
+                        $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
                     }
                     header ("Content-type: application/json");
                     echo json_encode($ret);
