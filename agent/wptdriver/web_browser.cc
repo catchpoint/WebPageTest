@@ -58,7 +58,6 @@ bool WebBrowser::RunAndWait() {
 
   if (_test.Start()) {
     if (_browser._exe.GetLength()) {
-      HMODULE hook_dll = NULL;
       TCHAR cmdLine[4096];
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
       if (_browser._options.GetLength() )
@@ -80,25 +79,34 @@ bool WebBrowser::RunAndWait() {
 
       EnterCriticalSection(&cs);
       _browser_process = NULL;
+      bool ok = true;
       if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, CREATE_SUSPENDED, 
                         NULL, NULL, &si, &pi)) {
         _browser_process = pi.hProcess;
 
         ResumeThread(pi.hThread);
-        WaitForInputIdle(pi.hProcess, 120000);
+        if (WaitForInputIdle(pi.hProcess, 120000) != 0) {
+          ok = false;
+          _status.Set(_T("Error waiting for browser to launch\n"));
+        }
         SuspendThread(pi.hThread);
 
         //FindHookFunctions(pi.hProcess);
-        InstallHook(pi.hProcess);
+        if (ok && !InstallHook(pi.hProcess)) {
+          ok = false;
+          _status.Set(_T("Error instrumenting browser\n"));
+        }
 
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
         ResumeThread(pi.hThread);
         CloseHandle(pi.hThread);
+      } else {
+        _status.Set(_T("Error Launching: %s\n"), cmdLine);
       }
       LeaveCriticalSection(&cs);
 
       // wait for the browser to finish (infinite timeout if we are debugging)
-      if (_browser_process) {
+      if (_browser_process && ok) {
         _status.Set(_T("Waiting up to %d seconds for the test to complete\n"), 
                     (_test._test_timeout / SECONDS_TO_MS) * 2);
         #ifdef DEBUG
@@ -120,10 +128,6 @@ bool WebBrowser::RunAndWait() {
         if( GetExitCodeProcess(_browser_process, &exit_code) == STILL_ACTIVE )
           TerminateProcess(_browser_process, 0);
         CloseHandle(_browser_process);
-      }
-
-      if (hook_dll) {
-        FreeLibrary(hook_dll);
       }
       LeaveCriticalSection(&cs);
     }

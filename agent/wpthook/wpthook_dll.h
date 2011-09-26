@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 extern "C" {
-_import void WINAPI InstallHook(HANDLE process);
+_import BOOL WINAPI InstallHook(HANDLE process);
 _import void WINAPI SetResultsFileBase(const WCHAR * file_base);
 _import void WINAPI SetTestTimeout(DWORD timeout);
 _import void WINAPI SetClearedCache(bool cleared_cache);

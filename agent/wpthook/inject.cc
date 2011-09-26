@@ -35,7 +35,7 @@ HINSTANCE global_dll_handle = NULL; // DLL handle
 extern WptHook * global_hook;
 
 extern "C" {
-__declspec( dllexport ) void __stdcall InstallHook(HANDLE process);
+__declspec( dllexport ) BOOL __stdcall InstallHook(HANDLE process);
 __declspec( dllexport ) DWORD __stdcall RemoteThreadProc(void * thread_data);
 }
 
@@ -151,7 +151,8 @@ bool LoadRemoteDll(HANDLE process) {
 /*-----------------------------------------------------------------------------
   Inject our dll into the browser process
 -----------------------------------------------------------------------------*/
-void WINAPI InstallHook(HANDLE process) {
+BOOL WINAPI InstallHook(HANDLE process) {
+  BOOL ret = FALSE;
   if (LoadRemoteDll(process)) {
     // code is loaded remotely, figure out the function offset and run the init
     LPBYTE fn_RemoteThreadProc = GetRemoteFunction(process, _T("wpthook.dll"), 
@@ -160,10 +161,12 @@ void WINAPI InstallHook(HANDLE process) {
       HANDLE thread_handle = CreateRemoteThread(process, NULL, 0, 
               (LPTHREAD_START_ROUTINE)fn_RemoteThreadProc, NULL, 0 , NULL);
       if (thread_handle) {
-        WaitForSingleObject(thread_handle, 120000);
+        if (WaitForSingleObject(thread_handle, 120000) == WAIT_OBJECT_0)
+          ret = TRUE;
         CloseHandle(thread_handle);
       }
     }
   }
+  return ret;
 }
 
