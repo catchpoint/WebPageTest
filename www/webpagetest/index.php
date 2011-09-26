@@ -20,6 +20,10 @@ $secret = '';
 $keys = parse_ini_file('./settings/keys.ini', true);
 if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
   $secret = trim($keys['server']['secret']);
+  
+$url = $req_url;
+if( !isset($url) || !strlen($url) )
+    $url = 'Enter a Website URL';
     
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 
@@ -82,7 +86,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="Enter a Website URL" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -206,6 +210,8 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <?php
                                         $runs = (int)$_COOKIE["runs"];
+                                        if( isset($req_runs) )
+                                            $runs = (int)$req_runs;
                                         if( $runs < 1 || $runs > $settings['maxruns'] )
                                             $runs = 1;
                                         ?>
