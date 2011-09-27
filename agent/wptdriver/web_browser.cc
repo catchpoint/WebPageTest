@@ -26,9 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
-#include "web_browser.h"
-#include <Tlhelp32.h>
 #include "dbghelp/dbghelp.h"
+#include "util.h"
+#include "web_browser.h"
 
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 
@@ -91,7 +91,7 @@ bool WebBrowser::RunAndWait() {
         }
         SuspendThread(pi.hThread);
 
-        //FindHookFunctions(pi.hProcess);
+        FindHookFunctions(pi.hProcess);
         if (ok && !InstallHook(pi.hProcess)) {
           ok = false;
           _status.Set(_T("Error instrumenting browser\n"));
@@ -142,15 +142,54 @@ void WebBrowser::ClearUserData() {
   _browser.ResetProfile();
 }
 
-// dump all of the symbols to the debugger
-BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID ctx) {
-  if( sym->NameLen && sym->Name ) {
-    CStringA buff;
-    DWORD address = (DWORD)sym->Address;
-    buff.Format("(0x%08X) 0x%08X - %s\n", sym->Flags, address, sym->Name);
-    OutputDebugStringA(buff);
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID offset) {
+  if (sym->Address && sym->ModBase) {
+    *static_cast<DWORD64 *>(offset) = sym->Address - sym->ModBase;
   }
   return TRUE;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool GetOffsetsFromSymbols(HANDLE process, LPCTSTR app_data_dir,
+                           const MODULEENTRY32& module,
+                           const HookSymbolNames& symbol_names,
+                           HookOffsets * offsets) {
+  bool is_loaded = false;
+  TCHAR symbols_dir[MAX_PATH];
+  lstrcpy(symbols_dir, app_data_dir);
+  lstrcat(symbols_dir, _T("\\symbols"));
+  CreateDirectory(symbols_dir, NULL);
+
+  SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
+                SYMOPT_IGNORE_NT_SYMPATH |
+                SYMOPT_INCLUDE_32BIT_MODULES | SYMOPT_NO_PROMPTS);
+  char symbols_search_path[1024];
+  wsprintfA(symbols_search_path,
+      "SRV*%S*http://chromium-browser-symsrv.commondatastorage.googleapis.com",
+      symbols_dir);
+  if (SymInitialize(process, symbols_search_path, FALSE)) {
+    DWORD64 module_base_addr = SymLoadModuleEx(
+        process, NULL, CT2A(module.szExePath), NULL, 
+        (DWORD64)module.modBaseAddr, module.modBaseSize, NULL, 0);
+    if (module_base_addr) {
+      // Find the offsets for the functions we want to hook.
+      POSITION pos = symbol_names.GetHeadPosition();
+      while (pos != NULL) {      
+        CStringA name = symbol_names.GetNext(pos);
+        DWORD64 offset = 0;
+        SymEnumSymbols(process, module_base_addr, name, EnumSymProc, &offset);
+        offsets->SetAt(name, offset);
+      }
+      is_loaded = true;
+      SymUnloadModule64(process, module_base_addr);
+    }
+    SymCleanup(process);
+  }
+  //DeleteDirectory(symbols_dir);
+  return is_loaded;
 }
 
 /*-----------------------------------------------------------------------------
@@ -158,60 +197,20 @@ BOOL CALLBACK EnumSymProc(PSYMBOL_INFO sym, ULONG SymbolSize, PVOID ctx) {
   (this is just for chrome where we need debug symbols)
 -----------------------------------------------------------------------------*/
 void WebBrowser::FindHookFunctions(HANDLE process) {
-  // figure out the name of the ini file where we cache the offsets
-  TCHAR ini_file[MAX_PATH];
-  TCHAR sym_cache[MAX_PATH];
-  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-                                NULL, SHGFP_TYPE_CURRENT, ini_file)) ) {
-    PathAppend(ini_file, _T("webpagetest_data"));
-    CreateDirectory(ini_file, NULL);
-    lstrcpy(sym_cache, ini_file);
-    lstrcat(sym_cache, _T("\\symbols"));
-    CreateDirectory(sym_cache, NULL);
-    lstrcat(ini_file, _T("\\offsets.dat"));
-    // find the chrome dll
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
-                                                        GetProcessId(process));
-    if (snap != INVALID_HANDLE_VALUE) {
-      bool found = false;
-      MODULEENTRY32 module;
-      module.dwSize = sizeof(module);
-      if (Module32First(snap, &module)) {
-        do {
-          if (!lstrcmpi(module.szModule, _T("chrome.dll"))) {
-            found = true;
-          }
-        } while(!found && Module32Next(snap, &module));
+  // TODO: Update offsets cache when wptdriver starts.
+  CString data_dir = CreateAppDataDir();
+  MODULEENTRY32 module;
+  if (GetModuleByName(process, _T("chrome.dll"), &module)) {
+    CString exe_path(module.szExePath);
+    CString offsets_filename = GetHookOffsetsFileName(data_dir, exe_path);
+    if (!PathFileExists(offsets_filename)) {
+      HookSymbolNames hook_names;
+      GetHookSymbolNames(&hook_names);
+      HookOffsets hook_offsets;
+      if (GetOffsetsFromSymbols(process, data_dir, module, hook_names,
+                                &hook_offsets)) {
+        SaveHookOffsets(offsets_filename, hook_offsets);
       }
-      if (found) {
-        // generate a md5 hash of the dll
-        CString hash;
-        if (HashFile(module.szExePath, hash)) {
-          SymSetOptions(SYMOPT_DEBUG | SYMOPT_FAVOR_COMPRESSED |
-                        SYMOPT_IGNORE_NT_SYMPATH | SYMOPT_INCLUDE_32BIT_MODULES |
-                        SYMOPT_NO_PROMPTS);
-          char sympath[1024];
-          wsprintfA(sympath,"SRV*%S*"
-            "http://chromium-browser-symsrv.commondatastorage.googleapis.com",
-            sym_cache);
-          if (SymInitialize(process, sympath, FALSE)) {
-            DWORD64 mod = SymLoadModuleEx(process, NULL, 
-                            CT2A(module.szExePath), NULL, 
-                            (DWORD64)module.modBaseAddr, module.modBaseSize, 
-                            NULL, 0);
-            if (mod) {
-              SymEnumSymbols(process, mod, "ssl_*", EnumSymProc, this);
-              //SymEnumSymbols(process, mod, "*", EnumSymProc, NULL);
-              // find the NSS routines
-
-              SymUnloadModule64(process, mod);
-            }
-            SymCleanup(process);
-            //DeleteDirectory(sym_cache);
-          }
-        }
-      }
-      CloseHandle(snap);
     }
   }
 }

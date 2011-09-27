@@ -28,6 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <TlHelp32.h>
+
+
 namespace loglevel {
   const int kError = 1;
   const int kWarning = 2;
@@ -38,6 +41,7 @@ namespace loglevel {
   const int kTrace = 9;
 };
 
+
 // Utility routines shared by all of the code
 
 bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL);
@@ -46,4 +50,13 @@ void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
                           HWND& document_window);
 void WptTrace(int level, LPCTSTR format, ...);
-bool HashFile(LPCTSTR file, CString& hash);
+
+typedef CAtlList<CStringA> HookSymbolNames;
+typedef CAtlMap<CStringA, DWORD64> HookOffsets;
+CString CreateAppDataDir();
+bool GetModuleByName(HANDLE process, LPCTSTR module_name,
+    MODULEENTRY32 * module);
+CString GetHookOffsetsFileName(CString dir, CString hooked_exe_path);
+void GetHookSymbolNames(HookSymbolNames * names);
+void SaveHookOffsets(CString offsets_filename, const HookOffsets& offsets);
+bool GetSavedHookOffsets(CString offsets_filename, HookOffsets * hook_offsets);

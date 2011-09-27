@@ -26,9 +26,25 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include "stdafx.h"
-#include "../wpthook/wpthook_dll.h"
+#include "StdAfx.h"
 #include <Wincrypt.h>
+#include <TlHelp32.h>
+#include "dbghelp/dbghelp.h"
+
+#include "../wpthook/wpthook_dll.h"
+
+const char HOOK_OFFSETS_FILE_VERSION[] = "1_0";
+const char * HOOK_OFFSETS_SYMBOL_NAMES[] = {
+  "SSL_ImportFD",
+  "SSL_ForceHandshake",
+  "ssl_Connect",
+  "ssl_Close",
+  "ssl_Send",
+  "ssl_Write",
+  "ssl_Recv",
+  "ssl_Read",
+  // Same names with "Def" and "Secure" prefixes (e.g. "ssl_DefWrite") exist.
+};
 
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
@@ -266,3 +282,132 @@ bool HashFile(LPCTSTR file, CString& hash) {
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+  Data for saving debug symbols files and function offsets.
+-----------------------------------------------------------------------------*/
+CString CreateAppDataDir() {
+  CString app_data_dir;
+  TCHAR dir[MAX_PATH];
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, dir))) {
+    PathAppend(dir, _T("webpagetest_data"));
+    CreateDirectory(dir, NULL);
+    app_data_dir = dir;
+  }
+  return app_data_dir;
+}
+
+/*-----------------------------------------------------------------------------
+  Get the module entry for a given process.
+-----------------------------------------------------------------------------*/
+bool GetModuleByName(HANDLE process, LPCTSTR module_name,
+                     MODULEENTRY32 * module) {
+  bool is_found = false;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE,
+      GetProcessId(process));
+  if (snap != INVALID_HANDLE_VALUE) {
+    module->dwSize = sizeof(*module);
+    if (Module32First(snap, module)) {
+      do {
+        is_found = !lstrcmpi(module->szModule, module_name);
+      } while (!is_found && Module32Next(snap, module));
+    }
+  }
+  CloseHandle(snap);
+  return is_found;
+}
+
+/*-----------------------------------------------------------------------------
+  Get the hook offsets filename based on a hash of the binary to be hooked.
+-----------------------------------------------------------------------------*/
+CString GetHookOffsetsFileName(CString dir, CString hooked_exe_path) {
+  CString hook_offsets_filename;
+  CString hash;
+  if (HashFile(hooked_exe_path, hash)) {
+    hook_offsets_filename.Format(_T("%s\\offsets-%S-%s.csv"),
+        dir, HOOK_OFFSETS_FILE_VERSION, hash);
+  }
+  return hook_offsets_filename;
+}
+
+/*-----------------------------------------------------------------------------
+  Return a copy of the symbol names to hook. 
+-----------------------------------------------------------------------------*/
+void GetHookSymbolNames(HookSymbolNames * names) {
+  if (names != NULL) {
+    names->RemoveAll();
+    for (int i = 0; i < _countof(HOOK_OFFSETS_SYMBOL_NAMES); i++) {
+      names->AddTail(CStringA(HOOK_OFFSETS_SYMBOL_NAMES[i]));
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Helper function for GetSavedHookOffsets.
+-----------------------------------------------------------------------------*/
+bool ParseHookOffsets(const CStringA& offsets_data,
+                      HookOffsets * hook_offsets) {
+  bool is_loaded = false;
+  if (hook_offsets != NULL) {
+    int line_pos = 0;
+    CStringA line = offsets_data.Tokenize("\n", line_pos);
+    while (line != _T("")) {
+      int separator_pos = line.Find(',');
+      if (separator_pos > 0) {
+        CStringA symbol_name = line.Left(separator_pos).Trim();
+        __int64 offset = _atoi64(line.Mid(separator_pos + 1).Trim());
+        if (symbol_name.GetLength() > 0 && offset > 0) {
+          hook_offsets->SetAt(symbol_name, offset);
+          is_loaded = true;
+        }
+      }
+      line = offsets_data.Tokenize("\n", line_pos);
+    }
+  }
+  return is_loaded;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool GetSavedHookOffsets(CString offsets_filename,
+                         HookOffsets * hook_offsets) {
+  bool is_loaded = false;
+  HANDLE offsets_fh = CreateFile(offsets_filename, GENERIC_READ, 0, NULL,
+                                 OPEN_EXISTING, 0, 0);
+  if (offsets_fh != INVALID_HANDLE_VALUE) {
+    DWORD len = GetFileSize(offsets_fh, NULL);
+    if (len) {
+      CStringA offsets_data;
+      DWORD num_bytes = 0;
+      if (ReadFile(offsets_fh, offsets_data.GetBuffer(len), len,
+                   &num_bytes, 0)) {
+        offsets_data.ReleaseBuffer(num_bytes);
+        is_loaded = ParseHookOffsets(offsets_data, hook_offsets);
+      }
+    }
+    CloseHandle(offsets_fh);
+  }
+  return is_loaded;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void SaveHookOffsets(CString offsets_filename,
+                     const HookOffsets& hook_offsets) {
+  HANDLE offsets_fh = CreateFile(offsets_filename, GENERIC_WRITE, 0, NULL,
+                                 CREATE_ALWAYS, 0, 0);
+  if (offsets_fh != INVALID_HANDLE_VALUE) {
+    DWORD bytes;
+    CString symbol_name;
+    DWORD64 offset;
+    CStringA line;
+    POSITION pos = hook_offsets.GetStartPosition();
+    while (pos) {
+      symbol_name = hook_offsets.GetKeyAt(pos);
+      offset = hook_offsets.GetNextValue(pos);
+      line.Format("%S,%I64u\n", symbol_name, offset);
+      WriteFile(offsets_fh, line, line.GetLength(), &bytes, 0);
+    }
+    CloseHandle(offsets_fh);
+  }
+}

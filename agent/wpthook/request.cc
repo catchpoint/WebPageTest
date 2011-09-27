@@ -311,6 +311,9 @@ bool Request::ModifyDataOut(DataChunk& chunk) {
     }
   }
   LeaveCriticalSection(&cs);
+  WptTrace(loglevel::kFunction,
+      _T("[wpthook] - Request::ModifyDataOut(len=%d) -> %d"),
+      chunk.GetLength(), is_modified);
   return is_modified;
 }
 

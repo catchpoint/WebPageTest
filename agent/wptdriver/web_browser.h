@@ -42,6 +42,8 @@ public:
 private:
   void InjectDll();
   void FindHookFunctions(HANDLE process);
+  CStringA GetHookFunctionIniFilename();
+  bool SaveHookFunctionOffsets(const char *names[], const int offsets[]);
 
   WptSettings&    _settings;
   WptTestDriver&  _test;

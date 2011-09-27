@@ -84,7 +84,8 @@ private:
   TrackSockets& _sockets;
   CAtlMap<PRFileDesc*, SOCKET> _ssl_sockets;
   NCodeHookIA32  hook;
-  void DumpOsfd(LPCTSTR name, PRFileDesc *fd);
+
+  SOCKET GetSocket(PRFileDesc *fd);
   template <typename U> void GetFunctionByName(
       const std::string& dll, const std::string& funcName, U& func);
 

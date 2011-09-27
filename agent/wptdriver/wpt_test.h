@@ -108,7 +108,7 @@ public:
   bool  Done();
   void  OverrideDNSName(CString& name);
   ULONG OverrideDNSAddress(CString& name);
-  bool  ModifyRequestHeader(CStringA& header);
+  bool  ModifyRequestHeader(CStringA& header) const;
 
   // overall test settings
   CString _id;

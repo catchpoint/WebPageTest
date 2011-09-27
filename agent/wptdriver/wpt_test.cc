@@ -545,7 +545,7 @@ ULONG WptTest::OverrideDNSAddress(CString& name) {
   - Overriding existing headers
   - Overriding the host header for a specific host
 -----------------------------------------------------------------------------*/
-bool WptTest::ModifyRequestHeader(CStringA& header) {
+bool WptTest::ModifyRequestHeader(CStringA& header) const {
   bool modified = true;
 
   int pos = header.Find(':');
