@@ -1,0 +1,84 @@
+[Portals]
+AOL Portal=http://www.aol.com/
+Yahoo Portal=http://www.yahoo.com/
+MSN Portal=http://www.msn.com/
+
+[Search Landing Pages]
+Google=http://www.google.com/
+Bing=http://www.bing.com/
+Yahoo Search=http://search.yahoo.com/
+AOL Search=http://search.aol.com/
+Ask.com=http://www.ask.com/
+
+[Search Results (flowers)]
+Google Search="http://www.google.com/search?q=flowers"
+Bing Search="http://www.bing.com/search?q=flowers"
+Yahoo Search="http://search.yahoo.com/search?p=flowers"
+AOL Search="http://search.aol.com/aol/search?query=flowers"
+Ask.com Search="http://www.ask.com/web?q=flowers"
+
+[Social Networking]
+Facebook=http://www.facebook.com/
+MySpace=http://www.myspace.com/
+LinkedIn=http://www.linkedin.com/
+
+[Social Networking Profile]
+Facebook Profile=http://www.facebook.com/barackobama
+MySpace Profile=http://www.myspace.com/barackobama
+LinkedIn=http://www.linkedin.com/in/barackobama
+
+[Shopping]
+Amazon=http://www.amazon.com/
+ebay=http://www.ebay.com/
+Best Buy=http://www.bestbuy.com/
+newegg=http://www.newegg.com/
+
+[Mapping]
+Mapquest=http://www.mapquest.com/
+Google Maps=http://maps.google.com/
+Bing Maps=http://www.bing.com/maps/
+Yahoo Maps=http://maps.yahoo.com/
+
+[Finance]
+Yahoo Finance=http://finance.yahoo.com/
+MSN Money=http://moneycentral.msn.com/home.asp
+CNN Money=http://money.cnn.com/
+AOL Money=http://money.aol.com/
+Google Finance=http://www.google.com/finance
+
+[Blog]
+Blogger=http://buzz.blogger.com/
+WordPress.com=http://en.blog.wordpress.com/
+blog.com=http://our.blog.com/
+Engadget=http://www.engadget.com/
+Gizmodo=http://gizmodo.com/
+TechCrunch=http://www.techcrunch.com/
+
+[News]
+CNN=http://www.cnn.com/
+Yahoo News=http://news.yahoo.com/
+Google News=http://news.google.com/
+AOL News=http://news.aol.com/
+MSNBC=http://www.msnbc.msn.com/
+New York Times=http://www.nytimes.com/
+Washington Post=http://www.washingtonpost.com/
+
+[Corporate Site]
+Exxon Mobile=http://www.exxonmobil.com/corporate/
+Walmart=http://walmartstores.com/
+Proctor and Gamble=http://www.pg.com/en_US/index.shtml
+Intel=http://www.intel.com/#/en_US_01
+IBM=http://www.ibm.com/us/en/
+Microsoft=http://www.microsoft.com/about/default.mspx
+Apple=http://www.apple.com/about/
+Google=http://www.google.com/corporate/
+
+[Sports]
+NFL=http://www.nfl.com/
+NBA=http://www.nba.com/
+MLB=http://mlb.mlb.com/index.jsp
+NHL=http://www.nhl.com/
+Fanhouse=http://www.fanhouse.com/
+ESPN=http://espn.go.com/
+FOX Sports=http://msn.foxsports.com/
+CBS Sports=http://www.cbssports.com/

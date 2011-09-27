@@ -1,0 +1,16 @@
+Debug
+Release
+*.vcxproj.user
+*.vcproj.*.user
+*~
+*.pyc
+Local.testsettings
+TraceAndTestImpact.testsettings
+wptdriver.ini
+wpthook.aps
+webpagetest.opensdf
+webpagetest.sdf
+webpagetest.suo
+webpagetest.vsmdi
+wptdriver tests/
+.svn

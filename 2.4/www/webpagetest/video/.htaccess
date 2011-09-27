@@ -1,0 +1,9 @@
+#
+#Friendly urls
+#
+
+RewriteEngine on
+#main pages
+RewriteRule ^compare$ compare.php
+RewriteRule ^create$ /create.php
+
