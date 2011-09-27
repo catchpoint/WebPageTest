@@ -39,7 +39,7 @@ CHROME='google-chrome'
 # Path to a temp directory.
 TEMP="/tmp/test_extension/$$"
 
-# Command to check js sources for syntax and type errors.
+# Command to invoke closure compiler.
 COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
   --root=third_party/closure-library/
   --root=wpt
@@ -49,36 +49,70 @@ COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
   --compiler_flags=--externs=third_party/closure-compiler/contrib/externs/webkit_console.js \
   --compiler_flags=--externs=third_party/closure-compiler/contrib/externs/json.js \
   --compiler_flags=--externs=../externs.js \
-  --output_mode=compiled
-  --output_file=/dev/null"
+"
+
+# Extra args to do linting, and ignore the compiled output.
+FOR_WARNINGS="\
+  --output_mode=compiled \
+  --output_file=/dev/null \
+"
+
+# Extra args to concatinate the required sources into a single file.
+FOR_RELEASE="\
+  --output_mode=script \
+"
 
 # Compile the logging code.
-${COMPILE_JS} \
+${COMPILE_JS} ${FOR_WARNINGS} \
   --input='wpt/logging.js' \
   || exit $?;
 
 # Compile the command runner.
-${COMPILE_JS} \
+${COMPILE_JS} ${FOR_WARNINGS}\
   --input='wpt/commands.js' \
   || exit $?;
 
 # Compile the background page.
-${COMPILE_JS} \
+${COMPILE_JS} ${FOR_WARNINGS}\
   --input='wpt/background.js' \
   || exit $?;
 
 # Compile the content script.
-${COMPILE_JS} \
+${COMPILE_JS} ${FOR_WARNINGS}\
   --input='wpt/script.js' \
   || exit $?;
 
 # Compile unit tests.
-${COMPILE_JS} \
+${COMPILE_JS} ${FOR_WARNINGS}\
   --input='wpt/allTests.js' \
   || exit $?;
 
 
-# Launch chrome, load the extension.
+# Create a release copy of the extension, with only the parts of closure we use.
+touch release
+rm -rf release.last
+mv release release.last
+mkdir -p 'release/wpt'
+
+${COMPILE_JS} ${FOR_RELEASE} \
+  --input='wpt/allTests.js' \
+  --output_file='release/wpt/allTests.js' \
+  || exit $?;
+
+# Don't compile the content script.
+cp wpt/script.js release/wpt/script.js
+
+${COMPILE_JS} ${FOR_RELEASE} \
+  --input='wpt/background.js' \
+  --output_file='release/wpt/background.js' \
+  || exit $?;
+
+cp manifest.json release/
+cp wpt/*.html release/wpt/
+cp wpt/*.jpg release/wpt/
+
+
+# Launch chrome, load the release extension.
 mkdir -p ${TEMP} || exit "Can't create temp dir";
 USER_DATA_DIR="${TEMP}/user_data/";
 echo "User data dir is ${USER_DATA_DIR}.";
@@ -86,8 +120,7 @@ echo "User data dir is ${USER_DATA_DIR}.";
 ${CHROME} \
   --user-data-dir=${USER_DATA_DIR} \
   --no-first-run \
-  --load-extension=. \
-  --new-window 'chrome://extensions' \
+  --load-extension=release \
   --no-experiments \
   --no-default-browser-check \
   --password-store=basic \
