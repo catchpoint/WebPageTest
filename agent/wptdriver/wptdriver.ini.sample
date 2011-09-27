@@ -7,7 +7,7 @@ browser=chrome
 
 [chrome]
 exe=""C:\Documents and Settings\Administrator\Local Settings\Application Data\Google\Chrome\Application\chrome.exe""
-options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
+options='--load-extension="%WPTDIR%\extension\release" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
 
 [Firefox]
 exe="C:\Program Files\Mozilla Firefox\firefox.exe"
