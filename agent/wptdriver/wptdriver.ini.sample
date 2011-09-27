@@ -1,25 +1,15 @@
 [WebPagetest]
-url=http://staging.webpagetest.org/
-location=Dev_Pat
+url=http://127.0.0.1/
+location=Test
 browser=chrome
-time limit=60
+;key=TestKey123
 ;debug=1
-;web_page_replay_host=192.168.0.11
 
 [chrome]
-exe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-; Load the chrome extension from the source directory.  This allows developers
-; to edit the extension and reload without rebuilding.  It also avoids the cost
-; of copying the extension when doing a build.
-; Note: --enable-experimental-extension-apis is used for block command in wpt
-; scripting and it works only in the dev channel of chrome.
-options='--load-extension="%WPTDIR%\..\agent\browser\chrome\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
+exe=""C:\Documents and Settings\Administrator\Local Settings\Application Data\Google\Chrome\Application\chrome.exe""
+options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
 
-[firefox]
-exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-options='-profile "%PROFILE%" -no-remote'
-
-[Firefox 4]
-exe="C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+[Firefox]
+exe="C:\Program Files\Mozilla Firefox\firefox.exe"
 options='-profile "%PROFILE%" -no-remote'
 template=firefox

@@ -22,7 +22,7 @@ enableVideo=1
 ;nogzip=1
 
 ;directory to archive test files (must include trailing slash)
-archive_dir=/data/archive/
+;archive_dir=/data/archive/
 
 ;showslow beacon
 showslow=http://www.showslow.com

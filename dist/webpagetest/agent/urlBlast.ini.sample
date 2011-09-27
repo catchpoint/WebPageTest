@@ -1,14 +1,9 @@
 [Configuration]
-
-Test Type=4
 Startup Delay=30
-Log File=c:\Web Site\log\log
-Thread Count=1
+Log File=c:\webpagetest\agent\urlblast
 Timeout=120
-Reboot Interval=720
-Clear Cache Interval=30
 
 ; Where to get work from
 Url Files Url=http://127.0.0.1/work/
-Location=Test
-Location Key=TestKey123
+Location=IE
+;Location Key=TestKey123
