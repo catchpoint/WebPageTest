@@ -134,9 +134,8 @@ void NsprHook::Init() {
   else {
     HANDLE process = GetCurrentProcess();
     MODULEENTRY32 module;
-    module.modBaseAddr = 0;
-    GetModuleByName(process, _T("chrome.dll"), &module);
-    if (module.modBaseAddr) {
+    if (GetModuleByName(process, _T("chrome.dll"), &module) &&
+        module.modBaseAddr) {
       CString data_dir = CreateAppDataDir();
       CString offsets_filename = GetHookOffsetsFileName(data_dir, module.szExePath);
       HookOffsets offsets;
