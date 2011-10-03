@@ -27,10 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
-#include "ipfw.h"
 
 class WebPageReplay;
-
 
 class WptDriverCore {
 public:
@@ -47,15 +45,12 @@ private:
   WebPagetest _webpagetest;
   WebBrowser *_browser;
   CWinPCap    _winpcap;
-  CIpfw       _ipfw;
   bool        _exit;
   HANDLE      _work_thread;
   HANDLE      _testing_mutex;
 
-  bool ConfigureIpfw(WptTestDriver& test);
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
-  void ResetIpfw(void);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);
   void FlushDNS(void);

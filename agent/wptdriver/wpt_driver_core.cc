@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "zlib/contrib/minizip/unzip.h"
 #include <Wtsapi32.h>
 
-const int PIPE_IN = 1;
-const int PIPE_OUT = 2;
 const TCHAR * BROWSERS[] = {
   _T("chrome.exe"),
   _T("firefox.exe"),
@@ -124,8 +122,7 @@ void WptDriverCore::WorkThread(void) {
       if (_settings.SetBrowser(test._browser)) {
         WebBrowser browser(_settings, test, _status, _settings._browser);
         if (SetupWebPageReplay(test, browser) &&
-            !TracerouteTest(test) &&
-            ConfigureIpfw(test)) {
+            !TracerouteTest(test)) {
           for (test._run = 1; test._run <= test._runs; test._run++) {
             test._clear_cache = true;
             BrowserTest(test, browser);
@@ -135,7 +132,6 @@ void WptDriverCore::WorkThread(void) {
             }
           }
         }
-        ResetIpfw();
 
         bool uploaded = false;
         for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
@@ -261,46 +257,6 @@ void WptDriverCore::FlushDNS(void) {
   if (!flushed)
     LaunchProcess(_T("ipconfig.exe /flushdns"));
 }
-
-/*-----------------------------------------------------------------------------
-  Set up bandwidth throttling
------------------------------------------------------------------------------*/
-bool WptDriverCore::ConfigureIpfw(WptTestDriver& test) {
-  bool ret = false;
-  if (test._bwIn && test._bwOut) {
-    // split the latency across directions
-    DWORD latency = test._latency / 2;
-
-    CString buff;
-    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, ")
-                _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
-                test._latency, test._plr );
-    OutputDebugString(buff);
-
-    if (_ipfw.CreatePipe(PIPE_IN, test._bwIn*1000, latency,test._plr/100.0)) {
-      // make up for odd values
-      if( test._latency % 2 )
-        latency++;
-
-      if (_ipfw.CreatePipe(PIPE_OUT, test._bwOut*1000,latency,test._plr/100.0))
-        ret = true;
-      else
-        _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
-    }
-  }
-  else
-    ret = true;
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Remove the bandwidth throttling
------------------------------------------------------------------------------*/
-void WptDriverCore::ResetIpfw(void) {
-  _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
-  _ipfw.CreatePipe(PIPE_OUT, 0, 0, 0);
-}
-
 
 /*-----------------------------------------------------------------------------
   Set up Web Page Replay (Record the page then start playback for it.)

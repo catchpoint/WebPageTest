@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "web_browser.h"
 
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
+const int PIPE_IN = 1;
+const int PIPE_OUT = 2;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -98,6 +100,8 @@ bool WebBrowser::RunAndWait() {
         }
 
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
+        if (!ConfigureIpfw(_test))
+            ok = false;
         ResumeThread(pi.hThread);
         CloseHandle(pi.hThread);
       } else {
@@ -130,6 +134,7 @@ bool WebBrowser::RunAndWait() {
         CloseHandle(_browser_process);
       }
       LeaveCriticalSection(&cs);
+      ResetIpfw();
     }
   }
 
@@ -213,4 +218,43 @@ void WebBrowser::FindHookFunctions(HANDLE process) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Set up bandwidth throttling
+-----------------------------------------------------------------------------*/
+bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
+  bool ret = false;
+  if (test._bwIn && test._bwOut) {
+    // split the latency across directions
+    DWORD latency = test._latency / 2;
+
+    CString buff;
+    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, ")
+                _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
+                test._latency, test._plr );
+    OutputDebugString(buff);
+
+    if (_ipfw.CreatePipe(PIPE_IN, test._bwIn*1000, latency,test._plr/100.0)) {
+      // make up for odd values
+      if( test._latency % 2 )
+        latency++;
+
+      if (_ipfw.CreatePipe(PIPE_OUT, test._bwOut*1000,latency,test._plr/100.0))
+        ret = true;
+      else
+        _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
+    }
+  }
+  else
+    ret = true;
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Remove the bandwidth throttling
+-----------------------------------------------------------------------------*/
+void WebBrowser::ResetIpfw(void) {
+  _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
+  _ipfw.CreatePipe(PIPE_OUT, 0, 0, 0);
 }

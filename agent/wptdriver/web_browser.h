@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
+#include "ipfw.h"
 
 class BrowserSettings;
 
@@ -44,11 +45,14 @@ private:
   void FindHookFunctions(HANDLE process);
   CStringA GetHookFunctionIniFilename();
   bool SaveHookFunctionOffsets(const char *names[], const int offsets[]);
+  bool ConfigureIpfw(WptTestDriver& test);
+  void ResetIpfw(void);
 
   WptSettings&    _settings;
   WptTestDriver&  _test;
   WptStatus&      _status;
   BrowserSettings& _browser;
+  CIpfw           _ipfw;
 
   HANDLE        _browser_process;
 
