@@ -22,6 +22,7 @@ CDN_PROVIDER cdnList[] = {
 	{".internapcdn.net", _T("Internap")},
 	{".cloudfront.net", _T("Amazon CloudFront")},
 	{".netdna-cdn.com", _T("MaxCDN")},
+	{".netdna-ssl.com", _T("MaxCDN")},
 	{".netdna.com", _T("MaxCDN")},
 	{".cotcdn.net", _T("Cotendo CDN")},
 	{".cachefly.net", _T("Cachefly")},
