@@ -256,9 +256,6 @@
     <ClInclude Include="..\wptdriver\wpt_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="hook_chrome.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="hook_nspr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -598,9 +595,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\wptdriver\wpt_test.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hook_chrome.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_nspr.cc">

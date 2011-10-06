@@ -33,16 +33,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../wpthook/wpthook_dll.h"
 
-const char HOOK_OFFSETS_FILE_VERSION[] = "001";
+const char HOOK_OFFSETS_FILE_VERSION[] = "002";
 const char * HOOK_OFFSETS_SYMBOL_NAMES[] = {
   "SSL_ImportFD",
   "ssl_Connect",
   "ssl_Close",
-  "ssl_Send",
   "ssl_Write",
-  "ssl_Recv",
   "ssl_Read",
-  // Same names with "Def" and "Secure" prefixes (e.g. "ssl_DefWrite") exist.
 };
 
 /*-----------------------------------------------------------------------------

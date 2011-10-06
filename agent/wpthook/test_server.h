@@ -30,14 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class WptHook;
 class WptTestHook;
-class HookChrome;
 class TestState;
 
 class TestServer
 {
 public:
-  TestServer(WptHook& hook, WptTestHook &test, HookChrome& chrome_hook, 
-              TestState& test_state);
+  TestServer(WptHook& hook, WptTestHook &test, TestState& test_state);
   ~TestServer(void);
 
   bool Start(void);
@@ -48,7 +46,6 @@ public:
 
 private:
   WptHook&          _hook;
-  HookChrome&       _chrome_hook;
   struct mg_context *_mongoose_context;
   WptTestHook&      _test;
   TestState&        _test_state;

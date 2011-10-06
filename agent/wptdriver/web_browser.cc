@@ -182,13 +182,18 @@ bool GetOffsetsFromSymbols(HANDLE process, LPCTSTR app_data_dir,
     if (module_base_addr) {
       // Find the offsets for the functions we want to hook.
       POSITION pos = symbol_names.GetHeadPosition();
+      is_loaded = true;
       while (pos != NULL) {      
         CStringA name = symbol_names.GetNext(pos);
         DWORD64 offset = 0;
         SymEnumSymbols(process, module_base_addr, name, EnumSymProc, &offset);
-        offsets->SetAt(name, offset);
+        if (offset) {
+          offsets->SetAt(name, offset);
+        } else {
+          is_loaded = false;
+          break;
+        }
       }
-      is_loaded = true;
       SymUnloadModule64(process, module_base_addr);
     }
     SymCleanup(process);
@@ -212,10 +217,13 @@ void WebBrowser::FindHookFunctions(HANDLE process) {
       HookSymbolNames hook_names;
       GetHookSymbolNames(&hook_names);
       HookOffsets hook_offsets;
-      if (GetOffsetsFromSymbols(process, data_dir, module, hook_names,
+      if (!GetOffsetsFromSymbols(process, data_dir, module, hook_names,
                                 &hook_offsets)) {
-        SaveHookOffsets(offsets_filename, hook_offsets);
+        // Be sure that dbghelp.dll and symsrv.dll are in the binary directory.
+        OutputDebugString(CString("Unable to find offsets for Chrome SSL."));
       }
+      // Go ahead and save offsets even on failure to avoid expensive retries.
+      SaveHookOffsets(offsets_filename, hook_offsets);
     }
   }
 }

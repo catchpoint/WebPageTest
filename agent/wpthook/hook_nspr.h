@@ -53,13 +53,8 @@ public:
   PRFileDesc* SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
   PRStatus PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags);
   PRStatus PR_Close(PRFileDesc *fd);
-
   PRInt32 PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount);
-  PRInt32 PR_Send(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
-                  PRIntervalTime timeout);
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
-  PRInt32 PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
-                  PRIntervalTime timeout);
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
@@ -72,9 +67,7 @@ private:
   PRConnectcontinueFN _PR_ConnectContinue;
   PRCloseFN  _PR_Close;
   PRReadFN   _PR_Read;
-  PRRecvFN   _PR_Recv;
   PRWriteFN  _PR_Write;
-  PRSendFN   _PR_Send;
   
   PFN_PR_FileDesc2NativeHandle _PR_FileDesc2NativeHandle;
 };

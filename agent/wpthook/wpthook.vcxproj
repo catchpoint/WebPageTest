@@ -148,7 +148,6 @@
     <ClInclude Include="distorm\src\textdefs.h" />
     <ClInclude Include="distorm\src\wstring.h" />
     <ClInclude Include="distorm\src\x86defs.h" />
-    <ClInclude Include="hook_chrome.h" />
     <ClInclude Include="hook_gdi.h" />
     <ClInclude Include="jpeg\jconfig.h" />
     <ClInclude Include="jpeg\jdct.h" />
@@ -631,7 +630,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="hook_chrome.cc" />
     <ClCompile Include="hook_gdi.cc" />
     <ClCompile Include="inject.cc" />
     <ClCompile Include="jpeg\jaricom.c">
