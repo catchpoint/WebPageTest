@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class DataChunk;
 class Requests;
 class TestState;
+struct PRFileDesc;
 
 class SocketInfo {
 public:
@@ -74,9 +75,15 @@ public:
   bool ModifyDataOut(SOCKET s, DataChunk& chunk);
   void DataOut(SOCKET s, DataChunk& chunk);
 
-  void SetIsSsl(SOCKET s, bool is_ssl);
+  void SetIsSsl(SOCKET s);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
+  void SetSslFd(PRFileDesc* fd);
+  void ClearSslFd(PRFileDesc* fd);
+  void SetSslSocket(SOCKET s);
+  bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
+  void SslSendActivity(SOCKET s);
+  void SslRecvActivity(SOCKET s);
 
   void Reset();
 
@@ -93,6 +100,8 @@ private:
   TestState&                  _test_state;
   DWORD	_nextSocketId;	// ID to assign to the next socket
   CAtlMap<SOCKET, DWORD>	    _openSockets;
-  CAtlMap<SOCKET, bool>       _sslSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
+
+  PRFileDesc* _last_ssl_fd;
+  CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
 };

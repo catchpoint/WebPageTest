@@ -273,15 +273,24 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
 -----------------------------------------------------------------------------*/
 int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  if( _recv )
+  if (_recv) {
     ret = _recv(s, buf, len, flags);
-  if( ret > 0 && !flags && buf && len && !_test_state._exit &&
-     !_sockets.IsSsl(s) )
-    _sockets.DataIn(s, DataChunk(buf, ret));
- WptTrace(loglevel::kProcess, _T(
-        "[wpthook] CWsHook::recv(socket=%d, bytes_recv=%d) -> %d"),
-        s, len, ret);
- return ret;
+  }
+  if (!_test_state._exit) {
+    if (_sockets.IsSsl(s)) {
+      if (ret > 0) {
+        _sockets.SslRecvActivity(s);
+      }
+    } else if (ret == SOCKET_ERROR && len == 1) {
+      _sockets.SetSslSocket(s);
+    } else if (ret > 0 && !flags && buf && len) {
+      _sockets.DataIn(s, DataChunk(buf, ret));
+    }
+  }
+  WptTrace(loglevel::kProcess, _T(
+           "[wpthook] CWsHook::recv(socket=%d, bytes_recv=%d) -> %d"),
+           s, len, ret);
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -291,25 +300,29 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                      LPWSAOVERLAPPED lpOverlapped, 
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  if (_WSARecv)
+  if (_WSARecv) {
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-  if (!_sockets.IsSsl(s)) {
-    if (!ret && lpBuffers && dwBufferCount && lpNumberOfBytesRecvd
-          && *lpNumberOfBytesRecvd && !_test_state._exit) {
-      DWORD bytes = *lpNumberOfBytesRecvd;
-      DWORD i = 0;
-      while (i < dwBufferCount && bytes > 0) {
-        DWORD chunk = min(lpBuffers[i].len, bytes);
-        if (chunk) {
-          bytes -= chunk;
-          if( lpBuffers[i].buf )
-            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, chunk));
-        }
-        i++;
+  }
+  if (!_test_state._exit) {
+    if (_sockets.IsSsl(s)) {
+      if (ret == 0) {
+        _sockets.SslRecvActivity(s);
       }
-    } else if (ret == SOCKET_ERROR && lpBuffers 
-                && dwBufferCount && lpOverlapped && !_test_state._exit) {
+    } else if (ret == 0 && lpBuffers && dwBufferCount &&
+               lpNumberOfBytesRecvd && *lpNumberOfBytesRecvd) {
+      DWORD num_bytes = *lpNumberOfBytesRecvd;
+      for (DWORD i = 0; i < dwBufferCount && num_bytes > 0; ++i) {
+        DWORD buffer_size = min(lpBuffers[i].len, num_bytes);
+        if (buffer_size) {
+          if (lpBuffers[i].buf) {
+            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, buffer_size));
+          }
+          num_bytes -= buffer_size;
+        }
+      }
+    } else if (ret == SOCKET_ERROR && lpBuffers && dwBufferCount &&
+               lpOverlapped) {
       WsaBuffTracker buff(lpBuffers, dwBufferCount);
       recv_buffers.SetAt(lpOverlapped, buff);
     }
@@ -317,7 +330,6 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   WptTrace(loglevel::kProcess, _T(
         "[wpthook] CWsHook::WSARecv(socket=%d, bytes_recv=%d) -> %d"),
         s, *lpNumberOfBytesRecvd, ret);
-
   return ret;
 }
 
@@ -328,11 +340,15 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   if (_send) {
     DataChunk chunk(buf, len);
     int original_len = len;
-    if (len && !_test_state._exit && !_sockets.IsSsl(s)) {
+    bool is_ssl = _sockets.IsSsl(s);
+    if (len && !_test_state._exit && !is_ssl) {
       _sockets.ModifyDataOut(s, chunk);
       _sockets.DataOut(s, chunk);
     }
     ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
+    if (!_test_state._exit && is_ssl && ret > 0) {
+      _sockets.SslSendActivity(s);
+    }
     WptTrace(loglevel::kProcess, _T(
         "[wpthook] CWsHook::send(socket=%d, len=%d, orig_len=%d) -> %d"),
         s, chunk.GetLength(), original_len, ret);
@@ -352,7 +368,8 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     bool is_modified = 0;
     unsigned original_len = 0;
     DataChunk chunk;
-    if (!_test_state._exit && !_sockets.IsSsl(s)) {
+    bool is_ssl = _sockets.IsSsl(s);
+    if (!_test_state._exit && !is_ssl) {
       for (DWORD i = 0; i < dwBufferCount; i++) {
         original_len += lpBuffers[i].len;
       }
@@ -387,9 +404,11 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                      dwFlags, lpOverlapped, lpCompletionRoutine);
     }
+    if (!_test_state._exit && is_ssl && ret == 0) {
+      _sockets.SslSendActivity(s);
+    }
     WptTrace(loglevel::kProcess, _T("[wpthook] WSASend")
-        _T("(socket=%d, bytes_sent=%d) -> %d"),
-        s, *lpNumberOfBytesSent, ret);
+        _T("(socket=%d, bytes_sent=%d) -> %d"), s, *lpNumberOfBytesSent, ret);
   }
   return ret;
 }

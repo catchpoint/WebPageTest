@@ -34,28 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct TRANSMIT_FILE_BUFFERS TRANSMIT_FILE_BUFFERS;
 #include "private/pprio.h"
 
-typedef enum _SECStatus {
-    SECWouldBlock = -2,
-    SECFailure = -1,
-    SECSuccess = 0
-} SECStatus;
-
-typedef struct PRAddrInfo PRAddrInfo;
-typedef struct PRHostEnt PrHostEnt;
-
 typedef PRFileDesc* (*PFN_SSL_ImportFD)(PRFileDesc *model, PRFileDesc *fd);
-typedef PRStatus (*PFN_PR_Close)(PRFileDesc *fd);
-typedef PRStatus (*PFN_PR_ConnectContinue)(PRFileDesc *fd, PRInt16 out_flags);
-
-typedef PRInt32 (*PFN_PR_Write)(PRFileDesc*, const void*, PRInt32);
-typedef PRInt32 (*PFN_PR_Send)(PRFileDesc*, const void*, PRInt32, PRIntn,
-                               PRIntervalTime);
-typedef PRInt32 (*PFN_PR_Read)(PRFileDesc*, void*, PRInt32);
-typedef PRInt32 (*PFN_PR_Recv)(PRFileDesc*, void*, PRInt32, PRIntn,
-                               PRIntervalTime);
-
 typedef PROsfd (*PFN_PR_FileDesc2NativeHandle)(PRFileDesc *fd);
-
 
 class TestState;
 class TrackSockets;
@@ -66,6 +46,8 @@ public:
   NsprHook(TrackSockets& sockets, TestState& test_state);
   ~NsprHook();
   void Init();
+
+  void SetSslFd(PRFileDesc *fd);
 
   // NSPR hooks
   PRFileDesc* SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
@@ -78,25 +60,21 @@ public:
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
   PRInt32 PR_Recv(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
                   PRIntervalTime timeout);
-
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
-  CAtlMap<PRFileDesc*, SOCKET> _ssl_sockets;
-  NCodeHookIA32  hook;
+  NCodeHookIA32* _hook;
 
-  SOCKET GetSocket(PRFileDesc *fd);
   template <typename U> void GetFunctionByName(
       const std::string& dll, const std::string& funcName, U& func);
 
   PFN_SSL_ImportFD _SSL_ImportFD;
-  PFN_PR_ConnectContinue _PR_ConnectContinue;
-  PFN_PR_Close  _PR_Close;
-
-  PFN_PR_Read   _PR_Read;
-  PFN_PR_Recv   _PR_Recv;
-  PFN_PR_Write  _PR_Write;
-  PFN_PR_Send   _PR_Send;
-
+  PRConnectcontinueFN _PR_ConnectContinue;
+  PRCloseFN  _PR_Close;
+  PRReadFN   _PR_Read;
+  PRRecvFN   _PR_Recv;
+  PRWriteFN  _PR_Write;
+  PRSendFN   _PR_Send;
+  
   PFN_PR_FileDesc2NativeHandle _PR_FileDesc2NativeHandle;
 };

@@ -44,12 +44,13 @@ bool SocketInfo::IsLocalhost() {
 -----------------------------------------------------------------------------*/
 TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
   _nextSocketId(1)
+  , _last_ssl_fd(NULL)
   , _requests(requests)
   , _test_state(test_state) {
   InitializeCriticalSection(&cs);
   _openSockets.InitHashTable(257);
   _socketInfo.InitHashTable(257);
-  _sslSockets.InitHashTable(257);
+  _ssl_sockets.InitHashTable(257);
 }
 
 /*-----------------------------------------------------------------------------
@@ -139,6 +140,8 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   if (info->_is_ssl && !info->_ssl_start.QuadPart) {
+    // Firefox relies on setting the start timer here.
+    // Chrome is handled by SslSendActivity().
     QueryPerformanceCounter(&info->_ssl_start);
   }
   DWORD socket_id = info->_id;
@@ -161,11 +164,13 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
 void TrackSockets::DataOut(SOCKET s, DataChunk& chunk) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
-  if (info->_is_ssl && info->_ssl_start.QuadPart && !info->_ssl_end.QuadPart) {
-    QueryPerformanceCounter(&info->_ssl_end);
-  }
   if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart) {
     QueryPerformanceCounter(&info->_connect_end);
+  }
+  if (info->_is_ssl && info->_ssl_start.QuadPart && !info->_ssl_end.QuadPart) {
+    // Firefox relies on setting the end timer here.
+    // Chrome is handled by SslRecvActivity().
+    QueryPerformanceCounter(&info->_ssl_end);
   }
   DWORD socket_id = info->_id;
   bool is_localhost = info->IsLocalhost();
@@ -192,6 +197,7 @@ void TrackSockets::Reset() {
       delete info;
   }
   _socketInfo.RemoveAll();
+  _ssl_sockets.RemoveAll();
   LeaveCriticalSection(&cs);
 }
 
@@ -235,10 +241,10 @@ ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TrackSockets::SetIsSsl(SOCKET s, bool is_ssl) {
+void TrackSockets::SetIsSsl(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
-  info->_is_ssl = is_ssl;
+  info->_is_ssl = true;
   LeaveCriticalSection(&cs);
 }
 
@@ -263,6 +269,92 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
   }
   LeaveCriticalSection(&cs);
   return is_ssl;
+}
+
+/*-----------------------------------------------------------------------------
+  Save the fd as the last one seen.
+  Chrome uses this (from NsprHook::SSL_ImportFD) to map the fd to a SOCKET.
+  The SOCKET is set when Chrome calls CWsHook::recv to check the SOCKET.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SetSslFd(PRFileDesc* fd) {
+  EnterCriticalSection(&cs);
+  _ssl_sockets.RemoveKey(fd);
+  _last_ssl_fd = fd;
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+  Drop the fd to SOCKET mapping (called from NsprHook::PR_Close).
+-----------------------------------------------------------------------------*/
+void TrackSockets::ClearSslFd(PRFileDesc* fd) {
+  EnterCriticalSection(&cs);
+  _ssl_sockets.RemoveKey(fd);
+  _last_ssl_fd = NULL;
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+  Map a SOCKET to the previously set PRFileDesc if that socket has not
+  had any activity.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SetSslSocket(SOCKET s) {
+  EnterCriticalSection(&cs);
+  SOCKET lookup_socket;
+  DWORD socket_id = 0;
+  _openSockets.Lookup(s, socket_id);
+  if (_last_ssl_fd && s != INVALID_SOCKET &&
+      !_ssl_sockets.Lookup(_last_ssl_fd, lookup_socket) &&
+      (!socket_id || !_requests.HasActiveRequest(socket_id))) {
+    _ssl_sockets.SetAt(_last_ssl_fd, s);
+    SetIsSsl(s);
+    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::SetSslSocket")
+        _T("(fd=%d, socket=%d) SUCCESS!."), _last_ssl_fd, s);
+  }
+  _last_ssl_fd = NULL;
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
+  EnterCriticalSection(&cs);
+  _last_ssl_fd = NULL;  // for good measure
+  bool ret = _ssl_sockets.Lookup(fd, s);
+  LeaveCriticalSection(&cs);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Track the SSL Handshake start (used by Chrome).
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslSendActivity(SOCKET s) {
+  DWORD socket_id = 0;
+  EnterCriticalSection(&cs);
+  _openSockets.Lookup(s, socket_id);
+  LeaveCriticalSection(&cs);
+  if (socket_id && !_requests.HasActiveRequest(socket_id)) {
+    SocketInfo* info = GetSocketInfo(s);
+    if (info->_is_ssl && !info->_ssl_start.QuadPart) {
+      QueryPerformanceCounter(&info->_ssl_start);
+    }
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+  Track the SSL Handshake end (used by Chrome).
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslRecvActivity(SOCKET s) {
+  DWORD socket_id = 0;
+  EnterCriticalSection(&cs);
+  _openSockets.Lookup(s, socket_id);
+  if (socket_id && !_requests.HasActiveRequest(socket_id)) {
+    SocketInfo* info = GetSocketInfo(s);
+    if (info->_is_ssl && info->_ssl_start.QuadPart) {
+      QueryPerformanceCounter(&info->_ssl_end);
+    }
+  }
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------

@@ -165,6 +165,15 @@ void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
 }
 
 /*-----------------------------------------------------------------------------
+  A request is counted as active if it has been create.
+  Calling ModifyDataOut (or DataOut/DataIn) will do that.
+-----------------------------------------------------------------------------*/
+bool Requests::HasActiveRequest(DWORD socket_id) {
+  Request * request = NULL;
+  return _active_requests.Lookup(socket_id, request) && request;
+}
+
+/*-----------------------------------------------------------------------------
   See if the beginning of the bugger matches any known HTTP method
   TODO: See if there is a more reliable way to detect HTTP traffic
 -----------------------------------------------------------------------------*/

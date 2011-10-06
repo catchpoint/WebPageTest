@@ -44,6 +44,7 @@ public:
   void DataIn(DWORD socket_id, DataChunk& chunk);
   bool ModifyDataOut(DWORD socket_id, DataChunk& chunk);
   void DataOut(DWORD socket_id, DataChunk& chunk);
+  bool HasActiveRequest(DWORD socket_id);
   void Lock();
   void Unlock();
   void Reset();
