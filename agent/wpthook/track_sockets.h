@@ -75,7 +75,6 @@ public:
   bool ModifyDataOut(SOCKET s, DataChunk& chunk);
   void DataOut(SOCKET s, DataChunk& chunk);
 
-  void SetIsSsl(SOCKET s);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
   void SetSslFd(PRFileDesc* fd);
@@ -87,7 +86,7 @@ public:
 
   void Reset();
 
-  SocketInfo* GetSocketInfo(SOCKET s);
+  SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
   SocketInfo* GetSocketInfoById(DWORD socket_id);
 
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,

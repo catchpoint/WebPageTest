@@ -68,12 +68,15 @@ void TrackSockets::Create(SOCKET s) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::Close(SOCKET s) {
-  EnterCriticalSection(&cs);
   DWORD socket_id = 0;
-  if (_openSockets.Lookup(s, socket_id) && socket_id)
-    _requests.SocketClosed(socket_id);
+
+  EnterCriticalSection(&cs);
+  _openSockets.Lookup(s, socket_id);
   _openSockets.RemoveKey(s);
   LeaveCriticalSection(&cs);
+
+  if (socket_id)
+    _requests.SocketClosed(socket_id);
 }
 
 /*-----------------------------------------------------------------------------
@@ -90,14 +93,16 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
         _T("[wpthook] - TrackSockets::Connect: Warning: IPv6 unsupported!\n"));
   }
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
-    EnterCriticalSection(&cs);
-    SocketInfo* info = GetSocketInfo(s);
     struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
-    memcpy(&info->_addr, ip_name, sizeof(ip_name));
+
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s, false);
+    memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
     QueryPerformanceCounter(&info->_connect_start);
+    LeaveCriticalSection(&cs);
+
     WptTrace(loglevel::kFunction, 
       _T("[wpthook] - TrackSockets::Connect start %d\n"), s);
-    LeaveCriticalSection(&cs);
   }
 }
 
@@ -241,15 +246,6 @@ ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TrackSockets::SetIsSsl(SOCKET s) {
-  EnterCriticalSection(&cs);
-  SocketInfo* info = GetSocketInfo(s);
-  info->_is_ssl = true;
-  LeaveCriticalSection(&cs);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 bool TrackSockets::IsSsl(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
@@ -279,8 +275,8 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
 void TrackSockets::SetSslFd(PRFileDesc* fd) {
   EnterCriticalSection(&cs);
   _ssl_sockets.RemoveKey(fd);
-  _last_ssl_fd = fd;
   LeaveCriticalSection(&cs);
+  _last_ssl_fd = fd;
 }
 
 /*-----------------------------------------------------------------------------
@@ -289,8 +285,8 @@ void TrackSockets::SetSslFd(PRFileDesc* fd) {
 void TrackSockets::ClearSslFd(PRFileDesc* fd) {
   EnterCriticalSection(&cs);
   _ssl_sockets.RemoveKey(fd);
-  _last_ssl_fd = NULL;
   LeaveCriticalSection(&cs);
+  _last_ssl_fd = NULL;
 }
 
 /*-----------------------------------------------------------------------------
@@ -306,19 +302,19 @@ void TrackSockets::SetSslSocket(SOCKET s) {
       !_ssl_sockets.Lookup(_last_ssl_fd, lookup_socket) &&
       (!socket_id || !_requests.HasActiveRequest(socket_id))) {
     _ssl_sockets.SetAt(_last_ssl_fd, s);
-    SetIsSsl(s);
-    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::SetSslSocket")
-        _T("(fd=%d, socket=%d) SUCCESS!."), _last_ssl_fd, s);
+    SocketInfo* info = GetSocketInfo(s);
+    info->_is_ssl = true;
   }
-  _last_ssl_fd = NULL;
   LeaveCriticalSection(&cs);
+
+  _last_ssl_fd = NULL;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
-  EnterCriticalSection(&cs);
   _last_ssl_fd = NULL;  // for good measure
+  EnterCriticalSection(&cs);
   bool ret = _ssl_sockets.Lookup(fd, s);
   LeaveCriticalSection(&cs);
   return ret;
@@ -331,7 +327,6 @@ void TrackSockets::SslSendActivity(SOCKET s) {
   DWORD socket_id = 0;
   EnterCriticalSection(&cs);
   _openSockets.Lookup(s, socket_id);
-  LeaveCriticalSection(&cs);
   if (socket_id && !_requests.HasActiveRequest(socket_id)) {
     SocketInfo* info = GetSocketInfo(s);
     if (info->_is_ssl && !info->_ssl_start.QuadPart) {
@@ -360,7 +355,7 @@ void TrackSockets::SslRecvActivity(SOCKET s) {
 /*-----------------------------------------------------------------------------
   This must always be called from within a critical section.
 -----------------------------------------------------------------------------*/
-SocketInfo* TrackSockets::GetSocketInfo(SOCKET s) {
+SocketInfo* TrackSockets::GetSocketInfo(SOCKET s, bool lookup_peer) {
   DWORD socket_id = 0;
   _openSockets.Lookup(s, socket_id);
   SocketInfo* info = NULL;
@@ -375,9 +370,9 @@ SocketInfo* TrackSockets::GetSocketInfo(SOCKET s) {
     info = new SocketInfo;
     info->_id = socket_id;
     info->_during_test = _test_state._active;
-    _socketInfo.SetAt(info->_id, info);
+    _socketInfo.SetAt(socket_id, info);
   }
-  if (info->_addr.sin_addr.S_un.S_addr == 0) {
+  if (lookup_peer && info->_addr.sin_addr.S_un.S_addr == 0) {
     int addr_len = sizeof(info->_addr);
     getpeername(s, (sockaddr *)&info->_addr, &addr_len);
   }
