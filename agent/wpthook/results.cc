@@ -190,7 +190,8 @@ void Results::SaveImages(void) {
               _test._image_quality);
   }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
-    image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+    if (_test._png_screen_shot)
+      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
     SaveImage(image, _file_base + IMAGE_FULLY_LOADED, true, 
               _test._image_quality);
   }
