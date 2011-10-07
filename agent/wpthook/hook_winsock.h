@@ -67,6 +67,8 @@ public:
                 fd_set FAR * exceptfds, const struct timeval FAR * timeout);
   int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                               const ADDRINFOA * pHints, PADDRINFOA * ppResult);
+  struct hostent * gethostbyname(const char * pNodeName);
+
   int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
                               const ADDRINFOW * pHints, PADDRINFOW * ppResult);
   void	freeaddrinfo(PADDRINFOA pAddrInfo);
@@ -111,6 +113,7 @@ private:
   LPFN_GETADDRINFOW	  _GetAddrInfoW;
   LPFN_FREEADDRINFO	  _freeaddrinfo;
   LPFN_FREEADDRINFOW	_FreeAddrInfoW;
+  LPFN_GETHOSTBYNAME  _gethostbyname;
   LPFN_WSARECV		    _WSARecv;
   LPFN_WSASEND        _WSASend;
   LPFN_WSAGETOVERLAPPEDRESULT _WSAGetOverlappedResult;

@@ -106,6 +106,13 @@ int WSAAPI GetAddrInfoW_Hook(PCWSTR pNodeName, PCWSTR pServiceName,
   return ret;
 }
 
+struct hostent * WSAAPI gethostbyname_Hook(const char * name) {
+  struct hostent * ret = NULL;
+  if (pHook)
+    ret = pHook->gethostbyname(name);
+  return ret;
+}
+
 void WSAAPI freeaddrinfo_Hook(PADDRINFOA pAddrInfo) {
   if (pHook)
     pHook->freeaddrinfo(pAddrInfo);
@@ -202,6 +209,8 @@ void CWsHook::Init() {
   _select = hook.createHookByName("ws2_32.dll", "select", select_Hook);
   _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
                                                             GetAddrInfoW_Hook);
+  _gethostbyname = hook.createHookByName("ws2_32.dll", "gethostbyname", 
+                                                            gethostbyname_Hook);
   _FreeAddrInfoW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoW", 
                                                            FreeAddrInfoW_Hook);
   _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
@@ -430,39 +439,20 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
   int ret = WSAEINVAL;
   void * context = NULL;
   CString name = CA2T(pNodeName);
-  CAtlArray<ADDRINFOA_ADDR> addresses;
-  bool override_dns = false;
   if (!_test_state._exit)
-    override_dns = _dns.LookupStart( name, context, addresses );
+    context = _dns.LookupStart(name);
 
-  if( _getaddrinfo && !override_dns )
+  if (_getaddrinfo)
     ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
-  else if( override_dns ) {
-    if( addresses.IsEmpty() )
-      ret = EAI_NONAME;
-    else {
-      // build the response structure with the addresses we looked up
-      ret = 0;
-      DWORD count = addresses.GetCount();
-      ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
-                                                          * count);
-      for (DWORD i = 0; i < count; i++) {
-        memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
-        if( i < count - 1 )
-          result->info.ai_next = (PADDRINFOA)&result[i+1];
-        else
-          result->info.ai_next = NULL;
-      }
-      dns_override.SetAt(result, result);
-
-      *ppResult = (PADDRINFOA)result;
-    }
-  }
 
   if (!ret && !_test_state._exit) {
     PADDRINFOA addr = *ppResult;
     while (addr) {
-      _dns.LookupAddress(context, addr);
+      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+          addr->ai_family == AF_INET) {
+        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+      }
       addr = addr->ai_next;
     }
   }
@@ -480,45 +470,57 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
   int ret = WSAEINVAL;
   void * context = NULL;
   CString name = CW2T(pNodeName);
-  CAtlArray<ADDRINFOA_ADDR> addresses;
-  bool override_dns = false;
   if (!_test_state._exit)
-      override_dns = _dns.LookupStart( name, context, addresses );
+      context = _dns.LookupStart(name);
 
-  if (_GetAddrInfoW && !override_dns)
+  if (_GetAddrInfoW)
     ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
-  else if (override_dns) { 
-    if (addresses.IsEmpty())
-      ret = EAI_NONAME;
-    else {
-      // build the response structure with the addresses we looked up
-      ret = 0;
-      DWORD count = addresses.GetCount();
-      ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR)
-                                                            * count);
-      for (DWORD i = 0; i < count; i++) {
-        memcpy( &result[i], &addresses[i], sizeof(ADDRINFOA_ADDR) );
-        if( i < count - 1 )
-          result->info.ai_next = (PADDRINFOA)&result[i+1];
-        else
-          result->info.ai_next = NULL;
-      }
-      dns_override.SetAt(result, result);
-
-      *ppResult = (PADDRINFOW)result;
-    }
-  }
 
   if (!ret && !_test_state._exit) {
     PADDRINFOA addr = (PADDRINFOA)*ppResult;
     while (addr) {
-      _dns.LookupAddress(context, addr);
+      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+          addr->ai_family == AF_INET) {
+        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+      }
       addr = addr->ai_next;
     }
   }
 
   if (context)
     _dns.LookupDone(context, ret);
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Firefox falls back to gethostbyname if ipv6 isn't detected on the machine
+-----------------------------------------------------------------------------*/
+struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
+  struct hostent * ret = NULL;
+
+  void * context = NULL;
+  CString name = CA2T(pNodeName);
+  if (!_test_state._exit)
+      context = _dns.LookupStart(name);
+
+  if (_gethostbyname)
+    ret = _gethostbyname((LPCSTR)CT2A(name));
+
+  if (ret && !_test_state._exit) {
+    int i = 0;
+    while (ret->h_addr_list[i] != 0) {
+      _dns.LookupAddress(context, *(u_long *)ret->h_addr_list[i]);
+      i++;
+    }
+  }
+
+  int err = WSAHOST_NOT_FOUND;
+  if (ret)
+    err = 0;
+  if (context)
+    _dns.LookupDone(context, err);
 
   return ret;
 }

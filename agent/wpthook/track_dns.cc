@@ -49,10 +49,7 @@ TrackDns::~TrackDns(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TrackDns::LookupStart(CString& name, void *&context, 
-                            CAtlArray<ADDRINFOA_ADDR> &addresses) {
-  bool use_internal_dns = false;
-
+void * TrackDns::LookupStart(CString& name) {
   WptTrace(loglevel::kFrequentEvent, 
             _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
               GetCurrentThreadId(), (LPCTSTR)name);
@@ -61,7 +58,6 @@ bool TrackDns::LookupStart(CString& name, void *&context,
   DnsInfo * info = new DnsInfo(name);
   _test.OverrideDNSName(name);
   info->_override_addr.S_un.S_addr = _test.OverrideDNSAddress(name);
-  context = info;
 
   if (_test_state._active) {
     _test_state.ActivityDetected();
@@ -71,28 +67,25 @@ bool TrackDns::LookupStart(CString& name, void *&context,
     LeaveCriticalSection(&cs);
   }
 
-  return use_internal_dns;
+  return info;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TrackDns::LookupAddress(void * context, ADDRINFOA * address) {
+void TrackDns::LookupAddress(void * context, ULONG &addr) {
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
-    if (address->ai_addrlen >= sizeof(struct sockaddr_in) && 
-        address->ai_family == AF_INET)
-    {
-      struct sockaddr_in * ipName = (struct sockaddr_in *)address->ai_addr;
-		  if( info->_override_addr.S_un.S_addr )
-        ipName->sin_addr.S_un.S_addr = info->_override_addr.S_un.S_addr;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
-        GetCurrentThreadId(),
-        ipName->sin_addr.S_un.S_un_b.s_b1
-        ,ipName->sin_addr.S_un.S_un_b.s_b2
-        ,ipName->sin_addr.S_un.S_un_b.s_b3
-        ,ipName->sin_addr.S_un.S_un_b.s_b4);
-    }
+    if( info->_override_addr.S_un.S_addr )
+      addr = info->_override_addr.S_un.S_addr;
+    IN_ADDR address;
+    address.S_un.S_addr = addr;
+    WptTrace(loglevel::kFrequentEvent, 
+      _T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
+      GetCurrentThreadId(),
+      address.S_un.S_un_b.s_b1
+      ,address.S_un.S_un_b.s_b2
+      ,address.S_un.S_un_b.s_b3
+      ,address.S_un.S_un_b.s_b4);
   }
 }
 

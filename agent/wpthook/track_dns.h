@@ -63,9 +63,8 @@ public:
   TrackDns(TestState& test_state, WptTest& test);
   ~TrackDns(void);
 
-  bool LookupStart(CString& name, void *&context, 
-                              CAtlArray<ADDRINFOA_ADDR> &addresses);
-  void LookupAddress(void * context, ADDRINFOA * address);
+  void * LookupStart(CString& name);
+  void LookupAddress(void * context, ULONG &addr);
   void LookupDone(void * context, int result);
   void Reset();
   bool Claim(CString name, LONGLONG before, LONGLONG& start, LONGLONG& end);
