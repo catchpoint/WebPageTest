@@ -48,3 +48,4 @@ user_pref("layers.acceleration.disabled", true);
 user_pref("gfx.direct2d.disabled", true);
 user_pref("xpinstall.whitelist.add", "");
 user_pref("xpinstall.whitelist.add.36", "");
+user_pref("toolkit.telemetry.ptompted", true);
