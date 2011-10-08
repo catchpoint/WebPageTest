@@ -1194,7 +1194,6 @@ function checkTesterRatioAndEmailAlert(){
     logOutput('[INFO] [checkTesterRatioAndEmailAlert] Alert message sent:\n' . $message );
     echo $message;
   }
-  
 }
 
 ?>

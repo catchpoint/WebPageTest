@@ -121,7 +121,7 @@ function adjustEC2InstanceCountIfRequired(){
       if ( $response->status != "200" ){
         logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       }
-    } else if (($currentInstanceCount - ($runRate/TARGET_RUN_RATE_RATIO) > 1) && $location['PendingTests'] < 75){
+    } else if (($currentInstanceCount - ($runRate/TARGET_RUN_RATE_RATIO) > 1) && $location['PendingTests'] < 25){
       logOutput("[INFO] [ec2_functions] Found excess instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       if ( $testerInfo[$k]['AgentCount'] > 0){
         // Find agent that's not busy
