@@ -182,11 +182,24 @@ function terminateDeadEC2Testers(){
     }
   }
 }
+function getEC2TesterStatusLastCheckTime(){
+  if (file_exists('temp/ec2_tester_status.ini')) {
+    return filemtime('temp/ec2_tester_status.ini');
+  }
+}
 /**
  *
  * @return void
  */
-function getEC2TesterStatus(){
+function getEC2TesterStatus($fromCache=false){
+
+  if ($fromCache){
+    if (file_exists('temp/ec2_tester_status.ini')) {
+      $status=parse_ini_file('temp/ec2_tester_status.ini',true);
+      return $status;
+    }
+  }
+
   $browsers[] = "IE_7";
   $browsers[] = "IE_8";
 

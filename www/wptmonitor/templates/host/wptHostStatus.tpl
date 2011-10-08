@@ -34,7 +34,7 @@
             {if $location.PendingTests > $location.YellowLimit}{assign value="red" var=bgcolor}{/if}
               <tr class="{$eo}">
                 <td>{$location.host}</td>
-                <td>{$location.id}</td>
+                <td><a href="#{$location.id}">{$location.id}</a></td>
                 <td>{$location.Label}</td>
                 <td>{$location.Browser}</td>
                 <td align="right">{$location.runRate}</td>
@@ -83,13 +83,15 @@
               <th align="right">Tester</th>
               <th align="center">PC</th>
               <th align="right">EC2 Instance</th>
-              <th align="right">IP</th>
+              <th align="center">Launch Time</th>
+              <th align="center"><a title="EC2 State as of last query">EC2 State (<a href="?cache=false">refresh</a>)</a><br>({$lastEc2StatusCheck|date_format:"Y/m/d - H:i:s"})</a></th>
+              <th align="center">IP</th>
               <th align="right">Busy</th>
               <th align="right">Last Check</th>
               <th align="right">Last Work</th>
             </thead>
             {foreach from=$testers item=tester}
-              <tr><td colspan="8" nowrap="true" bgcolor="#f5f5dc"><h4 style="font-size: medium;">{$tester.id}</h4></td></tr>
+              <tr><a name="{$tester.id}"></a> <td colspan="10" nowrap="true" bgcolor="#f5f5dc"><h4 style="font-size: medium;">{$tester.id}</h4></td></tr>
                 {foreach from=$tester.Agents item=agent}
                   {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
                   {assign value="#98fb98" var="bgcolor"}
@@ -98,8 +100,10 @@
                     <td></td>
                     <td align="right">{$agent.index}</td>
                     <td align="center">{$agent.pc}</td>
-                    <td align="right">{$agent.ec2}</td>
-                    <td align="right">{$agent.ip}</td>
+                    <td align="center">{$agent.ec2}</td>
+                    <td align="center">{$agent.ec2Status.launchTime}</td>
+                    <td align="center">{$agent.ec2Status.state}</td>
+                    <td align="center">{$agent.ip}</td>
                     <td align="right">{$agent.busy}</td>
                     <td align="right">{$agent.elapsed}</td>
                     <td align="right">{$agent.last}</td>

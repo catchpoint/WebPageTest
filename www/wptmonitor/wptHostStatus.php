@@ -6,8 +6,24 @@
   $testers = getTestersInformation();
   $locations = getLocationInformation();
   $runRateInfo = getCurrentRunRateInfo();
-//  $ec2TesterStatus = getEC2TesterStatus();
 
+  $cache = $_REQUEST['cache'];
+  if ( $cache == "false" ){
+    $cache = false;
+  } else {
+    $cache = true;
+  }
+  $ec2TesterStatus = getEC2TesterStatus($cache);
+
+  foreach($testers as &$tester){
+    foreach($tester['Agents'] as $key=>&$agent){
+      $ec2 = (String) $agent['ec2'];
+      $agent['ec2Status'] = $ec2TesterStatus[$ec2];
+    }
+  }
+  $lastEc2StatusCheck = getEC2TesterStatusLastCheckTime();
+
+  $smarty->assign('lastEc2StatusCheck',$lastEc2StatusCheck);
   $smarty->assign('locations',$locations);
   $smarty->assign('testers',$testers);
   $smarty->assign('runRateInfo',$runRateInfo);
