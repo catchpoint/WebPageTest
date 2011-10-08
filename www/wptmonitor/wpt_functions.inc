@@ -420,7 +420,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
           // Process script if it exists
           if ($script['URLScript']) {
             $url = processURLScript($script['URLScript'], $script['URL']);
-            logOutput("[INFO] [ProcessJob] Id:$id Label:$label URL:$url");
+                logOutput("[INFO] [ProcessJob] Id:$id Label:$label URL:$url");
           } else {
             $url = $script['URL'];
           }
@@ -526,7 +526,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
           unset($row);
           unset($r);
           unset($wptResult);
-          logOutput("[INFO] [ProcessJob] Id:$id Label:$label Sumitted job for processing\n url: " . $url, $wptResultId);
+          logOutput("[INFO] [ProcessJob] Id:$id Label:$label Sumitted job for processing\n url: " . $url);
           if ($navscript) {
             logOutput("[INFO] [ProcessJob] Id:$id Label:$label Nav Script\n" . $navscript);
           }
@@ -592,7 +592,7 @@ function processResultsForAll( $resultId = null ) {
       if (!$resultId){
         if ($result['DownloadAttempts'] > $result['MaxDownloadAttempts']) {
           // Set to 900 to indicate timeout
-          logOutput("[WARN] [ProcessResults] Max download attempts exceeded. Deactivating WPTResultId: $wptResultId Id: $id",$wptResultId);
+          logOutput("[WARN] [ProcessResults] Max download attempts exceeded. Deactivating WPTResultId: $wptResultId Id: $id");
           $result['Status'] = "910";
           $result->save();
           continue;
@@ -606,12 +606,12 @@ function processResultsForAll( $resultId = null ) {
       try {
         $resultXml = file_get_contents($result['WPTHost'] . $wptXmlResult . $wptResultId . "/");
       } catch (Exception $e) {
-        logOutput("[ERROR] [ProcessResults] Failed to retrieve xml for WPTResultId: $wptResultId Id: $id",$wptResultId);
+        logOutput("[ERROR] [ProcessResults] Failed to retrieve xml for WPTResultId: $wptResultId Id: $id");
         continue;
       }
 
       if (!$resultXml) {
-        logOutput("[ERROR] [ProcessResults] Empty xml retrieved for WPTResultId: $wptResultId Id: $id",$wptResultId);
+        logOutput("[ERROR] [ProcessResults] Empty xml retrieved for WPTResultId: $wptResultId Id: $id");
         continue;
       }
 
@@ -619,13 +619,13 @@ function processResultsForAll( $resultId = null ) {
         $xml = new SimpleXMLElement($resultXml);
       } catch (Exception $e) {
         // Ignore and continue
-        logOutput("[ERROR] [ProcessResults] Failed to parse XML for WPTResultId: $wptResultId Id: $id",$wptResultId);
+        logOutput("[ERROR] [ProcessResults] Failed to parse XML for WPTResultId: $wptResultId Id: $id");
         continue;
       }
       $status = $xml->statusCode;
       // If no valid statusCode then assume error.
       if (! $xml || !$xml->statusCode){
-        logOutput("[ERROR] [ProcessResults] Failed to get statusCode for WPTResultId: $wptResultId Id: $id",$wptResultId);
+        logOutput("[ERROR] [ProcessResults] Failed to get statusCode for WPTResultId: $wptResultId Id: $id");
         continue;
       }
       // If 100 then it's still waiting
@@ -637,7 +637,7 @@ function processResultsForAll( $resultId = null ) {
       }
       // Only process 200s
       if ($status == "200" || $resultId ) {
-        logOutput("[INFO] [ProcessResults] $wptResultId Completed",$wptResultId);
+        logOutput("[INFO] [ProcessResults] $wptResultId Completed");
         // Check for empty run
         $headersLocation = $xml->data->run[$runToUse - 1]->firstView->rawData->headers;
         // TODO: Remove Strangeloop specific code, or make this feature generic.
@@ -684,13 +684,13 @@ function processResultsForAll( $resultId = null ) {
         }
         $testComplete = $xml->data->run->firstView->results->date;
         // if = then use average.
+        $avgRun = $xml->data->average->firstView->avgRun;
+
         if ( $runToUse == 0 ){
           $avgFV = $xml->data->average->firstView;
           $avgRV = $xml->data->average->repeatView;
-          $avgRun = $xml->data->average->firstView->avgRun;
           $requestDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->requestsData;
           $pageDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->pageData;
-
         } else {
           $avgFV = $xml->data->run[$runToUse - 1]->firstView->results;
           $avgRV = $xml->data->run[$runToUse - 1]->repeatView->results;
@@ -1040,13 +1040,13 @@ function getReportResultsForLabel($label,$fromDate,$toDate,$stddev,$runLabel=nul
 function checkQueueGrowthCountAndEmailAlert(){
   $queueStatusFilename = './QueueStatus.ini';
   $queueStatus = parse_ini_file($queueStatusFilename,true);
-  $message = "";
+//  $message = "";
   $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
   $config = $configTable->find(1);
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
-    if ($status['QueueGrowthCount'] > 6 ){
-      logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 4 times for: '.$key);
+    if ($status['QueueGrowthCount'] > 12 ){
+      logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 12 times for: '.$key);
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
       if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( current_seconds() > $status["LastQueueGrowthAlertTime"] +3600 )){
@@ -1066,7 +1066,7 @@ function checkQueueGrowthCountAndEmailAlert(){
       }
     }
   }
-  if ($message){
+  if (isset($message)){
     sendEmailAlert($siteContactEmailAddress, $message);
     logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] Alert message sent:\n' . $message );
   }
@@ -1074,7 +1074,7 @@ function checkQueueGrowthCountAndEmailAlert(){
 
 /*
  * Checks the current count of jobs in queue compared to the previous run.
- * If the pending tests for the current info is greater than the last check
+ * If the pending tests for the current info is greater than the last check 
  * A counter is incremented. 'QueueGrowthCount'
  */
 function updateQueueProcessRate(){

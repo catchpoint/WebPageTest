@@ -101,7 +101,7 @@ function adjustEC2InstanceCountIfRequired(){
       continue;
     }
 
-    if ($runRateRatio > TARGET_RUN_RATE_RATIO){
+    if (($runRateRatio > TARGET_RUN_RATE_RATIO) || $location['PendingTests'] > 75){
       // Ramp up slowly to avoid over allocating instances
       if ( $currentInstanceCount >= EC2_MAXIMUM_INSTANCES_PER_REGION ){
         logOutput("[WARN] [ec2_functions] Maximum instance count reached while trying to Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."] Max Agents Allowed: [".EC2_MAXIMUM_INSTANCES_PER_REGION."]","ec2Processor.log");
@@ -121,7 +121,7 @@ function adjustEC2InstanceCountIfRequired(){
       if ( $response->status != "200" ){
         logOutput("[ERROR] [ec2_functions] EC2 Error [".$response->body->Errors->Error->Message."] while Requesting spot instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       }
-    } else if (($currentInstanceCount - ($runRate/TARGET_RUN_RATE_RATIO) > 1)){
+    } else if (($currentInstanceCount - ($runRate/TARGET_RUN_RATE_RATIO) > 1) && $location['PendingTests'] < 75){
       logOutput("[INFO] [ec2_functions] Found excess instance for Region: [".$region."] Browser: [".$browser."] AMI: [".$ami."] Current Agent Count: [".$agentCount."] Runrate: [".$runRate."] Ratio: [".$runRateRatio."]","ec2Processor.log");
       if ( $testerInfo[$k]['AgentCount'] > 0){
         // Find agent that's not busy
@@ -254,5 +254,4 @@ function getEC2TesterStatus(){
   writeIniFile($testers,"temp/ec2_tester_status.ini",true);
   return $testers;
 }
-logOutput("test","ec2Processor.log")
 ?>

@@ -18,6 +18,7 @@
     exit;
   }
 
+  checkQueueGrowthCountAndEmailAlert();
   try
   {
     $users = Doctrine_Core::getTable('User')->findAll();
@@ -39,14 +40,9 @@
     logOutput('[ERROR] [jobProcessor] Exception : ' . $e->getMessage());
   }
 
-  checkQueueGrowthCountAndEmailAlert();
+
   updateQueueProcessRate();
   checkTesterRatioAndEmailAlert();
-
-  // TODO: Make Only executes if EC2 integration is active
-  terminateDeadEC2Testers();
-  adjustEC2InstanceCountIfRequired();
-
 
 ?>
  
