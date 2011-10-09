@@ -11,7 +11,7 @@
     if ( isset($_REQUEST['clearFilter'] )){
       unset($_SESSION['jobsFilterField']);
       unset($_SESSION['jobsFilterValue']);
-      unset($_SESSION['jobsFolderId']);
+//      unset($_SESSION['jobsFolderId']);
     } else {
       if (isset($_REQUEST['filterField']) && $jobsFilterField = $_REQUEST['filterField'] ){
        $_SESSION['jobsFilterField']=$jobsFilterField;
