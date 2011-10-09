@@ -4,35 +4,37 @@
   include_once 'utils.inc';
   include_once 'db_utils.inc';
   $user_id = getCurrentUserId();
-$timingStart = current_seconds();
+  $timingStart = current_seconds();
   try
   {
     // Handle filter settings
-    if ( $_REQUEST['clearFilter'] ){
+    if ( isset($_REQUEST['clearFilter'] )){
       unset($_SESSION['jobsFilterField']);
       unset($_SESSION['jobsFilterValue']);
       unset($_SESSION['jobsFolderId']);
     } else {
-      if ( $jobsFilterField = $_REQUEST['filterField'] ){
+      if (isset($_REQUEST['filterField']) && $jobsFilterField = $_REQUEST['filterField'] ){
        $_SESSION['jobsFilterField']=$jobsFilterField;
       }
-      if ( $jobsFilterValue = $_REQUEST['filterValue'] ){
+      if ( isset($_REQUEST['filterValue']) && $jobsFilterValue = $_REQUEST['filterValue'] ){
         $_SESSION['jobsFilterValue'] = $jobsFilterValue;
       }
     }
-    $jobsFilterField = $_SESSION['jobsFilterField'];
-    $jobsFilterValue = $_SESSION['jobsFilterValue'];
+    if ( isset($_SESSION['jobsFilterField']) && isset($_SESSION['jobsFilterValue'])){
+      $jobsFilterField = $_SESSION['jobsFilterField'];
+      $jobsFilterValue = $_SESSION['jobsFilterValue'];
+    }
 
     // Handle pager settings
-    if (($_REQUEST['currentPage'])) {
+    if (isset($_REQUEST['currentPage'])) {
       $_SESSION['jobsCurrentPage'] = $_REQUEST['currentPage'];
     }
-    if (!$_SESSION['jobsCurrentPage']){
+    if (!isset($_SESSION['jobsCurrentPage'])){
       $_SESSION['jobsCurrentPage'] = 1;
     }
     $jobsCurrentPage = $_SESSION['jobsCurrentPage'];
     // Show inactive jobs
-    if ( $_REQUEST['showInactiveJobs'] ) {
+    if ( isset($_REQUEST['showInactiveJobs']) ) {
       if ( $_REQUEST['showInactiveJobs'] == 1 || $_REQUEST['showInactiveJobs'] == "true"){
         $_SESSION['showInactiveJobs'] = true;
       } else {
@@ -43,10 +45,10 @@ $timingStart = current_seconds();
     }
     $showInactiveJobs = $_SESSION['showInactiveJobs'];
     // Folder
-    if ( ($folderId = $_REQUEST['folderId']) ){
+    if ( isset($_REQUEST['folderId']) && ($folderId = $_REQUEST['folderId']) ){
       $_SESSION['jobsFolderId'] = $folderId;
     }
-    if (!$_SESSION['jobsFolderId']){
+    if (!isset($_SESSION['jobsFolderId'])){
       $_SESSION['jobsFolderId'] = getRootFolderForUser($user_id,'WPTJob');
     }
     $folderId = $_SESSION['jobsFolderId'];
@@ -54,10 +56,10 @@ $timingStart = current_seconds();
 
 
     // Order by direction
-    if ( ($orderByDir = $_REQUEST['orderByDir'] ) ){
+    if ( isset($_REQUEST['orderByDir'] ) && ($orderByDir = $_REQUEST['orderByDir'] ) ){
       $_SESSION['orderJobsByDirection'] = $orderByDir;
     }
-    if (!$_SESSION['orderJobsByDirection']){
+    if (!isset($_SESSION['orderJobsByDirection'])){
       $_SESSION['orderJobsByDirection'] = "ASC";
     }
 
@@ -68,11 +70,11 @@ $timingStart = current_seconds();
     }
 
     // Order by
-    if ( ($orderBy = $_REQUEST['orderBy'] ) )
+    if ( isset($_REQUEST['orderBy']) && ($orderBy = $_REQUEST['orderBy'] ) )
     {
       $_SESSION['orderJobsBy'] = $orderBy;
     }
-    if (!$_SESSION['orderJobsBy'] ){
+    if (!isset($_SESSION['orderJobsBy'])){
       $_SESSION['orderJobsBy'] = "Id";
     }
     // Upgrade path fix
@@ -94,7 +96,7 @@ $timingStart = current_seconds();
     if ( !$showInactiveJobs ){
       $q->andWhere('j.Active = ?', true);
     }
-    if ( $jobsFilterField && $jobsFilterValue ){
+    if ( isset($jobsFilterField) && isset($jobsFilterValue) ){
       $q->andWhere('j.'.$jobsFilterField.' LIKE ?', '%'.$jobsFilterValue.'%');
     }
 
@@ -111,7 +113,13 @@ $timingStart = current_seconds();
       $shares = getFolderShares($user_id,'WPTJob');
       $smarty->assign('folderTree',$folderTree);
       $smarty->assign('shares',$shares);
-
+      // Pass empty values for smarty use
+      if ( !isset($jobsFilterField)){
+        $jobsFilterField="";
+      }
+      if ( !isset($jobsFilterValue)){
+        $jobsFilterValue="";
+      }
       $smarty->assign('jobsFilterField',$jobsFilterField);
       $smarty->assign('jobsFilterValue',$jobsFilterValue);
       $smarty->assign('currentPage', $jobsCurrentPage);

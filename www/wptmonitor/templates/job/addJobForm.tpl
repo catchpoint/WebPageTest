@@ -152,19 +152,19 @@
       </td>
       <td><input type="checkbox" name="video" value="on" {if $job.Video}checked="true" {/if}/></td>
     </tr>
-    <tr>
-      <td align="right" nowrap="true">
-        <label title="Downlaod summary result information in XML">Download Result XML</label>
-      </td>
-      <td><input type="checkbox" name="downloadresultxml" value="true"
-                 {if $job.DownloadResultXml}checked="true" {/if}/></td>
-    </tr>
-    <tr>
-      <td align="right"><a class="tooltip"><label>Download Details</label><span>Download all assets for results, filmstrip, detail request info, etc.</span>
-      </td>
-      <td><input type="checkbox" name="downloaddetails" value="true"
-                 {if $job.DownloadDetails}checked="true" {/if}/></td>
-    </tr>
+    {*<tr>*}
+      {*<td align="right" nowrap="true">*}
+        {*<label title="Downlaod summary result information in XML">Download Result XML</label>*}
+      {*</td>*}
+      {*<td><input type="checkbox" name="downloadresultxml" value="true"*}
+                 {*{if $job.DownloadResultXml}checked="true" {/if}/></td>*}
+    {*</tr>*}
+    {*<tr>*}
+      {*<td align="right"><a class="tooltip"><label>Download Details</label><span>Download all assets for results, filmstrip, detail request info, etc.</span>*}
+      {*</td>*}
+      {*<td><input type="checkbox" name="downloaddetails" value="true"*}
+                 {*{if $job.DownloadDetails}checked="true" {/if}/></td>*}
+    {*</tr>*}
     <tr>
       <td align="right" nowrap="true"><label for="maxdownloadattempts">Max Download Attempts</label></td>
       <td><input type="text" name="maxdownloadattempts" id="maxdownloadattempts"
