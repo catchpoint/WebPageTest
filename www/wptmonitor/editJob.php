@@ -2,15 +2,15 @@
   require("login/login.php");
   include 'monitor.inc';
 
-  $jobId = $_REQUEST['id'];
   $userId = getCurrentUserId();
-  $ownerId = getOwnerIdFor($jobId, 'WPTJob');
-  $currentJobCount = getUserJobCount($userId);
-  $maxJobsPerMonth = getMaxJobsPerMonth($userId);
-  if ($jobId){
+  if ( isset($_REQUEST['id']) ){
+    $jobId = $_REQUEST['id'];
+    $ownerId = getOwnerIdFor($jobId, 'WPTJob');
+    $currentJobCount = getUserJobCount($userId);
+    $maxJobsPerMonth = getMaxJobsPerMonth($userId);
     $folderId = getFolderIdFor($jobId, 'WPTJob');
   } else {
-    if ( $_REQUEST['folderId'] ){
+    if ( isset($_REQUEST['folderId'])){
       $folderId = $_REQUEST['folderId'];
     } else {
       $folderId = getRootFolderForUser($userId,'WPTJob');
@@ -45,7 +45,7 @@
     $wptLocs[$loc->WPTHost['HostURL'] . ' ' . $key] = $loc->WPTHost['HostURL'] . ' ' . $key;
   }
 
-  if ($jobId) {
+  if (isset($jobId)) {
     $q = Doctrine_Query::create()->from('WPTJob j')->where('j.Id= ?', $jobId);
     $result = $q->fetchOne();
     $q->free(true);
@@ -54,8 +54,9 @@
   } else {
     $result = new WPTJob();
     $result['Frequency'] = 60;
+    $smarty->assign('selectedLocation', '');
   }
-  if ($scriptId){
+  if (isset($scriptId)){
   $scriptFolderId  = getFolderIdFor($scriptId,'WPTScript');
 
   $canChangeScript = hasPermission('WPTScript',$scriptFolderId, PERMISSION_UPDATE);
@@ -107,7 +108,10 @@
     $alertArray[$idx] = $alert;
   }
 
-  $q = Doctrine_Query::create()->from('WPTJob_Alert a')->where('a.WPTJobId= ?', $jobId);
+  $q = Doctrine_Query::create()->from('WPTJob_Alert a');
+  if (isset($jobId)){
+    $q->where('a.WPTJobId= ?', $jobId);
+  }
   $selectedAlerts = $q->fetchArray();
   $q->free(true);
   foreach ($selectedAlerts as $selected) {
@@ -117,6 +121,16 @@
     }
   }
 
+  // Set vars for smarty
+  if(!isset($maxJobsPerMonth)){
+    $maxJobsPerMonth="";
+  }
+  if(!isset($currentJobCount)){
+    $currentJobCount="";
+  }
+  if(!isset($ownerId)){
+    $ownerId="";
+  }
   $folderTree = getFolderTree($userId, 'WPTJob');
   $shares = getFolderShares($userId, 'WPTJob');
   $smarty->assign('folderTree', $folderTree);
