@@ -59,13 +59,15 @@
               </td>
               <td align="right" valign="top">
                 <form action="">
-                  <input type="hidden" name="scriptsCurrentPage" value="{$scriptsCurrentPage}">
+                  <input type="hidden" name="currentPage" value="{$scriptsCurrentPage}">
                   Filter: <select name="scriptsFilterField">
                   <option></option>
                   <option {if $scriptsFilterField eq 'Label'} selected="true"{/if}>Label</option>
                   <option {if $scriptsFilterField eq 'URL'} selected="true"{/if}>URL</option>
                 </select>
                   <input type="text" name="scriptsFilterValue" value="{$scriptsFilterValue}">
+                  <input type="hidden" name="orderBy" value="{$orderScriptsBy}">
+                  <input type="hidden" name="folderId" value="{$folderId}">
                   <input type="submit" value="Filter">
                 </form>
               </td>
@@ -83,16 +85,17 @@
               <td></td>
               <td colspan="2">
                 {if $folderId eq -1}Folder<br>{/if}
-                <a href="?orderBy=Label">{if $orderScriptsBy eq "Label"}<strong>{/if}Label</strong></a>
+                <a href="?orderBy=Label&folderId={$folderId}">{if $orderScriptsBy eq "Label"}<strong>{/if}Label</strong></a>
               </td>
-              <td><a href="?orderBy=URL">{if $orderScriptsBy eq "URL"}<strong>{/if}URL</strong></a></td>
-              <td colspan="1" align="center"><a href="?orderBy=MultiStep">{if $orderScriptsBy eq "MultiStep"}
+              <td><a href="?orderBy=URL&folderId={$folderId}">{if $orderScriptsBy eq "URL"}<strong>{/if}URL</strong></a></td>
+              <td colspan="1" align="center"><a href="?orderBy=MultiStep&folderId={$folderId}">{if $orderScriptsBy eq "MultiStep"}
               <strong>{/if}MultiStep</strong></a></td>
-              <td align="center"><a href="?orderBy=Validate">{if $orderScriptsBy eq "Validate"}<strong>{/if}
+              <td align="center"><a href="?orderBy=Validate&folderId={$folderId}">{if $orderScriptsBy eq "Validate"}<strong>{/if}
                 Validate</strong></a></td>
               <td align="center">Actions</td>
             </tr>
             {foreach from=$result item=res}
+            {assign var="eo" value="odd"} 
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">
                 <td align="center"><input type="checkbox" name="selectedScript" id="selectedScript" value="{$res.Id}"></td>
@@ -108,7 +111,6 @@
                       {if $hasUpdatePermission}
                       <form action="editScript.php">
                         <input type="hidden" name="id" value="{$res.Id}">
-                        <input type="hidden" name="folderId" value="{$res.WPTScriptFolderId}">
                         <td style="padding:1px">
                           <input class="actionIcon" type="image" src="img/edit_icon.png" title="Edit" alt="Edit" value="Edit">
                         </td>
@@ -117,15 +119,13 @@
                       {if $hasCreateDeletePermission}
                       <form action="deleteScript.php" name="deleteScript" onsubmit="return confirm('Confirm Deletion')">
                         <input type="hidden" name="id" value="{$res.Id}">
-                        <input type="hidden" name="folderId" value="{$res.WPTScriptFolderId}">
-
                         <td style="padding:1px"><input class="actionIcon" type="image" title="Delete"
                                                        src="img/delete_icon.png" value="Del"></td>
                       </form>
                       {/if}
                       {if $hasCreateDeletePermission}
-                      <form action="copyScript.php" name="copyScript" onsubmit="return confirm('Confirm Copy')"><input
-                          type="hidden" name="id" value="{$res.Id}">
+                      <form action="copyScript.php" name="copyScript" onsubmit="return confirm('Confirm Copy')">
+                          <input type="hidden" name="id" value="{$res.Id}">
                         <td style="padding:1px"><input class="actionIcon" type="image" src="img/copy_icon.png"
                                                        title="Copy" value="Copy"></td>
                       </form>
