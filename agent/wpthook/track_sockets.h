@@ -92,6 +92,7 @@ public:
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
                     LONGLONG& end, LONGLONG& ssl_start, LONGLONG& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
+  LONGLONG  GetEarliest(LONGLONG& after);
 
 private:
   CRITICAL_SECTION cs;

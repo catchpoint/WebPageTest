@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
+#include "track_dns.h"
 #include "test_state.h"
 #include "screen_capture.h"
 #include "../wptdriver/wpt_test.h"
@@ -51,11 +52,13 @@ static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
-                  TrackSockets& sockets, ScreenCapture& screen_capture):
+                  TrackSockets& sockets, TrackDns& dns, 
+                  ScreenCapture& screen_capture):
   _requests(requests)
   , _test_state(test_state)
   , _test(test)
   , _sockets(sockets)
+  , _dns(dns)
   , _screen_capture(screen_capture)
   , _saved(false) {
   _file_base = shared_results_file_base;
@@ -560,15 +563,38 @@ void Results::SavePageData(OptimizationChecks& checks){
 
 void Results::ProcessRequests(void) {
   _requests.Lock();
-    // first do all of the processing.  We want to do ALL of the processing
-    // before recording the results so we can include any socket connections
-    // or DNS lookups that are not associated with a request
+  // first pass, reset the actual start time to be the first measured action
+  // to eliminate the gap at startup for browser initialization
+  if (_test_state._start.QuadPart) {
+    LONGLONG new_start = 0;
+    if (_test_state._first_navigate.QuadPart)
+      new_start = _test_state._first_navigate.QuadPart;
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request)
-        request->Process();
+      if (request && request->_start.QuadPart && 
+        (!new_start || request->_start.QuadPart < new_start))
+        new_start = request->_start.QuadPart;
     }
+    LONGLONG earliest_dns = _dns.GetEarliest(_test_state._start.QuadPart);
+    if (earliest_dns && (!new_start || earliest_dns < new_start))
+      new_start = earliest_dns;
+    LONGLONG earliest_socket = _sockets.GetEarliest(_test_state._start.QuadPart);
+    if (earliest_socket && (!new_start || earliest_socket < new_start))
+      new_start = earliest_socket;
+    if (new_start)
+      _test_state._start.QuadPart = new_start;
+  }
+
+  // Next do all of the processing.  We want to do ALL of the processing
+  // before recording the results so we can include any socket connections
+  // or DNS lookups that are not associated with a request
+  POSITION pos = _requests._requests.GetHeadPosition();
+  while (pos) {
+    Request * request = _requests._requests.GetNext(pos);
+    if (request)
+      request->Process();
+  }
   _requests.Unlock();
 }
 

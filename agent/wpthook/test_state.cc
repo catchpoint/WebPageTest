@@ -104,6 +104,7 @@ void TestState::Reset(bool cascade) {
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _step_start.QuadPart = 0;
+    _first_navigate.QuadPart = 0;
     _on_load.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
@@ -207,6 +208,8 @@ void TestState::OnNavigate() {
       _current_document = _next_document;
       _next_document++;
     }
+    if (!_first_navigate.QuadPart)
+      QueryPerformanceCounter(&_first_navigate);
   }
 }
 

@@ -79,6 +79,7 @@ public:
   // times
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
+  LARGE_INTEGER _first_navigate;
   LARGE_INTEGER _on_load;
   LARGE_INTEGER _dom_elements_time;
   LARGE_INTEGER _render_start;

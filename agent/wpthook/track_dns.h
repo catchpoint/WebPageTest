@@ -68,6 +68,7 @@ public:
   void LookupDone(void * context, int result);
   void Reset();
   bool Claim(CString name, LONGLONG before, LONGLONG& start, LONGLONG& end);
+  LONGLONG  GetEarliest(LONGLONG& after);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
   CRITICAL_SECTION            cs;

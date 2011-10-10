@@ -234,6 +234,11 @@ public:
   int _ms_ssl_start;
   int _ms_ssl_end;
 
+  // performance counter times
+  LARGE_INTEGER _start;
+  LARGE_INTEGER _first_byte;
+  LARGE_INTEGER _end;
+
   OptimizationScores _scores;
 
 private:
@@ -241,9 +246,6 @@ private:
   WptTest&      _test;
   TrackSockets& _sockets;
   TrackDns&     _dns;
-  LARGE_INTEGER _start;
-  LARGE_INTEGER _first_byte;
-  LARGE_INTEGER _end;
 
   CRITICAL_SECTION cs;
   bool _is_active;

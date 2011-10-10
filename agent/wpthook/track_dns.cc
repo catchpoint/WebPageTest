@@ -145,14 +145,33 @@ bool TrackDns::Claim(CString name, LONGLONG before, LONGLONG& start,
     if (info && !info->_accounted_for && 
         name == info->_name && info->_success && 
         info->_start.QuadPart <= before && info->_end.QuadPart <= before) {
-        info->_accounted_for = true;
-        if (info->_start.QuadPart > start && info->_end.QuadPart > end) {
-          claimed = true;
-          start = info->_start.QuadPart;
-          end = info->_end.QuadPart;
-        }
+      info->_accounted_for = true;
+      claimed = true;
+      start = info->_start.QuadPart;
+      end = info->_end.QuadPart;
     }
   }
   LeaveCriticalSection(&cs);
   return claimed;
+}
+
+/*-----------------------------------------------------------------------------
+  Find the earliest start time for a DNS lookup after the given time
+-----------------------------------------------------------------------------*/
+LONGLONG TrackDns::GetEarliest(LONGLONG& after) {
+  LONGLONG earliest = 0;
+  EnterCriticalSection(&cs);
+  POSITION pos = _dns_lookups.GetStartPosition();
+  while (pos) {
+    DnsInfo * info = NULL;
+    void * key = NULL;
+    _dns_lookups.GetNextAssoc(pos, key, info);
+    if (info && info->_start.QuadPart &&
+        info->_start.QuadPart >= after && 
+        (!earliest || info->_start.QuadPart <= earliest)) {
+      earliest = info->_start.QuadPart;
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return earliest;
 }

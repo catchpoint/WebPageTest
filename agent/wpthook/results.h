@@ -32,6 +32,7 @@ class Requests;
 class Request;
 class TestState;
 class TrackSockets;
+class TrackDns;
 class ScreenCapture;
 class CxImage;
 class WptTest;
@@ -40,7 +41,7 @@ class OptimizationChecks;
 class Results {
 public:
   Results(TestState& test_state, WptTest& test, Requests& requests, 
-          TrackSockets& sockets, ScreenCapture& screen_capture);
+          TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture);
   ~Results(void);
 
   void Reset(void);
@@ -54,6 +55,7 @@ private:
   Requests&   _requests;
   TestState&  _test_state;
   TrackSockets& _sockets;
+  TrackDns&     _dns;
   ScreenCapture& _screen_capture;
   WptTest&      _test;
   bool        _saved;

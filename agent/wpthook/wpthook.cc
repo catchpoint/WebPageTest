@@ -52,7 +52,7 @@ WptHook::WptHook(void):
   , _process_hook(_test_server)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns, _test)
-  ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
+  ,_results(_test_state, _test, _requests, _sockets, _dns, _screen_capture)
   ,_dns(_test_state, _test)
   ,_done(false)
   ,_test_server(*this, _test, _test_state)

@@ -388,8 +388,8 @@ bool Request::Process() {
     LONGLONG start, end, ssl_start, ssl_end;
     CString host = CA2T(GetRequestHeader("host"));
     if (_dns.Claim(host, before, start, end) && 
-        start > _test_state._start.QuadPart &&
-        end > _test_state._start.QuadPart) {
+        start >= _test_state._start.QuadPart &&
+        end >= _test_state._start.QuadPart) {
       _ms_dns_start = (DWORD)((start - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
       _ms_dns_end = (DWORD)((end - _test_state._start.QuadPart)
@@ -397,14 +397,14 @@ bool Request::Process() {
     }
     if (_sockets.ClaimConnect(_socket_id, before, start, end,
                               ssl_start, ssl_end) && 
-        start > _test_state._start.QuadPart &&
-        end > _test_state._start.QuadPart) {
+        start >= _test_state._start.QuadPart &&
+        end >= _test_state._start.QuadPart) {
       _ms_connect_start = (DWORD)((start - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
       _ms_connect_end = (DWORD)((end - _test_state._start.QuadPart)
                   / _test_state._ms_frequency.QuadPart);
-      if (ssl_start > _test_state._start.QuadPart &&
-          ssl_end > _test_state._start.QuadPart) {
+      if (ssl_start >= _test_state._start.QuadPart &&
+          ssl_end >= _test_state._start.QuadPart) {
         _ms_ssl_start = (DWORD)((ssl_start - _test_state._start.QuadPart)
                     / _test_state._ms_frequency.QuadPart);
         _ms_ssl_end = (DWORD)((ssl_end - _test_state._start.QuadPart)

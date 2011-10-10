@@ -374,3 +374,24 @@ SocketInfo* TrackSockets::GetSocketInfoById(DWORD socket_id) {
   _socketInfo.Lookup(socket_id, info);
   return info;
 }
+
+/*-----------------------------------------------------------------------------
+  Find the earliest start time for a socket connect after the given time
+-----------------------------------------------------------------------------*/
+LONGLONG TrackSockets::GetEarliest(LONGLONG& after) {
+  LONGLONG earliest = 0;
+  EnterCriticalSection(&cs);
+  POSITION pos = _socketInfo.GetStartPosition();
+  while (pos) {
+    SocketInfo * info = NULL;
+    DWORD key = 0;
+    _socketInfo.GetNextAssoc(pos, key, info);
+    if (info && info->_connect_start.QuadPart && 
+        info->_connect_start.QuadPart >= after && 
+        (!earliest || info->_connect_start.QuadPart <= earliest)) {
+      earliest = info->_connect_start.QuadPart;
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return earliest;
+}
