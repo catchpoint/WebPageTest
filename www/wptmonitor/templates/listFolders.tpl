@@ -59,6 +59,7 @@
                     <th align="right">Shares</th>
                     <th align="center">Actions</th>
                   </tr>
+                  {assign var="eo" value="odd"}
                   {foreach from=$folderTree item=res}
                   {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
                     <tr class="{$eo}">

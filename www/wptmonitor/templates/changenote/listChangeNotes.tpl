@@ -72,6 +72,7 @@
               <th align="left" style="vertical-align:bottom;">Description</th>
               <th colspan="3" align="center" style="vertical-align:bottom;">Actions</th>
             </tr>
+            {assign var="eo" value="odd"}
             {foreach from=$result item=res}
             {if ($res.Public eq true and $showPublic eq 'true') or ($res.Public eq false)}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}

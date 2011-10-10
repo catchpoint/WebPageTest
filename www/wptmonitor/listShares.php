@@ -2,17 +2,20 @@
 require("login/login.php");
 include 'monitor.inc';
 global $tableNameLabel;
-if (!$tableName = $_REQUEST['tableName']){
+
+if (isset($_REQUEST['tableName'])){
+  $tableName = $_REQUEST['tableName'];
+}else{
   $tableName="WPTJob";
 }
 $tableLabel = $tableNameLabel[$tableName];
 //$folder = $_REQUEST['folder'];
-if (!($folderId = $_REQUEST['folderId'])){
- $folderId=getRootFolderForUser(getCurrentUserId(),$tableName);
+if (isset($_REQUEST['folderId'])){
+  $folderId = $_REQUEST['folderId'];
+}else{
+  $folderId=getRootFolderForUser(getCurrentUserId(),$tableName);
 }
-
 $folderTree = getFolderTree(getCurrentUserId(),$tableName);
-
 $folderTable= Doctrine_Core::getTable($tableName.'Folder');
 $folder = $folderTable->find($folderId);
 

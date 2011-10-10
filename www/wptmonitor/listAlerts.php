@@ -6,10 +6,10 @@
   try
   {
     // Folder
-    if (($folderId = $_REQUEST['folderId'])) {
+    if (isset($_REQUEST['folderId']) && ($folderId = $_REQUEST['folderId'])) {
       $_SESSION['alertFolderId'] = $folderId;
     }
-    if (!$_SESSION['alertFolderId']) {
+    if (!isset($_SESSION['alertFolderId'])) {
       $_SESSION['alertFolderId'] = getRootFolderForUser($user_id, 'Alert');
     }
     $folderId = $_SESSION['alertFolderId'];
@@ -19,19 +19,21 @@
     $smarty->assign('folderTree', $folderTree);
 
     // Handle filter settings
-    if ($_REQUEST['clearFilter']) {
+    if (isset($_REQUEST['clearFilter'])) {
       unset($_SESSION['alertsFilterField']);
       unset($_SESSION['alertsFilterValue']);
     } else {
-      if ($alertsFilterField = $_REQUEST['filterField']) {
+      if (isset($_REQUEST['filterField']) && $alertsFilterField = $_REQUEST['filterField']) {
         $_SESSION['alertsFilterField'] = $alertsFilterField;
       }
-      if ($alertsFilterValue = $_REQUEST['filterValue']) {
+      if (isset($_REQUEST['filterValue']) && $alertsFilterValue = $_REQUEST['filterValue']) {
         $_SESSION['alertsFilterValue'] = $alertsFilterValue;
       }
     }
-    $alertsFilterField = $_SESSION['alertsFilterField'];
-    $alertsFilterValue = $_SESSION['alertsFilterValue'];
+    if ( isset($_SESSION['alertsFilterField'] ) ){
+      $alertsFilterField = $_SESSION['alertsFilterField'];
+      $alertsFilterValue = $_SESSION['alertsFilterValue'];
+    }
 
     // Handle pager settings
     if (($_REQUEST['currentPage'])) {
@@ -43,7 +45,7 @@
     $alertsCurrentPage = $_SESSION['alertsCurrentPage'];
 
     // Show inactive alerts
-    if ($_REQUEST['showInactiveAlerts']) {
+    if (isset($_REQUEST['showInactiveAlerts'])) {
       if ($_REQUEST['showInactiveAlerts'] == 1 || $_REQUEST['showInactiveAlerts'] == "true") {
         $_SESSION['showInactiveAlerts'] = true;
       } else {
@@ -55,7 +57,7 @@
     $showInactiveAlerts = $_SESSION['showInactiveAlerts'];
 
     // Order by direction
-    if (($orderByDir = $_REQUEST['orderByDir'])) {
+    if (isset($_REQUEST['orderByDir']) && ($orderByDir = $_REQUEST['orderByDir'])) {
       $_SESSION['orderAlertsByDirection'] = $orderByDir;
     }
     if (!$_SESSION['orderAlertsByDirection']) {
@@ -69,7 +71,7 @@
     }
   
     // Order by
-    if (($orderBy = $_REQUEST['orderBy'])) {
+    if (isset($_REQUEST['orderBy']) && ($orderBy = $_REQUEST['orderBy'])) {
       $_SESSION['orderAlertsBy'] = $orderBy;
     }
     if (!$_SESSION['orderAlertsBy']) {
@@ -93,8 +95,12 @@
     if (!$showInactiveAlerts) {
       $q->andWhere('a.Active = ?', true);
     }
-    if ($alertsFilterField && $alertsFilterValue) {
+    if (isset($alertsFilterField) && isset($alertsFilterValue)) {
       $q->andWhere('a.' . $alertsFilterField . ' LIKE ?', '%' . $alertsFilterValue . '%');
+    } else {
+      // set for smarty
+      $alertsFilterField='';
+      $alertsFilterValue='';
     }
     if ($folderId > -1 && hasPermission('Alert',$folderId,PERMISSION_READ)) {
       $q->andWhere('a.AlertFolderId = ?', $folderId);
@@ -116,8 +122,8 @@
     $smarty->assign('maxpages', $pager->getLastPage());
     $smarty->assign('showInactiveAlerts', $_SESSION['showInactiveAlerts']);
     $smarty->assign('result', $result);
-    $smarty->assign('resultCount', $resultCount);
-    $smarty->assign('current_seconds', $current_Seconds);
+//    $smarty->assign('resultCount', $resultCount);
+//    $smarty->assign('current_seconds', $current_Seconds);
 
     $shares = getFolderShares($user_id,'Alert');
     $smarty->assign('shares',$shares);

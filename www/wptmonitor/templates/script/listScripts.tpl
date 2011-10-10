@@ -94,8 +94,8 @@
                 Validate</strong></a></td>
               <td align="center">Actions</td>
             </tr>
+            {assign var="eo" value="odd"}
             {foreach from=$result item=res}
-            {assign var="eo" value="odd"} 
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">
                 <td align="center"><input type="checkbox" name="selectedScript" id="selectedScript" value="{$res.Id}"></td>

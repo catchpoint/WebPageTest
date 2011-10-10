@@ -43,6 +43,7 @@
               <th>Super Admin</th>
               <th>Actions</th>
             </tr>
+            {assign var="eo" value="odd"}
             {foreach from=$result item=res}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">

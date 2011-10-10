@@ -1045,8 +1045,8 @@ function checkQueueGrowthCountAndEmailAlert(){
   $config = $configTable->find(1);
   $siteContactEmailAddress = $config['SiteContactEmailAddress'];
   foreach( $queueStatus as $key=>$status){
-    if ($status['QueueGrowthCount'] > 12 ){
-      logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 12 times for: '.$key);
+    if ($status['QueueGrowthCount'] > 4 ){
+      logOutput('[INFO] [checkQueueGrowthCountAndEmailAlert] QueueGrowthCheck has grown over 4 times for: '.$key);
       // Growth rate has exceeded threshold, but only send an alert once per hour.
       // Check time stamp
       if ( !array_key_exists("LastQueueGrowthAlertTime",$status) || ( current_seconds() > $status["LastQueueGrowthAlertTime"] +3600 )){

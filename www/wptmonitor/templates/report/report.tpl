@@ -99,7 +99,7 @@
     <th align="right">Fully<br>Bytes</th>
 
   </tr>
-
+{assign var="eo" value="odd"}
 {foreach $details as $detail}
 {if $detail.AvgFirstViewDocCompleteTime > 0}
 {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
@@ -152,6 +152,7 @@
   <tr>
     <th align="left">Date</th><th align="left">Note</th>
   </tr>
+  {assign var="eo" value="odd"}
   {foreach from=$changeNotes item=note}
   {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
     <tr class="monitoringJobRow {$eo}">

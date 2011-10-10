@@ -27,6 +27,7 @@
             <th align="right">Low</th>
             <th></th>
             </thead>
+            {assign var="eo" value="odd"}
             {foreach from=$locations item=location}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
             {assign value="#98fb98" var="bgcolor"}
@@ -55,6 +56,7 @@
             <th align="right">Active Jobs</th>
             <th align="right">Run Rate *</th>
             </thead>
+            {assign var="eo" value="odd"}
           {*{foreach $runRateInfo.runRatePerUser as $user=>$runRate}*}
             {foreach $runRateInfo.users as $user}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
@@ -92,6 +94,7 @@
             </thead>
             {foreach from=$testers item=tester}
               <tr><a name="{$tester.id}"></a> <td colspan="10" nowrap="true" bgcolor="#f5f5dc"><h4 style="font-size: medium;">{$tester.id}</h4></td></tr>
+                {assign var="eo" value="odd"}
                 {foreach from=$tester.Agents item=agent}
                   {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
                   {assign value="#98fb98" var="bgcolor"}
