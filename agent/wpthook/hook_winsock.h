@@ -95,6 +95,9 @@ private:
   // addresses that WE have alocated in case of DNS overrides
   CAtlMap<void *, void *>	dns_override; 
 
+  // sockets that are being connected asynchronously
+  CAtlMap<SOCKET, SOCKET>	_connecting; 
+
   // memory buffers for overlapped receive operations
   CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  recv_buffers;
 

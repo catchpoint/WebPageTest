@@ -189,6 +189,7 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   , _test_state(test_state) {
   dns_override.InitHashTable(257);
   recv_buffers.InitHashTable(257);
+  _connecting.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
 
@@ -257,6 +258,9 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 -----------------------------------------------------------------------------*/
 int CWsHook::closesocket(SOCKET s) {
   int ret = SOCKET_ERROR;
+  EnterCriticalSection(&cs);
+  _connecting.RemoveKey(s);
+  LeaveCriticalSection(&cs);
   if (!_test_state._exit)
     _sockets.Close(s);
   if (_closesocket)
@@ -275,6 +279,11 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
     ret = _connect(s, name, namelen);
   if (!ret)
     _sockets.Connected(s);
+  else if(ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
+    EnterCriticalSection(&cs);
+    _connecting.SetAt(s,s);
+    LeaveCriticalSection(&cs);
+  }
   return ret;
 }
 
@@ -423,12 +432,22 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 }
 
 /*-----------------------------------------------------------------------------
+  Check for completion of an async connect
 -----------------------------------------------------------------------------*/
 int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
               fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
   int ret = SOCKET_ERROR;
   if (_select)
     ret = _select(nfds, readfds, writefds, exceptfds, timeout);
+  if (ret > 0 && writefds && writefds->fd_count && !_connecting.IsEmpty()) {
+    EnterCriticalSection(&cs);
+    for (u_int i = 0; i < writefds->fd_count; i++) {
+      SOCKET s = writefds->fd_array[i];
+      if (_connecting.RemoveKey(s))
+        _sockets.Connected(s);
+    }
+    LeaveCriticalSection(&cs);
+  }
   return ret;
 }
 

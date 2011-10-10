@@ -51,7 +51,6 @@ public:
 
   // NSPR hooks
   PRFileDesc* SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd);
-  PRStatus PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags);
   PRStatus PR_Close(PRFileDesc *fd);
   PRInt32 PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount);
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
@@ -64,7 +63,6 @@ private:
       const std::string& dll, const std::string& funcName, U& func);
 
   PFN_SSL_ImportFD _SSL_ImportFD;
-  PRConnectcontinueFN _PR_ConnectContinue;
   PRCloseFN  _PR_Close;
   PRReadFN   _PR_Read;
   PRWriteFN  _PR_Write;

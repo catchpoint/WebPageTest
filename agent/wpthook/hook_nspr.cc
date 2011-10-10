@@ -57,10 +57,6 @@ PRFileDesc* SSL_ImportFD_Hook(PRFileDesc *model, PRFileDesc *fd) {
   return g_hook->SSL_ImportFD(model, fd);
 }
 
-PRStatus PR_ConnectContinue_Hook(PRFileDesc *fd, PRInt16 out_flags) {
-  return g_hook->PR_ConnectContinue(fd, out_flags);
-}
-
 PRStatus PR_Close_Hook(PRFileDesc *fd) {
   return g_hook->PR_Close(fd);
 }
@@ -81,7 +77,6 @@ NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state) :
     _test_state(test_state),
     _hook(NULL), 
     _SSL_ImportFD(NULL),
-    _PR_ConnectContinue(NULL),
     _PR_Close(NULL),
     _PR_Read(NULL),
     _PR_Write(NULL),
@@ -108,8 +103,6 @@ void NsprHook::Init() {
     WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init()\n"));
     _SSL_ImportFD = _hook->createHookByName(
         "ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
-    _PR_ConnectContinue = _hook->createHookByName(
-        "nspr4.dll", "PR_ConnectContinue", PR_ConnectContinue_Hook);
     _PR_Close = _hook->createHookByName(
         "nspr4.dll", "PR_Close", PR_Close_Hook);
     _PR_Write = _hook->createHookByName(
@@ -167,23 +160,6 @@ PRFileDesc* NsprHook::SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd) {
       }
       WptTrace(loglevel::kProcess,
                _T("[wpthook] NsprHook::SSL_ImportFD(fd=%d)"), ret);
-    }
-  }
-  return ret;
-}
-
-PRStatus NsprHook::PR_ConnectContinue(PRFileDesc *fd, PRInt16 out_flags) {
-  PRStatus ret = PR_FAILURE;
-  if (_PR_ConnectContinue) {
-    ret = _PR_ConnectContinue(fd, out_flags);
-    if (!ret) {
-      if (_PR_FileDesc2NativeHandle) {
-        SOCKET s = _PR_FileDesc2NativeHandle(fd);
-        _sockets.Connected(s);
-        WptTrace(loglevel::kProcess,
-           _T("[wpthook] NsprHook::PR_ConnectContinue(fd=%d, socket=%d)"),
-           fd, s);
-      }
     }
   }
   return ret;
