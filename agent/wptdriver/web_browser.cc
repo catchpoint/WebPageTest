@@ -64,6 +64,16 @@ bool WebBrowser::RunAndWait() {
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
       if (_browser._options.GetLength() )
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
+      // if we are running chrome, make sure the command line options that our 
+      // extension NEEDS are present
+      CString exe(_browser._exe);
+      exe.MakeLower();
+      if (exe.Find(_T("chrome.exe")) >= 0) {
+        if (_browser._options.Find(
+            _T("--enable-experimental-extension-apis")) < 0) {
+          lstrcat( cmdLine, _T(" --enable-experimental-extension-apis") );
+        }
+      }
       lstrcat ( cmdLine, _T(" about:blank"));
 
       _status.Set(_T("Launching: %s\n"), cmdLine);
