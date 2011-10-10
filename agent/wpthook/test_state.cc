@@ -158,7 +158,7 @@ void TestState::Start() {
     _capturing_aft = true;
   _current_document = _next_document;
   _next_document++;
-  FindBrowserWindow();  // the document window may not be available yet
+  FindBrowserWindow(true);  // the document window may not be available yet
 
   // position the browser window
   if (_frame_window) {
@@ -199,7 +199,7 @@ void TestState::ActivityDetected() {
 void TestState::OnNavigate() {
   if (_active) {
     WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
-    FindBrowserWindow();
+    FindBrowserWindow(true);
     GrabVideoFrame(true);
     _on_load.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
@@ -231,6 +231,7 @@ void TestState::OnLoad(DWORD load_time) {
                           (_ms_frequency.QuadPart * load_time);
     } else {
       WptTrace(loglevel::kFrequentEvent,_T("[wpthook] - _on_load recorded\n"));
+      FindBrowserWindow();
       _screen_capture.Capture(_document_window, 
                                     CapturedImage::DOCUMENT_COMPLETE);
     }
@@ -379,15 +380,24 @@ void TestState::Done(bool force) {
 /*-----------------------------------------------------------------------------
     Find the browser window that we are going to capture
 -----------------------------------------------------------------------------*/
-void TestState::FindBrowserWindow(void) {
-  DWORD browser_process_id = GetCurrentProcessId();
-  if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                          _document_window)) {
-    WptTrace(loglevel::kFunction, 
-              _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-              _frame_window, _document_window);
-    if (!_document_window)
-      _document_window = _frame_window;
+void TestState::FindBrowserWindow(bool force) {
+  bool update = force;
+  if (!force) {
+    if (!_frame_window || !_document_window)
+      update = true;
+    else if (!IsWindow(_frame_window) || !IsWindow(_document_window))
+      update = true;
+  }
+  if (update) {
+    DWORD browser_process_id = GetCurrentProcessId();
+    if (::FindBrowserWindow(browser_process_id, _frame_window, 
+                            _document_window)) {
+      WptTrace(loglevel::kFunction, 
+                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
+                _frame_window, _document_window);
+      if (!_document_window)
+        _document_window = _frame_window;
+    }
   }
 }
 
@@ -419,6 +429,7 @@ void TestState::GrabVideoFrame(bool force) {
         _screen_updated = false;
         _last_video_time.QuadPart = now.QuadPart;
         _video_capture_count++;
+        FindBrowserWindow();
         _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
       }
     }
@@ -448,6 +459,7 @@ void TestState::RenderCheckThread() {
 
       // grab a screen shot
       bool found = false;
+      FindBrowserWindow();
       CapturedImage captured_img = _screen_capture.CaptureImage(
                                 _document_window, CapturedImage::START_RENDER);
       CxImage img;

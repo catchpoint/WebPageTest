@@ -74,6 +74,7 @@ public:
   void Reset(bool cascade = true);
   void Init();
   void TitleSet(CString title);
+  void FindBrowserWindow(bool force = false);
 
   // times
   LARGE_INTEGER _start;
@@ -132,7 +133,6 @@ private:
   CRITICAL_SECTION  _data_cs;
 
   void Done(bool force = false);
-  void FindBrowserWindow(void);
   void CollectSystemStats(DWORD ms_from_start);
   void FindViewport();
 };

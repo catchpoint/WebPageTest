@@ -27,54 +27,43 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
-#include "hook_winsock.h"
-#include "hook_nspr.h"
-#include "hook_gdi.h"
-#include "hook_process.h"
-#include "requests.h"
-#include "track_dns.h"
-#include "track_sockets.h"
-#include "test_state.h"
-#include "results.h"
-#include "screen_capture.h"
-#include "test_server.h"
-#include "wpt_test_hook.h"
 
-extern HINSTANCE global_dll_handle; // DLL handle
+#include "ncodehook/NCodeHookInstantiation.h"
 
-class WptHook {
+class TestServer;
+
+typedef BOOL(__stdcall * LPCREATEPROCESSW)(
+    LPCWSTR lpApplicationName,
+    LPWSTR lpCommandLine,
+    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    BOOL bInheritHandles,
+    DWORD dwCreationFlags,
+    LPVOID lpEnvironment,
+    LPCWSTR lpCurrentDirectory,
+    LPSTARTUPINFOW lpStartupInfo,
+    LPPROCESS_INFORMATION lpProcessInformation);
+
+class ProcessHook {
 public:
-  WptHook(void);
-  ~WptHook(void);
-
+  ProcessHook(TestServer& web_server);
+  virtual ~ProcessHook(void);
   void Init();
-  void BackgroundThread();
-  bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
-  // extension actions
-  void Start();
-  void OnLoad(DWORD load_time);
-  void OnAllDOMElementsLoaded(DWORD load_time);
-  void OnNavigate();
+  BOOL CreateProcessW(
+    LPCWSTR lpApplicationName,
+    LPWSTR lpCommandLine,
+    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    BOOL bInheritHandles,
+    DWORD dwCreationFlags,
+    LPVOID lpEnvironment,
+    LPCWSTR lpCurrentDirectory,
+    LPSTARTUPINFOW lpStartupInfo,
+    LPPROCESS_INFORMATION pi);
 
 private:
-  CGDIHook  _gdi_hook;
-  CWsHook   _winsock_hook;
-  NsprHook  _nspr_hook;
-  ProcessHook _process_hook;
-  HANDLE    _background_thread;
-  HWND      _message_window;
-  CString   _file_base;
-  bool      _done;
-
-  // winsock event tracking
-  TrackDns      _dns;
-  TrackSockets  _sockets;
-  Requests      _requests;
-
-  TestState     _test_state;
-  Results       _results;
-  ScreenCapture _screen_capture;
-  TestServer    _test_server;
-  WptTestHook   _test;
+  NCodeHookIA32		  hook;
+  TestServer&        _web_server;
+  LPCREATEPROCESSW  _CreateProcessW;
 };

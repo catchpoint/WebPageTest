@@ -100,9 +100,6 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
     QueryPerformanceCounter(&info->_connect_start);
     LeaveCriticalSection(&cs);
-
-    WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - TrackSockets::Connect start %d\n"), s);
   }
 }
 
@@ -130,9 +127,6 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk) {
 
   if (!is_localhost) {
     _requests.DataIn(socket_id, chunk);
-    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::DataIn")
-        _T("(socket=%d, socket_id=%d, len=%d)"),
-        s, socket_id, chunk.GetLength());
   }
 }
 
@@ -155,9 +149,6 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
 
   if (!is_localhost) {
     is_modified = _requests.ModifyDataOut(socket_id, chunk);
-    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::ModifyDataOut")
-        _T("(socket=%d, socket_id=%d, len=%d) -> %d"),
-        s, socket_id, chunk.GetLength(), is_modified);
   }
   return is_modified;
 }
@@ -183,9 +174,6 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk) {
 
   if (!is_localhost) {
     _requests.DataOut(socket_id, chunk);
-    WptTrace(loglevel::kProcess, _T("[wpthook] TrackSockets::DataOut")
-        _T("(socket=%d, socket_id=%d, len=%d)"),
-        s, socket_id, chunk.GetLength());
   }
 }
 

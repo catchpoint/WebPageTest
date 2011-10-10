@@ -49,6 +49,7 @@ WptHook::WptHook(void):
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_nspr_hook(_sockets, _test_state)
   ,_gdi_hook(_test_state)
+  , _process_hook(_test_server)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns, _test)
   ,_results(_test_state, _test, _requests, _sockets, _screen_capture)
@@ -105,6 +106,7 @@ void WptHook::Init(){
   _winsock_hook.Init();
   _nspr_hook.Init();
   _gdi_hook.Init();
+  _process_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
   _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);

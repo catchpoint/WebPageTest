@@ -145,7 +145,6 @@ void NsprHook::Init() {
 
 void NsprHook::SetSslFd(PRFileDesc *fd) {
   _sockets.SetSslFd(fd);
-  WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::SetSslFd(fd=%d)"), fd);
 }
 
 // NSPR hooks
@@ -158,8 +157,6 @@ PRFileDesc* NsprHook::SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd) {
       if (_PR_FileDesc2NativeHandle) {
         _sockets.SetSslSocket(_PR_FileDesc2NativeHandle(ret));
       }
-      WptTrace(loglevel::kProcess,
-               _T("[wpthook] NsprHook::SSL_ImportFD(fd=%d)"), ret);
     }
   }
   return ret;
@@ -170,8 +167,6 @@ PRStatus NsprHook::PR_Close(PRFileDesc *fd) {
   if (_PR_Close) {
     ret = _PR_Close(fd);
     _sockets.ClearSslFd(fd);
-    WptTrace(loglevel::kProcess,
-             _T("[wpthook] NsprHook::PR_Close(fd=%d)"), fd);
   }
   return ret;
 }
@@ -192,9 +187,6 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
       _sockets.ModifyDataOut(s, chunk);
     }
     ret = _PR_Write(fd, chunk.GetData(), chunk.GetLength());
-    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Write")
-        _T("(fd=%d, socket=%d, amount=%d, orig_amount=%d) -> %d"),
-       fd, s, amount, original_amount, ret);
     if (ret > 0 && s != INVALID_SOCKET) {
       _sockets.DataOut(s, chunk);
       ret = original_amount;
@@ -210,9 +202,6 @@ PRInt32 NsprHook::PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount) {
     if (ret > 0 && buf && !_test_state._exit) {
       SOCKET s = INVALID_SOCKET;
       if (_sockets.SslSocketLookup(fd, s)) {
-        WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::PR_Read")
-                 _T("(fd=%d, socket=%d, amount=%d) -> %d"),
-                 fd, s, amount, ret);
         _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret));
       }
     }

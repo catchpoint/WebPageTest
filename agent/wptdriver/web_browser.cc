@@ -198,7 +198,7 @@ bool GetOffsetsFromSymbols(HANDLE process, LPCTSTR app_data_dir,
     }
     SymCleanup(process);
   }
-  //DeleteDirectory(symbols_dir);
+  DeleteDirectory(symbols_dir);
   return is_loaded;
 }
 
@@ -238,7 +238,7 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     DWORD latency = test._latency / 2;
 
     CString buff;
-    buff.Format(_T("[urlblast] - Throttling: %d Kbps in, %d Kbps out, ")
+    buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
                 _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
                 test._latency, test._plr );
     OutputDebugString(buff);

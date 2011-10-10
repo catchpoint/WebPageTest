@@ -305,9 +305,6 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
       _sockets.DataIn(s, DataChunk(buf, ret));
     }
   }
-  WptTrace(loglevel::kProcess, _T(
-           "[wpthook] CWsHook::recv(socket=%d, bytes_recv=%d) -> %d"),
-           s, len, ret);
   return ret;
 }
 
@@ -345,9 +342,6 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       recv_buffers.SetAt(lpOverlapped, buff);
     }
   }
-  WptTrace(loglevel::kProcess, _T(
-        "[wpthook] CWsHook::WSARecv(socket=%d, bytes_recv=%d) -> %d"),
-        s, *lpNumberOfBytesRecvd, ret);
   return ret;
 }
 
@@ -367,9 +361,6 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     if (!_test_state._exit && is_ssl && ret > 0) {
       _sockets.SslSendActivity(s);
     }
-    WptTrace(loglevel::kProcess, _T(
-        "[wpthook] CWsHook::send(socket=%d, len=%d, orig_len=%d) -> %d"),
-        s, chunk.GetLength(), original_len, ret);
     ret = original_len;
   }
   return ret;
@@ -425,8 +416,6 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     if (!_test_state._exit && is_ssl && ret == 0) {
       _sockets.SslSendActivity(s);
     }
-    WptTrace(loglevel::kProcess, _T("[wpthook] WSASend")
-        _T("(socket=%d, bytes_sent=%d) -> %d"), s, *lpNumberOfBytesSent, ret);
   }
   return ret;
 }
@@ -608,9 +597,6 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
 int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject, 
                                 long lNetworkEvents) {
   int ret = SOCKET_ERROR;
-  WptTrace(loglevel::kFunction, _T("[wpthook] WSAEventSelect for socket %d\n"),
-            s);
-
   if (_WSAEventSelect)
     ret = _WSAEventSelect(s, hEventObject, lNetworkEvents);
   return ret;
@@ -624,9 +610,6 @@ int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject,
 
   if (_WSAEnumNetworkEvents)
     ret = _WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
-
-  WptTrace(loglevel::kFunction, 
-            _T("[wpthook] WSAEnumNetworkEvents for socket %d\n"), s);
 
   if (!ret && !_test_state._exit && 
       lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
