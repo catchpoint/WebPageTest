@@ -80,6 +80,7 @@ bool WebBrowser::RunAndWait() {
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
+      memset( &pi, 0, sizeof(pi) );
       memset( &si, 0, sizeof(si) );
       si.cb = sizeof(si);
       si.dwX = 0;
@@ -103,7 +104,8 @@ bool WebBrowser::RunAndWait() {
         }
         SuspendThread(pi.hThread);
 
-        FindHookFunctions(pi.hProcess);
+        if (_browser._use_symbols)
+          FindHookFunctions(pi.hProcess);
         if (ok && !InstallHook(pi.hProcess)) {
           ok = false;
           _status.Set(_T("Error instrumenting browser\n"));
@@ -133,15 +135,51 @@ bool WebBrowser::RunAndWait() {
           ret = true;
         }
         #endif
+
+        // see if we need to attach to a child firefox process 
+        // < 4.x spawns a child process after initializing a new profile
+        if (ret && exe.Find(_T("firefox.exe")) >= 0) {
+          ok = false;
+          EnterCriticalSection(&cs);
+          if (FindFirefoxChild(pi.dwProcessId, pi)) {
+            ok = true;
+            CloseHandle(_browser_process);
+            _browser_process = pi.hProcess;
+            if (WaitForInputIdle(pi.hProcess, 120000) == 0) {
+              if (pi.hThread)
+                SuspendThread(pi.hThread);
+              if (!InstallHook(pi.hProcess))
+                ok = false;
+              if (pi.hThread) {
+                ResumeThread(pi.hThread);
+                CloseHandle(pi.hThread);
+              }
+            }
+          }
+          LeaveCriticalSection(&cs);
+          if (ok) {
+            ret = false;
+            #ifdef DEBUG
+            if (WaitForSingleObject(_browser_process, INFINITE )==WAIT_OBJECT_0 ) {
+              ret = true;
+            }
+            #else
+            if (WaitForSingleObject(_browser_process, _test._test_timeout * 2) == 
+                WAIT_OBJECT_0 ) {
+              ret = true;
+            }
+            #endif
+          }
+        }
       }
 
-      // kill the browser if it is still running
+      // kill the browser and any child processes if it is still running
       EnterCriticalSection(&cs);
       if (_browser_process) {
-        DWORD exit_code;
-        if( GetExitCodeProcess(_browser_process, &exit_code) == STILL_ACTIVE )
-          TerminateProcess(_browser_process, 0);
+        if (pi.dwProcessId)
+          TerminateProcessAndChildren(pi.dwProcessId);
         CloseHandle(_browser_process);
+        _browser_process = NULL;
       }
       LeaveCriticalSection(&cs);
       ResetIpfw();
@@ -275,4 +313,78 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
 void WebBrowser::ResetIpfw(void) {
   _ipfw.CreatePipe(PIPE_IN, 0, 0, 0);
   _ipfw.CreatePipe(PIPE_OUT, 0, 0, 0);
+}
+
+/*-----------------------------------------------------------------------------
+  Find a child process that is firefox.exe (for 3.6 hooking)
+-----------------------------------------------------------------------------*/
+bool WebBrowser::FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi) {
+  bool found = false;
+  if (pid) {
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (proc.th32ParentProcessID == pid) {
+            CString exe(proc.szExeFile);
+            exe.MakeLower();
+            if (exe.Find(_T("firefox.exe") >= 0)) {
+              pi.hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | 
+                                        PROCESS_CREATE_THREAD |
+                                        PROCESS_SET_INFORMATION |
+                                        PROCESS_SUSPEND_RESUME |
+                                        PROCESS_VM_OPERATION | 
+                                        PROCESS_VM_READ | PROCESS_VM_WRITE |
+                                        PROCESS_TERMINATE | SYNCHRONIZE,
+                                        FALSE, proc.th32ProcessID);
+              if (pi.hProcess) {
+                found = true;
+                pi.dwProcessId = proc.th32ProcessID;
+                pi.hThread = NULL;
+                pi.dwThreadId = 0;
+                // get a handle on the main thread
+                HANDLE thread_snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD
+                                                             , pi.dwProcessId);
+                if (thread_snap != INVALID_HANDLE_VALUE) {
+                  THREADENTRY32 thread;
+                  thread.dwSize = sizeof(thread);
+                  FILETIME created, exit, kernel, user;
+                  LARGE_INTEGER earliest, current;
+                  if (Thread32First(thread_snap, &thread)) {
+                    do {
+                      HANDLE thread_handle = OpenThread(
+                        THREAD_QUERY_INFORMATION, FALSE, thread.th32ThreadID);
+                      if (thread_handle) {
+                        if (GetThreadTimes(thread_handle, &created, &exit, 
+                              &kernel, &user)) {
+                          current.HighPart = created.dwHighDateTime;
+                          current.LowPart = created.dwLowDateTime;
+                          if (!pi.dwThreadId) {
+                            pi.dwThreadId = thread.th32ThreadID;
+                            earliest.QuadPart = current.QuadPart;
+                          } else if (current.QuadPart < earliest.QuadPart) {
+                            pi.dwThreadId = thread.th32ThreadID;
+                            earliest.QuadPart = current.QuadPart;
+                          }
+                        }
+                        CloseHandle(thread_handle);
+                      }
+                    } while (Thread32Next(thread_snap, &thread));
+                  }
+                  CloseHandle(thread_snap);
+                }
+                if (pi.dwThreadId)
+                  pi.hThread = OpenThread(THREAD_QUERY_INFORMATION |
+                              THREAD_SUSPEND_RESUME, FALSE, pi.dwThreadId);
+              }
+            }
+          }
+        } while (!found && Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  }
+  return found;
 }

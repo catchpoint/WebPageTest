@@ -47,6 +47,7 @@ private:
   bool SaveHookFunctionOffsets(const char *names[], const int offsets[]);
   bool ConfigureIpfw(WptTestDriver& test);
   void ResetIpfw(void);
+  bool FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi);
 
   WptSettings&    _settings;
   WptTestDriver&  _test;

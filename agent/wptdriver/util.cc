@@ -308,8 +308,8 @@ bool GetModuleByName(HANDLE process, LPCTSTR module_name,
         is_found = !lstrcmpi(module->szModule, module_name);
       } while (!is_found && Module32Next(snap, module));
     }
+    CloseHandle(snap);
   }
-  CloseHandle(snap);
   return is_found;
 }
 
@@ -405,5 +405,35 @@ void SaveHookOffsets(CString offsets_filename,
       WriteFile(offsets_fh, line, line.GetLength(), &bytes, 0);
     }
     CloseHandle(offsets_fh);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Recursively terminate the given process and all of it's child processes
+-----------------------------------------------------------------------------*/
+void TerminateProcessAndChildren(DWORD pid) {
+  if (pid) {
+    // terminate any child processes
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (proc.th32ParentProcessID == pid) {
+            TerminateProcessAndChildren(proc.th32ProcessID);
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+    // terminate the target process
+    HANDLE process = OpenProcess( PROCESS_TERMINATE | SYNCHRONIZE,
+                                  FALSE, pid);
+    if (process) {
+      TerminateProcess(process, 0);
+      WaitForSingleObject(process, 120000);
+      CloseHandle(process);
+    }
   }
 }

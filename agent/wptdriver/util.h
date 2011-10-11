@@ -60,3 +60,4 @@ CString GetHookOffsetsFileName(CString dir, CString hooked_exe_path);
 void GetHookSymbolNames(HookSymbolNames * names);
 void SaveHookOffsets(CString offsets_filename, const HookOffsets& offsets);
 bool GetSavedHookOffsets(CString offsets_filename, HookOffsets * hook_offsets);
+void TerminateProcessAndChildren(DWORD pid);
