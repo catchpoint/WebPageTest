@@ -36,7 +36,7 @@ WptSettings::WptSettings(void):
   _timeout(DEFAULT_TEST_TIMEOUT)
   ,_startup_delay(DEFAULT_STARTUP_DELAY)
   ,_polling_delay(DEFAULT_POLLING_DELAY)
-  ,_debug(0) {
+  ,_debug(0){
 }
 
 /*-----------------------------------------------------------------------------
@@ -258,6 +258,10 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _options.Replace(_T("%WPTDIR%"), _wpt_directory);
     _options.Replace(_T("%PROFILE%"), _profile_directory);
   }
+
+  _use_symbols = false;
+  if (GetPrivateProfileInt(browser, _T("use symbols"), 0, iniFile))
+    _use_symbols = true;
 
   return ret;
 }
