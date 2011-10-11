@@ -38,13 +38,15 @@
             
             // Extract the location, browser and connectivity.
             // location.connectivity:browser
-            if( preg_match('/([^\.:]+)[\.]*([^\.:]*)[:]*(.*)/i', trim($req_location), $matches) )
+            if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) )
             {
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2])))
-                    $test['connectivity'] = trim($matches[2]);
+                    $test['browser'] = trim($matches[2]);
                 if (strlen(trim($matches[3])))
-                    $test['browser'] = trim($matches[3]);
+                    $test['connectivity'] = trim($matches[3]);
+            } else {
+                $test['location'] = trim($req_location);
             }
             
             // Extract the multiple locations.
@@ -525,6 +527,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
   if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
       $test['connectivity'] = 'DSL';
 
+  if( isset($test['browser']) && strlen($test['browser']) )
+      $test['locationText'] .= " - <b>{$test['browser']}</b>";
   if( isset($test['connectivity']) )
   {
       $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -778,6 +782,8 @@ function ValidateParameters(&$test, $locations, &$error)
                 if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
                     $test['connectivity'] = 'DSL';
                     
+                if( isset($test['browser']) && strlen($test['browser']) )
+                    $test['locationText'] .= " - <b>{$test['browser']}</b>";
                 if( isset($test['connectivity']) )
                 {
                     $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
