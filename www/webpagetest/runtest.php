@@ -37,15 +37,14 @@
             $test['url'] = trim($req_url);
             
             // Extract the location, browser and connectivity.
-            $parts = explode('.', trim($req_location));
-            $test['location'] = trim($parts[0]);
-            $test['connectivity'] = trim($parts[1]);
-            if( !strlen($test['connectivity']) )
-                unset($test['connectivity']);
-            if( strpos($test['location'], ':') !== false )
+            // location.connectivity:browser
+            if( preg_match('/([^\.:]+)[\.]*([^\.:]*)[:]*(.*)/i', trim($req_location), $matches) )
             {
-                $parts = explode(':', $test['location']);
-                $test['browser'] = trim($parts[1]);
+                $test['location'] = trim($matches[1]);
+                if (strlen(trim($matches[2])))
+                    $test['connectivity'] = trim($matches[2]);
+                if (strlen(trim($matches[3])))
+                    $test['browser'] = trim($matches[3]);
             }
             
             // Extract the multiple locations.
