@@ -37,5 +37,6 @@ CDN_PROVIDER cdnList[] = {
   {".swiftcdn1.com", _T("SwiftCDN")},
   {".rncdn1.com", _T("Reflected Networks")},
   {".cdngc.net", _T("CDNetworks")},
+  {".fastly.net", _T("Fastly")},
 	{NULL, NULL}
 };
