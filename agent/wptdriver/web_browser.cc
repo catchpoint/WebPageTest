@@ -176,8 +176,8 @@ bool WebBrowser::RunAndWait() {
       // kill the browser and any child processes if it is still running
       EnterCriticalSection(&cs);
       if (_browser_process) {
-        if (pi.dwProcessId)
-          TerminateProcessAndChildren(pi.dwProcessId);
+        TerminateProcess(_browser_process, 0);
+        WaitForSingleObject(_browser_process, 120000);
         CloseHandle(_browser_process);
         _browser_process = NULL;
       }
