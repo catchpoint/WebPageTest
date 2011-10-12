@@ -119,7 +119,7 @@ function getCurrentUserId() {
 function getBaseURL() {
   $serverName = $_SERVER['SERVER_NAME'];
   $lidx = strrpos($_SERVER['REQUEST_URI'], "/");
-  $baseurl = $serverName . substr($_SERVER['REQUEST_URI'], 0, $lidx) . "/";
+  $baseurl = $serverName .":".$_SERVER['SERVER_PORT']. substr($_SERVER['REQUEST_URI'], 0, $lidx) . "/";
   return "http://" . $baseurl;
 }
 
