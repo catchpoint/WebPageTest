@@ -295,14 +295,11 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
     ret = _recv(s, buf, len, flags);
   }
   if (!_test_state._exit) {
-    if (_sockets.IsSsl(s)) {
-      if (ret > 0) {
-        _sockets.SslRecvActivity(s);
-      }
-    } else if (ret == SOCKET_ERROR && len == 1) {
+    if (ret == SOCKET_ERROR && len == 1) {
       _sockets.SetSslSocket(s);
     } else if (ret > 0 && !flags && buf && len) {
-      _sockets.DataIn(s, DataChunk(buf, ret));
+      DataChunk chunk(buf, ret);
+      _sockets.DataIn(s, chunk, false);
     }
   }
   return ret;
@@ -319,25 +316,20 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
   }
-  if (!_test_state._exit) {
-    if (_sockets.IsSsl(s)) {
-      if (ret == 0) {
-        _sockets.SslRecvActivity(s);
-      }
-    } else if (ret == 0 && lpBuffers && dwBufferCount &&
-               lpNumberOfBytesRecvd && *lpNumberOfBytesRecvd) {
+  if (!_test_state._exit && lpBuffers && dwBufferCount) {
+    if (ret == 0 && lpNumberOfBytesRecvd && *lpNumberOfBytesRecvd) {
       DWORD num_bytes = *lpNumberOfBytesRecvd;
       for (DWORD i = 0; i < dwBufferCount && num_bytes > 0; ++i) {
         DWORD buffer_size = min(lpBuffers[i].len, num_bytes);
         if (buffer_size) {
           if (lpBuffers[i].buf) {
-            _sockets.DataIn(s, DataChunk(lpBuffers[i].buf, buffer_size));
+            DataChunk chunk(lpBuffers[i].buf, buffer_size);
+            _sockets.DataIn(s, chunk, false);
           }
           num_bytes -= buffer_size;
         }
       }
-    } else if (ret == SOCKET_ERROR && lpBuffers && dwBufferCount &&
-               lpOverlapped) {
+    } else if (ret == SOCKET_ERROR && lpOverlapped) {
       WsaBuffTracker buff(lpBuffers, dwBufferCount);
       recv_buffers.SetAt(lpOverlapped, buff);
     }
@@ -352,15 +344,11 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   if (_send) {
     DataChunk chunk(buf, len);
     int original_len = len;
-    bool is_ssl = _sockets.IsSsl(s);
-    if (len && !_test_state._exit && !is_ssl) {
-      _sockets.ModifyDataOut(s, chunk);
-      _sockets.DataOut(s, chunk);
+    if (len && !_test_state._exit) {
+      _sockets.ModifyDataOut(s, chunk, false);
+      _sockets.DataOut(s, chunk, false);
     }
     ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
-    if (!_test_state._exit && is_ssl && ret > 0) {
-      _sockets.SslSendActivity(s);
-    }
     ret = original_len;
   }
   return ret;
@@ -377,8 +365,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     bool is_modified = 0;
     unsigned original_len = 0;
     DataChunk chunk;
-    bool is_ssl = _sockets.IsSsl(s);
-    if (!_test_state._exit && !is_ssl) {
+    if (!_test_state._exit) {
       for (DWORD i = 0; i < dwBufferCount; i++) {
         original_len += lpBuffers[i].len;
       }
@@ -391,8 +378,8 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         }
         data += buffer_len;
       }
-      is_modified = _sockets.ModifyDataOut(s, chunk);
-      _sockets.DataOut(s, chunk);
+      is_modified = _sockets.ModifyDataOut(s, chunk, false);
+      _sockets.DataOut(s, chunk, false);
     }
     if (is_modified) {
       WSABUF out;
@@ -412,9 +399,6 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     } else {
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
                      dwFlags, lpOverlapped, lpCompletionRoutine);
-    }
-    if (!_test_state._exit && is_ssl && ret == 0) {
-      _sockets.SslSendActivity(s);
     }
   }
   return ret;
@@ -582,7 +566,8 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
       for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
         DWORD data_bytes = min(bytes, buff._buffers[i].len);
         if (data_bytes && buff._buffers[i].buf) {
-          _sockets.DataIn(s, DataChunk(buff._buffers[i].buf, data_bytes));
+          DataChunk chunk(buff._buffers[i].buf, data_bytes);
+          _sockets.DataIn(s, chunk, false);
           bytes -= data_bytes;
         }
       }

@@ -37,6 +37,55 @@ const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool DataChunk::ModifyDataOut(const WptTest& test) {
+  bool is_modified = false;
+  const char * data = GetData();
+  unsigned long data_len = GetLength();
+  if (data && data_len > 0) {
+    CStringA headers;
+    CStringA line;
+    const char * current_data = data;
+    unsigned long current_data_len = data_len;
+    while(current_data_len) {
+      if (*current_data == '\r' || *current_data == '\n') {
+        if(!line.IsEmpty()) {
+          if (test.ModifyRequestHeader(line))
+            is_modified = true;
+          if (line.GetLength()) {
+            headers += line;
+            headers += "\r\n";
+          }
+          line.Empty();
+        }
+        if (current_data_len >= 4 && !strncmp(current_data, "\r\n\r\n", 4)) {
+          headers += "\r\n";
+          current_data += 4;
+          current_data_len -= 4;
+          break;
+        }
+      } else {
+        line += *current_data;
+      }
+      current_data++;
+      current_data_len--;
+    }
+    if (is_modified) {
+      DataChunk new_chunk;
+      DWORD headers_len = headers.GetLength();
+      DWORD new_len = headers_len + current_data_len;
+      LPSTR new_data = new_chunk.AllocateLength(new_len);
+      memcpy(new_data, (LPCSTR)headers, headers_len);
+      if (current_data_len) {
+        memcpy(new_data + headers_len, current_data, current_data_len);
+      }
+      *this = new_chunk;
+    }
+  }
+  return is_modified;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void HttpData::AddChunk(DataChunk& chunk) {
   if (_data_size < MAX_DATA_TO_RETAIN) {
     chunk.CopyDataIfUnowned();
@@ -268,47 +317,8 @@ void Request::DataIn(DataChunk& chunk) {
 bool Request::ModifyDataOut(DataChunk& chunk) {
   bool is_modified = false;
   EnterCriticalSection(&cs);
-  const char * data = chunk.GetData();
-  unsigned long data_len = chunk.GetLength();
-  if (_is_active && !_are_headers_complete && data && data_len > 0) {
-    CStringA headers;
-    CStringA line;
-    const char * current_data = data;
-    unsigned long current_data_len = data_len;
-    while(current_data_len) {
-      if (*current_data == '\r' || *current_data == '\n') {
-        if(!line.IsEmpty()) {
-          if (_test.ModifyRequestHeader(line))
-            is_modified = true;
-          if (line.GetLength()) {
-            headers += line;
-            headers += "\r\n";
-          }
-          line.Empty();
-        }
-        if (current_data_len >= 4 && !strncmp(current_data, "\r\n\r\n", 4)) {
-          headers += "\r\n";
-          current_data += 4;
-          current_data_len -= 4;
-          break;
-        }
-      } else {
-        line += *current_data;
-      }
-      current_data++;
-      current_data_len--;
-    }
-    if (is_modified) {
-      DataChunk new_chunk;
-      DWORD headers_len = headers.GetLength();
-      DWORD new_len = headers_len + current_data_len;
-      LPSTR new_data = new_chunk.AllocateLength(new_len);
-      memcpy(new_data, (LPCSTR)headers, headers_len);
-      if (current_data_len) {
-        memcpy(new_data + headers_len, current_data, current_data_len);
-      }
-      chunk = new_chunk;
-    }
+  if (_is_active && !_are_headers_complete) {
+    is_modified = chunk.ModifyDataOut(_test);
   }
   LeaveCriticalSection(&cs);
   WptTrace(loglevel::kFunction,

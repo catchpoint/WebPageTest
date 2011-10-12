@@ -115,41 +115,18 @@ void TrackSockets::Connected(SOCKET s) {
 }
 
 /*-----------------------------------------------------------------------------
-  Look up the socket ID (or create one if it doesn't already exist)
-  and pass the data on to the request tracker
------------------------------------------------------------------------------*/
-void TrackSockets::DataIn(SOCKET s, DataChunk& chunk) {
-  EnterCriticalSection(&cs);
-  SocketInfo* info = GetSocketInfo(s);
-  DWORD socket_id = info->_id;
-  bool is_localhost = info->IsLocalhost();
-  LeaveCriticalSection(&cs);
-
-  if (!is_localhost) {
-    _requests.DataIn(socket_id, chunk);
-  }
-}
-
-/*-----------------------------------------------------------------------------
   Allow data to be modified.
 -----------------------------------------------------------------------------*/
-bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
+bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
+                                 bool is_unencrypted) {
   bool is_modified = false;
-
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
-  if (info->_is_ssl && !info->_ssl_start.QuadPart) {
-    // Firefox relies on setting the start timer here.
-    // Chrome is handled by SslSendActivity().
-    QueryPerformanceCounter(&info->_ssl_start);
-  }
   DWORD socket_id = info->_id;
-  bool is_localhost = info->IsLocalhost();
-  LeaveCriticalSection(&cs);
-
-  if (!is_localhost) {
+  if (!info->IsLocalhost() && (is_unencrypted || !info->_is_ssl)) {
     is_modified = _requests.ModifyDataOut(socket_id, chunk);
   }
+  LeaveCriticalSection(&cs);
   return is_modified;
 }
 
@@ -157,24 +134,38 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk) {
   Look up the socket ID (or create one if it doesn't already exist)
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
-void TrackSockets::DataOut(SOCKET s, DataChunk& chunk) {
+void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   if (info->_connect_start.QuadPart && !info->_connect_end.QuadPart) {
     QueryPerformanceCounter(&info->_connect_end);
   }
-  if (info->_is_ssl && info->_ssl_start.QuadPart && !info->_ssl_end.QuadPart) {
-    // Firefox relies on setting the end timer here.
-    // Chrome is handled by SslRecvActivity().
-    QueryPerformanceCounter(&info->_ssl_end);
-  }
   DWORD socket_id = info->_id;
-  bool is_localhost = info->IsLocalhost();
-  LeaveCriticalSection(&cs);
-
-  if (!is_localhost) {
-    _requests.DataOut(socket_id, chunk);
+  if (!info->IsLocalhost()) {
+    if (is_unencrypted || !info->_is_ssl) {
+      _requests.DataOut(socket_id, chunk);
+    } else {
+      SslDataOut(info, chunk);
+    }
   }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+  Look up the socket ID (or create one if it doesn't already exist)
+  and pass the data on to the request tracker
+-----------------------------------------------------------------------------*/
+void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
+  SocketInfo* info = GetSocketInfo(s);
+  DWORD socket_id = info->_id;
+  if (!info->IsLocalhost()) {
+    if (is_unencrypted || !info->_is_ssl) {
+      _requests.DataIn(socket_id, chunk);
+    } else {
+      SslDataIn(info, chunk);
+    }
+  }
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -309,35 +300,49 @@ bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
 }
 
 /*-----------------------------------------------------------------------------
-  Track the SSL Handshake start (used by Chrome).
------------------------------------------------------------------------------*/
-void TrackSockets::SslSendActivity(SOCKET s) {
-  DWORD socket_id = 0;
-  EnterCriticalSection(&cs);
-  _openSockets.Lookup(s, socket_id);
-  if (socket_id && !_requests.HasActiveRequest(socket_id)) {
-    SocketInfo* info = GetSocketInfo(s);
-    if (info->_is_ssl && !info->_ssl_start.QuadPart) {
-      QueryPerformanceCounter(&info->_ssl_start);
+  Track the SSL handshake.
+  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
+  Call from within critical section.
+  -----------------------------------------------------------------------------*/
+void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+  const char *buf = chunk.GetData();
+  DWORD len = chunk.GetLength();
+  if (info->_is_ssl && !info->_is_ssl_handshake_complete && len > 3) {
+    bool is_handshake = (
+        buf[0] == 0x16 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
+    bool is_application_data = (
+        buf[0] == 0x17 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
+      // Handshake data starts with 0x16, then major/minor version.
+    if (is_handshake) {
+      if (!info->_ssl_start.QuadPart) {
+        QueryPerformanceCounter(&info->_ssl_start);
+        WptTrace(loglevel::kProcess, _T(
+            "handshake start(socket_id=%d)"), info->_id);
+      } else {
+        QueryPerformanceCounter(&info->_ssl_end);
+        WptTrace(loglevel::kProcess, _T(
+            "handshake end updated(socket_id=%d)"), info->_id);
+        // TODO: search for 14 (cipher) or 17 (app data) to end handshake
+        // Chrome makes the initial HTTP request when finishing the handshake.
+      }
+    } else if (is_application_data) {
+      WptTrace(loglevel::kProcess, _T(
+          "handshake complete(socket_id=%d)"), info->_id);
+      info->_is_ssl_handshake_complete = true;
     }
   }
-  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
-  Track the SSL Handshake end (used by Chrome).
+  Track the SSL handshake.
+  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
+  Call from within critical section.
+
+  TODO: search for 14 (change cipher) or 17 (app data) to end handshake
+  TODO: Save SSL version chosen by server. w
 -----------------------------------------------------------------------------*/
-void TrackSockets::SslRecvActivity(SOCKET s) {
-  DWORD socket_id = 0;
-  EnterCriticalSection(&cs);
-  _openSockets.Lookup(s, socket_id);
-  if (socket_id && !_requests.HasActiveRequest(socket_id)) {
-    SocketInfo* info = GetSocketInfo(s);
-    if (info->_is_ssl && info->_ssl_start.QuadPart) {
-      QueryPerformanceCounter(&info->_ssl_end);
-    }
-  }
-  LeaveCriticalSection(&cs);
+void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
+  SslDataOut(info, chunk);
 }
 
 /*-----------------------------------------------------------------------------

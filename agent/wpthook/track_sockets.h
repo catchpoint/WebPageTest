@@ -39,7 +39,8 @@ public:
     _id(0)
     , _accounted_for(false)
     , _during_test(false)
-    , _is_ssl(false) {
+    , _is_ssl(false)
+    , _is_ssl_handshake_complete(false) {
     memset(&_addr, 0, sizeof(_addr));
     _connect_start.QuadPart = 0;
     _connect_end.QuadPart = 0;
@@ -55,6 +56,7 @@ public:
   bool                _accounted_for;
   bool                _during_test;
   bool                _is_ssl;
+  bool                _is_ssl_handshake_complete;
   LARGE_INTEGER       _connect_start;
   LARGE_INTEGER       _connect_end;
   LARGE_INTEGER       _ssl_start;
@@ -71,9 +73,9 @@ public:
   void Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Connected(SOCKET s);
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
-  void DataIn(SOCKET s, DataChunk& chunk);
-  bool ModifyDataOut(SOCKET s, DataChunk& chunk);
-  void DataOut(SOCKET s, DataChunk& chunk);
+  bool ModifyDataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
+  void DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
+  void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted);
 
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
@@ -81,8 +83,6 @@ public:
   void ClearSslFd(PRFileDesc* fd);
   void SetSslSocket(SOCKET s);
   bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
-  void SslSendActivity(SOCKET s);
-  void SslRecvActivity(SOCKET s);
 
   void Reset();
 
@@ -95,6 +95,9 @@ public:
   LONGLONG  GetEarliest(LONGLONG& after);
 
 private:
+  void SslDataOut(SocketInfo* info, const DataChunk& chunk);
+  void SslDataIn(SocketInfo* info, const DataChunk& chunk);
+
   CRITICAL_SECTION cs;
   Requests&                   _requests;
   TestState&                  _test_state;

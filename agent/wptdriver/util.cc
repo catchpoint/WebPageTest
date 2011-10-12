@@ -33,10 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../wpthook/wpthook_dll.h"
 
-const char HOOK_OFFSETS_FILE_VERSION[] = "002";
+const char HOOK_OFFSETS_FILE_VERSION[] = "005";
 const char * HOOK_OFFSETS_SYMBOL_NAMES[] = {
   "SSL_ImportFD",
-  "ssl_Connect",
   "ssl_Close",
   "ssl_Write",
   "ssl_Read",

@@ -184,11 +184,11 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
     PRInt32 original_amount = amount;
     SOCKET s = INVALID_SOCKET;
     if (buf && !_test_state._exit && _sockets.SslSocketLookup(fd, s)) {
-      _sockets.ModifyDataOut(s, chunk);
+      _sockets.ModifyDataOut(s, chunk, true);
     }
     ret = _PR_Write(fd, chunk.GetData(), chunk.GetLength());
     if (ret > 0 && s != INVALID_SOCKET) {
-      _sockets.DataOut(s, chunk);
+      _sockets.DataOut(s, chunk, true);
       ret = original_amount;
     }
   }
@@ -202,7 +202,7 @@ PRInt32 NsprHook::PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount) {
     if (ret > 0 && buf && !_test_state._exit) {
       SOCKET s = INVALID_SOCKET;
       if (_sockets.SslSocketLookup(fd, s)) {
-        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret));
+        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret), true);
       }
     }
   }

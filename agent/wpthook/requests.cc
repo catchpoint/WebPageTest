@@ -125,18 +125,15 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
   if (_test_state._active) {
     _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
-    Request * request = GetOrCreateRequest(socket_id, chunk);
+    Request * request = GetActiveRequest(socket_id);
     if (request) {
       is_modified = request->ModifyDataOut(chunk);
-      WptTrace(loglevel::kFunction,
-          _T("[wpthook] Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d"),
-          socket_id, chunk.GetLength(), is_modified);
     } else {
-      WptTrace(loglevel::kFrequentEvent,
-          _T("[wpthook] Requests::ModifyDataOut(socket_id=%d, len=%d)")
-          _T("  Non-HTTP traffic detected"),
-          socket_id, chunk.GetLength());
+      is_modified = chunk.ModifyDataOut(_test);
     }
+    WptTrace(loglevel::kFunction,
+        _T("[wpthook] Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d"),
+        socket_id, chunk.GetLength(), is_modified);
     LeaveCriticalSection(&cs);
   }
   return is_modified;
@@ -165,12 +162,10 @@ void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
 }
 
 /*-----------------------------------------------------------------------------
-  A request is counted as active if it has been create.
-  Calling ModifyDataOut (or DataOut/DataIn) will do that.
+  A request is "active" once it is created by calling DataOut/DataIn.
 -----------------------------------------------------------------------------*/
 bool Requests::HasActiveRequest(DWORD socket_id) {
-  Request * request = NULL;
-  return _active_requests.Lookup(socket_id, request) && request;
+  return GetActiveRequest(socket_id) != NULL;
 }
 
 /*-----------------------------------------------------------------------------
@@ -214,5 +209,14 @@ Request * Requests::NewRequest(DWORD socket_id) {
   Request * request = new Request(_test_state, socket_id, _sockets,_dns,_test);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
+  return request;
+}
+
+/*-----------------------------------------------------------------------------
+  A request is "active" once it is created by calling DataOut/DataIn.
+-----------------------------------------------------------------------------*/
+Request * Requests::GetActiveRequest(DWORD socket_id) {
+  Request * request = NULL;
+  _active_requests.Lookup(socket_id, request);
   return request;
 }

@@ -67,10 +67,12 @@ public:
     _value = new DataChunkValue(NULL, new char[len], len);
     return _value->_data;
   }
-  const char * GetData() {
+  const char * GetData() const {
     return _value->_data ? _value->_data : _value->_unowned_data;
   }
-  DWORD GetLength() { return _value->_data_len; }
+  DWORD GetLength() const { return _value->_data_len; }
+
+  bool ModifyDataOut(const WptTest& test);
 
 private:
   class DataChunkValue {

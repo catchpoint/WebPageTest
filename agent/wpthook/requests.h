@@ -64,4 +64,5 @@ private:
   // GetOrCreateRequest must be called within a critical section.
   Request * GetOrCreateRequest(DWORD socket_id, DataChunk& chunk);
   Request * NewRequest(DWORD socket_id);
+  Request * GetActiveRequest(DWORD socket_id);
 };
