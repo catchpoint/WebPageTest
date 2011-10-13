@@ -7,14 +7,13 @@
 <form id="timeZoneForm" action="">
   <?php
     include_once 'utils.inc';
-  // Default if we don't find a setting.
-  $timezone = 'GMT';
-  if (array_key_exists('edited_user_timezone', $_REQUEST)) {
-    if (!empty($_REQUEST['edited_user_timezone'])) {
-      $timezone = $_REQUEST['edited_user_timezone'];
+    if (array_key_exists('edited_user_timezone', $_REQUEST) && !empty($_REQUEST['edited_user_timezone'])) {
+      $_SESSION['ls_timezone'] = $_REQUEST['edited_user_timezone'];
+    } else {
+      if (!isset($_SESSION['ls_timezone'])){
+        $_SESSION['ls_timezone'] = 'GMT';
+      }
     }
-  }
-  $_SESSION['ls_timezone'] = $timezone;
 
   date_default_timezone_set($_SESSION['ls_timezone']);
 
