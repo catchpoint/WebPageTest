@@ -10,6 +10,9 @@ $debug = false;
 include 'common.inc';
 set_time_limit(600);
 
+$json = false;
+if($_GET['f'] == 'json')
+    $json = true;
 $location = $_GET['location'];
 $key = $_GET['key'];
 $recover = $_GET['recover'];
@@ -60,6 +63,7 @@ function GetJob()
     global $ec2;
     global $tester;
     global $recover;
+    global $json;
     
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
@@ -143,7 +147,10 @@ function GetJob()
                 {
                     $done = true;
                     
-                    header('Content-type: text/plain');
+                    if( $json)
+                        header ("Content-type: application/json");
+                    else
+                        header('Content-type: text/plain');
                     header("Cache-Control: no-cache, must-revalidate");
                     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
@@ -162,7 +169,49 @@ function GetJob()
                     }
                     else
                         unlink($fileName);
-                    echo $testInfo;
+                    
+                    if( $json )
+                    {
+                        $testJson = array();
+                        $script = '';
+                        $isScript = false;
+                        $lines = explode("\r\n", $testInfo);
+                        foreach($lines as $line)
+                        {
+                            if( strlen(trim($line)) )
+                            {
+                                if( $isScript )
+                                {
+                                    if( strlen($script) )
+                                        $script .= "\r\n";
+                                    $script .= $line;
+                                }
+                                elseif( !strcasecmp($line, '[Script]') )
+                                    $isScript = true;
+                                else
+                                {
+                                    $pos = strpos($line, '=');
+                                    if( $pos > -1 )
+                                    {
+                                        $key = trim(substr($line, 0, $pos));
+                                        $value = trim(substr($line, $pos + 1));
+                                        if( strlen($key) && strlen($value) )
+                                        {
+                                            if( is_numeric($value) )
+                                                $testJson[$key] = (int)$value;
+                                            else
+                                                $testJson[$key] = $value;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if( strlen($script) )
+                            $testJson['script'] = $script;
+                        echo json_encode($testJson);
+                    }
+                    else
+                        echo $testInfo;
                     $ok = true;
                     
                     // extract the test ID from the job file
