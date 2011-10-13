@@ -181,8 +181,10 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
   test.SetFileBase();
-  if (test._clear_cache)
+  if (test._clear_cache) {
     browser.ClearUserData();
+    FlushDNS();
+  }
   if (test._tcpdump)
     _winpcap.StartCapture( test._file_base + _T(".cap") );
 
