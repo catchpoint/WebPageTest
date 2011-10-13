@@ -96,13 +96,22 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
                 // calculate the socket and dns times so we have the times in a consistent field
                 $event['msSocket'] = $event['socketTime'];
                 if( $event['connect_end'] )
+                {
                     $event['msSocket'] = $event['connect_end'] - $event['connect_start'];
+                    $event['totalTime'] += $event['msSocket'];
+                }
                 $event['msDNS'] = $event['dnsTime'];
                 if( $event['dns_end'] )
+                {
                     $event['msDNS'] = $event['dns_end'] - $event['dns_start'];
+                    $event['totalTime'] += $event['msDNS'];
+                }
                 $event['msSSL'] = $event['sslTime'];
                 if( $event['ssl_end'] )
+                {
                     $event['msSSL'] = $event['ssl_end'] - $event['ssl_start'];
+                    $event['totalTime'] += $event['msSSL'];
+                }
                 
 				unset($dnsTime);
 				unset($socketTime);
