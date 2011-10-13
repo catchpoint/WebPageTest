@@ -109,6 +109,8 @@ protected:
 	CString silverlight;
 	CString flash;
   CString domStorage;
+	CString desktopPath;
+	CString windir;
 
   bool Launch(CString cmd, HANDLE * phProc = NULL);
 	void LaunchDynaTrace();

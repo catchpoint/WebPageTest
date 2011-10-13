@@ -155,6 +155,10 @@ bool CURLBlaster::Start(int userIndex)
   }
 	
 	info.userName = userName;
+
+  windir = _T("c:\\windows");
+  if( GetWindowsDirectory(path, _countof(path)) )
+    windir = path;
 	
 	// default directories
   if( profile.GetLength() )
@@ -162,6 +166,7 @@ bool CURLBlaster::Start(int userIndex)
 	  cookies = profile + _T("\\Cookies");
 	  history = profile + _T("\\Local Settings\\History");
 	  tempFiles = profile + _T("\\Local Settings\\Temporary Internet Files");
+	  desktopPath = profile + _T("\\Local Settings\\Desktop");
 	  silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
 	  flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
     domStorage = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Internet Explorer\\DOMStore");
@@ -402,6 +407,10 @@ bool CURLBlaster::DoUserLogon(void)
 						  tempFiles = path;
 
 					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Desktop"), 0, 0, (LPBYTE)path, &len)) )
+						  desktopPath = path;
+
+					  len = _countof(path);
 					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local AppData"), 0, 0, (LPBYTE)path, &len)) )
 					  {
 						  silverlight = path;
@@ -430,6 +439,7 @@ bool CURLBlaster::DoUserLogon(void)
 				  cookies.Replace(_T("%USERPROFILE%"), profile);
 				  history.Replace(_T("%USERPROFILE%"), profile);
 				  tempFiles.Replace(_T("%USERPROFILE%"), profile);
+				  desktopPath.Replace(_T("%USERPROFILE%"), profile);
 				  silverlight.Replace(_T("%USERPROFILE%"), profile);
 				  flash.Replace(_T("%USERPROFILE%"), profile);
 				  domStorage.Replace(_T("%USERPROFILE%"), profile);
@@ -473,6 +483,8 @@ void CURLBlaster::ClearCache(void)
 	OutputDebugString(buff);
 	DeleteDirectory( silverlight );
 	DeleteDirectory( flash, false );
+  DeleteFile(desktopPath + _T("\\debug.log"));  // delete the desktop debug log from page speed - argh!
+  DeleteDirectory( windir + _T("\\temp"), false );  // delete the global windows temp directory
 
   // delete the local storage quotas from the registry
   DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"), false);
