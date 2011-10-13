@@ -70,6 +70,12 @@ bool CDNSEvents::DnsLookupStart(CString &name, void *&context, CAtlArray<DWORD> 
 			CDNSName entry = dnsNameOverride.GetNext(pos);
 			if( !name.CompareNoCase(entry.name) )
 				name = entry.realName;
+      else if (entry.name.Left(1) == _T('*')) 
+      {
+        CString sub_string = entry.name.Mid(1).Trim();
+        if (!sub_string.GetLength() || !name.Right(sub_string.GetLength()).CompareNoCase(sub_string))
+          name = entry.realName;
+      }
 		}
 
 		// see if we need to override the address
@@ -77,8 +83,14 @@ bool CDNSEvents::DnsLookupStart(CString &name, void *&context, CAtlArray<DWORD> 
 		while( pos )
 		{
 			CDNSEntry entry = dnsOverride.GetNext(pos);
-			if( !name.CompareNoCase(entry.name) || !entry.name.Compare(_T("*")) )
+			if( !name.CompareNoCase(entry.name) )
 				d->overrideAddr.S_un.S_addr = entry.addr.S_un.S_addr;
+      else if (entry.name.Left(1) == _T('*')) 
+      {
+        CString sub_string = entry.name.Mid(1).Trim();
+        if (!sub_string.GetLength() || !name.Right(sub_string.GetLength()).CompareNoCase(sub_string))
+          d->overrideAddr.S_un.S_addr = entry.addr.S_un.S_addr;
+      }
 		}
 
 		dns.AddHead(d);		// add it to the head of the DNS lookups to keep searching fast

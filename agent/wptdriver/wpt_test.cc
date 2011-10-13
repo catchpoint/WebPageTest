@@ -520,6 +520,12 @@ void  WptTest::OverrideDNSName(CString& name) {
     CDNSName entry = _dns_name_override.GetNext(pos);
     if (!name.CompareNoCase(entry.name))
       name = entry.realName;
+    else if (entry.name.Left(1) == _T('*')) {
+      CString sub_string = entry.name.Mid(1).Trim();
+      if (!sub_string.GetLength() || 
+          !name.Right(sub_string.GetLength()).CompareNoCase(sub_string))
+        name = entry.realName;
+    }
   }
 }
 
@@ -531,8 +537,14 @@ ULONG WptTest::OverrideDNSAddress(CString& name) {
   POSITION pos = _dns_override.GetHeadPosition();
   while (pos) {
     CDNSEntry entry = _dns_override.GetNext(pos);
-    if (!name.CompareNoCase(entry.name) || !entry.name.Compare(_T("*")))
+    if (!name.CompareNoCase(entry.name))
       addr = entry.addr;
+    else if (entry.name.Left(1) == _T('*')) {
+      CString sub_string = entry.name.Mid(1).Trim();
+      if (!sub_string.GetLength() || 
+          !name.Right(sub_string.GetLength()).CompareNoCase(sub_string))
+        addr = entry.addr;
+    }
   }
 
   return addr;
