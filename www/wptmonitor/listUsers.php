@@ -5,7 +5,6 @@ displayErrorIfNotAdmin();
 
 try
 {
-  $user_id = $_SESSION['user_id'];
   $q = Doctrine_Query::create()->from('User u')->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
   $result = $q->fetchArray();
   $q->free(true);
