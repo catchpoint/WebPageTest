@@ -14,7 +14,7 @@
 require_once ('bootstrap.php');
 include_once ('wpt_functions.inc');
 include_once ('utils.inc');
-include_once ( '/lib/FormValidator.php' );
+include_once ( 'lib/FormValidator.php' );
 
 // Check for shared/public url access
 // TODO: Move to util include

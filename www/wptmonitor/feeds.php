@@ -54,7 +54,7 @@
                           }
 
                           $titles[] = $item['title'];
-                          echo "<li><a title=\"{$item['source']}\" href=\"{$item['link']}\">{$item['title']}</a></li>";
+                          echo "<li><a title=\"{$item['source']}\" target='_blank' href=\"{$item['link']}\">{$item['title']}</a></li>";
                       }
                   }
               }
