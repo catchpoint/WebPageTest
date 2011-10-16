@@ -36,7 +36,7 @@
     }
 
     // Handle pager settings
-    if (($_REQUEST['currentPage'])) {
+    if (isset($_REQUEST['currentPage'])) {
       $_SESSION['alertsCurrentPage'] = $_REQUEST['currentPage'];
     }
     if (!$_SESSION['alertsCurrentPage']) {
@@ -60,7 +60,7 @@
     if (isset($_REQUEST['orderByDir']) && ($orderByDir = $_REQUEST['orderByDir'])) {
       $_SESSION['orderAlertsByDirection'] = $orderByDir;
     }
-    if (!$_SESSION['orderAlertsByDirection']) {
+    if (!isset($_SESSION['orderAlertsByDirection'])) {
       $_SESSION['orderAlertsByDirection'] = "ASC";
     }
 

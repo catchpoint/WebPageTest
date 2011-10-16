@@ -65,7 +65,7 @@
                 </tr>
                 <tr>
                   <td align="right"><label>Description</label></td>
-                  <td><textareaname="description"
+                  <td><textarea name="description"
                                 style="height:30px;width:700px">{$result.Description}</textarea></td>
                 </tr>
                 <tr>

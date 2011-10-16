@@ -1,14 +1,15 @@
 <?php
   require("login/login.php");
   include 'monitor.inc';
-  $id = $_REQUEST['id'];
+
   $folderId = $_REQUEST['folderId'];
 
   if (!hasPermission('ChangeNote', $folderId, PERMISSION_UPDATE)) {
     echo "Invalid Permission";
     exit;
   }
-  if ($id) {
+  if (isset($_REQUEST['id'])) {
+    $id = $_REQUEST['id'];
     $changeNoteTable = Doctrine_Core::getTable('ChangeNote');
     $changeNote = $changeNoteTable->find($id);
   } else {
