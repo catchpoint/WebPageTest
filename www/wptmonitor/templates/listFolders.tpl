@@ -64,6 +64,7 @@
                   {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
                     <tr class="{$eo}">
                       <td nowrap="true" valign="top">
+                        {assign var="lev" value="0"}
                         {if $res.level > 0}
                         {for $lev=1 to $res.level} &nbsp;&nbsp;&nbsp; {/for}
                           |_
