@@ -4,12 +4,14 @@
   $user_id = getCurrentUserId();
   try
   {
-    if (!$folderName = $_REQUEST['folder']) {
+    if (isset($_REQUEST['folder'])) {
+      $folderName = $_REQUEST['folder'];
+    }else{
       $folderName = "Job";
     }
     $jumpUrl = 'list' . $folderName . 's.php';
     $smarty->assign('jumpUrl', $jumpUrl);
-
+    $itemTableName="";
     if ($folderName != "Alert" && $folderName != "ChangeNote") {
       $itemTableName = 'WPT';
     }
@@ -19,9 +21,13 @@
 
     $folderTableName = $itemTableName . 'Folder';
     $folderTable = Doctrine_Core::getTable($folderTableName);
-
-    $action = $_REQUEST['action'];
-    $folderId = $_REQUEST['folderId'];
+    $action = "list";
+    if (isset($_REQUEST['action'])){
+      $action = $_REQUEST['action'];
+    }
+    if ( isset($_REQUEST['folderId'])){
+      $folderId = $_REQUEST['folderId'];
+    }
 
     $q = Doctrine_Query::create()
         ->select('f.Label, j.Label')

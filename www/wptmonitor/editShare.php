@@ -2,8 +2,9 @@
   require("login/login.php");
   include_once 'monitor.inc';
 
-  $shareId = $_REQUEST['id'];
-  if ( $shareId ){
+
+  if ( isset($_REQUEST['id']) ){
+    $shareId = $_REQUEST['id'];
     $shareTable = Doctrine_Core::getTable('Share');
     $share = $shareTable->find($shareId);
    } else {

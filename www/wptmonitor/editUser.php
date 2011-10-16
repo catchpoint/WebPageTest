@@ -3,12 +3,14 @@
   include_once 'monitor.inc';
   $tzone="GMT";
   if ($_SESSION['ls_admin']){
-    $user_id = $_REQUEST['user_id'];
+    if (isset($_REQUEST['user_id'])){
+      $user_id = $_REQUEST['user_id'];
+    }
   } else {
     $user_id = $_SESSION['ls_id'];
   }
 
-  if ( $user_id ){
+  if ( isset($user_id) ){
     $userTable = Doctrine_Core::getTable('User');
     $user = $userTable->find($user_id);
     $tzone = $user['TimeZone'];
