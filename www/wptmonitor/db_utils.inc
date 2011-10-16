@@ -7,7 +7,9 @@ function deleteRecord($table, $column, $id) {
   $record = $t->find($id);
 
   // Results are not contained in folders
-  if ( $table != "WPTResult" && $table != "Share"){
+  if ( $table != "WPTResult"
+          && $table != "Share"
+          && $table != "User"){
     $folderId = $record[$table . 'FolderId'];
     if (!hasPermission($table, $folderId, PERMISSION_CREATE_DELETE)) {
       echo 'Invalid Permission';
