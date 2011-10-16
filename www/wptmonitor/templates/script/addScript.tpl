@@ -19,11 +19,9 @@
   <div id="main">
     <div class="level_2">
       <div class="content-wrap">
-        <div class="content">
+          <div class="content" style="height:auto;">
           <br>
-
           <h2 class="cufon-dincond_black">Script</h2>
-
           <div class="translucent">
             {* If $script.Id has a value then we are editing, otherwise we are adding/creating*}
             {if $script.Id > -1}
