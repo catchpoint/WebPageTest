@@ -23,8 +23,7 @@
           <br>
           <h2 class="cufon-dincond_black">User</h2>
           <div class="translucent">
-            <form method="post" class="cmxform"
-                  {if $user.Type != 1 or $smarty.session.ls_admin}action="updateUser.php"{/if} id="updateForm">
+            <form method="post" class="cmxform" action="updateUser.php" id="updateForm">
               <input type="hidden" name="id" value="{$user.Id}">
               <table>
                 <tr>
@@ -77,18 +76,11 @@
                     <td><input type="checkbox" id="issuperadmin" name="issuperadmin" value="1"
                                {if $user.IsSuperAdmin}checked="true" {/if}/></td>
                   </tr>
-                  {*<tr>*}
-                    {*<td align="right"><label for="type">Read Only</label></td>*}
-                    {*<td><input type="checkbox" id="type" name="type" value="1" {if $user.Type}checked="true" {/if}/>*}
-                    {*</td>*}
-                  {*</tr>*}
                 {/if}
-                {if $user.Type != 1 or $smarty.session.ls_admin}
                   <tr>
                     <td></td>
                     <td><input type="submit" value="Save"></td>
                   </tr>
-                {/if}
               </table>
             </form>
           </div>

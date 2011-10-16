@@ -67,12 +67,10 @@
                       <option value="4" {if $share.Permissions eq 4}selected{/if}>Execute</option>
                     </select>
                 </td>
-                {if $user.Type != 1 or $smarty.session.ls_admin}
                   <tr>
                     <td></td>
                     <td><input type="submit" value="Save"></td>
                   </tr>
-                {/if}
               </table>
             </form>
           </div>
