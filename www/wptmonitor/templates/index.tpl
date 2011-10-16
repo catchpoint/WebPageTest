@@ -19,8 +19,9 @@
             {else}
                 <p>WebPagetest Monitor is a tool that provides the ability to create recurring jobs for a WebPagetest instance. The jobs will be passed to the indicated WebPagetest instance and the results will be collected.</p>
             {/if}
-                <p>If you are having any problems of just have questions about the site, please feel free to <a href="mailto:{$contactEmail}">contact us</a>.</p></div>
-            <div style="width:100%;float:none;clear:both;"></div>
+                <p>If you are having any problems of just have questions about the site, please feel free to <a href="mailto:{$contactEmail}">contact us</a>.</p>
+          </div>
+            <div style="float:right;vertical-align:bottom;clear:both;font-size: larger;"><br><p>Powered by <a target="_blank" href="http://www.wptmonitor.org/">WPTMonitor</a></p></div>
 
         </div>
       </div>

@@ -14,6 +14,7 @@
 require_once ('bootstrap.php');
 include_once ('wpt_functions.inc');
 include_once ('utils.inc');
+include_once ( '/lib/FormValidator.php' );
 
 // Check for shared/public url access
 // TODO: Move to util include
@@ -167,11 +168,13 @@ if (isset($_REQUEST)) {
 	$login = FALSE;
 	$register = FALSE;
 	$errors = '';
+  $validator = new FormValidator();
 	foreach ($_REQUEST as $key => $value) {
 		if ($key == "ls_reg") { $login = FALSE; $register = TRUE; }
 		else if ($key == "ls_log") { $login = TRUE; $register = FALSE; }
 		else if ($key == "ls_user") {
-			if (!eregi('^[[:alnum:]\.\'\-]{3,15}$', $value)) { $u_invalid = 1; }
+			//if (!eregi('^[[:alnum:]\.\'\-]{3,15}$', $value))
+      if (!($validator->validateItem($value,'alfanum'))){ $u_invalid = 1; }
 			$user = $value;
 		}
     else if ($key == "ls_first") {
@@ -184,11 +187,13 @@ if (isset($_REQUEST)) {
       $last = $value;
     }
 		else if ($key == "ls_email") {
-			if (!eregi('^[a-zA-Z]+[\.a-zA-Z0-9_-]*@([a-zA-Z0-9_-]+){1}(\.[a-zA-Z0-9]+){1,2}', $value)) { $e_invalid = 1; }
+			//if (!eregi('^[a-zA-Z]+[\.a-zA-Z0-9_-]*@([a-zA-Z0-9_-]+){1}(\.[a-zA-Z0-9]+){1,2}', $value))
+      if ( !$validator->validateItem($value,'email') ){ $e_invalid = 1; }
 			$email = $value;
 		}
 		else if ($key == "ls_pass") {
-			if (!eregi("^[[:alnum:]\.\'\-]{3,15}$", $value)) { $p_invalid = 1; }
+			//if (!eregi("^[[:alnum:]\.\'\-]{3,15}$", $value))
+      if (!$validator->validateItem($value,'alfanum')){ $p_invalid = 1; }
 			$pass = sha1($value);
 		}
 		else if ($key == "ls_repeat") { $repeat = sha1($value); }
@@ -254,21 +259,30 @@ if ($login == TRUE) {
 		}
 } else if ($register == TRUE ) {
 
-      $q = Doctrine_Query::create()->from('User u')->where('u.Username = ?', $user);
-      $theUser = $q->fetchOne();
-			if ($theUser['Username'] == $user) { $u_taken = 1; }
+    if ($email == NULL) {
+      $errors[] = 'Email cannot be blank.';
+    } else {
       $q = Doctrine_Query::create()->from('User u')->where('u.EmailAddress = ?', $email);
       $theUser = $q->fetchOne();
-			if ($theUser['EmailAddress'] == $email) { $e_taken = 1; }
+      if ($theUser['EmailAddress'] == $email) { $e_taken = 1; }
+    }
 
-		if ($user == NULL) { $errors[] = 'User cannot be blank.'; }
-		if ($u_invalid == 1) { $errors[] = 'User <strong>' . htmlspecialchars($user) . '</strong> is invalid. 3-15 alphanumeric characters required.'; }
-		if ($u_taken == 1) { $errors[] = 'Username <strong>' . htmlspecialchars($user) . '</strong> is already taken.'; }
-		if ($email == NULL) { $errors[] = 'Email cannot be blank.'; }
-		if ($e_invalid == 1) { $errors[] = 'Email address <strong>' . htmlspecialchars($email) . '</strong> is invalid.'; }
-		if ($e_taken == 1) { $errors[] = 'Email address <strong>' . htmlspecialchars($email) . '</strong> is already taken.'; }
+    if (isset($e_taken)) {
+      $errors[] = 'Email address <strong>' . htmlspecialchars($email) . '</strong> is already taken.';
+    }
+		if ($user == NULL) {
+      $errors[] = 'User cannot be blank.';
+    } else {
+      $q = Doctrine_Query::create()->from('User u')->where('u.Username = ?', $user);
+      $theUser = $q->fetchOne();
+      if ($theUser['Username'] == $user) { $u_taken = 1; }
+    }
+		if (isset($u_invalid)) { $errors[] = 'User <strong>' . htmlspecialchars($user) . '</strong> is invalid. 3-15 alphanumeric characters required.'; }
+		if (isset($u_taken)) { $errors[] = 'Username <strong>' . htmlspecialchars($user) . '</strong> is already taken.'; }
+
+		if (isset($e_invalid)) { $errors[] = 'Email address <strong>' . htmlspecialchars($email) . '</strong> is invalid.'; }
 		if ($pass == sha1(NULL)) { $errors[] = 'Password cannot be blank.'; }
-		if ($p_invalid == 1) { $errors[] = 'Password is invalid. 3-15 alphanumeric characters required.'; }
+		if (isset($p_invalid)) { $errors[] = 'Password is invalid. 3-15 alphanumeric characters required.'; }
 		if ($repeat == sha1(NULL)) { $errors[] = 'Password verification cannot be blank.'; }
 		if ($pass != $repeat) { $errors[] = 'Password and verification do not match.'; }
 
@@ -376,7 +390,7 @@ if ($login == TRUE) {
 						<input type="password" name="ls_pass" value="" class="text" /></label><br />
 						<label>Password Repeat:
 						<input type="password" name="ls_repeat" value="" class="text" /></label><br />
-            <label>Timezone</label><?php get_tz_options('America/Chicago',"Time Zone")?><br />
+            <label>Timezone</label><?php echo get_tz_options('America/Chicago',"Time Zone")?><br />
 						<div style="text-align:center;margin:20px 0px 0px 0px;">
 							<input type="submit" name="ls_reg" value="Register" class="btn" />
 						</div>
