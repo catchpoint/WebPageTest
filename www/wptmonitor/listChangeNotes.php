@@ -17,7 +17,7 @@
     $_SESSION['changeNoteShowPublic'] = $showPublic;
   }
   if (!isset($_SESSION['changeNoteShowPublic'])) {
-    $_SESSION['changeNoteShowPublic'] = 'false';
+    $_SESSION['changeNoteShowPublic'] = 'true';
   }
   $smarty->assign('showPublic', $_SESSION['changeNoteShowPublic']);
   // Folder
