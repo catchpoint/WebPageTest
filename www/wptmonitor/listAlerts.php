@@ -74,7 +74,7 @@
     if (isset($_REQUEST['orderBy']) && ($orderBy = $_REQUEST['orderBy'])) {
       $_SESSION['orderAlertsBy'] = $orderBy;
     }
-    if (!$_SESSION['orderAlertsBy']) {
+    if (!isset($_SESSION['orderAlertsBy'])) {
       $_SESSION['orderAlertsBy'] = "Id";
     }
 

@@ -36,7 +36,7 @@
     <td align="right" id="fvLoadTime" class="odd" valign="middle">{($average[0].AvgFirstViewDocCompleteTime/1000)|string_format:"%.3f"}s</td>
     <td align="right" id="fvTTFB" class="odd" valign="middle">{($average[0].AvgFirstViewFirstByte/1000)|string_format:"%.3f"}s</td>
     <td align="right" id="fvStartRender" class="odd" valign="middle">{($average[0].AvgFirstViewStartRender/1000)|string_format:"%.3f"}s</td>
-    <td align="right" id="fvDomElement" class="odd" valign="middle">{($average[0].AvgFirstViewDomCompleteTime/1000)|string_format:"%.3f"}s</td>
+    <td align="right" id="fvDomElement" class="odd" valign="middle">{if isset($average[0].AvgFirstViewDomCompleteTime)}{($average[0].AvgFirstViewDomCompleteTime/1000)|string_format:"%.3f"}s{/if}</td>
     <td align="right" id="fvDocComplete" class="odd border" valign="middle">{($average[0].AvgFirstViewDocCompleteTime/1000)|string_format:"%.3f"}s</td>
     <td align="center" id="fvRequestsDoc" class="odd" align="center" valign="middle">{$average[0].AvgFirstViewDocCompleteRequests|string_format:"%.0f"}</td>
     <td align="right" id="fvBytesDoc" class="odd" valign="middle">{($average[0].AvgFirstViewDocCompleteBytesIn/1000)|string_format:"%.0f"} KB</td>
@@ -50,7 +50,7 @@
     <td align="right" id="fvLoadTime" class="even" valign="middle">{($average[0].AvgRepeatViewDocCompleteTime/1000)|string_format:"%.3f"}s</td>
     <td align="right" id="fvTTFB" class="even" valign="middle">{($average[0].AvgRepeatViewFirstByte/1000)|string_format:"%.3f"}s</td>
     <td align="right" id="fvStartRender" class="even" valign="middle">{($average[0].AvgRepeatViewStartRender/1000)|string_format:"%.3f"}s</td>
-    <td align="right" id="fvDomElement" class="even" valign="middle">{($average[0].AvgRepeatViewDomCompleteTime/1000)|string_format:"%.3f"}s</td>
+    <td align="right" id="fvDomElement" class="even" valign="middle">{if isset($average[0].AvgRepeatViewDomCompleteTime)}{($average[0].AvgRepeatViewDomCompleteTime/1000)|string_format:"%.3f"}s{/if}</td>
     <td align="right" id="fvDocComplete" class="even border" valign="middle">{($average[0].AvgRepeatViewDocCompleteTime/1000)|string_format:"%.3f"}s</td>
     <td align="center" id="fvRequestsDoc" class="even" align="center" valign="middle">{($average[0].AvgRepeatViewDocCompleteRequests)|string_format:"%.0f"}</td>
     <td align="right" id="fvBytesDoc" class="even" valign="middle">{($average[0].AvgRepeatViewDocCompleteBytesIn/1000)|string_format:"%.0f"} KB</td>
@@ -108,7 +108,7 @@
     <td align="right" class="border">{($detail.AvgFirstViewFirstByte/1000)|string_format:"%.3f"}</td>
     <td align="right" >{($detail.AvgFirstViewStartRender/1000)|string_format:"%.3f"}</td>
     <td align="right" >{($detail.AvgFirstViewDocCompleteTime/1000)|string_format:"%.3f"}</td>
-    <td align="right" >{($detail.AvgFirstViewDomCompleteTime/1000)|string_format:"%.3f"}</td>
+    <td align="right" >{if isset($detail.AvgFirstViewDomCompleteTime)}{($detail.AvgFirstViewDomCompleteTime/1000)|string_format:"%.3f"}{/if}</td>
     <td align="right" >{($detail.AvgFirstViewFullyLoadedTime/1000)|string_format:"%.3f"}</td><td></td>
     <td valign="middle" class="border" align="right">{$detail.AvgFirstViewDocCompleteRequests|string_format:"%.0f"}</td>
     <td valign="middle" align="right">{($detail.AvgFirstViewDocCompleteBytesIn/1000)|string_format:"%.0f"} KB</td>

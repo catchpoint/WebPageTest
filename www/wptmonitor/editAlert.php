@@ -1,7 +1,9 @@
 <?php
   require("login/login.php");
   include 'monitor.inc';
-  $alert_id = $_REQUEST['id'];
+  if ( isset($_REQUEST['id'])){
+    $alert_id = $_REQUEST['id'];
+  }
   $user_id = getCurrentUserId();
   $folderId = $_REQUEST['folderId'];
   
@@ -10,7 +12,7 @@
   }
   global $wptResultStatusCodes;
 
-  if ( $alert_id ){
+  if ( isset($alert_id)){
     $alertTable = Doctrine_Core::getTable('Alert');
     $result = $alertTable->find($alert_id);
    } else {

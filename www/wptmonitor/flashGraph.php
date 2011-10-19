@@ -251,7 +251,7 @@ if ($_REQUEST['act'] == 'report') {
   $smarty->assign('x_axis_tick_labels',$timeStamps);
 
   // If the user is a guest then only show the shared report format
-  if ($_SESSION['ls_guest']){
+  if (isset($_SESSION['ls_guest'])){
     $smarty->display('report/share.tpl');
     session_unset();
     exit;
