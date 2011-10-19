@@ -2207,6 +2207,7 @@ void CPagetestReporting::CheckCache(CString &buff)
 				!(cache.Find(_T("no-store")) > -1) &&
 				!(cache.Find(_T("no-cache")) > -1) &&
 				!(pragma.Find(_T("no-cache")) > -1) &&
+				!(mime.Find(_T("/cache-manifest")) > -1)	&&
 				!(mime.Find(_T("/html")) > -1)	&&
 				!(mime.Find(_T("/xhtml")) > -1)	&&
 				(	mime.Find(_T("shockwave-flash")) >= 0 || 

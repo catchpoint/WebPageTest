@@ -479,7 +479,7 @@ bool Request::IsStatic() {
     (result == 200 && exp != _T("0") && exp != _T("-1") &&
      cache.Find(_T("no-store")) == -1 && cache.Find(_T("no-cache")) == -1 &&
      pragma.Find(_T("no-cache")) == -1 && mime.Find(_T("/html")) == -1 &&
-     mime.Find(_T("/xhtml")) == -1 &&
+     mime.Find(_T("/xhtml")) == -1 && mime.Find(_T("/cache-manifest")) == -1 &&
      (mime.Find(_T("shockwave-flash")) >= 0 || object.Right(4) == _T(".swf") ||
       mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 ||
       mime.Find(_T("image/")) >= 0)));
