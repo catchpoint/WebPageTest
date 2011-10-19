@@ -1,7 +1,7 @@
 <?php
   require("login/login.php");
   include 'monitor.inc';
-
+  $ownerId="";
   $userId = getCurrentUserId();
   if ( isset($_REQUEST['id']) ){
     $jobId = $_REQUEST['id'];
@@ -127,9 +127,6 @@
   }
   if(!isset($currentJobCount)){
     $currentJobCount="";
-  }
-  if(!isset($ownerId)){
-    $ownerId="";
   }
   $folderTree = getFolderTree($userId, 'WPTJob');
   $shares = getFolderShares($userId, 'WPTJob');
