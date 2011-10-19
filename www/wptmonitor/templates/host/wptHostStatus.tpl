@@ -38,7 +38,7 @@
                 <td><a href="#{$location.id}">{$location.id}</a></td>
                 <td>{$location.Label}</td>
                 <td>{$location.Browser}</td>
-                <td align="right">{$location.runRate}</td>
+                <td align="right">{if isset($location.runRate)}{$location.runRate}{/if}</td>
                 <td align="right">{$location.AgentCount}</td>
                 <td align="right">{$location.PendingTests}</td>
                 <td align="right">{$location.PendingTestsHighPriority}</td>
@@ -63,9 +63,9 @@
             {assign value="#98fb98" var="bgcolor"}
             <tr class="{$eo}">
               <td nowrap="true">{$user}</td>
-              <td align="right">{if $runRateInfo.jobsPerUser[$user]}{$runRateInfo.jobsPerUser[$user]}{else}0{/if}</td>
-              <td align="right">{if $runRateInfo.activeJobsPerUser[$user]}{$runRateInfo.activeJobsPerUser[$user]}{else}0{/if}</td>
-              <td align="right" nowrap="true">{if $runRateInfo.runRatePerUser[$user]}{$runRateInfo.runRatePerUser[$user]}{else}0{/if}</td>
+              <td align="right">{if isset($runRateInfo.jobsPerUser[$user])}{$runRateInfo.jobsPerUser[$user]}{else}0{/if}</td>
+              <td align="right">{if isset($runRateInfo.activeJobsPerUser[$user])}{$runRateInfo.activeJobsPerUser[$user]}{else}0{/if}</td>
+              <td align="right" nowrap="true">{if isset($runRateInfo.runRatePerUser[$user])}{$runRateInfo.runRatePerUser[$user]}{else}0{/if}</td>
             </tr>
           {/foreach}
             <tr><td colspan="4"><hr></td></tr>
@@ -104,8 +104,8 @@
                     <td align="right">{$agent.index}</td>
                     <td align="center">{$agent.pc}</td>
                     <td align="center">{$agent.ec2}</td>
-                    <td align="center">{$agent.ec2Status.launchTime}</td>
-                    <td align="center">{$agent.ec2Status.state}</td>
+                    <td align="center">{if isset($agent.ec2Status.launchTime)}{$agent.ec2Status.launchTime}{/if}</td>
+                    <td align="center">{if isset($agent.ec2Status.state)}{$agent.ec2Status.state}{/if}</td>
                     <td align="center">{$agent.ip}</td>
                     <td align="right">{$agent.busy}</td>
                     <td align="right">{$agent.elapsed}</td>

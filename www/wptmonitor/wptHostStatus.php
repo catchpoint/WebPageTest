@@ -6,19 +6,22 @@
   $testers = getTestersInformation();
   $locations = getLocationInformation();
   $runRateInfo = getCurrentRunRateInfo();
+  $cache = true;
 
-  $cache = $_REQUEST['cache'];
-  if ( $cache == "false" ){
-    $cache = false;
-  } else {
-    $cache = true;
+  if ( isset($_REQUEST['cache'])){
+    $cache = $_REQUEST['cache'];
+    if ( $cache == "false" ){
+      $cache = false;
+    }
   }
   $ec2TesterStatus = getEC2TesterStatus($cache);
 
   foreach($testers as &$tester){
     foreach($tester['Agents'] as $key=>&$agent){
       $ec2 = (String) $agent['ec2'];
-      $agent['ec2Status'] = $ec2TesterStatus[$ec2];
+      if ( isset($ec2TesterStatus[$ec2])){
+        $agent['ec2Status'] = $ec2TesterStatus[$ec2];
+      }
     }
   }
   $lastEc2StatusCheck = getEC2TesterStatusLastCheckTime();
