@@ -156,6 +156,7 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
 void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
+  EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
