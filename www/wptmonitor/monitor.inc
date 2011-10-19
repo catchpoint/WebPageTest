@@ -62,6 +62,8 @@
   $wptResultStatusCodes['910']="Max Download Attempts Exceeded";
   $wptResultStatusCodes['990']="X-SL-CompState: Uncompiled";
   $wptResultStatusCodes['999']="Other";
+  $wptResultStatusCodes['99998']="Other";
+  $wptResultStatusCodes['99999']="Other";
 
   $wptValidationStateCodes['1']="Valid";
   $wptValidationStateCodes['2']="Invalid";
