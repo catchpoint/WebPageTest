@@ -11,7 +11,7 @@
  */
 function getResultsDataAvg($startDateTime, $endDateTime, $interval, $datas, $fields) {
   $pointer = $startDateTime;
-  $id = $datas[0]['Id'];
+//  $id = $datas[0]['Id'];
   $data = array();
 
   while ($pointer < $endDateTime) {
@@ -289,9 +289,12 @@ function getGraphData($user_id,
       ->limit($limit)
       ->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
     $res = $q->fetchArray();
-    $maxTime = $res[sizeof($res) - 1][$adjustUsing];
-
-    $q->andWhere('r.' . $adjustUsing . '< ?', $maxTime);
+    if (sizeof($res) > 0){
+      $maxTime = $res[sizeof($res) - 1][$adjustUsing];
+    }
+    if ( isset($maxTime)){
+      $q->andWhere('r.' . $adjustUsing . '< ?', $maxTime);
+    }
   }
   $q->orderBy('r.Date')->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
 
@@ -354,6 +357,7 @@ function getChangeNotesAsAmLineChartXml($userId,
                                  $start,
                                  $end) {
   $changeNotes = getChangeNoteData($userId, $jobIds, $start, $end);
+  $xmlData = '';
   $xmlData .= "<graph title=\"Change Notes\" gid=\"0\">";
   $xmlData .= "\n";
 
@@ -370,6 +374,7 @@ function getChangeNotesAsAmScatterChartXml($userId,
                                  $jobIds,
                                  $start,
                                  $end) {
+  $xmlData ="";
   $changeNotes = getChangeNoteData($userId, $jobIds, $start, $end);
   $xmlData .= "<graph title=\"Change Notes\" gid=\"0\">";
   $xmlData .= "\n";

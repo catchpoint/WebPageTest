@@ -7,42 +7,53 @@
             //$_REQUEST['folderId'];
   $user_id = getCurrentUserId();
 
+  // Defaults
+  $resultsFilterField="";
+  $resultsFilterValue="";
+
   // Handle resultsFilter settings
   // TODO: Refactor filter feature into common code. It's duplicated
-  if ($_REQUEST['clearFilter']) {
+  if (isset($_REQUEST['clearFilter'])) {
     unset($_SESSION['resultsFilterField']);
     unset($_SESSION['resultsFilterValue']);
     unset($_SESSION['resultsFilterStartDateTime']);
     unset($_SESSION['resultsFilterEndDateTime']);
   } else {
-    if ($resultsFilterField = $_REQUEST['filterField']) {
+    if (isset($_REQUEST['filterField']) && $resultsFilterField = $_REQUEST['filterField']) {
       $_SESSION['resultsFilterField'] = $resultsFilterField;
     }
-    if ($resultsFilterValue = $_REQUEST['filterValue']) {
+    if (isset($_REQUEST['filterValue']) && $resultsFilterValue = $_REQUEST['filterValue']) {
       $_SESSION['resultsFilterValue'] = $resultsFilterValue;
     }
   }
-  $resultsFilterField = $_SESSION['resultsFilterField'];
-  $resultsFilterValue = $_SESSION['resultsFilterValue'];
+  if ( isset($_SESSION['resultsFilterField'])){
+    $resultsFilterField = $_SESSION['resultsFilterField'];
+  }
+  if ( isset($_SESSION['resultsFilterValue'])){
+    $resultsFilterValue = $_SESSION['resultsFilterValue'];
+  }
+  if ( isset($_REQUEST['startDateTime'])){
+    $startDateTime = $_REQUEST['startDateTime'];
+  }
+  if ( isset($_REQUEST['endDateTime'])){
+    $endDateTime = $_REQUEST['endDateTime'];
+  }
 
-  $startDateTime = $_REQUEST['startDateTime'];
-  $endDateTime = $_REQUEST['endDateTime'];
-
-  if ($_REQUEST['startMonth']) {
+  if (isset($_REQUEST['startMonth'])) {
     $startDateTime = mktime($_REQUEST['startHour'], $_REQUEST['startMinute'], 0, $_REQUEST['startMonth'], $_REQUEST['startDay'], $_REQUEST['startYear']);
-  } else if ($_SESSION['resultsFilterStartDateTime']) {
+  } else if (isset($_SESSION['resultsFilterStartDateTime'])) {
     $startDateTime = $_SESSION['resultsFilterStartDateTime'];
   }
-  if ($_REQUEST['endMonth']) {
+  if (isset($_REQUEST['endMonth'])) {
     $endDateTime = mktime($_REQUEST['endHour'], $_REQUEST['endMinute'], 0, $_REQUEST['endMonth'], $_REQUEST['endDay'], $_REQUEST['endYear']);
-  } else if ($_SESSION['resultsFilterEndDateTime']) {
+  } else if (isset($_SESSION['resultsFilterEndDateTime'])) {
     $endDateTime = $_SESSION['resultsFilterEndDateTime'];
   }
 
-  if (!$startDateTime && !$_SESSION['resultsFilterStartDateTime']) {
+  if (!isset($startDateTime) && !isset($_SESSION['resultsFilterStartDateTime'])) {
     $startDateTime = time() - 86400;
   }
-  if (!$endDateTime && !$_SESSION['resultsFilterEndDateTime']) {
+  if (!isset($endDateTime) && !isset($_SESSION['resultsFilterEndDateTime'])) {
     $endDateTime = time();
   }
 
@@ -52,24 +63,27 @@
   $smarty->assign('startTime', $startDateTime);
   $smarty->assign('endTime', $endDateTime);
 
-
-  $job_id = $_REQUEST['job_id'];
-  //$ownerId= getOwnerIdFor($job_id,'WPTJob');
+  if (isset($_REQUEST['job_id'])){
+    $job_id = $_REQUEST['job_id'];
+    $ownerId= getOwnerIdFor($job_id,'WPTJob');
+  } else {
+    $ownerId = null;
+  }
 
   // If a job_id is passed in, set the filter to show only results for that job_id
-  if ($job_id) {
+  if (isset($job_id)) {
     $_SESSION['resultsFilterField'] = "WPTJob.Id";
     $_SESSION['resultsFilterValue'] = $job_id[0];
   }
 
-  if ($showThumbs = $_REQUEST['showResultsThumbs']) {
+  if (isset($_REQUEST['showResultsThumbs']) && $showThumbs = $_REQUEST['showResultsThumbs']) {
     $_SESSION['showResultsThumbs'] = $showThumbs;
   } else if (!isset($_SESSION['showResultsThumbs'])) {
     $_SESSION['showResultsThumbs'] = 'false';
   }
   $smarty->assign('showResultsThumbs', $_SESSION['showResultsThumbs']);
 
-  if ($showWaterfallThumbs = $_REQUEST['showWaterfallThumbs']) {
+  if (isset($_REQUEST['showWaterfallThumbs']) && $showWaterfallThumbs = $_REQUEST['showWaterfallThumbs']) {
     $_SESSION['showWaterfallThumbs'] = $showWaterfallThumbs;
   } else if (!isset($_SESSION['showWaterfallThumbs'])) {
     $_SESSION['showWaterfallThumbs'] = 'false';
@@ -78,19 +92,19 @@
   $smarty->assign('showWaterfallThumbs', $_SESSION['showWaterfallThumbs']);
 
   // Handle pager settings
-  if (($_REQUEST['currentPage'])) {
+  if (isset($_REQUEST['currentPage'])) {
     $_SESSION['resultsCurrentPage'] = $_REQUEST['currentPage'];
   }
-  if (!$_SESSION['resultsCurrentPage']) {
+  if (!isset($_SESSION['resultsCurrentPage'])) {
     $_SESSION['resultsCurrentPage'] = 1;
   }
   $resultsCurrentPage = $_SESSION['resultsCurrentPage'];
 
   // Order by direction
-  if (($orderByDir = $_REQUEST['orderByDir'])) {
+  if (isset($_REQUEST['orderByDir']) && ($orderByDir = $_REQUEST['orderByDir'])) {
     $_SESSION['orderResultsByDirection'] = $orderByDir;
   } else {
-    if (!$_SESSION['orderResultsByDirection']) {
+    if (!isset($_SESSION['orderResultsByDirection'])) {
       $_SESSION['orderResultsByDirection'] = "DESC";
     }
   }
@@ -101,12 +115,14 @@
   }
 
   // Order by
-  if (!($orderBy = $_REQUEST['orderBy'])) {
-    if (!$_SESSION['orderResultsBy']) {
+  if (!isset($_REQUEST['orderBy'])) {
+    if (!isset($_SESSION['orderResultsBy'])) {
       $orderBy = "Date";
     } else {
       $orderBy = $_SESSION['orderResultsBy'];
     }
+  } else {
+    $orderBy = $_REQUEST['orderBy'];
   }
   $_SESSION['orderResultsBy'] = $orderBy;
 
