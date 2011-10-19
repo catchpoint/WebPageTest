@@ -270,8 +270,8 @@
   <td>
     <form action="deleteResult.php" onsubmit="return confirm('Confirm Deletion')">
       <input type="hidden" name="result_id" value="{$res.Id}">
-      <input type="hidden" name="forward_to"
-             value="listResults.php?job_id={$jobId}&pendingResults={$pendingResults}">
+      {if isset($jobId)}<input type="hidden" name="forward_to"
+             value="listResults.php?job_id={$jobId}&pendingResults={$pendingResults}">{/if}
       <input title="Delete Result" class="actionIcon" type="image" src="img/delete_icon.png" width="17">
     </form>
   </td>
