@@ -6,15 +6,22 @@ include_once 'graph_functions.inc';
 $userId = getCurrentUserId();
 date_default_timezone_set($_SESSION['ls_timezone']);
 
-//print_r($_REQUEST);exit;
 // Set action
-$smarty->assign('action',$_REQUEST['act'] );
+if (isset($_REQUEST['act'])){
+  $action = $_REQUEST['act'];
+} else {
+  $action = 'default';
+}
+$smarty->assign('action',$action );
+// Default chart time
+$smarty->assign('chartType', 'Line');
+
 // Folder handling
-if (($folderId = $_REQUEST['folderId'])) {
-  $_SESSION['jobsFolderId'] = $folderId;
+if (isset($_REQUEST['folderId'])) {
+  $_SESSION['jobsFolderId'] = $_REQUEST['folderId'];
 }
 
-if (!$_SESSION['jobsFolderId']) {
+if (!isset($_SESSION['jobsFolderId'])) {
   $_SESSION['jobsFolderId'] = getRootFolderForUser($userId,'WPTJob');
 }
 $folderId = $_SESSION['jobsFolderId'];
@@ -25,32 +32,36 @@ $folderTree = getFolderTree($userId, 'WPTJob');
 $smarty->assign('folderTree', $folderTree);
 // End Folder handling
 
-$includeRepeatView = $_REQUEST['includeRepeatView'];
-if (!$includeRepeatView) {
+
+if (!isset($_REQUEST['includeRepeatView'])) {
   $includeRepeatView = 0;
+} else {
+  $includeRepeatView = 1;
 }
 $smarty->assign('includeRepeatView', $includeRepeatView);
 
 // Start/end times
 // timeFrame > 0 will ignore time select boxes
-if (($timeFrame = $_REQUEST['timeFrame']) > 0) {
+$timeFrame = '';
+$smarty->assign('timeFrame',$timeFrame);
+if (isset($_REQUEST['timeFrame']) && (($timeFrame = $_REQUEST['timeFrame']) > 0)) {
   $smarty->assign('timeFrame',$timeFrame);
   $endDateTime = gmdate('U') + 3600;
   $startDateTime = $endDateTime - $timeFrame;
 } else {
-  if ($_REQUEST['startMonth']) {
+  if (isset($_REQUEST['startMonth'])) {
     $startDateTime = mktime($_REQUEST['startHour'], 0, 0, $_REQUEST['startMonth'], $_REQUEST['startDay'], $_REQUEST['startYear']);
   }
-  if ($_REQUEST['endMonth']) {
+  if (isset($_REQUEST['endMonth'])) {
     $endDateTime = mktime($_REQUEST['endHour'], 59, 59, $_REQUEST['endMonth'], $_REQUEST['endDay'], $_REQUEST['endYear']);
   }
 }
 // no end date, use now.
-if (!$endDateTime || $endDateTime > time()) {
+if (!isset($endDateTime) || $endDateTime > time()) {
   $endDateTime = gmdate('U') + 3600;
 }
 // no start date, use last 7 days.
-if (!$startDateTime) {
+if (!isset($startDateTime)) {
   $startDateTime = $endDateTime - 604800;
 }
 
@@ -94,8 +105,9 @@ $availFieldKeysRV = array('RV_TTFB' => 'RV_TTFB', 'RV_Render' => 'RV_Render', 'R
 $smarty->assign('availFieldKeysFV', $availFieldKeysFV);
 $smarty->assign('availFieldKeysRV', $availFieldKeysRV);
 // Process fields to display
-$fieldsToDisplay = $_REQUEST['fields'];
-
+if ( isset($_REQUEST['fields'])){
+  $fieldsToDisplay = $_REQUEST['fields'];
+}
 $availFields = array();
 $availFields['FV_TTFB'] = "AvgFirstViewFirstByte";
 $availFields['FV_Render'] = "AvgFirstViewStartRender";
@@ -108,7 +120,7 @@ $availFields['RV_Doc'] = "AvgRepeatViewDocCompleteTime";
 $availFields['RV_Dom'] = "AvgRepeatViewDomTime";
 $availFields['RV_Fully'] = "AvgRepeatViewFullyLoadedTime";
 
-if (sizeof($fieldsToDisplay) > 0) {
+if (isset($fieldsToDisplay) && sizeof($fieldsToDisplay) > 0) {
   $fields = array();
   foreach ($fieldsToDisplay as $field) {
     if (!empty($field))
@@ -123,30 +135,47 @@ if (sizeof($fieldsToDisplay) > 0) {
 }
 $smarty->assign('fieldsToDisplay', $fieldsToDisplay);
 // End field handling
-
-$jobIds = $_REQUEST['job_id'];
+if ( isset($_REQUEST['job_id']) ){
+  $jobIds = $_REQUEST['job_id'];
+} else{
+  $jobIds = '';
+}
 $smarty->assign('job_ids', $jobIds);
 
-$adjustUsing = $_REQUEST['adjustUsing'];
+if (isset($_REQUEST['adjustUsing'])){
+  $adjustUsing = $_REQUEST['adjustUsing'];
+}
 if (empty($adjustUsing)) {
   $adjustUsing = "AvgFirstViewDocCompleteTime";
 }
 $smarty->assign('adjustUsing', $adjustUsing);
 
-if (!$percentile = $_REQUEST['percentile']) {
+if (!isset($_REQUEST['percentile'])) {
   $percentile = 1;
+} else {
+  $percentile = $_REQUEST['percentile'];
 }
 $smarty->assign('percentile', $percentile);
-
-$trimAbove = $_REQUEST['trimAbove'];
-$trimBelow = $_REQUEST['trimBelow'];
+if ( isset($_REQUEST['trimAbove'])){
+  $trimAbove = $_REQUEST['trimAbove'];
+}else {
+  $trimAbove ="";
+}
 $smarty->assign('trimAbove', $trimAbove);
+if (isset($_REQUEST['trimBelow'])){
+  $trimBelow = $_REQUEST['trimBelow'];
+}else{
+  $trimBelow="";
+}
 $smarty->assign('trimBelow', $trimBelow);
-
-$interval = $_REQUEST['interval'];
+if ( isset($_REQUEST['interval'])){
+  $interval = $_REQUEST['interval'];
+} else {
+  $interval = 'Auto';
+}
 $smarty->assign('interval', $interval);
 
-if ($_REQUEST['act'] == '') {
+if (!isset($_REQUEST['act'])) {
   $smarty->display('report/flashGraph.tpl');
   exit;
 }
@@ -273,8 +302,14 @@ if ($_REQUEST['act'] == 'graph') {
   $smarty->assign('chartType', $chartType);
 
   // Use a unique file per user.
-  if (!($cacheKey = $_REQUEST['cacheKey']) || strlen(trim($_REQUEST['cacheKey'])) < 4) {
-    $cacheKey = $userId . "-" . rand(1000, 9999);
+  if ( isset($_REQUEST['cacheKey'])){
+    if ( strlen(trim($_REQUEST['cacheKey'])) < 4) {
+        $cacheKey = $userId . "-" . rand(1000, 9999);
+    }else {
+      $cacheKey = $_REQUEST['cacheKey'];
+    }
+  } else {
+    $cacheKey="";
   }
   cleanupDir("graph/cache/",86400);
   // TODO: Add code to clean up dir
@@ -308,7 +343,7 @@ if ($_REQUEST['act'] == 'graph') {
 
   $smarty->assign('wptResultURL', $wptResult);
 
-  if ($_REQUEST['rpc']) {
+  if (isset($_REQUEST['rpc'])) {
     echo "SUCCESS" . "," . $cacheFileName;
     exit;
   }

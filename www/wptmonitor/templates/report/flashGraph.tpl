@@ -166,7 +166,7 @@ function updateGraph() {
   </select>
   </form>
   <form name="updateForm" class="cmxform" action="flashGraph.php" id="updateForm" onsubmit="validateForm();">
-    <input type="hidden" value="{$cacheKey}" name="cacheKey">
+    {if isset($cacheKey)}<input type="hidden" value="{$cacheKey}" name="cacheKey">{/if}
     <input type="hidden" name="act" value="">
     <table width="100%" border=0>
       <tr>
@@ -223,7 +223,8 @@ function updateGraph() {
                 <option {if $interval eq 43200}selected="true"{/if} value="43200">12 Hours</option>
                 <option {if $interval eq 86400}selected="true"{/if} value="86400">Daily</option>
                 <option {if $interval eq 604800}selected="true"{/if} value="604800">Weekly</option>
-              </select>&nbsp;{if $intervalAuto}{$intervalAuto}{/if}
+              </select>&nbsp;
+              {*{if $intervalAuto}{$intervalAuto}{/if}*}
               </td>
             </tr>
             <tr>
@@ -334,9 +335,11 @@ function updateGraph() {
   document.getElementById('shareUrl').value=base+'?___k={$cryptQueryString}'</script>
   {*<td align="center" valign="top"><input type="button" name="action" onclick="shareReport();" value="Share"></td>*}
 {/if}
+    {assign var="changeNoteFileName" value=""}
 {if $action eq 'graph'}
     {if $graphDataFile}
     {if $chartType eq "scatter"}
+
     {literal}
       <script type="text/javascript" src="lib/amcharts/amxy/swfobject.js"></script>
       <div style="width:auto;" align="center" id="flashcontent"><strong>You need to upgrade your Flash
