@@ -26,3 +26,8 @@ enableVideo=1
 
 ;showslow beacon
 showslow=http://www.showslow.com
+
+; image quality (defaults to 30)
+iq=75
+;save png full-resolution screen shots
+;pngss=1

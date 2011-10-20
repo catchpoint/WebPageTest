@@ -54,6 +54,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 using namespace std::tr1;
 #include "AFT.h"
+#include "../urlblast/zip/zip.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 CPagetestReporting * reporting = NULL;
@@ -392,6 +393,9 @@ void CPagetestReporting::FlushResults(void)
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
             if( !noHeaders )
 						  SaveStatusUpdates(logFile+step+_T("_status.txt"));
+
+            if( bodies )
+              SaveBodies(logFile+step+_T("_bodies.zip"));
 
             if( aft )
               msAFT = CalculateAFT();
@@ -1331,6 +1335,51 @@ void CPagetestReporting::GenerateReport(CString &szReport)
 	}
 
 	szReport.Replace(_T("\n"), _T("\r\n"));
+}
+
+/*-----------------------------------------------------------------------------
+	Generate the detailled report for a single request
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveBodies(CString file)
+{
+	zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
+	if( zip )
+	{
+	  DWORD count = 0;
+    DWORD bodiesCount = 0;
+	  POSITION pos = events.GetHeadPosition();
+	  while( pos )
+	  {
+		  CTrackedEvent * event = events.GetNext(pos);
+		  if( event && event->type == CTrackedEvent::etWinInetRequest )
+		  {
+			  CWinInetRequest * r = (CWinInetRequest *)event;
+			  CString mime = r->response.contentType;
+			  mime.MakeLower();
+        if( r->valid && r->fromNet )
+        {
+				  count++;
+          if(r->result == 200 && r->body && r->bodyLen &&
+             (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
+			    {
+            CStringA name;
+            name.Format("%03d-response.txt", count);
+						// add the file to the archive
+						if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
+						{
+							// write the file to the archive
+              zipWriteInFileInZip( zip, r->body, r->bodyLen );
+							zipCloseFileInZip( zip );
+              bodiesCount++;
+						}
+          }
+        }
+		  }
+	  }
+		zipClose(zip, 0);
+    if(!bodiesCount)
+      DeleteFile(file);
+  }
 }
 
 /*-----------------------------------------------------------------------------

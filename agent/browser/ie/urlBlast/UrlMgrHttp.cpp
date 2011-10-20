@@ -308,6 +308,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.imageQuality = max(0, min(100, _ttol(value)));
 							else if( !key.CompareNoCase(_T("pngScreenShot")) )
                 info.pngScreenShot = _ttol(value);
+							else if( !key.CompareNoCase(_T("bodies")) )
+                info.bodies = _ttol(value);
 						}
 					}
 

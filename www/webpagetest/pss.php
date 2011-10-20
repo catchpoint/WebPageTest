@@ -200,6 +200,10 @@ $page_description = "Comparison Test$testLabel.";
                             </select>
                         </li>
                         <li>
+                            <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
+                            <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
+                        </li>
+                        <li>
                             <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-Expt-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>

@@ -29,6 +29,9 @@ if( !strlen($view) )
 if( $view == 'simple' )
     $view = 'pss';
 
+$stats = array();
+$stats['fv'] = array();
+$stats['rv'] = array();
 $fvonly = false;
 if( $test['test']['fvonly'] )
     $fvonly = true;
@@ -171,6 +174,25 @@ else
                 {
                     if( $view == 'bulk' )
                     {
+                        if( count($stats['fv']) )
+                        {
+                            $total = 0;
+                            $count = count($stats['fv']);
+                            foreach($stats['fv'] as $val)
+                                $total += $val;
+                            $avg = $total / $count;
+                            echo '<br>Average First View Load Time: ' . number_format($avg / 1000.0, 3) .'s';
+                            if( count($stats['rv']) )
+                            {
+                                $total = 0;
+                                $count = count($stats['rv']);
+                                foreach($stats['rv'] as $val)
+                                    $total += $val;
+                                $avg = $total / $count;
+                                echo '<br>Average Repeat View Load Time: ' . number_format($avg / 1000.0, 3) .'s';
+                            }
+                            echo '<br>';
+                        }
                         if( FRIENDLY_URLS )
                             echo "<br>Download Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
                         else
@@ -303,6 +325,7 @@ function DisplayTestsWithVariations(&$tests)
 */
 function DisplayTest($id, $url, $label, $complete)
 {
+    global $stats;
     global $fvonly;
     RestoreTest($id);
     $testPath = './' . GetTestPath($id);
@@ -324,8 +347,14 @@ function DisplayTest($id, $url, $label, $complete)
         if ($rvMedian)
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
         echo "<td>" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
+        if( $pageData[$fvMedian][0]['loadTime'] )
+            $stats['fv'][] = $pageData[$fvMedian][0]['loadTime'];
         if( !$fvonly )
+        {
+            if ($pageData[$rvMedian][1]['loadTime'])
+                $stats['rv'][] = $pageData[$rvMedian][1]['loadTime'];
             echo "<td>$rvMedian_column</td>";
+        }
         if( FRIENDLY_URLS )
         {
             echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";

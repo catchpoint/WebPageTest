@@ -103,7 +103,6 @@ $page_description = "Website performance test details$testLabel";
                     </div>
                     <?php
 	    		        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
-	    		        echo '<br>';
 			            if ( $settings['enable_google_csi'] )
 				            echo '<a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
@@ -111,6 +110,9 @@ $page_description = "Website performance test details$testLabel";
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
                             echo ' (<a href="http://ajax.dynatrace.com/pages/" target="_blank">get dynaTrace</a>)';
                         }
+                        if( is_file("$testPath/{$run}{$cachedText}_bodies.zip") )
+                            echo "<br><a href=\"/$testPath/{$run}{$cachedText}_bodies.zip\">Download Response Bodies</a>";
+                        echo '<br>';
                     ?>
                 </div>
                 <div class="cleared"></div>

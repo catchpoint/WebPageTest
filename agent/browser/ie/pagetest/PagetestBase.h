@@ -171,6 +171,7 @@ public:
   DWORD           blockads;
   DWORD           imageQuality;
   DWORD           pngScreenShot;
+  DWORD           bodies;
   CAtlList<CString>	adPatterns;
   DWORD           aft;          // above-the fold measurement enabled?
   DWORD           aftMinChanges;

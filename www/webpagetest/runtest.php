@@ -110,6 +110,7 @@
             $test['queue_limit'] = 0;
             $test['pngss'] = (int)$req_pngss;
             $test['iq'] = (int)$req_iq;
+            $test['bodies'] = $req_bodies;
             
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
@@ -735,6 +736,16 @@ function ValidateParameters(&$test, $locations, &$error)
             }
             else
                 $test['aft'] = 0;
+
+            if( $test['pngss'] )
+                $test['pngss'] = 1;
+            else
+                $test['pngss'] = 0;
+
+            if( $test['bodies'] )
+                $test['bodies'] = 1;
+            else
+                $test['bodies'] = 0;
             
             if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
                 $test['aftMinChanges'] = $settings['aftMinChanges'];
@@ -1521,6 +1532,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "imageQuality={$test['iq']}\r\n";
         elseif( $settings['iq'] )
             $testFile .= "imageQuality={$settings['iq']}\r\n";
+        if( $test['bodies'] )
+            $testFile .= "bodies=1\r\n";
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )
