@@ -212,6 +212,9 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   TCHAR buff[4096];
   _browser = browser;
   _template = _browser;
+  _exe.Empty();
+  _exe_directory.Empty();
+  _options.Empty();
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
