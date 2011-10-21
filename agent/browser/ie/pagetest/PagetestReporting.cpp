@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PageSpeed/include/pagespeed/proto/pagespeed_output.pb.h"
 #include "PageSpeed/include/pagespeed/proto/pagespeed_proto_formatter.pb.h"
 #include "PageSpeed/include/pagespeed/rules/rule_provider.h"
+#include "PageSpeed/include/googleurl/base/logging.h"
 #include <regex>
 #include <string>
 #include <sstream>
@@ -1798,6 +1799,9 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 	static bool didInit = false;
 	if (!didInit) {
 		didInit = true;
+    #ifndef DEBUG
+    logging::SetMinLogLevel(logging::LOG_NUM_SEVERITIES);
+    #endif
 		pagespeed::Init();
 	}
 
