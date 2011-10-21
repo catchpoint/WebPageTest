@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
+static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -45,6 +46,14 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   ,_browser(browser) {
 
   InitializeCriticalSection(&cs);
+
+  // create a NULL DACL we will use for allowing access to our active mutex
+  ZeroMemory(&null_dacl, sizeof(null_dacl));
+  null_dacl.nLength = sizeof(null_dacl);
+  null_dacl.bInheritHandle = FALSE;
+  if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
+    if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
+      null_dacl.lpSecurityDescriptor = &SD;
 }
 
 /*-----------------------------------------------------------------------------
@@ -58,8 +67,12 @@ WebBrowser::~WebBrowser(void) {
 bool WebBrowser::RunAndWait() {
   bool ret = false;
 
+  // signal to the IE BHO that it needs to inject the code
+  HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
+
   if (_test.Start()) {
     if (_browser._exe.GetLength()) {
+      bool hook = true;
       TCHAR cmdLine[4096];
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
       if (_browser._options.GetLength() )
@@ -73,6 +86,9 @@ bool WebBrowser::RunAndWait() {
             _T("--enable-experimental-extension-apis")) < 0) {
           lstrcat( cmdLine, _T(" --enable-experimental-extension-apis") );
         }
+      }
+      if (exe.Find(_T("iexplore.exe")) >= 0) {
+        hook = false;
       }
       lstrcat ( cmdLine, _T(" about:blank"));
 
@@ -106,7 +122,7 @@ bool WebBrowser::RunAndWait() {
 
         if (_browser._use_symbols)
           FindHookFunctions(pi.hProcess);
-        if (ok && !InstallHook(pi.hProcess)) {
+        if (ok && hook && !InstallHook(pi.hProcess)) {
           ok = false;
           _status.Set(_T("Error instrumenting browser\n"));
         }
@@ -148,7 +164,7 @@ bool WebBrowser::RunAndWait() {
             if (WaitForInputIdle(pi.hProcess, 120000) == 0) {
               if (pi.hThread)
                 SuspendThread(pi.hThread);
-              if (!InstallHook(pi.hProcess))
+              if (hook && !InstallHook(pi.hProcess))
                 ok = false;
               if (pi.hThread) {
                 ResumeThread(pi.hThread);
@@ -185,6 +201,9 @@ bool WebBrowser::RunAndWait() {
       ResetIpfw();
     }
   }
+
+  if (active_event)
+    CloseHandle(active_event);
 
   return ret;
 }

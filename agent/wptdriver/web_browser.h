@@ -58,4 +58,6 @@ private:
   HANDLE        _browser_process;
 
   CRITICAL_SECTION  cs;
+	SECURITY_ATTRIBUTES null_dacl;
+	SECURITY_DESCRIPTOR SD;
 };
