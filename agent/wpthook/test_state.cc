@@ -159,7 +159,7 @@ void TestState::Start() {
     _capturing_aft = true;
   _current_document = _next_document;
   _next_document++;
-  FindBrowserWindow(true);  // the document window may not be available yet
+  UpdateBrowserWindow();  // the document window may not be available yet
 
   // position the browser window
   if (_frame_window) {
@@ -200,7 +200,7 @@ void TestState::ActivityDetected() {
 void TestState::OnNavigate() {
   if (_active) {
     WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
-    FindBrowserWindow(true);
+    UpdateBrowserWindow();
     GrabVideoFrame(true);
     _on_load.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
@@ -234,7 +234,6 @@ void TestState::OnLoad(DWORD load_time) {
                           (_ms_frequency.QuadPart * load_time);
     } else {
       WptTrace(loglevel::kFrequentEvent,_T("[wpthook] - _on_load recorded\n"));
-      FindBrowserWindow();
       _screen_capture.Capture(_document_window, 
                                     CapturedImage::DOCUMENT_COMPLETE);
     }
@@ -383,23 +382,28 @@ void TestState::Done(bool force) {
 /*-----------------------------------------------------------------------------
     Find the browser window that we are going to capture
 -----------------------------------------------------------------------------*/
-void TestState::FindBrowserWindow(bool force) {
-  bool update = force;
-  if (!force) {
-    if (!_frame_window || !_document_window)
-      update = true;
-    else if (!IsWindow(_frame_window) || !IsWindow(_document_window))
-      update = true;
+void TestState::UpdateBrowserWindow() {
+  DWORD browser_process_id = GetCurrentProcessId();
+  if (::FindBrowserWindow(browser_process_id, _frame_window, 
+                          _document_window)) {
+    WptTrace(loglevel::kFunction, 
+              _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
+              _frame_window, _document_window);
+    if (!_document_window)
+      _document_window = _frame_window;
   }
-  if (update) {
-    DWORD browser_process_id = GetCurrentProcessId();
-    if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                            _document_window)) {
-      WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                _frame_window, _document_window);
-      if (!_document_window)
-        _document_window = _frame_window;
+}
+
+/*-----------------------------------------------------------------------------
+    Change the document window
+-----------------------------------------------------------------------------*/
+void TestState::SetDocument(HWND wnd) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - TestState::SetDocument(%d)"), wnd);
+  if (wnd != _document_window) {
+    _document_window = wnd;
+    _frame_window = GetAncestor(_document_window, GA_ROOTOWNER);
+    if (_document_window == _frame_window) {
+      FindViewport();
     }
   }
 }
@@ -432,7 +436,6 @@ void TestState::GrabVideoFrame(bool force) {
         _screen_updated = false;
         _last_video_time.QuadPart = now.QuadPart;
         _video_capture_count++;
-        FindBrowserWindow();
         _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
       }
     }
@@ -462,7 +465,6 @@ void TestState::RenderCheckThread() {
 
       // grab a screen shot
       bool found = false;
-      FindBrowserWindow();
       CapturedImage captured_img = _screen_capture.CaptureImage(
                                 _document_window, CapturedImage::START_RENDER);
       CxImage img;
@@ -551,9 +553,11 @@ void TestState::CollectSystemStats(DWORD ms_from_start) {
       __int64 idle = i.QuadPart - _last_cpu_idle.QuadPart;
       __int64 kernel = k.QuadPart - _last_cpu_kernel.QuadPart;
       __int64 user = u.QuadPart - _last_cpu_user.QuadPart;
-      int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
-                                    / (kernel + user));
-      data.cpu = max(min(cpu_utilization, 100), 0);
+      if (kernel || user) {
+        int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
+                                      / (kernel + user));
+        data.cpu = max(min(cpu_utilization, 100), 0);
+      }
     }
     _last_cpu_idle.QuadPart = i.QuadPart;
     _last_cpu_kernel.QuadPart = k.QuadPart;

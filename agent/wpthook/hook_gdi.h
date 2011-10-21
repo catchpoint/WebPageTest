@@ -69,6 +69,8 @@ public:
 private:
   NCodeHookIA32	hook;
   TestState&  _test_state;
+  CRITICAL_SECTION	cs;
+  CAtlMap<HWND, bool>	_document_windows;
 
   LPBITBLT		    _BitBlt;
   LPENDPAINT		  _EndPaint;

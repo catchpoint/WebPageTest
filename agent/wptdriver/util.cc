@@ -41,6 +41,12 @@ const char * HOOK_OFFSETS_SYMBOL_NAMES[] = {
   "ssl_Read",
 };
 
+static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
+  _T("Internet Explorer_Server"),
+  _T("Chrome_RenderWidgetHostHWND"),
+  _T("MozillaWindowClass")
+};
+
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
@@ -134,43 +140,67 @@ void CopyDirectoryTree(CString source, CString destination) {
 }
 
 /*-----------------------------------------------------------------------------
-  Find what we assume is the browser document window:
-  Largest child window that:
-  - Is visible
-  - Takes > 80% of the parent window's space
-  - Recursively checks the largest child
+  Recursively check to see if the given window has a child of the same class
+  A buffer is passed so we don't have to keep re-allocating it on the stack
 -----------------------------------------------------------------------------*/
-static HWND FindBrowserDocument(HWND parent_window) {
-  HWND document_window = NULL;
-  RECT rect;
-  DWORD biggest_child = 0;
+static bool HasVisibleChildDocument(HWND parent, const TCHAR * class_name, 
+                            TCHAR * buff, DWORD buff_len) {
+  bool has_child_document = false;
+  HWND wnd = ::GetWindow(parent, GW_CHILD);
+  while (wnd && !has_child_document) {
+    if (IsWindowVisible(wnd)) {
+      if (GetClassName(wnd, buff, buff_len) && !lstrcmp(buff, class_name)) {
+        has_child_document = true;
+      } else {
+        has_child_document = HasVisibleChildDocument(wnd, class_name, 
+                                                      buff, buff_len);
+      }
+    }
+    wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
+  }
+  return has_child_document;
+}
 
-  if (GetWindowRect(parent_window, &rect)) {
-    DWORD parent_pixels = abs(rect.right - rect.left) * 
-                          abs(rect.top - rect.bottom);
-    DWORD cutoff = (DWORD)((double)parent_pixels * 0.8);
-    if (parent_pixels) {
-      HWND child = GetWindow(parent_window, GW_CHILD);
-      while (child) {
-        if (IsWindowVisible(child) && GetWindowRect(child, &rect)) {
-          DWORD child_pixels = abs(rect.right - rect.left) * 
-                                abs(rect.top - rect.bottom);
-          if (child_pixels > biggest_child && child_pixels > cutoff) {
-            document_window = child;
-            biggest_child = child_pixels;
-          }
+/*-----------------------------------------------------------------------------
+  See if the given window is a browser document window.
+  A browser document window is detected as:
+  - Having a window class of a known type
+  - Not having any visible child windows of the same type
+-----------------------------------------------------------------------------*/
+bool IsBrowserDocument(HWND wnd) {
+  bool is_document = false;
+  TCHAR class_name[100];
+  if (GetClassName(wnd, class_name, _countof(class_name))) {
+    for (int i = 0; i < _countof(DOCUMENT_WINDOW_CLASSES); i++) {
+      if (!lstrcmp(class_name, DOCUMENT_WINDOW_CLASSES[i])) {
+        if (!HasVisibleChildDocument(wnd, DOCUMENT_WINDOW_CLASSES[i], 
+            class_name, _countof(class_name))) {
+          is_document = true;
         }
-        child = GetWindow(child, GW_HWNDNEXT);
       }
     }
   }
+  return is_document;
+}
 
-  if (document_window) {
-    HWND child_window = FindBrowserDocument(document_window);
-    if (child_window)
-      document_window = child_window;
+/*-----------------------------------------------------------------------------
+  Recursively find the highest visible window for the fiven process
+-----------------------------------------------------------------------------*/
+static HWND FindDocumentWindow(DWORD process_id, HWND parent) {
+  HWND document_window = NULL;
+  HWND wnd = ::GetWindow(parent, GW_CHILD);
+  while (wnd && !document_window) {
+    if (IsWindowVisible(wnd)) {
+      DWORD pid;
+      GetWindowThreadProcessId(wnd, &pid);
+      if (pid == process_id && IsBrowserDocument(wnd)) {
+        document_window = wnd;
+      } else {
+        document_window = FindDocumentWindow(process_id, wnd);
+      }
+    }
+    wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
   }
-
   return document_window;
 }
 
@@ -180,28 +210,12 @@ static HWND FindBrowserDocument(HWND parent_window) {
 bool FindBrowserWindow( DWORD process_id, HWND& frame_window, 
                           HWND& document_window) {
   bool found = false;
-  frame_window = NULL;
-  document_window = NULL;
-
-  HWND wnd = ::GetDesktopWindow();
-  wnd = ::GetWindow(wnd, GW_CHILD);
-  while (!frame_window && wnd) {
-    DWORD pid;
-    GetWindowThreadProcessId(wnd, &pid);
-    if (pid == process_id && IsWindowVisible(wnd)) {
-      LONG style = GetWindowLong(wnd, GWL_STYLE);
-      if (style & WS_SYSMENU && style & WS_CAPTION) {
-        found = true;
-        frame_window = wnd;
-      }
-    }
-    wnd = ::GetNextWindow( wnd , GW_HWNDNEXT);
+  // find a known document window that belongs to this process
+  document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
+  if (document_window) {
+    found = true;
+    frame_window = GetAncestor(document_window, GA_ROOTOWNER);
   }
-
-  if (frame_window) {
-    document_window = FindBrowserDocument(frame_window);
-  }
-
   return found;
 }
 

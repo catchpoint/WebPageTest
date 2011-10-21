@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <TlHelp32.h>
 
-
 namespace loglevel {
   const int kError = 1;
   const int kWarning = 2;
@@ -61,3 +60,4 @@ void GetHookSymbolNames(HookSymbolNames * names);
 void SaveHookOffsets(CString offsets_filename, const HookOffsets& offsets);
 bool GetSavedHookOffsets(CString offsets_filename, HookOffsets * hook_offsets);
 void TerminateProcessAndChildren(DWORD pid);
+bool IsBrowserDocument(HWND wnd);

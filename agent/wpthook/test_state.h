@@ -74,7 +74,8 @@ public:
   void Reset(bool cascade = true);
   void Init();
   void TitleSet(CString title);
-  void FindBrowserWindow(bool force = false);
+  void UpdateBrowserWindow();
+  void SetDocument(HWND wnd);
 
   // times
   LARGE_INTEGER _start;

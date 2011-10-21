@@ -83,6 +83,8 @@ BOOL __stdcall SetWindowTextW_Hook(HWND hWnd, LPCWSTR text)
 -----------------------------------------------------------------------------*/
 CGDIHook::CGDIHook(TestState& test_state):
   _test_state(test_state) {
+  _document_windows.InitHashTable(257);
+  InitializeCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -102,6 +104,7 @@ void CGDIHook::Init() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CGDIHook::~CGDIHook(void) {
+  DeleteCriticalSection(&cs);
   if( pHook == this )
     pHook = NULL;
 }
@@ -117,11 +120,16 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc,
   if( _BitBlt )
     ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
 
-  if (wnd && !_test_state._exit && _test_state._active) {
-    _test_state.FindBrowserWindow();
-    if (wnd == _test_state._document_window) {
-      _test_state._screen_updated = true;
-    }
+  bool is_document = false;
+  if (!_document_windows.Lookup(wnd, is_document)) {
+    is_document = IsBrowserDocument(wnd);
+    _document_windows.SetAt(wnd, is_document);
+  }
+
+  if (wnd && !_test_state._exit && _test_state._active && is_document) {
+    if (wnd != _test_state._document_window)
+      _test_state.SetDocument(wnd);
+    _test_state._screen_updated = true;
   }
 
   return ret;
