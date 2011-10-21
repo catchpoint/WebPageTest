@@ -372,9 +372,6 @@ bool Request::Process() {
   if (_is_active) {
     _is_active = false;
 
-    _test_state._bytes_out = _request_data.GetDataSize();
-    _test_state._bytes_in = _response_data.GetDataSize();
-
     // calculate the times
     if (_start.QuadPart && _end.QuadPart) {
       if (_start.QuadPart > _test_state._start.QuadPart)
@@ -425,9 +422,11 @@ bool Request::Process() {
     // update the overall stats
     int result = GetResult();
     if (!_test_state._first_byte.QuadPart && result == 200 && 
-        _first_byte.QuadPart )
+        _first_byte.QuadPart ) {
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-
+    }
+    _test_state._bytes_out += _request_data.GetDataSize();
+    _test_state._bytes_in += _response_data.GetDataSize();
     _test_state._requests++;
     if (_start.QuadPart <= _test_state._on_load.QuadPart) {
       _test_state._doc_bytes_in += _response_data.GetDataSize();
