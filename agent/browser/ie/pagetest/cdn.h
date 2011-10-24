@@ -38,5 +38,6 @@ CDN_PROVIDER cdnList[] = {
   {".rncdn1.com", _T("Reflected Networks")},
   {".cdngc.net", _T("CDNetworks")},
   {".fastly.net", _T("Fastly")},
+  {".gslb.taobao.com", _T("Taobao")},
 	{NULL, NULL}
 };
