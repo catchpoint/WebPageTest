@@ -37,9 +37,9 @@ CIpfw::CIpfw(void):
 	hDriver = CreateFile (_T("\\\\.\\Ipfw"), GENERIC_READ | GENERIC_WRITE, 0, 
                              NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hDriver != INVALID_HANDLE_VALUE)	{
-		OutputDebugString(_T("Connected to IPFW"));
+		AtlTrace(_T("Connected to IPFW"));
 	} else {
-		OutputDebugString(_T("Could not connect to IPFW"));
+		AtlTrace(_T("Could not connect to IPFW"));
 	}
 }
 
@@ -70,7 +70,7 @@ void DumpBuff(const unsigned char * buff, unsigned long len) {
 		}
 	}
 
-	OutputDebugString(out);
+	AtlTrace(out);
 }
 
 /*-----------------------------------------------------------------------------
@@ -142,8 +142,9 @@ bool CIpfw::Flush() {
 		// Flush both dummynet and IPFW
 		ret = Set(IP_FW_FLUSH, NULL, 0);
 
-		if( ret )
-			OutputDebugString(_T("IPFW flushed"));
+		if( ret ) {
+			AtlTrace(_T("IPFW flushed"));
+    }
 	}
 
 	return ret;
@@ -198,8 +199,9 @@ bool CIpfw::CreatePipe(unsigned int num, unsigned long bandwidth,
 
 		ret = Set(IP_DUMMYNET3, &cmd, sizeof(cmd));
 
-		if( ret )
-			OutputDebugString(_T("Pipe created"));
+		if (ret) {
+			AtlTrace(_T("Pipe created"));
+    }
 	}
 
 	return ret;
@@ -228,8 +230,9 @@ bool CIpfw::DeletePipe(unsigned int num) {
 
 		ret = Set(IP_DUMMYNET3, &cmd, sizeof(cmd));
 
-		if( ret )
-			OutputDebugString(_T("Pipe deleted"));
+		if (ret) {
+			AtlTrace(_T("Pipe deleted"));
+    }
 	}
 
 	return ret;

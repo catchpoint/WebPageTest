@@ -3,9 +3,9 @@
 #include "wpt_task.h"
 
 const TCHAR * TASK_REQUEST = _T("http://127.0.0.1:8888/task");
-const TCHAR * TASK_ON_NAVIGATE = _T("http://127.0.0.1:8888/event/navigate");
-const TCHAR * TASK_ON_LOAD = _T("http://127.0.0.1:8888/event/load");
-const TCHAR * TASK_ON_TITLE = _T("http://127.0.0.1:8888/event/title?title=");
+const TCHAR * EVENT_ON_NAVIGATE = _T("http://127.0.0.1:8888/event/navigate");
+const TCHAR * EVENT_ON_LOAD = _T("http://127.0.0.1:8888/event/load");
+const TCHAR * EVENT_ON_TITLE = _T("http://127.0.0.1:8888/event/title?title=");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -23,7 +23,7 @@ bool WptInterface::GetTask(WptTask& task) {
   bool has_task = false;
   CString response;
   if (HttpGet(TASK_REQUEST, response)) {
-    OutputDebugString(response);
+    AtlTrace(response);
     has_task = task.ParseTask(response);
   }
 
@@ -34,21 +34,21 @@ bool WptInterface::GetTask(WptTask& task) {
 -----------------------------------------------------------------------------*/
 void WptInterface::OnLoad() {
   CString response;
-  HttpGet(TASK_ON_LOAD, response);
+  HttpGet(EVENT_ON_LOAD, response);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptInterface::OnNavigate() {
   CString response;
-  HttpGet(TASK_ON_NAVIGATE, response);
+  HttpGet(EVENT_ON_NAVIGATE, response);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptInterface::OnTitle(CString title) {
   CString response;
-  CString cmd = TASK_ON_TITLE;
+  CString cmd = EVENT_ON_TITLE;
   TCHAR buff[4096];
   DWORD len = _countof(buff);
   if (InternetCanonicalizeUrl(title, buff, &len, ICU_ENCODE_PERCENT))

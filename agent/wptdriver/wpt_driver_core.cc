@@ -224,17 +224,17 @@ void WptDriverCore::Init(void){
   ExtractZipFiles();
 
   // register the IE BHO if it is in the directory
-	TCHAR path[MAX_PATH];
-	if (GetModuleFileName(NULL, path, _countof(path)) ) 	{ 
-		lstrcpy(PathFindFileName(path), _T("wptbho.dll") );
-		HMODULE bho = LoadLibrary(path);
-		if (bho) {
-			DLLREG proc = (DLLREG)GetProcAddress(bho, "DllRegisterServer");
-			if( proc )
-				proc();
-			FreeLibrary(bho);
-		}
-	}
+  TCHAR path[MAX_PATH];
+  if (GetModuleFileName(NULL, path, _countof(path)) ) 	{ 
+    lstrcpy(PathFindFileName(path), _T("wptbho.dll") );
+    HMODULE bho = LoadLibrary(path);
+    if (bho) {
+      DLLREG proc = (DLLREG)GetProcAddress(bho, "DllRegisterServer");
+      if( proc )
+        proc();
+      FreeLibrary(bho);
+    }
+  }
 
   // Get WinPCap ready (install it if necessary)
   _winpcap.Initialize();

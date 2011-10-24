@@ -3,6 +3,7 @@
 #include "json/json.h"
 
 const char * ACTION_NAVIGATE = "navigate";
+const char * ACTION_CLEAR_CACHE = "clearCache";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -56,6 +57,8 @@ bool WptTask::ParseTask(CString task) {
 
         if (action == ACTION_NAVIGATE)
           _action = NAVIGATE;
+        else if (action == ACTION_CLEAR_CACHE)
+          _action = CLEAR_CACHE;
         if (_action != UNDEFINED)
           _valid = true;
       }

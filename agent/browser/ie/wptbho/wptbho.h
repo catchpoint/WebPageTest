@@ -35,7 +35,6 @@ END_COM_MAP()
   BEGIN_SINK_MAP(WptBHO)
     SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_BEFORENAVIGATE2, OnBeforeNavigate2 )
     SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_DOCUMENTCOMPLETE, OnDocumentComplete )
-    SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NAVIGATECOMPLETE2, OnNavigateComplete )
     SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NAVIGATEERROR, OnNavigateError )
     SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NEWWINDOW2, OnNewWindow2 )
     SINK_ENTRY_EX(1, DIID_DWebBrowserEvents2, DISPID_NEWWINDOW3, OnNewWindow3 )
@@ -57,7 +56,6 @@ END_COM_MAP()
               VARIANT * Flags, VARIANT * TargetFrameName, VARIANT * PostData, 
               VARIANT * Headers, VARIANT_BOOL * Cancel );
   STDMETHOD_(void,OnDocumentComplete)( IDispatch *pDisp, VARIANT * vUrl );
-  STDMETHOD_(void,OnNavigateComplete)( IDispatch *pDisp, VARIANT * vUrl );
   STDMETHOD_(void,OnNavigateError)( IDispatch *pDisp, VARIANT *vUrl, 
               VARIANT *TargetFrameName, VARIANT *StatusCode, 
               VARIANT_BOOL *Cancel);

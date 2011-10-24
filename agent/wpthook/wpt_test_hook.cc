@@ -30,6 +30,7 @@ void WptTestHook::LoadFromFile() {
         if (ReadFile(file, buff, len, &bytes_read, 0)) {
           CString test_data(buff);
           if (Load(test_data)) {
+            _clear_cache = shared_cleared_cache;
             BuildScript();
           }
         }

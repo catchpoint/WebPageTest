@@ -9,7 +9,8 @@ public:
 
   typedef enum {
     UNDEFINED,
-    NAVIGATE
+    NAVIGATE,
+    CLEAR_CACHE
   } TASK_ACTION;
 
   bool        _valid;

@@ -34,6 +34,9 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
+static const TCHAR * FLASH_CACHE_DIR = 
+                        _T("Macromedia\\Flash Player\\#SharedObjects");
+static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -209,9 +212,23 @@ bool WebBrowser::RunAndWait() {
 }
 
 /*-----------------------------------------------------------------------------
+  Delete the user profile as well as the flash and silverlight caches
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
   _browser.ResetProfile();
+  TCHAR path[MAX_PATH];
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 
+                    SHGFP_TYPE_CURRENT, path))) {
+    if (PathAppend(path, FLASH_CACHE_DIR)) {
+      DeleteDirectory(path, false);
+    }
+  }
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 
+                    SHGFP_TYPE_CURRENT, path))) {
+    if (PathAppend(path, SILVERLIGHT_CACHE_DIR)) {
+      DeleteDirectory(path, false);
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -308,7 +325,7 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
                 _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
                 test._latency, test._plr );
-    OutputDebugString(buff);
+    AtlTrace(buff);
 
     if (_ipfw.CreatePipe(PIPE_IN, test._bwIn*1000, latency,test._plr/100.0)) {
       // make up for odd values

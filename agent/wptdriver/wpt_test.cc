@@ -380,6 +380,13 @@ void WptTest::BuildScript() {
 
     _script_commands.AddTail(command);
   }
+
+  if (_clear_cache) {
+      ScriptCommand command;
+      command.command = _T("clearCache");
+      command.record = false;
+      _script_commands.AddHead(command);
+  }
 }
 
 /*-----------------------------------------------------------------------------

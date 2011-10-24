@@ -43,7 +43,7 @@ __declspec( dllexport ) DWORD __stdcall RemoteThreadProc(void * thread_data);
     Injected initialization routine
 -----------------------------------------------------------------------------*/
 void __stdcall Initialize(void) {
-  OutputDebugString(_T("[wpthook] Initialize()\n"));
+  AtlTrace(_T("[wpthook] Initialize()\n"));
   #ifdef DEBUG
   //MessageBox(NULL, _T("Attach"), _T("Debugger"), MB_SYSTEMMODAL | MB_OK);
   #endif

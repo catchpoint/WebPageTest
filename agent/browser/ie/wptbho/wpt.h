@@ -26,4 +26,5 @@ private:
 
   // commands
   void  NavigateTo(CString url);
+  void  ClearCache(void);
 };
