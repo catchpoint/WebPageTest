@@ -233,6 +233,7 @@ function GetJob()
                         if( gz_is_file("$testPath/testinfo.json") )
                         {
                             $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                            $testInfoJson['tester'] = $tester;
                             $testInfoJson['started'] = $time;
                             gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
                         }

@@ -1148,6 +1148,8 @@ function GetTestInfoHtml($includeScript = true)
     global $settings;
     global $admin;
     $html = '';
+    if( $admin && isset($test['testinfo']['tester']) )
+        $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom ) 
         $html .= 'DOM Element: <b>' . $dom . '</b><br>';
     if( $test['test']['fvonly'] ) 
