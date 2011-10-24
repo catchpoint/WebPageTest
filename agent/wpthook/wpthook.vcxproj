@@ -149,6 +149,7 @@
     <ClInclude Include="distorm\src\wstring.h" />
     <ClInclude Include="distorm\src\x86defs.h" />
     <ClInclude Include="hook_gdi.h" />
+    <ClInclude Include="hook_schannel.h" />
     <ClInclude Include="jpeg\jconfig.h" />
     <ClInclude Include="jpeg\jdct.h" />
     <ClInclude Include="jpeg\jerror.h" />
@@ -631,6 +632,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="hook_gdi.cc" />
+    <ClCompile Include="hook_schannel.cc" />
     <ClCompile Include="inject.cc" />
     <ClCompile Include="jpeg\jaricom.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

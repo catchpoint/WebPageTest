@@ -84,10 +84,10 @@ NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state) :
 }
 
 NsprHook::~NsprHook() {
-  delete _hook;  // remove all the hooks
   if (g_hook == this) {
     g_hook = NULL;
   }
+  delete _hook;  // remove all the hooks
 }
 
 void NsprHook::Init() {

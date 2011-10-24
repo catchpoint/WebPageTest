@@ -409,6 +409,9 @@
     <ClInclude Include="jpeg\jversion.h">
       <Filter>Third-Party\jpeg\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="hook_schannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -836,6 +839,9 @@
     </ClCompile>
     <ClCompile Include="jpeg\jutils.c">
       <Filter>Third-Party\jpeg\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_schannel.cc">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
