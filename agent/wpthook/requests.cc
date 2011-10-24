@@ -103,6 +103,7 @@ void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
     // See if socket maps to a known request.
     Request * request = NULL;
     if (_active_requests.Lookup(socket_id, request) && request) {
+      _test_state._bytes_in_bandwidth += chunk.GetLength();
       request->DataIn(chunk);
       WptTrace(loglevel::kFunction, 
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),

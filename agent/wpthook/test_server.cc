@@ -156,6 +156,14 @@ void TestServer::MongooseCallback(enum mg_event event,
         _test_state.TitleSet(CString(CA2T(title, CP_UTF8)));
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/status") == 0) {
+      char status[4096];
+      if (mg_get_var(request_info->query_string, 
+                  strlen(request_info->query_string), 
+                  "status", status, _countof(status)) >= 0) {
+        _test_state.OnStatusMessage(CString(CA2T(status, CP_UTF8)));
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 

@@ -96,11 +96,12 @@ void TestState::Reset(bool cascade) {
     _requests = 0;
     _doc_bytes_in = 0;
     _bytes_in = 0;
+    _bytes_in_bandwidth = 0;
     _doc_bytes_out = 0;
     _bytes_out = 0;
     _last_bytes_in = 0;
     _screen_updated = false;
-    _last_data_ms = 0;
+    _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _step_start.QuadPart = 0;
@@ -523,20 +524,19 @@ void TestState::RenderCheckThread() {
 /*-----------------------------------------------------------------------------
     Collect the periodic system stats like cpu/memory/bandwidth.
 -----------------------------------------------------------------------------*/
-void TestState::CollectSystemStats(DWORD ms_from_start) {
-  CProgressData data;
-  data.ms = ms_from_start;
-  DWORD msElapsed = 0;
-  if( data.ms > _last_data_ms )
-    msElapsed = data.ms - _last_data_ms;
+void TestState::CollectSystemStats(LARGE_INTEGER &now) {
+  ProgressData data;
+  data._time.QuadPart = now.QuadPart;
+  DWORD msElapsed = (DWORD)((now.QuadPart - _last_data.QuadPart) / 
+                            _ms_frequency.QuadPart);
 
   // figure out the bandwidth
   if (msElapsed) {
-    double bits = (_bytes_in - _last_bytes_in) * 8;
+    double bits = (_bytes_in_bandwidth - _last_bytes_in) * 8;
     double sec = (double)msElapsed / (double)MS_IN_SEC;
-    data.bpsIn = (DWORD)(bits / sec);
+    data._bpsIn = (DWORD)(bits / sec);
   }
-  _last_bytes_in = _bytes_in;
+  _last_bytes_in = _bytes_in_bandwidth;
 
   // calculate CPU utilization
   FILETIME idle_time, kernel_time, user_time;
@@ -556,7 +556,7 @@ void TestState::CollectSystemStats(DWORD ms_from_start) {
       if (kernel || user) {
         int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
                                       / (kernel + user));
-        data.cpu = max(min(cpu_utilization, 100), 0);
+        data._cpu = max(min(cpu_utilization, 100), 0);
       }
     }
     _last_cpu_idle.QuadPart = i.QuadPart;
@@ -568,22 +568,8 @@ void TestState::CollectSystemStats(DWORD ms_from_start) {
   PROCESS_MEMORY_COUNTERS mem;
   mem.cb = sizeof(mem);
   if( GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem)) )
-    data.mem = mem.WorkingSetSize / 1024;
+    data._mem = mem.WorkingSetSize / 1024;
 
-  // interpolate across multiple time periods
-  if( msElapsed > 100 )
-  {
-    DWORD chunks = msElapsed / 100;
-    for( DWORD i = 1; i < chunks; i++ )
-    {
-      CProgressData d;
-      d.ms = _last_data_ms + (i * 100);
-      d.cpu = data.cpu;
-      d.bpsIn = data.bpsIn;
-      d.mem = data.mem;
-      _progress_data.AddTail(d);
-    }
-  }
   _progress_data.AddTail(data);
 }
 
@@ -597,16 +583,10 @@ void TestState::CollectData() {
   if (_active) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    DWORD ms = 0;
-    if (now.QuadPart > _start.QuadPart)
-      ms = (DWORD)((now.QuadPart - _start.QuadPart) / _ms_frequency.QuadPart);
-    // round it to the closest interval
-    ms = ((DWORD)((ms + (DATA_COLLECTION_INTERVAL / 2)) / 
-                  DATA_COLLECTION_INTERVAL)) * DATA_COLLECTION_INTERVAL;
-    if (ms != _last_data_ms || !_last_data_ms) {
+    if (now.QuadPart > _last_data.QuadPart || !_last_data.QuadPart) {
       GrabVideoFrame();
-      CollectSystemStats(ms);
-      _last_data_ms = ms;
+      CollectSystemStats(now);
+      _last_data.QuadPart = now.QuadPart;
     }
   }
   LeaveCriticalSection(&_data_cs);
@@ -679,4 +659,12 @@ void TestState::FindViewport() {
     }
     captured.Free();
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Browser status message
+-----------------------------------------------------------------------------*/
+void TestState::OnStatusMessage(CString status) {
+  StatusMessage stat(status);
+  _status_messages.AddTail(stat);
 }

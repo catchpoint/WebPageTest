@@ -43,6 +43,7 @@ static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
 static const TCHAR * REQUEST_HEADERS_DATA_FILE = _T("_report.txt");
 static const TCHAR * PROGRESS_DATA_FILE = _T("_progress.csv");
+static const TCHAR * STATUS_MESSAGE_DATA_FILE = _T("_status.txt");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
@@ -95,6 +96,7 @@ void Results::Save(void) {
     SavePageData(checks);
     SaveImages();
     SaveProgressData();
+    SaveStatusMessages();
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -164,17 +166,52 @@ void Results::SaveProgressData(void) {
   while( pos )
   {
     if( progress.IsEmpty() )
-      progress = "Offset Time (ms),Bandwidth In (kbps),CPU Utilization (%),Memory Use (KB)\r\n";
-    CProgressData data = _test_state._progress_data.GetNext(pos);
+      progress = "Offset Time (ms),Bandwidth In (kbps),"
+                  "CPU Utilization (%),Memory Use (KB)\r\n";
+    ProgressData data = _test_state._progress_data.GetNext(pos);
+    DWORD ms = 0;
+    if (data._time.QuadPart > _test_state._start.QuadPart)
+      ms = (DWORD)((data._time.QuadPart - _test_state._start.QuadPart) / 
+                      _test_state._ms_frequency.QuadPart);
     CStringA buff;
-    buff.Format("%d,%d,%0.2f,%d\r\n", data.ms, data.bpsIn, data.cpu, data.mem );
+    buff.Format("%d,%d,%0.2f,%d\r\n", ms, data._bpsIn, data._cpu, data._mem );
     progress += buff;
   }
-  HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+  HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, 
+                                NULL, CREATE_ALWAYS, 0, 0);
   if( hFile != INVALID_HANDLE_VALUE )
   {
     DWORD dwBytes;
     WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
+    CloseHandle(hFile);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Save the browser status messages
+-----------------------------------------------------------------------------*/
+void Results::SaveStatusMessages(void) {
+  CStringA status;
+  POSITION pos = _test_state._status_messages.GetHeadPosition();
+  while( pos )
+  {
+    StatusMessage data = _test_state._status_messages.GetNext(pos);
+    DWORD ms = 0;
+    if (data._time.QuadPart > _test_state._start.QuadPart)
+      ms = (DWORD)((data._time.QuadPart - _test_state._start.QuadPart) / 
+                      _test_state._ms_frequency.QuadPart);
+    CStringA buff;
+    buff.Format("%d\t", ms);
+    status += buff;
+    status += CT2A(data._status, CP_UTF8);
+    status += "\r\n";
+  }
+  HANDLE hFile = CreateFile(_file_base + STATUS_MESSAGE_DATA_FILE, 
+                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+  if( hFile != INVALID_HANDLE_VALUE )
+  {
+    DWORD dwBytes;
+    WriteFile(hFile, (LPCSTR)status, status.GetLength(), &dwBytes, 0);
     CloseHandle(hFile);
   }
 }

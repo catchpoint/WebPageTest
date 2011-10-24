@@ -112,7 +112,7 @@ STDMETHODIMP_(void) WptBHO::OnStatusTextChange(BSTR bstrStatus) {
   CString status(bstrStatus);
   status.Trim();
   if (status.GetLength()) {
-    //OutputDebugString(CString(_T("[WptBHO] - Status: ")) + status);
+    _wpt.OnStatus(status);
   }
 }
 

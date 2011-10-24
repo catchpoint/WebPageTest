@@ -6,6 +6,8 @@ const TCHAR * TASK_REQUEST = _T("http://127.0.0.1:8888/task");
 const TCHAR * EVENT_ON_NAVIGATE = _T("http://127.0.0.1:8888/event/navigate");
 const TCHAR * EVENT_ON_LOAD = _T("http://127.0.0.1:8888/event/load");
 const TCHAR * EVENT_ON_TITLE = _T("http://127.0.0.1:8888/event/title?title=");
+const TCHAR * EVENT_ON_STATUS = 
+                              _T("http://127.0.0.1:8888/event/status?status=");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -49,11 +51,25 @@ void WptInterface::OnNavigate() {
 void WptInterface::OnTitle(CString title) {
   CString response;
   CString cmd = EVENT_ON_TITLE;
-  TCHAR buff[4096];
+  char buff[4096];
   DWORD len = _countof(buff);
-  if (InternetCanonicalizeUrl(title, buff, &len, ICU_ENCODE_PERCENT))
+  if (InternetCanonicalizeUrlA(CT2A(title, CP_UTF8), buff, &len, 
+                                  ICU_ENCODE_PERCENT))
     title = buff;
   HttpGet(cmd + title, response);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptInterface::OnStatus(CString status) {
+  CString response;
+  CString cmd = EVENT_ON_STATUS;
+  char buff[4096];
+  DWORD len = _countof(buff);
+  if (InternetCanonicalizeUrlA(CT2A(status, CP_UTF8), buff, &len, 
+                                  ICU_ENCODE_PERCENT))
+    status = buff;
+  HttpGet(cmd + status, response);
 }
 
 /*-----------------------------------------------------------------------------

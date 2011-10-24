@@ -12,6 +12,7 @@ public:
   void  OnLoad();
   void  OnNavigate();
   void  OnTitle(CString title);
+  void  OnStatus(CString status);
 
 private:
   bool HttpGet(CString url, CString& response);

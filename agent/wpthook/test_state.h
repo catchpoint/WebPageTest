@@ -37,23 +37,41 @@ const int TEST_RESULT_TIMEOUT = 99997;
 const int TEST_RESULT_TIMEOUT_CONTENT_ERROR = 99998;
 const int TEST_RESULT_CONTENT_ERROR = 99999;
 
-class CProgressData {
+class ProgressData {
 public:
-  CProgressData(void):ms(0),bpsIn(0),cpu(0.0),mem(0){}
-  CProgressData(const CProgressData& src){*this = src;}
-  ~CProgressData(){       }
-  const CProgressData& operator =(const CProgressData& src) {
-    ms = src.ms;
-    bpsIn = src.bpsIn;
-    cpu = src.cpu;
-    mem = src.mem;
+  ProgressData(void):_bpsIn(0),_cpu(0.0),_mem(0){ _time.QuadPart = 0; }
+  ProgressData(const ProgressData& src){*this = src;}
+  ~ProgressData(){       }
+  const ProgressData& operator =(const ProgressData& src) {
+    _time.QuadPart = src._time.QuadPart;
+    _bpsIn = src._bpsIn;
+    _cpu = src._cpu;
+    _mem = src._mem;
     return src;
   }
   
-  DWORD           ms;             // milliseconds since start
-  DWORD           bpsIn;          // inbound bandwidth
-  double          cpu;            // CPU utilization
-  DWORD           mem;            // Working set size (in KB)
+  LARGE_INTEGER   _time;
+  DWORD           _bpsIn;          // inbound bandwidth
+  double          _cpu;            // CPU utilization
+  DWORD           _mem;            // Working set size (in KB)
+};
+
+class StatusMessage {
+public:
+  StatusMessage(void){ _time.QuadPart = 0; }
+  StatusMessage(CString status):_status(status){ 
+    QueryPerformanceCounter(&_time);
+  }
+  StatusMessage(const StatusMessage& src){*this = src;}
+  ~StatusMessage(){       }
+  const StatusMessage& operator =(const StatusMessage& src) {
+    _time.QuadPart = src._time.QuadPart;
+    _status = src._status;
+    return src;
+  }
+  
+  LARGE_INTEGER   _time;
+  CString         _status;
 };
 
 class TestState {
@@ -66,6 +84,7 @@ public:
   void OnNavigate();
   void OnLoad(DWORD load_time);
   void OnAllDOMElementsLoaded(DWORD load_time);
+  void OnStatusMessage(CString status);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
   void CheckStartRender();
@@ -96,6 +115,7 @@ public:
   int _requests;
   int _doc_bytes_in;
   int _bytes_in;
+  int _bytes_in_bandwidth;
   int _doc_bytes_out;
   int _bytes_out;
   int _last_bytes_in;
@@ -113,8 +133,8 @@ public:
 
   WptTestHook& _test;
   
-  // CPU, memory and BwIn information.
-  CAtlList<CProgressData> _progress_data;
+  CAtlList<ProgressData>   _progress_data;     // CPU, memory and Bandwidth
+  CAtlList<StatusMessage>  _status_messages;   // Browser status
 
 private:
   int   _next_document;
@@ -125,7 +145,7 @@ private:
   HANDLE  _data_timer;
 
   // tracking of the periodic data capture
-  DWORD _last_data_ms;
+  LARGE_INTEGER  _last_data;
   ULARGE_INTEGER _last_cpu_idle;
   ULARGE_INTEGER _last_cpu_kernel;
   ULARGE_INTEGER _last_cpu_user;
@@ -135,6 +155,6 @@ private:
   CRITICAL_SECTION  _data_cs;
 
   void Done(bool force = false);
-  void CollectSystemStats(DWORD ms_from_start);
+  void CollectSystemStats(LARGE_INTEGER &now);
   void FindViewport();
 };
