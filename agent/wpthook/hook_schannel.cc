@@ -7,29 +7,6 @@
 static SchannelHook* g_hook = NULL;
 
 // Stub Functions
-SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleW_Hook(LPWSTR pszPrincipal,
-    LPWSTR pszPackage, unsigned long fCredentialUse,
-    void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-    void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry) {
-  SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
-  if (g_hook)
-    ret = g_hook->AcquireCredentialsHandleW(pszPrincipal, pszPackage, 
-            fCredentialUse, pvLogonId, pAuthData, pGetKeyFn, pvGetKeyArgument,
-            phCredential, ptsExpiry);
-  return ret;
-}
-
-SECURITY_STATUS SEC_ENTRY AcquireCredentialsHandleA_Hook(LPSTR pszPrincipal,
-    LPSTR pszPackage, unsigned long fCredentialUse,
-    void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-    void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry) {
-  SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
-  if (g_hook)
-    ret = g_hook->AcquireCredentialsHandleA(pszPrincipal, pszPackage, 
-            fCredentialUse, pvLogonId, pAuthData, pGetKeyFn, pvGetKeyArgument,
-            phCredential, ptsExpiry);
-  return ret;
-}
 
 SECURITY_STATUS SEC_ENTRY InitializeSecurityContextW_Hook(
     PCredHandle phCredential,
@@ -94,8 +71,6 @@ SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state):
   _hook(NULL)
   ,_sockets(sockets)
   ,_test_state(test_state)
-  ,_AcquireCredentialsHandleW(NULL)
-  ,_AcquireCredentialsHandleA(NULL)
   ,_InitializeSecurityContextW(NULL)
   ,_InitializeSecurityContextA(NULL)
   ,_DecryptMessage(NULL)
@@ -121,12 +96,6 @@ void SchannelHook::Init() {
   _hook = new NCodeHookIA32();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Init()\n"));
-  _AcquireCredentialsHandleW = _hook->createHookByName(
-      "secur32.dll", "AcquireCredentialsHandleW", 
-      AcquireCredentialsHandleW_Hook);
-  _AcquireCredentialsHandleA = _hook->createHookByName(
-      "secur32.dll", "AcquireCredentialsHandleA", 
-      AcquireCredentialsHandleA_Hook);
   _InitializeSecurityContextW = _hook->createHookByName(
       "secur32.dll", "InitializeSecurityContextW", 
       InitializeSecurityContextW_Hook);
@@ -144,38 +113,6 @@ void SchannelHook::Init() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-SECURITY_STATUS SchannelHook::AcquireCredentialsHandleW(LPWSTR pszPrincipal,
-    LPWSTR pszPackage, unsigned long fCredentialUse,
-    void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-    void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::AcquireCredentialsHandleW()\n"));
-  SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
-  if (_AcquireCredentialsHandleW) {
-    ret = _AcquireCredentialsHandleW(pszPrincipal, pszPackage, 
-            fCredentialUse, pvLogonId, pAuthData, pGetKeyFn, pvGetKeyArgument,
-            phCredential, ptsExpiry);
-  }
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-SECURITY_STATUS SchannelHook::AcquireCredentialsHandleA(LPSTR pszPrincipal,
-    LPSTR pszPackage, unsigned long fCredentialUse,
-    void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-    void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::AcquireCredentialsHandleA()\n"));
-  SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
-  if (_AcquireCredentialsHandleA) {
-    ret = _AcquireCredentialsHandleA(pszPrincipal, pszPackage, 
-            fCredentialUse, pvLogonId, pAuthData, pGetKeyFn, pvGetKeyArgument,
-            phCredential, ptsExpiry);
-  }
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
     PCredHandle phCredential,
     PCtxtHandle phContext, SEC_WCHAR * pszTargetName, 
@@ -184,12 +121,14 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
     unsigned long Reserved2, PCtxtHandle phNewContext,
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::InitializeSecurityContextW()\n"));
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (_InitializeSecurityContextW) {
     ret = _InitializeSecurityContextW(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
+    if (!phContext && phNewContext) {
+      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+    }
   }
   return ret;
 }
@@ -204,12 +143,14 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
     unsigned long Reserved2, PCtxtHandle phNewContext,
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::InitializeSecurityContextA()\n"));
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (_InitializeSecurityContextA) {
     ret = _InitializeSecurityContextA(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
+    if (!phContext && phNewContext) {
+      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+    }
   }
   return ret;
 }
@@ -217,8 +158,10 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 SECURITY_STATUS SchannelHook::DeleteSecurityContext(PCtxtHandle phContext) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::DeleteSecurityContext()\n"));
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
+  if (phContext) {
+    _sockets.ClearSslFd((PRFileDesc *)phContext);
+  }
   if (_DeleteSecurityContext) {
     ret = _DeleteSecurityContext(phContext);
   }
@@ -229,9 +172,23 @@ SECURITY_STATUS SchannelHook::DeleteSecurityContext(PCtxtHandle phContext) {
 -----------------------------------------------------------------------------*/
 SECURITY_STATUS SchannelHook::EncryptMessage(PCtxtHandle phContext, 
     unsigned long fQOP, PSecBufferDesc pMessage, unsigned long MessageSeqNo) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::EncryptMessage()\n"));
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (_EncryptMessage) {
+    SOCKET s = INVALID_SOCKET;
+    _sockets.SslSocketLookup((PRFileDesc *)phContext, s);
+    if (pMessage && !_test_state._exit) {
+      for (ULONG i = 0; i < pMessage->cBuffers; i++) {
+        unsigned long len = pMessage->pBuffers[i].cbBuffer;
+        if (pMessage->pBuffers[i].pvBuffer && len &&
+            pMessage->pBuffers[i].BufferType == SECBUFFER_DATA) {
+          DataChunk chunk((LPCSTR)pMessage->pBuffers[i].pvBuffer, len);
+          // TODO, allow for actual modification of the buffer
+          //if (_sockets.ModifyDataOut(s, chunk, true)) {
+          //}
+          _sockets.DataOut(s, chunk, true);
+        }
+      }
+    }
     ret = _EncryptMessage(phContext, fQOP, pMessage, MessageSeqNo);
   }
   return ret;
@@ -241,10 +198,24 @@ SECURITY_STATUS SchannelHook::EncryptMessage(PCtxtHandle phContext,
 -----------------------------------------------------------------------------*/
 SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext, 
     PSecBufferDesc pMessage,unsigned long MessageSeqNo,unsigned long * pfQOP) {
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::DecryptMessage()\n"));
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (_DecryptMessage) {
+    SOCKET s = INVALID_SOCKET;
     ret = _DecryptMessage(phContext, pMessage, MessageSeqNo, pfQOP);
+    if (ret == SEC_E_OK && pMessage && !_test_state._exit) {
+      if (_sockets.SslSocketLookup((PRFileDesc *)phContext, s) && 
+            s != INVALID_SOCKET) {
+        for (ULONG i = 0; i < pMessage->cBuffers; i++) {
+          unsigned long len = pMessage->pBuffers[i].cbBuffer;
+          if (pMessage->pBuffers[i].pvBuffer && len &&
+              pMessage->pBuffers[i].BufferType == SECBUFFER_DATA) {
+            _sockets.DataIn(s, 
+                      DataChunk((LPCSTR)pMessage->pBuffers[i].pvBuffer, len), 
+                      true);
+          }
+        }
+      }
+    }
   }
   return ret;
 }

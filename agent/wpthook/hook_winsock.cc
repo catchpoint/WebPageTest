@@ -246,6 +246,7 @@ CWsHook::~CWsHook(void) {
 SOCKET CWsHook::WSASocketW(int af, int type, int protocol, 
                   LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = INVALID_SOCKET;
+  _sockets.ResetSslFd();
   if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
     if( ret != INVALID_SOCKET && !_test_state._exit )
@@ -258,6 +259,7 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
 -----------------------------------------------------------------------------*/
 int CWsHook::closesocket(SOCKET s) {
   int ret = SOCKET_ERROR;
+  _sockets.ResetSslFd();
   EnterCriticalSection(&cs);
   _connecting.RemoveKey(s);
   LeaveCriticalSection(&cs);
@@ -273,6 +275,7 @@ int CWsHook::closesocket(SOCKET s) {
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, 
                                                               IN int namelen) {
   int ret = SOCKET_ERROR;
+  _sockets.ResetSslFd();
   if (!_test_state._exit)
     _sockets.Connect(s, name, namelen);
   if (_connect)
@@ -334,6 +337,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       recv_buffers.SetAt(lpOverlapped, buff);
     }
   }
+  _sockets.ResetSslFd();
   return ret;
 }
 
@@ -342,6 +346,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
   if (_send) {
+    _sockets.ClaimSslFd(s);
     DataChunk chunk(buf, len);
     int original_len = len;
     if (len && !_test_state._exit) {
@@ -351,6 +356,7 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
     ret = original_len;
   }
+  _sockets.ResetSslFd();
   return ret;
 }
 
@@ -401,6 +407,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                      dwFlags, lpOverlapped, lpCompletionRoutine);
     }
   }
+  _sockets.ResetSslFd();
   return ret;
 }
 
@@ -410,6 +417,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
               fd_set FAR * exceptfds, const struct timeval FAR * timeout) {
   int ret = SOCKET_ERROR;
+  _sockets.ResetSslFd();
   if (_select)
     ret = _select(nfds, readfds, writefds, exceptfds, timeout);
   if (ret > 0 && writefds && writefds->fd_count && !_connecting.IsEmpty()) {
@@ -429,6 +437,7 @@ int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
 int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                              const ADDRINFOA * pHints, PADDRINFOA * ppResult) {
   int ret = WSAEINVAL;
+  _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CA2T(pNodeName);
   if (!_test_state._exit)
@@ -460,6 +469,7 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
                              const ADDRINFOW * pHints, PADDRINFOW * ppResult) {
   int ret = WSAEINVAL;
+  _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CW2T(pNodeName);
   if (!_test_state._exit)
@@ -491,7 +501,7 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 -----------------------------------------------------------------------------*/
 struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
   struct hostent * ret = NULL;
-
+  _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CA2T(pNodeName);
   if (!_test_state._exit)
@@ -522,6 +532,7 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
 -----------------------------------------------------------------------------*/
 void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo) {
   void * mem = NULL;
+  _sockets.ResetSslFd();
   EnterCriticalSection(&cs);
   if (dns_override.Lookup(pAddrInfo, mem))
     dns_override.RemoveKey(pAddrInfo);
@@ -538,6 +549,7 @@ void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo) {
 -----------------------------------------------------------------------------*/
 void CWsHook::FreeAddrInfoW(PADDRINFOW pAddrInfo) {
   void * mem = NULL;
+  _sockets.ResetSslFd();
   EnterCriticalSection(&cs);
   if (dns_override.Lookup(pAddrInfo, mem))
     dns_override.RemoveKey(pAddrInfo);
@@ -554,7 +566,7 @@ void CWsHook::FreeAddrInfoW(PADDRINFOW pAddrInfo) {
 BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
               LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags) {
   BOOL ret = false;
-
+  _sockets.ResetSslFd();
   if (_WSAGetOverlappedResult)
     ret = _WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, 
                                   lpdwFlags);
@@ -582,6 +594,7 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
 int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject, 
                                 long lNetworkEvents) {
   int ret = SOCKET_ERROR;
+  _sockets.ResetSslFd();
   if (_WSAEventSelect)
     ret = _WSAEventSelect(s, hEventObject, lNetworkEvents);
   return ret;
@@ -592,7 +605,7 @@ int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject,
 int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                             LPWSANETWORKEVENTS lpNetworkEvents) {
   int ret = SOCKET_ERROR;
-
+  _sockets.ResetSslFd();
   if (_WSAEnumNetworkEvents)
     ret = _WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
 

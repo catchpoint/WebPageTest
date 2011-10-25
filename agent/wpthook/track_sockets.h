@@ -81,6 +81,8 @@ public:
   bool IsSslById(DWORD socket_id);
   void SetSslFd(PRFileDesc* fd);
   void ClearSslFd(PRFileDesc* fd);
+  void ClaimSslFd(SOCKET s);
+  void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
   bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
 
@@ -105,6 +107,6 @@ private:
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
 
-  PRFileDesc* _last_ssl_fd;
+  CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
   CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
 };

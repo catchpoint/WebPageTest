@@ -13,14 +13,6 @@ public:
   ~SchannelHook(void);
   void Init();
 
-  SECURITY_STATUS AcquireCredentialsHandleW(LPWSTR pszPrincipal,
-      LPWSTR pszPackage, unsigned long fCredentialUse,
-      void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-      void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry);
-  SECURITY_STATUS AcquireCredentialsHandleA(LPSTR pszPrincipal,
-      LPSTR pszPackage, unsigned long fCredentialUse,
-      void * pvLogonId, void * pAuthData, SEC_GET_KEY_FN pGetKeyFn,
-      void * pvGetKeyArgument, PCredHandle phCredential, PTimeStamp ptsExpiry);
   SECURITY_STATUS InitializeSecurityContextW(PCredHandle phCredential,
       PCtxtHandle phContext, SEC_WCHAR * pszTargetName, 
       unsigned long fContextReq, unsigned long Reserved1,
@@ -48,8 +40,6 @@ private:
   NCodeHookIA32* _hook;
 
   // original functions
-  ACQUIRE_CREDENTIALS_HANDLE_FN_W _AcquireCredentialsHandleW;
-  ACQUIRE_CREDENTIALS_HANDLE_FN_A _AcquireCredentialsHandleA;
   INITIALIZE_SECURITY_CONTEXT_FN_W  _InitializeSecurityContextW;
   INITIALIZE_SECURITY_CONTEXT_FN_A  _InitializeSecurityContextA;
   DELETE_SECURITY_CONTEXT_FN  _DeleteSecurityContext;

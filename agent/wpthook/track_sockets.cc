@@ -44,13 +44,13 @@ bool SocketInfo::IsLocalhost() {
 -----------------------------------------------------------------------------*/
 TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
   _nextSocketId(1)
-  , _last_ssl_fd(NULL)
   , _requests(requests)
   , _test_state(test_state) {
   InitializeCriticalSection(&cs);
   _openSockets.InitHashTable(257);
   _socketInfo.InitHashTable(257);
   _ssl_sockets.InitHashTable(257);
+  _last_ssl_fd.InitHashTable(257);
 }
 
 /*-----------------------------------------------------------------------------
@@ -255,8 +255,8 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
 void TrackSockets::SetSslFd(PRFileDesc* fd) {
   EnterCriticalSection(&cs);
   _ssl_sockets.RemoveKey(fd);
+  _last_ssl_fd.SetAt(GetCurrentThreadId(), fd);
   LeaveCriticalSection(&cs);
-  _last_ssl_fd = fd;
 }
 
 /*-----------------------------------------------------------------------------
@@ -265,8 +265,32 @@ void TrackSockets::SetSslFd(PRFileDesc* fd) {
 void TrackSockets::ClearSslFd(PRFileDesc* fd) {
   EnterCriticalSection(&cs);
   _ssl_sockets.RemoveKey(fd);
+  _last_ssl_fd.RemoveKey(GetCurrentThreadId());
   LeaveCriticalSection(&cs);
-  _last_ssl_fd = NULL;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::ClaimSslFd(SOCKET s) {
+  DWORD thread_id = GetCurrentThreadId();
+  EnterCriticalSection(&cs);
+  PRFileDesc * fd = NULL;
+  if (_last_ssl_fd.Lookup(thread_id, fd) && fd 
+        && s != INVALID_SOCKET) {
+    _ssl_sockets.SetAt(fd, s);
+    SocketInfo* info = GetSocketInfo(s);
+    info->_is_ssl = true;
+  }
+  _last_ssl_fd.RemoveKey(thread_id);
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::ResetSslFd() {
+  EnterCriticalSection(&cs);
+  _last_ssl_fd.RemoveKey(GetCurrentThreadId());
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -274,27 +298,29 @@ void TrackSockets::ClearSslFd(PRFileDesc* fd) {
   had any activity.
 -----------------------------------------------------------------------------*/
 void TrackSockets::SetSslSocket(SOCKET s) {
+  DWORD thread_id = GetCurrentThreadId();
   EnterCriticalSection(&cs);
   SOCKET lookup_socket;
   DWORD socket_id = 0;
+  PRFileDesc * fd = NULL;
   _openSockets.Lookup(s, socket_id);
-  if (_last_ssl_fd && s != INVALID_SOCKET &&
-      !_ssl_sockets.Lookup(_last_ssl_fd, lookup_socket) &&
+  _last_ssl_fd.Lookup(thread_id, fd);
+  if (fd && s != INVALID_SOCKET &&
+      !_ssl_sockets.Lookup(fd, lookup_socket) &&
       (!socket_id || !_requests.HasActiveRequest(socket_id))) {
-    _ssl_sockets.SetAt(_last_ssl_fd, s);
+    _ssl_sockets.SetAt(fd, s);
     SocketInfo* info = GetSocketInfo(s);
     info->_is_ssl = true;
   }
+  _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
-
-  _last_ssl_fd = NULL;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
-  _last_ssl_fd = NULL;  // for good measure
   EnterCriticalSection(&cs);
+  _last_ssl_fd.RemoveKey(GetCurrentThreadId());
   bool ret = _ssl_sockets.Lookup(fd, s);
   LeaveCriticalSection(&cs);
   return ret;
