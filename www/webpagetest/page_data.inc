@@ -109,7 +109,7 @@ function loadPageData($file)
                                 'aft' => (int)$fields[72],
                                 'domElements' => (int)$fields[73],
                                 'pageSpeedVersion' => trim($fields[74]),
-                                'title' => htmlspecialchars(trim($fields[75])),
+                                'title' => htmlspecialchars(trim($fields[75]),ENT_NOQUOTES,'UTF-8'),
                                 'titleTime' => (int)$fields[76]
                             );
                 

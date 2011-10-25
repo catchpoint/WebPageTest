@@ -1771,7 +1771,7 @@ function loadVideo($path)
 /**
 * Escape XML output (insane that PHP doesn't support this natively)
 */
-function xml_entities($text, $charset = 'Windows-1252')
+function xml_entities($text, $charset = 'UTF-8')
 {
     // First we encode html characters that are also invalid in xml
     $text = htmlentities($text, ENT_COMPAT, $charset, false);
