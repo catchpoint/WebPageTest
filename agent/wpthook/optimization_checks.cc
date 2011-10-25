@@ -356,29 +356,28 @@ void OptimizationChecks::CheckCacheStatic()
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
-    if( request && request->_processed && request->IsStatic()) {
-      count++;
-      request->_scores._cache_score = 0;
+    bool expiration_set;
+    int seconds_remaining;
+    if( request && request->_processed && 
+      request->GetExpiresRemaining(expiration_set, seconds_remaining)) {
+      CString mime = request->GetMime().MakeLower();
+      if (mime.Find(_T("/cache-manifest")) == -1) {
+        count++;
+        request->_scores._cache_score = 0;
 
-      long age_in_seconds  = -1;
-      bool exp_present = false;
-      bool cache_control_present = false;
-      request->GetExpiresTime(age_in_seconds, exp_present,
-        cache_control_present);
-      request->_scores._cache_time_secs = age_in_seconds;
-      if( cache_control_present ) {
-        // If age more than month give 100
-        // else if more than hour, give 50
-        if( age_in_seconds >= 2592000 )
-          request->_scores._cache_score = 100;
-        else if( age_in_seconds >= 3600 )
-          request->_scores._cache_score = 50;
+        request->_scores._cache_time_secs = seconds_remaining;
+        if( expiration_set ) {
+          // If age more than 7 days give 100
+          // else if more than hour, give 50
+          if( seconds_remaining >= 604800 )
+            request->_scores._cache_score = 100;
+          else if( seconds_remaining >= 3600 )
+            request->_scores._cache_score = 50;
+        }
+
+        // Add the score to the total.
+        total += request->_scores._cache_score;
       }
-      else if (exp_present && request->GetResult() != 304)
-        request->_scores._cache_score = 100;
-
-      // Add the score to the total.
-      total += request->_scores._cache_score;
     }
   }
   _requests.Unlock();

@@ -32,8 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "track_dns.h"
 #include "../wptdriver/wpt_test.h"
+#include <wininet.h>
 
 const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
+const __int64 NS100_TO_SEC = 10000000;   // convert 100ns intervals to seconds
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -527,32 +529,86 @@ CStringA Request::GetMime() {
 }
 
 /*-----------------------------------------------------------------------------
-  Parse out the expires time in seconds.
+  See how much time is remaining for the object
+  Returns false if the object is explicitly not cacheable
+  (private or negative expires)
 -----------------------------------------------------------------------------*/
-void Request::GetExpiresTime(long& age_in_seconds, bool& exp_present,
-  bool& cache_control_present) {
-  CStringA exp = GetResponseHeader("expires");
-  exp.MakeLower();
-  if( !exp.IsEmpty() )
-    exp_present = true;
-  CStringA cache = GetResponseHeader("cache-control");
-  cache.MakeLower();
-  int index = cache.Find("max-age");
-  if( index > -1 ) {
-    cache_control_present = true;
-    // Extract the age in seconds.
-    int eq = cache.Find("=", index);
-    if( eq > -1 ) {
-      eq++;
-      CStringA str = cache.Right(cache.GetLength() - eq);
-      // Strip off the ", public" etc from the string.
-      int temp_pos = 0;
-      CStringA age_str = str.Tokenize(",", temp_pos);
-      age_in_seconds = _ttol(CA2T(age_str));
+bool Request::GetExpiresRemaining(bool& expiration_set, 
+                                    int& seconds_remaining) {
+  bool is_cacheable = true;
+  expiration_set = false;
+  seconds_remaining = 0;
+
+  CStringA cache = GetResponseHeader("cache-control").MakeLower();
+  CStringA pragma = GetResponseHeader("pragma").MakeLower();
+
+  if (cache.Find("no-store") != -1 || 
+      cache.Find("no-cache") != -1 ||
+      pragma.Find("no-cache") != -1) {
+    is_cacheable = false;
+  } else {
+    CStringA date_string = GetResponseHeader("date").Trim();
+    CStringA age_string = GetResponseHeader("age").Trim();
+    CStringA expires_string = GetResponseHeader("expires").Trim();
+    SYSTEMTIME sys_time;
+    __int64 date_seconds = 0;
+    if (date_string.GetLength() && 
+        InternetTimeToSystemTimeA(date_string, &sys_time, 0)) {
+        date_seconds = SystemTimeToSeconds(sys_time);
+    }
+    if (!date_seconds) {
+      GetSystemTime(&sys_time);
+      date_seconds = SystemTimeToSeconds(sys_time);
+    }
+    if (date_seconds) {
+      if (expires_string.GetLength() && 
+          InternetTimeToSystemTimeA(expires_string, &sys_time, 0)) {
+        __int64 expires_seconds = SystemTimeToSeconds(sys_time);
+        if (expires_seconds) {
+          if (expires_seconds < date_seconds)
+            is_cacheable = false;
+          else {
+            expiration_set = true;
+            seconds_remaining = (int)(expires_seconds - date_seconds);
+          }
+        }
+      }
+    }
+    if (is_cacheable && !expiration_set) {
+      int index = cache.Find("max-age");
+      if( index > -1 ) {
+        int eq = cache.Find("=", index);
+        if( eq > -1 ) {
+          seconds_remaining = atol(cache.Mid(eq + 1).Trim());
+          if (seconds_remaining) {
+            expiration_set = true;
+            if (age_string.GetLength()) {
+              int age = atol(age_string);
+              seconds_remaining -= age;
+            }
+          }
+        }
+      }
     }
   }
+
+  return is_cacheable;
 }
 
+/*-----------------------------------------------------------------------------
+  Convert a System Time into a "seconds since X" format suitable for math
+-----------------------------------------------------------------------------*/
+__int64 Request::SystemTimeToSeconds(SYSTEMTIME& system_time) {
+  __int64 seconds = 0;
+  FILETIME file_time;
+  if (SystemTimeToFileTime(&system_time, &file_time)) {
+    LARGE_INTEGER convert;
+    convert.HighPart = file_time.dwHighDateTime;
+    convert.LowPart = file_time.dwLowDateTime;
+    seconds = convert.QuadPart / NS100_TO_SEC;
+  }
+  return seconds;
+}
 
 /*-----------------------------------------------------------------------------
   Get the start time of this request.

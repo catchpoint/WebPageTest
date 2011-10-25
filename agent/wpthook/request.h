@@ -213,8 +213,7 @@ public:
   CStringA GetHost();
   CStringA GetMime();
   LARGE_INTEGER GetStartTime();
-  void GetExpiresTime(long& age_in_seconds, bool& exp_present,
-                      bool& cache_control_present);
+  bool GetExpiresRemaining(bool& expiration_set, int& seconds_remaining);
   ULONG GetPeerAddress();
 
   bool  _processed;
@@ -252,4 +251,5 @@ private:
   CRITICAL_SECTION cs;
   bool _is_active;
   bool _are_headers_complete;
+  __int64 SystemTimeToSeconds(SYSTEMTIME& system_time);
 };
