@@ -238,6 +238,10 @@ void CWinInetRequest::CrackHeaders(void)
 				response.pragma = value;
 			else if( !tag.CompareNoCase(_T("ETag")) )
 				response.etag = value;
+			else if( !tag.CompareNoCase(_T("Date")) )
+				response.date = value;
+			else if( !tag.CompareNoCase(_T("Age")) )
+				response.age = value;
 		}
 		
 		// on to the next line

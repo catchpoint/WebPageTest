@@ -1971,9 +1971,7 @@ LRESULT CWatchDlg::OnTabChanged(int /*idCtrl*/, LPNMHDR pNMHDR, BOOL& bHandled)
 		settings.codepage = sizeof(TCHAR) == sizeof(char) ? CP_ACP : 1200;
 		
 		// Fill in the contents of the rich edit control based on which they selected
-		if( tab == 2 )
-			GetDlgItem(IDC_RICHEDIT).SendMessage(EM_SETTEXTEX, (WPARAM)&settings, (LPARAM)(LPCTSTR)optReport);
-		else
+		if( tab != 2 )
 		{
 			CString szReport;
 			GenerateReport(szReport);
@@ -2106,38 +2104,6 @@ LRESULT CWatchDlg::OnFileSaveReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*h
 -----------------------------------------------------------------------------*/
 LRESULT CWatchDlg::OnFileSaveOptimizationReport(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
 {
-	if( !optReport.IsEmpty() )
-	{
-		TCHAR szFile[MAX_PATH];
-		szFile[0] = 0;
-		
-		OPENFILENAME ofn;
-		memset(&ofn, 0, sizeof(ofn));
-		ofn.lStructSize = sizeof(ofn);
-		ofn.hwndOwner = m_hWnd;
-		ofn.lpstrFilter = _T("Report Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0");
-		ofn.lpstrFile = szFile;
-		ofn.nMaxFile = _countof(szFile);
-		ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
-		ofn.lpstrDefExt = _T("txt");
-		
-		if( GetSaveFileName(&ofn) )
-		{
-			// create the file
-			HANDLE hFile = CreateFile(szFile, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
-			if( hFile != INVALID_HANDLE_VALUE )
-			{
-				DWORD written;
-				CT2A str((LPCTSTR)optReport);
-				WriteFile(hFile, (LPCSTR)str, optReport.GetLength(), &written, 0);
-				
-				CloseHandle(hFile);
-			}
-		}
-	}
-	else
-		MessageBox(_T("No Optimization Report Available"), _T("AOL Pagetest"));
-	
 	return 0;
 }
 

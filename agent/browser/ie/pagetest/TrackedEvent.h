@@ -143,6 +143,8 @@ public:
 	CString cacheControl;
 	CString pragma;
 	CString etag;
+	CString date;
+	CString age;
 	double ver;
 };
 

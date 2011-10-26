@@ -217,7 +217,6 @@ public:
 	DWORD	script_ABM;
 	
 	// optimization scores
-	CString optReport;
 	int	gzipScore;
 	int	doctypeScore;
 	int keepAliveScore;

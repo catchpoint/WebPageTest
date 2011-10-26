@@ -36,23 +36,6 @@ namespace pagespeed {
 	class Results;
 }
 
-class CReportItem
-{
-public:
-	CReportItem(void){}
-	CReportItem(const CReportItem &src){ *this = src; }
-	~CReportItem(void){}
-	const CReportItem & operator =(const CReportItem &src)
-	{
-		sort = src.sort;
-		report = src.report;
-		return src;
-	}
-
-	CString	sort;
-	CString	report;
-};
-
 class CCDNEntry
 {
 public:
@@ -71,8 +54,6 @@ public:
 	CString provider;
 	bool	isCDN;
 };
-
-typedef CAtlArray<CReportItem>	ReportArray;
 
 class CPagetestReporting :
 	public CScriptEngine
@@ -186,22 +167,20 @@ public:
 
 protected:
 	CString	GenerateSummaryStats(void);
-	void	SortReport(ReportArray& reports);
 
 	// optimization checks
 	void CheckOptimization(void);
-	void CheckGzip(CString &buff);
-	void CheckKeepAlive(CString &buff);
-	void CheckCDN(CString &buff);
-	void CheckCache(CString &buff);
-	void CheckCombine(CString &buff);
-	void CheckCookie(CString &buff);
-	void CheckMinify(CString &buff);
-	void CheckImageCompression(CString &buff);
-	void CheckEtags(CString &buff);
-	void CheckJQuerySelectorId(CString &buff);
-	void CheckPageSpeed(CString &buff);
-	void ProtectedCheckPageSpeed(CString &buff);
+	void CheckGzip();
+	void CheckKeepAlive();
+	void CheckCDN();
+	void CheckCache();
+	void CheckCombine();
+	void CheckCookie();
+	void CheckMinify();
+	void CheckImageCompression();
+	void CheckEtags();
+	void CheckPageSpeed();
+	void ProtectedCheckPageSpeed();
 	virtual void LogError(bool scriptError = false);
 	void SaveHTML(void);
 	void SaveCookies(void);

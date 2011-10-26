@@ -1483,10 +1483,10 @@ void CPagetestReporting::GenerateGUID(void)
 	Wrap the pagespeed check in an exception filter just in case something
 	goes horribly wrong
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::ProtectedCheckPageSpeed(CString &buff)
+void CPagetestReporting::ProtectedCheckPageSpeed()
 {
 	__try{
-		CheckPageSpeed(buff);
+		CheckPageSpeed();
 	}__except(1){}
 }
 
@@ -1501,54 +1501,21 @@ void CPagetestReporting::CheckOptimization(void)
 		// can have those going on while we do the CPU-intensive checks
 		StartCDNLookups();
 
-		optReport.Empty();
-		optReport += CTime::GetCurrentTime().Format(_T("Optimization Report : %x at %X\n\n"));
-		
-		optReport += GenerateSummaryStats();
-		
-		CString buff;
-
-		CheckKeepAlive(buff);
-		optReport += buff;
-
-		CheckGzip(buff);
-		optReport += buff;
-		
-		CheckImageCompression(buff);
-		optReport += buff;
-
-		CheckCache(buff);
-		optReport += buff;
-
-		CheckCombine(buff);
-		optReport += buff;
-		
-		CheckCDN(buff);
-		optReport += buff;
-
-		CheckMinify(buff);
-		optReport += buff;
-		
-		CheckCookie(buff);
-		optReport += buff;
-
-		CheckEtags(buff);
-		optReport += buff;
-		
-		CheckJQuerySelectorId(buff);
-		optReport += buff;
+		CheckKeepAlive();
+		CheckGzip();
+		CheckImageCompression();
+		CheckCache();
+		CheckCombine();
+		CheckCDN();
+		CheckMinify();
+		CheckCookie();
+		CheckEtags();
 
 		// Run all Page Speed checks.
 		// This is the entry point that invokes the Page Speed engine.
 		// only run them if we are running in one-off mode
 		if( saveEverything )
-			ProtectedCheckPageSpeed(buff);
-
-		// pagespeed results will be serialized out as JSON and not part of the text results
-		// (uncomment this for testing)
-		//optReport += buff;
-
-		optReport.Replace(_T("\n"), _T("\r\n"));
+			ProtectedCheckPageSpeed();
 
 		RepaintWaterfall();
 	}
@@ -1781,10 +1748,9 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 /*-----------------------------------------------------------------------------
 	Run Page Speed checks
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckPageSpeed(CString &buff)
+void CPagetestReporting::CheckPageSpeed()
 {
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed\n"));
-	buff = _T("\nPage Speed results:\n");
 
 	// Instantiate an AtExitManager, which is required by some of the
 	// internals of the Page Speed ruleset.
@@ -1835,11 +1801,6 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 	{
 		std::string pagespeedReport;
 		pagespeed::proto::FormattedResultsToTextConverter::Convert(formatted_results, &pagespeedReport);
-		buff += pagespeedReport.c_str();
-	}
-	else 
-	{
-		buff += _T("Failed to compute Page Speed results.\n");
 	}
 
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed complete\n"));
@@ -1848,17 +1809,15 @@ void CPagetestReporting::CheckPageSpeed(CString &buff)
 /*-----------------------------------------------------------------------------
 	Check each text element to make sure it was gzip encoded
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckGzip(CString &buff)
+void CPagetestReporting::CheckGzip()
 {
 	gzipScore = -1;
 	int count = 0;
 	int total = 0;
-	ReportArray	report;
 	DWORD totalBytes = 0;
 	DWORD targetBytes = 0;
 	
 	ATLTRACE(_T("[Pagetest] - CheckGzip\n"));
-	buff = _T("\nGZIP encode all appropriate text assets (text responses > 1400 bytes):\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -1911,19 +1870,8 @@ void CPagetestReporting::CheckGzip(CString &buff)
 							}
 						}
 						
-						CReportItem reportItem;
-						CString sz;
 						if( target < origSize )
-						{
-							DWORD savings = origSize - target;
-							sz.Format(_T("(%0.1f KB, compressed = %0.1f KB - savings of %0.1f KB)"), (double)origSize / 1024.0, (double)target / 1024.0, (double)savings / 1024.0);
-
-							CString scheme = w->scheme + _T("//");
-							reportItem.report = CString(_T("    FAILED ")) + sz + CString(_T(" - ")) + scheme + w->host + w->object + _T("\n");
-							reportItem.sort.Format(_T("%010u %s %s"), 0xFFFFFFFF - savings, (LPCTSTR)w->host, (LPCTSTR)w->object);
-							report.Add(reportItem);
 							w->warning = true;
-						}
 						else
 						{
 							target = origSize;
@@ -1946,43 +1894,25 @@ void CPagetestReporting::CheckGzip(CString &buff)
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-		
 	gzipTotal = totalBytes;
 	gzipTarget = targetBytes;
 	
 	// average the gzip scores of all of the objects for the page
 	if( count && totalBytes )
-	{
 		gzipScore = targetBytes * 100 / totalBytes;
-		CString b;
-		b.Format(_T("  GZIP score : %d\n"), gzipScore);
-		buff += b;
-		b.Format(_T("    %0.1f KB total in compressible text, target size = %0.1f KB - potential savings = %0.1f KB\n"), (double)totalBytes / 1024.0, (double)targetBytes / 1024.0, (double)(totalBytes - targetBytes) / 1024.0 );
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 
 /*-----------------------------------------------------------------------------
 	Make sure any host that served more than one asset used keep-alives
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckKeepAlive(CString &buff)
+void CPagetestReporting::CheckKeepAlive()
 {
 	keepAliveScore = -1;
 	int count = 0;
 	int total = 0;
-	ReportArray	report;
 	
 	ATLTRACE(_T("[Pagetest] - CheckKeepAlive\n"));
-	buff = _T("\nUse persistent connections (keep alive):\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2037,14 +1967,7 @@ void CPagetestReporting::CheckKeepAlive(CString &buff)
 				}
 
 				if( !w->keepAliveScore )
-				{
-					CReportItem reportItem;
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%s %s"), (LPCTSTR)w->host, (LPCTSTR)w->object);
-					report.Add(reportItem);
 					w->warning = true;
-				}
 
 				if( w->keepAliveScore != -1 )
 				{
@@ -2055,40 +1978,24 @@ void CPagetestReporting::CheckKeepAlive(CString &buff)
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
 	// average the keep alive scores of all of the objects for the page
 	if( count )
-	{
 		keepAliveScore = total / count;
-		CString b;
-		b.Format(_T("  Keep-Alive score : %d\n"), keepAliveScore);
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
 	Make sure all static content is served from a CDN 
 	and that only one CDN is used for all content
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckCDN(CString &buff)
+void CPagetestReporting::CheckCDN()
 {
 	staticCdnScore = -1;
 	oneCdnScore = -1;
 	DWORD count = 0;
 	int total = 0;
 	CAtlArray<CString> cdnList;
-	ReportArray	report;
 	
 	ATLTRACE(_T("[Pagetest] - CheckCDN\n"));
-	buff = _T("\nUse a CDN for all static assets:\n");
 
 	// wait for the parallel lookup threads to complete
 	count = hCDNThreads.GetCount();
@@ -2157,26 +2064,12 @@ void CPagetestReporting::CheckCDN(CString &buff)
 				}
 
 				if( !w->staticCdnScore )
-				{
-					CReportItem reportItem;
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%s %s"), (LPCTSTR)w->host, (LPCTSTR)w->object);
-					report.Add(reportItem);
 					w->warning = true;
-				}
 				total += w->staticCdnScore;
 			}
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
 	size_t cnt = cdnList.GetCount();
 	if( cnt )
 	{
@@ -2188,51 +2081,101 @@ void CPagetestReporting::CheckCDN(CString &buff)
 
 	// average the CDN scores of all of the objects for the page
 	if( count )
-	{
 		staticCdnScore = total / count;
-		CString b;
-		b.Format(_T("  CDN score (static objects) : %d\n"), staticCdnScore);
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
+}
 
-	// dump a list of the CDN's
-	CString cdnString;
-	bool hasCDN = false;
-	EnterCriticalSection(&csCDN);
-	pos = cdnLookups.GetHeadPosition();
-	while( pos )
-	{
-		CCDNEntry &entry = cdnLookups.GetNext(pos);
-		if( entry.isCDN )
-		{
-			CString b;
-			b.Format(_T("    %s : %s\n"), (LPCTSTR)entry.name, (LPCTSTR)entry.provider);
-			cdnString += b;
-			hasCDN = true;
-		}
-	}
-	LeaveCriticalSection(&csCDN);
-	if( hasCDN )
-	{
-		buff += _T("\n  CDN's Used:\n");
-		buff += cdnString;
-	}
+/*-----------------------------------------------------------------------------
+  Convert a System Time into a "seconds since X" format suitable for math
+-----------------------------------------------------------------------------*/
+__int64 SystemTimeToSeconds(SYSTEMTIME& system_time) {
+  __int64 seconds = 0;
+  FILETIME file_time;
+  if (SystemTimeToFileTime(&system_time, &file_time)) {
+    LARGE_INTEGER convert;
+    convert.HighPart = file_time.dwHighDateTime;
+    convert.LowPart = file_time.dwLowDateTime;
+    seconds = convert.QuadPart / 10000000;
+  }
+  return seconds;
+}
+
+/*-----------------------------------------------------------------------------
+  See how much time is remaining for the object
+  Returns false if the object is explicitly not cacheable
+  (private or negative expires)
+-----------------------------------------------------------------------------*/
+bool GetExpiresRemaining(CWinInetRequest * w, bool& expiration_set, 
+                                    int& seconds_remaining) {
+  bool is_cacheable = true;
+  expiration_set = false;
+  seconds_remaining = 0;
+
+  CStringA cache = CT2A(w->response.cacheControl.MakeLower());
+  CStringA pragma = CT2A(w->response.pragma.MakeLower());
+
+  if (cache.Find("no-store") != -1 || 
+      cache.Find("no-cache") != -1 ||
+      pragma.Find("no-cache") != -1) {
+    is_cacheable = false;
+  } else {
+    CStringA date_string = CT2A(w->response.date.Trim());
+    CStringA age_string = CT2A(w->response.age.Trim());
+    CStringA expires_string = CT2A(w->response.expires.Trim());
+    SYSTEMTIME sys_time;
+    __int64 date_seconds = 0;
+    if (date_string.GetLength() && 
+        InternetTimeToSystemTimeA(date_string, &sys_time, 0)) {
+        date_seconds = SystemTimeToSeconds(sys_time);
+    }
+    if (!date_seconds) {
+      GetSystemTime(&sys_time);
+      date_seconds = SystemTimeToSeconds(sys_time);
+    }
+    if (date_seconds) {
+      if (expires_string.GetLength() && 
+          InternetTimeToSystemTimeA(expires_string, &sys_time, 0)) {
+        __int64 expires_seconds = SystemTimeToSeconds(sys_time);
+        if (expires_seconds) {
+          if (expires_seconds < date_seconds)
+            is_cacheable = false;
+          else {
+            expiration_set = true;
+            seconds_remaining = (int)(expires_seconds - date_seconds);
+          }
+        }
+      }
+    }
+    if (is_cacheable && !expiration_set) {
+      int index = cache.Find("max-age");
+      if( index > -1 ) {
+        int eq = cache.Find("=", index);
+        if( eq > -1 ) {
+          seconds_remaining = atol(cache.Mid(eq + 1).Trim());
+          if (seconds_remaining) {
+            expiration_set = true;
+            if (age_string.GetLength()) {
+              int age = atol(age_string);
+              seconds_remaining -= age;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return is_cacheable;
 }
 
 /*-----------------------------------------------------------------------------
 	Check each static element to make sure it was cachable
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckCache(CString &buff)
+void CPagetestReporting::CheckCache()
 {
 	cacheScore = -1;
 	int count = 0;
 	int total = 0;
-	ReportArray	report;
 
 	ATLTRACE(_T("[Pagetest] - CheckCache\n"));
-	buff = _T("\nEnable browser caching of static assets:\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2241,128 +2184,48 @@ void CPagetestReporting::CheckCache(CString &buff)
 		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
 		{
 			CWinInetRequest * w = (CWinInetRequest *)e;
-			CString mime = w->response.contentType;
-			mime.MakeLower();
-			CString exp = w->response.expires;
-			exp.Trim();
-			CString cache = w->response.cacheControl;
-			cache.MakeLower();
-			CString pragma = w->response.pragma;
-			pragma.MakeLower();
-			CString object = w->object;
-			object.MakeLower();
-			if( !w->basePage &&
-				w->fromNet &&
-				(w->result == 304 ||
-				(w->result == 200 &&
-				exp != _T("0") && 
-				exp != _T("-1") && 
-				!(cache.Find(_T("no-store")) > -1) &&
-				!(cache.Find(_T("no-cache")) > -1) &&
-				!(pragma.Find(_T("no-cache")) > -1) &&
-				!(mime.Find(_T("/cache-manifest")) > -1)	&&
-				!(mime.Find(_T("/html")) > -1)	&&
-				!(mime.Find(_T("/xhtml")) > -1)	&&
-				(	mime.Find(_T("shockwave-flash")) >= 0 || 
-					object.Right(4) == _T(".swf") ||
-					mime.Find(_T("text/")) >= 0 || 
-					mime.Find(_T("javascript")) >= 0 || 
-					mime.Find(_T("image/")) >= 0))) )
-			{
-				count++;
-				w->cacheScore = 0;
-				CReportItem reportItem;
+			CString mime = w->response.contentType.Trim().MakeLower();
+      bool expiration_set;
+      int seconds_remaining;
+      if (w->result == 200 && mime.Find(_T("/cache-manifest")) == -1 && 
+          GetExpiresRemaining(w, expiration_set, seconds_remaining))
+      {
+        count++;
+        w->cacheScore = 0;
+        w->ttl = seconds_remaining;
+        if( expiration_set ) 
+        {
+          // If age more than 7 days give 100
+          // else if more than hour, give 50
+          if( seconds_remaining >= 604800 )
+            w->cacheScore = 100;
+          else if( seconds_remaining >= 3600 )
+            w->cacheScore = 50;
+        }
 
-				int index = cache.Find(_T("max-age"));
-				if( index > -1 )
-				{
-					int eq = cache.Find(_T("="), index);
-					if( eq > -1 )
-					{
-						eq++;
-						CString str = cache.Right(cache.GetLength() - eq);
-						long age = _ttol(str);
-						w->ttl = age;
-						reportItem.sort.Format(_T("%010u %s %s"), age, (LPCTSTR)w->host, (LPCTSTR)w->object);
+        // Add the score to the total.
+        total += w->cacheScore;
+      }
+    }
+  }
 
-						if( age >= 2592000 )	// a month
-							w->cacheScore = 100;
-						else if( age >= 3600 )	// an hour
-						{
-							CString sz;
-							if( age > 86400 )
-								sz.Format(_T("(%0.1f days) - "), (double)age / 86400.0);
-							else
-								sz.Format(_T("(%0.1f hours) - "), (double)age / 3600.0);
-							CString scheme = w->scheme + _T("//");
-							reportItem.report = CString(_T("    WARNING ")) + sz + scheme + w->host + w->object + _T("\n");
-							w->cacheScore = 50;
-						}
-						else
-						{
-							CString sz;
-							if( age > 60 )
-								sz.Format(_T("(%0.1f minutes) - "), (double)age / 60.0);
-							else
-								sz.Format(_T("(%d seconds) - "), age);
-							CString scheme = w->scheme + _T("//");
-							reportItem.report = CString(_T("    FAILED  ")) + sz + scheme + w->host + w->object + _T("\n");
-						}
-					}
-				}
-				else if( exp.GetLength() && w->result != 304)
-					w->cacheScore = 100;
-				else
-				{
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED  (No max-age or expires) - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%010u %s %s"), 0, (LPCTSTR)w->host, (LPCTSTR)w->object);
-				}
-
-				if( w->cacheScore >= 0 && w->cacheScore < 100 )
-					report.Add(reportItem);
-
-				if( !w->cacheScore )
-					w->warning = true;
-
-				total += w->cacheScore;
-			}
-		}
-	}
-
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
-	// average the Cache scores of all of the objects for the page
+  // average the Cache scores of all of the objects for the page
 	if( count )
-	{
 		cacheScore = total / count;
-		CString b;
-		b.Format(_T("  Cache score : %d\n"), cacheScore);
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
 	Check to make sure CSS and JS files are combined (at least into top-level domain)
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckCombine(CString &buff)
+void CPagetestReporting::CheckCombine()
 {
 	combineScore = 100;	// default to 100 as "no applicable objects" is a success
 	int count = 0;
 	int total = 0;
 	int jsCount = 0;
 	int cssCount = 0;
-	ReportArray	report;
 
 	ATLTRACE(_T("[Pagetest] - CheckCombine\n"));
-	buff = _T("\nCombine static CSS and JS files:\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2391,7 +2254,6 @@ void CPagetestReporting::CheckCombine(CString &buff)
 			{
 				count++;
 				w->combineScore = 0;
-				CReportItem reportItem;
 				
 				if( mime.Find(_T("/css")) >= 0 )
 					cssCount++;
@@ -2433,14 +2295,6 @@ void CPagetestReporting::CheckCombine(CString &buff)
 					w->combineScore = 100;
 
 				if( !w->combineScore )
-				{
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%s %s"), (LPCTSTR)mime, (LPCTSTR)w->host);
-					report.Add(reportItem);
-				}
-
-				if( !w->combineScore )
 					w->warning = true;
 
 				total += w->combineScore;
@@ -2448,39 +2302,23 @@ void CPagetestReporting::CheckCombine(CString &buff)
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
 	// average the Combine scores of all of the objects for the page
 	if( count )
-	{
 		combineScore = max(100 - ((max(jsCount,1) - 1)*10) - ((max(cssCount,1) - 1)*5), 0);
-		CString b;
-		b.Format(_T("  Combine score : %d\n"), combineScore);
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
 	Check to make sure cookies are not set to the TLD
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckCookie(CString &buff)
+void CPagetestReporting::CheckCookie()
 {
 	cookieScore = -1;
 	int count = 0;
 	int total = 0;
 	DWORD totalBytes = 0;
 	DWORD targetBytes = 0;
-	ReportArray	report;
 	
 	ATLTRACE(_T("[Pagetest] - CheckCookie\n"));
-	buff = _T("\nProper cookie usage:\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2527,77 +2365,39 @@ void CPagetestReporting::CheckCookie(CString &buff)
 						mime.Find(_T("javascript")) >= 0 || 
 						mime.Find(_T("image/")) >= 0) )
 				{
-					failStr.Format(_T("    FAILED (Static object with %d cookies - %d bytes) - "), w->request.cookieCount, w->request.cookieSize);
 					w->cookieScore = 0;
 				}
 				else
 				{
-					failStr.Format(_T("   WARNING (%d cookies, %d bytes) - "), w->request.cookieCount, w->request.cookieSize);
 					w->cookieScore = 50;
 					targetBytes += w->request.cookieSize;
 				}
 			}
 			
-			if( w->cookieScore >= 0 && w->cookieScore < 100 )
-			{
-				CReportItem reportItem;
-				CString scheme = w->scheme + _T("//");
-				reportItem.report = failStr + scheme + w->host + w->object + _T("\n");
-
-				int p = 0;
-				do
-				{
-					CString cookie = w->request.cookie.Tokenize(_T(";"), p);
-					if( cookie.GetLength() )
-						reportItem.report += CString(_T("      cookie:")) + cookie + _T("\n");
-				}while(p != -1);
-
-				reportItem.sort.Format(_T("%d %s %d"), w->cookieScore, (LPCTSTR)w->host, 10000000 - w->request.cookieSize);
-				report.Add(reportItem);
-
-				if( !w->cookieScore )
-					w->warning = true;
-			}
+			if( !w->cookieScore )
+				w->warning = true;
 
 			total += w->cookieScore;
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
 	// average the cookie scores of all of the objects for the page
 	if( count )
-	{
 		cookieScore = total / count;
-		CString b;
-		b.Format(_T("  Cookie score : %d\n"), cookieScore);
-		buff += b;
-		b.Format(_T("    %0.1f KB total in outbound cookies, target size = %0.1f KB - potential savings = %0.1f KB\n"), (double)totalBytes / 1024.0, (double)targetBytes / 1024.0, (double)(totalBytes - targetBytes) / 1024.0 );
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
 	Check each js or html element to make sure it has been minified
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckMinify(CString &buff)
+void CPagetestReporting::CheckMinify()
 {
 	minifyScore = -1;
 	int count = 0;
 	int total = 0;
-	ReportArray	report;
 	DWORD totalBytes = 0;
 	DWORD targetBytes = 0;
 
 	ATLTRACE(_T("[Pagetest] - CheckMinify\n"));
-	buff = _T("\nMinify JS:\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2675,54 +2475,16 @@ void CPagetestReporting::CheckMinify(CString &buff)
 
 				w->minifyTotal = w->in;
 				w->minifyTarget = target;
-
-				if( w->minifyScore >= 0 && w->minifyScore < 100 )
-				{
-					CString fail = _T("FAILED");
-					if( w->minifyScore > 0 )
-						fail = _T("WARNING");
-					
-					CString sz;
-					DWORD savings = 0;
-					if( target < origSize )
-					{
-						savings = origSize - target;
-						sz.Format(_T(" (%0.1f KB, minified = %0.1f KB - savings of %0.1f KB)"), (double)origSize / 1024.0, (double)target / 1024.0, (double)savings / 1024.0);
-					}
-
-					CReportItem reportItem;
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    ")) + fail + sz + CString(_T(" - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%010u %s %s"), 0xFFFFFFFF - savings, (LPCTSTR)w->host, (LPCTSTR)w->object);
-					report.Add(reportItem);
-				}
-				
 				total += w->minifyScore;
 			}
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-		
 	minifyTotal = totalBytes;
 	minifyTarget = targetBytes;
 
 	if( count && totalBytes )
-	{
 		minifyScore = targetBytes * 100 / totalBytes;
-		CString b;
-		b.Format(_T("  Minify score : %d\n"), minifyScore);
-		buff += b;
-		b.Format(_T("    %0.1f KB total in minifiable text, target size = %0.1f KB - potential savings = %0.1f KB\n"), (double)totalBytes / 1024.0, (double)targetBytes / 1024.0, (double)(totalBytes - targetBytes) / 1024.0 );
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
@@ -2742,7 +2504,7 @@ static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size, DWORD imagetype
 /*-----------------------------------------------------------------------------
 	Check the images to make sure they have been compressed appropriately
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckImageCompression(CString &buff)
+void CPagetestReporting::CheckImageCompression()
 {
 	compressionScore = -1;
 	int count = 0;
@@ -2750,10 +2512,8 @@ void CPagetestReporting::CheckImageCompression(CString &buff)
 	DWORD totalBytes = 0;
 	DWORD targetBytes = 0;
 	int imgNum = 0;
-	ReportArray	report;
 
 	ATLTRACE(_T("[Pagetest] - CheckImageCompression\n"));
-	buff = _T("\nCompress Images:\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2776,7 +2536,6 @@ void CPagetestReporting::CheckImageCompression(CString &buff)
 				DWORD size = bodyLen;
 				DWORD target = size;
 				count++;
-				CReportItem reportItem;
 
 				CxImage img;
 				if( DecodeImage(img, body, bodyLen, CXIMAGE_FORMAT_UNKNOWN) )
@@ -2808,42 +2567,21 @@ void CPagetestReporting::CheckImageCompression(CString &buff)
 										img.FreeMemory(mem);
 										
 										target = (DWORD)len < size ? (DWORD)len : size;
-
-										// compare image sizes
-										// if the original was within 10% then it's a pass
-										// if it's less than 50% bigger than it's a warning
-										// more than that is a fail
-										double orig = bodyLen;
-										double newLen = (double)len;
-										double delta = orig / newLen;
-										CString szFail = _T("FAILED ");
-										if( delta < 1.1 )
-											w->compressionScore = 100;
-										else if( delta < 1.5 )
-										{
-											w->compressionScore = 50;
-											szFail = "WARNING";
-										}
-										else
-											w->compressionScore = 0;
-
-										if( w->compressionScore != 100 )
-										{
-											CString sz;
-											sz.Format(_T("(%0.1f KB, target = %0.1f KB - savings of %0.1f KB)"), (double)size / 1024.0, (double)target / 1024.0, (double)(size - target) / 1024.0);
-											CString scheme = w->scheme + _T("//");
-											reportItem.report = CString(_T("    ")) + szFail + CString(_T(" ")) + sz + CString(_T("- ")) + scheme + w->host + w->object + _T("\n");
-											reportItem.sort.Format(_T("%010u"), size-target);
-										}
+                    w->compressionScore = 100;
+                    if (target && target < size && size > 1400)
+                    {
+                      double ratio = (double)size / (double)target;
+                      if (ratio >= 1.5)
+                        w->compressionScore = 0;
+                      else if (ratio >= 1.1)
+                        w->compressionScore = 50;
+                    }
 									}
 								}
 								break;
 								
 						default:
 								{
-									CString scheme = w->scheme + _T("//");
-									reportItem.report = CString(_T("    FAILED  (unexpected image type) - ")) + scheme + w->host + w->object + _T("\n");
-									reportItem.sort.Format(_T("%010u"), ((DWORD)-1));
 									w->compressionScore = 0;
 								}
 								break;
@@ -2860,15 +2598,9 @@ void CPagetestReporting::CheckImageCompression(CString &buff)
 				}
 				else
 				{
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED  (couldn't decode image) - ")) + scheme + w->host + w->object + _T("\n");
-					reportItem.sort.Format(_T("%010u"), ((DWORD)-1));
 					w->compressionScore = 0;
 				}
 
-				if( w->compressionScore >= 0 && w->compressionScore < 100 )
-					report.Add(reportItem);
-					
 				if( !w->compressionScore )
 					w->warning = true;
 
@@ -2877,41 +2609,23 @@ void CPagetestReporting::CheckImageCompression(CString &buff)
 		}
 	}
 	
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = (int)report.GetCount() - 1; i >= 0; i-- )
-		buff += report[i].report;
-		
 	compressTotal = totalBytes;
 	compressTarget = targetBytes;
 
 	if( count && totalBytes )
-	{
 		compressionScore = targetBytes * 100 / totalBytes;
-		CString b;
-		b.Format(_T("  Image Compression score : %d\n"), compressionScore);
-		buff += b;
-		b.Format(_T("    %0.1f KB total in images, target size = %0.1f KB - potential savings = %0.1f KB\n"), (double)totalBytes / 1024.0, (double)targetBytes / 1024.0, (double)(totalBytes - targetBytes) / 1024.0 );
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
 }
 
 /*-----------------------------------------------------------------------------
 	Check to make sure there are no ETags
 -----------------------------------------------------------------------------*/
-void CPagetestReporting::CheckEtags(CString &buff)
+void CPagetestReporting::CheckEtags()
 {
 	etagScore = -1;
 	int count = 0;
 	int total = 0;
-	ReportArray	report;
 	
 	ATLTRACE(_T("[Pagetest] - CheckEtags\n"));
-	buff = _T("\nNo ETag headers (ETag headers should generally not be used unless you have an explicit reason to need them):\n");
 	
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2930,150 +2644,14 @@ void CPagetestReporting::CheckEtags(CString &buff)
 				else
 					w->etagScore = 0;
 				
-				if( w->etagScore >= 0 && w->etagScore < 100 )
-				{
-					CReportItem reportItem;
-					CString scheme = w->scheme + _T("//");
-					reportItem.report = CString(_T("    FAILED - ")) + scheme + w->host + w->object + _T("\n");
-
-					reportItem.sort = w->host;
-					report.Add(reportItem);
-				}
-
 				total += w->etagScore;
 			}
 		}
 	}
 
-	// sort the report
-	SortReport(report);
-	
-	// now actually spit out the sorted report
-	for( int i = 0; i < (int)report.GetCount(); i++)
-		buff += report[i].report;
-	
 	// average the cookie scores of all of the objects for the page
 	if( count )
-	{
 		etagScore = total / count;
-		CString b;
-		b.Format(_T("  ETag score : %d\n"), etagScore);
-		buff += b;
-	}
-	else
-		buff += _T("  No appropriate resources present\n");
-}
-
-/*-----------------------------------------------------------------------------
-	Check for common jQuery performance problems
------------------------------------------------------------------------------*/
-void CPagetestReporting::CheckJQuerySelectorId(CString &buff)
-{
-	bool found = false;
-	ATLTRACE(_T("[Pagetest] - CheckJQuerySelectorId\n"));
-	buff = _T("\nJQuery Selectors not descended from an ID:\n");
-	
-	POSITION pos = events.GetHeadPosition();
-	while( pos )
-	{
-		CTrackedEvent * e = events.GetNext(pos);
-		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
-		{
-			CWinInetRequest * w = (CWinInetRequest *)e;
-			CString mime = w->response.contentType;
-			mime.MakeLower();
-
-			if( w->fromNet && w->result == 200 && 
-					((mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) && 
-					w->body && w->bodyLen))
-			{
-				const char * body = (const char *)w->body;
-				try
-				{
-					DWORD count = 0;
-					
-					// regex for any selector not descended from an id or a html element
-					regex regexId("((\\$)|(jQuery))[ ]*\\([ ]*((\"[ ]*[^#<][^\"\\r\\n]*\")|('[ ]*[^#<][^'\\r\\n]*'))[ ]*\\)");
-					
-					// loop through each line of the file
-					DWORD currentLine = 0;
-					const char * end = body + strlen(body);
-					const char * first = body;
-					const char * last = strchr(first, '\n');
-					while( first < end )
-					{
-						currentLine++;
-						if( !last )
-							last = end;
-							
-						if( last > first )
-						{
-							// find all of the matches on the current line
-							cmatch match;
-							while( first < last && regex_search(first, last, match, regexId) )
-							{
-								CString m(CA2T(match.str().c_str()));
-
-								if( !count )
-									buff += CString(_T("    FAILED - ")) + w->scheme + CString(_T("//")) + w->host + w->object + _T("\n");
-								
-								if( count < 10 )
-								{
-									CString txt;
-									txt.Format(_T("        Line %d: "), currentLine);
-									buff += txt + m + _T("\n");
-								}
-
-								found = true;
-								count++;
-
-								// look for any more matches on this line
-								first = match[0].second;
-								first++;
-							}
-						}
-						
-						// on to the next line
-						first = last + 1;
-						if( first < end )
-							last = strchr(first, '\n');
-					}
-					
-					if( count > 10 )
-						buff += _T("        ...\n");
-					if( count )
-					{
-						CString txt;
-						txt.Format(_T("      (%d occurrences)\n\n"), count);
-						buff += txt;
-					}
-				}
-				catch(...)
-				{
-					OutputDebugString(_T("Regex error\n"));
-				}
-			}
-		}
-	}
-	
-	if( !found )
-		buff += _T("  No problems found\n");
-}
-
-/*-----------------------------------------------------------------------------
-	Do a sort on the provided array (bubble sort is fine, not many items)
------------------------------------------------------------------------------*/
-void CPagetestReporting::SortReport(ReportArray& reports)
-{
-	int size = (int)reports.GetCount();
-	for (int j=0; j < size; j++)
-		for(int i=0; i< size - 1; i++)
-			if( reports[i].sort.CompareNoCase(reports[i+1].sort) > 0 )
-			{
-				CReportItem tmp = reports[i];
-				reports[i] = reports[i + 1];
-				reports[i+1] = tmp;
-			}
 }
 
 /*-----------------------------------------------------------------------------

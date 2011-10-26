@@ -182,7 +182,6 @@ void CPagetestBase::Reset(void)
     capturingAFT = false;
 		url.Empty();
 		
-		optReport.Empty();
 		gzipScore = -1;
 		doctypeScore = -1;
 		keepAliveScore = -1;
