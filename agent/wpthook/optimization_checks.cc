@@ -291,26 +291,14 @@ void OptimizationChecks::CheckImageCompression()
           //  break;
           case CXIMAGE_FORMAT_JPG:
             {
-              img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);
-              img.SetCodecOption(16, CXIMAGE_FORMAT_JPG);
+              img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+              img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
               img.SetJpegQuality(85);
               BYTE* mem = NULL;
               long len = 0;
-              if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) ) {
+              if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
                 img.FreeMemory(mem);
-                targetRequestBytes = (DWORD) len < size ? (DWORD) len: size;
-                // If the original was within 10%, then give 100
-                // If it's less than 50% bigger then give 50
-                // More than that is a fail
-                double orig = body.GetLength();
-                double newLen = (double)len;
-                double delta = orig / newLen;
-                if( delta < 1.1 )
-                  request->_scores._image_compression_score = 100;
-                else if( delta < 1.5 )
-                  request->_scores._image_compression_score = 50;
-                else
-                  request->_scores._image_compression_score = 0;
+                targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
               }
             }
             break;
@@ -324,6 +312,18 @@ void OptimizationChecks::CheckImageCompression()
           
           request->_scores._image_compress_total = size;
           request->_scores._image_compress_target = targetRequestBytes;
+          request->_scores._image_compression_score = 100;
+
+          // If the original was within 10%, then give 100
+          // If it's less than 50% bigger then give 50
+          // More than that is a fail
+          if (targetRequestBytes && targetRequestBytes < size && size > 1400) {
+            double ratio = (double)size / (double)targetRequestBytes;
+            if (ratio >= 1.5)
+              request->_scores._image_compression_score = 0;
+            else if (ratio >= 1.1)
+              request->_scores._image_compression_score = 50;
+          }
         }
         total += request->_scores._image_compression_score;
       }
