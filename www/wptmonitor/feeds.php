@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="css/pagestyle.css" type="text/css">
   <style type="text/css">
+    body{background-color: #ffffff;}
     #feeds {background-color: #302f2f; color: #fff; width: 100%; border-collapse: collapse; table-layout: fixed;}
   </style>
 <script type="text/javascript">
