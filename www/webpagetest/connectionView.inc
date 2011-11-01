@@ -114,7 +114,7 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
 
     $totalHeight = $height;
     if( $mime )
-        $totalHeight += (count($mimeColors) + 1) * $rowHeight;
+        $totalHeight += (2 * $rowHeight) + 2;
 
     $left = 250;
     $w = $width - 2 - $left;
@@ -535,16 +535,21 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
     // draw the legend
     if( $mime && !$imageMap )
     {
-        $left = 100;
-        $y = $height + $rowHeight;
+        $mime_count = count($mimeColors);
+        $barWidth = (int)($width / $mime_count);
+        $left = 0;
+        $y_text = $height + 2;
+        $y_bar = $y_text + $rowHeight;
         foreach( $mimeColors as $mimeType => $color )
         {
-            drawBar($im, 4, $y + 1, 94, $y + $rowHeight - 2, $color);
+            $textLeft = $left + (int)(($barWidth - ($fontWidth * strlen($mimeType))) / 2);
+            drawBar($im, $left + 2, $y_bar + 1, $left + $barWidth - 4, $y_bar + $rowHeight - 2, $color);
             foreach( $color as &$col )
                 $col = min(255, (int)($col + ((255 - $col) * 0.4)));
-            drawBar($im, 4, $y + 1, 44, $y + $rowHeight - 2, $color);
-            imagestring($im, $font, $left, $y + 1, $mimeType, $black );
-            $y += $rowHeight;
+            drawBar($im, $left + 2, $y_bar + 1, $left + (int)($barWidth / 2), $y_bar + $rowHeight - 2, $color);
+            imagestring($im, $font, $textLeft, $y_text + 1, $mimeType, $black );
+
+            $left += $barWidth;
         }
     }
     
