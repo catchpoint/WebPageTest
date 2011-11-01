@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "wpt.h"
 #include "wpt_task.h"
+#include <comdef.h>
 
 extern HINSTANCE dll_hinstance;
 
@@ -141,6 +142,33 @@ void Wpt::CheckForTask() {
         case WptTask::CLEAR_CACHE: 
           ClearCache(); 
           break;
+        case WptTask::SET_COOKIE:
+          SetCookie(task._target, task._value);
+          break;
+        case WptTask::EXEC:
+          Exec(task._target);
+          break;
+        case WptTask::CLICK:
+          Click(task._target);
+          break;
+        case WptTask::SET_INNER_HTML:
+          SetInnerHTML(task._target, task._value);
+          break;
+        case WptTask::SET_INNER_TEXT:
+          SetInnerText(task._target, task._value);
+          break;
+        case WptTask::SET_VALUE:
+          SetValue(task._target, task._value);
+          break;
+        case WptTask::SUBMIT_FORM:
+          SubmitForm(task._target);
+          break;
+        case WptTask::BLOCK:
+          Block(task._target);
+          break;
+        case WptTask::SET_DOM_ELEMENT:
+          SetDomElement(task._target);
+          break;
       }
       if (!_active)
         CheckForTask();
@@ -276,3 +304,324 @@ void  Wpt::ClearCache(void) {
   DeleteRegKey(HKEY_CURRENT_USER, REG_DOM_STORAGE, false);
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SetCookie(CString path, CString value) {
+  InternetSetCookieEx(path.Trim(), NULL, value, 
+      INTERNET_COOKIE_EVALUATE_P3P | INTERNET_COOKIE_THIRD_PARTY,
+      (DWORD_PTR)_T("CP=NOI CUR OUR NOR"));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::Exec(CString javascript) {
+  javascript.Replace(_T("\r"), _T(" "));
+  javascript.Replace(_T("\n"), _T(" "));
+  if (_web_browser) {
+    CComPtr<IDispatch> dispatch;
+    if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
+      CComQIPtr<IHTMLDocument2> document = dispatch;
+      if (document) {
+        CComPtr<IHTMLWindow2> window;
+        if (SUCCEEDED(document->get_parentWindow(&window))) {
+          VARIANT var;
+          VariantInit(&var);
+          BSTR lang = SysAllocString(L"Javascript");
+          CComBSTR script = javascript;
+          window->execScript(script, lang, &var);
+          SysFreeString(lang);
+        }
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::Click(CString target) {
+  CComPtr<IHTMLElement> element = FindDomElement(target);
+  if (element) {
+    element->click();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SetInnerHTML(CString target, CString value) {
+  CComPtr<IHTMLElement> element = FindDomElement(target);
+  if (element) {
+    element->put_innerHTML(_bstr_t(value));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SetInnerText(CString target, CString value) {
+  CComPtr<IHTMLElement> element = FindDomElement(target);
+  if (element) {
+    element->put_innerText(_bstr_t(value));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SetValue(CString target, CString value) {
+  CComPtr<IHTMLElement> element = FindDomElement(target);
+  if (element) {
+    CComQIPtr<IHTMLInputElement> input = element;
+    if (input) {
+      input->put_value(_bstr_t(value));
+    } else {
+      CComQIPtr<IHTMLTextAreaElement> textArea = element;
+      if (textArea) {
+        textArea->put_value(_bstr_t(value));
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SubmitForm(CString target) {
+  CComQIPtr<IHTMLFormElement> form = FindDomElement(target);
+  if (form) {
+    form->submit();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::Block(CString block_string) {
+  // TODO: Implement block command
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  Wpt::SetDomElement(CString target) {
+  // TODO: Implement setdomelement command
+}
+
+/*-----------------------------------------------------------------------------
+  Find the given DOM element
+-----------------------------------------------------------------------------*/
+CComPtr<IHTMLElement> Wpt::FindDomElement(CString target) {
+  CComPtr<IHTMLElement> result;
+
+  // first, translate the target string into it's component parts
+  CString attribute = _T("id");
+  CString value = target;
+  value.Trim();
+  int index = target.Find('=');
+  if (index == -1)
+    index = target.Find('\'');
+  int index2 = target.Find('<');
+  attrOperator op = equal;
+  if (index2 != -1 && (index2 < index || index == -1)) {
+    index = index2;
+    op = left;
+  }
+  int index3 = target.Find('^');
+  if (index3 != -1 && (index3 < index || index == -1) 
+      && (index3 < index2 || index2 == -1) ) {
+    index = index3;
+    op = mid;
+  }
+  if (index != -1) {
+    attribute = target.Left(index);
+    value = target.Mid(index + 1);
+    value.Trim();
+    value.Trim(_T("\""));
+  }
+  index = attribute.Find(':');
+  CString tag;
+  if (index != -1) {
+    tag = attribute.Left(index);
+    attribute = attribute.Mid(index + 1);
+  }
+  attribute.Trim();
+  
+  if (_web_browser) {
+    CComPtr<IDispatch> dispatch;
+    if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
+      CComQIPtr<IHTMLDocument2> document = dispatch;
+      if (document) {
+        result = FindDomElementInDocument(tag, attribute, value, op, document);
+      }
+    }
+  }
+  
+  return result;
+}
+
+/*-----------------------------------------------------------------------------
+  Recursively scan the given document and any IFrames within it
+-----------------------------------------------------------------------------*/
+CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag, 
+        CString attribute, CString value, attrOperator op, 
+        CComPtr<IHTMLDocument2> document) {
+  CComPtr<IHTMLElement> result;
+  CComBSTR attrib(attribute);
+  bool innerText = false;
+  bool innerHtml = false;
+  bool sourceIndex = false;
+  if( !attribute.CompareNoCase(_T("innerText")) )
+    innerText = true;
+  else if( !attribute.CompareNoCase(_T("innerHtml")) )
+    innerHtml = true;
+  else if( !attribute.CompareNoCase(_T("sourceIndex")) )
+    sourceIndex = true;
+  if (!attribute.CompareNoCase(_T("class")))
+    attribute = _T("className");
+
+  if (document) {
+    if (!result) {
+      bool ok = false;
+      if (!sourceIndex && !innerText && !innerHtml && op == equal 
+        && tag.IsEmpty() && (!attribute.CompareNoCase(_T("id")))) {
+        CComQIPtr<IHTMLDocument3> doc3 = document;
+        if (doc3) {
+          ok = true;
+          doc3->getElementById(_bstr_t(value), &result);
+        }
+      }
+      if (!ok) {
+        CComPtr<IHTMLElementCollection> dom_elements;
+        ok = false;
+        if (!tag.IsEmpty() || (!attribute.CompareNoCase(_T("name")) 
+            && op == equal)) {
+          CComQIPtr<IHTMLDocument3> doc3 = document;
+          if (doc3) {
+            ok = true;
+            if (!attribute.CompareNoCase(_T("name")) && op == equal) {
+              doc3->getElementsByName(_bstr_t(value), &dom_elements);
+            } else if (!tag.IsEmpty()) {
+              doc3->getElementsByTagName(_bstr_t(tag), &dom_elements);
+            }
+          }
+        }
+        if (!ok && SUCCEEDED(document->get_all(&dom_elements)))
+          ok = true;
+        // scan the collection of DOM elements for the one we are interested in
+        if (ok && dom_elements) {
+          long count = 0;
+          if (SUCCEEDED(dom_elements->get_length(&count))) {
+            for (long i = 0; i < count && !result; i++) {
+              _variant_t index = i;
+              CComPtr<IDispatch> item;
+              if (SUCCEEDED(dom_elements->item(index, index, &item)) && item) {
+                CComQIPtr<IHTMLElement> element = item;
+                if (element) {
+                  ok = false;
+                  if (tag.IsEmpty())
+                    ok = true;
+                  else {
+                    _bstr_t elementTag;
+                    if (SUCCEEDED(element->get_tagName(
+                        elementTag.GetAddress()))) {
+                      CString elTag = elementTag;
+                      if (!tag.CompareNoCase(elTag))
+                        ok = true;
+                    }
+                  }
+                  if (ok) {								
+                    _variant_t varVal;
+                    _bstr_t text;
+                    if (sourceIndex) {
+                      long index;
+                      if (SUCCEEDED(element->get_sourceIndex(&index))) {
+                        long lValue = _ttol(value);
+                        if( index == lValue )
+                          result = element;
+                      }
+                    } else {
+                      if( innerText )
+                        element->get_innerText(text.GetAddress());
+                      else if (innerHtml)
+                        element->get_innerHTML(text.GetAddress());
+                      else if (SUCCEEDED(element->getAttribute(attrib, 0, 
+                                              &varVal))) {
+                        if (varVal.vt != VT_EMPTY && varVal.vt != VT_NULL 
+                          && varVal.vt != VT_ERROR) {
+                          text = (_bstr_t)varVal;
+                        }
+                      }
+                      CString val = text;
+                      val.Trim();
+                      if (val.GetLength()) {
+                        switch (op) {
+                          case equal: {
+                              if( val == value )
+                                result = element;
+                            } break;
+                          case left: {
+                              if( val.Left(value.GetLength()) == value )
+                                result = element;
+                            } break;
+                          case mid: {
+                              if( val.Find(value) > -1 )
+                                result = element;
+                            } break;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // walk the IFrames using OLE (to bypass security blocks)
+    if (!result) {
+      CComQIPtr<IOleContainer> ole(document);
+      if (ole) {
+        CComPtr<IEnumUnknown> objects;
+        if (SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) 
+                        && objects) {
+          IUnknown* pUnk;
+          ULONG uFetched;
+          while (!result && S_OK == objects->Next(1, &pUnk, &uFetched)) {
+            CComQIPtr<IWebBrowser2> browser(pUnk);
+            pUnk->Release();
+            if (browser) {
+              CComPtr<IDispatch> disp;
+              if (SUCCEEDED(browser->get_Document(&disp)) && disp) {
+                CComQIPtr<IHTMLDocument2> frameDoc(disp);
+                if (frameDoc)
+                  result = FindDomElementInDocument(tag, attribute, value, op, 
+                                                          frameDoc);
+              }
+            }
+          }
+        }
+      }			
+    }
+
+    // walk the IFrames diriectly (the OLE way doesn't appear to always work)
+    if (!result) {
+      CComPtr<IHTMLFramesCollection2> frames;
+      if (SUCCEEDED(document->get_frames(&frames)) && frames) {
+        long count = 0;
+        if (SUCCEEDED(frames->get_length(&count))) {
+          for (long i = 0; i < count && !result; i++) {
+            _variant_t index = i;
+            _variant_t varFrame;
+            if (SUCCEEDED(frames->item(&index, &varFrame))) {
+              CComQIPtr<IHTMLWindow2> window(varFrame);
+              if (window) {
+                CComQIPtr<IHTMLDocument2> frameDoc;
+                if (SUCCEEDED(window->get_document(&frameDoc)) && frameDoc)
+                  result = FindDomElementInDocument(tag, attribute, value, op, 
+                                                      frameDoc);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return result;
+}

@@ -4,6 +4,15 @@
 
 const char * ACTION_NAVIGATE = "navigate";
 const char * ACTION_CLEAR_CACHE = "clearCache";
+const char * ACTION_SET_COOKIE = "setCookie";
+const char * ACTION_EXEC = "exec";
+const char * ACTION_CLICK = "click";
+const char * ACTION_SET_INNER_HTML = "setInnerHTML";
+const char * ACTION_SET_INNER_TEXT = "setInnerText";
+const char * ACTION_SET_VALUE = "setValue";
+const char * ACTION_SUBMIT_FORM = "submitForm";
+const char * ACTION_BLOCK = "block";
+const char * ACTION_SET_DOM_ELEMENT = "setDomElement";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -59,6 +68,25 @@ bool WptTask::ParseTask(CString task) {
           _action = NAVIGATE;
         else if (action == ACTION_CLEAR_CACHE)
           _action = CLEAR_CACHE;
+        else if (action == ACTION_SET_COOKIE)
+          _action = SET_COOKIE;
+        else if (action == ACTION_EXEC)
+          _action = EXEC;
+        else if (action == ACTION_CLICK)
+          _action = CLICK;
+        else if (action == ACTION_SET_INNER_HTML)
+          _action = SET_INNER_HTML;
+        else if (action == ACTION_SET_INNER_TEXT)
+          _action = SET_INNER_TEXT;
+        else if (action == ACTION_SET_VALUE)
+          _action = SET_VALUE;
+        else if (action == ACTION_SUBMIT_FORM)
+          _action = SUBMIT_FORM;
+        else if (action == ACTION_BLOCK)
+          _action = BLOCK;
+        else if (action == ACTION_SET_DOM_ELEMENT)
+          _action = SET_DOM_ELEMENT;
+
         if (_action != UNDEFINED)
           _valid = true;
       }
