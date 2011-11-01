@@ -15,3 +15,6 @@ webpagetest.vsmdi
 wptdriver tests/
 .svn
 *.last
+agent/browser/ie/wptbho/wptbho_i.c
+agent/browser/ie/wptbho/wptbho_i.h
+agent/browser/ie/wptbho/wptbho_p.c
