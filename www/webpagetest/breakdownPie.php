@@ -7,7 +7,7 @@ else
 {
     include 'common.inc';
     include 'breakdown.inc';
-    include 'contentColors.inc';
+    require_once('contentColors.inc');
 
     include ("graph/jpgraph.php");
     include ("graph/jpgraph_pie.php"); 
@@ -61,27 +61,12 @@ else
         foreach($breakdown as $type => $data)
         {
             $labels[] = $type;
-            
-            // see if we are on a new category
-            $category = strtok($type, '/');
-            if( strcasecmp($category, $lastType) )
-            {
-                if( strlen($lastType) )
-                    addColors($colors, $lastType, $count);
-                    
-                // reset the counter
-                $count = 0;
-                $lastType = $category;
-            }
-            
+            $colors[] = $data['color'];
             $count++;
         }
-        if( strlen($lastType) )
-            addColors($colors, $lastType, $count);
 
         // set  the actual labels for the wedges
         $pie->SetLabels($labels, 1.1); 
-
         if( count($colors) )
             $pie->SetSliceColors($colors); 
 

@@ -1,5 +1,6 @@
 <?php
 require_once('draw.inc');
+require_once('contentColors.inc');
 
 /**
 * Draw the waterfall view image
@@ -14,6 +15,12 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
     $domElement = $pageData['domTime'];
     $docComplete = $pageData['docTime'];
     $aft = $pageData['aft'];
+    $mime = false;
+    if( isset($options['mime']) )
+        $mime = $options['mime'];
+    $state = false;
+    if( isset($options['state']) )
+        $state = $options['state'];
 
     $thumbnail = false;
     if( isset($options['thumbnail']) )
@@ -142,24 +149,20 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         $im = imagecreate($width, $totalHeight);
     
         // allocate the colors we will need
+        ColorRequests($requests, $thumbnail, $mime, $state);
         $white = GetColor($im, 255, 255, 255);
         $black = GetColor($im, 0, 0, 0);
         $grey = GetColor($im, 240, 240, 240);
         $midGrey = GetColor($im, 208, 208, 208);
         $dkGrey = GetColor($im, 192, 192, 192);
-        $error = GetColor($im, 255, 0, 0);
-        $warning = GetColor($im, 255, 255, 0);
+        $error = GetColor($im, 255, 96, 96);
+        $warning = GetColor($im, 255, 255, 96);
         if( $thumbnail )
         {
             $time_scale_color = $midGrey;
             $border_color = $dkGrey;
             $cpuLine = GetColor($im, 255, 183, 112);
             $bwLine = GetColor($im, 137, 200, 137);
-            $colDNS = array(48,150,158);
-            $colConnect = array(255, 157, 66);
-            $colSSL = array(213,102, 223);
-            $colRequest = array(64, 255, 64);
-            $colContent = array(52,150,255);
         }
         else
         {
@@ -167,11 +170,6 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             $border_color = $black;
             $cpuLine = GetColor($im, 255, 127, 0);
             $bwLine = GetColor($im, 0, 127, 0);
-            $colDNS = array(0,123,132);
-            $colConnect = array(255, 123, 0);
-            $colSSL = array(207, 37, 223);
-            $colRequest = array(0, 255, 0);
-            $colContent = array(0,123,255);
         }
         
         // give it a white background and black border
@@ -237,6 +235,7 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             $color = $white;
             if( $i % 2 == 0 )
                 $color = $grey;
+            $highlight = null;
             if( $request['responseCode'] >= 400 )
                 $color = $error;
             elseif( $request['responseCode'] >= 300 )
@@ -421,8 +420,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
         {
             foreach( $csiInfo as $name => $value )
             {
-		if ($name == 'srt')
-		    continue;
+		        if ($name == 'srt')
+		            continue;
                 $triangleCoord = array(-3, 0,
                                        0, 8,
                                        3, 0
@@ -578,16 +577,26 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             }
 
             // background fill the content download time
-            drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colContent);
+            $requestStart = $start + $request['dnsTime'] + $request['socketTime'] + $request['sslTime'];
+            $xStart = $left + (int)((double)$w * ((double)$requestStart / $range));
+            drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colContent']);
             
             $end = $start;
+            $barHeight = $barBottom - $barTop;
+            if( isset($request['stateHeight']) )
+                $mHeight = min($barHeight, max(2, (int)($barHeight * $request['stateHeight'])));
+            else
+                $mHeight = $barHeight;
+            $mTop = max($barTop, $barTop + (int)(($barHeight - $mHeight) / 2));
+            $mBottom = min($barBottom, $mTop + $mHeight);
             // DNS
             if( $request['dnsTime'] > 0 )
             {
                 $end += $request['dnsTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colDNS);
+                if( array_key_exists('colDNS', $request) )
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colDNS']);
                 $start = $end;
             }
             
@@ -597,7 +606,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $end += $request['socketTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colConnect);
+                if( array_key_exists('colConnect', $request) )
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colConnect']);
                 $start = $end;
             }
 
@@ -607,7 +617,8 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $end += $request['sslTime'];
                 $xStart = $left + (int)((double)$w * ((double)$start / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colSSL);
+                if( array_key_exists('colSSL', $request) )
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colSSL']);
                 $start = $end;
             }
 
@@ -619,32 +630,32 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $xEnd = $left + (int)((double)$w * ((double)$end / $range));
                 if( $xEnd >= $xFullEnd )
                     $xEnd = $xFullEnd - 1;  // allow for a sliver of content download in between stacked requests
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colRequest);
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colRequest']);
                 $start = $end;
             }
             
             // new-style DNS reporting
-            if( $request['dns_end'] > 0 )
+            if( $request['dns_end'] > 0 && array_key_exists('colDNS', $request) )
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colDNS);
+                drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colDNS']);
             }
 
             // new-style SSL reporting (draw before connection reporting to avoid obscuring that)
-            if( $request['ssl_end'] > 0 )
+            if( $request['ssl_end'] > 0 && array_key_exists('colSSL', $request) )
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['ssl_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['ssl_end'] / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colSSL);
+                drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colSSL']);
             }
 
             // new-style connection reporting
-            if( $request['connect_end'] > 0 )
+            if( $request['connect_end'] > 0 && array_key_exists('colConnect', $request) )
             {
                 $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
                 $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
-                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $colConnect);
+                drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colConnect']);
             }
         }
         

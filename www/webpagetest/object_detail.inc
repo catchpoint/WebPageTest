@@ -166,74 +166,93 @@ function getRequests($id, $testPath, $run, $cached, &$secure, &$haveLocations, $
 		}
         
         // load the raw headers if we have them
-        $fileName = $testPath . '/' . $run . $cachedText . '_report.txt';
-        $lines = gz_file($fileName);
-        if( $lines)
+        if ($includeHeaders)
         {
-            $started = false;
-            $request = -1;
-            $requestHeaders = array();
-            $responseHeaders = array();
-            $req = false;
-            $resp = false;
-            foreach($lines as &$line)
+            $fileName = $testPath . '/' . $run . $cachedText . '_report.txt';
+            $lines = gz_file($fileName);
+            if( $lines)
             {
-                $trimmed = trim($line);
-                if( !$started )
+                $started = false;
+                $request = -1;
+                $requestHeaders = array();
+                $responseHeaders = array();
+                $req = false;
+                $resp = false;
+                foreach($lines as &$line)
                 {
-                    if( $trimmed == 'Request details:' )
-                        $started = true;
-                }
-                else
-                {
-                    if( !strncmp($line, 'Request ', 8) )
+                    $trimmed = trim($line);
+                    if( !$started )
                     {
-                        // see if we had a previous request to store
-                        if( $request > -1 && (count($requestHeaders) || count($responseHeaders)) && isset($requests[$request]) )
+                        if( $trimmed == 'Request details:' )
+                            $started = true;
+                    }
+                    else
+                    {
+                        if( !strncmp($line, 'Request ', 8) )
                         {
-                            $requests[$request]['headers'] = array();
-                            $requests[$request]['headers']['request'] = $requestHeaders;
-                            $requests[$request]['headers']['response'] = $responseHeaders;
+                            // see if we had a previous request to store
+                            if( $request > -1 && (count($requestHeaders) || count($responseHeaders)) && isset($requests[$request]) )
+                            {
+                                $requests[$request]['headers'] = array();
+                                $requests[$request]['headers']['request'] = $requestHeaders;
+                                $requests[$request]['headers']['response'] = $responseHeaders;
+                            }
+                            
+                            // start up a new request
+                            $req = false;
+                            $resp = false;
+                            $requestHeaders = array();
+                            $responseHeaders = array();
+                            $parts = explode(' ', $line);
+                            $request = (int)$parts[1];
+                            if( $request > 0 )
+                                $request--;
+                            else
+                                $request = -1;
                         }
-                        
-                        // start up a new request
-                        $req = false;
-                        $resp = false;
-                        $requestHeaders = array();
-                        $responseHeaders = array();
-                        $parts = explode(' ', $line);
-                        $request = (int)$parts[1];
-                        if( $request > 0 )
-                            $request--;
-                        else
-                            $request = -1;
+                        elseif( $trimmed == 'Request Headers:' )
+                        {
+                            $req = true;
+                            $resp = false;
+                        }
+                        elseif( $trimmed == 'Response Headers:' )
+                        {
+                            $req = false;
+                            $resp = true;
+                        }
+                        elseif( strlen($trimmed) )
+                        {
+                            if( $req )
+                                $requestHeaders[] = $trimmed;
+                            if( $resp )
+                                $responseHeaders[] = $trimmed;
+                        }
                     }
-                    elseif( $trimmed == 'Request Headers:' )
-                    {
-                        $req = true;
-                        $resp = false;
-                    }
-                    elseif( $trimmed == 'Response Headers:' )
-                    {
-                        $req = false;
-                        $resp = true;
-                    }
-                    elseif( strlen($trimmed) )
-                    {
-                        if( $req )
-                            $requestHeaders[] = $trimmed;
-                        if( $resp )
-                            $responseHeaders[] = $trimmed;
-                    }
+                }
+
+                // store the last request
+                if( $request > -1 && (count($requestHeaders) || count($responseHeaders)) && isset($requests[$request]) )
+                {
+                    $requests[$request]['headers'] = array();
+                    $requests[$request]['headers']['request'] = $requestHeaders;
+                    $requests[$request]['headers']['response'] = $responseHeaders;
                 }
             }
-
-            // store the last request
-            if( $request > -1 && (count($requestHeaders) || count($responseHeaders)) && isset($requests[$request]) )
+            
+            // see if we have response bodies (just flag if they are present for individual requests
+            $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
+            if (is_file($bodies_file))
             {
-                $requests[$request]['headers'] = array();
-                $requests[$request]['headers']['request'] = $requestHeaders;
-                $requests[$request]['headers']['response'] = $responseHeaders;
+                $zip = new ZipArchive;
+                if ($zip->open($bodies_file) === TRUE) 
+                {
+                    for( $i = 0; $i < $zip->numFiles; $i++ )
+                    {
+                        $index = intval($zip->getNameIndex($i), 10);
+                        if ($index)
+                            $requests[$index - 1]['body'] = true;
+                    }
+                }
             }
         }
 	}

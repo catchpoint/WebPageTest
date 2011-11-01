@@ -1,5 +1,6 @@
 <?php
-include 'object_detail.inc'; 
+include 'object_detail.inc';
+require_once('contentColors.inc'); 
 
 /**
 * Aggregate the individual requests by mime type
@@ -14,27 +15,18 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
     $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
     
     $breakdown = array();
+    $mime_colors = MimeColors();
     
     foreach($requests as $request)
     {
-        $contentType = $request['contentType'];
-        
-        // collapse the various javascript content types together
-        if( !strcasecmp($contentType, "application/x-javascript") || 
-            !strcasecmp($contentType, "text/javascript") || 
-            !strcasecmp($contentType, "text/ecmascript") || 
-            !strcasecmp($contentType, "text/js") || 
-            !strcasecmp($contentType, "application/ecmascript") || 
-            !strcasecmp($contentType, "application/javascript") )
-            $contentType = "javascript";
-        
-        $object = strtolower($request['url']);
-        if( strlen($contentType) && (strstr($object, 'favicon.ico') === FALSE) )
+        $contentType = ContentType($request['contentType']);
+        if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) )
         {
-            if( $breakdown["$contentType"] === null )
+            if( !isset($breakdown[$contentType]) )
             {
-                $current = array();
-                $breakdown["$contentType"] = $current;
+                $entry = array();
+                $entry['color'] = $mime_colors[$contentType];
+                $breakdown["$contentType"] = $entry;
             }
             
             $breakdown["$contentType"]['bytes'] += $request['bytesIn'];

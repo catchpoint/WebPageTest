@@ -1,7 +1,7 @@
 <?php
 include 'common.inc';
 include 'breakdown.inc';
-include 'contentColors.inc';
+require_once('contentColors.inc');
 include 'connectionView.inc';
 require_once('page_data.inc');
 
@@ -81,12 +81,11 @@ if( (int)$test[test][fvonly] == 0 )
             <h3 name="connection">Connection View (First View)</h3>
             <map name="connection_map">
             <?php
-                $mimeColors = requestColors($requestsFv);
                 $summary = array();
                 $connections = getConnections($requestsFv, $summary);
                 $pageData = loadPageRunData($testPath, $run, 0);
                 $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true );
-                $map = drawImage($connections, $summary, $url, $mime, $mimeColors, true, $pageData, $options);
+                $map = drawImage($connections, $summary, $url, $mime, true, $pageData, $options);
                 foreach($map as $entry)
                 {
                     if( $entry['request'] !== NULL )
@@ -143,12 +142,11 @@ if( (int)$test[test][fvonly] == 0 )
             <h3 name="connection">Connection View (Repeat View)</h3>
             <map name="connection_map_rv">
             <?php
-                $mimeColors = requestColors($requestsRv);
                 $summary = array();
                 $connections = getConnections($requestsRv, $summary);
                 $pageData = loadPageRunData($testPath, $run, 1);
                 $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true );
-                $map = drawImage($connections, $summary, $url, $mime, $mimeColors, true, $pageData, $options);
+                $map = drawImage($connections, $summary, $url, $mime, true, $pageData, $options);
                 foreach($map as $entry)
                 {
                     if( $entry['request'] !== NULL )

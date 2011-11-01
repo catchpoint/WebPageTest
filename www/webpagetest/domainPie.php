@@ -1,7 +1,7 @@
 <?php
 include 'common.inc';
 include 'domains.inc';
-include 'contentColors.inc';
+require_once('contentColors.inc');
 
 include ("graph/jpgraph.php");
 include ("graph/jpgraph_pie.php"); 

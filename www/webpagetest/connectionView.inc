@@ -1,13 +1,16 @@
 <?php
 require_once('draw.inc');
+require_once('contentColors.inc');
 
 /**
 * Translate the object data into a series of requests per connection
 * 
 * @param mixed $requests
 */
-function getConnections(&$requests, &$summary)
+function getConnections(&$requests, &$summary, $mime, $state)
 {
+    ColorRequests($requests, false, $mime, $state);
+
     // initialize some defaults
     $connections = array();
     $summary['end'] = 0;
@@ -73,12 +76,13 @@ function getConnections(&$requests, &$summary)
 * @param mixed $connections
 * @return resource
 */
-function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap, &$pageData, $options = null)
+function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData, $options = null)
 {
     $startRender = $pageData['render'];
     $domElement = $pageData['domTime'];
     $docComplete = $pageData['docTime'];
     $aft = $pageData['aft'];
+    $mimeColors = MimeColors();
 
     $cpuHeight = 50;
     $bwHeight = 50;
@@ -163,12 +167,6 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
         $cpuLine = GetColor($im, 255, 127, 0);
         $bwLine = GetColor($im, 0, 127, 0);
         
-        $colDNS = array(0,123,132);
-        $colConnect = array(255, 123, 0);
-        $colSSL = array(207, 37, 223);
-        $colRequest = array(0, 255, 0);
-        $colContent = array(0,123,255);
-
         // give it a white background and black border
         imagefilledrectangle($im, 0, 0, $width, $totalHeight, $white);
         imagerectangle($im, 0, 0, $width - 1, $height - 1, $black);
@@ -434,100 +432,99 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
             }
             else
             {
-                // see if we are drawing in request mode or content type mode
-                if( $mime )
-                {
-                    $col = GetColor($im, $request['color'][0], $request['color'][1], $request['color'][2] );
-                    imagefilledrectangle($im, $xStart, $y + 1, $xEnd, $y + $rowHeight - 4, $white);
-                    imagerectangle($im, $xStart, $y + 1, $xEnd, $y + $rowHeight - 4, $col);
-                    imagerectangle($im, $xStart + 1, $y + 2, $xEnd - 1, $y + $rowHeight - 5, $col);
-                    if( isset($request['downloadOffset']) )
-                    {
-                        $xStart = $left + (int)((double)$w * ((double)$request['downloadOffset'] / $range));
-                        imagefilledrectangle($im, $xStart, $y + 1, $xEnd, $y + $rowHeight - 4, $col);
-                        imageline($im, $xEnd, $y + 1, $xEnd, $y + $rowHeight - 4, $black );
-                    }
-                }
+                $barTop = $y;
+                $barBottom = $y + $rowHeight - 3;
+                $barHeight = $barBottom - $barTop;
+                if( isset($request['stateHeight']) )
+                    $mHeight = min($barHeight, max(2, (int)($barHeight * $request['stateHeight'])));
                 else
+                    $mHeight = $barHeight;
+                $mTop = max($barTop, $barTop + (int)(($barHeight - $mHeight) / 2));
+                $mBottom = min($barBottom, $mTop + $mHeight);
+
+                // background fill the content download time
+                $requestStart = $start + $request['dnsTime'] + $request['socketTime'] + $request['sslTime'];
+                $xStart = $left + (int)((double)$w * ((double)$requestStart / $range));
+                drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colContent']);
+                
+                $end = $start;
+                // DNS
+                if( $request['dnsTime'] > 0 )
                 {
-                    // background fill the content download time
-                    drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colContent);
-                    
-                    $end = $start;
-                    // DNS
-                    if( $request['dnsTime'] > 0 )
-                    {
-                        $end += $request['dnsTime'];
-                        $xStart = $left + (int)((double)$w * ((double)$start / $range));
-                        if( $xStart <= $lastEnd )
-                            $xStart = $lastEnd + 1;
-                        $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
-                        $start = $end;
-                    }
-                    
-                    // socket connect
-                    if( $request['socketTime'] > 0 )
-                    {
-                        $end += $request['socketTime'];
-                        $xStart = $left + (int)((double)$w * ((double)$start / $range));
-                        if( $xStart <= $lastEnd )
-                            $xStart = $lastEnd + 1;
-                        $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
-                        $start = $end;
-                    }
-
-                    // SSL
-                    if( $request['secure'] && $request['sslTime'] > 0 )
-                    {
-                        $end += $request['sslTime'];
-                        $xStart = $left + (int)((double)$w * ((double)$start / $range));
-                        if( $xStart <= $lastEnd )
-                            $xStart = $lastEnd + 1;
-                        $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colSSL);
-                        $start = $end;
-                    }
-
-                    // TTFB
-                    if( $request['ttfb'] > 0 )
-                    {
-                        $end += $request['ttfb'];
-                        $xStart = $left + (int)((double)$w * ((double)$start / $range));
-                        if( $xStart <= $lastEnd )
-                            $xStart = $lastEnd + 1;
-                        $xEnd = $left + (int)((double)$w * ((double)$end / $range));
-                        if( $xEnd >= $xFullEnd )
-                            $xEnd = $xFullEnd - 1;  // allow for a sliver of content download in between stacked requests
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colRequest);
-                        $start = $end;
-                    }
-
-                    // new-style DNS reporting
-                    if( $request['dns_end'] > 0 )
-                    {
-                        $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
-                        $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colDNS);
-                    }
-
-                    // new-style SSL reporting (draw before connection reporting to avoid obscuring that)
-                    if( $request['ssl_end'] > 0 )
-                    {
-                        $xStart = $left + (int)((double)$w * ((double)$request['ssl_start'] / $range));
-                        $xEnd = $left + (int)((double)$w * ((double)$request['ssl_end'] / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colSSL);
-                    }
-
-                    // new-style connection reporting
-                    if( $request['connect_end'] > 0 )
-                    {
-                        $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
-                        $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
-                        drawBar($im, $xStart, $y, $xEnd, $y + $rowHeight - 3, $colConnect);
-                    }
+                    $end += $request['dnsTime'];
+                    $xStart = $left + (int)((double)$w * ((double)$start / $range));
+                    if( $xStart <= $lastEnd )
+                        $xStart = $lastEnd + 1;
+                    $xEnd = $left + (int)((double)$w * ((double)$end / $range));
+                    if( array_key_exists('colDNS', $request) )
+                        drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colDNS']);
+                    $start = $end;
                 }
+                
+                // socket connect
+                if( $request['socketTime'] > 0 )
+                {
+                    $end += $request['socketTime'];
+                    $xStart = $left + (int)((double)$w * ((double)$start / $range));
+                    if( $xStart <= $lastEnd )
+                        $xStart = $lastEnd + 1;
+                    $xEnd = $left + (int)((double)$w * ((double)$end / $range));
+                    if( array_key_exists('colConnect', $request) )
+                        drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colConnect']);
+                    $start = $end;
+                }
+
+                // SSL
+                if( $request['secure'] && $request['sslTime'] > 0 )
+                {
+                    $end += $request['sslTime'];
+                    $xStart = $left + (int)((double)$w * ((double)$start / $range));
+                    if( $xStart <= $lastEnd )
+                        $xStart = $lastEnd + 1;
+                    $xEnd = $left + (int)((double)$w * ((double)$end / $range));
+                    if( array_key_exists('colSSL', $request) )
+                        drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colSSL']);
+                    $start = $end;
+                }
+
+                // TTFB
+                if( $request['ttfb'] > 0 )
+                {
+                    $end += $request['ttfb'];
+                    $xStart = $left + (int)((double)$w * ((double)$start / $range));
+                    if( $xStart <= $lastEnd )
+                        $xStart = $lastEnd + 1;
+                    $xEnd = $left + (int)((double)$w * ((double)$end / $range));
+                    if( $xEnd >= $xFullEnd )
+                        $xEnd = $xFullEnd - 1;  // allow for a sliver of content download in between stacked requests
+                    drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colRequest']);
+                    $start = $end;
+                }
+
+                // new-style DNS reporting
+                if( $request['dns_end'] > 0 && array_key_exists('colDNS', $request) )
+                {
+                    $xStart = $left + (int)((double)$w * ((double)$request['dns_start'] / $range));
+                    $xEnd = $left + (int)((double)$w * ((double)$request['dns_end'] / $range));
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colDNS']);
+                }
+
+                // new-style SSL reporting (draw before connection reporting to avoid obscuring that)
+                if( $request['ssl_end'] > 0 && array_key_exists('colSSL', $request) )
+                {
+                    $xStart = $left + (int)((double)$w * ((double)$request['ssl_start'] / $range));
+                    $xEnd = $left + (int)((double)$w * ((double)$request['ssl_end'] / $range));
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colSSL']);
+                }
+
+                // new-style connection reporting
+                if( $request['connect_end'] > 0 && array_key_exists('colConnect', $request) )
+                {
+                    $xStart = $left + (int)((double)$w * ((double)$request['connect_start'] / $range));
+                    $xEnd = $left + (int)((double)$w * ((double)$request['connect_end'] / $range));
+                    drawBar($im, $xStart, $mTop, $xEnd, $mBottom, $request['colConnect']);
+                }
+
                 $lastEnd = $xFullEnd;
             }
         }
@@ -542,9 +539,10 @@ function drawImage(&$connections, &$summary, $url, $mime, $mimeColors, $imageMap
         $y = $height + $rowHeight;
         foreach( $mimeColors as $mimeType => $color )
         {
-            $col = GetColor($im, $color[0], $color[1], $color[2]);
-            imagefilledrectangle($im, 4, $y + 1, 94, $y + $rowHeight - 2, $col);
-            imagefilledrectangle($im, 6, $y + 3, 44, $y + $rowHeight - 4, $white);
+            drawBar($im, 4, $y + 1, 94, $y + $rowHeight - 2, $color);
+            foreach( $color as &$col )
+                $col = min(255, (int)($col + ((255 - $col) * 0.4)));
+            drawBar($im, 4, $y + 1, 44, $y + $rowHeight - 2, $color);
             imagestring($im, $font, $left, $y + 1, $mimeType, $black );
             $y += $rowHeight;
         }

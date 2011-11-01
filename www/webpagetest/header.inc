@@ -108,7 +108,7 @@
 
         if (!$privateInstall && $_SERVER['HTTP_SSL'] != 'On' && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
         {
-            echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/"></g:plusone>&nbsp;
+            echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/" actions="+1,addtocircles"></g:plusone>&nbsp;
                 <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
                 <script type="text/javascript">
                     (function() {

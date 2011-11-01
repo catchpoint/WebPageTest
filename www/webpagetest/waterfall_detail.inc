@@ -242,6 +242,10 @@ foreach($requests as $reqNum => $request)
 							    echo '<b>Content Download: </b>' . ($request['loadTime'] - $request['ttfb']) . " ms<br>\n";
 						    echo '<b>Bytes In (downloaded): </b>' . number_format($request['bytesIn'] / 1024, 1) . " KB<br>\n";
 						    echo '<b>Bytes Out (uploaded): </b>' . number_format($request['bytesOut'] / 1024, 1) . " KB<br>\n";
+                            if ($request['body']) {
+                                $cached = (int)$_GET["cached"];
+                                echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
+                            }
 					    }
 					    echo "</p>\n";
 					    

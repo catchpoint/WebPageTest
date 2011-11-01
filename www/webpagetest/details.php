@@ -220,7 +220,7 @@ $page_description = "Website performance test details$testLabel";
                     }
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true);
+                $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true, true);
                 ?>
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
@@ -283,13 +283,11 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="connection_view">Connection View</h3>
                 <map name="connection_map">
                 <?php
-                    include 'contentColors.inc';
-                    include 'connectionView.inc';
-                    $mimeColors = requestColors($requests);
+                    require_once('connectionView.inc');
                     $summary = array();
                     $connections = getConnections($requests, $summary);
                     $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $_GET["cached"], 'cpu' => true, 'width' => 930 );
-                    $map = drawImage($connections, $summary, $url, $mime, $mimeColors, true, $data, $options);
+                    $map = drawImage($connections, $summary, $url, $mime, true, $data, $options);
                     foreach($map as $entry)
                     {
                         if( $entry['request'] !== NULL )
