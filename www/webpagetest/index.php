@@ -260,6 +260,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
+                                        <label for="bodies" class="auto_width">
+                                            Save response bodies<br>
+                                            <small>For text resources</small>
+                                        </label>
+                                    </li>
+                                    <li>
                                         <label for="dom_elements" class="auto_width">DOM Element</label>
                                         <input type="text" name="domelement" id="dom_elements" class="text">
                                         <div class="tooltip" style="display:none;">Waits for and records when the indicated DOM element becomes available on the page.  The DOM element 
