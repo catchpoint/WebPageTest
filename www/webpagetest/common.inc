@@ -531,7 +531,7 @@ function gz_file_put_contents($filename, &$data)
     global $settings;
     $ret = false;
     
-    if( !$settings['nogzip'] )
+    if( !$settings['nogzip'] && extension_loaded('zlib') )
     {
         $zip = gzopen("$filename.gz", 'wb9');
         if( $zip !== false )
@@ -577,7 +577,7 @@ function gz_compress($filename)
     global $settings;
     $ret = false;
     
-    if( !$settings['nogzip'] )
+    if( !$settings['nogzip'] && extension_loaded('zlib') )
     {
         $data = file_get_contents($filename);
         if( $data ){
