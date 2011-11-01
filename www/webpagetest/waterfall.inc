@@ -577,7 +577,13 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
             }
 
             // background fill the content download time
-            $requestStart = $start + $request['dnsTime'] + $request['socketTime'] + $request['sslTime'];
+            $requestStart = $start;
+            if ($request['dnsTime'] > 0)
+                $requestStart += $request['dnsTime'];
+            if( $request['socketTime'] > 0 )
+                $requestStart += $request['socketTime'];
+            if( $request['secure'] && $request['sslTime'] > 0 )
+                $requestStart += $request['sslTime'];
             $xStart = $left + (int)((double)$w * ((double)$requestStart / $range));
             drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colContent']);
             

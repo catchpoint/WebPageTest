@@ -443,7 +443,13 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
                 $mBottom = min($barBottom, $mTop + $mHeight);
 
                 // background fill the content download time
-                $requestStart = $start + $request['dnsTime'] + $request['socketTime'] + $request['sslTime'];
+                $requestStart = $start;
+                if ($request['dnsTime'] > 0)
+                    $requestStart += $request['dnsTime'];
+                if( $request['socketTime'] > 0 )
+                    $requestStart += $request['socketTime'];
+                if( $request['secure'] && $request['sslTime'] > 0 )
+                    $requestStart += $request['sslTime'];
                 $xStart = $left + (int)((double)$w * ((double)$requestStart / $range));
                 drawBar($im, $xStart, $barTop, $xEnd, $barBottom, $request['colContent']);
                 
@@ -536,13 +542,13 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
     if( $mime && !$imageMap )
     {
         $mime_count = count($mimeColors);
-        $barWidth = (int)($width / $mime_count);
+        $barWidth = $width / $mime_count;
         $left = 0;
         $y_text = $height + 2;
         $y_bar = $y_text + $rowHeight;
         foreach( $mimeColors as $mimeType => $color )
         {
-            $textLeft = $left + (int)(($barWidth - ($fontWidth * strlen($mimeType))) / 2);
+            $textLeft = $left + (($barWidth - ($fontWidth * strlen($mimeType))) / 2);
             drawBar($im, $left + 2, $y_bar + 1, $left + $barWidth - 4, $y_bar + $rowHeight - 2, $color);
             foreach( $color as &$col )
                 $col = min(255, (int)($col + ((255 - $col) * 0.4)));
