@@ -9,9 +9,9 @@ $mime = false;
 if( array_key_exists('mime', $_REQUEST) && $_REQUEST['mime'] )
     $mime = true;
 
-$state = false;
-if( array_key_exists('state', $_REQUEST) && $_REQUEST['state'] )
-    $state = true;
+$state = true;
+//if( array_key_exists('state', $_REQUEST) && $_REQUEST['state'] )
+//    $state = true;
     
 // get all of the requests
 $secure = false;

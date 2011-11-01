@@ -16,7 +16,7 @@ $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, 
 
 $summary = array();
 $connections = getConnections($requests, $summary);
-$options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true );
+$options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true, 'state' => true );
 $im = drawImage($connections, $summary, $url, $mime, false, $pageData, $options);
 
 // spit the image out to the browser

@@ -308,8 +308,6 @@ $page_description = "Website performance test details$testLabel";
                         <?php if($secure) { ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>
                         <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#00FF00"></div></td><td>Time to First Byte</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#007BFF"></div></td><td>Content Download</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
@@ -322,7 +320,7 @@ $page_description = "Website performance test details$testLabel";
                     $extenstion = 'php';
                     if( FRIENDLY_URLS )
                         $extenstion = 'png';
-                    echo "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached";?>">
+                    echo "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1";?>">
                 </div>
 		        <br><br> 
                 <?php include('./ads/details_middle.inc'); ?>
