@@ -40,30 +40,7 @@ if( count($breakdown) )
             $values[] = $data['requests'];
         else if( !strcasecmp($chartType, 'Bytes') )
             $values[] = $data['bytes'];
-
-        // see if we are on a new TLD
-        $tld = $domain;
-        $first = strpos($domain, '.');
-        if( $first !== false )
-        {
-            $second = strpos($domain, '.', $first+1);
-            if( $second !== false )
-                $tld = substr($domain, 0, $second);
-        }
-        if( strcasecmp($tld, $lastTLD) )
-        {
-            if( strlen($lastTLD) )
-                getColors($colors, $count, $index);
-                
-            // reset the counter
-            $count = 0;
-            $lastTLD = $tld;
-        }
-        
-        $count++;
     }
-    if( strlen($lastTLD) )
-        getColors($colors, $count, $index);
         
     $graph  = new PieGraph($width,$height);
     $graph->SetFrame(false);
@@ -73,9 +50,6 @@ if( count($breakdown) )
 
     // set  the actual labels for the wedges
     $pie->SetLabels($labels, 1.1); 
-
-    if( count($colors) )
-        $pie->SetSliceColors($colors); 
 
     // set other options
     $pie->SetGuideLines( true, true, true); 
