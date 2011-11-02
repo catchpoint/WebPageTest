@@ -196,7 +196,7 @@ public:
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id,
-          TrackSockets& sockets, TrackDns& dns, WptTest& test);
+          TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
@@ -220,6 +220,7 @@ public:
   DWORD _socket_id;
   ULONG _peer_address;
   bool  _is_ssl;
+  bool  _is_spdy;
 
   RequestData  _request_data;
   ResponseData _response_data;

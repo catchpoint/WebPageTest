@@ -67,11 +67,16 @@ public:
   void LookupAddress(void * context, ULONG &addr);
   void LookupDone(void * context, int result);
   void Reset();
-  bool Claim(CString name, LONGLONG before, LONGLONG& start, LONGLONG& end);
+  bool Claim(CString name, ULONG addr, LONGLONG before,
+             LONGLONG& start, LONGLONG& end);
   LONGLONG  GetEarliest(LONGLONG& after);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
+  CAtlMap<ULONG, CString>     _dns_hosts;
   CRITICAL_SECTION            cs;
   TestState&                  _test_state;
   WptTest&                    _test;
+
+private:
+  CString GetHost(ULONG addr);
 };

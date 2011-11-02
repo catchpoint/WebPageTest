@@ -683,7 +683,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += "\t";
   // IP Address
   struct sockaddr_in addr;
-  addr.sin_addr.S_un.S_addr = _sockets.GetPeerAddress(request->_socket_id);
+  addr.sin_addr.S_un.S_addr = request->_peer_address;
   if (addr.sin_addr.S_un.S_addr) {
     buff.Format("%d.%d.%d.%d", addr.sin_addr.S_un.S_un_b.s_b1, 
       addr.sin_addr.S_un.S_un_b.s_b2, addr.sin_addr.S_un.S_un_b.s_b3, 
@@ -694,10 +694,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Action
   result += request->_request_data.GetMethod() + "\t";
   // Host
-  CStringA host = request->GetRequestHeader("x-host");
-  if (!host.GetLength())
-    host = request->GetRequestHeader("host");
-  result += host + "\t";
+  result += request->GetHost() + "\t";
   // URL
   result += request->_request_data.GetObject() + "\t";
   // Response Code

@@ -75,13 +75,18 @@ void * TrackDns::LookupStart(CString& name) {
 void TrackDns::LookupAddress(void * context, ULONG &addr) {
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
+    CString host;
+    if (info->_tracked && !_dns_hosts.Lookup(addr, host) || host.IsEmpty()) {
+      _dns_hosts.SetAt(addr, info->_name);
+    }
     if( info->_override_addr.S_un.S_addr )
       addr = info->_override_addr.S_un.S_addr;
     IN_ADDR address;
     address.S_un.S_addr = addr;
     WptTrace(loglevel::kFrequentEvent, 
-      _T("[wshook] (%d) DNS Lookup address: %d.%d.%d.%d\n"), 
+      _T("[wshook] (%d) DNS Lookup address: %s -> %d.%d.%d.%d\n"), 
       GetCurrentThreadId(),
+      info->_name,
       address.S_un.S_un_b.s_b1
       ,address.S_un.S_un_b.s_b2
       ,address.S_un.S_un_b.s_b3
@@ -126,25 +131,29 @@ void TrackDns::Reset() {
       delete info;
   }
   _dns_lookups.RemoveAll();
+  _dns_hosts.RemoveAll();
   LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
+  For undecoded SPDY sessions (all of them), claim with IP instead of host.
 -----------------------------------------------------------------------------*/
-bool TrackDns::Claim(CString name, LONGLONG before, LONGLONG& start, 
-                      LONGLONG& end) {
+bool TrackDns::Claim(CString name, ULONG addr, LONGLONG before,
+                     LONGLONG& start, LONGLONG& end) {
   bool claimed = false;
   start = 0;
   end = 0;
+  if (!name.GetLength())
+    name = GetHost(addr);
   EnterCriticalSection(&cs);
   POSITION pos = _dns_lookups.GetStartPosition();
   while (pos) {
     DnsInfo * info = NULL;
     void * key = NULL;
     _dns_lookups.GetNextAssoc(pos, key, info);
-    if (info && !info->_accounted_for && 
-        name == info->_name && info->_success && 
-        info->_start.QuadPart <= before && info->_end.QuadPart <= before) {
+    if (info && !info->_accounted_for && info->_success &&
+        info->_start.QuadPart <= before && info->_end.QuadPart <= before &&
+        name == info->_name) {
       info->_accounted_for = true;
       claimed = true;
       start = info->_start.QuadPart;
@@ -174,4 +183,13 @@ LONGLONG TrackDns::GetEarliest(LONGLONG& after) {
   }
   LeaveCriticalSection(&cs);
   return earliest;
+}
+
+/*-----------------------------------------------------------------------------
+  For undecoded SPDY sessions (all of them), we get the host from the IP.
+-----------------------------------------------------------------------------*/
+CString TrackDns::GetHost(ULONG addr) {
+  CString host;
+  _dns_hosts.Lookup(addr, host);
+  return host;
 }

@@ -261,9 +261,11 @@ void ResponseData::Dechunk() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id,
-                  TrackSockets& sockets, TrackDns& dns, WptTest& test):
-  _processed(false)
+                 TrackSockets& sockets, TrackDns& dns, WptTest& test,
+                 bool is_spdy)
+  : _processed(false)
   , _socket_id(socket_id)
+  , _is_spdy(is_spdy)
   , _ms_start(0)
   , _ms_first_byte(0)
   , _ms_end(0)
@@ -309,7 +311,9 @@ void Request::DataIn(DataChunk& chunk) {
     if (!_first_byte.QuadPart) {
       _first_byte.QuadPart = _end.QuadPart;
     }
-    _response_data.AddChunk(chunk);
+    if (!_is_spdy) {
+      _response_data.AddChunk(chunk);
+    }
   }
   LeaveCriticalSection(&cs);
 }
@@ -319,7 +323,7 @@ void Request::DataIn(DataChunk& chunk) {
 bool Request::ModifyDataOut(DataChunk& chunk) {
   bool is_modified = false;
   EnterCriticalSection(&cs);
-  if (_is_active && !_are_headers_complete) {
+  if (_is_active && !_are_headers_complete && !_is_spdy) {
     is_modified = chunk.ModifyDataOut(_test);
   }
   LeaveCriticalSection(&cs);
@@ -336,7 +340,7 @@ void Request::DataOut(DataChunk& chunk) {
       _T("[wpthook] - Request::DataOut(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
-  if (_is_active) {
+  if (_is_active && !_is_spdy) {
     // Keep track of the data that was actually sent.
     unsigned long chunk_len = chunk.GetLength();
     if (chunk_len > 0) {
@@ -392,11 +396,11 @@ bool Request::Process() {
       ret = true;
     }
 
-    // find the matching socket connect and DNS lookup (if they exist)
+    // Find the matching socket connect and DNS lookup (if they exist).
     LONGLONG before = _start.QuadPart;
     LONGLONG start, end, ssl_start, ssl_end;
     CString host = CA2T(GetRequestHeader("host"));
-    if (_dns.Claim(host, before, start, end) && 
+    if (_dns.Claim(host, _peer_address, before, start, end) && 
         start >= _test_state._start.QuadPart &&
         end >= _test_state._start.QuadPart) {
       _ms_dns_start = (DWORD)((start - _test_state._start.QuadPart)
@@ -421,7 +425,7 @@ bool Request::Process() {
       }
     }
 
-    // update the overall stats
+    // Update the overall stats.
     int result = GetResult();
     if (!_test_state._first_byte.QuadPart && result == 200 && 
         _first_byte.QuadPart ) {

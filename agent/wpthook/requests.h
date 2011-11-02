@@ -59,10 +59,11 @@ private:
   TrackDns&         _dns;
   WptTest&          _test;
 
-  bool IsHttpRequest(DataChunk& chunk) const;
+  bool IsHttpRequest(const DataChunk& chunk) const;
+  bool IsSpdyRequest(const DataChunk& chunk) const;
 
   // GetOrCreateRequest must be called within a critical section.
-  Request * GetOrCreateRequest(DWORD socket_id, DataChunk& chunk);
-  Request * NewRequest(DWORD socket_id);
+  Request * GetOrCreateRequest(DWORD socket_id, const DataChunk& chunk);
+  Request * NewRequest(DWORD socket_id, bool is_spdy);
   Request * GetActiveRequest(DWORD socket_id);
 };

@@ -88,15 +88,15 @@ public:
 
   void Reset();
 
-  SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
-  SocketInfo* GetSocketInfoById(DWORD socket_id);
-
   bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
                     LONGLONG& end, LONGLONG& ssl_start, LONGLONG& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
   LONGLONG  GetEarliest(LONGLONG& after);
 
 private:
+  SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
+  SocketInfo* GetSocketInfoById(DWORD socket_id);
+
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
 

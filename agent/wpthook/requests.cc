@@ -173,7 +173,7 @@ bool Requests::HasActiveRequest(DWORD socket_id) {
   See if the beginning of the bugger matches any known HTTP method
   TODO: See if there is a more reliable way to detect HTTP traffic
 -----------------------------------------------------------------------------*/
-bool Requests::IsHttpRequest(DataChunk& chunk) const {
+bool Requests::IsHttpRequest(const DataChunk& chunk) const {
   bool ret = false;
   for (int i = 0; i < _countof(HTTP_METHODS) && !ret; i++) {
     const char * method = HTTP_METHODS[i];
@@ -186,28 +186,46 @@ bool Requests::IsHttpRequest(DataChunk& chunk) const {
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+  This must always be called from within a critical section.
+-----------------------------------------------------------------------------*/
+bool Requests::IsSpdyRequest(const DataChunk& chunk) const {
+  bool is_spdy = false;
+  const char *buf = chunk.GetData();
+  if (chunk.GetLength() >= 8) {
+    is_spdy = buf[0] == '\x80' && buf[1] == '\x02';  // SPDY control frame
+  }
+  return is_spdy;
+}
+
 
  /*-----------------------------------------------------------------------------
    Find an existing request, or create a new one if appropriate.
  -----------------------------------------------------------------------------*/
-Request * Requests::GetOrCreateRequest(DWORD socket_id, DataChunk& chunk) {
+Request * Requests::GetOrCreateRequest(DWORD socket_id,
+                                       const DataChunk& chunk) {
   Request * request = NULL;
   if (_active_requests.Lookup(socket_id, request) && request) {
     // We have an existing request on this socket, however, if data has been
     // received already, then this may be a new request.
-    if (request->_response_data.GetDataSize() && IsHttpRequest(chunk)) {
-      request = NewRequest(socket_id);
+    if (!request->_is_spdy && request->_response_data.GetDataSize() &&
+        IsHttpRequest(chunk)) {
+      request = NewRequest(socket_id, false);
     }
-  } else if (IsHttpRequest(chunk)) {
-      request = NewRequest(socket_id);
+  } else {
+    bool is_spdy = IsSpdyRequest(chunk);
+    if (is_spdy || IsHttpRequest(chunk)) {
+      request = NewRequest(socket_id, is_spdy);
+    }
   }
   return request;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Request * Requests::NewRequest(DWORD socket_id) {
-  Request * request = new Request(_test_state, socket_id, _sockets,_dns,_test);
+Request * Requests::NewRequest(DWORD socket_id, bool is_spdy) {
+  Request * request = new Request(_test_state, socket_id, _sockets, _dns,
+                                  _test, is_spdy);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
   return request;
