@@ -11,14 +11,20 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
             if( strlen($tests) )
                 $tests .= ',';
             $tests .= trim($parts[0]);
-            if( $parts[1] )
+            if( count($parts) > 1 )
                 $tests .= "-r:{$parts[1]}";
-            if( strlen(trim($parts[2])) )
+            if( count($parts) > 2 && strlen(trim($parts[2])) )
                 $tests .= '-l:' . urlencode($parts[2]);
-            if( $parts[3] )
+            if( count($parts) > 3 )
                 $tests .= "-c:{$parts[3]}";
-            if( strlen(trim($parts[4])) )
+            if( count($parts) > 4 && strlen(trim($parts[4])) )
                 $tests .= "-e:{$parts[4]}";
+            if( count($parts) > 5 )
+                $tests .= "-s:{$parts[5]}";
+            if( count($parts) > 6 )
+                $tests .= "-d:{$parts[6]}";
+            if( count($parts) > 7 )
+                $tests .= "-f:{$parts[7]}";
         }
     }
 

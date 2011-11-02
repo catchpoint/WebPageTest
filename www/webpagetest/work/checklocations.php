@@ -46,6 +46,9 @@ foreach( $files as $file )
                 
                 if( $to )
                 {
+                    $subject = "$loc WebPagetest ALERT";
+                    $body = "The $loc location has not checked for new jobs in $minutes minutes.";
+
                     // send the e-mail through an SMTP server?
                     if (array_key_exists('mailserver', $settings))
                     {
@@ -63,12 +66,11 @@ foreach( $files as $file )
                             $mailInit['password'] = $mailServerSettings['password'];
                         }
                         $smtp = Mail::factory('smtp', $mailInit);
-                        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => "$loc WebPagetest ALERT");
-                        $body = "The $loc location has not checked for new jobs in $minutes minutes.";
+                        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
                         $mail = $smtp->send($to, $headers, $body);
                     }
                     else
-                        mail($to, "$loc WebPagetest ALERT", "The $loc location has not checked for new jobs in $minutes minutes." );
+                        mail($to, $subject, $body);
                 }
             }
             
