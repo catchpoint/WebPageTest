@@ -324,8 +324,12 @@ function GetMedianRun(&$pageData, $cached)
             }
         }
     }
-    elseif( $count == 1 )
-        $run = 1;
+    elseif( $count == 1 ) {
+        foreach( $times as $index => $time ) {
+            $run = $index;
+            break;
+        }
+    }
     
     return $run;
 }
