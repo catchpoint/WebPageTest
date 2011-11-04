@@ -2,8 +2,8 @@
 include 'common.inc';
 include 'breakdown.inc';
 
-include ("graph/jpgraph.php");
-include ("graph/jpgraph_bar.php"); 
+include ("lib/jpgraph/jpgraph.php");
+include ("lib/jpgraph/jpgraph_bar.php"); 
 
 // Get the various settings
 $width = htmlspecialchars($_GET["width"]);
