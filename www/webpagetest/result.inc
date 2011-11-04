@@ -237,14 +237,20 @@ $page_description = "Website performance test result$testLabel.";
                         ?>
                     </tr>
                     <?php } ?>
-                    </table><br>
+                    </table>
+                    <?php
+                    if (count($pageData) > 1) {
+                        echo "<a href=\"/graph_page_data.php?test=$id\">Plot Full Results</a>";
+                    }
+                    ?>
+                    <br>
                 <?php
                     if( isset($test['testinfo']['extract_csi']) && $fvMedian && count($pageData) > 1 )
-		    {
-			require_once('google/google_lib.inc');
-			// Draw the table and print the first-view details.
-		    	$fv_params = ParseCsiInfo($id, $testPath, $fvMedian, false, true);
-		?>
+		            {
+			        require_once('google/google_lib.inc');
+			        // Draw the table and print the first-view details.
+		    	        $fv_params = ParseCsiInfo($id, $testPath, $fvMedian, false, true);
+		        ?>
 		    <h2>Csi Metrics (Median Run)</h2>
                     <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                     <tr>
