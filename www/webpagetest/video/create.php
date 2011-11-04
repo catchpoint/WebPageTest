@@ -134,6 +134,8 @@ else
                         }
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
                     }
+                    elseif(!strncasecmp($test['end'], 'doc+', 4))
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
                     elseif( !strcmp($test['end'], 'aft') )
                     {
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
