@@ -39,6 +39,10 @@ if (strlen($metric)) {
         $rvMedianValue = $pageData[$rvMedian][1][$metric];
 }
 
+function labelFormat($aLabel) { 
+    return number_format($aLabel);
+} 
+
 if (count($fv)) {
     include ("lib/jpgraph/jpgraph.php");
     include ("lib/jpgraph/jpgraph_scatter.php"); 
@@ -54,6 +58,7 @@ if (count($fv)) {
     $graph->xaxis->SetTitle('Run');
     $graph->xaxis->SetLabelFormat("%d");
     $graph->xaxis->scale->ticks->Set(1);
+    $graph->yaxis->SetLabelFormatCallback('labelFormat'); 
     $graph->legend->SetPos(0,0,'right','top');
     $graph->SetMargin(60,20,60,40);
     
