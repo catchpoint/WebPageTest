@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class TrackDns;
 class TrackSockets;
 class TestState;
+class DataChunk;
 
 class WsaBuffTracker {
 public:
@@ -98,8 +99,10 @@ private:
   // sockets that are being connected asynchronously
   CAtlMap<SOCKET, SOCKET>	_connecting; 
 
-  // memory buffers for overlapped receive operations
-  CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  recv_buffers;
+  // memory buffers for overlapped operations
+  CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  _recv_buffers;
+  CAtlMap<LPWSAOVERLAPPED, DataChunk>       _send_buffers;
+  CAtlMap<LPWSAOVERLAPPED, DWORD>           _send_buffer_original_length;
 
   // winsock event tracking
   TrackDns&      _dns;

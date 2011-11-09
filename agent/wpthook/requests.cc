@@ -126,7 +126,7 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
   if (_test_state._active) {
     _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
-    Request * request = GetActiveRequest(socket_id);
+    Request * request = GetOrCreateRequest(socket_id, chunk);
     if (request) {
       is_modified = request->ModifyDataOut(chunk);
     } else {

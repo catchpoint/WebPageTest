@@ -188,7 +188,9 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   , _sockets(sockets)
   , _test_state(test_state) {
   dns_override.InitHashTable(257);
-  recv_buffers.InitHashTable(257);
+  _recv_buffers.InitHashTable(257);
+  _send_buffers.InitHashTable(257);
+  _send_buffer_original_length.InitHashTable(257);
   _connecting.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -237,6 +239,9 @@ void CWsHook::Init() {
 CWsHook::~CWsHook(void) {
   if( pHook == this )
     pHook = NULL;
+
+  _send_buffers.RemoveAll();
+  _send_buffer_original_length.RemoveAll();
 
   DeleteCriticalSection(&cs);
 }
@@ -334,7 +339,7 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       }
     } else if (ret == SOCKET_ERROR && lpOverlapped) {
       WsaBuffTracker buff(lpBuffers, dwBufferCount);
-      recv_buffers.SetAt(lpOverlapped, buff);
+      _recv_buffers.SetAt(lpOverlapped, buff);
     }
   }
   _sockets.ResetSslFd();
@@ -396,11 +401,12 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       // Respond with the number of bytes the sending app was expecting
       // to be written.  It can get confused if you write more data than
       // they provided.
-      if (lpNumberOfBytesSent)
-        *lpNumberOfBytesSent = original_len;
-      if (WSAGetLastError() == WSA_IO_PENDING) {
-        // TODO: figure out how to delete the buffer later and return the real
-        // number of bytes transmitted to the calling app
+      if (!ret) {
+        if (lpNumberOfBytesSent && *lpNumberOfBytesSent == out.len) {
+          *lpNumberOfBytesSent = original_len;
+        }
+      } else if (WSAGetLastError() == WSA_IO_PENDING) {
+        _send_buffers.SetAt(lpOverlapped, chunk);
       }
     } else {
       ret = _WSASend(s, lpBuffers, dwBufferCount, lpNumberOfBytesSent,
@@ -573,7 +579,8 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
 
   if (ret && lpcbTransfer && !_test_state._exit) {
     WsaBuffTracker buff;
-    if (recv_buffers.Lookup(lpOverlapped, buff)) {
+    // handle a receive
+    if (_recv_buffers.Lookup(lpOverlapped, buff)) {
       DWORD bytes = *lpcbTransfer;
       for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
         DWORD data_bytes = min(bytes, buff._buffers[i].len);
@@ -581,6 +588,18 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
           DataChunk chunk(buff._buffers[i].buf, data_bytes);
           _sockets.DataIn(s, chunk, false);
           bytes -= data_bytes;
+        }
+      }
+    }
+    // handle a send (where we modified the outbound headers
+    DataChunk chunk;
+    if (_send_buffers.Lookup(lpOverlapped, chunk)) {
+      _send_buffers.RemoveKey(lpOverlapped);
+      if (lpcbTransfer) {
+        DWORD len = *lpcbTransfer;
+        if (_send_buffer_original_length.Lookup(lpOverlapped, len)) {
+          _send_buffer_original_length.RemoveKey(lpOverlapped);
+          *lpcbTransfer = len;
         }
       }
     }
