@@ -280,7 +280,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _sockets(sockets)
   , _dns(dns)
   , _is_active(true)
-  , _are_headers_complete(false) {
+  , _are_headers_complete(false)
+  , _data_sent(false) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -340,6 +341,10 @@ void Request::DataOut(DataChunk& chunk) {
       _T("[wpthook] - Request::DataOut(len=%d)"), chunk.GetLength());
 
   EnterCriticalSection(&cs);
+  if (!_data_sent) {
+    QueryPerformanceCounter(&_start);
+    _data_sent = true;
+  }
   if (_is_active && !_is_spdy) {
     // Keep track of the data that was actually sent.
     unsigned long chunk_len = chunk.GetLength();

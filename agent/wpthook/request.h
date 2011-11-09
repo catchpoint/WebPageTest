@@ -252,5 +252,6 @@ private:
   CRITICAL_SECTION cs;
   bool _is_active;
   bool _are_headers_complete;
+  bool _data_sent;
   __int64 SystemTimeToSeconds(SYSTEMTIME& system_time);
 };
