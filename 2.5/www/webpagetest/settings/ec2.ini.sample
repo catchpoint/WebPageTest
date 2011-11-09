@@ -1,0 +1,21 @@
+[Dulles_IE8]
+; Minimum number of instances
+min=0
+; Maximum number of instances
+max=50
+; Number of tests per instance before spinning up new ones
+ratio=100
+; AWS API Keys
+key=<AWS Key ID>
+secret=<AWS Secret>
+; Maximum price for spot instances
+price=0.13
+; AMI ID to use
+ami=ami-528c7f3b
+; Instance size
+size=m1.small
+; Region
+region=us-east-1
+; User data to pass to instance
+;user_data="wpt_server=www.webpagetest.org wpt_location=Dulles_IE8_EC2 wpt_key=xxxxx wpt_reboot_interval=0"
+user_data=<user data>

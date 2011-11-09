@@ -1,0 +1,33 @@
+[settings]
+product=WebPagetest
+contact=admin@my.email.com
+optLinks=0
+maxruns=10
+countTests=1
+allowPrivate=0
+
+; Comment out the publishTo if you do not want to be able to upload your
+; results to the public instance (this is useful for sharing internal tests
+; with external users)
+publishTo=www.webpagetest.org
+
+;Uncomment map=1 if you want to enable the map-based picker
+;map=1
+
+; test options available
+enableSNS=0
+enableVideo=1
+
+; disable gzip compressing the result text files
+;nogzip=1
+
+;directory to archive test files (must include trailing slash)
+;archive_dir=/data/archive/
+
+;showslow beacon
+showslow=http://www.showslow.com
+
+; image quality (defaults to 30)
+iq=75
+;save png full-resolution screen shots
+;pngss=1

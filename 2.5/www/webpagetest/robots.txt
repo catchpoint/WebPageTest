@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /result/
+Disallow: /testlog/
+Disallow: /testlog.php
+Allow: /
+Disallow: /results/
+
+User-agent: Mediapartners-Google
+Allow: /

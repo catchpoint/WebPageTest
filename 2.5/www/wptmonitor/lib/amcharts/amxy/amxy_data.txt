@@ -1,0 +1,4 @@
+[x];[y];[value];[bullet_color];[bullet_size];[url];[description]
+100;100;40;#00FF00;;http://www.amcharts.com;here is a description
+-40;30;4
+100;-40;15

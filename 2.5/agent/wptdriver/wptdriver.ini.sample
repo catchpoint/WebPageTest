@@ -1,0 +1,17 @@
+[WebPagetest]
+url=http://127.0.0.1/
+location=Test
+browser=chrome
+;key=TestKey123
+;debug=1
+
+[chrome]
+exe=""C:\Documents and Settings\Administrator\Local Settings\Application Data\Google\Chrome\Application\chrome.exe""
+options='--load-extension="%WPTDIR%\extension\release" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
+;For SSL support in chrome, enable the downloading of debug symbols
+;use symbols=1
+
+[Firefox]
+exe="C:\Program Files\Mozilla Firefox\firefox.exe"
+options='-profile "%PROFILE%" -no-remote'
+template=firefox

@@ -1,0 +1,10 @@
+URL: http://code.google.com/p/simplejson/
+Version: tags/simplejson-2.1.2
+License: MIT
+
+Description:
+simplejson is compatible with Python 2.5 and later with no external dependencies. It covers the full JSON specification for both encoding and decoding, with unicode support. By default, encoding is done in an encoding neutral fashion (plain ASCII with \uXXXX escapes for unicode characters).
+
+Local Modifications:
+
+1. Removed unused files.
