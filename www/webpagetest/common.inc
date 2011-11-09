@@ -99,6 +99,8 @@ else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
 }
 setcookie('o', $owner, time()+60*60*24*365, '/');
 
+if( $supportsAuth && ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
+    $settings['enable_google_csi'] = true;
 
 // set their color selection as a cookie
 if( $req_color )

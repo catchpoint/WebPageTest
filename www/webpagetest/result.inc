@@ -109,7 +109,7 @@ $page_description = "Website performance test result$testLabel.";
                     if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
                         echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
 		            if( $settings['enable_google_csi'] )
-			        echo '<br><a href="/google/google_csi.php?test=' . $id . '">CSI data (.csv)</a>';
+			            echo '<br><a href="/google/view_csi.php?test=' . $id . '">View CSI data</a>';
                     if( $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>
