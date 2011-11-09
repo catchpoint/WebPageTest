@@ -131,37 +131,36 @@ void TestServer::MongooseCallback(enum mg_event event,
         _hook.Start();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
-      DWORD load_time = ParseLoadTime(request_info->query_string);
+      DWORD load_time = GetDwordParam(request_info->query_string, "load_time");
       _hook.OnLoad(load_time);
+      DWORD dom_content_loaded_start = GetDwordParam(
+          request_info->query_string, "dom_content_loaded_start");
+      _hook.SetDomContentLoaded(dom_content_loaded_start);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _hook.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri,"/event/all_dom_elements_loaded")==0) {
-      DWORD load_time = ParseLoadTime(request_info->query_string);
+      DWORD load_time = GetDwordParam(request_info->query_string, "load_time");
       _hook.OnAllDOMElementsLoaded(load_time);
       // TODO: Log the all dom elements loaded time into its metric.
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/dom_element") == 0) {
-      DWORD time;
-      CStringA dom_element;
-      ParseDOMElementLoadTime(request_info->query_string, dom_element, time);
+      DWORD time = GetDwordParam(request_info->query_string, "load_time");
+      CString dom_element = GetUnescapedParam(request_info->query_string,
+                                               "name_value");
       // TODO: Store the dom element loaded time.
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/title") == 0) {
-      char title[4096];
-      if (mg_get_var(request_info->query_string, 
-                  strlen(request_info->query_string), 
-                  "title", title, _countof(title)) >= 0) {
-        _test_state.TitleSet(CString(CA2T(title, CP_UTF8)));
+      CString title = GetParam(request_info->query_string, "title");
+      if (!title.IsEmpty()) {
+        _test_state.TitleSet(title);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/status") == 0) {
-      char status[4096];
-      if (mg_get_var(request_info->query_string, 
-                  strlen(request_info->query_string), 
-                  "status", status, _countof(status)) >= 0) {
-        _test_state.OnStatusMessage(CString(CA2T(status, CP_UTF8)));
+      CString status = GetParam(request_info->query_string, "status");
+      if (!status.IsEmpty()) {
+        _test_state.OnStatusMessage(status);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
@@ -240,54 +239,40 @@ void TestServer::SendResponse(struct mg_connection *conn,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-DWORD TestServer::ParseLoadTime(CStringA query_string) {
-  DWORD load_time = 0;
+CString TestServer::GetParam(const CString query_string, 
+                             const CString key) const {
+  CString value;
   int pos = 0;
-  CStringA token = query_string.Tokenize("&", pos);
-  while (pos >= 0 && !load_time) {
+  CString token = query_string.Tokenize(_T("&"), pos);
+  bool is_found = false;
+  while (pos >= 0 && !is_found) {
     int split = token.Find('=');
     if (split > 0) {
-      CStringA key = token.Left(split).Trim();
-      CStringA value = token.Mid(split + 1).Trim();
-      if (!key.CompareNoCase("load_time")) {
-        load_time = atoi(value);
-        WptTrace(loglevel::kFrequentEvent, 
-                _T("[wptdriver] Load time from extension: %dms"), 
-                load_time);
+      CString k = token.Left(split).Trim();
+      CString v = token.Mid(split + 1).Trim();
+      if (!key.CompareNoCase(k)) {
+        is_found = true;
+        value = v;
       }
     }
-    token = query_string.Tokenize("&", pos);
+    token = query_string.Tokenize(_T("&"), pos);
   }
+  return value;
+}
 
-  return load_time;
+DWORD TestServer::GetDwordParam(const CString query_string,
+                                const CString key) const {
+  return _ttoi(GetParam(query_string, key));
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestServer::ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_element, DWORD& time) {
-  time = 0;
-  dom_element = _T("");
-  int pos = 0;
-  CStringA token = query_string.Tokenize("&", pos);
-  while (pos >= 0 && (!time || dom_element != "")) {
-    int split = token.Find('=');
-    if (split > 0) {
-      CStringA key = token.Left(split).Trim();
-      CStringA value = token.Mid(split + 1).Trim();
-      if (!key.CompareNoCase("time")) {
-        time = atoi(value);
-      }
-      if (!key.CompareNoCase("name_value")) {
-        // TODO: UrlUnescape the term before using it.
-        DWORD len;
-        TCHAR buff[4096];
-        AtlUnescapeUrl((LPCTSTR) CA2T(value), buff, &len, _countof(buff));
-        dom_element = CStringA(buff);
-      }
-    }
-    token = query_string.Tokenize("&", pos);
-  }
-  WptTrace(loglevel::kFrequentEvent,
-    _T("[wptdriver] DOM element load time from extension: %s %dms"), (LPCTSTR)CA2T(dom_element), time);
+CString TestServer::GetUnescapedParam(const CString query_string,
+                                      const CString key) const {
+  CString value = GetParam(query_string, key);
+  DWORD len;
+  TCHAR buff[4096];
+  AtlUnescapeUrl((LPCTSTR)value, buff, &len, _countof(buff));
+  value = CStringA(buff);
+  return value;
 }
-

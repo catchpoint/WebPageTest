@@ -204,6 +204,7 @@ void TestState::OnNavigate() {
     UpdateBrowserWindow();
     GrabVideoFrame(true);
     _on_load.QuadPart = 0;
+    _dom_content_loaded_start.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     if (!_current_document) {
       _current_document = _next_document;
@@ -215,57 +216,60 @@ void TestState::OnNavigate() {
 }
 
 /*-----------------------------------------------------------------------------
+  We do some sanity checking here to make sure the value reported 
+  from the extension is sane.
+-----------------------------------------------------------------------------*/
+void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
+  QueryPerformanceCounter(out_time);
+  DWORD elapsed_time = 0;
+  if (_step_start.QuadPart && out_time->QuadPart >= _step_start.QuadPart) {
+    elapsed_time = (DWORD)((out_time->QuadPart - _step_start.QuadPart) /
+                           _ms_frequency.QuadPart);
+  }
+  if (time > 0 && time <= elapsed_time) {
+    WptTrace(loglevel::kFrequentEvent, 
+             _T("[wpthook] - Record %s from extension: %dms\n"), name, time);
+    out_time->QuadPart = _step_start.QuadPart;
+    out_time->QuadPart += _ms_frequency.QuadPart * time;
+  } else {
+    WptTrace(loglevel::kFrequentEvent,
+             _T("[wpthook] - Record %s from hook: %dms (instead of %dms)\n"),
+             name, elapsed_time, time);
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Notification from the extension that the page has finished loading.
-  We need to do some sanity checking here to make sure the value reported 
-  from the extension is sane
 -----------------------------------------------------------------------------*/
 void TestState::OnLoad(DWORD load_time) {
   if (_active) {
-    WptTrace(loglevel::kFunction, 
-              _T("[wpthook] TestState::OnLoad() - %dms\n"), load_time);
-    QueryPerformanceCounter(&_on_load);
-    DWORD elapsed_test = 0;
-    if (_step_start.QuadPart && _on_load.QuadPart >= _step_start.QuadPart)
-      elapsed_test = (DWORD)((_on_load.QuadPart - _step_start.QuadPart) 
-                            / _ms_frequency.QuadPart);
-    if (load_time && load_time <= elapsed_test) {
-      WptTrace(loglevel::kFrequentEvent, 
-              _T("[wpthook] - _on_load calculated based on load_time\n"));
-      _on_load.QuadPart = _step_start.QuadPart + 
-                          (_ms_frequency.QuadPart * load_time);
-    } else {
-      WptTrace(loglevel::kFrequentEvent,_T("[wpthook] - _on_load recorded\n"));
-      _screen_capture.Capture(_document_window, 
-                                    CapturedImage::DOCUMENT_COMPLETE);
-    }
+    RecordTime(_T("_on_load"), load_time, &_on_load);
+    _screen_capture.Capture(_document_window,
+                            CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
 }
 
 /*-----------------------------------------------------------------------------
+  Notification from the extension the DOMContentLoaded event.
+-----------------------------------------------------------------------------*/
+void TestState::SetDomContentLoaded(DWORD start_time) {
+  if (_active && start_time && _step_start.QuadPart && _ms_frequency.QuadPart) {
+    WptTrace(loglevel::kFrequentEvent,
+             _T("[wpthook] - Set _dom_content_loaded start from extension: ")
+             _T("%dms\n"), start_time);
+    _dom_content_loaded_start.QuadPart = _step_start.QuadPart +
+        _ms_frequency.QuadPart * start_time;
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Notification from the extension that all dom elements are loaded.
-  We need to do some sanity checking here to make sure the value reported 
-  from the extension is sane
 -----------------------------------------------------------------------------*/
 void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
   if (_active) {
     QueryPerformanceCounter(&_dom_elements_time);
-    DWORD elapsed_test = 0;
-    if (_step_start.QuadPart && _dom_elements_time.QuadPart >= _step_start.QuadPart)
-      elapsed_test = (DWORD)((_dom_elements_time.QuadPart - _step_start.QuadPart) 
-                            / _ms_frequency.QuadPart);
-    if (load_time && load_time <= elapsed_test) {
-      _dom_elements_time.QuadPart = _step_start.QuadPart + 
-                          (_ms_frequency.QuadPart * load_time);
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] TestState::OnAllDOMElementsLoaded() from extension %dms\n"),
-        _dom_elements_time);
-
-    } else {
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] TestState::OnAllDOMElementsLoaded() recorded in hook. %ldms\n"),
-        _dom_elements_time);
-    }
+    RecordTime(_T("_dom_elements_time"), load_time, &_dom_elements_time);
     _test._dom_element_check = false;
     WptTrace(loglevel::kFrequentEvent, 
       _T("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state. "));

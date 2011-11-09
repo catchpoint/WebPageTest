@@ -4500,16 +4500,24 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
 // since the navigation timing times are sometimes questionable.
 window.addEventListener("load", function() {
   var WPT_load_time = 0;
+  var WPT_dom_content_loaded_start = 0;
   try {
     if (window.performance.timing['loadEventStart'] > 0)
-      WPT_load_time = window.performance.timing['loadEventStart']
-                    - window.performance.timing['navigationStart'];
-    if (WPT_load_time < 0)
-      WPT_load_time = 0;
+      WPT_load_time = Math.max(0, (
+          window.performance.timing['loadEventStart'] -
+          window.performance.timing['navigationStart']));
+    if (window.performance.timing['domContentLoadedEventStart'] > 0)
+      WPT_dom_content_loaded_start = Math.max(0, (
+          window.performance.timing['domContentLoadedEventStart'] -
+          window.performance.timing['navigationStart']));
   } catch(e) {}
 
   // send the navigation timings back to the extension
-  chrome.extension.sendRequest({message: "wptLoad", load_time: WPT_load_time}, function(response) {});
+  chrome.extension.sendRequest({
+      "message": "wptLoad",
+      "load_time": WPT_load_time,
+      "dom_content_loaded_start": WPT_dom_content_loaded_start
+    }, function(response) {});
 }, false);
 
 /**

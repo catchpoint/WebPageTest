@@ -127,6 +127,12 @@ void WptHook::OnLoad(DWORD load_time) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WptHook::SetDomContentLoaded(DWORD start_time) {
+  _test_state.SetDomContentLoaded(start_time);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptHook::OnAllDOMElementsLoaded(DWORD load_time) {
   _test_state.OnAllDOMElementsLoaded(load_time);
 }

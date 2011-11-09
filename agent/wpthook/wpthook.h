@@ -54,6 +54,7 @@ public:
   // extension actions
   void Start();
   void OnLoad(DWORD load_time);
+  void SetDomContentLoaded(DWORD start_time);
   void OnAllDOMElementsLoaded(DWORD load_time);
   void OnNavigate();
 

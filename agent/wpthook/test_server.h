@@ -56,6 +56,8 @@ private:
                     DWORD response_code,
                     CStringA response_code_string,
                     CStringA response_data);
-  DWORD ParseLoadTime(CStringA query_string);
-  void ParseDOMElementLoadTime(CStringA query_string, CStringA& dom_element, DWORD& time);
+  CString GetParam(const CString query_string, const CString key) const;
+  DWORD GetDwordParam(const CString query_string, const CString key) const;
+  CString GetUnescapedParam(const CString query_string,
+                             const CString key) const;
 };

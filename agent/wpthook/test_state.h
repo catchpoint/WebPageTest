@@ -83,6 +83,7 @@ public:
   void ActivityDetected();
   void OnNavigate();
   void OnLoad(DWORD load_time);
+  void SetDomContentLoaded(DWORD start_time);
   void OnAllDOMElementsLoaded(DWORD load_time);
   void OnStatusMessage(CString status);
   bool IsDone();
@@ -101,6 +102,7 @@ public:
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
   LARGE_INTEGER _on_load;
+  LARGE_INTEGER _dom_content_loaded_start;
   LARGE_INTEGER _dom_elements_time;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
@@ -157,4 +159,5 @@ private:
   void Done(bool force = false);
   void CollectSystemStats(LARGE_INTEGER &now);
   void FindViewport();
+  void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
 };

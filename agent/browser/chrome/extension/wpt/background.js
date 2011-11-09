@@ -139,38 +139,22 @@ function wptGetTask(){
   }
 }
 
-// notification that navigation started
-function wptOnNavigate(){
+function wptSendEvent(event_name, query_string) {
   try {
-    // update the start timestamp.
-    g_start = new Date().getTime();
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://127.0.0.1:8888/event/navigate", true);
-    xhr.send();
-  } catch (err) {
-    wpt.LOG.warning("Error sending navigation XHR: " + err);
-  }
-}
-
-// notification that the page loaded
-function wptOnLoad(load_time){
-  // close the debug window.
-  wpt.logging.closeWindowIfOpen();
-  try {
-    g_active = false;
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://127.0.0.1:8888/event/load?load_time="+load_time, true);
+    xhr.open("POST", "http://127.0.0.1:8888/event/" + event_name + query_string,
+             true);
     xhr.send();
   } catch (err) {
     wpt.LOG.warning("Error sending page load XHR: " + err);
   }
 }
 
-// install an onLoad handler for all tabs
+// Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (g_active){
-    if (props.status == "loading")
-      wptOnNavigate();
+  if (g_active && props.status == "loading") {
+    g_start = new Date().getTime();
+    wptSendEvent("navigate", "");
   }
 });
 
@@ -179,33 +163,25 @@ chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     wpt.LOG.info("Message from content script: " + request.message);
     if (request.message == "DOMElementLoaded") {
-      try {
-	var dom_element_time = new Date().getTime() - g_start;
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST",
-		"http://127.0.0.1:8888/event/dom_element?name_value="
-		+ encodeURIComponent(request['name_value'])
-		+ "&time=" + dom_element_time,
-		true);
-        xhr.send();
-      } catch (err) {
-        wpt.LOG.warning("Error sending dom element xhr: " + err);
-      }
+      var dom_element_time = new Date().getTime() - g_start;
+      wptSendEvent(
+          "dom_element",
+          "?name_value=" + encodeURIComponent(request['name_value']) +
+          "&time=" + dom_element_time);
     }
     else if (request.message == "AllDOMElementsLoaded") {
-      try {
-	var time = new Date().getTime() - g_start;
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST",
-		"http://127.0.0.1:8888/event/all_dom_elements_loaded?load_time=" + time,
-		true);
-        xhr.send();
-      } catch (err) {
-        wpt.LOG.warning("Error sending all dom elements loaded xhr: " + err);
-      }
+      var time = new Date().getTime() - g_start;
+      wptSendEvent(
+          "all_dom_elements_loaded",
+          "?load_time=" + time);
     }
     else if (request.message == "wptLoad") {
-      wptOnLoad(request['load_time']);
+      wpt.logging.closeWindowIfOpen();
+      g_active = false;
+      wptSendEvent(
+          "load",
+          "?load_time=" + request['load_time'] +
+          "&dom_content_loaded_start=" + request['dom_content_loaded_start']);
     }
     // TODO: check whether calling sendResponse blocks in the content script side in page.
     sendResponse({});
