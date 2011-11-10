@@ -277,6 +277,13 @@ $loc = ParseLocations($locations);
                                         first request that contains the given value in the url. i.e. <b>RequestTTFB=favicon.ico</b> will mark the first byte time of the favicon.ico request.
                                         </div>
                                     </li>
+                                    <li>
+                                        <label for="time">
+                                            Minimum test duration<br>
+                                            <small>Capture data for at least...</small>
+                                        </label>
+                                        <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                    </li>
                                 </ul>
                             </div>
                             <div id="auth" class="test_subbox">

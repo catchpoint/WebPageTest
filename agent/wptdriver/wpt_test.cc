@@ -38,6 +38,7 @@ static const DWORD AFT_MIN_CHANGES_THRESHOLD = 100;
 static const DWORD AFT_TIMEOUT = 240000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
+static const DWORD MS_IN_SEC = 1000;
 
 
 /*-----------------------------------------------------------------------------
@@ -101,6 +102,7 @@ void WptTest::Reset(void) {
   _combine_steps = 0;
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
+  _minimum_duration = 0;
   _upload_incremental_results = true;
   _user_agent.Empty();
   _add_headers.RemoveAll();
@@ -174,6 +176,9 @@ bool WptTest::Load(CString& test) {
                                      min(100, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
           _png_screen_shot = true;
+        else if (!key.CompareNoCase(_T("time")))
+          _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
+                               min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script

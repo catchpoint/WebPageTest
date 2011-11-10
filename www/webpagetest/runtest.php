@@ -111,6 +111,7 @@
             $test['pngss'] = (int)$req_pngss;
             $test['iq'] = (int)$req_iq;
             $test['bodies'] = $req_bodies;
+            $test['time'] = (int)$req_time;
             
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
@@ -1534,6 +1535,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "imageQuality={$settings['iq']}\r\n";
         if( $test['bodies'] )
             $testFile .= "bodies=1\r\n";
+        if( $test['time'] )
+            $testFile .= "time={$test['time']}\r\n";
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )

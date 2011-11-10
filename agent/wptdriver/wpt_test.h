@@ -139,6 +139,7 @@ public:
   DWORD   _measurement_timeout;
   BYTE    _image_quality;
   bool    _png_screen_shot;
+  DWORD   _minimum_duration;
   
   // current state
   int     _run;

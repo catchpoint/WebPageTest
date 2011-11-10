@@ -310,6 +310,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.pngScreenShot = _ttol(value);
 							else if( !key.CompareNoCase(_T("bodies")) )
                 info.bodies = _ttol(value);
+							else if( !key.CompareNoCase(_T("time")) )
+                info.minimumDuration = min(120, max(0, _ttol(value)));
 						}
 					}
 

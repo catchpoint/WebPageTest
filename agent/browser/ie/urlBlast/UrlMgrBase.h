@@ -47,6 +47,7 @@ public:
     pngScreenShot = 0;
     imageQuality = 0;
     bodies = 0;
+    minimumDuration=0;
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -81,6 +82,7 @@ public:
   DWORD pngScreenShot;       // High-quality screen shot (png)
   DWORD imageQuality;       // Quality of jpeg images
   DWORD bodies;             // save the content of text responses?
+  DWORD minimumDuration;    // minimum test duration
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

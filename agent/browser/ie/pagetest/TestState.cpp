@@ -261,6 +261,8 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
           imageQuality = max(JPEG_DEFAULT_QUALITY, min(100, imageQuality));
 					bodies = 0;
 					key.QueryDWORDValue(_T("bodies"), bodies);
+					minimumDuration = 0;
+					key.QueryDWORDValue(_T("minimumDuration"), minimumDuration);
 					clearShortTermCacheSecs = 0;
 					key.QueryDWORDValue(_T("clearShortTermCacheSecs"), clearShortTermCacheSecs);
 			        aft = 0;
@@ -477,6 +479,11 @@ void CTestState::CheckComplete()
 
 	  __int64 now;
 	  QueryPerformanceCounter((LARGE_INTEGER *)&now);
+	  DWORD elapsed =  (DWORD)((now - start) / freq);
+
+    bool keepOpen = false;
+    if (minimumDuration && elapsed < minimumDuration)
+      keepOpen = true;
 
     // only do the request checking if we're actually active
     if( active )
@@ -484,9 +491,8 @@ void CTestState::CheckComplete()
       EnterCriticalSection(&cs);
   		
 		  // has our timeout expired?
-		  if( timeout && start )
+		  if( !keepOpen && timeout && start )
 		  {
-			  DWORD elapsed =  (DWORD)((now - start) / freq);
 			  if( elapsed > timeout )
 			  {
 				  buff.Format(_T("[Pagetest] - Test timed out (timout set to %d sec)\n"), timeout);
@@ -510,7 +516,7 @@ void CTestState::CheckComplete()
 		  CheckDOM();
 
 		  // only exit if there isn't an outstanding doc or request
-		  if( (lastRequest && !currentDoc) || expired || forceDone || errorCode )
+		  if( !keepOpen && ((lastRequest && !currentDoc) || expired || forceDone || errorCode) )
 		  {
 			  done = forceDone || errorCode != 0;
   			
@@ -579,7 +585,7 @@ void CTestState::CheckComplete()
         done = true;
     }
 			
-		if ( expired || done )
+		if ( !keepOpen && (expired || done) )
 		{
       if( active && capturingAFT )
       {

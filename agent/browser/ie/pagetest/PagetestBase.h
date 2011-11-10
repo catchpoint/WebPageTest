@@ -172,6 +172,7 @@ public:
   DWORD           imageQuality;
   DWORD           pngScreenShot;
   DWORD           bodies;
+  DWORD           minimumDuration;
   CAtlList<CString>	adPatterns;
   DWORD           aft;          // above-the fold measurement enabled?
   DWORD           aftMinChanges;
