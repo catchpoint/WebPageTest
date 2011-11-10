@@ -553,6 +553,7 @@ void CTestState::CheckComplete()
 							   (openRequests && elapsedRequest > FORCE_ACTIVITY_TIMEOUT) )	// open requests but it's been longer than 60 seconds since the last one (edge case) that touched the wire
 						  {
 							  done = true;
+                expired = false;
 							  OutputDebugString(_T("[Pagetest] ***** Measured as Web 2.0\n"));
 						  }
 					  }
@@ -564,6 +565,7 @@ void CTestState::CheckComplete()
 							  if( elapsed > DOC_TIMEOUT )
 							  {
 								  done = true;
+                  expired = false;
 								  OutputDebugString(_T("[Pagetest] ***** Measured as Web 1.0\n"));
 							  }
 						  }

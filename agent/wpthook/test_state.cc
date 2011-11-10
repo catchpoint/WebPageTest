@@ -317,19 +317,13 @@ bool TestState::IsDone() {
       WptTrace(loglevel::kFrequentEvent, 
         _T("[wpthook] - TestState::IsDone() -> true; AFT timed out."));
     } else if (_active) { 
-      if (!keep_open && (int)elapsed_test > _test._measurement_timeout) {
-        // the test timed out
-        _test_result = TEST_RESULT_TIMEOUT;
-        page_load_done = true;
-        WptTrace(loglevel::kFrequentEvent, 
-          _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
-      } else if (!keep_open && !_current_document && !_test._dom_element_check 
+      if (!keep_open && !_current_document && !_test._dom_element_check 
                   && _test._doc_complete && elapsed_doc && 
                   elapsed_doc > ON_LOAD_GRACE_PERIOD){
         // end 1 second after onLoad regardless of activity
         page_load_done = true;
         WptTrace(loglevel::kFrequentEvent, 
-          _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
+         _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
       } else if (!keep_open && !_current_document && !_test._dom_element_check 
                   && !_test._doc_complete && 
                   elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
@@ -338,7 +332,13 @@ bool TestState::IsDone() {
         // onLoad
         page_load_done = true;
         WptTrace(loglevel::kFrequentEvent, 
-          _T("[wpthook] - TestState::IsDone() -> true; 2 seconds no activity"));
+         _T("[wpthook] - TestState::IsDone() -> true; 2 seconds no activity"));
+      } else if (!keep_open && (int)elapsed_test >_test._measurement_timeout) {
+        // the test timed out
+        _test_result = TEST_RESULT_TIMEOUT;
+        page_load_done = true;
+        WptTrace(loglevel::kFrequentEvent, 
+          _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
       }
     }
 
