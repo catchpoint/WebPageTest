@@ -20,6 +20,8 @@
     "cookies",
     "experimental",
     "tabs",
+    "webNavigation",
+    "webRequest",
     "http://*/*",
     "https://*/*"
   ]

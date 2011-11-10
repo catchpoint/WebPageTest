@@ -17746,6 +17746,27 @@ goog.provide('wpt.commands');
 wpt.commands.g_domElements = [];
 
 /**
+ * Chrome APIs move from experimental to supported without notice.
+ * Keep our code from breaking by declaring that some experimental
+ * APIs can be used in the non-experimental namespace.
+ * @param {string} apiName The name of the chrome extensons API.
+ */
+function moveOutOfexperimentalIfNeeded(apiName) {
+  // Prefer the real API.  If it exists, do nothing.
+  if (!chrome[apiName]) {
+    // Use the experimental version if it exists.
+    if (chrome.experimental[apiName]) {
+      chrome[apiName] =  chrome.experimental[apiName];
+    } else {
+      throw 'Requested chrome API ' +  apiName + ' does not exist!';
+    }
+  }
+}
+
+moveOutOfexperimentalIfNeeded('webNavigation');
+moveOutOfexperimentalIfNeeded('webRequest');
+
+/**
  * Remove leading and trailing whitespace.
  * @param {string} stringToTrim
  * @return {string}
@@ -17856,7 +17877,7 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // Create a listener which blocks all the requests that has the patterm. Also,
   // pass an empty filter and "blocking" as the extraInfoSpec.
-  chrome.experimental.webRequest.onBeforeRequest.addListener(function(details){
+  chrome.webRequest.onBeforeRequest.addListener(function(details){
     if (details.url.indexOf(blockPattern) != -1) {
       return { "cancel": true };
     }
@@ -17870,7 +17891,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
  * might need to switch to "passing a sendrequest" from content script as the first
  * step to notify the background page that it is loaded.
  */
-chrome.experimental.webNavigation.onBeforeNavigate.addListener(function(details) {
+chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
   wpt.commands.CommandRunner.prototype.doSetDOMElements();
 });
 
