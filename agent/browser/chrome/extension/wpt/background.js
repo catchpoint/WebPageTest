@@ -175,13 +175,17 @@ chrome.extension.onRequest.addListener(
           "all_dom_elements_loaded",
           "?load_time=" + time);
     }
-    else if (request.message == "wptLoad") {
+    else if (request.message == "wptWindowTiming") {
       wpt.logging.closeWindowIfOpen();
       g_active = false;
       wptSendEvent(
-          "load",
-          "?load_time=" + request['load_time'] +
-          "&dom_content_loaded_start=" + request['dom_content_loaded_start']);
+          "window_timing",
+          "?domContentLoadedEventStart=" +
+              request['domContentLoadedEventStart'] +
+          "&domContentLoadedEventEnd=" +
+              request['domContentLoadedEventEnd'] +
+          "&loadEventStart=" + request['loadEventStart'] +
+          "&loadEventEnd=" + request['loadEventEnd']);
     }
     // TODO: check whether calling sendResponse blocks in the content script side in page.
     sendResponse({});

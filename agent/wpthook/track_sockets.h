@@ -88,10 +88,11 @@ public:
 
   void Reset();
 
-  bool ClaimConnect(DWORD socket_id, LONGLONG before, LONGLONG& start,
-                    LONGLONG& end, LONGLONG& ssl_start, LONGLONG& ssl_end);
+  bool ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
+                    LARGE_INTEGER& start, LARGE_INTEGER& end,
+                    LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
-  LONGLONG  GetEarliest(LONGLONG& after);
+  LONGLONG GetEarliest(LONGLONG& after);
 
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);

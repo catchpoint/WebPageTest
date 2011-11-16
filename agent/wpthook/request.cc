@@ -385,49 +385,26 @@ bool Request::Process() {
 
     // calculate the times
     if (_start.QuadPart && _end.QuadPart) {
-      if (_start.QuadPart > _test_state._start.QuadPart)
-        _ms_start = (DWORD)((_start.QuadPart - _test_state._start.QuadPart)
-                    / _test_state._ms_frequency.QuadPart);
-
-      if (_first_byte.QuadPart > _test_state._start.QuadPart)
-        _ms_first_byte = (DWORD)((_first_byte.QuadPart
-                    - _test_state._start.QuadPart)
-                    / _test_state._ms_frequency.QuadPart);
-
-      if (_end.QuadPart > _test_state._start.QuadPart)
-        _ms_end = (DWORD)((_end.QuadPart - _test_state._start.QuadPart)
-                    / _test_state._ms_frequency.QuadPart);
-
+      _ms_start = _test_state.ElapsedMsFromStart(_start);
+      _ms_first_byte = _test_state.ElapsedMsFromStart(_first_byte);
+      _ms_end = _test_state.ElapsedMsFromStart(_end);
       ret = true;
     }
 
     // Find the matching socket connect and DNS lookup (if they exist).
-    LONGLONG before = _start.QuadPart;
-    LONGLONG start, end, ssl_start, ssl_end;
+    LARGE_INTEGER before = _start;
+    LARGE_INTEGER start, end, ssl_start, ssl_end;
     CString host = CA2T(GetRequestHeader("host"));
-    if (_dns.Claim(host, _peer_address, before, start, end) && 
-        start >= _test_state._start.QuadPart &&
-        end >= _test_state._start.QuadPart) {
-      _ms_dns_start = (DWORD)((start - _test_state._start.QuadPart)
-                  / _test_state._ms_frequency.QuadPart);
-      _ms_dns_end = (DWORD)((end - _test_state._start.QuadPart)
-                  / _test_state._ms_frequency.QuadPart);
+    if (_dns.Claim(host, _peer_address, before, start, end)) {
+      _ms_dns_start = _test_state.ElapsedMsFromStart(start);
+      _ms_dns_end = _test_state.ElapsedMsFromStart(end);
     }
     if (_sockets.ClaimConnect(_socket_id, before, start, end,
-                              ssl_start, ssl_end) && 
-        start >= _test_state._start.QuadPart &&
-        end >= _test_state._start.QuadPart) {
-      _ms_connect_start = (DWORD)((start - _test_state._start.QuadPart)
-                  / _test_state._ms_frequency.QuadPart);
-      _ms_connect_end = (DWORD)((end - _test_state._start.QuadPart)
-                  / _test_state._ms_frequency.QuadPart);
-      if (ssl_start >= _test_state._start.QuadPart &&
-          ssl_end >= _test_state._start.QuadPart) {
-        _ms_ssl_start = (DWORD)((ssl_start - _test_state._start.QuadPart)
-                    / _test_state._ms_frequency.QuadPart);
-        _ms_ssl_end = (DWORD)((ssl_end - _test_state._start.QuadPart)
-                    / _test_state._ms_frequency.QuadPart);
-      }
+                              ssl_start, ssl_end)) {
+      _ms_connect_start = _test_state.ElapsedMsFromStart(start);
+      _ms_connect_end = _test_state.ElapsedMsFromStart(end);
+      _ms_ssl_start = _test_state.ElapsedMsFromStart(ssl_start);
+      _ms_ssl_end = _test_state.ElapsedMsFromStart(ssl_end);
     }
 
     // Update the overall stats.
@@ -439,7 +416,7 @@ bool Request::Process() {
     _test_state._bytes_out += _request_data.GetDataSize();
     _test_state._bytes_in += _response_data.GetDataSize();
     _test_state._requests++;
-    if (_start.QuadPart <= _test_state._on_load.QuadPart) {
+    if (_start.QuadPart <= _test_state._load_event_start.QuadPart) {
       _test_state._doc_bytes_in += _response_data.GetDataSize();
       _test_state._doc_bytes_out += _request_data.GetDataSize();
       _test_state._doc_requests++;

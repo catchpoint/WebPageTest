@@ -81,12 +81,15 @@ void TestState::Init() {
 -----------------------------------------------------------------------------*/
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
+  _step_start.QuadPart = 0;
+  _dom_content_loaded_event_start.QuadPart = 0;
+  _dom_content_loaded_event_end.QuadPart = 0;
+  _load_event_start.QuadPart = 0;
+  _load_event_end.QuadPart = 0;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     _last_activity.QuadPart = now.QuadPart;
-    _on_load.QuadPart = 0;
-    _step_start.QuadPart = 0;
   } else {
     _active = false;
     _capturing_aft = false;
@@ -104,9 +107,7 @@ void TestState::Reset(bool cascade) {
     _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
-    _step_start.QuadPart = 0;
     _first_navigate.QuadPart = 0;
-    _on_load.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
     _first_activity.QuadPart = 0;
@@ -203,8 +204,10 @@ void TestState::OnNavigate() {
     WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
     UpdateBrowserWindow();
     GrabVideoFrame(true);
-    _on_load.QuadPart = 0;
-    _dom_content_loaded_start.QuadPart = 0;
+    _dom_content_loaded_event_start.QuadPart = 0;
+    _dom_content_loaded_event_end.QuadPart = 0;
+    _load_event_start.QuadPart = 0;
+    _load_event_end.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     if (!_current_document) {
       _current_document = _next_document;
@@ -239,27 +242,57 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
 }
 
 /*-----------------------------------------------------------------------------
-  Notification from the extension that the page has finished loading.
+  Save web timings for DOMContentLoaded event.
 -----------------------------------------------------------------------------*/
-void TestState::OnLoad(DWORD load_time) {
-  if (_active) {
-    RecordTime(_T("_on_load"), load_time, &_on_load);
-    _screen_capture.Capture(_document_window,
-                            CapturedImage::DOCUMENT_COMPLETE);
+void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
+  if (_active && _step_start.QuadPart && _ms_frequency.QuadPart) {
+    if (start) {
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Set _dom_content_loaded_event_start: %dms\n"),
+               start);
+      _dom_content_loaded_event_start.QuadPart = _step_start.QuadPart +
+          _ms_frequency.QuadPart * start;
+    }
+    if (end) {
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Set _dom_content_loaded_event_end: %dms\n"),
+               end);
+      _dom_content_loaded_event_end.QuadPart = _step_start.QuadPart +
+          _ms_frequency.QuadPart * end;
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Save web timings for load event.
+-----------------------------------------------------------------------------*/
+void TestState::SetLoadEvent(DWORD start, DWORD end) {
+  if (_active && _step_start.QuadPart && _ms_frequency.QuadPart) {
+    if (start) {
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Set _load_event_start: %dms\n"), start);
+      _load_event_start.QuadPart = _step_start.QuadPart +
+          _ms_frequency.QuadPart * start;
+    }
+    if (end) {
+      WptTrace(loglevel::kFrequentEvent,
+               _T("[wpthook] - Set _load_event_end: %dms\n"), end);
+      _load_event_end.QuadPart = _step_start.QuadPart +
+          _ms_frequency.QuadPart * end;
+    }
     _current_document = 0;
   }
 }
 
 /*-----------------------------------------------------------------------------
-  Notification from the extension the DOMContentLoaded event.
+  Notification from the extension that the page has finished loading.
 -----------------------------------------------------------------------------*/
-void TestState::SetDomContentLoaded(DWORD start_time) {
-  if (_active && start_time && _step_start.QuadPart && _ms_frequency.QuadPart) {
-    WptTrace(loglevel::kFrequentEvent,
-             _T("[wpthook] - Set _dom_content_loaded start from extension: ")
-             _T("%dms\n"), start_time);
-    _dom_content_loaded_start.QuadPart = _step_start.QuadPart +
-        _ms_frequency.QuadPart * start_time;
+void TestState::OnLoad() {
+  if (_active) {
+    RecordTime(_T("_load_event_start"), 0, &_load_event_start);
+    _screen_capture.Capture(_document_window,
+                            CapturedImage::DOCUMENT_COMPLETE);
+    _current_document = 0;
   }
 }
 
@@ -279,83 +312,59 @@ void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool TestState::IsDone() {
-  bool page_load_done = false;
-  bool aft_timed_out = false;
-
-  if (_active || _capturing_aft){
-    LARGE_INTEGER now;
-    QueryPerformanceCounter(&now);
-    DWORD elapsed_test = 0;
-    DWORD elapsed_doc = 0;
-    DWORD elapsed_activity = 0;
-    bool  keep_open = false;
-
-    // calculate the varous elapsed times
-    if (_step_start.QuadPart && now.QuadPart >= _step_start.QuadPart)
-      elapsed_test = (DWORD)((now.QuadPart - _step_start.QuadPart) 
-                            / _ms_frequency.QuadPart);
-
-    if (_on_load.QuadPart && now.QuadPart >= _on_load.QuadPart)
-      elapsed_doc = (DWORD)((now.QuadPart - _on_load.QuadPart) 
-                              / _ms_frequency.QuadPart);
-
-    if (_last_activity.QuadPart && now.QuadPart >= _last_activity.QuadPart)
-      elapsed_activity = (DWORD)((now.QuadPart - _last_activity.QuadPart)
-                                  / _ms_frequency.QuadPart);
-
-    if (_test._minimum_duration && elapsed_test < _test._minimum_duration)
-      keep_open = true;
-
-    WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - TestState::IsDone() test: %d ms, ") 
-      _T("doc: %d ms, activity: %d ms, measurement timeout:%d\n"),
-      elapsed_test, elapsed_doc, elapsed_activity, _test._measurement_timeout);
-
-    // Check for AFT timeout first.
-    if (_capturing_aft && (int)elapsed_test > AFT_TIMEOUT) {
-      aft_timed_out = true;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - TestState::IsDone() -> true; AFT timed out."));
-    } else if (_active) { 
-      if (!keep_open && !_current_document && !_test._dom_element_check 
-                  && _test._doc_complete && elapsed_doc && 
-                  elapsed_doc > ON_LOAD_GRACE_PERIOD){
-        // end 1 second after onLoad regardless of activity
-        page_load_done = true;
-        WptTrace(loglevel::kFrequentEvent, 
-         _T("[wpthook] - TestState::IsDone() -> true; 1 second after onLoad"));
-      } else if (!keep_open && !_current_document && !_test._dom_element_check 
-                  && !_test._doc_complete && 
-                  elapsed_doc && elapsed_doc > ON_LOAD_GRACE_PERIOD &&
-                  elapsed_activity && elapsed_activity > ACTIVITY_TIMEOUT){
-        // the normal mode of waiting for 2 seconds of no network activity after
-        // onLoad
-        page_load_done = true;
-        WptTrace(loglevel::kFrequentEvent, 
-         _T("[wpthook] - TestState::IsDone() -> true; 2 seconds no activity"));
-      } else if (!keep_open && (int)elapsed_test >_test._measurement_timeout) {
-        // the test timed out
+  bool is_done = false;
+  LARGE_INTEGER now;
+  QueryPerformanceCounter(&now);
+  DWORD test_ms = ElapsedMs(_step_start, now);
+  if (_active) {
+    bool is_page_done = false;
+    CString done_reason;
+    if (test_ms >= _test._minimum_duration) {
+      DWORD load_ms = ElapsedMs(_load_event_start, now);
+      DWORD inactive_ms = ElapsedMs(_last_activity, now);
+      WptTrace(loglevel::kFunction,
+               _T("[wpthook] - TestState::IsDone()? ")
+               _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d\n"),
+               test_ms, load_ms, inactive_ms, _test._measurement_timeout);
+      bool is_loaded = (load_ms > ON_LOAD_GRACE_PERIOD &&
+                        !_test._dom_element_check);
+      if (is_loaded && _test._doc_complete) {
+        is_page_done = true;
+        done_reason = _T("Stop at document complete (i.e. onload).");
+      } else if (is_loaded && inactive_ms > ACTIVITY_TIMEOUT) {
+        // This is the default done criteria: onload is done and at least
+        // 2 more seconds have elapsed since the last network activity.
+        is_page_done = true;
+        done_reason = _T("No network activity detected.");
+      } else if (test_ms > _test._measurement_timeout) {
         _test_result = TEST_RESULT_TIMEOUT;
-        page_load_done = true;
-        WptTrace(loglevel::kFrequentEvent, 
-          _T("[wpthook] - TestState::IsDone() -> true; Test timed out."));
+        is_page_done = true;
+        done_reason = _T("Test timed out.");
       }
     }
-
-    // AFT timed-out, then mark the page as done.
-    if (aft_timed_out) {
-      Done();
-    }
-    else if (_active && page_load_done) {
-      // Page load is done normally. If we are not capturing AFT, mark it as 
-      // done. Else, just mark active as false to continue video capturing.
-      if (!_capturing_aft)
-        Done();
-      else
+    if (is_page_done) {
+      if (_capturing_aft) {
+        // Continue AFT video capture by only marking the test as inactive.
+        WptTrace(loglevel::kFrequentEvent,
+                 _T("[wpthook] - TestState::IsDone() -> false (capturing AFT);")
+                 _T(" page done: %s"), done_reason);
         _active = false;
+      } else {
+        WptTrace(loglevel::kFrequentEvent,
+                 _T("[wpthook] - TestState::IsDone() -> true; %s"),
+                 done_reason);
+        Done();
+        is_done = true;
+      }
     }
+  } else if (_capturing_aft && (int)test_ms > AFT_TIMEOUT) {
+    WptTrace(loglevel::kFrequentEvent,
+             _T("[wpthook] - TestState::IsDone() -> true; ")
+             _T("AFT timed out."));
+    Done();
+    is_done = true;
   }
-  return aft_timed_out || (!_capturing_aft && page_load_done);
+  return is_done;
 }
 
 /*-----------------------------------------------------------------------------
@@ -675,4 +684,20 @@ void TestState::FindViewport() {
 void TestState::OnStatusMessage(CString status) {
   StatusMessage stat(status);
   _status_messages.AddTail(stat);
+}
+
+/*-----------------------------------------------------------------------------
+  Convert |time| to the number of milliseconds since the start.
+-----------------------------------------------------------------------------*/
+DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
+  return ElapsedMs(_start, end);
+}
+
+DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
+  DWORD elapsed_ms = 0;
+  if (start.QuadPart && end.QuadPart > start.QuadPart) {
+    elapsed_ms = static_cast<DWORD>(
+        (end.QuadPart - start.QuadPart) / _ms_frequency.QuadPart);
+  }
+  return elapsed_ms;
 }

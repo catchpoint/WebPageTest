@@ -138,11 +138,9 @@ void TrackDns::Reset() {
 /*-----------------------------------------------------------------------------
   For undecoded SPDY sessions (all of them), claim with IP instead of host.
 -----------------------------------------------------------------------------*/
-bool TrackDns::Claim(CString name, ULONG addr, LONGLONG before,
-                     LONGLONG& start, LONGLONG& end) {
-  bool claimed = false;
-  start = 0;
-  end = 0;
+bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
+                     LARGE_INTEGER& start, LARGE_INTEGER& end) {
+  bool is_claimed = false;
   if (!name.GetLength())
     name = GetHost(addr);
   EnterCriticalSection(&cs);
@@ -152,16 +150,17 @@ bool TrackDns::Claim(CString name, ULONG addr, LONGLONG before,
     void * key = NULL;
     _dns_lookups.GetNextAssoc(pos, key, info);
     if (info && !info->_accounted_for && info->_success &&
-        info->_start.QuadPart <= before && info->_end.QuadPart <= before &&
+        info->_start.QuadPart <= before.QuadPart &&
+        info->_end.QuadPart <= before.QuadPart &&
         name == info->_name) {
       info->_accounted_for = true;
-      claimed = true;
-      start = info->_start.QuadPart;
-      end = info->_end.QuadPart;
+      is_claimed = true;
+      start = info->_start;
+      end = info->_end;
     }
   }
   LeaveCriticalSection(&cs);
-  return claimed;
+  return is_claimed;
 }
 
 /*-----------------------------------------------------------------------------

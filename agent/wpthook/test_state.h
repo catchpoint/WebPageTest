@@ -82,9 +82,10 @@ public:
   void Start();
   void ActivityDetected();
   void OnNavigate();
-  void OnLoad(DWORD load_time);
-  void SetDomContentLoaded(DWORD start_time);
   void OnAllDOMElementsLoaded(DWORD load_time);
+  void SetDomContentLoadedEvent(DWORD start, DWORD end);
+  void SetLoadEvent(DWORD load_event_start, DWORD load_event_end);
+  void OnLoad(); // browsers either call this or SetLoadEvent
   void OnStatusMessage(CString status);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
@@ -96,14 +97,17 @@ public:
   void TitleSet(CString title);
   void UpdateBrowserWindow();
   void SetDocument(HWND wnd);
+  DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
 
   // times
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
-  LARGE_INTEGER _on_load;
-  LARGE_INTEGER _dom_content_loaded_start;
   LARGE_INTEGER _dom_elements_time;
+  LARGE_INTEGER _dom_content_loaded_event_start;
+  LARGE_INTEGER _dom_content_loaded_event_end;
+  LARGE_INTEGER _load_event_start;
+  LARGE_INTEGER _load_event_end;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
@@ -160,4 +164,5 @@ private:
   void CollectSystemStats(LARGE_INTEGER &now);
   void FindViewport();
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
+  DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
 };

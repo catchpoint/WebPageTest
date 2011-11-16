@@ -67,8 +67,8 @@ public:
   void LookupAddress(void * context, ULONG &addr);
   void LookupDone(void * context, int result);
   void Reset();
-  bool Claim(CString name, ULONG addr, LONGLONG before,
-             LONGLONG& start, LONGLONG& end);
+  bool Claim(CString name, ULONG addr, LARGE_INTEGER before,
+             LARGE_INTEGER& start, LARGE_INTEGER& end);
   LONGLONG  GetEarliest(LONGLONG& after);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;

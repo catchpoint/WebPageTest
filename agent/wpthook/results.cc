@@ -118,10 +118,7 @@ void Results::CalculateAFT(void) {
   POSITION pos = _screen_capture._captured_images.GetHeadPosition();
   while( pos ) {
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
-    DWORD image_time = 0;
-    if( image._capture_time.QuadPart > _test_state._start.QuadPart )
-      image_time = (DWORD)((image._capture_time.QuadPart -
-      _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    DWORD image_time = _test_state.ElapsedMsFromStart(image._capture_time);
     CxImage * img = new CxImage;
     if( image.Get(*img) ) {
       img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
@@ -169,10 +166,7 @@ void Results::SaveProgressData(void) {
       progress = "Offset Time (ms),Bandwidth In (kbps),"
                   "CPU Utilization (%),Memory Use (KB)\r\n";
     ProgressData data = _test_state._progress_data.GetNext(pos);
-    DWORD ms = 0;
-    if (data._time.QuadPart > _test_state._start.QuadPart)
-      ms = (DWORD)((data._time.QuadPart - _test_state._start.QuadPart) / 
-                      _test_state._ms_frequency.QuadPart);
+    DWORD ms = _test_state.ElapsedMsFromStart(data._time);
     CStringA buff;
     buff.Format("%d,%d,%0.2f,%d\r\n", ms, data._bpsIn, data._cpu, data._mem );
     progress += buff;
@@ -196,13 +190,7 @@ void Results::SaveStatusMessages(void) {
   while( pos )
   {
     StatusMessage data = _test_state._status_messages.GetNext(pos);
-    DWORD ms = 0;
-    if (data._time.QuadPart > _test_state._start.QuadPart)
-      ms = (DWORD)((data._time.QuadPart - _test_state._start.QuadPart) / 
-                      _test_state._ms_frequency.QuadPart);
-    CStringA buff;
-    buff.Format("%d\t", ms);
-    status += buff;
+    status += FormatTime(data._time);
     status += CT2A(data._status, CP_UTF8);
     status += "\r\n";
   }
@@ -252,10 +240,7 @@ void Results::SaveVideo(void) {
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
     CxImage * img = new CxImage;
     if (image.Get(*img)) {
-      DWORD image_time = 0;
-      if (image._capture_time.QuadPart > _test_state._start.QuadPart)
-        image_time = (DWORD)((image._capture_time.QuadPart - 
-          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+      DWORD image_time = _test_state.ElapsedMsFromStart(image._capture_time);
       // we save the frames in increments of 100ms (for now anyway)
       // round it to the closest interval
       image_time = ((image_time + 50) / 100);
@@ -370,19 +355,11 @@ void Results::SavePageData(OptimizationChecks& checks){
     // URL
     result += "\t";
     // Load Time (ms)
-    int on_load_time = 0;
-    if (_test_state._on_load.QuadPart > _test_state._start.QuadPart)
-      on_load_time = (int)((_test_state._on_load.QuadPart - 
-          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
-    buff.Format("%d\t", on_load_time);
-    result += buff;
+    CStringA formatted_load_event_start = FormatTime(
+        _test_state._load_event_start);
+    result += formatted_load_event_start;
     // Time to First Byte (ms)
-    int first_byte_time = 0;
-    if (_test_state._first_byte.QuadPart > _test_state._start.QuadPart)
-      first_byte_time = (int)((_test_state._first_byte.QuadPart - 
-          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
-    buff.Format("%d\t", first_byte_time);
-    result += buff;
+    result += FormatTime(_test_state._first_byte);
     // unused
     result += "\t";
     // Bytes Out
@@ -412,12 +389,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     buff.Format("%d\t", _test_state._test_result);
     result += buff;
     // Time to Start Render (ms)
-    int render_start_time = 0;
-    if (_test_state._render_start.QuadPart > _test_state._start.QuadPart)
-      render_start_time = (int)((_test_state._render_start.QuadPart - 
-          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
-    buff.Format("%d\t", render_start_time);
-    result += buff;
+    result += FormatTime(_test_state._render_start);
     // Segments Transmitted
     result += "\t";
     // Segments Retransmitted
@@ -425,14 +397,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Packet Loss (out)
     result += "\t";
     // Activity Time(ms)
-    int activity_time = on_load_time;
-    if (_test_state._last_activity.QuadPart > _test_state._on_load.QuadPart) {
-      if (_test_state._last_activity.QuadPart > _test_state._start.QuadPart)
-        activity_time = (int)((_test_state._last_activity.QuadPart - 
-            _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
+    if (_test_state._last_activity.QuadPart >
+        _test_state._load_event_start.QuadPart) {
+      result += FormatTime(_test_state._last_activity);
+    } else {
+      result += formatted_load_event_start;
     }
-    buff.Format("%d\t", activity_time);
-    result += buff;
     // Descriptor
     result += "\t";
     // Lab ID
@@ -458,20 +428,13 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Experimental
     result += "0\t";
     // Doc Complete Time (ms)
-    buff.Format("%d\t", on_load_time);
-    result += buff;
+    result += formatted_load_event_start;
     // Event GUID
     result += "\t";
     // Time to DOM Element (ms)
     if (_test_state._dom_elements_time.QuadPart > 0) {
-      int dom_elements_time = 0;
-      if (_test_state._dom_elements_time.QuadPart > _test_state._start.QuadPart)
-        dom_elements_time = (int)((_test_state._dom_elements_time.QuadPart - 
-            _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
-      buff.Format("%d\t", dom_elements_time);
-      result += buff;
-    }
-    else {
+      result += FormatTime(_test_state._dom_elements_time);
+    } else {
       result += "\t";
     }
     // Includes Object Data
@@ -582,12 +545,14 @@ void Results::SavePageData(OptimizationChecks& checks){
     }
     result += "\t";
     // Time to title (ms)
-    int title_time = 0;
-    if (_test_state._title_time.QuadPart > _test_state._start.QuadPart)
-      title_time = (int)((_test_state._title_time.QuadPart - 
-          _test_state._start.QuadPart) / _test_state._ms_frequency.QuadPart);
-    buff.Format("%d\t", title_time);
-    result += buff;
+    result += FormatTime(_test_state._title_time);
+
+    // Time to loadEventEnd (i.e. onload finished) (ms)
+    result += FormatTime(_test_state._load_event_end);
+    // Time to DOMContentComplete start event (ms)
+    result += FormatTime(_test_state._dom_content_loaded_event_start);
+    // Time to DOMContentComplete end event (ms)
+    result += FormatTime(_test_state._dom_content_loaded_event_end);
 
     result += "\r\n";
 
@@ -868,4 +833,14 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
     buff += "\r\n";
     WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
   }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Format as the number of milliseconds since the start (with trailing tab).
+-----------------------------------------------------------------------------*/
+CStringA Results::FormatTime(LARGE_INTEGER t) {
+  CStringA formatted_time;
+  formatted_time.Format("%d\t", _test_state.ElapsedMsFromStart(t));
+  return formatted_time;
 }

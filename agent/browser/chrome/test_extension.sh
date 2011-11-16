@@ -118,14 +118,15 @@ USER_DATA_DIR="${TEMP}/user_data/";
 echo "User data dir is ${USER_DATA_DIR}.";
 
 ${CHROME} \
-  --user-data-dir=${USER_DATA_DIR} \
+  --user-data-dir="${USER_DATA_DIR}" \
+  --no-proxy-server \
   --no-first-run \
+  --no-default-browser-check \
+  --enable-experimental-extension-apis \
   --load-extension=release \
   --no-experiments \
-  --no-default-browser-check \
   --password-store=basic \
   --disable-extensions-file-access-check \
-  --enable-experimental-extension-apis \
-
+  about:blank
 
 echo "Chrome exited with status code $?";

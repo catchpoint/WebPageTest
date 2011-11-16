@@ -121,14 +121,20 @@ void WptHook::Start() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptHook::OnLoad(DWORD load_time) {
-  _test_state.OnLoad(load_time);
+void WptHook::SetDomContentLoadedEvent(DWORD start, DWORD end) {
+  _test_state.SetDomContentLoadedEvent(start, end);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptHook::SetDomContentLoaded(DWORD start_time) {
-  _test_state.SetDomContentLoaded(start_time);
+void WptHook::SetLoadEvent(DWORD start, DWORD end) {
+  _test_state.SetLoadEvent(start, end);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::OnLoad() {
+  _test_state.OnLoad();
 }
 
 /*-----------------------------------------------------------------------------

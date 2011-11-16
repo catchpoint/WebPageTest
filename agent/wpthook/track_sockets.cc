@@ -189,26 +189,26 @@ void TrackSockets::Reset() {
 /*-----------------------------------------------------------------------------
   Claim ownership of a connection (associate it with a request)
 -----------------------------------------------------------------------------*/
-bool TrackSockets::ClaimConnect(DWORD socket_id, LONGLONG before, 
-                                LONGLONG& start, LONGLONG& end,
-                                LONGLONG& ssl_start, LONGLONG& ssl_end) {
-  bool claimed = false;
+bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before, 
+                                LARGE_INTEGER& start, LARGE_INTEGER& end,
+                                LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end) {
+  bool is_claimed = false;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
   if (_socketInfo.Lookup(socket_id, info) && info) {
     if (!info->_accounted_for &&
-        info->_connect_start.QuadPart <= before && 
-        info->_connect_end.QuadPart <= before) {
-      claimed = true;
+        info->_connect_start.QuadPart <= before.QuadPart && 
+        info->_connect_end.QuadPart <= before.QuadPart) {
+      is_claimed = true;
       info->_accounted_for = true;
-      start = info->_connect_start.QuadPart;
-      end = info->_connect_end.QuadPart;
-      ssl_start = info->_ssl_start.QuadPart;
-      ssl_end = info->_ssl_end.QuadPart;
+      start = info->_connect_start;
+      end = info->_connect_end;
+      ssl_start = info->_ssl_start;
+      ssl_end = info->_ssl_end;
     }
   }
   LeaveCriticalSection(&cs);
-  return claimed;
+  return is_claimed;
 }
 
 /*-----------------------------------------------------------------------------

@@ -131,11 +131,20 @@ void TestServer::MongooseCallback(enum mg_event event,
         _hook.Start();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
-      DWORD load_time = GetDwordParam(request_info->query_string, "load_time");
-      _hook.OnLoad(load_time);
-      DWORD dom_content_loaded_start = GetDwordParam(
-          request_info->query_string, "dom_content_loaded_start");
-      _hook.SetDomContentLoaded(dom_content_loaded_start);
+      // Browsers may get "/event/window_timing" to set "onload" time.
+      _hook.OnLoad();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/window_timing") == 0) {
+      DWORD start = GetDwordParam(request_info->query_string,
+                                  "domContentLoadedEventStart");
+      DWORD end = GetDwordParam(request_info->query_string,
+                                "domContentLoadedEventEnd");
+      _hook.SetDomContentLoadedEvent(start, end);
+
+      // To set "onload" time, browsers may request "/event/load".
+      start = GetDwordParam(request_info->query_string, "loadEventStart");
+      end = GetDwordParam(request_info->query_string, "loadEventEnd");
+      _hook.SetLoadEvent(start, end);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       _hook.OnNavigate();

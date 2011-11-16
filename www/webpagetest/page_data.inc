@@ -110,7 +110,10 @@ function loadPageData($file)
                                 'domElements' => (int)$fields[73],
                                 'pageSpeedVersion' => trim($fields[74]),
                                 'title' => htmlspecialchars(trim($fields[75]),ENT_NOQUOTES,'UTF-8'),
-                                'titleTime' => (int)$fields[76]
+                                'titleTime' => (int)$fields[76],
+                                'loadEventEnd' => (int)$fields[77],
+                                'domContentLoadedEventStart' => (int)$fields[78],
+                                'domContentLoadedEventEnd' => (int)$fields[79]
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
