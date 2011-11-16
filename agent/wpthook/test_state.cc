@@ -357,7 +357,7 @@ bool TestState::IsDone() {
         is_done = true;
       }
     }
-  } else if (_capturing_aft && (int)test_ms > AFT_TIMEOUT) {
+  } else if (_capturing_aft && test_ms > AFT_TIMEOUT) {
     WptTrace(loglevel::kFrequentEvent,
              _T("[wpthook] - TestState::IsDone() -> true; ")
              _T("AFT timed out."));
