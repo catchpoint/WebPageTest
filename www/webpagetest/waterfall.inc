@@ -11,6 +11,10 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
 {
     global $settings;
     
+    $times = array('render' => $pageData['render'], 'dom_element' => $pageData['domTime'], 
+                    'load' => $pageData['docTime'], ' aft' =>  $pageData['aft'],
+                    'load_start' => $pageData['loadEventStart'], 'load_end' => $pageData['loadEventEnd'], 
+                    'dom_start' => $pageData['domContentLoadedEventStart'], 'dom_end' => $pageData['domContentLoadedEventEnd']);
     $startRender = $pageData['render'];
     $domElement = $pageData['domTime'];
     $docComplete = $pageData['docTime'];
@@ -110,14 +114,10 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $range = (double)$requests[$index]['endOffset'];
         
         // check our various page milestones to make sure they are included in the range
-        if( $startRender > $range )
-            $range = $startRender;
-        if( $domElement > $range )
-            $range = $domElement;
-        if( $docComplete > $range )
-            $range = $docComplete;
-        if( $aft > $range )
-            $range = $aft;
+        foreach( $times as $time ) {
+            if ($time > $range)
+                $range = $time;
+        }
     }
 
     // Get CSI info
@@ -328,6 +328,80 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                 $pos += $inc;
             }
             
+            // draw the start render and doc complete lines
+            $section = 'first ' . $run;
+            if($cached == 1) 
+                $section = 'repeat ' . $run;
+            $colStartRender = GetColor($im, 40, 188, 0);
+            $colDomElement  = GetColor($im, 242, 131, 0);
+            $colDocComplete = GetColor($im, 0, 0, 255);
+            $colNavLoad = GetColor($im, 192, 192, 255);
+            $colNavDom = GetColor($im, 216, 136, 223);
+            $colAFT = GetColor($im, 255, 0, 0);
+            $colCsi = GetColor($im, 105, 0, 158);
+
+            if( $startRender > 0 && $startRender <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$startRender / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colStartRender);
+                if( !$thumbnail )
+                    imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
+            }
+
+            if( $aft > 0 && $aft <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$aft / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colAFT);
+                if( !$thumbnail )
+                    imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
+            }
+
+            if( $domElement > 0 && $domElement <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$domElement / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colDomElement);
+                if( !$thumbnail )
+                    imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
+            }
+            
+            if ($times['dom_start'] > 0 && $times['dom_end'] > 0 && $times['dom_start'] <= $range) {
+                $xRange = $left + $w;
+                $xStart = $left + (int)((double)$w * ((double)$times['dom_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$times['dom_end'] / $range));
+                $minWidth = 0;
+                if( !$thumbnail )
+                    $minWidth = 1;
+                $xEnd = min($xRange, max($xStart + $minWidth, $xEnd));
+                if ($xEnd >= $xStart) {
+                    for( $x = $xStart; $x <= $xEnd; $x++)
+                        imageline($im, $x, 1 + $rowHeight, $x, $height - 1, $colNavDom);
+                }
+            }
+
+            if ($times['load_start'] > 0 && $times['load_end'] > 0 && $times['load_start'] <= $range) {
+                $xRange = $left + $w;
+                $xStart = $left + (int)((double)$w * ((double)$times['load_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$times['load_end'] / $range));
+                $minWidth = 0;
+                if( !$thumbnail )
+                    $minWidth = 1;
+                $xEnd = min($xRange, max($xStart + $minWidth, $xEnd));
+                if ($xEnd >= $xStart) {
+                    for( $x = $xStart; $x <= $xEnd; $x++)
+                        imageline($im, $x, 1 + $rowHeight + (int)($rowHeight / 2), $x, $height - 1, $colNavLoad);
+                }
+            }
+            
+            if( $docComplete > 0 && $docComplete <= $range )
+            {
+                if( $docComplete >= $range )
+                    $docComplete = $range - 1;
+                $x = $left + (int)((double)$w * ((double)$docComplete / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
+                if( !$thumbnail )
+                    imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
+            }
+
             // draw the performance data
             $h = $height - $dataHeight - 3;
             if( $h && $perf )
@@ -369,99 +443,55 @@ function drawWaterfall($url, &$requests, &$pageData, $imageMap = false, $options
                     }
                 }
             }
-        }
         
-        // draw the start render and doc complete lines
-        $section = 'first ' . $run;
-        if($cached == 1) 
-            $section = 'repeat ' . $run;
-        $colStartRender = GetColor($im, 40, 188, 0);
-        $colDomElement  = GetColor($im, 242, 131, 0);
-        $colDocComplete = GetColor($im, 0, 0, 255);
-        $colAFT = GetColor($im, 255, 0, 0);
-        $colCsi = GetColor($im, 105, 0, 158);
-
-        if( $startRender > 0 && $startRender <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$startRender / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colStartRender);
-            if( !$thumbnail )
-                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
-        }
-
-        if( $aft > 0 && $aft <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$aft / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colAFT);
-            if( !$thumbnail )
-                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
-        }
-
-        if( $domElement > 0 && $domElement <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$domElement / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colDomElement);
-            if( !$thumbnail )
-                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
-        }
-        
-        if( $docComplete > 0 && $docComplete <= $range )
-        {
-            if( $docComplete >= $range )
-                $docComplete = $range - 1;
-            $x = $left + (int)((double)$w * ((double)$docComplete / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
-            if( !$thumbnail )
-                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
-        }
-
-        // draw the csi metrics
-        if( null != $csiInfo )
-        {
-            foreach( $csiInfo as $name => $value )
+            // draw the csi metrics
+            if( null != $csiInfo )
             {
-		        if ($name == 'srt')
-		            continue;
-                $triangleCoord = array(-3, 0,
-                                       0, 8,
-                                       3, 0
-                                      );
-                                
-                if( $value > 0 && $value <= $range )
+                foreach( $csiInfo as $name => $value )
                 {
-                    $x = $left + (int)((double)$w * ((double)$value / $range));
-                    for( $i = 0; $i < 3; $i++) {
-                        $triangleCoord[$i*2] += $x;
-                        $triangleCoord[$i*2+1] += $rowHeight + 1;
+		            if ($name == 'srt')
+		                continue;
+                    $triangleCoord = array(-3, 0,
+                                           0, 8,
+                                           3, 0
+                                          );
+                                    
+                    if( $value > 0 && $value <= $range )
+                    {
+                        $x = $left + (int)((double)$w * ((double)$value / $range));
+                        for( $i = 0; $i < 3; $i++) {
+                            $triangleCoord[$i*2] += $x;
+                            $triangleCoord[$i*2+1] += $rowHeight + 1;
+                        }
+                        if( !$thumbnail )
+                            imagefilledpolygon($im, $triangleCoord, 3, $colCsi);
+                        imageline($im, $x, $rowHeight + 1, $x, $height - 1, $colCsi);
                     }
-                    if( !$thumbnail )
-                        imagefilledpolygon($im, $triangleCoord, 3, $colCsi);
-                    imageline($im, $x, $rowHeight + 1, $x, $height - 1, $colCsi);
+                }
+            }       
+
+            // put the url label in
+            if( $thumbnail )
+                ThumbnailText($im, 1, $rowHeight, $left - 2, $rowHeight, $url, $fontWidth, $border_color);
+            else
+            {
+                $x = 4;
+                $y = 2 + $rowHeight;
+                $label = $url;
+                if( $x + (strlen($label) * $fontWidth) > $left )
+                {
+                    $chars = ($left - $x) / $fontWidth;
+                    $label = substr($label, 0, $chars - 4) . '...';
+                }
+                imagestring($im, $font, $x, $y,  $label, $black);
+                
+                if( $requestsBefore )
+                {
+                    $y += $rowHeight;
+                    imagestring($im, $font, $x, $y,  '...', $black);
                 }
             }
-        }       
-
-        // put the url label in
-        if( $thumbnail )
-            ThumbnailText($im, 1, $rowHeight, $left - 2, $rowHeight, $url, $fontWidth, $border_color);
-        else
-        {
-            $x = 4;
-            $y = 2 + $rowHeight;
-            $label = $url;
-            if( $x + (strlen($label) * $fontWidth) > $left )
-            {
-                $chars = ($left - $x) / $fontWidth;
-                $label = substr($label, 0, $chars - 4) . '...';
             }
-            imagestring($im, $font, $x, $y,  $label, $black);
-            
-            if( $requestsBefore )
-            {
-                $y += $rowHeight;
-                imagestring($im, $font, $x, $y,  '...', $black);
-            }
-        }
     }
 
     // draw the request information

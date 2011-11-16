@@ -355,9 +355,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     // URL
     result += "\t";
     // Load Time (ms)
-    CStringA formatted_load_event_start = FormatTime(
-        _test_state._load_event_start);
-    result += formatted_load_event_start;
+    CStringA formatted_on_load = FormatTime(_test_state._on_load);
+    result += formatted_on_load;
     // Time to First Byte (ms)
     result += FormatTime(_test_state._first_byte);
     // unused
@@ -398,10 +397,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += "\t";
     // Activity Time(ms)
     if (_test_state._last_activity.QuadPart >
-        _test_state._load_event_start.QuadPart) {
+        _test_state._on_load.QuadPart) {
       result += FormatTime(_test_state._last_activity);
     } else {
-      result += formatted_load_event_start;
+      result += formatted_on_load;
     }
     // Descriptor
     result += "\t";
@@ -428,7 +427,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Experimental
     result += "0\t";
     // Doc Complete Time (ms)
-    result += formatted_load_event_start;
+    result += formatted_on_load;
     // Event GUID
     result += "\t";
     // Time to DOM Element (ms)
@@ -547,11 +546,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Time to title (ms)
     result += FormatTime(_test_state._title_time);
 
-    // Time to loadEventEnd (i.e. onload finished) (ms)
+    // W3C Navigation timings
+    result += FormatTime(_test_state._load_event_start);
     result += FormatTime(_test_state._load_event_end);
-    // Time to DOMContentComplete start event (ms)
     result += FormatTime(_test_state._dom_content_loaded_event_start);
-    // Time to DOMContentComplete end event (ms)
     result += FormatTime(_test_state._dom_content_loaded_event_end);
 
     result += "\r\n";

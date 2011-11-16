@@ -13885,6 +13885,9 @@ chrome.extension.onRequest.addListener(
           "all_dom_elements_loaded",
           "?load_time=" + time);
     }
+    else if (request.message == "wptLoad") {
+			wptSendEvent("load", "");
+    }
     else if (request.message == "wptWindowTiming") {
       wpt.logging.closeWindowIfOpen();
       g_active = false;

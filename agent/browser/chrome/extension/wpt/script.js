@@ -60,8 +60,9 @@ wpt.contentScript.reportTiming_ = function() {
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
 window.addEventListener("load", function() {
-    window.setTimeout(wpt.contentScript.reportTiming_, 0);
-  }, false);
+	window.setTimeout(wpt.contentScript.reportTiming_, 0);
+  chrome.extension.sendRequest({message: "wptLoad"}, function(response) {});
+}, false);
 
 
 

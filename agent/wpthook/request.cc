@@ -416,7 +416,7 @@ bool Request::Process() {
     _test_state._bytes_out += _request_data.GetDataSize();
     _test_state._bytes_in += _response_data.GetDataSize();
     _test_state._requests++;
-    if (_start.QuadPart <= _test_state._load_event_start.QuadPart) {
+    if (_start.QuadPart <= _test_state._on_load.QuadPart) {
       _test_state._doc_bytes_in += _response_data.GetDataSize();
       _test_state._doc_bytes_out += _request_data.GetDataSize();
       _test_state._doc_requests++;

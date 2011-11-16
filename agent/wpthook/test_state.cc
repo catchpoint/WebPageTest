@@ -86,6 +86,7 @@ void TestState::Reset(bool cascade) {
   _dom_content_loaded_event_end.QuadPart = 0;
   _load_event_start.QuadPart = 0;
   _load_event_end.QuadPart = 0;
+  _on_load.QuadPart = 0;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -107,6 +108,11 @@ void TestState::Reset(bool cascade) {
     _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
+    _on_load.QuadPart = 0;
+    _dom_content_loaded_event_start.QuadPart = 0;
+    _dom_content_loaded_event_end.QuadPart = 0;
+    _load_event_start.QuadPart = 0;
+    _load_event_end.QuadPart = 0;
     _first_navigate.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
@@ -209,6 +215,7 @@ void TestState::OnNavigate() {
     _load_event_start.QuadPart = 0;
     _load_event_end.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
+    _on_load.QuadPart = 0;
     if (!_current_document) {
       _current_document = _next_document;
       _next_document++;
@@ -289,7 +296,7 @@ void TestState::SetLoadEvent(DWORD start, DWORD end) {
 -----------------------------------------------------------------------------*/
 void TestState::OnLoad() {
   if (_active) {
-    RecordTime(_T("_load_event_start"), 0, &_load_event_start);
+    QueryPerformanceCounter(&_on_load);
     _screen_capture.Capture(_document_window,
                             CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
@@ -320,7 +327,7 @@ bool TestState::IsDone() {
     bool is_page_done = false;
     CString done_reason;
     if (test_ms >= _test._minimum_duration) {
-      DWORD load_ms = ElapsedMs(_load_event_start, now);
+      DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       WptTrace(loglevel::kFunction,
                _T("[wpthook] - TestState::IsDone()? ")

@@ -78,6 +78,10 @@ function getConnections(&$requests, &$summary, $mime, $state)
 */
 function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData, $options = null)
 {
+    $times = array('render' => $pageData['render'], 'dom_element' => $pageData['domTime'], 
+                    'load' => $pageData['docTime'], ' aft' =>  $pageData['aft'],
+                    'load_start' => $pageData['loadEventStart'], 'load_end' => $pageData['loadEventEnd'], 
+                    'dom_start' => $pageData['domContentLoadedEventStart'], 'dom_end' => $pageData['domContentLoadedEventEnd']);
     $startRender = $pageData['render'];
     $domElement = $pageData['domTime'];
     $docComplete = $pageData['docTime'];
@@ -132,14 +136,10 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
                     $range = (double)$request['endOffset'];
 
         // check our various page milestones to make sure they are included in the range
-        if( $startRender > $range )
-            $range = $startRender;
-        if( $domElement > $range )
-            $range = $domElement;
-        if( $docComplete > $range )
-            $range = $docComplete;
-        if( $aft > $range )
-            $range = $aft;
+        foreach( $times as $time ) {
+            if ($time > $range)
+                $range = $time;
+        }
     }
 
     // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart        
@@ -277,6 +277,69 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
                 $pos += $inc;
             }
 
+            // draw the start render and doc complete lines
+            $section = 'first ' . $run;
+            if($cached == 1) 
+                $section = 'repeat ' . $run;
+            $colStartRender = GetColor($im, 40, 188, 0);
+            $colDomElement  = GetColor($im, 242, 131, 0);
+            $colDocComplete = GetColor($im, 0, 0, 255);
+            $colNavLoad = GetColor($im, 192, 192, 255);
+            $colNavDom = GetColor($im, 216, 136, 223);
+            $colAFT = GetColor($im, 255, 0, 0);
+            
+            if( $startRender > 0 && $startRender <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$startRender / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colStartRender);
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
+            }
+
+            if( $aft > 0 && $aft <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$aft / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colAFT);
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
+            }
+
+            if( $domElement > 0 && $domElement <= $range )
+            {
+                $x = $left + (int)((double)$w * ((double)$domElement / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colDomElement);
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
+            }
+            
+            if ($times['dom_start'] > 0 && $times['dom_end'] > 0 && $times['dom_start'] <= $range) {
+                $xRange = $left + $w;
+                $xStart = $left + (int)((double)$w * ((double)$times['dom_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$times['dom_end'] / $range));
+                $xEnd = min($xRange, max($xStart + 1, $xEnd));
+                if ($xEnd >= $xStart) {
+                    for( $x = $xStart; $x <= $xEnd; $x++)
+                        imageline($im, $x, 1 + $rowHeight, $x, $height - 1, $colNavDom);
+                }
+            }
+
+            if ($times['load_start'] > 0 && $times['load_end'] > 0 && $times['load_start'] <= $range) {
+                $xRange = $left + $w;
+                $xStart = $left + (int)((double)$w * ((double)$times['load_start'] / $range));
+                $xEnd = $left + (int)((double)$w * ((double)$times['load_end'] / $range));
+                $xEnd = min($xRange, max($xStart + 1, $xEnd));
+                if ($xEnd >= $xStart) {
+                    for( $x = $xStart; $x <= $xEnd; $x++)
+                        imageline($im, $x, 1 + $rowHeight + (int)($rowHeight / 2), $x, $height - 1, $colNavLoad);
+                }
+            }
+            
+            if( $docComplete > 0 && $docComplete <= $range )
+            {
+                if( $docComplete >= $range )
+                    $docComplete = $range - 1;
+                $x = $left + (int)((double)$w * ((double)$docComplete / $range));
+                imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
+                imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
+            }
+
             // draw the performance data
             $h = $height - $dataHeight - 3;
             if( $h && $perf )
@@ -318,47 +381,9 @@ function drawImage(&$connections, &$summary, $url, $mime, $imageMap, &$pageData,
                     }
                 }
             }
-        }
         
-        // draw the start render and doc complete lines
-        $section = 'first ' . $run;
-        if($cached == 1) 
-            $section = 'repeat ' . $run;
-        $colStartRender = GetColor($im, 40, 188, 0);
-        $colDomElement  = GetColor($im, 242, 131, 0);
-        $colDocComplete = GetColor($im, 0, 0, 255);
-        $colAFT = GetColor($im, 255, 0, 0);
-        
-        if( $startRender > 0 && $startRender <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$startRender / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colStartRender);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colStartRender);
         }
 
-        if( $aft > 0 && $aft <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$aft / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colAFT);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colAFT);
-        }
-
-        if( $domElement > 0 && $domElement <= $range )
-        {
-            $x = $left + (int)((double)$w * ((double)$domElement / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colDomElement);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDomElement);
-        }
-        
-        if( $docComplete > 0 && $docComplete <= $range )
-        {
-            if( $docComplete >= $range )
-                $docComplete = $range - 1;
-            $x = $left + (int)((double)$w * ((double)$docComplete / $range));
-            imageline($im, $x, 1, $x, $height - 1, $colDocComplete);
-            imageline($im, $x + 1, 1, $x + 1, $height - 2, $colDocComplete);
-        }
-        
         // put the url label in
         $x = 4;
         $y = 2 + $rowHeight;

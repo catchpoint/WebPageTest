@@ -189,35 +189,51 @@ $page_description = "Website performance test details$testLabel";
                         ?>
                     </tr>
                 </table><br>
-		<?php
-		    if( isset($test['testinfo']['extract_csi']) )
-		    {
-			require_once('google/google_lib.inc');
-                        $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
-		?>
-		<h2>Csi Metrics</h2>
-                <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
-                   <tr>
-                <?php
-                        foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                            echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
-                        echo '</tr><tr>';
-                        foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                        {
-                            if( array_key_exists($csi_param, $params) )
-                            {
-                                echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
-                            }
-                            else
-                            {
-                                echo '<td class="even" valign="middle"></td>';
-                            }
-                        }
-                        echo '</tr>';
-                ?>
-		</table><br>
+		        <?php
+		        if( isset($test['testinfo']['extract_csi']) )
+		        {
+			        require_once('google/google_lib.inc');
+                    $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
+		        ?>
+		            <h2>Csi Metrics</h2>
+                            <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
+                               <tr>
+                            <?php
+                                    foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                                        echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
+                                    echo '</tr><tr>';
+                                    foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                                    {
+                                        if( array_key_exists($csi_param, $params) )
+                                        {
+                                            echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
+                                        }
+                                        else
+                                        {
+                                            echo '<td class="even" valign="middle"></td>';
+                                        }
+                                    }
+                                    echo '</tr>';
+                            ?>
+		            </table><br>
                 <?php 
-                    }
+                }
+                if ($data['loadEventStart'] > 0 || $data['domContentLoadedEventStart'] > 0)
+                {
+                    echo '<h2><a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process" target="_blank">W3C Navigation Timing</a></h2>';
+                    echo '<table id="tableNavTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
+                    echo '<tr><th>domContentLoaded</th><th>loadEvent</th></tr>';
+                    echo '<tr><td>';
+                    echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' . 
+                            number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
+                            number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)';
+                    echo '</td><td>';
+                    echo number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' . 
+                            number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
+                            number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)';
+                    echo '</td></tr>';
+                    echo '</table><br>';
+                }
                 $secure = false;
                 $haveLocations = false;
                 $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true, true);

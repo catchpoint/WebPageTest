@@ -79,7 +79,7 @@ function CSITable($runs, &$data) {
         echo "<th>Run $run</th>";
     echo '</tr>';
     foreach( $data as $name => &$values ) {
-        if ($name != 'rt') {
+        if ($name != 'rt' && $name != 'e' ) {
             echo "<tr><td><b>$name</b></td>";
             for ($run = 1; $run <= $runs; $run++) {
                 echo '<td>';

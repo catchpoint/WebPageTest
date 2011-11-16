@@ -106,6 +106,7 @@ public:
   LARGE_INTEGER _dom_elements_time;
   LARGE_INTEGER _dom_content_loaded_event_start;
   LARGE_INTEGER _dom_content_loaded_event_end;
+  LARGE_INTEGER _on_load;
   LARGE_INTEGER _load_event_start;
   LARGE_INTEGER _load_event_end;
   LARGE_INTEGER _render_start;

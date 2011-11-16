@@ -30,6 +30,7 @@ wpt.contentScript.reportTiming_ = function() {
     "message": "wptWindowTiming"
   };
   try {
+    // TODO(slamm): Replace repetitive code with loop or function.
     if (window.performance.timing['domContentLoadedEventStart'] > 0) {
       timingRequest['domContentLoadedEventStart'] = Math.max(0, (
           window.performance.timing['domContentLoadedEventStart'] -
@@ -59,8 +60,9 @@ wpt.contentScript.reportTiming_ = function() {
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
 window.addEventListener("load", function() {
-    window.setTimeout(wpt.contentScript.reportTiming_, 0);
-  }, false);
+	window.setTimeout(wpt.contentScript.reportTiming_, 0);
+  chrome.extension.sendRequest({message: "wptLoad"}, function(response) {});
+}, false);
 
 
 
