@@ -18,3 +18,7 @@ wptdriver tests/
 agent/browser/ie/wptbho/wptbho_i.c
 agent/browser/ie/wptbho/wptbho_i.h
 agent/browser/ie/wptbho/wptbho_p.c
+www/webpagetest/results
+www/webpagetest/log.txt
+www/webpagetest/tmp
+www/webpagetest/work/jobs/uniqueId.dat

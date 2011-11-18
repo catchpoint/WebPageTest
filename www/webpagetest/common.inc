@@ -679,6 +679,18 @@ function logMsg($msg, $logFile = './log.txt')
 }
 
 /**
+ * Log unexpected input.  Usefull for debugging interaction with an agent.
+ * Search for "Unexpected input" to find these messages in the logs.
+ */
+function logMalformedInput($msg)
+{
+  $backtrace = debug_backtrace();
+  $file = $backtrace[1]["file"];
+  $line = $backtrace[1]["line"];
+  logMsg("Unexpected input at $file:$line: $msg");
+}
+
+/**
 * Count the number of test files in the given directory
 * 
 * @param mixed $dir

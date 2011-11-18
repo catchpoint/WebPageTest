@@ -1,4 +1,5 @@
 <?php
+$debug = 1; // SK: Debug info.
 chdir('..');
 include('common.inc');
 require_once('./lib/pclzip.lib.php');
@@ -426,35 +427,66 @@ function ProcessHAR($testPath)
                 $curPageData["startTime"] = $matches[2];
                 $curPageData["startFull"] = $startFull;
                     
-                if (array_key_exists('onRender',$page['pageTimings'])) {
-                    $curPageData["onRender"] = $page['pageTimings']['onRender'];
+                if (array_key_exists('onRender', $page['pageTimings'])) {
+                  $curPageData["onRender"] = $page['pageTimings']['onRender'];
+                } else if (array_key_exists('_onRender',$page['pageTimings'])) {
+                  $curPageData["onRender"] = $page['pageTimings']['_onRender'];
                 } else {
-                    $curPageData["onRender"] = $page['pageTimings']['_onRender'];
+                  logMsg("onRender not set for page $pageref");
+                  $curPageData["onRender"] = -1;
                 }
+
                 $curPageData["docComplete"] = $page['pageTimings']['onContentLoad'];
                 $curPageData["fullyLoaded"] = $page['pageTimings']['onLoad'];
                 // TODO: Remove this patch for files missing the data
                 if ($curPageData["docComplete"] <= 0)
-                $curPageData["docComplete"] = $curPageData["fullyLoaded"];
+                  $curPageData["docComplete"] = $curPageData["fullyLoaded"];
                 if ($curPageData["onRender"] <= 0)
-                $curPageData["onRender"] = 0;
-                preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/", $curPageData["url"], $urlMatches);
+                  $curPageData["onRender"] = 0;
+
+                if (0 >= preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/", $curPageData["url"], $urlMatches))
+                  logMalformedInput("HAR error: Could not match host in URL ".$curPageData["url"]);
+
                 $curPageData["host"] = $urlMatches[1];
 
-                // Figure out the run number and cached flag
-                preg_match("/page_(\d+)_([01])/", $pageref, $matches);
-                $curPageData["run"] = $matches[1];
-                $curPageData["cached"] = $matches[2];
+                // Some clients encode the run number and cache status in the
+                // page name.  Others give the information in properties on the
+                // pageTimings record.  Prefer the explicit properties.  Fall
+                // back to decoding the information from the name of the page
+                // record.
+                if (array_key_exists('_runNumber', $page['pageTimings']))
+                {
+                  $curPageData["run"] = $page['_runNumber'];
+                  $curPageData["cached"] = $page['_cacheWarmed'];
+                }
+                else if (0 < preg_match("/page_(\d+)_([01])/", $pageref, $matches))
+                {
+                  $curPageData["run"] = $matches[1];
+                  $curPageData["cached"] = $matches[2];
+                }
+                else
+                {
+                  logMalformedInput("HAR error: Could not get runs or cache status, from ".
+                                    "pages array or page name \"$pageref\".");
+                  // Sensible defaults:
+                  $curPageData["run"] =  1;
+                  $curPageData["cached"] = 0;
+                }
+
+                if ($curPageData["run"] <= 0)
+                  logMalformedInput("HAR error: \$curPageData[\"run\"] should always be positive.  ".
+                                    "Value is ".$curPageData["run"]);
+
                 $curPageData["title"] =
-                ($curPageData["cached"] ? "Cached-" : "Cleared Cache-") .
-                    "Run_" . $curPageData["run"]  . 
-                    "^" . $curPageData["url"];
+                  ($curPageData["cached"] ? "Cached-" : "Cleared Cache-") .
+                      "Run_" . $curPageData["run"]  . 
+                      "^" . $curPageData["url"];
 
                 // Define filename prefix
                 $curPageData["runFilePrefix"] = $testPath . "/" . $curPageData["run"] . "_";
 
                 if ($curPageData["cached"])
-                $curPageData["runFilePrefix"] .= "Cached_";
+                  $curPageData["runFilePrefix"] .= "Cached_";
                 $curPageData["runFileName"] = $curPageData["runFilePrefix"] . "IEWTR.txt";
                 $curPageData["reportFileName"] = $curPageData["runFilePrefix"] . "report.txt";
 
