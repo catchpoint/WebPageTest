@@ -264,11 +264,7 @@ else
             }
             
             // archive the test result
-            if( is_file('storage/storage.inc') )
-            {
-                require_once('storage/storage.inc');
-                StoreResults($id);
-            }
+            ArchiveTest($id);
         }
         
         if( isset($testInfo) )
