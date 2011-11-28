@@ -5,6 +5,7 @@ define('RESTORE_DATA_ONLY', true);
 //$debug=true;
 include 'common.inc';
 require_once('page_data.inc');
+require_once('testStatus.inc');
 
 // stub-out requests from M4_SpeedTestService
 //if( strpos($_SERVER['HTTP_USER_AGENT'], 'M4_SpeedTestService') !== false )
@@ -18,6 +19,7 @@ if( isset($test['test']) && $test['test']['batch'] )
 else
 {
     // see if the test is actually finished
+    $status = GetTestStatus($id);
     if( isset($test['test']['completeTime']) )
     {
         $host  = $_SERVER['HTTP_HOST'];
