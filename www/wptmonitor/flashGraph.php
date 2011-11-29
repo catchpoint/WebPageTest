@@ -16,6 +16,19 @@ $smarty->assign('action',$action );
 // Default chart time
 $smarty->assign('chartType', 'Line');
 
+// Show only active jobs
+// Show inactive jobs
+  if ( isset($_REQUEST['showInactiveJobsGraph']) ) {
+    if ( $_REQUEST['showInactiveJobsGraph'] == 1 || $_REQUEST['showInactiveJobsGraph'] == "true"){
+      $_SESSION['showInactiveJobsGraph'] = true;
+    } else {
+      $_SESSION['showInactiveJobsGraph'] = false;
+    }
+   } else if ( !isset($_SESSION['showInactiveJobsGraph'] ) ){
+    $_SESSION['showInactiveJobsGraph'] = true;
+  }
+  $showInactiveJobs = $_SESSION['showInactiveJobsGraph'];
+  $smarty->assign('showInactiveJobsGraph', $showInactiveJobs);
 // Folder handling
 if (isset($_REQUEST['folderId'])) {
   $_SESSION['jobsFolderId'] = $_REQUEST['folderId'];
@@ -78,6 +91,9 @@ $q = Doctrine_Query::create()->select('j.Id, j.Label')
       $q->andWhere('j.WPTJobFolderId = ?', $folderId);
     } else {
       $q->andWhere('j.UserId = ?', $user_id);
+    }
+    if (!$showInactiveJobs){
+      $q->andWhere('j.Active = ?',true);
     }
 
 //if ($folderId > -1) {

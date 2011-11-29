@@ -159,12 +159,21 @@ function updateGraph() {
 <div class="level_2">
 <div class="content-wrap">
 <div class="content">
-  <form name="folderForm" action="">
-    <a href="listFolders.php?folder=Job"><b>Folder:</b></a> <select name="folderId"
-                                                                    onchange="document.folderForm.submit();">
+  <table>
+    <tr>
+      <td>
+        <form name="folderForm" action="">
+        <a href="listFolders.php?folder=Job"><b>Folder:</b></a> <select name="folderId" onchange="document.folderForm.submit();">
       {html_select_tree permission=$smarty.const.PERMISSION_READ shares=$shares tree=$folderTree selected=$folderId}
   </select>
   </form>
+  </td>
+    <td>
+    <form action="" name="showInactiveJobsForm">
+        <input type="hidden" name="showInactiveJobsGraph" value="0">
+      <input id="showInactiveJobs" type="checkbox" name="showInactiveJobsGraph" value="1" {if $showInactiveJobsGraph}checked="true"{/if} onclick="document.showInactiveJobsForm.submit()"><label for="showInactiveJobs"> Show Inactive Jobs</label>
+    </form>
+  </td></tr></table>
   <form name="updateForm" class="cmxform" action="flashGraph.php" id="updateForm" onsubmit="validateForm();">
     {if isset($cacheKey)}<input type="hidden" value="{$cacheKey}" name="cacheKey">{/if}
     <input type="hidden" name="act" value="">
