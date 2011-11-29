@@ -12,13 +12,23 @@
 # the developer tools, and run unit tests using the browser action.
 #
 # Typical Usage:
-# $ cd wpt/webpagetest/agent/browser/chrome/extension
-# $ ../test_extension.sh
-#   (((COMPILE ERROR))) -> fix it
-# $ ../test_extension.sh
-#   (((Chrome launches))) -> Run unit tests, they fail.  Fix them.
-# $ ../test_extension.sh
-#   (((Chrome launches))) -> Run unit tests, they pass.  Success!
+#   $ agent/browser/chrome/extension/test_extension.sh
+#     ...
+#     [Closure gives compiler errors.]
+#     [Fix them.]
+#     ...
+#   $ agent/browser/chrome/extension/test_extension.sh
+#     ...
+#     [Chrome launches.]
+#     [Click on extension icon to run unit tests. They fail.]
+#     [Fix them.]
+#     ...
+#   $ agent/browser/chrome/extension/test_extension.sh
+#     ...
+#     [Chrome launches.]
+#     [Run unit tests, they pass.]
+#     [Success!]
+#     ...
 #
 # TODO(skerner): It would be nice to be able to set the initial
 # state of chrome.  For example, enabling developer mode and
@@ -61,6 +71,8 @@ FOR_WARNINGS="\
 FOR_RELEASE="\
   --output_mode=script \
 "
+
+cd $(dirname $0)/extension
 
 # Compile the logging code.
 ${COMPILE_JS} ${FOR_WARNINGS} \

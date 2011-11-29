@@ -4496,31 +4496,19 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
 };
 
 wpt.contentScript.reportTiming_ = function() {
-  var timingRequest = {
-    "message": "wptWindowTiming"
+  var timingRequest = { 'message': 'wptWindowTiming' };
+  function addTime(name) {
+    if (window.performance.timing[name] > 0) {
+      timingRequest[name] = Math.max(0, (
+        window.performance.timing[name] -
+        window.performance.timing['navigationStart']));
+    }
   };
-  try {
-    if (window.performance.timing['domContentLoadedEventStart'] > 0) {
-      timingRequest['domContentLoadedEventStart'] = Math.max(0, (
-          window.performance.timing['domContentLoadedEventStart'] -
-          window.performance.timing['navigationStart']));
-    }
-    if (window.performance.timing['domContentLoadedEventEnd'] > 0) {
-      timingRequest['domContentLoadedEventEnd'] = Math.max(0, (
-          window.performance.timing['domContentLoadedEventEnd'] -
-          window.performance.timing['navigationStart']));
-    }
-    if (window.performance.timing['loadEventStart'] > 0) {
-      timingRequest['loadEventStart'] = Math.max(0, (
-          window.performance.timing['loadEventStart'] -
-          window.performance.timing['navigationStart']));
-    }
-    if (window.performance.timing['loadEventEnd'] > 0) {
-      timingRequest['loadEventEnd'] = Math.max(0, (
-          window.performance.timing['loadEventEnd'] -
-          window.performance.timing['navigationStart']));
-    }
-  } catch(e) {}
+  addTime('domContentLoadedEventStart');
+  addTime('domContentLoadedEventEnd');
+  addTime('loadEventStart');
+  addTime('loadEventEnd');
+
   // Send the times back to the extension.
   chrome.extension.sendRequest(timingRequest, function(response) {});
 };
@@ -4528,9 +4516,10 @@ wpt.contentScript.reportTiming_ = function() {
 // This script is automatically injected into every page before it loads.
 // We need to use it to register for the earliest onLoad callback
 // since the navigation timing times are sometimes questionable.
-window.addEventListener("load", function() {
-    window.setTimeout(wpt.contentScript.reportTiming_, 0);
-  }, false);
+window.addEventListener('load', function() {
+  window.setTimeout(wpt.contentScript.reportTiming_, 0);
+  chrome.extension.sendRequest({message: 'wptLoad'}, function(response) {});
+}, false);
 
 
 

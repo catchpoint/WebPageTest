@@ -47,7 +47,7 @@ http.createServer(function (req, res) {
     if (req.url == '/task') {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('{"statusCode": 200, "data": { "record": 1, "action": ' +
-              '"navigate","target": "http://pages.google.com/"} }');
+              '"navigate","target": "http://books.google.com/"} }');
     } else if (req.url.slice(0, '/event'.length) == '/event') {
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('');
