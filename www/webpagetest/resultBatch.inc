@@ -500,6 +500,21 @@ function DisplayPSS(&$tests, $video, &$dirty)
 
     if( $csv )
     {
+        $domains = array();
+        $domains['Original FV'] = array();
+        $domains['Optimized FV'] = array();
+        $domains['Original RV'] = array();
+        $domains['Optimized RV'] = array();
+        $mime_stats = array();
+        $mime_stats['Original FV'] = array();
+        $mime_stats['Optimized FV'] = array();
+        $mime_stats['Original RV'] = array();
+        $mime_stats['Optimized RV'] = array();
+        GetRequestStats($original[0]['request_data'], $domains['Original FV'], $mime_stats['Original FV']);
+        GetRequestStats($optimized[0]['request_data'], $domains['Optimized FV'], $mime_stats['Optimized FV']);
+        GetRequestStats($original[1]['request_data'], $domains['Original RV'], $mime_stats['Original RV']);
+        GetRequestStats($optimized[1]['request_data'], $domains['Optimized RV'], $mime_stats['Optimized RV']);
+
         $testIssues = 0;
         if ($baseDomainRedirect)
             $testIssues |= 1;
@@ -512,6 +527,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
         echo "Original FV Socket Connect,Optimized FV Socket Connect,Original RV Socket Connect,Optimized RV Socket Connect,";
         echo "Original FV Requests,Optimized FV Requests,Original RV Requests,Optimized RV Requests,";
         echo "Original FV Bytes,Optimized FV Bytes,Original RV Bytes,Optimized RV Bytes,";
+        echo "Original FV Result,Optimized FV Result,Original RV Result,Optimized RV Result,";
+        foreach($domains as $config => &$domains_data)
+            echo "$config Unique Domains,";
+        foreach($mime_stats as $config => &$mime_stats_data)
+            foreach($mime_stats_data as $mime_type => &$mime_data)
+                echo "$config $mime_type requests,$config $mime_type bytes,";
         echo "\n$id,\"$url\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
         echo "{$original[0]['loadTime']},{$optimized[0]['loadTime']},{$original[1]['loadTime']},{$optimized[1]['loadTime']},$testIssues,";
         echo "{$original[0]['TTFB']},{$optimized[0]['TTFB']},{$original[1]['TTFB']},{$optimized[1]['TTFB']},";
@@ -519,6 +540,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
         echo "{$original[0]['request_data'][0]['msSocket']},{$optimized[0]['request_data'][0]['msSocket']},{$original[1]['request_data'][0]['msSocket']},{$optimized[1]['request_data'][0]['msSocket']},";
         echo "{$original[0]['requestsDoc']},{$optimized[0]['requestsDoc']},{$original[1]['requestsDoc']},{$optimized[1]['requestsDoc']},";
         echo "{$original[0]['bytesInDoc']},{$optimized[0]['bytesInDoc']},{$original[1]['bytesInDoc']},{$optimized[1]['bytesInDoc']},";
+        echo "{$original[0]['result']},{$optimized[0]['result']},{$original[1]['result']},{$optimized[1]['result']},";
+        foreach($domains as $config => &$domains_data)
+            echo count($domains_data) . ',';
+        foreach($mime_stats as $config => &$mime_stats_data)
+            foreach($mime_stats_data as $mime_type => &$mime_data)
+                echo "{$mime_data['count']},{$mime_data['bytes']},";
     }
     else
     {
@@ -1115,5 +1142,54 @@ function DisplayProgress(&$tests)
     echo "<div id=\"statusText\">$statusText</div>\n";
     echo '</div><br>';
     
+}
+
+/**
+* Calculate some aggregate stats off of the individual results
+* 
+* @param mixed $original
+*/
+function GetRequestStats(&$requests, &$domains, &$mime_stats) {
+    $mime_stats['html'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['css'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['javascript'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['jpeg'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['png'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['gif'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['webp'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['other images'] = array('count' => 0, 'bytes' => 0);
+    $mime_stats['other'] = array('count' => 0, 'bytes' => 0);
+        
+    foreach( $requests as &$request )
+    {
+        if (strlen($request['host']))
+            $domains[$request['host']] = 1;
+        
+        $mime = $request['contentType'];
+        $contentType = 'other';
+        if( stripos($mime, 'javascript') !== false || 
+            stripos($mime, 'ecmascript') !== false || 
+            !strcasecmp($mime, 'text/js') )
+        {
+            $contentType = 'javascript';
+        }
+        elseif( !strcasecmp($mime, 'text/css') )
+            $contentType = 'css';
+        elseif( !strcasecmp($mime, 'text/html') )
+            $contentType = 'html';
+        elseif( !strcasecmp($mime, 'image/jpeg') )
+            $contentType = 'jpeg';
+        elseif( !strcasecmp($mime, 'image/png') )
+            $contentType = 'png';
+        elseif( !strcasecmp($mime, 'image/gif') )
+            $contentType = 'gif';
+        elseif( !strcasecmp($mime, 'image/webp') )
+            $contentType = 'webp';
+        elseif( !strncasecmp($mime, 'image/', 6) )
+            $contentType = 'other images';
+
+        $mime_stats[$contentType]['count']++;
+        $mime_stats[$contentType]['bytes'] += $request['bytesIn'];
+    }
 }
 ?>
