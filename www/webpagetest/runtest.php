@@ -49,6 +49,10 @@
                 $test['location'] = trim($req_location);
             }
             
+            // special case locations
+            if ($test['location'] == 'closest' && is_file('./settings/closest.ini') )
+                $test['location'] = GetClosestLocation($test['url']);
+            
             // Extract the multiple locations.
             if ( isset($req_multiple_locations)) 
             {
@@ -1721,5 +1725,59 @@ function RelayTest()
     
     header ("Content-type: application/json");
     echo json_encode($ret);
+}
+
+/**
+* Find the closest location in the list to the destination server
+* 
+* @param mixed $url
+*/
+function GetClosestLocation($url) {
+    $location = null;
+    $locations = parse_ini_file('./settings/closest.ini', true);
+    if (count($locations)) {
+        // figure out the IP address of the server
+        if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+            $url = 'http://' . $url;
+        $parts = parse_url($url);
+        $host = $parts['host'];
+        if (strlen($host)) {
+            $ip = gethostbyname($host);
+            try
+            {
+                include('./Net/GeoIP.php');
+                $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
+                if ($geoip) {
+                    $host_location = $geoip->lookupLocation($ip);
+                    if ($host_location) {
+                        $lat = $host_location->latitude;
+                        $lng = $host_location->longitude;
+                        
+                        // calculate the distance to each location and see which is closest
+                        $distance = 0;
+                        foreach( $locations as $loc => $pos ) {
+                            $r = 6371; // km
+                            $dLat = deg2rad($pos['lat']-$lat);
+                            $dLon = deg2rad($pos['lng']-$lng);
+                            $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat'])); 
+                            $c = 2 * atan2(sqrt($a), sqrt(1-$a)); 
+                            $dist = $r * $c;
+                            if (!isset($location) || $dist < $distance) {
+                                $location = $loc;
+                                $distance = $dist;
+                            }
+                        }
+                    }
+                }
+            }catch(Exception $e) { }
+        }
+        if (!isset($location)) {
+            foreach( $locations as $loc => $pos ) {
+                $location = $loc;
+                break;
+            }
+        }
+    }
+    return $location;
 }
 ?>
