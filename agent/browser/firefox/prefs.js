@@ -29,6 +29,8 @@ user_pref("dom.max_script_run_time", 0);
 user_pref("extensions.checkCompatibility", false);
 user_pref("extensions.update.enabled", false);
 user_pref("extensions.update.notifyUser", false);
+user_pref("extensions.shownSelectionUI", true);
+user_pref("extensions.autoDisableScopes", 14);
 user_pref("intl.charsetmenu.browser.cache", "UTF-8");
 user_pref("network.cookie.prefsMigrated", true);
 user_pref("network.proxy.type", 0);
