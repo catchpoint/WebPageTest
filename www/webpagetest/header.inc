@@ -53,52 +53,43 @@
 </div>
 
 <div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
-        if( $id )
+        if ($id) {
             $resultUrl = FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id";
-            
-        if( !count($navTabs) )
-        {
+        }
+        if (!isset($navTabs) || !count($navTabs)) {
             $navTabs = array(  'Home' => '/' );
-                            
-            if( $headerType == 'video' )
-            {
-                if( !$filmstrip )
+            if (isset($headerType) && $headerType == 'video') {
+                if (!$filmstrip) {
                     $filmstrip = urldecode($_COOKIE['fs']);
-                
-                if( $filmstrip )
+                }
+                if ($filmstrip) {
                     $navTabs['Test Result'] = '/video/compare.php?tests=' . urlencode($filmstrip);
-            }
-            else
-            {
-                $navTabs['Test Result'] = $resultUrl;
+                }
+            } else {
+                $navTabs['Test Result'] = isset($resultUrl) ? $resultUrl : '';
             }
 
             $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
 
-            if( is_dir('wptmonitor') )
+            if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
-
-            if( is_dir('forums') && !$settings['disableMybb'] )
+            }
+            if (is_dir('forums') && !$settings['disableMybb']) {
                 $navTabs['Forums'] = '/forums/';
-            
+            }
             $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
-                
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
-        
-        foreach( $navTabs as $tabName => $tabUrl )
-        {
+        foreach ($navTabs as $tabName => $tabUrl) {
             // make sure we have a test result to navigate to
-            if( strlen($tabUrl) )
-            {
+            if (strlen($tabUrl)) {
                 // highlight the current tab
                 $target = '';
                 $current = '';
                 $opens = '';
                 if( !strcasecmp($tabName, $tab) )
                     $current = ' class="current"';
-                if( substr($tabUrl, 0, 4) == 'http' )
-                {
+                if (substr($tabUrl, 0, 4) == 'http') {
                     $target = ' target="_blank"';
                     $opens = ' (opens in a new tab)';
                 }
@@ -128,8 +119,7 @@
 </div>
 
 <?php
-if( strlen($settings['alert']) )
-{
+if (isset($settings['alert']) && strlen($settings['alert'])) {
     echo '<div class="alert bold">';
     echo $settings['alert'];
     echo '</div>';

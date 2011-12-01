@@ -28,28 +28,30 @@ if (!is_dir($tempDir))
 $tempDir .= '/';
 define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
-if( $req_bare )
+if (isset($req_bare)) {
     define('BARE_UI', true);
-
+}
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
 
 // override some settings from the URI
-if( $req_bulk )
+if (isset($req_bulk)) {
     $settings['noBulk'] = 0;
-
-$cdnPath = '';
-if( isset($settings['cdn']) && $_SERVER['HTTP_SSL'] != 'On' )
-    $cdnPath = $settings['cdn'];
-$GLOBALS['cdnPath'] = $cdnPath;
-
+}
+$is_ssl = isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On';
+$GLOBALS['cdnPath'] = '';
+if (isset($settings['cdn']) && !$is_ssl) {
+    $GLOBALS['cdnPath'] = $settings['cdn'];
+}
 $GLOBALS['ptotocol'] = 'http';
-if( $_SERVER['HTTP_SSL'] == 'On' )
+if ($is_ssl) {
     $GLOBALS['ptotocol'] = 'https';
+}
 
 $tz_offset = null;
-if( isset($_COOKIE['tzo']) )
+if (isset($_COOKIE['tzo'])) {
     $tz_offset = (int)$_COOKIE['tzo'];
+}
 SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
@@ -58,16 +60,13 @@ $uid = NULL;
 $user = NULL;
 $admin = false;
 $api_keys;
-if( is_dir('./forums') && !$settings['disableMybb'] )
-{                         
+if (is_dir('./forums') && !$settings['disableMybb']) {
     ob_start();
     $supportsAuth = true;
-    
-    if( isset($_COOKIE['mybbuser']) )
-    {
+
+    if (isset($_COOKIE['mybbuser'])) {
         $dir = getcwd();
-        try
-        {
+        try {
             define("IN_MYBB",1);
             chdir('forums'); // path to MyBB
             include './global.php';
@@ -78,8 +77,7 @@ if( is_dir('./forums') && !$settings['disableMybb'] )
                 $admin = true;
             unset($mybb);
         }
-        catch(Exception $e)
-        {
+        catch(Exception $e) {
         }
         chdir($dir);
     }
@@ -103,61 +101,61 @@ if( $supportsAuth && ($admin || strpos($_COOKIE['google_email'], '@google.com') 
     $settings['enable_google_csi'] = true;
 
 // set their color selection as a cookie
-if( $req_color )
-{
+if (isset($req_color)) {
     setcookie('color', $req_color, time()+60*60*24*365, '/');
     $_REQUEST['color'] = $req_color;
 }
 
 // Load the test-specific data
-$id = htmlspecialchars($req_test);
+$id = '';
+if (isset($req_test)) {
+  $id = htmlspecialchars($req_test);
+}
 
-// if we didn't get an id explicitly, try from cookie
-if( !$id )
+// If we didn't get an id explicitly, try from cookie.
+if (!$id && isset($_COOKIE['tid'])) {
     $id = $_COOKIE['tid'];
-
-$testLabel = '';    
-if( $id )
-{
+}
+$testLabel = '';
+if ($id) {
     // see if we are serving a relay request, if so - munge the id
     if( strlen($req_rkey) )
         $id = trim(htmlspecialchars($req_rkey)) . '.' . $id;
-        
-    // set the test ID cookie (session cookie) if we're looking at a different test
-    if( strcmp($id, $_COOKIE['tid']) )
-        setcookie('tid', $id);
 
+    // Set the test ID cookie (session cookie) if we're looking at a
+    // different test.
+    if (strcmp($id, $_COOKIE['tid'])) {
+        setcookie('tid', $id);
+    }
     RestoreTest($id);   // restore the test if it is archived (and deleted)
-    
+
     $testPath = './' . GetTestPath($id);
     // test if the testPath exists. If not, download from the remote storage.
-    if( $settings['archive'] )
-    {
-        if( !is_dir($testPath) && is_file('storage/storage.ini') && is_file('storage/storage.inc') )
-        {
+    if ($settings['archive']) {
+        if (!is_dir($testPath) && is_file('storage/storage.ini') &&
+            is_file('storage/storage.inc')) {
             require_once('storage/storage.inc');
             DownloadResults($id);
         }
     }
 
     $run = htmlspecialchars($req_run);
-    if( !$run )
+    if (!$run) {
         $run = (int)1;
+    }
     $cached = (int)$req_cached;
     $cachedText = '';
-    if( $cached )
+    if ($cached) {
         $cachedText = '_Cached';
-    if( is_file("$testPath/testinfo.ini") )
-    {
+    }
+    if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
         touch("$testPath/testinfo.ini");
     }
     $testDate = null;
-    if( gz_is_file("$testPath/testinfo.json") )
-    {
+    if (gz_is_file("$testPath/testinfo.json")) {
         $test['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if (isset($test['testinfo']))
-        {
+        if (isset($test['testinfo'])) {
             if( isset($test['testinfo']['completed']))
                 $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
             if (isset($test['testinfo']['owner']) && strlen($owner) && $owner == $test['testinfo']['owner'])
@@ -174,9 +172,8 @@ if( $id )
     }
 
     // build a common label to add to the title of each of the results pages
-    if( isset($test["test"]) && isset($test["test"]["location"]) )
-    {
-        $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]); 
+    if (isset($test["test"]) && isset($test["test"]["location"])) {
+        $locs = preg_replace('/<.*>/U', '', $test["test"]["location"]);
         $locscitypos =  strpos($locs, ",");
         if ($locscitypos)
             $locs = substr($locs,0,strpos($locs, ","));
@@ -666,7 +663,6 @@ function LoadPageSpeedData($file)
 function logMsg($msg, $logFile = './log.txt')
 {
     global $debug;
-    
     if( $debug || $force )
     {
         $file = fopen($logFile, 'a');
@@ -711,65 +707,55 @@ function CountTests($path)
 */
 function BuildLocations( &$locations )
 {
-    if( !$locations['processed'] )
-    {
+    if (!isset($locations['processed'])) {
         // dynamically create a whole new tree based on the data from the locations
         // the main reason for this is to be able to support multiple browsers in each "location"
         $original = $locations;
         $locations = array();
         
         // start from the top-level locations
-        foreach( $original as $name => $loc )
-        {
+        foreach ($original as $name => $loc) {
             // just the top-level locations
-            if( isset($loc['browser']) )
-            {
+            if (isset($loc['browser'])) {
                 // clone the existing locations over for code that just accesses them directly
                 $loc['localDir'] = "./work/jobs/$name";
                 $loc['location'] = $name;
                 if( !is_dir($loc['localDir']) )
                     mkdir($loc['localDir'], 0777, true);
                 $locations[$name] = $loc;
-            }
-            else
-            {
-                if( $name == 'locations' )
+            } else {
+                if ($name == 'locations') {
                     $locations[$name] = $loc;
-                else
-                {    
+                } else {
                     $index = 1;
                     $default = $loc['default'];
                     $location = array();
-                    foreach( $loc as $key => $value )
-                    {
-                        if( is_numeric($key) )
-                        {
+                    foreach ($loc as $key => $value) {
+                        if (is_numeric($key)) {
                             // make sure we have a default
-                            if( !strlen($default) )
+                            if (!strlen($default)) {
                                 $default = $value;
-
+                            }
                             // clone the individual configuration based on the available browsers
                             $configuration = $original[$value];
-                            if( strlen($configuration['browser']) )
-                            {
+                            if (strlen($configuration['browser'])) {
                                 $configuration['localDir'] = "./work/jobs/$value";
                                 $configuration['location'] = $value;
-                                if( !is_dir($configuration['localDir']) )
+                                if (!is_dir($configuration['localDir'])) {
                                     mkdir($configuration['localDir'], 0777, true);
-
+                                }
                                 $browsers = array();
                                 $parts = explode(',', $configuration['browser']);
-                                foreach( $parts as $browser )
+                                foreach ($parts as $browser) {
                                     $browsers[] = trim($browser);
-                                if( count($browsers) > 1 )
-                                {
+                                }
+                                if (count($browsers) > 1) {
                                     // default to the first browser in the list
-                                    if( $default == $value )
+                                    if ($default == $value) {
                                         $default .= ':' . $browsers[0];
-
+                                    }
                                     // build the actual configurations
-                                    foreach( $browsers as $browser )
-                                    {
+                                    foreach ($browsers as $browser) {
                                         $label = $value . ':' . $browser;
                                         $location[$index] = $label;
                                         $index++;
@@ -778,20 +764,17 @@ function BuildLocations( &$locations )
                                         $cfg['label'] = $cfg['label'] . " - $browser";
                                         $locations[$label] = $cfg;
                                     }
-                                }
-                                else
-                                {
+                                } else {
                                     // for single-browser locations, just copy it over as it exists
                                     $location[$index] = $value;
                                     $index++;
                                 }
                             }
-                        }
-                        elseif( $key !== 'default' )
+                        } elseif ($key !== 'default') {
                             $location[$key] = $value;
+                        }
                     }
-                    if( $index > 1 )
-                    {
+                    if ($index > 1) {
                         $location['default'] = $default;
                         $locations[$name] = $location;
                     }
@@ -807,37 +790,33 @@ function BuildLocations( &$locations )
 * 
 * @param mixed $locations
 */
-function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null )
-{
-    BuildLocations( $locations );
-    
+function FilterLocations(&$locations, $includeHidden = '',
+                         $stripBrowser = null) {
+    BuildLocations($locations);
     // drop the main index of any hidden locations so they don't show up in the map view
-    foreach( $locations as $name => &$locRef )
-    {
-        if( $locRef['hidden'] && !$_REQUEST['hidden'] )
-        {
+    foreach ($locations as $name => &$locRef) {
+        if (isset($locRef['hidden']) && !isset($_REQUEST['hidden'])) {
             $hide = true;
-            if( strlen($includeHidden) && stripos($locRef['hidden'], $includeHidden) !== false )
+            if (strlen($includeHidden) &&
+                stripos($locRef['hidden'], $includeHidden) !== false) {
                 $hide = false;
-            
-            if( $hide )
+            }
+            if ($hide) {
                 unset( $locations[$name] );
+            }
         }
         unset($locRef['hidden']);
     }
-    
+
     // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
-    if( !$_REQUEST['hidden'] && (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows'))
-    {
+    if (!isset($_REQUEST['hidden']) &&
+       (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows')) {
         // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
-        foreach( $locations as $name => &$locRef )
-        {
-            if( isset($locRef['browser']) )
-            {
+        foreach ($locations as $name => &$locRef) {
+            if (isset($locRef['browser'])) {
                 // now check the times
                 $file = "./tmp/$name.tm";
-                if( is_file($file) )
-                {
+                if (is_file($file)) {
                     $updated = filemtime($file);
                     $now = time();
                     $elapsed = 0;
@@ -850,74 +829,64 @@ function FilterLocations( &$locations, $includeHidden = '', $stripBrowser = null
             }
         }
     }
-    
     // next pass, filter browsers if we were asked to
-    if( isset($stripBrowser) )
-    {
-        foreach( $locations as $name => &$locRef )
-        {
-            if( isset($locRef['browser']) )
-            {
+    if (isset($stripBrowser)) {
+        foreach ($locations as $name => &$locRef) {
+            if (isset($locRef['browser'])) {
                 $remove = false;
-                foreach( $stripBrowser as $browser )
-                {
+                foreach ($stripBrowser as $browser) {
                     $pos = stripos($locRef['browser'], $browser);
-                    if( $pos !== false )
-                    {
+                    if ($pos !== false) {
                         $remove = true;
                         break;
                     }
                 }
-                    
-                if( $remove )
-                {
+                if ($remove) {
                     unset($locations[$name]);
                 }
-            }
-            else
-            {
+            } else {
                 // strip the browsers from the label
-                foreach( $stripBrowser as $browser )
+                foreach ($stripBrowser as $browser) {
                     $locRef['label'] = preg_replace("/[, -]*$browser/i", '', $locRef['label']);
+                }
             }
         }
     }
-        
+
     // next pass, remove any top-level locations whose sub-locations have all been removed
-    foreach( $locations as $name => &$locRef )
-    {
+    foreach ($locations as $name => &$locRef) {
         // top-level locations do not have the browser specified
         // and "locations" is the uber-top-level grouping
-        if( $name != 'locations' && !isset($locRef['browser']) )
-        {
+        if ($name != 'locations' && $name != 'processed' &&
+            !isset($locRef['browser'])) {
             $ok = false;        // default to deleting the location
             $newLoc = array();  // new, filtered copy of the location
             $default = null;    // the default location for the group
-            
+
             // remove any of the child locations that don't exist
             $index = 0;
-            foreach( $locRef as $key => $val )
-            {
+            foreach ($locRef as $key => $val) {
                 // the sub-locations are identified with numeric keys (1, 2, 3)
-                if( is_numeric($key) )
-                {
+                if (is_numeric($key)) {
                     // check the location that is being referenced to see if it exists
-                    if( isset($locations[$val]) )
-                    {
+                    if (isset($locations[$val])) {
                         $ok = true;
                         $index++;
                         $newLoc[$index] = $val;
-                        if( isset($locRef['default']) && $locRef['default'] == $val )
+                        if (isset($locRef['default']) &&
+                            $locRef['default'] == $val) {
                             $default = $val;
-                    }
-                    else
-                    {
-                        if( isset($locRef['default']) && $locRef['default'] == $val )
+                        }
+                    } else {
+                        if (isset($locRef['default']) &&
+                            $locRef['default'] == $val) {
                             unset($locRef['default']);
+                        }
                     }
                 }
-                elseif( $key != 'default' )
+                elseif ($key != 'default') {
                     $newLoc[$key] = $val;
+                }
             }
             
             if( $ok )
@@ -979,57 +948,52 @@ function GetLocationFromConfig(&$locations, $config)
 
 /**
 * Run through the location selections and build the default selections (instead of doing this in javascript)
-* 
+*
 * @param mixed $locations
 */
-function ParseLocations(&$locations)
-{
+function ParseLocations(&$locations) {
     global $connectivity;
     $loc = array();
     $loc['locations'] = array();
 
     // build the list of locations
-    foreach($locations['locations'] as $index => $name)
-    {
-        if( is_numeric($index) )
-        {
+    foreach($locations['locations'] as $index => $name) {
+        if (is_numeric($index)) {
             $location['label'] = $locations[$name]['label'];
-            $location['comment'] = str_replace("'", '"', $locations[$name]['comment']);
+            $location['comment'] = '';
+            if (isset($locations[$name]['comment'])) {
+                $location['comment'] = str_replace(
+                    "'", '"', $locations[$name]['comment']);  // "
+            }
             $location['name'] = $name;
             $loc['locations'][$name] = $location;
         }
     }
-    
+
     // see if they have a saved location from their cookie
     $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
-    if( !$currentLoc || !isset($loc['locations'][$currentLoc]) )
-    {
+    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
         // nope, try thee default
         $currentLoc = $locations['locations']['default'];
     }
-    if( !$currentLoc || !isset($loc['locations'][$currentLoc]) )
-    {
+    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
         // if all else fails, just select the first one
-        foreach( $loc['locations'] as $key => &$val )
-        {
+        foreach ($loc['locations'] as $key => &$val) {
             $currentLoc = $key;
             break;
         }
     }
-    
+
     // select the location
     $loc['locations'][$currentLoc]['checked'] = true;
-    
+
     // build the list of browsers for the location
     $loc['browsers'] = array();
-    foreach($locations[$currentLoc] as $index => $config)
-    {
-        if( is_numeric($index) )
-        {
+    foreach ($locations[$currentLoc] as $index => $config) {
+        if (is_numeric($index)) {
             $browser = $locations[$config]['browser'];
             $browserKey = str_replace(' ', '', $browser);
-            if( strlen($browserKey) && strlen($browser) )
-            {
+            if (strlen($browserKey) && strlen($browser)) {
                 $b = array();
                 $b['label'] = $browser;
                 $b['key'] = $browserKey;
@@ -1037,90 +1001,76 @@ function ParseLocations(&$locations)
             }
         }
     }
-    
+
     // default to the browser from their saved cookie
-    $currentBrowser;
-    if( $_COOKIE["cfg"] && isset($locations[$_COOKIE["cfg"]]) )
-    {
+    $currentBrowser = '';
+    if ($_COOKIE["cfg"] && isset($locations[$_COOKIE["cfg"]])) {
         $currentBrowser = str_replace(' ', '', $locations[$_COOKIE["cfg"]]['browser']);
         $currentConfig = $_COOKIE["cfg"];
     }
-    if( !strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser]) )
-    {
+    if (!strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser])) {
         // try the browser from the default config
         $cfg = $locations[$currentLoc]['default'];
-        if( strlen($cfg) )
-        {
+        if (strlen($cfg)) {
             $currentBrowser = str_replace(' ', '', $locations[$cfg]['browser']);
             $currentConfig = $cfg;
         }
     }
-    if( !strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser]) )
-    {
+    if (!strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser])) {
         // just select the first one if all else fails
-        foreach( $loc['browsers'] as $key => &$val )
-        {
+        foreach ($loc['browsers'] as $key => &$val) {
             $currentBrowser = $key;
             break;
         }
     }
     $loc['browsers'][$currentBrowser]['selected'] = true;
-    
+
     // build the list of connection types
     $loc['bandwidth']['dynamic'] = false;
     $loc['connections'] = array();
-    foreach($locations[$currentLoc] as $index => $config)
-    {
-        if( is_numeric($index) )
-        {
+    foreach($locations[$currentLoc] as $index => $config) {
+        if (is_numeric($index)) {
             $browserKey = str_replace(' ', '', $locations[$config]['browser']);
-            if( strlen($browserKey) && $browserKey == $currentBrowser )
-            {
-                if( isset($locations[$config]['connectivity']) )
-                {
+            if (strlen($browserKey) && $browserKey == $currentBrowser) {
+                if (isset($locations[$config]['connectivity'])) {
                     $connection = array();
                     $connection['key'] = $config;
                     $connection['label'] = $locations[$config]['connectivity'];
                     $loc['connections'][$config] = $connection;
-                }
-                else
-                {
+                } else {
                     $loc['bandwidth']['dynamic'] = true;
                     $loc['bandwidth']['down'] = 1500;
                     $loc['bandwidth']['up'] = 384;
                     $loc['bandwidth']['latency'] = 50;
                     $loc['bandwidth']['plr'] = 0;
 
-                    foreach( $connectivity as $key => &$conn )
-                    {
+                    foreach ($connectivity as $key => &$conn) {
                         $connKey = $config . '.' . $key;
-                        if( !$currentConfig )
+                        if (!$currentConfig) {
                             $currentConfig = $connKey;
-
+                        }
                         $connection = array();
                         $connection['key'] = $connKey;
                         $connection['label'] = $conn['label'];
                         $loc['connections'][$connKey] = $connection;
-                        
-                        if( $currentConfig == $connKey )
-                        {
+                        if ($currentConfig == $connKey) {
                             $loc['bandwidth']['down'] = $conn['bwIn'] / 1000;
                             $loc['bandwidth']['up'] = $conn['bwOut'] / 1000;
                             $loc['bandwidth']['latency'] = $conn['latency'];
-                            if( isset($conn['plr']) )
+                            if (isset($conn['plr'])) {
                                 $loc['bandwidth']['plr'] = $conn['plr'];
+                            }
                         }
                     }
-                    
                     // add the custom config option
                     $connKey = $config . '.custom';
                     $connection = array();
                     $connection['key'] = $connKey;
                     $connection['label'] = 'Custom';
                     $loc['connections'][$connKey] = $connection;
-                    
-                    if( !$currentConfig )
+                    if (!$currentConfig) {
                         $currentConfig = $connKey;
+                    }
                 }
             }
         }

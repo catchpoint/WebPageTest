@@ -2,29 +2,33 @@
 include 'common.inc';
 
 // see if we are overriding the max runs
-if( $_COOKIE['maxruns'] )
+if (isset($_COOKIE['maxruns'])) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
-if( $_GET['maxruns'] )
-{
+}
+if (isset($_GET['maxruns'])) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
     setcookie("maxruns", $settings['maxruns']);    
 }
-    
-if( !$settings['maxruns'] )
-    $settings['maxruns'] = 10;
-if( $_REQUEST['map'] )
-    $settings['map'] = 1;
 
+if (!isset($settings['maxruns'])) {
+    $settings['maxruns'] = 10;
+}
+if (isset($_REQUEST['map'])) {
+    $settings['map'] = 1;
+}
 // load the secret key (if there is one)
 $secret = '';
 $keys = parse_ini_file('./settings/keys.ini', true);
-if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
+if ($keys && isset($keys['server']) && isset($keys['server']['secret'])) {
   $secret = trim($keys['server']['secret']);
-  
-$url = $req_url;
-if( !isset($url) || !strlen($url) )
+}
+$url = '';
+if (isset($req_url)) {
+  $url = $req_url;
+}
+if (!strlen($url)) {
     $url = 'Enter a Website URL';
-    
+}
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 
 // if they have custom bandwidth stored, remember it
@@ -79,7 +83,7 @@ $loc = ParseLocations($locations);
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <?php
-                    if( $settings['mobile'] )
+                    if (isset($settings['mobile']))
                         echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
                     ?>
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
@@ -101,7 +105,7 @@ $loc = ParseLocations($locations);
                                 }
                                 ?>
                             </select>
-                            <?php if( $settings['map'] ) { ?>
+                            <?php if (isset($settings['map'])) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
                             <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
@@ -122,7 +126,7 @@ $loc = ParseLocations($locations);
                             </select>
                         </li>
                     </ul>
-                    <?php if ($settings['multi_locations']) { ?>
+                    <?php if (isset($settings['multi_locations'])) { ?>
                     <a href="javascript:OpenMultipleLocations()"><font color="white">Multiple locations/browsers?</font></a>
                     <br>
                     <div id="multiple-location-dialog" align=center style="display: none; color: white;">
@@ -163,10 +167,10 @@ $loc = ParseLocations($locations);
                                 <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
-                                <?php if($settings['enableVideo']) { ?>
+                                <?php if (isset($settings['enableVideo'])) { ?>
                                 <li><a href="#video">Video</a></li>
                                 <?php } ?>
-                                <?php if(!$settings['noBulk']) { ?>
+                                <?php if (!isset($settings['noBulk'])) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -229,7 +233,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="keep_test_private">Keep Test Private</label>
-                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if( ((int)$_COOKIE["testOptions"] & 1) || $_REQUEST['hidden'] ) echo " checked=checked"; ?>>
+                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)$_COOKIE["testOptions"] & 1) || isset($_REQUEST['hidden'])) echo " checked=checked"; ?>>
                                     </li>
                                     <li>
                                         <label for="label">Label</label>
@@ -392,7 +396,7 @@ $loc = ParseLocations($locations);
                             </div>
                             <?php } ?>
 
-                            <?php if(!$settings['noBulk']) { ?>
+                            <?php if (!isset($settings['noBulk'])) { ?>
                             <div id="bulk" class="test_subbox">
                                 <p>
                                     <label for="bulkurls" class="full_width">

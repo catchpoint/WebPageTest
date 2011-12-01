@@ -1,7 +1,7 @@
 <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 <?php
 if( count($page_keywords) )
-    echo '<meta name="keywords" content="' . implode(',', $page_keywords) . "\">\n";
+    echo '<meta name="keywords" content="' . implode(',', $page_keywords) . "\">\n";  //"
 if( strlen($page_description) )
     echo "<meta name=\"description\" content=\"$page_description\">\n";
 ?>
@@ -52,7 +52,7 @@ if( strlen($page_description) )
     echo "\n</style>\n";
         
     // include the analytics code if it is appropriate
-    if( !$noanalytics )
+    if (!isset($noanalytics))
         include('analytics.inc');
         
         
