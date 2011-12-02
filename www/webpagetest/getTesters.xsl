@@ -21,7 +21,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="8"><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="9"><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
@@ -32,6 +32,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>Busy?</th>
             <th>Last Check (minutes)</th>
             <th>Last Work (minutes)</th>
+            <th>Free Disk (GB)</th>
           </tr>
           <xsl:for-each select="testers/tester">
               <tr>
@@ -43,6 +44,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="busy"/></td>
                 <td><xsl:value-of select="elapsed"/></td>
                 <td><xsl:value-of select="last"/></td>
+                <td><xsl:value-of select="freedisk"/></td>
               </tr>
           </xsl:for-each>
         </xsl:if>

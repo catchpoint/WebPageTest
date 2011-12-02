@@ -44,6 +44,7 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_status(status)
   ,_version(0)
   ,_exit(false) {
+  SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the binary (for software updates)
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(NULL, file, _countof(file))) {
@@ -88,12 +89,12 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   DeleteDirectory(test._directory, false);
 
   // build the url for the request
+  CString buff;
   CString url = _settings._server + _T("work/getwork.php?");
   url += CString(_T("location=")) + _settings._location;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_version) {
-    CString buff;
     buff.Format(_T("&software=wpt&ver=%d"), _version);
     url += buff;
   }
@@ -101,6 +102,12 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
     url += CString(_T("&ec2=")) + _settings._ec2_instance;
+  ULARGE_INTEGER fd;
+  if (GetDiskFreeSpaceEx(_T("C:\\"), NULL, NULL, &fd)) {
+    double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
+    buff.Format(_T("&freedisk=%0.3f"), freeDisk);
+    url += buff;
+  }
 
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {

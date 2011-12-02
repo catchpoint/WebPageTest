@@ -1272,10 +1272,23 @@ function ArchiveTest($id)
                                 // post the file to a S3-style bucket (just supporting Internet archive right now)
                                 require_once('./lib/S3.php');
                                 $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
-                                $metaHeaders = array();
-                                $requestHeaders = array('x-archive-queue-derive:0');
-                                if ($s3->putObject($s3->inputFile($zipFile, false), $settings['archive_s3_bucket'], "$id.zip", S3::ACL_PUBLIC_READ, $metaHeaders, $requestHeaders))
-                                    $ret = true;
+                                $separator = strrpos($id, '_');
+                                if ($separator !== false) {
+                                    $bucket = $settings['archive_s3_bucket'];
+                                    $file = "$id.zip";
+                                    $metaHeaders = array();
+                                    $requestHeaders = array();
+                                    if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
+                                        // special-case Internet Archive storage
+                                        $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
+                                        $file = substr($id, $separator + 1);
+                                        $requestHeaders = array('x-archive-queue-derive' => '0',
+                                                                'x-archive-meta-collection' => 'httparchive',
+                                                                'x-archive-auto-make-bucket' => '1');
+                                    }
+                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, "$file.zip", S3::ACL_PUBLIC_READ, $metaHeaders, $requestHeaders))
+                                        $ret = true;
+                                }
                             }
                         } 
                         // make sure we don't leave a file hanging around
@@ -1323,11 +1336,21 @@ function RestoreTest($id)
                 $source = GetArchiveFile($id);
                 copy($source, $zipfile);
             } elseif (isset($settings['archive_s3_url'])) {
-                $url = trim($settings['archive_s3_url']) . "$id.zip";
-                $data = file_get_contents($url);
-                if ($data) {
-                    file_put_contents($zipfile, $data);
-                    unset($data);
+                $separator = strrpos($id, '_');
+                if ($separator !== false) {
+                    $bucket = $settings['archive_s3_bucket'];
+                    $file = "$id.zip";
+                    if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
+                        // special-case Internet Archive storage
+                        $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
+                        $file = substr($id, $separator + 1);
+                    }
+                    $url = trim($settings['archive_s3_url']) . "$bucket/$file.zip";
+                    $data = file_get_contents($url);
+                    if ($data) {
+                        file_put_contents($zipfile, $data);
+                        unset($data);
+                    }
                 }
             }
             $zip = new ZipArchive;
@@ -1658,7 +1681,7 @@ function GetTesters($locationId)
             {
                 if( !$tester['offline'] )
                 {
-                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver']);
+                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver'], 'freedisk' => $tester['freedisk']);
                     
                     // last time it checked in
                     if( isset($tester['updated']) )

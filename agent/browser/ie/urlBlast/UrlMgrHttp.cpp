@@ -34,6 +34,7 @@ CUrlMgrHttp::CUrlMgrHttp(CLog &logRef):
 	, version(0)
 	, noUpdate(false)
 {
+  SetErrorMode(SEM_FAILCRITICALERRORS);
 	// see if video encoding is possible on this system
 
 	// check if x264.exe is in the same directory as urlblast
@@ -550,10 +551,18 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 				session->SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout), 0);
 				session->SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout), 0);
 
+        CString diskSpace;
+        ULARGE_INTEGER fd;
+        if( GetDiskFreeSpaceEx(_T("C:\\"), NULL, NULL, &fd) )
+        {
+          double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
+          diskSpace.Format(_T("&freedisk=%0.3f"), freeDisk);
+        }
+
 				CHttpConnection * connection = session->GetHttpConnection(host, port);
 				if( connection )
 				{
-					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
+					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
 					if( file )
 					{
 						if( file->SendRequest() )
