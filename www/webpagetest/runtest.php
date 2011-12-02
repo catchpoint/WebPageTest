@@ -253,49 +253,66 @@
                             $line = trim($line);
                             if( strlen($line) )
                             {
-                                if( substr($line, 0, 1) == '[' )
+                                if( substr($line, 0, 1) == '<' )
                                 {
-                                    if( count($script) )
-                                    {
-                                        $entry = ParseBulkScript($script);
-                                        if( $entry )
-                                            $bulk['urls'][] = $entry;
+                                    if (!strcasecmp($line, '<test>')) {
+                                        $entry = array();
+                                        $current_mode = 'test';
+                                    } elseif (!strcasecmp($line, '</test>')) {
+                                        $bulk['urls'][] = $entry;
+                                        unset($entry);
+                                    } elseif (!strcasecmp($line, '<script>')) {
+                                        $script = array();
+                                        $current_mode = 'test_script';
+                                    } elseif (!strcasecmp($line, '</script>')) {
+                                        $current_mode = 'test';
+                                        $entry = ParseBulkScript($script, $entry);
                                         unset($script);
                                     }
-                                    
-                                    if( !strcasecmp($line, '[urls]') )
-                                        $current_mode = 'urls';
-                                    elseif(!strcasecmp($line, '[variations]'))
-                                        $current_mode = 'variations';
-                                    elseif(!strcasecmp($line, '[script]'))
-                                    {
-                                        $script = array();
-                                        $current_mode = 'script';
+                                } elseif ($current_mode == 'test') {
+                                    $split = strpos($line, '=');
+                                    if ($split > 0) {
+                                        $key = substr($line, 0, $split);
+                                        $value = substr($line, $split + 1);
+                                        if ($key == 'label')
+                                            $entry['l'] = $value;
                                     }
-                                    else
-                                        $current_mode = '';
-                                }
-                                elseif( $current_mode == 'urls' )
-                                {
-                                    $entry = ParseBulkUrl($line);
-                                    if( $entry )
-                                        $bulk['urls'][] = $entry;
-                                }
-                                elseif( $current_mode == 'variations' )
-                                {
-                                    $entry = ParseBulkVariation($line);
-                                    if( $entry )
-                                        $bulk['variations'][] = $entry;
-                                }
-                                elseif( $current_mode == 'script' )
-                                {
+                                } elseif ($current_mode == 'test_script') {
                                     $script[] = $line;
+                                } else {
+                                    if (substr($line, 0, 1) == '[') {
+                                        if (count($script)) {
+                                            $entry = ParseBulkScript($script);
+                                            if( $entry )
+                                                $bulk['urls'][] = $entry;
+                                            unset($script);
+                                        }
+                                        
+                                        if( !strcasecmp($line, '[urls]') )
+                                            $current_mode = 'urls';
+                                        elseif(!strcasecmp($line, '[variations]'))
+                                            $current_mode = 'variations';
+                                        elseif (!strcasecmp($line, '[script]')) {
+                                            $script = array();
+                                            $current_mode = 'script';
+                                        } else
+                                            $current_mode = '';
+                                    } elseif ($current_mode == 'urls') {
+                                        $entry = ParseBulkUrl($line);
+                                        if( $entry )
+                                            $bulk['urls'][] = $entry;
+                                    } elseif ($current_mode == 'variations') {
+                                        $entry = ParseBulkVariation($line);
+                                        if( $entry )
+                                            $bulk['variations'][] = $entry;
+                                    } elseif ($current_mode == 'script') {
+                                        $script[] = $line;
+                                    }
                                 }
                             }
                         }
                         
-                        if( count($script) )
-                        {
+                        if (count($script)) {
                             $entry = ParseBulkScript($script);
                             if( $entry )
                                 $bulk['urls'][] = $entry;
@@ -889,48 +906,35 @@ function ValidateScript(&$script, &$error)
 */
 function FixScript(&$test, &$script)
 {
-    if( strlen($script) )
-    {
+    if (strlen($script)) {
         $newScript = '';
         $lines = explode("\n", $script);
-        foreach( $lines as $line )
-        {
+        foreach ($lines as $line) {
             $line = trim($line);
-            if( strlen($line) )
-            {
+            if (strlen($line)) {
                 if( strpos($line, "\t") !== false )
                     $newScript .= "$line\r\n";
-                else
-                {
+                else {
                     $command = strtok(trim($line), " \t\r\n");
-                    if( $command !== false )
-                    {
-                        if( $command == "csiVariable" )
-                        {
+                    if ($command !== false) {
+                        if ($command == "csiVariable") {
                             $target = strtok("\r\n");
-			                if( isset($test['extract_csi']) )
-			                {
+			                if (isset($test['extract_csi'])) {
 				                array_push($test['extract_csi'], $target);                                
-			                }
-			                else
-			                {
+			                } else {
 				                $test['extract_csi'] = array($target);
 			                }
                             continue;
                         }
                         $newScript .= $command;
                         $expected = ScriptParameterCount($command);
-                        if( $expected == 2 )
-                        {
+                        if ($expected == 2) {
                             $target = strtok("\r\n");
-                            if( $target !== false )
+                            if ($target !== false)
                                 $newScript .= "\t$target";
-                        }
-                        elseif( $expected = 3 )
-                        {
+                        } elseif($expected = 3) {
                             $target = strtok(" \t\r\n");
-                            if( $target !== false )
-                            {
+                            if ($target !== false) {
                                 $newScript .= "\t$target";
                                 $value = strtok("\r\n");
                                 if( $value !== false )
@@ -1651,32 +1655,29 @@ function ParseBulkVariation($line)
 * 
 * @param mixed $script
 */
-function ParseBulkScript(&$script)
-{
+function ParseBulkScript(&$script, $current_entry = null) {
     global $test;
     $entry = null;
     
-    if( count($script) )
-    {
+    if (count($script)) {
         $s = '';
-        $entry = array();
-        foreach($script as $line)
-        {
+        if (isset($current_entry))
+            $entry = $current_entry;
+        else
+            $entry = array();
+        foreach ($script as $line) {
             if( !strncasecmp($line, 'label=', 6) )
                 $entry['l'] = trim(substr($line,6));
-            else
-            {
+            else {
                 $s .= $line;
                 $s .= "\r\n";
             }
         }
 
         $entry['u'] = ValidateScript($s, $error);
-                
-        if( strlen($entry['u']) )
+        if (strlen($entry['u']))
             $entry['s'] = $s;
-        else
-        {
+        else {
             unset($entry);
         }
     }
