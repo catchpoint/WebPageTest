@@ -17,6 +17,8 @@ user_pref("browser.cache.disk.capacity", 1048576);
 user_pref("browser.cache.disk.smart_size.first_run", false);
 user_pref("browser.cache.disk.smart_size_cached_value", 1048576);
 user_pref("browser.rights.3.shown", true);
+user_pref("browser.safebrowsing.enabled", false);
+user_pref("browser.safebrowsing.malware.enabled", false);
 user_pref("browser.safebrowsing.remotelookups", false);
 user_pref("browser.search.update", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
