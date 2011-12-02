@@ -141,7 +141,7 @@ wpt.moz.main.getTask = function() {
   }
 };
 
-// notification that navigation started
+// Send message that navigation started.
 wpt.moz.main.onNavigate = function() {
   wpt.moz.main.sendEventToDriver_('navigate');
   // We used to record the time here, so that events could send
@@ -151,10 +151,25 @@ wpt.moz.main.onNavigate = function() {
   // and the chrome extension sends times based on it.
 };
 
-// notification that the page loaded
-wpt.moz.main.onLoad = function() {
+// Send onload & W3C navigation timing events.
+wpt.moz.main.onLoad = function(win) {
   g_active = false;
   wpt.moz.main.sendEventToDriver_('load');
+  setTimeout(function() {
+      var timingParams = {};
+      function addTime(name) {
+        if (win.performance.timing[name] > 0) {
+          timingParams[name] = Math.max(0, (
+              win.performance.timing[name] -
+              win.performance.timing['navigationStart']));
+        }
+      };
+      addTime('domContentLoadedEventStart');
+      addTime('domContentLoadedEventEnd');
+      addTime('loadEventStart');
+      addTime('loadEventEnd');
+      wpt.moz.main.sendEventToDriver_('window_timing', timingParams);
+  }, 0);
 };
 
 /**
@@ -173,7 +188,7 @@ function onPageLoad(event) {
   if (!win || win !== win.top)
     return;
 
-  wptExtension.loadStop();
+  wptExtension.loadStop(win);
 }
 
 /**
@@ -190,7 +205,7 @@ function onPageHide(event) {
   if (!win || win !== win.top)
     return;
 
-  wptExtension.loadStart();
+  wptExtension.loadStart(win);
 }
 
 var wptExtension = {
@@ -210,9 +225,9 @@ var wptExtension = {
       wpt.moz.main.onNavigate();
     }
   },
-  loadStop: function() {
+  loadStop: function(win) {
     if (g_active) {
-      wpt.moz.main.onLoad();
+      wpt.moz.main.onLoad(win);
     }
   }
 };
