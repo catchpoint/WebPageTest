@@ -104,11 +104,11 @@ public:
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
   LARGE_INTEGER _dom_elements_time;
-  LARGE_INTEGER _dom_content_loaded_event_start;
-  LARGE_INTEGER _dom_content_loaded_event_end;
+  DWORD _dom_content_loaded_event_start;
+  DWORD _dom_content_loaded_event_end;
   LARGE_INTEGER _on_load;
-  LARGE_INTEGER _load_event_start;
-  LARGE_INTEGER _load_event_end;
+  DWORD _load_event_start;
+  DWORD _load_event_end;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;

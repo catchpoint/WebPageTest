@@ -82,10 +82,10 @@ void TestState::Init() {
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
   _step_start.QuadPart = 0;
-  _dom_content_loaded_event_start.QuadPart = 0;
-  _dom_content_loaded_event_end.QuadPart = 0;
-  _load_event_start.QuadPart = 0;
-  _load_event_end.QuadPart = 0;
+  _dom_content_loaded_event_start = 0;
+  _dom_content_loaded_event_end = 0;
+  _load_event_start = 0;
+  _load_event_end = 0;
   _on_load.QuadPart = 0;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
@@ -109,10 +109,10 @@ void TestState::Reset(bool cascade) {
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _on_load.QuadPart = 0;
-    _dom_content_loaded_event_start.QuadPart = 0;
-    _dom_content_loaded_event_end.QuadPart = 0;
-    _load_event_start.QuadPart = 0;
-    _load_event_end.QuadPart = 0;
+    _dom_content_loaded_event_start = 0;
+    _dom_content_loaded_event_end = 0;
+    _load_event_start = 0;
+    _load_event_end = 0;
     _first_navigate.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
@@ -210,10 +210,10 @@ void TestState::OnNavigate() {
     WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
     UpdateBrowserWindow();
     GrabVideoFrame(true);
-    _dom_content_loaded_event_start.QuadPart = 0;
-    _dom_content_loaded_event_end.QuadPart = 0;
-    _load_event_start.QuadPart = 0;
-    _load_event_end.QuadPart = 0;
+    _dom_content_loaded_event_start = 0;
+    _dom_content_loaded_event_end = 0;
+    _load_event_start = 0;
+    _load_event_end = 0;
     _dom_elements_time.QuadPart = 0;
     _on_load.QuadPart = 0;
     if (!_current_document) {
@@ -252,21 +252,9 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
   Save web timings for DOMContentLoaded event.
 -----------------------------------------------------------------------------*/
 void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
-  if (_active && _step_start.QuadPart && _ms_frequency.QuadPart) {
-    if (start) {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Set _dom_content_loaded_event_start: %dms\n"),
-               start);
-      _dom_content_loaded_event_start.QuadPart = _step_start.QuadPart +
-          _ms_frequency.QuadPart * start;
-    }
-    if (end) {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Set _dom_content_loaded_event_end: %dms\n"),
-               end);
-      _dom_content_loaded_event_end.QuadPart = _step_start.QuadPart +
-          _ms_frequency.QuadPart * end;
-    }
+  if (_active) {
+    _dom_content_loaded_event_start = start;
+    _dom_content_loaded_event_end = end;
   }
 }
 
@@ -274,20 +262,9 @@ void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
   Save web timings for load event.
 -----------------------------------------------------------------------------*/
 void TestState::SetLoadEvent(DWORD start, DWORD end) {
-  if (_active && _step_start.QuadPart && _ms_frequency.QuadPart) {
-    if (start) {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Set _load_event_start: %dms\n"), start);
-      _load_event_start.QuadPart = _step_start.QuadPart +
-          _ms_frequency.QuadPart * start;
-    }
-    if (end) {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Set _load_event_end: %dms\n"), end);
-      _load_event_end.QuadPart = _step_start.QuadPart +
-          _ms_frequency.QuadPart * end;
-    }
-    _current_document = 0;
+  if (_active) {
+    _load_event_start = start;
+    _load_event_end = end;
   }
 }
 

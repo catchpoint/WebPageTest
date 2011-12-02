@@ -547,10 +547,14 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += FormatTime(_test_state._title_time);
 
     // W3C Navigation timings
-    result += FormatTime(_test_state._load_event_start);
-    result += FormatTime(_test_state._load_event_end);
-    result += FormatTime(_test_state._dom_content_loaded_event_start);
-    result += FormatTime(_test_state._dom_content_loaded_event_end);
+    buff.Format("%d\t", _test_state._load_event_start);
+    result += buff;
+    buff.Format("%d\t", _test_state._load_event_end);
+    result += buff;
+    buff.Format("%d\t", _test_state._dom_content_loaded_event_start);
+    result += buff;
+    buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
+    result += buff;
 
     result += "\r\n";
 
