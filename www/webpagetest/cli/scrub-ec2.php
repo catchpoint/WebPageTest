@@ -7,8 +7,11 @@ set_time_limit(0);
 $minimum = true;
 
 $counts = array();
-foreach($regions as $region => &$regionData)
-    $counts[$region] = 0;
+foreach( $regions as $region => &$amiData ) {
+    foreach( $amiData as $ami => &$regionData ) {
+        $counts["$region.$ami"] = 0;
+    }
+}
 
 // we only terminate instances at the top of the hour, but we can add instances at other times
 $addOnly = true;
@@ -141,7 +144,7 @@ if( $ec2 )
             if( !$addOnly )
             {
                 $termCount = count($terminate);
-                echo "Terminating $termCount out of {$counts[$region]} instances running in $region...";
+                echo "Terminating $termCount out of {$counts["$region.$ami"]} instances running in $region...";
                 if( $termCount )
                 {
                     $response = $ec2->terminate_instances($terminate);
