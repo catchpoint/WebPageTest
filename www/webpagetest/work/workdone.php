@@ -1,5 +1,5 @@
 <?php
-$debug = 1; // SK: Debug info.
+//$debug = 1; // Uncomment to enable logging.
 chdir('..');
 include('common.inc');
 require_once('./lib/pclzip.lib.php');
