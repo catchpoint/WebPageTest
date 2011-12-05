@@ -9,8 +9,8 @@ if($settings['analytics'])
     if( isset($gaTemplate) && strlen($gaTemplate) )
         echo "_gaq.push(['_setCustomVar', 1, 'Template', '$gaTemplate', 3]);\n";
     ?>
+    _gaq.push(['_setSiteSpeedSampleRate', 100]);
     _gaq.push(['_trackPageview']);
-    _gaq.push(['_trackPageLoadTime']);
 
     (function() {
     var ga = document.createElement('script');
