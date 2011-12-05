@@ -49,10 +49,6 @@
                 $test['location'] = trim($req_location);
             }
             
-            // special case locations
-            if ($test['location'] == 'closest' && is_file('./settings/closest.ini') )
-                $test['location'] = GetClosestLocation($test['url']);
-            
             // Extract the multiple locations.
             if ( isset($req_multiple_locations)) 
             {
@@ -194,6 +190,12 @@
         if( !isset($test['owner']) || !strlen($test['owner']) )
           $test['owner'] = sha1(uniqid(uniqid('', true), true));
           
+        // special case locations
+        $use_closest = false;
+        if ($test['location'] == 'closest' && is_file('./settings/closest.ini') ) {
+            $use_closest = true;
+        }
+        
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
         if( CheckIp($test) && CheckUrl($test['url']) )
@@ -202,7 +204,7 @@
             
             ValidateKey($test, $error);
         
-            if( !$error )
+            if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
               
             if( !$error )
@@ -340,6 +342,8 @@
                             }
                             if( $entry['s'] )
                                 $testData['script'] = $entry['s'];
+
+                            ValidateParameters($testData, $locations, $error, $entry['u']);
                             $entry['id'] = CreateTest($testData, $entry['u']);
                             if( $entry['id'] )
                             {
@@ -349,8 +353,10 @@
                                     if( strlen($test['label']) && strlen($variation['l']) )
                                         $test['label'] .= ' - ' . $variation['l'];
                                     $url = CreateUrlVariation($entry['u'], $variation['q']);
-                                    if( $url )
+                                    if( $url ) {
+                                        ValidateParameters($testData, $locations, $error, $url);
                                         $entry['v'][$variation_index] = CreateTest($testData, $url);
+                                    }
                                 }
                                 $testCount++;
                             }
@@ -680,8 +686,10 @@ function ValidateKey(&$test, &$error, $key = null)
 * @param mixed $test
 * @param mixed $locations
 */
-function ValidateParameters(&$test, $locations, &$error)
+function ValidateParameters(&$test, $locations, &$error, $destination_url = null)
 {
+    global $use_closest;
+    
     if( strlen($test['script']) )
     {
         $url = ValidateScript($test['script'], $error);
@@ -705,6 +713,12 @@ function ValidateParameters(&$test, $locations, &$error)
             
         if( !$error )
         {
+            if ($use_closest) {
+                if (!isset($destination_url))
+                    $destination_url = $test['url'];
+                $test['location'] = GetClosestLocation($destination_url);
+            }
+
             // make sure the test runs are between 1 and 200
             if( $test['runs'] > $maxruns )
                 $test['runs'] = $maxruns;
@@ -1746,7 +1760,7 @@ function GetClosestLocation($url) {
             $ip = gethostbyname($host);
             try
             {
-                include('./Net/GeoIP.php');
+                require_once('./Net/GeoIP.php');
                 $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
                 if ($geoip) {
                     $host_location = $geoip->lookupLocation($ip);

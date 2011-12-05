@@ -21,6 +21,15 @@ elseif( gz_is_file("$testPath/tests.json") )
     foreach( $legacyData as &$legacyTest )
         $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
 }
+
+// grab the location from the first test
+$location = $test['test']['location'];
+if( count($tests) && count($tests['urls']) ) {
+    $location_test_path = './' . GetTestPath($tests['urls'][0]['id']);
+    $location_test_ini = parse_ini_file("$location_test_path/testinfo.ini",true);
+    if( array_key_exists('test', $location_test_ini) && array_key_exists('location', $location_test_ini['test']) )
+        $location = $location_test_ini['test']['location'];
+}
     
 $view = trim(strtolower($test['testinfo']['view']));
 if( !strlen($view) )
@@ -121,7 +130,7 @@ else
                         <?php
                             if( $test['test']['batch'] )
                             {
-                                echo 'Tested From: ' . $test['test']['location'] . '<br>';
+                                echo "Tested From: $location<br>";
                             }
                             else if ( $test['test']['batch_locations'] )
                             {
@@ -1038,6 +1047,7 @@ function VideoHtml($id)
 */
 function CheckTests(&$tests, &$dirty)
 {
+    global $location;
     $allComplete = true;
 
     foreach( $tests['urls'] as &$test )
