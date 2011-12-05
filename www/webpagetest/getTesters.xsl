@@ -28,11 +28,11 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>Version</th>
             <th>PC</th>
             <th>EC2 Instance</th>
+            <th>Free Disk (GB)</th>
             <th>IP</th>
             <th>Busy?</th>
             <th>Last Check (minutes)</th>
             <th>Last Work (minutes)</th>
-            <th>Free Disk (GB)</th>
           </tr>
           <xsl:for-each select="testers/tester">
               <tr>
@@ -40,11 +40,11 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="version"/></td>
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
+                <td><xsl:value-of select="freedisk"/></td>
                 <td><xsl:value-of select="ip"/></td>
                 <td><xsl:value-of select="busy"/></td>
                 <td><xsl:value-of select="elapsed"/></td>
                 <td><xsl:value-of select="last"/></td>
-                <td><xsl:value-of select="freedisk"/></td>
               </tr>
           </xsl:for-each>
         </xsl:if>
