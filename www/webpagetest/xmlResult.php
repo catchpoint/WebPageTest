@@ -62,13 +62,10 @@ else
             if( @strlen($test['testinfo']['connectivity']) )
             {
                 echo "<connectivity>{$test['testinfo']['connectivity']}</connectivity>\n";
-                if( $test['testinfo']['bwIn'] && $test['testinfo']['bwOut'] )
-                {
-                    echo "<bwDown>{$test['testinfo']['bwIn']}</bwDown>\n";
-                    echo "<bwUp>{$test['testinfo']['bwOut']}</bwUp>\n";
-                    echo "<latency>{$test['testinfo']['latency']}</latency>\n";
-                    echo "<plr>{$test['testinfo']['plr']}</plr>\n";
-                }
+                echo "<bwDown>{$test['testinfo']['bwIn']}</bwDown>\n";
+                echo "<bwUp>{$test['testinfo']['bwOut']}</bwUp>\n";
+                echo "<latency>{$test['testinfo']['latency']}</latency>\n";
+                echo "<plr>{$test['testinfo']['plr']}</plr>\n";
             }
             if( @strlen($test['testinfo']['label']) )
                 echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";

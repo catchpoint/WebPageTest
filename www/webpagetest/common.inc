@@ -1122,7 +1122,7 @@ function GetTestInfoHtml($includeScript = true)
         $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
     if( (int)$test['test']['authenticated'] == 1) 
         $html .= '<b>Authenticated: ' . $login . '</b><br>';
-    if( isset($test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') && $test['testinfo']['bwIn'] && $test['testinfo']['bwOut'] )
+    if( isset($test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
     {
         $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
