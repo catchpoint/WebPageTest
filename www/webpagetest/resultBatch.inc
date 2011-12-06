@@ -32,11 +32,14 @@ if( count($tests) && count($tests['urls']) ) {
 }
     
 $view = trim(strtolower($test['testinfo']['view']));
-if( !strlen($view) )
-    $view = 'bulk';
-
-if( $view == 'simple' )
+if( $view == 'simple' || $view == 'pss' )
     $view = 'pss';
+elseif ($view == 'pss_path')
+    $view = 'pss_path';
+elseif ($view == 'blink')
+    $view = 'blink';
+else
+    $view = 'bulk';
 
 $stats = array();
 $stats['fv'] = array();
@@ -66,6 +69,13 @@ if($csv && $view == 'pss')
     header ("Content-type: text/csv");
     if ($complete)
         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+}
+elseif($csv && $view == 'pss_path')
+{
+    $testInfo = $test['testinfo'];
+    header ("Content-type: text/csv");
+    if ($complete)
+        DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
 }
 else
 {
@@ -109,7 +119,7 @@ else
         <div class="page">
             <?php
             $tab = 'Test Result';
-            if( $view == 'pss' )
+            if( $view == 'pss' || $view == 'pss_path' )
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
                                     'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
@@ -154,6 +164,8 @@ else
 
                     if( $view == 'pss' )
                         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+                    elseif( $view == 'pss_path' )
+                        DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
                     elseif( $view == 'blink' )
                         DisplayBlink($tests, $test['testinfo']['video'], $dirty);
                 }
@@ -211,7 +223,7 @@ else
                 }
                 else
                 {
-                    if( $view == 'pss' )
+                    if( $view == 'pss' || $view == 'pss_path' )
                     {
                         ?>
                         <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
@@ -678,6 +690,169 @@ function DisplayPSS(&$tests, $video, &$dirty)
 }
 
 /**
+* Display a simple comparison
+* 
+* @param mixed $tests
+* @param mixed $complete
+*/
+function DisplayPSSPath(&$tests, $video, &$dirty)
+{
+    global $id;
+    global $csv;
+    global $complete;
+    global $testInfo;
+    require_once('object_detail.inc');
+    $includeRender = false;
+    if( $_REQUEST['norender'] )
+        $includeRender = false;
+    
+    $fvLoadTime = array();
+    $fvRenderTimes = array();
+    $rvLoadTimes = array();
+    $rvRenderTimes = array();
+    $original = array();
+    $optimized = array();
+    $count = 0;
+    global $fvonly;
+    $url = '';
+    $testData = array();
+    $videoTests = array();
+    
+    // first pass, check the status of all of the tests and calculate the relevant times
+    $baseDomainRedirect = false;
+    $baseDomainSSL = false;
+    foreach($tests['urls'] as &$test) {
+        if( preg_match('/(Original|Optimized)(.*)/i', trim($test['l']), $matches) ) {
+            $opt_string = $matches[1];
+            $variation = trim($matches[2]);
+            if( !strlen($variation) ) {
+                $variation = 'Page';
+                $videoTests[] = $test;
+            }
+            
+            if (!array_key_exists($variation, $testData))
+                $testData[$variation] = array();
+            $testData[$variation][$opt_string] = array();
+            
+            RestoreTest($test['id']);
+
+            $entry = &$testData[$variation][$opt_string];
+            $entry['id'] = $test['id'];
+            $test['path'] = GetTestPath($test['id']);
+            $testPath = './' . $test['path'];
+            $entry['pageData'] = loadAllPageData($testPath);
+            if( CountSuccessfulTests($entry['pageData'], 0) ) {
+                $entry['median_run'] = GetMedianRun($entry['pageData'], 0);
+                $entry['median'] = $entry['pageData'][$entry['median_run']][0];
+                $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
+                $entry['domains'] = array();
+                $entry['mime_stats'] = array();
+                GetRequestStats($entry['requests'], $entry['domains'], $entry['mime_stats']);
+                if( !strlen($url) )
+                    $url = $entry['median']['URL'];
+                if ($basePage = GetBasePage($entry['requests'])) {
+                    $testedHost = $entry['requests'][0]['host'];
+                    $basePageHost = $basePage['host'];
+                    if( $testedHost != $basePageHost )
+                        $baseDomainRedirect = true;
+                    foreach( $entry['requests'] as &$request ) {
+                        if ($request['host'] == $basePageHost && $request['secure']) {
+                            $baseDomainSSL = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if( $csv )
+    {
+        $testIssues = 0;
+        if ($baseDomainRedirect)
+            $testIssues |= 1;
+        if ($baseDomainSSL)
+            $testIssues |= 2;
+
+        echo "Test ID,URL,Location,Base Domain Test Issues,";
+        foreach ($testData as $variation => &$configs) {
+            foreach ($configs as $config => $data) {
+                $label = "$config $variation";
+                echo "$label Test ID,$label Load Time,$label TTFB,$label Render,$label Socket Connect,$label Requests,$label Bytes,$label Result,$label Unique Domains,";
+                foreach($data['mime_stats'] as $mime_type => &$mime_data)
+                    echo "$label $mime_type requests,$label $mime_type bytes,";
+            }
+        }
+
+        echo "\n$id,\"$url\",{$testInfo['location']},$testIssues,";
+        foreach ($testData as $variation => &$configs) {
+            foreach ($configs as $config => $data) {
+                echo "{$data['id']},{$entry['median']['loadTime']},{$entry['median']['TTFB']},{$entry['median']['render']},";
+                echo "{$entry['requests'][0]['msSocket']},{$entry['median']['requestsDoc']},{$entry['median']['bytesInDoc']},{$entry['median']['result']},";
+                echo count($entry['domains']) . ',';
+                foreach($data['mime_stats'] as $mime_type => &$mime_data)
+                    echo "{$mime_data['count']},{$mime_data['bytes']},";
+            }
+        }
+    }
+    else
+    {
+        if ($baseDomainRedirect)
+        {
+            $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
+            echo '<div class="alert">';
+            echo '<h1>Domain Redirect Detected</h1>';
+            echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
+            echo '</div>';
+        }
+        
+        if( $baseDomainSSL )
+        {
+            echo '<div class="alert">';
+            echo '<h1>HTTPS Content Detected</h1>';
+            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
+            echo '</div>';
+        }
+        
+        echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
+                <tr><th class="empty"></th><th>Original</th><th>Optimized</th><th>Difference</th></tr>';
+
+        foreach ($testData as $variation => &$configs) {
+            DisplayPathMetric("$variation Load Time", $configs, 'loadTime');
+            DisplayPathMetric("$variation Visually Complete", $configs, 'visualComplete', 1);
+        }
+        echo '</table><br>';
+        
+        // video
+        if ($complete && $video) {
+            $videoComplete = true;
+            if (!strlen($tests['vID'])) {
+                $tests['vID'] = CreateVideo($videoTests, 'all');
+                $dirty = true;
+                $videoComplete = false;
+                if (!strlen($tests['vID'])) {
+                    $videoComplete = true;
+                    $tests['vReady'] = true;
+                }
+            } elseif( !$tests['vReady'] ) {
+                $tests['vReady'] = CheckVideo($tests['vID']);
+                if( $tests['vReady'] )
+                    $dirty = true;
+                else
+                    $videoComplete = false;
+            }
+            
+            if( $videoComplete ) {
+                echo '<h2>Visual Comparison*</h2>';
+                VideoHtml($tests['vID']);
+            } else {
+                echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+            }
+        }
+    }
+}
+
+/**
 * Display a blink result page
 */
 function DisplayBlink(&$tests, $video, &$dirty)
@@ -922,16 +1097,44 @@ function DisplayMetric($metric, &$values, $count, $reverse = false)
 }
 
 /**
+* Display the original and optimized values for a single metric
+* 
+* @param mixed $label
+* @param mixed $configs
+* @param mixed $metric
+*/
+function DisplayPathMetric($label, &$configs, $metric, $digits = 3) {
+    echo "<tr><td class=\"right\"><b>$label</b></td><td>";
+    echo "<a href=\"/result/{$configs['Original']['id']}/\" target=\"_blank\">" . number_format( $configs['Original']['median'][$metric] / 1000.0, $digits) . '</a>s</td><td>';
+    echo "<a href=\"/result/{$configs['Optimized']['id']}/\" target=\"_blank\">" . number_format( $configs['Optimized']['median'][$metric] / 1000.0, $digits) . '</a>s</td>';
+    $delta = $configs['Optimized']['median'][$metric] - $configs['Original']['median'][$metric];
+    $class = '';
+    $direction = '';
+    if( $delta > 0 ) {
+        $direction = '+';
+        $class = 'bad';
+    } elseif( $delta < 0 )
+        $class = 'good';
+    echo "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s";
+    if ($configs['Optimized']['median'][$metric])
+        echo ' (' . number_format(abs($delta / $configs['Optimized']['median'][$metric]) * 100.0, 1) . ')';
+    echo "</td>";
+    echo '</tr>';
+}
+
+/**
 * Send a request to create a video and return the ID
 * 
 * @param mixed $tests
 */
-function CreateVideo(&$tests)
+function CreateVideo(&$tests, $end = null)
 {
     $id = null;
 
+    if (!strlen($end))
+        $end = 'docvisual';
     $host  = $_SERVER['HTTP_HOST'];
-    $request = "http://$host/video/create.php?f=json&force=1&end=docvisual&tests=";
+    $request = "http://$host/video/create.php?f=json&force=1&end=$end&tests=";
 
     $count = 0;
     foreach( $tests as &$test )

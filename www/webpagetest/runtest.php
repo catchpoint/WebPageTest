@@ -255,18 +255,18 @@
                             $line = trim($line);
                             if( strlen($line) )
                             {
-                                if( substr($line, 0, 1) == '<' )
+                                if( substr($line, 0, 1) == '<' || substr($line, 0, 1) == '{' )
                                 {
-                                    if (!strcasecmp($line, '<test>')) {
+                                    if (!strcasecmp($line, '<test>') || !strcasecmp($line, '{test}')) {
                                         $entry = array();
                                         $current_mode = 'test';
-                                    } elseif (!strcasecmp($line, '</test>')) {
+                                    } elseif (!strcasecmp($line, '</test>') || !strcasecmp($line, '{/test}')) {
                                         $bulk['urls'][] = $entry;
                                         unset($entry);
-                                    } elseif (!strcasecmp($line, '<script>')) {
+                                    } elseif (!strcasecmp($line, '<script>') || !strcasecmp($line, '{script}')) {
                                         $script = array();
                                         $current_mode = 'test_script';
-                                    } elseif (!strcasecmp($line, '</script>')) {
+                                    } elseif (!strcasecmp($line, '</script>') || !strcasecmp($line, '{/script}')) {
                                         $current_mode = 'test';
                                         $entry = ParseBulkScript($script, $entry);
                                         unset($script);
