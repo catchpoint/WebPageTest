@@ -1490,6 +1490,9 @@ function GetPendingTests($location, &$count, &$avgTime)
             $avgTime = ceil($timeTotal / $timeCount);
         }
     }
+    // now count just the low priority tests
+    if( LoadJobQueue("./work/jobs/$location", $queue) )
+        $count = count($queue[0]);
 }
 
 /**
