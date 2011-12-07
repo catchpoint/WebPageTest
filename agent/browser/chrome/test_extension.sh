@@ -111,8 +111,9 @@ ${COMPILE_JS} ${FOR_RELEASE} \
   --output_file='release/wpt/allTests.js' \
   || exit $?;
 
-# Don't compile the content script.
+# Don't compile the content script or the browser action popup script.
 cp wpt/script.js release/wpt/script.js
+cp wpt/browserActionPopup.js release/wpt/browserActionPopup.js
 
 ${COMPILE_JS} ${FOR_RELEASE} \
   --input='wpt/background.js' \

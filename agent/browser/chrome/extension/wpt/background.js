@@ -1,3 +1,24 @@
+/**
+ * Copyright 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * This file is run as the background page of the WebPageTest Chrome driver.
+ * It sets up initial testing state, grabs commands by XHR from wptdriver.exe,
+ * and runs them.
+ *
+ * Author: Sam Kerner (skerner at google dot com)
+ */
 
 goog.require('wpt.logging');
 goog.require('wpt.commands');
@@ -46,57 +67,54 @@ function wptStartup() {
   });
 }
 
+/**
+ * Build a fake command record.
+ * @param {string} action action
+ * @param {string} target target
+ * @param {string=} opt_value value
+ * @return {Object} A fake command record.
+ */
+function FakeCommand(action, target, opt_value) {
+  var result = {
+    'action': action,
+    'target': target
+  };
+
+  if (typeof opt_value != 'undefined')
+    result['value'] = opt_value;
+
+  return result;
+}
+
+
 var FAKE_TASKS_IDX = 0;
 var FAKE_TASKS = [
-  {
-    'action': 'navigate',
-    'target': 'http://www.youtube.com/'
-  },
-  {
-    'action': 'setvalue',
-    'target': 'id=masthead-search-term',
-    'value': 'boston mspca legend'
-  },
-  {
-    'action': 'submitform',
-    'target': 'id=masthead-search'
-  },
-  {
-    'action': 'navigate',
-    'target': 'http://www.google.com/'
-  },
-  {
-    'action': 'click',
-    'target': 'name\'btnI'
-  },
-  {
-    'action': 'navigate',
-    'target': 'http://www.google.com/news'
-  },
-  {
-    'action': 'setinnertext',
-    'target': 'class=kd-appname',
-    'value': 'This text should replace the word news!'
-  },
-  {
-    'action': 'setinnerhtml',
-    'target': 'class=kd-appname',
-    'value': 'This <b>HTML</b> should replace the word news!'
-  },
-  {
-    'action': 'setvalue',
-    'target': 'class=searchField',
-    'value': 'Susie, the Qmiester'
-  },
-  {
-    'action': 'submitform',
-    'target': 'id=search-hd'
-  }
+    // Can we navigate to youtube and search for a video?
+    FakeCommand('navigate', 'http://www.youtube.com/'),
+    FakeCommand('setvalue', 'id=masthead-search-term', 'boston mspca legend'),
+    FakeCommand('submitform', 'id=masthead-search'),
+
+    // Can we click?
+    FakeCommand('navigate', 'http://www.google.com/'),
+    FakeCommand('click', 'name\'btnI'),
+
+    // Can we change the text/html of a page?
+    FakeCommand('navigate', 'http://www.google.com/news'),
+    FakeCommand('setinnertext', 'class=kd-appname', 'This text should replace the word news!'),
+    FakeCommand('setinnerhtml', 'class=kd-appname', 'This <b>HTML</b> should replace the word news!'),
+
+    // Search news after changing the page.
+    FakeCommand('setvalue', 'class=searchField', 'Susie, the Qmiester'),
+    FakeCommand('submitform', 'id=search-hd'),
+
+    // Block the header graphic on www.example.com .
+    FakeCommand('block', 'iana-logo-pageheader.png'),
+    FakeCommand('navigate', 'http://www.example.com/')
 ];
 
 function wptFeedFakeTasks() {
   if (FAKE_TASKS.length == FAKE_TASKS_IDX) {
-    console.log("DONE");
+    console.log("DONE with fake command sequence.");
     return;
   }
   wptExecuteTask(FAKE_TASKS[FAKE_TASKS_IDX++]);

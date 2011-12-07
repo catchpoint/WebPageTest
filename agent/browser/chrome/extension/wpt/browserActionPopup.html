@@ -40,15 +40,7 @@ a.popupButton {
   width: 200px;
 }
     </style>
-    <script>
-function openLink(url) {
-  chrome.tabs.create({
-      url: url,
-      selected: true
-  });
-}
-
-    </script>
+    <script src="browserActionPopup.js"></script>
   </head>
   <body>
     <a class="popupButton" href="about:blank" onclick="openLink('chrome://extensions');">Extensions Page</a>
