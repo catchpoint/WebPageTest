@@ -39,7 +39,6 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 , useBitBlt(0)
 , winpcap(logRef)
 , keepDNS(0)
-, clearShortTermCacheSecs(0)
 , heartbeatEvent(NULL)
 {
 	InitializeCriticalSection(&cs);
@@ -929,7 +928,7 @@ void CURLBlaster::ConfigurePagetest(void)
 
 
 			RegSetValueEx(hKey, _T("ignoreSSL"), 0, REG_DWORD, (const LPBYTE)&info.ignoreSSL, sizeof(info.ignoreSSL));
-			RegSetValueEx(hKey, _T("clearShortTermCacheSecs"), 0, REG_DWORD, (const LPBYTE)&clearShortTermCacheSecs, sizeof(clearShortTermCacheSecs));
+			RegSetValueEx(hKey, _T("clearShortTermCacheSecs"), 0, REG_DWORD, (const LPBYTE)&info.clearShortTermCacheSecs, sizeof(info.clearShortTermCacheSecs));
 			
 			CString descriptor = _T("Launch");
 			RegSetValueEx(hKey, _T("Descriptor"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)descriptor, (descriptor.GetLength() + 1) * sizeof(TCHAR));

@@ -48,6 +48,7 @@ public:
     imageQuality = 0;
     bodies = 0;
     minimumDuration=0;
+    clearShortTermCacheSecs=0;
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -83,6 +84,7 @@ public:
   DWORD imageQuality;       // Quality of jpeg images
   DWORD bodies;             // save the content of text responses?
   DWORD minimumDuration;    // minimum test duration
+  DWORD clearShortTermCacheSecs;  // in repeat view, delete objects with a expires of less than X seconds
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

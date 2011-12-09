@@ -313,6 +313,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.bodies = _ttol(value);
 							else if( !key.CompareNoCase(_T("time")) )
                 info.minimumDuration = min(120, max(0, _ttol(value)));
+							else if( !key.CompareNoCase(_T("clearRV")) )
+                info.clearShortTermCacheSecs = _ttol(value);
 						}
 					}
 

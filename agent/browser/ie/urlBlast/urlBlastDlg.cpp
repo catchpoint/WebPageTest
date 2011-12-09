@@ -63,7 +63,6 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
   , useCurrentAccount(0)
   , hHookDll(NULL)
   , keepDNS(0)
-  , clearShortTermCacheSecs(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	
@@ -558,7 +557,6 @@ void CurlBlastDlg::LoadSettings(void)
 	ec2					        = GetPrivateProfileInt(_T("Configuration"), _T("ec2"), 0, iniFile);
   useCurrentAccount   = GetPrivateProfileInt(_T("Configuration"), _T("Use Current Account"), 0, iniFile);;
   keepDNS		          = GetPrivateProfileInt(_T("Configuration"), _T("Keep DNS"), keepDNS, iniFile);
-  clearShortTermCacheSecs	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Short Cache Secs"), clearShortTermCacheSecs, iniFile);
 
 	log.debug = debug;
 
@@ -1516,7 +1514,6 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			blaster->pipeOut		  = pipeOut;
 			blaster->useBitBlt		= useBitBlt;
       blaster->keepDNS      = keepDNS;
-      blaster->clearShortTermCacheSecs = clearShortTermCacheSecs;
 			
 			// force 1024x768 for screen shots
 			blaster->pos.right = browserWidth;
@@ -1644,8 +1641,6 @@ void CurlBlastDlg::GetEC2Config()
 							clearCacheInterval = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_keep_DNS")) && value.GetLength() )
 							keepDNS = _ttol(value); 
-						else if( !key.CompareNoCase(_T("wpt_clear_short_cache_secs")) && value.GetLength() )
-							clearShortTermCacheSecs = _ttol(value); 
 					}
 				}
 			}

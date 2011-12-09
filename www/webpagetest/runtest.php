@@ -112,6 +112,7 @@
             $test['iq'] = (int)$req_iq;
             $test['bodies'] = $req_bodies;
             $test['time'] = (int)$req_time;
+            $test['clear_rv'] = (int)$req_clearRV;
             
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
@@ -1559,6 +1560,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "bodies=1\r\n";
         if( $test['time'] )
             $testFile .= "time={$test['time']}\r\n";
+        if( $test['clear_rv'] )
+            $testFile .= "clearRV={$test['clear_rv']}\r\n";
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )
