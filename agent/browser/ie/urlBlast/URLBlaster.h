@@ -105,6 +105,7 @@ protected:
 	CString cookies;
 	CString history;
 	CString tempFiles;
+  CString tempDir;
 	CString silverlight;
 	CString flash;
   CString domStorage;

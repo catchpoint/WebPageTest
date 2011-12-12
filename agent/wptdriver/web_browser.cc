@@ -229,6 +229,9 @@ void WebBrowser::ClearUserData() {
       DeleteDirectory(path, false);
     }
   }
+  if (GetTempPath(MAX_PATH, path)) {
+      DeleteDirectory(path, false);
+  }
 }
 
 /*-----------------------------------------------------------------------------

@@ -165,6 +165,7 @@ bool CURLBlaster::Start(int userIndex)
 	  cookies = profile + _T("\\Cookies");
 	  history = profile + _T("\\Local Settings\\History");
 	  tempFiles = profile + _T("\\Local Settings\\Temporary Internet Files");
+	  tempDir = profile + _T("\\Local Settings\\Temp");
 	  desktopPath = profile + _T("\\Local Settings\\Desktop");
 	  silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
 	  flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
@@ -414,6 +415,8 @@ bool CURLBlaster::DoUserLogon(void)
 					  {
 						  silverlight = path;
 						  silverlight += _T("\\Microsoft\\Silverlight");
+              tempDir = path;
+              tempDir += _T("\\Temp");
 					  }
 
 					  len = _countof(path);
@@ -438,6 +441,7 @@ bool CURLBlaster::DoUserLogon(void)
 				  cookies.Replace(_T("%USERPROFILE%"), profile);
 				  history.Replace(_T("%USERPROFILE%"), profile);
 				  tempFiles.Replace(_T("%USERPROFILE%"), profile);
+				  tempDir.Replace(_T("%USERPROFILE%"), profile);
 				  desktopPath.Replace(_T("%USERPROFILE%"), profile);
 				  silverlight.Replace(_T("%USERPROFILE%"), profile);
 				  flash.Replace(_T("%USERPROFILE%"), profile);
@@ -477,6 +481,7 @@ void CURLBlaster::ClearCache(void)
   DeleteDirectory( domStorage );
 	cacheCount = 0;
 	DeleteDirectory( tempFiles );
+	DeleteDirectory( tempDir );
 	CString buff;
 	buff.Format(_T("%d files found in cache\n"), cacheCount);
 	OutputDebugString(buff);
