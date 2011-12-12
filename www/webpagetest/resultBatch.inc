@@ -415,6 +415,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $csv;
     global $complete;
     global $testInfo;
+    global $location;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -549,12 +550,14 @@ function DisplayPSS(&$tests, $video, &$dirty)
         echo "Original FV Requests,Optimized FV Requests,Original RV Requests,Optimized RV Requests,";
         echo "Original FV Bytes,Optimized FV Bytes,Original RV Bytes,Optimized RV Bytes,";
         echo "Original FV Result,Optimized FV Result,Original RV Result,Optimized RV Result,";
+        echo "Tested From,";
         foreach($domains as $config => &$domains_data)
             echo "$config Unique Domains,";
         foreach($mime_stats as $config => &$mime_stats_data)
             foreach($mime_stats_data as $mime_type => &$mime_data)
                 echo "$config $mime_type requests,$config $mime_type bytes,";
-        echo "\n$id,\"$url\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
+        echo "Original FV Visually Complete,Optimized FV Visually Complete,Original RV Visually Complete,Optimized RV Visually Complete,";
+        echo "\n$id,\"" . htmlspecialchars_decode($url) . "\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
         echo "{$original[0]['loadTime']},{$optimized[0]['loadTime']},{$original[1]['loadTime']},{$optimized[1]['loadTime']},$testIssues,";
         echo "{$original[0]['TTFB']},{$optimized[0]['TTFB']},{$original[1]['TTFB']},{$optimized[1]['TTFB']},";
         echo "{$original[0]['render']},{$optimized[0]['render']},{$original[1]['render']},{$optimized[1]['render']},";
@@ -567,6 +570,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         foreach($mime_stats as $config => &$mime_stats_data)
             foreach($mime_stats_data as $mime_type => &$mime_data)
                 echo "{$mime_data['count']},{$mime_data['bytes']},";
+        echo "{$original[0]['visualComplete']},{$optimized[0]['visualComplete']},{$original[1]['visualComplete']},{$optimized[1]['visualComplete']},";
+        echo "\"$location\",";
     }
     else
     {
@@ -717,6 +722,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     $url = '';
     $testData = array();
     $videoTests = array();
+    $videoPathTests = array();
     
     // first pass, check the status of all of the tests and calculate the relevant times
     $baseDomainRedirect = false;
@@ -728,6 +734,8 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             if( !strlen($variation) ) {
                 $variation = 'Page';
                 $videoTests[] = $test;
+            } else {
+                $videoPathTests[] = $test;
             }
             
             if (!array_key_exists($variation, $testData))
@@ -739,6 +747,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $entry = &$testData[$variation][$opt_string];
             $entry['id'] = $test['id'];
             $test['path'] = GetTestPath($test['id']);
+            $entry['path'] = $test['path'];
             $testPath = './' . $test['path'];
             $entry['pageData'] = loadAllPageData($testPath);
             if( CountSuccessfulTests($entry['pageData'], 0) ) {
@@ -818,8 +827,29 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
 
         foreach ($testData as $variation => &$configs) {
             DisplayPathMetric("$variation Load Time", $configs, 'loadTime');
-            DisplayPathMetric("$variation Visually Complete", $configs, 'visualComplete', 1);
+            //DisplayPathMetric("$variation Visually Complete", $configs, 'visualComplete', 1);
         }
+
+        foreach ($testData as $variation => &$configs) {
+            echo "<tr><td class=\"right\">$variation Full Test Result</td>";
+            $id = $configs['Original']['id'];
+            $testurl = "/results.php?test=$id";
+            if( FRIENDLY_URLS )
+                $testurl = "/result/$id/";
+            $path = $configs['Original']['path'];
+            $run = $configs['Original']['median_run'];
+            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+
+            $id = $configs['Optimized']['id'];
+            $testurl = "/results.php?test=$id";
+            if( FRIENDLY_URLS )
+                $testurl = "/result/$id/";
+            $path = $configs['Optimized']['path'];
+            $run = $configs['Optimized']['median_run'];
+            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+            echo '<td></td></tr>';
+        }
+        
         echo '</table><br>';
         
         // video
@@ -840,10 +870,27 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
                 else
                     $videoComplete = false;
             }
+            if (!strlen($tests['vPathID'])) {
+                $tests['vPathID'] = CreateVideo($videoPathTests, 'all');
+                $dirty = true;
+                $videoComplete = false;
+                if (!strlen($tests['vPathID'])) {
+                    $videoComplete = true;
+                    $tests['vPathReady'] = true;
+                }
+            } elseif( !$tests['vPathReady'] ) {
+                $tests['vPathReady'] = CheckVideo($tests['vPathID']);
+                if( $tests['vPathReady'] )
+                    $dirty = true;
+                else
+                    $videoComplete = false;
+            }
             
             if( $videoComplete ) {
-                echo '<h2>Visual Comparison*</h2>';
+                echo '<h2>Page Visual Comparison*</h2>';
                 VideoHtml($tests['vID']);
+                echo '<br><br><h2>Path Visual Comparison*</h2>';
+                VideoHtml($tests['vPathID']);
             } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
                 echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
@@ -1105,8 +1152,8 @@ function DisplayMetric($metric, &$values, $count, $reverse = false)
 */
 function DisplayPathMetric($label, &$configs, $metric, $digits = 3) {
     echo "<tr><td class=\"right\"><b>$label</b></td><td>";
-    echo "<a href=\"/result/{$configs['Original']['id']}/\" target=\"_blank\">" . number_format( $configs['Original']['median'][$metric] / 1000.0, $digits) . '</a>s</td><td>';
-    echo "<a href=\"/result/{$configs['Optimized']['id']}/\" target=\"_blank\">" . number_format( $configs['Optimized']['median'][$metric] / 1000.0, $digits) . '</a>s</td>';
+    echo number_format( $configs['Original']['median'][$metric] / 1000.0, $digits) . 's</td><td>';
+    echo number_format( $configs['Optimized']['median'][$metric] / 1000.0, $digits) . 's</td>';
     $delta = $configs['Optimized']['median'][$metric] - $configs['Original']['median'][$metric];
     $class = '';
     $direction = '';
