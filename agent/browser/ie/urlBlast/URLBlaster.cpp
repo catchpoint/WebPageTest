@@ -415,9 +415,23 @@ bool CURLBlaster::DoUserLogon(void)
 					  {
 						  silverlight = path;
 						  silverlight += _T("\\Microsoft\\Silverlight");
+					  }
+
+					  len = _countof(path);
+					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local Settings"), 0, 0, (LPBYTE)path, &len)) )
+					  {
               tempDir = path;
               tempDir += _T("\\Temp");
-					  }
+            }
+            else
+            {
+					    len = _countof(path);
+					    if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local AppData"), 0, 0, (LPBYTE)path, &len)) )
+					    {
+                tempDir = path;
+                tempDir += _T("\\Temp");
+					    }
+            }
 
 					  len = _countof(path);
 					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("AppData"), 0, 0, (LPBYTE)path, &len)) )
@@ -476,16 +490,16 @@ int cacheCount;
 void CURLBlaster::ClearCache(void)
 {
 	// delete the cookies, history and temporary internet files for this user
-	DeleteDirectory( cookies );
-	DeleteDirectory( history );
-  DeleteDirectory( domStorage );
+	DeleteDirectory( cookies, false );
+	DeleteDirectory( history, false );
+  DeleteDirectory( domStorage, false );
 	cacheCount = 0;
-	DeleteDirectory( tempFiles );
-	DeleteDirectory( tempDir );
+	DeleteDirectory( tempFiles, false );
+	DeleteDirectory( tempDir, false );
 	CString buff;
 	buff.Format(_T("%d files found in cache\n"), cacheCount);
 	OutputDebugString(buff);
-	DeleteDirectory( silverlight );
+	DeleteDirectory( silverlight, false );
 	DeleteDirectory( flash, false );
   DeleteFile(desktopPath + _T("\\debug.log"));  // delete the desktop debug log from page speed - argh!
   DeleteDirectory( windir + _T("\\temp"), false );  // delete the global windows temp directory
