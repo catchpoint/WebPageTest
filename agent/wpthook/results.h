@@ -51,14 +51,15 @@ public:
   CString _url;
 
 private:
-  CString     _file_base;
-  Requests&   _requests;
-  TestState&  _test_state;
+  CString       _file_base;
+  Requests&     _requests;
+  TestState&    _test_state;
   TrackSockets& _sockets;
   TrackDns&     _dns;
   ScreenCapture& _screen_capture;
   WptTest&      _test;
-  bool        _saved;
+  bool          _saved;
+  LARGE_INTEGER _visually_complete;
 
   void ProcessRequests(void);
   void CalculateAFT(void);

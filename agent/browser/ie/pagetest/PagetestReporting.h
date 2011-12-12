@@ -83,6 +83,7 @@ public:
 	int				reportSt;		// Done Reporting?
 	DWORD			basePageResult;	// result of the base page
   DWORD     msAFT;      // AFT Time (if we're capturing it)
+  DWORD     msVisualComplete; // Visually complete time (only available with video capture)
 
 	DWORD			nDns;			// number of DNS lookups
 	DWORD			nConnect;		// number of connects

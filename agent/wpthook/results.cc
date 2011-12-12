@@ -63,6 +63,7 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false) {
   _file_base = shared_results_file_base;
+  _visually_complete.QuadPart = 0;
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
             (LPCTSTR)_file_base);
 }
@@ -79,6 +80,7 @@ void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
   _saved = false;
+  _visually_complete.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -93,10 +95,10 @@ void Results::Save(void) {
     if( _test._aft )
       CalculateAFT();
     SaveRequests(checks);
-    SavePageData(checks);
     SaveImages();
     SaveProgressData();
     SaveStatusMessages();
+    SavePageData(checks);
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -260,6 +262,7 @@ void Results::SaveVideo(void) {
         if (img->GetHeight() < height)
           img->Expand(0, 0, 0, height - img->GetHeight(), black);
         if (ImagesAreDifferent(last_image, img)) {
+          _visually_complete.QuadPart = image._capture_time.QuadPart;
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                             image_time);
           SaveImage(*img, file_name, false, _test._image_quality);
@@ -555,6 +558,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
     result += buff;
+
+    // Visually complete
+    result += FormatTime(_visually_complete);
 
     result += "\r\n";
 
