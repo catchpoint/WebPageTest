@@ -84,7 +84,7 @@ if( $ec2 )
             elseif( $targetBacklog && $activeCount )
             {
                 // get the current backlog
-                GetPendingTests($location, $backlog, $avgTime);
+                $backlog = GetPendingTests($location, $bk, $avgTime);
                 echo "Backlog: $backlog\n";
                 $ratio = $backlog / $activeCount;
                 if( $ratio > $targetBacklog )

@@ -1475,6 +1475,7 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($location, &$count, &$avgTime)
 {
+    $total = 0;
     $count = 0;
     $avgTime = 0;
     $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
@@ -1491,8 +1492,12 @@ function GetPendingTests($location, &$count, &$avgTime)
         }
     }
     // now count just the low priority tests
-    if( LoadJobQueue("./work/jobs/$location", $queue) )
+    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+        foreach( $queue as &$q )
+            $total += count($q);
         $count = count($queue[0]);
+    }
+    return $total;
 }
 
 /**
