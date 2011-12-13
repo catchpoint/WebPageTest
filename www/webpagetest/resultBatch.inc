@@ -5,7 +5,7 @@ if( !defined('BARE_UI') )
 $csv = false;
 if( $_REQUEST['f'] == 'csv' )
 {
-    define('RESTORE_DATA_ONLY', true);
+    //define('RESTORE_DATA_ONLY', true);
     $csv = true;
 }
 require_once('testStatus.inc');
@@ -550,13 +550,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
         echo "Original FV Requests,Optimized FV Requests,Original RV Requests,Optimized RV Requests,";
         echo "Original FV Bytes,Optimized FV Bytes,Original RV Bytes,Optimized RV Bytes,";
         echo "Original FV Result,Optimized FV Result,Original RV Result,Optimized RV Result,";
-        echo "Tested From,";
         foreach($domains as $config => &$domains_data)
             echo "$config Unique Domains,";
         foreach($mime_stats as $config => &$mime_stats_data)
             foreach($mime_stats_data as $mime_type => &$mime_data)
                 echo "$config $mime_type requests,$config $mime_type bytes,";
         echo "Original FV Visually Complete,Optimized FV Visually Complete,Original RV Visually Complete,Optimized RV Visually Complete,";
+        echo "Tested From,";
         echo "\n$id,\"" . htmlspecialchars_decode($url) . "\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
         echo "{$original[0]['loadTime']},{$optimized[0]['loadTime']},{$original[1]['loadTime']},{$optimized[1]['loadTime']},$testIssues,";
         echo "{$original[0]['TTFB']},{$optimized[0]['TTFB']},{$original[1]['TTFB']},{$optimized[1]['TTFB']},";
@@ -826,30 +826,13 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
                 <tr><th class="empty"></th><th>Original</th><th>Optimized</th><th>Difference</th></tr>';
 
         foreach ($testData as $variation => &$configs) {
-            DisplayPathMetric("$variation Load Time", $configs, 'loadTime');
-            //DisplayPathMetric("$variation Visually Complete", $configs, 'visualComplete', 1);
+            $label = "$variation Load Time";
+            if ($variation == 'Page')
+                $label = "First View";
+            elseif( $variation = 'Path' )
+                $label = "Site Navigation";
+            DisplayPathMetric($label, $configs, 'loadTime');
         }
-
-        foreach ($testData as $variation => &$configs) {
-            echo "<tr><td class=\"right\">$variation Full Test Result</td>";
-            $id = $configs['Original']['id'];
-            $testurl = "/results.php?test=$id";
-            if( FRIENDLY_URLS )
-                $testurl = "/result/$id/";
-            $path = $configs['Original']['path'];
-            $run = $configs['Original']['median_run'];
-            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
-
-            $id = $configs['Optimized']['id'];
-            $testurl = "/results.php?test=$id";
-            if( FRIENDLY_URLS )
-                $testurl = "/result/$id/";
-            $path = $configs['Optimized']['path'];
-            $run = $configs['Optimized']['median_run'];
-            echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
-            echo '<td></td></tr>';
-        }
-        
         echo '</table><br>';
         
         // video
@@ -887,9 +870,9 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             }
             
             if( $videoComplete ) {
-                echo '<h2>Page Visual Comparison*</h2>';
+                echo '<h2>First View Visual Comparison*</h2>';
                 VideoHtml($tests['vID']);
-                echo '<br><br><h2>Path Visual Comparison*</h2>';
+                echo '<br><br><h2>Site Navigation Visual Comparison*</h2>';
                 VideoHtml($tests['vPathID']);
             } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
@@ -1152,8 +1135,27 @@ function DisplayMetric($metric, &$values, $count, $reverse = false)
 */
 function DisplayPathMetric($label, &$configs, $metric, $digits = 3) {
     echo "<tr><td class=\"right\"><b>$label</b></td><td>";
-    echo number_format( $configs['Original']['median'][$metric] / 1000.0, $digits) . 's</td><td>';
-    echo number_format( $configs['Optimized']['median'][$metric] / 1000.0, $digits) . 's</td>';
+
+    $id = $configs['Original']['id'];
+    $testurl = "/results.php?test=$id";
+    if( FRIENDLY_URLS )
+        $testurl = "/result/$id/";
+    $path = $configs['Original']['path'];
+    $run = $configs['Original']['median_run'];
+    echo '<br><b>' . number_format( $configs['Original']['median'][$metric] / 1000.0, $digits) . '</b> seconds<br><br>';
+    echo "<a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a>";
+
+    echo '</td><td>';
+    $id = $configs['Optimized']['id'];
+    $testurl = "/results.php?test=$id";
+    if( FRIENDLY_URLS )
+        $testurl = "/result/$id/";
+    $path = $configs['Optimized']['path'];
+    $run = $configs['Optimized']['median_run'];
+    echo '<br><b>' . number_format( $configs['Optimized']['median'][$metric] / 1000.0, $digits) . '</b> seconds<br><br>';
+    echo "<a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test=$id&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a>";
+    echo '</td>';
+    
     $delta = $configs['Optimized']['median'][$metric] - $configs['Original']['median'][$metric];
     $class = '';
     $direction = '';
