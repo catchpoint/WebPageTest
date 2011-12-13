@@ -49,6 +49,7 @@ WptHook::WptHook(void):
   ,_winsock_hook(_dns, _sockets, _test_state)
   ,_nspr_hook(_sockets, _test_state)
   ,_schannel_hook(_sockets, _test_state)
+  ,_wininet_hook(_sockets, _test_state, _test)
   ,_gdi_hook(_test_state)
   ,_sockets(_requests, _test_state)
   ,_requests(_test_state, _sockets, _dns, _test)
@@ -106,6 +107,7 @@ void WptHook::Init(){
   _winsock_hook.Init();
   _nspr_hook.Init();
   _schannel_hook.Init();
+  _wininet_hook.Init();
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();

@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hook_winsock.h"
 #include "hook_nspr.h"
 #include "hook_schannel.h"
+#include "hook_wininet.h"
 #include "hook_gdi.h"
 #include "requests.h"
 #include "track_dns.h"
@@ -64,6 +65,7 @@ private:
   CWsHook   _winsock_hook;
   NsprHook  _nspr_hook;
   SchannelHook  _schannel_hook;
+  WinInetHook _wininet_hook;
   HANDLE    _background_thread;
   HWND      _message_window;
   CString   _file_base;

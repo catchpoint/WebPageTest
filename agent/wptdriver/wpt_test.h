@@ -109,6 +109,7 @@ public:
   void  OverrideDNSName(CString& name);
   ULONG OverrideDNSAddress(CString& name);
   bool  ModifyRequestHeader(CStringA& header) const;
+  bool  BlockRequest(CString host, CString object);
 
   // overall test settings
   CString _id;
@@ -165,8 +166,11 @@ protected:
   CAtlList<ScriptCommand> _script_commands;
 
   // DNS overrides
-  CAtlList<CDNSEntry>			_dns_override;
-  CAtlList<CDNSName>			_dns_name_override;
+  CAtlList<CDNSEntry>	_dns_override;
+  CAtlList<CDNSName>  _dns_name_override;
+
+  // requests to block
+  CAtlList<CString> _block_requests;
 
   // header overrides
   CStringA  _user_agent;

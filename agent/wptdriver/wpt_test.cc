@@ -110,6 +110,7 @@ void WptTest::Reset(void) {
   _override_hosts.RemoveAll();
   _dns_override.RemoveAll();
   _dns_name_override.RemoveAll();
+  _block_requests.RemoveAll();
 }
 
 /*-----------------------------------------------------------------------------
@@ -491,6 +492,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
         HttpHeaderValue host_override(host, new_host);
         _override_hosts.AddTail(host_override);
       }
+  } else if (cmd == _T("block")) {
+    _block_requests.AddTail(command.target);
   } else {
     continue_processing = false;
     consumed = false;
@@ -633,4 +636,19 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   }
 
   return modified;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the outbound request needs to be blocked
+-----------------------------------------------------------------------------*/
+bool WptTest::BlockRequest(CString host, CString object) {
+  bool block = false;
+  CString request = host + object;
+  POSITION pos = _block_requests.GetHeadPosition();
+  while (!block && pos) {
+    CString block_pattern = _block_requests.GetNext(pos);
+    if (request.Find(block_pattern) >= 0)
+      block = true;
+  }
+  return block;
 }

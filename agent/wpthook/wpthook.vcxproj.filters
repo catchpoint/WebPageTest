@@ -386,6 +386,9 @@
     <ClInclude Include="jpeg\jpeglib.h">
       <Filter>Third-Party\jpeg</Filter>
     </ClInclude>
+    <ClInclude Include="hook_wininet.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -815,6 +818,9 @@
       <Filter>Third-Party\distorm</Filter>
     </ClCompile>
     <ClCompile Include="..\wptdriver\util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_wininet.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
