@@ -114,7 +114,8 @@ function loadPageData($file)
                                 'loadEventStart' => (int)$fields[77],
                                 'loadEventEnd' => (int)$fields[78],
                                 'domContentLoadedEventStart' => (int)$fields[79],
-                                'domContentLoadedEventEnd' => (int)$fields[80]
+                                'domContentLoadedEventEnd' => (int)$fields[80],
+                                'visualComplete' => (int)$fields[81]
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
@@ -127,7 +128,7 @@ function loadPageData($file)
     }
     
     // see if we have video files to calculate a visually complete time from
-    if( isset($ret) && !array_key_exists('visualComplete', $ret) )
+    if( isset($ret) && (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) )
     {
         $video_dir = dirname($file) . '/video_';
         $filename = basename($file);
