@@ -1,5 +1,4 @@
 <?php
-//$debug = 1; // Uncomment to enable logging.
 chdir('..');
 include('common.inc');
 require_once('./lib/pclzip.lib.php');
@@ -7,6 +6,7 @@ header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(60*5*10);
+ignore_user_abort(true);
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
 $done = $_REQUEST['done'];
@@ -264,6 +264,7 @@ else
             }
             
             // archive the test result
+            require_once('archive.inc');
             ArchiveTest($id);
         }
         
