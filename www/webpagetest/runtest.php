@@ -3,6 +3,7 @@
     require_once('unique.inc');
     set_time_limit(300);
      
+    $error = NULL;
     $xml = false;
     if( !strcasecmp($req_f, 'xml') )
         $xml = true;
@@ -35,31 +36,6 @@
         {
             $test = array();
             $test['url'] = trim($req_url);
-            
-            // Extract the location, browser and connectivity.
-            // location.connectivity:browser
-            if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) )
-            {
-                $test['location'] = trim($matches[1]);
-                if (strlen(trim($matches[2])))
-                    $test['browser'] = trim($matches[2]);
-                if (strlen(trim($matches[3])))
-                    $test['connectivity'] = trim($matches[3]);
-            } else {
-                $test['location'] = trim($req_location);
-            }
-            
-            // Extract the multiple locations.
-            if ( isset($req_multiple_locations)) 
-            {
-                $test['multiple_locations'] = array();
-                foreach ($req_multiple_locations as $location_string)
-                {
-                    array_push($test['multiple_locations'], $location_string);
-                }
-                $test['batch_locations'] = 1;
-            }
-            
             $test['domElement'] = trim($req_domelement);
             $test['login'] = trim($req_login);
             $test['password'] = trim($req_password);
@@ -113,6 +89,40 @@
             $test['bodies'] = $req_bodies;
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
+            
+            // see if we need to process a template for these requests
+            if (isset($req_k) && strlen($req_k)) {
+                $keys = parse_ini_file('./settings/keys.ini', true);
+                if (count($keys) && array_key_exists($req_k, $keys) && array_key_exists('template', $keys[$req_k])) {
+                    $template = $keys[$req_k]['template'];
+                    if (is_file("./templates/$template.php"))
+                        include("./templates/$template.php");
+                }
+            }
+            
+            // Extract the location, browser and connectivity.
+            // location.connectivity:browser
+            if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) )
+            {
+                $test['location'] = trim($matches[1]);
+                if (strlen(trim($matches[2])))
+                    $test['browser'] = trim($matches[2]);
+                if (strlen(trim($matches[3])))
+                    $test['connectivity'] = trim($matches[3]);
+            } else {
+                $test['location'] = trim($req_location);
+            }
+            
+            // Extract the multiple locations.
+            if ( isset($req_multiple_locations)) 
+            {
+                $test['multiple_locations'] = array();
+                foreach ($req_multiple_locations as $location_string)
+                {
+                    array_push($test['multiple_locations'], $location_string);
+                }
+                $test['batch_locations'] = 1;
+            }
             
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
@@ -199,10 +209,8 @@
         
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
-        if( CheckIp($test) && CheckUrl($test['url']) )
+        if( !$error && CheckIp($test) && CheckUrl($test['url']) )
         {
-            $error = NULL;
-            
             ValidateKey($test, $error);
         
             if( !$error && !$test['batch'] )
@@ -424,11 +432,10 @@
                     $ret = array();
                     $ret['statusCode'] = 200;
                     $ret['statusText'] = 'Ok';
-                    if( strlen($req_r) )
-                        $ret['requestId'] = $req_r;
                     $ret['data'] = array();
                     $ret['data']['testId'] = $test['id'];
                     $ret['data']['ownerKey'] = $test['owner'];
+                    $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
                     if( FRIENDLY_URLS )
                     {
                         $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult/{$test['id']}/";
@@ -443,8 +450,7 @@
                         $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
                         $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
                     }
-                    header ("Content-type: application/json");
-                    echo json_encode($ret);
+                    json_response($ret);
                 }
                 else
                 {

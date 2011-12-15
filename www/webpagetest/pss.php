@@ -52,7 +52,7 @@ $page_description = "Comparison Test$testLabel.";
             }
             else
             {
-                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;wpt.pssdemos.com&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"3\">\n";
             }
@@ -193,13 +193,6 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
-                            <label for="backend">Back-End</label>
-                            <select name="backend" id="backend">
-                                <option value="PSS" selected>Production</option>
-                                <option value="PSA">PSA</option>
-                            </select>
-                        </li>
-                        <li>
                             <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
@@ -297,14 +290,6 @@ $page_description = "Comparison Test$testLabel.";
                 {
                     var script = form.script.value;
                     script = "addHeader\tX-Expt-NumDomainShards: " + shard + "\n" + script;
-                    form.script.value = script;
-                }
-                
-                var backend = form.backend.value;
-                if (backend == 'PSA')
-                {
-                    var script = form.script.value;
-                    script = script.replace('wpt.pssdemos.com', 'psa.pssdemos.com');
                     form.script.value = script;
                 }
                 
