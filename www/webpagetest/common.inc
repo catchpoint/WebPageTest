@@ -1603,4 +1603,22 @@ function xml_entities($text, $charset = 'UTF-8')
     $replacement = '&amp;${1}';
     return preg_replace($pattern, $replacement, $text);
 }
+
+/**
+* Send a JSON response (including callback for JSONP)
+* 
+* @param mixed $response
+*/
+function json_response(&$response) {
+    header ("Content-type: application/json");
+    if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
+        echo "{$_REQUEST['callback']}(";
+
+    if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
+        $ret['requestId'] = $_REQUEST['r'];
+    echo json_encode($response);
+
+    if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
+        echo ");";
+}
 ?>

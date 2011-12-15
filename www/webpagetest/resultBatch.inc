@@ -7,7 +7,12 @@ if( $_REQUEST['f'] == 'csv' )
 {
     //define('RESTORE_DATA_ONLY', true);
     $csv = true;
+    $json_response = array();
+} elseif( $_REQUEST['f'] == 'json' ) {
+    $json_response = array();
+    $json = true;
 }
+
 require_once('testStatus.inc');
 $tests = null;
 if( gz_is_file("$testPath/bulk.json") )
@@ -76,6 +81,14 @@ elseif($csv && $view == 'pss_path')
     header ("Content-type: text/csv");
     if ($complete)
         DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
+}
+elseif($json && $view == 'pss')
+{
+    if ($complete)
+        DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+    else
+        DisplayProgress($tests);
+    json_response($json_response);
 }
 else
 {
@@ -416,6 +429,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $complete;
     global $testInfo;
     global $location;
+    global $json;
+    global $json_response;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -520,7 +535,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
     }
 
-    if( $csv )
+    if( $json || $csv )
     {
         $domains = array();
         $domains['Original FV'] = array();
@@ -542,36 +557,69 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testIssues |= 1;
         if ($baseDomainSSL)
             $testIssues |= 2;
-        echo "Test ID,URL,Location,Original Test ID,Optimized Test ID,";
-        echo "Original FV Load Time,Optimized FV Load Time,Original RV Load Time,Optimized RV Load Time,Base Domain Test Issues,";
-        echo "Original FV TTFB,Optimized FV TTFB,Original RV TTFB,Optimized RV TTFB,";
-        echo "Original FV Render,Optimized FV Render,Original RV Render,Optimized RV Render,";
-        echo "Original FV Socket Connect,Optimized FV Socket Connect,Original RV Socket Connect,Optimized RV Socket Connect,";
-        echo "Original FV Requests,Optimized FV Requests,Original RV Requests,Optimized RV Requests,";
-        echo "Original FV Bytes,Optimized FV Bytes,Original RV Bytes,Optimized RV Bytes,";
-        echo "Original FV Result,Optimized FV Result,Original RV Result,Optimized RV Result,";
+        $json_response['data'] = array();
+        $json_response['data']['Test_ID'] = $id;
+        $json_response['data']['URL'] = htmlspecialchars_decode($url);
+        $json_response['data']['Location'] = $testInfo['location'];
+        $json_response['data']['Original_Test_ID'] = $tests['urls'][0]['id'];
+        $json_response['data']['Optimized_Test_ID'] = $tests['urls'][1]['id'];
+        $json_response['data']['Original_FV_Load_Time'] = $original[0]['loadTime'];
+        $json_response['data']['Optimized_FV_Load_Time'] = $optimized[0]['loadTime'];
+        $json_response['data']['Original_RV_Load_Time'] = $original[1]['loadTime'];
+        $json_response['data']['Optimized_RV_Load_Time'] = $optimized[1]['loadTime'];
+        $json_response['data']['Base_Domain_Test_Issues'] = $testIssues;
+        $json_response['data']['Original_FV_TTFB'] = $original[0]['TTFB'];
+        $json_response['data']['Optimized_FV_TTFB'] = $optimized[0]['TTFB'];
+        $json_response['data']['Original_RV_TTFB'] = $original[1]['TTFB'];
+        $json_response['data']['Optimized_RV_TTFB'] = $optimized[1]['TTFB'];
+        $json_response['data']['Original_FV_Render'] = $original[0]['render'];
+        $json_response['data']['Optimized_FV_Render'] = $optimized[0]['render'];
+        $json_response['data']['Original_RV_Render'] = $original[1]['render'];
+        $json_response['data']['Optimized_RV_Render'] = $optimized[1]['render'];
+        $json_response['data']['Original_FV_Socket_Connect'] = $original[0]['request_data'][0]['msSocket'];
+        $json_response['data']['Optimized_FV_Socket_Connect'] = $optimized[0]['request_data'][0]['msSocket'];
+        $json_response['data']['Original_RV_Socket_Connect'] = $original[1]['request_data'][0]['msSocket'];
+        $json_response['data']['Optimized_RV_Socket_Connect'] = $optimized[1]['request_data'][0]['msSocket'];
+        $json_response['data']['Original_FV_Requests'] = $original[0]['requestsDoc'];
+        $json_response['data']['Optimized_FV_Requests'] = $optimized[0]['requestsDoc'];
+        $json_response['data']['Original_RV_Requests'] = $original[1]['requestsDoc'];
+        $json_response['data']['Optimized_RV_Requests'] = $optimized[1]['requestsDoc'];
+        $json_response['data']['Original_FV_Bytes'] = $original[0]['bytesInDoc'];
+        $json_response['data']['Optimized_FV_Bytes'] = $optimized[0]['bytesInDoc'];
+        $json_response['data']['Original_RV_Bytes'] = $original[1]['bytesInDoc'];
+        $json_response['data']['Optimized_RV_Bytes'] = $optimized[1]['bytesInDoc'];
+        $json_response['data']['Original_FV_Result'] = $original[0]['result'];
+        $json_response['data']['Optimized_FV_Result'] = $optimized[0]['result'];
+        $json_response['data']['Original_RV_Result'] = $original[1]['result'];
+        $json_response['data']['Optimized_RV_Result'] = $optimized[1]['result'];
         foreach($domains as $config => &$domains_data)
-            echo "$config Unique Domains,";
+            $json_response['data']["{$config}_Unique_Domains"] = count($domains_data);
         foreach($mime_stats as $config => &$mime_stats_data)
-            foreach($mime_stats_data as $mime_type => &$mime_data)
-                echo "$config $mime_type requests,$config $mime_type bytes,";
-        echo "Original FV Visually Complete,Optimized FV Visually Complete,Original RV Visually Complete,Optimized RV Visually Complete,";
-        echo "Tested From,";
-        echo "\n$id,\"" . htmlspecialchars_decode($url) . "\",{$testInfo['location']},{$tests['urls'][0]['id']},{$tests['urls'][1]['id']},";
-        echo "{$original[0]['loadTime']},{$optimized[0]['loadTime']},{$original[1]['loadTime']},{$optimized[1]['loadTime']},$testIssues,";
-        echo "{$original[0]['TTFB']},{$optimized[0]['TTFB']},{$original[1]['TTFB']},{$optimized[1]['TTFB']},";
-        echo "{$original[0]['render']},{$optimized[0]['render']},{$original[1]['render']},{$optimized[1]['render']},";
-        echo "{$original[0]['request_data'][0]['msSocket']},{$optimized[0]['request_data'][0]['msSocket']},{$original[1]['request_data'][0]['msSocket']},{$optimized[1]['request_data'][0]['msSocket']},";
-        echo "{$original[0]['requestsDoc']},{$optimized[0]['requestsDoc']},{$original[1]['requestsDoc']},{$optimized[1]['requestsDoc']},";
-        echo "{$original[0]['bytesInDoc']},{$optimized[0]['bytesInDoc']},{$original[1]['bytesInDoc']},{$optimized[1]['bytesInDoc']},";
-        echo "{$original[0]['result']},{$optimized[0]['result']},{$original[1]['result']},{$optimized[1]['result']},";
-        foreach($domains as $config => &$domains_data)
-            echo count($domains_data) . ',';
-        foreach($mime_stats as $config => &$mime_stats_data)
-            foreach($mime_stats_data as $mime_type => &$mime_data)
-                echo "{$mime_data['count']},{$mime_data['bytes']},";
-        echo "{$original[0]['visualComplete']},{$optimized[0]['visualComplete']},{$original[1]['visualComplete']},{$optimized[1]['visualComplete']},";
-        echo "\"$location\",";
+            foreach($mime_stats_data as $mime_type => &$mime_data) {
+                $config = str_replace(' ', '_', $config);
+                $mime_type = str_replace(' ', '_', $mime_type);
+                $json_response['data']["{$config}_{$mime_type}_requests"] = $mime_data['count'];
+                $json_response['data']["{$config}_{$mime_type}_bytes"] = $mime_data['bytes'];
+            }
+        $json_response['data']['Original_FV_Visually_Complete'] = $original[0]['visualComplete'];
+        $json_response['data']['Optimized_FV_Visually_Complete'] = $optimized[0]['visualComplete'];
+        $json_response['data']['Original_RV_Visually_Complete'] = $original[1]['visualComplete'];
+        $json_response['data']['Optimized_RV_Visually_Complete'] = $optimized[1]['visualComplete'];
+        $json_response['data']['Tested_From'] = $location;
+        
+        if ($csv) {
+            foreach ($json_response['data'] as $label => $value) {
+                $label = str_replace('_', ' ', $label);
+                echo $label . ',';
+            }
+            echo "\n";
+            foreach ($json_response['data'] as $label => $value) {
+                if ($label == 'URL' || $label == 'Tested_From')
+                    echo '"' . $value . '",';
+                else
+                    echo $value . ',';
+            }
+        }
     }
     else
     {
@@ -654,32 +702,45 @@ function DisplayPSS(&$tests, $video, &$dirty)
             echo '</tr>';
         }
         echo '</table><br>';
-        
-        // video
-        if( $complete && $video )
+    }
+
+    // video
+    if( $complete && $video && !$csv )
+    {
+        $videoComplete = true;
+        if( !strlen($tests['vID']) )
         {
-            $videoComplete = true;
+            $tests['vID'] = CreateVideo($tests['urls']);
+            $dirty = true;
+            $videoComplete = false;
             if( !strlen($tests['vID']) )
             {
-                $tests['vID'] = CreateVideo($tests['urls']);
+                // bail on the video if it couldn't be created
+                $videoComplete = true;
+                $tests['vReady'] = true;
+            }
+        }
+        elseif( !$tests['vReady'] )
+        {
+            $tests['vReady'] = CheckVideo($tests['vID']);
+            if( $tests['vReady'] )
                 $dirty = true;
+            else
                 $videoComplete = false;
-                if( !strlen($tests['vID']) )
-                {
-                    // bail on the video if it couldn't be created
-                    $videoComplete = true;
-                    $tests['vReady'] = true;
-                }
+        }
+        
+        if ($json) {
+            $json_response['data']['VideoID'] = $tests['vID'];
+            if ($videoComplete) {
+                $json_response['statusCode'] = 200;
+                $host  = $_SERVER['HTTP_HOST'];
+                $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id={$tests['vID']}";
+            } else {
+                $json_response['statusCode'] = 102;
+                $json_response['statusText'] = 'Creating Video';
             }
-            elseif( !$tests['vReady'] )
-            {
-                $tests['vReady'] = CheckVideo($tests['vID']);
-                if( $tests['vReady'] )
-                    $dirty = true;
-                else
-                    $videoComplete = false;
-            }
-            
+        } else {
             if( $videoComplete )
             {
                 echo '<h2>Visual Comparison*</h2>';
@@ -1292,6 +1353,13 @@ function VideoHtml($id)
                 <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
+// rewrite the bulk file if it changed
+if( $dirty )
+{
+    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    $dirty = false;
+}
+
 /**
 * Walk through the tests determining which ones are complete
 * 
@@ -1350,6 +1418,8 @@ function CheckTests(&$tests, &$dirty)
 function DisplayProgress(&$tests)
 {
     global $debug;
+    global $json;
+    global $json_response;
     $elapsed = -1;
     $position = -1;
     require_once('testStatus.inc');
@@ -1359,13 +1429,19 @@ function DisplayProgress(&$tests)
         $statusCode = $status['statusCode'];
         if( $statusCode == 100 || $statusCode == 200 )
         {
-            if( $elapsed < 0 || $status['elapsed'] > $elapsed )
+            if( $elapsed < 0 || $status['elapsed'] > $elapsed ) {
                 $elapsed = $status['elapsed'];
+                if ($json)
+                    $json_response['data'] = $status;
+            }
         }
         elseif( $statusCode == 101 )
         {
-            if( $position < 0 || $status['behindCount'] < $position )
+            if( $position < 0 || $status['behindCount'] < $position ) {
                 $position = $status['behindCount'];
+                if ($json)
+                    $json_response['data'] = $status;
+            }
         }
     }
 
@@ -1399,11 +1475,15 @@ function DisplayProgress(&$tests)
             $statusText = "Waiting at the front of the queue...";
     }
     
-    echo '<br><div id="statusImg">';
-    echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
-    echo "<div id=\"statusText\">$statusText</div>\n";
-    echo '</div><br>';
-    
+    if($json) {
+        $json_response['statusCode'] = $json_response['data']['statusCode'];
+        $json_response['statusText'] = $json_response['data']['statusText'];
+    } else {
+        echo '<br><div id="statusImg">';
+        echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
+        echo "<div id=\"statusText\">$statusText</div>\n";
+        echo '</div><br>';
+    }    
 }
 
 /**

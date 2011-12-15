@@ -311,14 +311,11 @@ else
             $ret = array();
             $ret['statusCode'] = 200;
             $ret['statusText'] = 'Ok';
-            if( strlen($_REQUEST['r']) )
-                $ret['requestId'] = $_REQUEST['r'];
             $ret['data'] = array();
             $ret['data']['videoId'] = $id;
             $ret['data']['jsonUrl'] = "http://$host$uri/view.php?f=json&id=$id";
             $ret['data']['userUrl'] = "http://$host$uri/view.php?id=$id";
-            header ("Content-type: application/json");
-            echo json_encode($ret);
+            json_response($ret);
         }
         else
         {

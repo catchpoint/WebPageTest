@@ -67,6 +67,7 @@ if( $xml || $json )
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
             $videoUrl = "http://$host$uri/download.php?id=$id";
+            $embedUrl = "http://$host$uri/view.php?embed=1&id=$id";
         }
         else
             $ret = 100;
@@ -99,14 +100,19 @@ elseif( $json )
     $ret = array();
     $ret['statusCode'] = $ret;
     $ret['statusText'] = $error;
-    if( strlen($_REQUEST['r']) )
-        $ret['requestId'] = $_REQUEST['r'];
     $ret['data'] = array();
     $ret['data']['videoId'] = $id;
     if( strlen($videoUrl) )
         $ret['data']['videoUrl'] = $videoUrl;
-    header ("Content-type: application/json");
-    echo json_encode($ret);
+    if (strlen($embedUrl)) {
+        $ret['data']['embedUrl'] = $embedUrl;
+        if (is_file("./$dir/video.png")) {
+            list($width, $height) = getimagesize("./$dir/video.png");
+            $ret['data']['width'] = $width;
+            $ret['data']['height'] = $height;
+        }
+    }
+    json_response($ret);
 }
 else
 {
