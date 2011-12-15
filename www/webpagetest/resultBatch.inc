@@ -1431,16 +1431,12 @@ function DisplayProgress(&$tests)
         {
             if( $elapsed < 0 || $status['elapsed'] > $elapsed ) {
                 $elapsed = $status['elapsed'];
-                if ($json)
-                    $json_response['data'] = $status;
             }
         }
         elseif( $statusCode == 101 )
         {
             if( $position < 0 || $status['behindCount'] < $position ) {
                 $position = $status['behindCount'];
-                if ($json)
-                    $json_response['data'] = $status;
             }
         }
     }
@@ -1476,8 +1472,8 @@ function DisplayProgress(&$tests)
     }
     
     if($json) {
-        $json_response['statusCode'] = $json_response['data']['statusCode'];
-        $json_response['statusText'] = $json_response['data']['statusText'];
+        $json_response['statusCode'] = 100;
+        $json_response['statusText'] = $statusText;
     } else {
         echo '<br><div id="statusImg">';
         echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
