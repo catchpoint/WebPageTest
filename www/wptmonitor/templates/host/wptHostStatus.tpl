@@ -38,7 +38,7 @@
                 <td><a href="#{$location.id}">{$location.id}</a></td>
                 <td>{$location.Label}</td>
                 <td>{$location.Browser}</td>
-                <td align="right">{if isset($location.runRate)}{$location.runRate}{/if}</td>
+                <td align="right">{if isset($location.runRate)}{$location.runRate|number_format}{/if}</td>
                 <td align="right">{$location.AgentCount}</td>
                 <td align="right">{$location.PendingTests}</td>
                 <td align="right">{$location.PendingTestsHighPriority}</td>
@@ -65,7 +65,7 @@
               <td nowrap="true">{$user}</td>
               <td align="right">{if isset($runRateInfo.jobsPerUser[$user])}{$runRateInfo.jobsPerUser[$user]}{else}0{/if}</td>
               <td align="right">{if isset($runRateInfo.activeJobsPerUser[$user])}{$runRateInfo.activeJobsPerUser[$user]}{else}0{/if}</td>
-              <td align="right" nowrap="true">{if isset($runRateInfo.runRatePerUser[$user])}{$runRateInfo.runRatePerUser[$user]}{else}0{/if}</td>
+              <td align="right" nowrap="true">{if isset($runRateInfo.runRatePerUser[$user])}{$runRateInfo.runRatePerUser[$user]|number_format}{else}0{/if}</td>
             </tr>
           {/foreach}
             <tr><td colspan="4"><hr></td></tr>
