@@ -1,9 +1,11 @@
 <?php
   require("login/login.php");
   include 'monitor.inc';
-  $script_id = $_REQUEST['id'];
+  if (isset($_REQUEST['id'])){
+    $script_id = $_REQUEST['id'];
+  }
   $user_id = getCurrentUserId();
-  if ($script_id){
+  if (isset($script_id)){
     $folderId = getFolderIdFor($script_id,'WPTScript');
   } else {
     $folderId = $_REQUEST['folderId'];
@@ -12,7 +14,7 @@
   if (!hasPermission('WPTScript',$folderId,PERMISSION_UPDATE)){
     echo "Invalid Permission";exit;
   }
-  if ( $script_id ){
+  if ( isset($script_id) ){
     $q = Doctrine_Query::create()->from('WPTScript s')
         ->andWhere('s.Id= ?', $script_id);
     $script = $q->fetchOne();
