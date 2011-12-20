@@ -358,7 +358,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
   // Update location information
   $locationInformation = getLocationInformation();
 
-  logOutput("[DEBUG] [processJobsForUsers] start: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] start: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
 
   $userTable = Doctrine_Core::getTable('User');
   $user = $userTable->find($userId);
@@ -382,7 +382,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
     $result = $q->fetchArray();
   }
   
-  logOutput("[DEBUG] [processJobsForUsers] before looping through results: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] before looping through results: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
   try {
     foreach ($result as $row)
     {
@@ -432,7 +432,6 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
           $authenticate = $script['Authenticate'];
           $authuser = $script['AuthUser'];
           $authpassword= $script['AuthPassword'];
-
           $wptResult = new WPTResult();
           $wptResult['WPTJobId']=$row['Id'];
           $wptResult['Date'] = current_seconds();
@@ -468,7 +467,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
 
           $format = "xml";
 
-          logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+          logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
             $wptRes = submitWPTRequest(
             $row['Host'] .$wptRuntest,
             $url,
@@ -491,7 +490,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
 
           $wptResultId = $wptRes['wptResultId'];
           $wptResultText = $wptRes['statusText'];
-          logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+          logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
 //          $row['Lastrun'] = $dte;
           if ($wptResultId == "-1"){
             $wptResult['Status'] = "905";
@@ -542,14 +541,25 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
     logOutput('[ERROR] [processJobsForUsers] Exception : ' . $e->getMessage() . "");
     exit;
   }
-  logOutput("[DEBUG] [processJobsForUsers] after looping: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] after looping: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
   unset($result);
   $user->free(true);
   unset($user);
-  logOutput("[DEBUG] [processJobsForUsers] after cleanup: " .current_seconds()." mem: ". intval(memory_get_usage() / 1024));
+  logOutput("[DEBUG] [processJobsForUsers] after cleanup: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
 }
 
-
+/**
+ * @param null $seconds
+ * @param string $format
+ * @return string
+ */
+function timestamp($seconds = null, $format = "Y-m-d H:i:s"){
+  $now = new DateTime();
+  if ($seconds != null){
+    $now->setTimestamp($seconds);
+  }
+  return $now->format($format);
+}
 // return our current unix time in millis
 function current_seconds() {
 //  date_default_timezone_set('UTC');
@@ -767,6 +777,7 @@ function processResultsForAll( $resultId = null ) {
         }
         // If this is a multi page job page test will report incorrect numbers. This routine
         // Will calculate correct numbers from the actual request data.
+        // Sums up the total for each element across all pages.
         if ( $result['MultiStep'] ){
           $pageData = file_get_contents($pageDataLocation);
           if ($pageData){
@@ -1055,7 +1066,7 @@ function checkQueueGrowthCountAndEmailAlert(){
         $message .= "Queue Growth alert for location: ".$status['id']."\n";
         $message .= "In Queue: ".$status['PendingTests']."\n";
         $message .= "Testers: ".$status['AgentCount']."\n";
-        $message .= "Timestamp: ".current_seconds()."\n";
+        $message .= "Timestamp: ".timestamp()."\n";
         $message .= "\n--------------------------------------------\n";
         $message .= "Queue count continues to grow. Please provision more testers or decrease the runrate for this location.";
         // Update alert time stamp
@@ -1171,7 +1182,7 @@ function checkTesterRatioAndEmailAlert(){
           $message .= "Runrate ratio insufficient for location: ".$id."\n";
           $message .= "Runrate: ".$runRate."\n";
           $message .= "Testers: ".$agentCount."\n";
-          $message .= "Timestamp: ".current_seconds()."\n";
+          $message .= "Timestamp: ".timestamp()."\n";
           if ($agentCount){
             $message .= "Ratio: ".$runRate/$agentCount."\n";
           } else {
@@ -1195,5 +1206,57 @@ function checkTesterRatioAndEmailAlert(){
     echo $message;
   }
 }
+function updateLocations($id){
+  try {
 
+    $q = Doctrine_Query::create()->from('WPTHost h')->where('h.Id= ?', $id);
+    $host = $q->fetchOne();
+    $q->free(true);
+
+    if ( $host ){
+      $locationsArray = getLocationInformation($host['HostURL']);
+    } else {
+      echo "no host";exit;
+    }
+
+    // Update information from getLocations call
+    foreach($locationsArray as $key=>$loc){
+      $locationId = $loc['id'];
+      $q = Doctrine_Query::create()->from('WPTLocation l')
+          ->where('l.Location= ?', $locationId)
+          ->andWhere('l.WPTHostId = ?',$id);
+      $wptLocation = $q->fetchOne();
+      $q->free(true);
+      if ( !$wptLocation ){
+        $wptLocation = new WPTLocation();
+      }
+      $wptLocation['Label'] = $loc['Label'];
+      $wptLocation['Location'] = $loc['id'];
+      $wptLocation['WPTHostId'] = $id;
+      $wptLocation['Active'] = true;
+      $wptLocation['Valid'] = true;
+      $wptLocation['Browser']= $loc['Browser'];
+      $wptLocation->save();
+    }
+    // Check for invalid locations
+    $q = Doctrine_Query::create()->from('WPTLocation l')->where('l.WPTHostId= ?', $id);
+    $locations = $q->execute();
+    $q->free(true);
+    foreach( $locations as $key=>$location ){
+      $id = $location['Location'];
+      foreach( $locationsArray as $locArray ){
+        if ( $locArray['id'] == $id ){
+          $location['Valid'] = true;
+          break;
+        }
+        $location['Valid'] = false;
+      }
+      $location->save();
+    }
+  unset($locations);
+ } catch (Exception $e){
+    print $e;
+    exit;
+  }
+}
 ?>
