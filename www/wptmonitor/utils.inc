@@ -371,7 +371,8 @@ function getLocationInformation($host = null) {
       $locations["'".$id."'"] = $location;
     }
   }
-  $q = Doctrine_Query::create()->select('j.Location, j.FirstViewOnly, SUM(j.Runs * 60/j.Frequency) as runrate')
+  //SELECT location, firstviewonly, runs, frequency, (runs * (2-(firstviewonly is not null))*60/frequency) as runrate FROM `wptjob` WHERE active group by location;
+  $q = Doctrine_Query::create()->select('j.Location, j.FirstViewOnly, SUM(j.Runs * (2-(FirstViewOnly is not null)) * 60/j.Frequency) as runrate')
       ->from('WPTJob j')
       ->where('j.Active = ?',true)
       ->groupBy('j.Location');
