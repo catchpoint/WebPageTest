@@ -11,8 +11,8 @@ class Share extends Doctrine_Record{
     $this->hasColumn('TableItemId', 'integer', 8);
     // 0 - Read, 1 - Update, 2 - Create/Delete, 4 - Execute
     $this->hasColumn('Permissions', 'integer', 8);
-    $this->hasColumn('StartSharingDate', 'timestamp');
-    $this->hasColumn('StopSharingDate', 'timestamp');
+    $this->hasColumn('StartSharingDate', 'double');
+    $this->hasColumn('StopSharingDate', 'double');
 
   }
 

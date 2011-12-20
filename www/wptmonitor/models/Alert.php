@@ -19,7 +19,7 @@ class Alert extends Doctrine_Record {
       array('values' => array('equals', 'not equals', 'greater than', 'less than')));
     $this->hasColumn('AlertOnValue', 'string', 255, array('type' => 'string', 'length' => 255));
     $this->hasColumn('AlertThreshold', 'integer', 8, array('type' => 'integer', 'length' => 8));
-    $this->hasColumn('LastAlertTime', 'timestamp');
+    $this->hasColumn('LastAlertTime', 'double');
   }
 
   public function setUp() {

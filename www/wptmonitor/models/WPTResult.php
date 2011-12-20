@@ -7,7 +7,7 @@ class WPTResult extends Doctrine_Record
     $this->setTableName('WPTResult');
 
     $this->hasColumn('Id', 'integer', 8, array('type' => 'integer', 'length' => 8, 'primary' => true, 'autoincrement' => true));
-    $this->hasColumn('Date', 'timestamp');
+    $this->hasColumn('Date', 'double');
     $this->hasColumn('WPTJobId', 'integer', 8);
     // Is this a multi step/page test
     $this->hasColumn('MultiStep', 'boolean');
@@ -35,8 +35,8 @@ class WPTResult extends Doctrine_Record
     $this->hasColumn('DownloadAttempts', 'integer', 3);
     $this->hasColumn('Runs', 'integer', 2, array('unsigned' => 'true', 'default' => '1'));
     $this->hasColumn('RunToUseForAverage', 'integer', 2, array('unsigned' => 'true', 'default' => '0'));
-    $this->hasColumn('FirstStatusUpdate', 'timestamp');
-    $this->hasColumn('LastStatusUpdate', 'timestamp');
+    $this->hasColumn('FirstStatusUpdate', 'double');
+    $this->hasColumn('LastStatusUpdate', 'double');
 
     $this->hasColumn('AvgFirstViewLoadTime', 'integer', 12);
     $this->hasColumn('AvgFirstViewFirstByte', 'integer', 12);

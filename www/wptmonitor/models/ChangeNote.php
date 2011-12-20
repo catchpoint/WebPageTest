@@ -8,7 +8,7 @@ class ChangeNote extends Doctrine_Record {
     $this->hasColumn('ChangeNoteFolderId', 'integer', 8);
     
     $this->hasColumn('UserId', 'integer', 8, array('type' => 'integer', 'length' => 8));
-    $this->hasColumn('Date', 'timestamp');
+    $this->hasColumn('Date', 'double');
     $this->hasColumn('Public', 'boolean');
     $this->hasColumn('ReleaseInfo', 'string', 255, array('type' => 'string', 'length' => 255));
     $this->hasColumn('Label', 'string', 255, array('type' => 'string', 'length' => 255));

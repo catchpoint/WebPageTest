@@ -29,7 +29,7 @@ class WPTJob extends Doctrine_Record {
     $this->hasColumn('MaxDownloadAttempts', 'integer', 8, array('type' => 'integer', 'length' => 8, 'default' => '30'));
     $this->hasColumn('Runs', 'integer', 2, array('unsigned' => 'true', 'default' => '1'));
     $this->hasColumn('RunToUseForAverage', 'integer', 2, array('unsigned' => 'true', 'default' => '0'));
-    $this->hasColumn('Lastrun', 'timestamp');
+    $this->hasColumn('Lastrun', 'double');
     $this->hasColumn('WPTBandwidthDown', 'integer', 8);
     $this->hasColumn('WPTBandwidthUp', 'integer', 8);
     $this->hasColumn('WPTBandwidthLatency', 'integer', 8);
