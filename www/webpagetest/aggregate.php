@@ -2,6 +2,10 @@
 include 'common.inc';
 include 'page_data.inc';
 
+$use_median_run = false;
+if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
+    $use_median_run = true;
+
 // only support batch tests for now
 if( isset($test['test']) && $test['test']['batch'] )
 {
@@ -35,25 +39,49 @@ if( isset($test['test']) && $test['test']['batch'] )
         
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
-        foreach( $metrics as $metric )
-            echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",";
+        if ($use_median_run) {
+            echo '"FV Median Run",';
+            foreach( $metrics as $metric )
+                echo "\"FV $metric\",";
+        } else {
+            foreach( $metrics as $metric )
+                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",";
+        }
         if( !$fvOnly )
         {
             echo '"RV Successful Tests",';
-            foreach( $metrics as $metric )
-                echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",";
+            if ($use_median_run) {
+                echo '"RV Median Run",';
+                foreach( $metrics as $metric )
+                    echo "\"RV $metric\",";
+            } else {
+                foreach( $metrics as $metric )
+                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",";
+            }
         }
         foreach( $tests['variations'] as &$variation )
         {
             $label = $variation['l'];
             echo "\"$label URL\",\"$label FV Successful Tests\",";
-            foreach( $metrics as $metric )
-                echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",";
+            if ($use_median_run) {
+                echo "\"$label FV Median Run\",";
+                foreach( $metrics as $metric )
+                    echo "\"$label FV $metric\",";
+            } else {
+                foreach( $metrics as $metric )
+                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",";
+            }
             if( !$fvOnly )
             {
                 echo "\"$label RV Successful Tests\",";
-                foreach( $metrics as $metric )
-                    echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",";
+                if ($use_median_run) {
+                    echo "\"$label RV Median Run\",";
+                    foreach( $metrics as $metric )
+                        echo "\"$label RV $metric\",";
+                } else {
+                    foreach( $metrics as $metric )
+                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",";
+                }
             }
         }
         echo "\r\n";
@@ -75,10 +103,18 @@ if( isset($test['test']) && $test['test']['batch'] )
                 {
                     $count = CountSuccessfulTests($pageData, $cacheVal);
                     echo "\"$count\",";
+                    if ($use_median_run) {
+                        $median_run = GetMedianRun($pageData, $cacheVal);
+                        echo "\"$median_run\",";
+                    }
                     foreach( $metrics as $metric => $metricLabel )
                     {
-                        CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                        echo "\"$median\",\"$avg\",\"$stdDev\",";
+                        if ($use_median_run) {
+                            echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
+                        } else {
+                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
+                            echo "\"$median\",\"$avg\",\"$stdDev\",";
+                        }
                     }
                 }
                 foreach( $tests['variations'] as $variationIndex => &$variation )
@@ -93,17 +129,31 @@ if( isset($test['test']) && $test['test']['batch'] )
                         {
                             $count = CountSuccessfulTests($pageData, $cacheVal);
                             echo "\"$count\",";
+                            if ($use_median_run) {
+                                $median_run = GetMedianRun($pageData, $cacheVal);
+                                echo "\"$median_run\",";
+                            }
                             foreach( $metrics as $metric => $metricLabel )
                             {
-                                CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                                echo "\"$median\",\"$avg\",\"$stdDev\",";
+                                if ($use_median_run) {
+                                    echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
+                                } else {
+                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
+                                    echo "\"$median\",\"$avg\",\"$stdDev\",";
+                                }
                             }
                         }
                         else
                         {
                             echo '"",';
-                            foreach( $metrics as $metric => $metricLabel )
-                                echo '"","","",';
+                            if ($use_median_run)
+                                echo '"",';
+                            foreach( $metrics as $metric => $metricLabel ) {
+                                if ($use_median_run)
+                                    echo '"",';
+                                else
+                                    echo '"","","",';
+                            }
                         }
                     }
                 }                
