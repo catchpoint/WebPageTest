@@ -27,6 +27,9 @@
   $folder = $folderTable->find($share['TableItemId']);
 
   $smarty->assign('folderName',$folder['Label']);
+  if (!isset($userName)){
+    $userName = '';
+  }
   $smarty->assign('userName',$userName);
   $smarty->assign('share',$share);
   $smarty->display('user/addShare.tpl');
