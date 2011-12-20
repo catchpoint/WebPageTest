@@ -50,24 +50,23 @@
 <?php
 session_start();
 include 'monitor.inc';
+include 'wpt_functions.inc';
 require_once('bootstrap.php');
 $dbFile = dirname(__FILE__) . '/db/wpt_monitor.sqlite';
-$step = $_REQUEST['step'];
-$jobProcessorKey = $_REQUEST['jobProcessorKey'];
-$enableRegistration = $_REQUEST['enableRegistration'];
-$defaultJobsPerMonth = $_REQUEST['defaultJobsPerMonth'];
-$hostUrl = $_REQUEST['hostUrl'];
-$hostLabel = $_REQUEST['hostLabel'];
-$hostContact = $_REQUEST['hostContact'];
-$hostContactEmail = $_REQUEST['hostContactEmail'];
-$adminUsername = $_REQUEST['adminUsername'];
-$adminFirstName = $_REQUEST['adminFirstName'];
-$adminLastName = $_REQUEST['adminLastName'];
-$adminPassword = $pass = sha1($_REQUEST['adminPassword']);
-$adminEmailAddress = $_REQUEST['adminEmailAddress'];
-if (!$step) {
-  if (file_exists($dbFile)) {
-    echo "<br><h2>Warning!</h2><br><h3>Database file already exists.<br></h3>To reinitialize remove the wpt_monitor.sqlite file located in the db directory.<br>";
+if (isset($_REQUEST['step'])){
+  $step = $_REQUEST['step'];
+}
+if (!isset($step)) {
+  // Determine if database exists already by checking for existence of the config table
+  $dbExists = true;
+  try{
+    $configTable = Doctrine_Core::getTable('WPTMonitorConfig');
+    $configTable->find(1);
+  } catch (Exception $e){
+    $dbExists = false;
+  }
+  if ($dbExists){
+    echo "<br><h2>Warning!</h2><br><h3>Database file already exists.<br></h3>To reinitialize remove/drop the wpt_monitor database. If using sqlite this will be wpt_monitor.sqlite in the db direcotry.<br>";
   } else {
     ?>
     <h3 align="center">Warning: This will erase any existing data.</h3>
@@ -246,8 +245,20 @@ Total: 11,520
   }
 } else if ($step == "2") {
   try {
-    // Check for db and generate tables if needed.
-    if (!file_exists($dbFile)) {
+    $jobProcessorKey = $_REQUEST['jobProcessorKey'];
+    $enableRegistration = $_REQUEST['enableRegistration'];
+    $defaultJobsPerMonth = $_REQUEST['defaultJobsPerMonth'];
+    $hostUrl = $_REQUEST['hostUrl'];
+    $hostLabel = $_REQUEST['hostLabel'];
+    $hostContact = $_REQUEST['hostContact'];
+    $hostContactEmail = $_REQUEST['hostContactEmail'];
+    $adminUsername = $_REQUEST['adminUsername'];
+    $adminFirstName = $_REQUEST['adminFirstName'];
+    $adminLastName = $_REQUEST['adminLastName'];
+    $adminPassword = $pass = sha1($_REQUEST['adminPassword']);
+    $adminEmailAddress = $_REQUEST['adminEmailAddress'];
+
+    if (!$dbExists){
       Doctrine_Core::createDatabases();
       Doctrine_Core::createTablesFromModels('models');
       // Initialize configuration
@@ -281,10 +292,12 @@ Total: 11,520
       $host['HostURL'] = $hostUrl;
       $host->save();
       $_SESSION['ls_id'] = 1;
-      include 'FixFolders.php';
-      header("Location: updateLocations.php?id=1&forwardTo=install.php?step=3");
+      //include 'FixFolders.php';
+      updateLocations(1);
+
+      header("Location: install.php?step=3");
     } else {
-      echo "<br><h2>Warning!</h2><br><h3>Database file already exists.<br></h3>To reinitialize remove the wpt_monitor.sqlite file located in the db directory.<br>";
+      echo "<br><h2>Warning!</h2><br><h3>Database file already exists.<br></h3>To reinitialize remove/drop the wpt_monitor database. If using sqlite this will be wpt_monitor.sqlite in the db direcotry.<br>";
     }
 
   } catch (Exception $e) {
