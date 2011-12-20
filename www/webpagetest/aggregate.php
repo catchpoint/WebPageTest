@@ -89,6 +89,7 @@ if( isset($test['test']) && $test['test']['batch'] )
         // and now the actual data
         foreach( $tests['urls'] as &$test )
         {
+            RestoreTest($test['id']);
             $label = $test['l'];
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
@@ -122,6 +123,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                     $urlVariation = CreateUrlVariation($url, $variation['q']);
                     echo "\"$urlVariation\",";
                     $id = $test['v'][$variationIndex];
+                    RestoreTest($id);
+                    $testPath = './' . GetTestPath($id);
                     $pageData = loadAllPageData($testPath);
                     for( $cacheVal = 0; $cacheVal <= $cached; $cacheVal++ )
                     {
