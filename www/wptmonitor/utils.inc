@@ -105,11 +105,11 @@ function displayError($message = "You are not authorized to perform this operati
 
 function getCurrentUserId() {
   // Support admin impersonating impersonate
-  if ($_SESSION['ls_admin']) {
+  if (isset($_SESSION['ls_admin'])) {
     if ($_SESSION['ls_impersonate_id']) {
       return $_SESSION['ls_impersonate_id'];
     }
-  } else if ($_SESSION['ls_guest_id']) {
+  } else if (isset($_SESSION['ls_guest_id'])) {
     return $_SESSION['ls_guest_id'];
   } else {
     return $_SESSION['ls_id'];
