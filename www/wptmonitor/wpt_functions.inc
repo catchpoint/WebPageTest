@@ -700,6 +700,7 @@ function processResultsForAll( $resultId = null ) {
           $avgFV = $xml->data->average->firstView;
           $avgRV = $xml->data->average->repeatView;
           $requestDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->requestsData;
+          $requestDataLocationRepeatView = $xml->data->run[$avgRun-1]->repeatView->rawData->requestsData;
           $pageDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->pageData;
         } else {
           $avgFV = $xml->data->run[$runToUse - 1]->firstView->results;
@@ -752,18 +753,22 @@ function processResultsForAll( $resultId = null ) {
           $validationMarkAs = $result['ValidationMarkAs'];
           $validationMarkAsElse = $result['ValidationMarkAsElse'];
           $requestData = retrieveRequestsData($requestDataLocation );
-//          $requestDataRepeatView = retrieveRequestsData($requestDataLocationRepeatView );
+          $requestDataRepeatView = retrieveRequestsData($requestDataLocationRepeatView );
+          $requestDataArray[] = $requestData;
+          $requestDataArray[] = $requestDataRepeatView;
           $result['ValidationState'] = $validationMarkAsElse;
-          foreach ($requestData as $request){
-            if ( preg_match($validationRequest, $request['url']) ){
-              if ( $validationType == VALIDATION_TYPE_MATCH ){
-                $result['ValidationState'] = $validationMarkAs;
-                break;
-              } else {
-                if ($validationType == VALIDATION_TYPE_NOMATCH){
+          foreach($requestDataArray as $reqData){
+            foreach ($reqData as $request){
+              if ( preg_match($validationRequest, $request['url']) ){
+                if ( $validationType == VALIDATION_TYPE_MATCH ){
+                  $result['ValidationState'] = $validationMarkAs;
                   break;
                 } else {
-                  $result['ValidationState'] = $validationMarkAs;
+                  if ($validationType == VALIDATION_TYPE_NOMATCH){
+                    break;
+                  } else {
+                    $result['ValidationState'] = $validationMarkAs;
+                  }
                 }
               }
             }
