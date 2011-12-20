@@ -141,6 +141,7 @@ public:
   BYTE    _image_quality;
   bool    _png_screen_shot;
   DWORD   _minimum_duration;
+  bool    _save_response_bodies;
   
   // current state
   int     _run;

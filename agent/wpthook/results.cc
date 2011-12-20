@@ -38,6 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "screen_capture.h"
 #include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
+#include <zlib.h>
+#include <zip.h>
 
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
@@ -99,6 +101,8 @@ void Results::Save(void) {
     SaveProgressData();
     SaveStatusMessages();
     SavePageData(checks);
+    if (_test._save_response_bodies)
+      SaveResponseBodies();
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -851,4 +855,47 @@ CStringA Results::FormatTime(LARGE_INTEGER t) {
   CStringA formatted_time;
   formatted_time.Format("%d\t", _test_state.ElapsedMsFromStart(t));
   return formatted_time;
+}
+
+/*-----------------------------------------------------------------------------
+  Save the bare response bodies in a zip file
+-----------------------------------------------------------------------------*/
+void Results::SaveResponseBodies(void) {
+  CString file = _file_base + _T("_bodies.zip");
+  zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
+  if (zip) {
+    DWORD count = 0;
+    DWORD bodies_count = 0;
+    _requests.Lock();
+    POSITION pos = _requests._requests.GetHeadPosition();
+    while (pos) {
+      Request * request = _requests._requests.GetNext(pos);
+      if (request && request->_processed) {
+        CString mime = request->GetResponseHeader("content-type").MakeLower();
+        count++;
+        if (request->GetResult() == 200 && 
+            ( mime.Find(_T("text/")) >= 0 || 
+              mime.Find(_T("javascript")) >= 0 || 
+              mime.Find(_T("json")) >= 0)) {
+          DataChunk body = request->_response_data.GetBody(true);
+          LPBYTE body_data = (LPBYTE)body.GetData();
+          DWORD body_len = body.GetLength();
+          if (body_data && body_len) {
+            CStringA name;
+            name.Format("%03d-response.txt", count);
+            if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
+                Z_BEST_COMPRESSION)) {
+              zipWriteInFileInZip(zip, body_data, body_len);
+              zipCloseFileInZip(zip);
+              bodies_count++;
+            }
+          }
+        }
+      }
+    }
+    _requests.Unlock();
+    zipClose(zip, 0);
+    if(!bodies_count)
+      DeleteFile(file);
+  }
 }

@@ -153,7 +153,7 @@ class ResponseData : public HttpData {
 
   int GetResult() { ProcessStatusLine(); return _result; }
   double GetProtocolVersion() { ProcessStatusLine(); return _protocol_version;}
-  DataChunk GetBody() { Dechunk(); return _body; }
+  DataChunk GetBody(bool uncompress = false);
 private:
   void ProcessStatusLine();
   void Dechunk();

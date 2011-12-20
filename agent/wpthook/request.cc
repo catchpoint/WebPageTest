@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "../wptdriver/wpt_test.h"
 #include <wininet.h>
+#include <zlib.h>
 
 const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
 const __int64 NS100_TO_SEC = 10000000;   // convert 100ns intervals to seconds
@@ -257,6 +258,54 @@ void ResponseData::Dechunk() {
   }
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+DataChunk ResponseData::GetBody(bool uncompress) { 
+  DataChunk ret;
+  Dechunk(); 
+  ret = _body;
+  if (uncompress && GetHeader("content-encoding").Find("gzip") >= 0) {
+    LPBYTE body_data = (LPBYTE)ret.GetData();
+    DWORD body_len = ret.GetLength();
+    if (body_data && body_len) {
+      DWORD len = body_len * 10;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        z_stream d_stream;
+        memset( &d_stream, 0, sizeof(d_stream) );
+        d_stream.next_in  = body_data;
+        d_stream.avail_in = body_len;
+        int err = inflateInit2(&d_stream, MAX_WBITS + 16);
+        if (err == Z_OK) {
+          d_stream.next_out = buff;
+          d_stream.avail_out = len;
+          while (((err = inflate(&d_stream, Z_SYNC_FLUSH)) == Z_OK) 
+                    && d_stream.avail_in) {
+            len *= 2;
+            buff = (LPBYTE)realloc(buff, len);
+            if( !buff )
+              break;
+            
+            d_stream.next_out = buff + d_stream.total_out;
+            d_stream.avail_out = len - d_stream.total_out;
+          }
+        
+          if (d_stream.total_out) {
+            char * data = ret.AllocateLength(d_stream.total_out);
+            if (data)
+              memcpy(data, buff, d_stream.total_out);
+          }
+        
+          inflateEnd(&d_stream);
+        }
+      
+        free(buff);
+      }
+    }
+  }
+
+  return ret;
+}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

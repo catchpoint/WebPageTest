@@ -111,6 +111,7 @@ void WptTest::Reset(void) {
   _dns_override.RemoveAll();
   _dns_name_override.RemoveAll();
   _block_requests.RemoveAll();
+  _save_response_bodies = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -180,6 +181,8 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("time")))
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
+        else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim()))
+          _save_response_bodies = true;
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
