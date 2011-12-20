@@ -45,7 +45,7 @@ if ( isset( $_REQUEST[ 'endDateTime' ] ) ) {
   $endDateTime = $_REQUEST[ 'endDateTime' ];
 } else {
   if ( isset( $_REQUEST[ 'endMonth' ] ) ) {
-    $endDateTime = mktime( $_REQUEST[ 'endHour' ], $_REQUEST[ 'endMinute' ], 0, $_REQUEST[ 'endMonth' ], $_REQUEST[ 'endDay' ], $_REQUEST[ 'endYear' ] );
+    $endDateTime = mktime( $_REQUEST[ 'endHour' ], $_REQUEST[ 'endMinute' ], 0, $_REQUEST[ 'endMonth' ], $_REQUEST[ 'endDay' ], $_REQUEST[ 'endYear' ] )+120;
   } else if ( isset( $_SESSION[ 'resultsFilterEndDateTime' ] ) ) {
     $endDateTime = $_SESSION[ 'resultsFilterEndDateTime' ];
   }
