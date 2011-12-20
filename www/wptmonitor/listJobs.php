@@ -4,7 +4,7 @@
   include_once 'utils.inc';
   include_once 'db_utils.inc';
   $user_id = getCurrentUserId();
-  $timingStart = current_seconds();
+
   try
   {
     // Handle filter settings
@@ -153,11 +153,11 @@
   if ($folderPermissionLevel >= -9)
       $hasOwnerPermission = true;
 
-  $smarty->assign('hasReadPermission',$hasReadPermission);
-  $smarty->assign('hasUpdatePermission',$hasUpdatePermission);
-  $smarty->assign('hasCreateDeletePermission',$hasCreateDeletePermission);
-  $smarty->assign('hasExecutePermission',$hasExecutePermission);
-  $smarty->assign('hasOwnerPermission',$hasOwnerPermission);
+//  $smarty->assign('hasReadPermission',$hasReadPermission);
+//  $smarty->assign('hasUpdatePermission',$hasUpdatePermission);
+//  $smarty->assign('hasCreateDeletePermission',$hasCreateDeletePermission);
+//  $smarty->assign('hasExecutePermission',$hasExecutePermission);
+//  $smarty->assign('hasOwnerPermission',$hasOwnerPermission);
 
   $smarty->display('job/listJobs.tpl');
 ?>

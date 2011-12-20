@@ -94,6 +94,12 @@
   {/literal}
 </head>
 <body>
+{assign var="hasUpdatePermission"       value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_UPDATE)}
+{assign var="hasExecutePermission"      value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_EXECUTE)}
+{assign var="hasCreateDeletePermission" value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_CREATE_DELETE)}
+{assign var="hasOwnerPermission"        value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_OWNER)}
+{assign var="hasReadPermission"         value=hasPermission("WPTJob",$folderId, $smarty.const.PERMISSION_READ)}
+
 <div class="page">
   {include file='header.tpl'}
   {include file='navbar.tpl'}
