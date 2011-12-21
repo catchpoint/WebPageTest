@@ -85,6 +85,7 @@ $page_description = "Comparison Test$testLabel.";
                             <select name="pssloc" id="pssloc">
                                 <option value="US_East" selected>US East (Virginia)</option>
                                 <option value="US_West">US West (California)</option>
+                                <option value="Brazil">South America (Brazil)</option>
                                 <option value="Europe">Europe (Ireland)</option>
                                 <option value="Asia_Singapore">Asia (Singapore)</option>
                                 <option value="Asia_Tokyo">Asia (Tokyo)</option>

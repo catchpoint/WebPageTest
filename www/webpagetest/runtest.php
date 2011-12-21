@@ -1766,34 +1766,50 @@ function GetClosestLocation($url) {
         $parts = parse_url($url);
         $host = $parts['host'];
         if (strlen($host)) {
-            $ip = gethostbyname($host);
-            try
-            {
-                require_once('./Net/GeoIP.php');
-                $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
-                if ($geoip) {
-                    $host_location = $geoip->lookupLocation($ip);
-                    if ($host_location) {
-                        $lat = $host_location->latitude;
-                        $lng = $host_location->longitude;
-                        
-                        // calculate the distance to each location and see which is closest
-                        $distance = 0;
-                        foreach( $locations as $loc => $pos ) {
-                            $r = 6371; // km
-                            $dLat = deg2rad($pos['lat']-$lat);
-                            $dLon = deg2rad($pos['lng']-$lng);
-                            $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat'])); 
-                            $c = 2 * atan2(sqrt($a), sqrt(1-$a)); 
-                            $dist = $r * $c;
-                            if (!isset($location) || $dist < $distance) {
+            //first see if we have a domain-based match
+            $tld = substr($host, strrpos($host, '.'));
+            if (strlen($tld)) {
+                foreach( $locations as $loc => $pos ) {
+                    if (array_key_exists('domains', $pos)) {
+                        $domains = explode(',', $pos['domains']);
+                        foreach( $domains as $d ) {
+                            if (strcasecmp($tld, ".$d") == 0) {
                                 $location = $loc;
-                                $distance = $dist;
+                                break 2;
                             }
                         }
                     }
                 }
-            }catch(Exception $e) { }
+            }
+            if (!isset($location)) {
+                $ip = gethostbyname($host);
+                try {
+                    require_once('./Net/GeoIP.php');
+                    $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
+                    if ($geoip) {
+                        $host_location = $geoip->lookupLocation($ip);
+                        if ($host_location) {
+                            $lat = $host_location->latitude;
+                            $lng = $host_location->longitude;
+                            
+                            // calculate the distance to each location and see which is closest
+                            $distance = 0;
+                            foreach( $locations as $loc => $pos ) {
+                                $r = 6371; // km
+                                $dLat = deg2rad($pos['lat']-$lat);
+                                $dLon = deg2rad($pos['lng']-$lng);
+                                $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat'])); 
+                                $c = 2 * atan2(sqrt($a), sqrt(1-$a)); 
+                                $dist = $r * $c;
+                                if (!isset($location) || $dist < $distance) {
+                                    $location = $loc;
+                                    $distance = $dist;
+                                }
+                            }
+                        }
+                    }
+                }catch(Exception $e) { }
+            }
         }
         if (!isset($location)) {
             foreach( $locations as $loc => $pos ) {
