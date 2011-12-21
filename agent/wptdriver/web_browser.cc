@@ -89,6 +89,10 @@ bool WebBrowser::RunAndWait() {
             _T("--enable-experimental-extension-apis")) < 0) {
           lstrcat( cmdLine, _T(" --enable-experimental-extension-apis") );
         }
+        if (_browser._options.Find(
+            _T("--ignore-certificate-errors")) < 0) {
+          lstrcat( cmdLine, _T(" --ignore-certificate-errors") );
+        }
       }
       if (exe.Find(_T("iexplore.exe")) >= 0) {
         hook = false;
