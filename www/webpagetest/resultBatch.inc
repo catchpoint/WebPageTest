@@ -737,7 +737,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
                 $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id={$tests['vID']}";
             } else {
-                $json_response['statusCode'] = 102;
+                $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
             }
         } else {
@@ -1472,7 +1472,15 @@ function DisplayProgress(&$tests)
     }
     
     if($json) {
-        $json_response['statusCode'] = 100;
+        if( $elapsed >= 0 ) {
+            $json_response['statusCode'] = 102;
+            $json_response['data'] = array('elapsed' => $elapsed);
+        } elseif( $position >= 0 ) {
+            $json_response['statusCode'] = 101;
+            $json_response['data'] = array('position' => $position);
+        } else {
+            $json_response['statusCode'] = 100;
+        }
         $json_response['statusText'] = $statusText;
     } else {
         echo '<br><div id="statusImg">';
