@@ -50,7 +50,7 @@ BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
 
 int __stdcall ReleaseDC_Hook(HWND hWnd, HDC hDC) {
   int ret = 0;
-	if(pHook)
+  if(pHook)
     ret = pHook->ReleaseDC(hWnd, hDC);
   return ret;
 }
@@ -94,7 +94,7 @@ void CGDIHook::Init() {
     pHook = this;
 
   _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
-	_ReleaseDC = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
+  _ReleaseDC = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
   _SetWindowTextA = hook.createHookByName("user32.dll", "SetWindowTextA", 
                                             SetWindowTextA_Hook);
   _SetWindowTextW = hook.createHookByName("user32.dll", "SetWindowTextW", 
