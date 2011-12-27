@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WatchDlg.h"
 
 static CGDIHook * pHook = NULL;
+extern bool wpt_capturing_screen;
 
 void GDIInstallHooks(void)
 {
@@ -57,16 +58,6 @@ void GDIRemoveHooks(void)
 **																			 **
 *******************************************************************************
 ******************************************************************************/
-
-BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop)
-{
-	BOOL ret = FALSE;
-	__try{
-		if(pHook)
-			ret = pHook->BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-	}__except(1){}
-	return ret;
-}
 
 BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
@@ -100,7 +91,6 @@ int __stdcall ReleaseDC_Hook(HWND hWnd, HDC hDC)
 -----------------------------------------------------------------------------*/
 CGDIHook::CGDIHook(void)
 {
-	_BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
 	_EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
 	_ReleaseDC = hook.createHookByName("user32.dll", "ReleaseDC", ReleaseDC_Hook);
 }
@@ -115,28 +105,6 @@ CGDIHook::~CGDIHook(void)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop)
-{
-	BOOL ret = FALSE;
-
-	if( _BitBlt )
-		ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-
-  if( dlg && (dlg->active || dlg->capturingAFT) )
-	{
-		HWND hWnd = WindowFromDC(hdc);
-    if( hWnd )
-    {
-		  if( hWnd == dlg->hBrowserWnd )
-        dlg->SetBrowserWindowUpdated(true);
-    }
-	}
-
-	return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
 	BOOL ret = FALSE;
@@ -144,8 +112,10 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 	if( _EndPaint )
 		ret = _EndPaint(hWnd, lpPaint);
 
-  if( dlg && !dlg->painted && hWnd == dlg->hBrowserWnd && dlg->BrowserWindowUpdated() )
+  if( dlg && dlg->active && hWnd == dlg->hBrowserWnd ) {
+    dlg->SetBrowserWindowUpdated(true);
     dlg->CheckWindowPainted();
+  }
 
 	return ret;
 }
@@ -159,8 +129,10 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
   if( _ReleaseDC )
     ret = _ReleaseDC(hWnd, hDC);
 
-	if( dlg && !dlg->painted && hWnd == dlg->hBrowserWnd && dlg->BrowserWindowUpdated() )
+  if( !wpt_capturing_screen && dlg && dlg->active && hWnd == dlg->hBrowserWnd ) {
+    dlg->SetBrowserWindowUpdated(true);
     dlg->CheckWindowPainted();
+  }
 
   return ret;
 }

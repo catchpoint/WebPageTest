@@ -448,8 +448,10 @@ void TestState::GrabVideoFrame(bool force) {
     See if anything has been rendered to the screen
 -----------------------------------------------------------------------------*/
 void TestState::CheckStartRender() {
-  if (!_render_start.QuadPart && _screen_updated && _document_window)
+  if (!_render_start.QuadPart && _screen_updated && _document_window) {
+    GdiFlush();
     SetEvent(_check_render_event);
+  }
 }
 
 /*-----------------------------------------------------------------------------

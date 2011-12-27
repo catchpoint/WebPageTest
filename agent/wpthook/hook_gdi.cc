@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 
 static CGDIHook * pHook = NULL;
+extern bool wpt_capturing_screen;
 
 /******************************************************************************
 *******************************************************************************
@@ -40,18 +41,17 @@ static CGDIHook * pHook = NULL;
 *******************************************************************************
 ******************************************************************************/
 
-BOOL __stdcall BitBlt_Hook( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, 
-                                                   int x1, int y1, DWORD rop) {
-  BOOL ret = FALSE;
-  if(pHook)
-    ret = pHook->BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-  return ret;
-}
-
 BOOL __stdcall EndPaint_Hook(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   BOOL ret = FALSE;
   if(pHook)
     ret = pHook->EndPaint(hWnd, lpPaint);
+  return ret;
+}
+
+int __stdcall ReleaseDC_Hook(HWND hWnd, HDC hDC) {
+  int ret = 0;
+	if(pHook)
+    ret = pHook->ReleaseDC(hWnd, hDC);
   return ret;
 }
 
@@ -93,8 +93,8 @@ void CGDIHook::Init() {
   if (!pHook)
     pHook = this;
 
-  _BitBlt = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
   _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+	_ReleaseDC = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
   _SetWindowTextA = hook.createHookByName("user32.dll", "SetWindowTextA", 
                                             SetWindowTextA_Hook);
   _SetWindowTextW = hook.createHookByName("user32.dll", "SetWindowTextW", 
@@ -111,25 +111,27 @@ CGDIHook::~CGDIHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, 
-                                              int x1, int y1, DWORD rop) {
+BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   BOOL ret = FALSE;
 
-  HWND wnd = WindowFromDC(hdc);
-
-  if( _BitBlt )
-    ret = _BitBlt( hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
+  if( _EndPaint )
+    ret = _EndPaint(hWnd, lpPaint);
 
   bool is_document = false;
-  if (!_document_windows.Lookup(wnd, is_document)) {
-    is_document = IsBrowserDocument(wnd);
-    _document_windows.SetAt(wnd, is_document);
+  if (!_document_windows.Lookup(hWnd, is_document)) {
+    is_document = IsBrowserDocument(hWnd);
+    _document_windows.SetAt(hWnd, is_document);
   }
 
-  if (wnd && !_test_state._exit && _test_state._active && is_document) {
-    if (wnd != _test_state._document_window)
-      _test_state.SetDocument(wnd);
+  if (hWnd && hWnd != _test_state._document_window && 
+      !_test_state._exit && _test_state._active && is_document) {
+    _test_state.SetDocument(hWnd);
+  }
+
+  if (!_test_state._exit && _test_state._active && 
+        hWnd == _test_state._document_window) {
     _test_state._screen_updated = true;
+    _test_state.CheckStartRender();
   }
 
   return ret;
@@ -137,15 +139,29 @@ BOOL CGDIHook::BitBlt( HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
-  BOOL ret = FALSE;
+int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
+{
+  int ret = 0;
 
-  if( _EndPaint )
-    ret = _EndPaint(hWnd, lpPaint);
+  if( _ReleaseDC )
+    ret = _ReleaseDC(hWnd, hDC);
 
-  if (!_test_state._exit && _test_state._active && 
-        hWnd == _test_state._document_window)
+  bool is_document = false;
+  if (!_document_windows.Lookup(hWnd, is_document)) {
+    is_document = IsBrowserDocument(hWnd);
+    _document_windows.SetAt(hWnd, is_document);
+  }
+
+  if (hWnd && hWnd != _test_state._document_window && 
+      !_test_state._exit && _test_state._active && is_document) {
+    _test_state.SetDocument(hWnd);
+  }
+
+  if (!wpt_capturing_screen && !_test_state._exit && _test_state._active && 
+        hWnd == _test_state._document_window) {
+    _test_state._screen_updated = true;
     _test_state.CheckStartRender();
+  }
 
   return ret;
 }

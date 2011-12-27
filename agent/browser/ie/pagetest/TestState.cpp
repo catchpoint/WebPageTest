@@ -774,6 +774,7 @@ void CTestState::CheckWindowPainted()
 	if( active && !painted && hBrowserWnd && ::IsWindow(hBrowserWnd) && BrowserWindowUpdated() )
 	{
 		// grab a screen shot of the window
+    GdiFlush();
     screenCapture.Lock();
     SetBrowserWindowUpdated(false);
 		__int64 now;

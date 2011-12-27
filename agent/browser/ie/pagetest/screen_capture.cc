@@ -30,6 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "screen_capture.h"
 #include "cximage/ximage.h"
 
+// global indicator that we are capturing a screen shot
+// (so that any GDI hooks can ignore our activity)
+bool wpt_capturing_screen = false;
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 ScreenCapture::ScreenCapture() {
@@ -107,6 +111,7 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
   , _type(UNKNOWN) {
   _capture_time.QuadPart = 0;
   if (wnd) {
+    wpt_capturing_screen = true;
     HDC src = GetDC(wnd);
     if (src) {
       HDC dc = CreateCompatibleDC(src);
@@ -132,6 +137,7 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
       ReleaseDC(wnd, src);
     }
     QueryPerformanceCounter(&_capture_time);
+    wpt_capturing_screen = false;
   }
 }
 
