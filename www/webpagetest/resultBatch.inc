@@ -1422,6 +1422,7 @@ function DisplayProgress(&$tests)
     global $json_response;
     $elapsed = -1;
     $position = -1;
+    $seconds = -1;
     require_once('testStatus.inc');
     foreach($tests['urls'] as &$test)
     {
@@ -1445,6 +1446,7 @@ function DisplayProgress(&$tests)
     $img = "waiting";
     if( $elapsed >= 0 )
     {
+        $seconds = $elapsed;
         $img = "testing";
         if( $elapsed == 0 )
           $statusText = "Test just started";
@@ -1472,9 +1474,9 @@ function DisplayProgress(&$tests)
     }
     
     if($json) {
-        if( $elapsed >= 0 ) {
+        if( $seconds >= 0 ) {
             $json_response['statusCode'] = 102;
-            $json_response['data'] = array('elapsed' => $elapsed);
+            $json_response['data'] = array('elapsed' => $seconds);
         } elseif( $position >= 0 ) {
             $json_response['statusCode'] = 101;
             $json_response['data'] = array('position' => $position);
