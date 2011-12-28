@@ -25,7 +25,9 @@ enableVideo=1
 ;archive_dir=/data/archive/
 
 ;showslow beacon
-showslow=http://www.showslow.com
+;showslow=http://www.showslow.com
+;beaconRate=100
+showslow_key=<your showslow API key>
 
 ; image quality (defaults to 30)
 iq=75

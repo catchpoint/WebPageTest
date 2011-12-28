@@ -119,6 +119,8 @@ else
             if( strlen($settings['showslow'])  )
             {
                 $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
+                if( strlen($settings['showslow_key'])  )
+                    $beaconUrl .= '?key=' . trim($settings['showslow_key']);
                 if( $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
                     unset($beaconUrl);
                 else
