@@ -78,6 +78,16 @@ void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
 
   if( _settings.Load() ){
+    // launch the watchdog
+    TCHAR path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
+    CString watchdog;
+    watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
+    HANDLE process = NULL;
+    LaunchProcess(watchdog, &process);
+    if (process)
+      CloseHandle(process);
 
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
@@ -93,6 +103,11 @@ void WptDriverCore::Start(void){
 -----------------------------------------------------------------------------*/
 void WptDriverCore::Stop(void) {
   _status.Set(_T("Stopping..."));
+
+  // kill the watchdog
+  HWND watchdog = FindWindow(_T("WPT_Watchdog"), NULL);
+  if (watchdog)
+    SendMessageTimeout(watchdog, WM_CLOSE, 0, 0, 0, 10000, NULL);
 
   _exit = true;
   _webpagetest._exit = true;
