@@ -526,7 +526,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             // see if any of the requests served from the base page were over ssl
             foreach( $requests as &$request )
             {
-                if( $request['host'] == $basePageHost && $request['secure'] )
+                if( $request['host'] == $basePageHost && $request['is_secure'] )
                 {
                     $baseDomainSSL = true;
                     break;

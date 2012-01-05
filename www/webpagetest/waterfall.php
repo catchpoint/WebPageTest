@@ -1,50 +1,42 @@
 <?php
 header ("Content-type: image/png");
 include 'common.inc';
-include 'object_detail.inc'; 
+include 'object_detail.inc';
 require_once('page_data.inc');
-$pageData = loadPageRunData($testPath, $run, $cached);
+require_once('waterfall.inc');
 
-$mime = false;
-if( array_key_exists('mime', $_REQUEST) && $_REQUEST['mime'] )
-    $mime = true;
+$page_data = loadPageRunData($testPath, $run, $cached);
 
-$state = true;
-//if( array_key_exists('state', $_REQUEST) && $_REQUEST['state'] )
-//    $state = true;
-    
-// get all of the requests
-$secure = false;
-$haveLocations = false;
-$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-$cpu = true;
-if( isset($_REQUEST['cpu']) && $_REQUEST['cpu'] == 0 )
-    $cpu = false;
-$bw = true;
-if( isset($_REQUEST['bw']) && $_REQUEST['bw'] == 0 )
-    $bw = false;
-$dots = true;
-if( isset($_REQUEST['dots']) && $_REQUEST['dots'] == 0 )
-    $dots = false;
-$options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => $cpu, 'bw' => $bw, 'dots' => $dots, 'mime' => $mime, 'state' => $state );
+$is_mime = (bool)@$_REQUEST['mime'];
+$is_state = (bool)@$_REQUEST['state'];
 
-// see if we are doing a regular waterfall or a connection view
-if( $_REQUEST['type'] == 'connection' )
-{
-    require_once('contentColors.inc');
-    require_once('connectionView.inc');
-
-    $summary = array();
-    $connections = getConnections($requests, $summary, $mime, $state);
-    $im = drawImage($connections, $summary, $url, $mime, false, $pageData, $options);
+// Get all of the requests;
+$is_secure = false;
+$has_locations = false;
+$use_location_check = false;
+$requests = getRequests($id, $testPath, $run, $cached,
+                        $is_secure, $has_locations, $use_location_check);
+if (@$_REQUEST['type'] == 'connection') {
+    $is_state = true;
+    $rows = GetConnectionRows($requests);
+} else {
+    $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
+    $rows = GetRequestRows($requests, $use_dots);
 }
-else
-{
-    require_once('waterfall.inc');
-    $im = drawWaterfall($url, $requests, $pageData, false, $options);
-}
+$page_events = GetPageEvents($page_data);
+$options = array(
+    'id' => $id,
+    'path' => $testPath,
+    'run_id' => $run,
+    'is_cached' => $cached,
+    'use_cpu' =>  (!isset($_REQUEST['cpu']) || $_REQUEST['cpu'] != 0),
+    'use_bw' =>   (!isset($_REQUEST['bw'])  || $_REQUEST['bw'] != 0),
+    'is_mime' => $is_mime,
+    'is_state' => $is_state
+    );
+$im = GetWaterfallImage($rows, $url, $page_events, $options);
 
-// spit the image out to the browser
+// Spit the image out to the browser.
 imagepng($im);
 imagedestroy($im);
 ?>

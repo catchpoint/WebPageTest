@@ -165,24 +165,20 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
     if( count($requests) )
     {
         // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
-        $socketConnect = null;
-        if( (int)$requests[0]['connect_end'] && (int)$requests[0]['connect_end'] > (int)$requests[0]['connect_start'] )
-            $socketConnect = $requests[0]['connect_end'] - $requests[0]['connect_start'];
-        elseif( (int)$requests[0]['socketTime'] > 0 )
-            $socketConnect = (int)$requests[0]['socketTime'];
-        if( isset($rtt) && (!isset($socketConnect) || $socketConnect > 3000) )
+        $connect_ms = $requests[0]['connect_ms'];
+        if( isset($rtt) && (!isset($connect_ms) || $connect_ms > 3000) )
             $rtt += 100;    // allow for an additional 100ms to reach the server on top of the traffic-shaped RTT
         else
-            $rtt = $socketConnect;
+            $rtt = $connect_ms;
 
         if( isset($rtt) )
         {
-            $sslTime = 0;
-            if( $requests[0]['secure'] && (int)$requests[0]['sslTime'] > 0 )
-                $sslTime = $requests[0]['sslTime'];
+            $ssl_ms = 0;
+            if( $requests[0]['is_secure'] && (int)$requests[0]['ssl_ms'] > 0 )
+                $ssl_ms = $requests[0]['ssl_ms'];
             
             // RTT's: DNS + Socket Connect + HTTP Request
-            $target =  ($rtt * 3) + $sslTime;
+            $target =  ($rtt * 3) + $ssl_ms;
         }
     }
     

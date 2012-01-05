@@ -24,13 +24,14 @@ if( strlen($page_description) )
         $privateInstall = false;
 
     $blkLogo = false;
-    $color = html2rgb($_REQUEST['color']);
-    if( $color )
-    {
-        echo "body {background-color: #{$_REQUEST['color']};}";
-        $max = max($color[0], $color[1], $color[2]);
-        if( $max >= 192 )
-            $blkLogo = true;
+    if (isset($_REQUEST['color'])) {
+        $color = html2rgb($_REQUEST['color']);
+        if ($color) {
+            echo "body {background-color: #{$_REQUEST['color']};}";
+            $max = max($color[0], $color[1], $color[2]);
+            if( $max >= 192 )
+                $blkLogo = true;
+        }
     }
             
     if( $privateInstall )

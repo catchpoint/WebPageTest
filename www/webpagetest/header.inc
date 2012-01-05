@@ -134,7 +134,7 @@ if (isset($settings['alert']) && strlen($settings['alert'])) {
             
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
-if( !strcasecmp('Test Result', $tab) && !$nosubheader )
+if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
 {
     // make sure the test is actually complete
     if( (isset($test['test']) && isset($test['test']['completeTime'])) )

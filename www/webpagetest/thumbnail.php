@@ -29,7 +29,7 @@ else
         $type = $parts['extension'];
 
         $newWidth = 250;
-        $w = $_REQUEST['width'];
+        $w = @$_REQUEST['width'];
         if( $w && $w > 20 && $w < 1000 )
             $newWidth = $w;
         $img = null;
@@ -77,16 +77,30 @@ function tbnDrawWaterfall(&$img)
     global $cached;
     global $url;
     global $newWidth;
-    
+
     include('waterfall.inc');
-    $secure = false;
-    $haveLocations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-    $pageData = loadPageRunData($testPath, $run, $cached);
-    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $cached, 'cpu' => true, 'bw' => true, 'thumbnail' => true, 'width' => $newWidth );
-    $img = drawWaterfall($url, $requests, $pageData, false, $options);
-    if( !$requests || !$pageData )
+    $is_secure = false;
+    $has_locations = false;
+    $requests = getRequests($id, $testPath, $run, $cached, $is_secure,
+                            $has_locations, false);
+    $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
+    $rows = GetRequestRows($requests, $use_dots);
+    $page_data = loadPageRunData($testPath, $run, $cached);
+    $page_events = GetPageEvents($page_data);
+    $options = array(
+        'id' => $id,
+        'path' => $testPath,
+        'run_id' => $run,
+        'is_cached' => $cached,
+        'use_cpu' => true,
+        'use_bw' => true,
+        'is_thumbnail' => true,
+        'width' => $newWidth
+        );
+    $img = GetWaterfallImage($rows, $url, $page_events, $options);
+    if (!$requests || !$page_data) {
         $failed = true;
+    }
 }
 
 /**
@@ -103,13 +117,14 @@ function tbnDrawChecklist(&$img)
     global $url;
 
     include('optimizationChecklist.inc');
-    $secure = false;
-    $haveLocations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-    $pageData = loadPageRunData($testPath, $run, $cached);
-    $img = drawChecklist($url, $requests, $pageData);
-    if( !$requests || !$pageData )
+    $is_secure = false;
+    $has_locations = false;
+    $requests = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false);
+    $page_data = loadPageRunData($testPath, $run, $cached);
+    $img = drawChecklist($url, $requests, $page_data);
+    if (!$requests || !$page_data) {
         $failed = true;
+    }
 }
 
 /**

@@ -128,13 +128,11 @@ function BuildResult(&$pageData)
                 $entry = array();
                 $entry['pageref'] = $pd['id'];
                 $entry['startedDateTime'] = msdate((double)$data['date'] + ($r['offset'] / 1000.0));
-                $entry['time'] = $r['totalTime'];
+                $entry['time'] = $r['all_ms'];
                 
                 $request = array();
                 $request['method'] = $r['method'];
-                $protocol = 'http://';
-                if( $r['secure'] )
-                    $protocol = 'https://';
+                $protocol = ($r['is_secure']) ? 'https://' : 'http://';
                 $request['url'] = $protocol . $r['host'] . $r['url'];
                 $request['headersSize'] = -1;
                 $request['bodySize'] = -1;
@@ -249,19 +247,20 @@ function BuildResult(&$pageData)
                 
                 $timings = array();
                 $timings['blocked'] = -1;
-                $timings['dns'] = (int)$r['dnsTime'];
+                $timings['dns'] = (int)$r['dns_ms'];
                 if( !$timings['dns'] )
                     $timings['dns'] = -1;
-                $timings['connect'] = (int)($r['socketTime'] + $r['sslTime']);
+                $timings['connect'] = (int)($r['connect_ms'] + $r['ssl_ms']);
                 if( !$timings['connect'] )
                     $timings['connect'] = -1;
                 $timings['send'] = 0;
-                $timings['wait'] = (int)$r['ttfb'];
-                $timings['receive'] = max(0,(int)($r['loadTime'] - $r['ttfb']));
+                $timings['wait'] = (int)$r['ttfb_ms'];
+                $timings['receive'] = (int)$r['download_ms'];
                 $entry['timings'] = $timings;
 
-                $entry['time'] = (int)($r['dnsTime'] + $r['socketTime'] + $r['sslTime'] +  $r['ttfb'] + $timings['receive']);
-                
+                $entry['time'] = (int)(
+                    $r['dns_ms'] + $r['connect_ms'] + $r['ssl_ms'] +
+                    $r['ttfb_ms'] + $timings['receive']);
                 // add it to the list of entries
                 $entries[] = $entry;
             }

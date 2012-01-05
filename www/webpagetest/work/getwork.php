@@ -10,52 +10,49 @@ $debug = false;
 include 'common.inc';
 set_time_limit(600);
 
-$json = false;
-if($_GET['f'] == 'json')
-    $json = true;
+$is_json = isset($_GET['f']) && $_GET['f'] == 'json';
 $location = $_GET['location'];
-$key = $_GET['key'];
-$recover = $_GET['recover'];
-$pc = $_GET['pc'];
-$ec2 = $_GET['ec2'];
+$key = @$_GET['key'];
+$recover = @$_GET['recover'];
+$pc = @$_GET['pc'];
+$ec2 = @$_GET['ec2'];
 $tester = null;
-if( isset($ec2) && strlen($ec2) )
+if (@strlen($ec2)) {
     $tester = $ec2;
-elseif( isset($pc) && strlen($pc) )
+} elseif (@strlen($pc)) {
     $tester = $pc;
-else
+} else {
     $tester = trim($_SERVER['REMOTE_ADDR']);
-    
+}
 logMsg("getwork.php location:$location tester:$tester ex2:$ec2 recover:$recover");
 
-// see if there is an update
-$done = false;
-if( !$done && $_GET['ver'] )
-    $done = GetUpdate();
-    
+// See if there is an update.
+$is_done = false;
+if (!$is_done && $_GET['ver']) {
+    $is_done = GetUpdate();
+}
 // see if there is a video  job
-if( !$done && $_GET['video'] )
-    $done = GetVideoJob();
+if (!$is_done && @$_GET['video']) {
+    $is_done = GetVideoJob();
+}
+if (!$is_done) {
+    $is_done = GetJob();
+}
 
-if( !$done )
-    $done = GetJob();
-
-// send back a blank result if we didn't have anything
-if( !$done )
-{
+// Send back a blank result if we didn't have anything.
+if (!$is_done) {
     header('Content-type: text/plain');
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 
-    
+
 /**
 * Get an actual task to complete
 * 
 */
-function GetJob()
-{
-    $done = false;
+function GetJob() {
+    $is_done = false;
 
     global $location;
     global $key;
@@ -63,16 +60,15 @@ function GetJob()
     global $ec2;
     global $tester;
     global $recover;
-    global $json;
-    
+    global $is_json;
+
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
     BuildLocations($locations);
 
     $workDir = $locations[$location]['localDir'];
-    $locKey = $locations[$location]['key'];
-    if( strlen($workDir) && (!strlen($locKey) || !strcmp($key, $locKey)) )
-    {
+    $locKey = @$locations[$location]['key'] || '';
+    if (strlen($workDir) && (!strlen($locKey) || !strcmp($key, $locKey))) {
         // see if the tester is marked as being offline
         $offline = false;
         if( strlen($ec2) && strlen($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
@@ -105,8 +101,7 @@ function GetJob()
             }
 
             // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
-            if( !$testers[$tester]['offline'] )
-            {
+            if(!@$testers[$tester]['offline']) {
                 // go through the backup directory and restore any that are over an hour old
                 // We prefix the files with an underscore to identify that they have been recovered 
                 // so we don't try to back them up
@@ -145,9 +140,9 @@ function GetJob()
                 
                 if( isset($fileName) && strlen($fileName) )
                 {
-                    $done = true;
+                    $is_done = true;
                     
-                    if( $json)
+                    if ($is_json)
                         header ("Content-type: application/json");
                     else
                         header('Content-type: text/plain');
@@ -170,8 +165,7 @@ function GetJob()
                     else
                         unlink($fileName);
                     
-                    if( $json )
-                    {
+                    if ($is_json) {
                         $testJson = array();
                         $script = '';
                         $isScript = false;
@@ -247,14 +241,11 @@ function GetJob()
                 $testers[$tester]['pc'] = $pc;
                 $testers[$tester]['ec2'] = $ec2;
                 $testers[$tester]['ver'] = $_GET['ver'];
-                $testers[$tester]['freedisk'] = $_GET['freedisk'];
-                $testers[$tester]['test'] = $testId;
-                if( isset($testId) )
-                {
+                $testers[$tester]['freedisk'] = @$_GET['freedisk'];
+                $testers[$tester]['test'] = @$testId;
+                if (isset($testId)) {
                     $testers[$tester]['last'] = $now;
-                }
-                else
-                {
+                } else {
                     // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
                     if( isset($testers[$tester]['test']) && strlen($testers[$tester]['test']) )
                         $testers[$tester]['last'] = $now;
@@ -273,7 +264,7 @@ function GetJob()
                 }
                         
                 // zero out the tracked page loads in case some got lost
-                if( !$done )
+                if( !$is_done )
                 {
                     $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
                     if( $tests )
@@ -291,7 +282,7 @@ function GetJob()
         }
     }
     
-    return $done;
+    return $is_done;
 }
 
 /**

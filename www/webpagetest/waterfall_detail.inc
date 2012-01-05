@@ -35,8 +35,7 @@ foreach($requests as $reqNum => $request)
         
         $requestNum = $reqNum + 1;
 
-		$highlight;
-		unset($highlight);
+		$highlight = '';
 		$result = (int)$request['responseCode'];
 		if( $result >= 400)
 			$highlight = 'error ';
@@ -48,9 +47,9 @@ foreach($requests as $reqNum => $request)
 		else
 			$highlight .= 'even';
 		
-		if( $request['offset'] < $data['render'])
+		if( $request['load_start'] < $data['render'])
 			$highlight .= 'Render';
-		elseif ( $request['offset'] < $data['docTime'])
+		elseif ( $request['load_start'] < $data['docTime'])
 			$highlight .= 'Doc';
 		
 		echo '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
@@ -58,7 +57,7 @@ foreach($requests as $reqNum => $request)
 		if( $request['host'] || $request['url'] )
 		{
 			$protocol = 'http://';
-			if( $request['secure'] && $request['secure'] == 1)
+			if( $request['is_secure'] && $request['is_secure'] == 1)
 				$protocol = 'https://';
 			$url = $protocol . $request['host'] . $request['url'];
             $displayurl = ShortenUrl($url);
@@ -72,13 +71,13 @@ foreach($requests as $reqNum => $request)
 		else
 			echo '<td class="reqMime ' . $highlight . '">-</td>';
 
-		if( $request['offset'])
-			echo '<td class="reqStart ' . $highlight . '">' . $request['offset'] / 1000.0 . ' s</td>';
+		if( $request['load_start'])
+			echo '<td class="reqStart ' . $highlight . '">' . $request['load_start'] / 1000.0 . ' s</td>';
 		else
 			echo '<td class="reqStart ' . $highlight . '">-</td>';
 
-		if( $request['dnsTime'] && (int)$request['dnsTime'] !== -1)
-			echo '<td class="reqDNS ' . $highlight . '">' . $request['dnsTime'] . ' ms</td>';
+		if( $request['dns_ms'] && (int)$request['dns_ms'] !== -1)
+			echo '<td class="reqDNS ' . $highlight . '">' . $request['dns_ms'] . ' ms</td>';
         elseif( $request['dns_end'] > 0 )
         {
             $time = $request['dns_end'] - $request['dns_start'];
@@ -87,10 +86,10 @@ foreach($requests as $reqNum => $request)
 		else
 			echo '<td class="reqDNS ' . $highlight . '">-</td>';
 
-		if( $request['socketTime'] && (int)$request['socketTime'] !== -1 )
+		if( $request['connect_ms'] && (int)$request['connect_ms'] !== -1 )
 		{
-			echo '<td class="reqSocket ' . $highlight . '">' . $request['socketTime'] . ' ms</td>';
-			if( $request['secure'] && $request['secure'] == 1 )
+			echo '<td class="reqSocket ' . $highlight . '">' . $request['connect_ms'] . ' ms</td>';
+			if( $request['is_secure'] && $request['is_secure'] == 1 )
 				echo '<td class="reqSSL ' . $highlight . '">' . (int)$request['sslTime'] . ' ms</td>';
 			elseif( $secure )
 				echo '<td class="reqSSL ' . $highlight . '">-</td>';
@@ -119,13 +118,13 @@ foreach($requests as $reqNum => $request)
 				echo '<td class="reqSSL ' . $highlight . '">-</td>';
 		}
 
-		if( $request['ttfb'])
-			echo '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb'] . ' ms</td>';
+		if( $request['ttfb_ms'])
+			echo '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb_ms'] . ' ms</td>';
 		else
 			echo '<td class="reqTTFB ' . $highlight . '">-</td>';
 
-		if( $request['loadTime']  && $request['ttfb'])
-			echo '<td class="reqDownload ' . $highlight . '">' . ($request['loadTime'] - $request['ttfb']) . ' ms</td>';
+		if( $request['download_ms'])
+			echo '<td class="reqDownload ' . $highlight . '">' . $request['download_ms'] . ' ms</td>';
 		else
 			echo '<td class="reqDownload ' . $highlight . '">-</td>';
 		
@@ -139,8 +138,8 @@ foreach($requests as $reqNum => $request)
 		else
 			echo '<td class="reqResult ' . $highlight . '">-</td>';
 		
-		if( $request['ipAddr'])
-			echo '<td class="reqIP ' . $highlight . '">' . $request['ipAddr'] . '</td>';
+		if( $request['ip_addr'])
+			echo '<td class="reqIP ' . $highlight . '">' . $request['ip_addr'] . '</td>';
 		else
 			echo '<td class="reqIP ' . $highlight . '">-</td>';
 			
@@ -167,7 +166,7 @@ foreach($requests as $reqNum => $request)
 <?php
 	// load the raw results
 	$cached='';
-	if((int)$_GET["cached"] == 1)
+	if((bool)@$_GET["cached"])
 		$cached='_Cached';
 	$fileName = $testPath . '/' . $run . $cached . '_report.txt';
 	$lines = gz_file($fileName);
@@ -203,28 +202,28 @@ foreach($requests as $reqNum => $request)
 						    if( $request['host'] || $request['url'] )
 						    {
 							    $protocol = 'http://';
-							    if( $request['secure'] && $request['secure'] == 1)
+							    if((bool)@$request['is_secure'])
 								    $protocol = 'https://';
 							    $url = $protocol . $request['host'] . $request['url'];
 							    echo '<b>URL: </b><a rel="nofollow" href="' . $url .  '">' . $url . "</a><br>\n";
 						    }
 						    echo '<b>Host: </b>' . $request['host'] . "<br>\n";
-						    echo '<b>IP: </b>' . $request['ipAddr'] . "<br>\n";
+						    echo '<b>IP: </b>' . $request['ip_addr'] . "<br>\n";
 						    if( $haveLocations)
 							    echo '<b>Location: </b>' . $request['location'] . "*<br>\n";
 						    echo '<b>Error/Status Code: </b>' . $request['responseCode'] . "<br>\n";
-						    echo '<b>Start Offset: </b>' . $request['offset'] / 1000.0 . " s<br>\n";
-						    if( $request['dnsTime'] && (int)$request['dnsTime'] !== -1 )
-							    echo '<b>DNS Lookup: </b>' . $request['dnsTime'] . " ms<br>\n";
+						    echo '<b>Start Offset: </b>' . $request['load_start'] / 1000.0 . " s<br>\n";
+						    if( $request['dns_ms'] && (int)$request['dns_ms'] !== -1 )
+							    echo '<b>DNS Lookup: </b>' . $request['dns_ms'] . " ms<br>\n";
 						    elseif( $request['dns_end'] > 0 )
 						    {
 							    $time = $request['dns_end'] - $request['dns_start'];
 							    echo '<b>DNS Lookup: </b>' . $time . " ms<br>\n";
 						    }
-						    if( $request['socketTime'] && (int)$request['socketTime'] !== -1 )
+						    if( $request['connect_ms'] && (int)$request['connect_ms'] !== -1 )
 						    {
-							    echo '<b>Initial Connection: </b>' . $request['socketTime'] . " ms<br>\n";
-							    if( $request['secure'] && $request['secure'] == 1 )
+							    echo '<b>Initial Connection: </b>' . $request['connect_ms'] . " ms<br>\n";
+							    if( $request['is_secure'] )
 								    echo '<b>SSL Negotiation: </b>' . (int)$request['sslTime'] . " ms<br>\n";
 						    }
 						    elseif( $request['connect_end'] > 0 )
@@ -237,13 +236,13 @@ foreach($requests as $reqNum => $request)
 								    echo '<b>SSL Negotiation: </b>' . $time . " ms<br>\n";
 							    }
 						    }
-						    echo '<b>Time to First Byte: </b>' . $request['ttfb'] . " ms<br>\n";
-						    if( $request['loadTime'] )
-							    echo '<b>Content Download: </b>' . ($request['loadTime'] - $request['ttfb']) . " ms<br>\n";
+						    echo '<b>Time to First Byte: </b>' . $request['ttfb_ms'] . " ms<br>\n";
+						    if( $request['download_ms'] )
+							    echo '<b>Content Download: </b>' . $request['download_ms'] . " ms<br>\n";
 						    echo '<b>Bytes In (downloaded): </b>' . number_format($request['bytesIn'] / 1024, 1) . " KB<br>\n";
 						    echo '<b>Bytes Out (uploaded): </b>' . number_format($request['bytesOut'] / 1024, 1) . " KB<br>\n";
-                            if ($request['body']) {
-                                $cached = (int)$_GET["cached"];
+                            if (@$request['body']) {
+                                $cached = (int)@$_GET["cached"];
                                 echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
                             }
 					    }

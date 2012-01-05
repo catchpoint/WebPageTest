@@ -62,7 +62,7 @@ function ReportKeepAlive(&$pageData, &$requests)
             {
                 $key = $request['host'] . ' ' . $index;
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
                 $report[$key] = $value;
@@ -111,7 +111,7 @@ function ReportTextCompression(&$pageData, &$requests)
                     $value = 'WARNING - ';
 
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value .=  "($original KB, compressed = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
 
@@ -164,7 +164,7 @@ function ReportImageCompression(&$pageData, &$requests)
                     $value = 'WARNING - ';
 
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value .=  "($original KB, compressed = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
 
@@ -222,7 +222,7 @@ function ReportCache(&$pageData, &$requests)
                 }
 
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value .=  "(<b>$time</b>) - " . $proto . $request['host'] . $request['url'];
 
@@ -259,7 +259,7 @@ function ReportCombine(&$pageData, &$requests)
             {
                 $key = $request['contentType'] . ' ' . $request['host'] . ' ' . $index;
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
                 $report[$key] = $value;
@@ -295,7 +295,7 @@ function ReportCDN(&$pageData, &$requests)
             {
                 $key = $request['host'] . ' ' . $index;
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
                 $report[$key] = $value;
@@ -354,7 +354,7 @@ function ReportMinify(&$pageData, &$requests)
                     $value = 'WARNING - ';
 
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value .=  "($original KB, minified = $target KB - savings of <b>$save KB</b>) - " . $proto . $request['host'] . $request['url'];
 
@@ -393,7 +393,7 @@ function ReportCookies(&$pageData, &$requests)
             {
                 $key = $request['host'] . ' ' . $index;
                 $proto = 'http://';
-                if( $request['secure'] )
+                if( $request['is_secure'] )
                     $proto = 'https://';
                 $value = 'FAILED - ' . $proto . $request['host'] . $request['url'];
                 $report[$key] = $value;

@@ -236,7 +236,7 @@ $page_description = "Website performance test details$testLabel";
                 }
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true, true);
+                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
                 ?>
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
@@ -267,22 +267,28 @@ $page_description = "Website performance test details$testLabel";
                 <br>
                 <map name="waterfall_map">
                 <?php
-                    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $_GET["cached"], 'cpu' => true, 'width' => 930 );
-                    $map = drawWaterfall($url, $requests, $data, true, $options);
+                    $options = array(
+                        'id' => $id,
+                        'path' => $testPath,
+                        'run_id' => $run,
+                        'is_cached' => @$_GET['cached'],
+                        'use_cpu' => true,
+                        'width' => 930
+                        );
+                    $use_dots = !isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0;
+                    $rows = GetRequestRows($requests, $use_dots);
+                    $map = GetWaterfallMap($rows, $url, $options);
                     foreach($map as $entry)
                     {
-                        if( $entry['request'] !== NULL )
-                        {
+                        if (isset($entry['request'])) {
                             $index = $entry['request'] + 1;
                             $title = $index . ': ' . $entry['url'];
                             echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                        }
-                        elseif( $entry['url'] !== NULL )
-                        {
+                        } elseif (isset($entry['url'])) {
                             echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                        }
-                        elseif( $entry['csi'] !== NULL )
+                        } elseif (isset($entry['csi'])) {
                             echo '<area nohref="nohref" alt="' . $entry['csi'] . '" title="' . $entry['csi'] . '" shape=POLYGON coords="' . $entry['coords'] . '">' . "\n";
+                        }
                     }
                 ?>
                 </map>
@@ -299,21 +305,24 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="connection_view">Connection View</h3>
                 <map name="connection_map">
                 <?php
-                    require_once('connectionView.inc');
-                    $summary = array();
-                    $connections = getConnections($requests, $summary);
-                    $options = array( 'id' => $id, 'path' => $testPath, 'run' => $run, 'cached' => $_GET["cached"], 'cpu' => true, 'width' => 930 );
-                    $map = drawImage($connections, $summary, $url, $mime, true, $data, $options);
-                    foreach($map as $entry)
-                    {
-                        if( $entry['request'] !== NULL )
-                        {
+                    $connection_rows = GetConnectionRows($requests);
+                    $options = array(
+                        'id' => $id,
+                        'path' => $testPath,
+                        'run_id' => $run,
+                        'is_cached' => (bool)@$_GET['cached'],
+                        'use_cpu' => true,
+                        'width' => 930
+                        );
+                    $map = GetWaterfallMap($connection_rows, $url, $options);
+                    foreach($map as $entry) {
+                        if (array_key_exists('request', $entry)) {
                             $index = $entry['request'] + 1;
-                            $title = $index . ': ' . $entry['url'];
-                            echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+                            $title = "$index: {$entry['url']}";
+                            echo "<area href=\"#request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+                        } elseif(array_key_exists('url', $entry)) {
+                            echo "<area href=\"#request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
                         }
-                        else
-                            echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
                     }
                 ?>
                 </map>

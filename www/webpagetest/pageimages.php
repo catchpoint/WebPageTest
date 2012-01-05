@@ -39,7 +39,7 @@ $page_description = "Website speed test images$testLabel.";
                         $index = $request['index'] + 1;
                         echo "<tr><td><b>$index:</b></td><td>";
                         $reqUrl = "http://";
-                        if( $request['secure'] )
+                        if( $request['is_secure'] )
                             $reqUrl = "https://";
                         $reqUrl .= $request['host'];
                         $reqUrl .= $request['url'];

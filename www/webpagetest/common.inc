@@ -119,8 +119,9 @@ if (!$id && isset($_COOKIE['tid'])) {
 $testLabel = '';
 if ($id) {
     // see if we are serving a relay request, if so - munge the id
-    if( strlen($req_rkey) )
+    if (@strlen($req_rkey)) {
         $id = trim(htmlspecialchars($req_rkey)) . '.' . $id;
+    }
 
     // Set the test ID cookie (session cookie) if we're looking at a
     // different test.
@@ -131,7 +132,7 @@ if ($id) {
 
     $testPath = './' . GetTestPath($id);
     // test if the testPath exists. If not, download from the remote storage.
-    if ($settings['archive']) {
+    if (@$settings['archive']) {
         if (!is_dir($testPath) && is_file('storage/storage.ini') &&
             is_file('storage/storage.inc')) {
             require_once('storage/storage.inc');
@@ -139,15 +140,12 @@ if ($id) {
         }
     }
 
-    $run = htmlspecialchars($req_run);
+    $run = htmlspecialchars(@$req_run);
     if (!$run) {
         $run = (int)1;
     }
-    $cached = (int)$req_cached;
-    $cachedText = '';
-    if ($cached) {
-        $cachedText = '_Cached';
-    }
+    $cached = @(int)$req_cached;
+    $cachedText = $cached ? '_Cached' : '';
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
         touch("$testPath/testinfo.ini");
@@ -162,7 +160,7 @@ if ($id) {
                 $isOwner = true;
             elseif (isset($test['testinfo']['uid']) && strlen($uid) && $uid == $test['testinfo']['uid'])
                 $isOwner = true;
-            
+
             $url = htmlspecialchars($test['testinfo']['url']);
             $dom = htmlspecialchars($test['testinfo']['domElement']);
             $login = htmlspecialchars($test['testinfo']['login']);
@@ -191,16 +189,39 @@ if ($id) {
 }
 
 /**
+* Make the text fit in the available space.
+*
+* @param mixed $text
+* @param mixed $len
+*/
+function FitText($text, $max_len) {
+    $fit_text = $text;
+    if (strlen($fit_text) > $max_len) {
+        // Trim out middle.
+        $num_before = intval($max_len / 2) - 1;
+        if (substr($fit_text, $num_before - 1, 1) == ' ') {
+            $num_before--;
+        } elseif (substr($fit_text, $num_before + 1, 1) == ' ') {
+            $num_before++;
+        }
+        $num_after = $max_len - $num_before - 3;
+        $fit_text = (substr($fit_text, 0, $num_before) . '...' .
+                     substr($fit_text, -$num_after));
+    }
+    return $fit_text;
+}
+
+/**
  * Create a shorter version of the url for displaying.
  */
-function ShortenUrl($url)
-{
-  $displayurl = $url;
-  $maxlen = 40;
-  $len = strlen($displayurl);
-  if( $len > $maxlen)
-    $displayurl = substr($url, 0, $maxlen / 2) . '...' . substr($url, $len - ($maxlen / 2), $maxlen / 2);
-  return $displayurl;
+function ShortenUrl($url) {
+  $short_url = $url;
+  $max_len = 40;
+  if (strlen($url) > $max_len) {
+    $short_url = (substr($url, 0, $max_len / 2) . '...' .
+                  substr($url, -$max_len / 2));
+  }
+  return $short_url;
 }
 
 /**
@@ -277,25 +298,26 @@ function SetLocaleFromBrowser()
 
 function generate_languages()
 {
-  $rawlangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
-  $langs = array();
-  foreach ($rawlangs as $rawlang)
-  {
-    $parts = explode(';', $rawlang);
-    if (count($parts) == 1)
-      $qual = 1;                        // no q-factor
-    else
-    {
-      $qual = explode('=', $parts[1]);
-      if (count($qual) == 2)
-        $qual = (float)$qual[1];        // q-factor
-      else
-        $qual = 1;                      // ill-formed q-f
+    $langs = array();
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        $rawlangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        foreach ($rawlangs as $rawlang) {
+            $parts = explode(';', $rawlang);
+            if (count($parts) == 1) {
+                $qual = 1;  // no q-factor
+            } else {
+                $qual = explode('=', $parts[1]);
+            }
+            if (count($qual) == 2) {
+                $qual = (float)$qual[1];  // q-factor
+            } else {
+                $qual = 1;  // ill-formed q-f
+            }
+            $langs[] = array('lang' => trim($parts[0]), 'q' => $qual);
+        }
     }
-    $langs[] = array('lang' => trim($parts[0]), 'q' => $qual);
-  }
-  usort($langs, 'lang_compare_quality');
-  return $langs;
+    usort($langs, 'lang_compare_quality');
+    return $langs;
 }
 
 // this function sorts by q-factors, putting highest first.
@@ -467,35 +489,6 @@ function gz_readfile_chunked($filename, $retbytes = TRUE)
 }
 
 /**
-* Make the text fit in the available space
-* 
-* @param mixed $text
-* @param mixed $len
-*/
-function FitText($text, $len)
-{
-    $ret = $text;
-    $textLen = strlen($ret);
-    if( $textLen > $len)
-    {
-        // trim off any query parameters first
-        $pos = strpos($ret, '?');
-        if( $pos !== false )
-        {
-            $ret = substr($ret, 0, $pos);
-            $ret .= '...';
-        }
-
-        // see if it is still too long            
-        $textLen = strlen($ret);
-        if( $textLen > $len)
-            $ret = substr($ret, 0, ($len / 2) - 2) . '...' . substr($ret, $textLen - (($len / 2) - 1) + 1, ($len / 2) - 1);
-    }
-
-    return $ret;
-}
-
-/**
 * Transparently read a gzip version of the given file (we will be looking for .gz extensions though it's not technically required, just good practice)
 * 
 * @param mixed $file
@@ -663,11 +656,9 @@ function LoadPageSpeedData($file)
 function logMsg($msg, $logFile = './log.txt')
 {
     global $debug;
-    if( $debug || $force )
-    {
+    if ($debug || isset($force)) {
         $file = fopen($logFile, 'a');
-        if( $file )
-        {
+        if ($file) {
             fwrite($file, date('Y/m/d H:i:s - ') . $msg . "\n");
             fclose($file);
         }

@@ -20,12 +20,16 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
     foreach($requests as $request)
     {
         $contentType = ContentType($request['contentType']);
+        $object = strtolower($request['url']);
         if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) )
         {
             if( !isset($breakdown[$contentType]) )
             {
-                $entry = array();
-                $entry['color'] = $mime_colors[$contentType];
+                $entry = array(
+                    'color' => $mime_colors[$contentType],
+                    'bytes' => 0,
+                    'requests' => 0
+                    );
                 $breakdown["$contentType"] = $entry;
             }
             
