@@ -106,6 +106,8 @@ bool WptSettings::Load(void) {
   if (_server.GetLength() && _location.GetLength())
     ret = true;
 
+  _browser_update.LoadSettings(iniFile);
+
   return ret;
 }
 
@@ -203,6 +205,13 @@ bool WptSettings::SetBrowser(CString browser) {
   // try loading the settings for the specified browser
   bool ret = _browser.Load(browser, _ini_file);
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Update the various browsers
+-----------------------------------------------------------------------------*/
+void WptSettings::UpdateBrowsers() {
+  _browser_update.UpdateBrowsers();
 }
 
 /*-----------------------------------------------------------------------------

@@ -125,12 +125,15 @@ void WptDriverCore::Stop(void) {
 -----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
+  WaitForSingleObject(_testing_mutex, INFINITE);
   Init();  // do initialization and machine configuration
+  ReleaseMutex(_testing_mutex);
   _status.Set(_T("Running..."));
   while (!_exit) {
     WaitForSingleObject(_testing_mutex, INFINITE);
+    _status.Set(_T("Checking for browser updates..."));
+    _settings.UpdateBrowsers();
     _status.Set(_T("Checking for work..."));
-
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS);
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
@@ -255,6 +258,9 @@ void WptDriverCore::Init(void){
   _winpcap.Initialize();
 
   KillBrowsers();
+
+  _status.Set(_T("Installing browsers..."));
+  _settings.UpdateBrowsers();
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();

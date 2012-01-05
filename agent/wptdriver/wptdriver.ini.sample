@@ -7,8 +7,9 @@ Time Limit=120
 ;debug=1
 
 [chrome]
-exe=""C:\Documents and Settings\Administrator\Local Settings\Application Data\Google\Chrome\Application\chrome.exe""
+exe="C:\Program Files\Google\Chrome\Application\chrome.exe"
 options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
+installer=http://www.webpagetest.org/installers/browsers/chrome.dat
 ;For SSL support in chrome, enable the downloading of debug symbols
 ;use symbols=1
 

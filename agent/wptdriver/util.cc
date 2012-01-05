@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wincrypt.h>
 #include <TlHelp32.h>
 #include "dbghelp/dbghelp.h"
+#include <WinInet.h>
 
 #include "../wpthook/wpthook_dll.h"
 
@@ -449,4 +450,77 @@ void TerminateProcessAndChildren(DWORD pid) {
       CloseHandle(process);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Fetch an URL and return the response as a string
+-----------------------------------------------------------------------------*/
+CString HttpGetText(CString url) {
+  CString response;
+  HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+                                    INTERNET_OPEN_TYPE_PRECONFIG,
+                                    NULL, NULL, 0);
+  if (internet) {
+    DWORD timeout = 30000;
+    InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+                                INTERNET_FLAG_NO_CACHE_WRITE | 
+                                INTERNET_FLAG_NO_UI | 
+                                INTERNET_FLAG_PRAGMA_NOCACHE | 
+                                INTERNET_FLAG_RELOAD, NULL);
+    if (http_request) {
+      char buff[4097];
+      DWORD bytes_read;
+      while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
+              &bytes_read) && bytes_read) {
+        buff[bytes_read] = 0;
+        response += CA2T(buff);
+      }
+      InternetCloseHandle(http_request);
+    }
+    InternetCloseHandle(internet);
+  }
+
+  return response;
+}
+
+/*-----------------------------------------------------------------------------
+  Fetch an URL and save it to a file (returning the length of the file)
+-----------------------------------------------------------------------------*/
+DWORD HttpSaveFile(CString url, CString file) {
+  DWORD len = 0;
+
+  HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+                                    INTERNET_OPEN_TYPE_PRECONFIG,
+                                    NULL, NULL, 0);
+  if (internet) {
+    DWORD timeout = 30000;
+    InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+                                INTERNET_FLAG_NO_CACHE_WRITE | 
+                                INTERNET_FLAG_NO_UI | 
+                                INTERNET_FLAG_PRAGMA_NOCACHE | 
+                                INTERNET_FLAG_RELOAD, NULL);
+    if (http_request) {
+      char buff[4097];
+      DWORD bytes_read, bytes_written;
+      HANDLE file_handle = CreateFile(file,GENERIC_WRITE,0,0,
+                                      CREATE_ALWAYS,0,NULL);
+      if (file_handle != INVALID_HANDLE_VALUE) {
+        while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
+                &bytes_read) && bytes_read) {
+          WriteFile(file_handle, buff, bytes_read, &bytes_written, 0);
+          len += bytes_read;
+        }
+        CloseHandle(file_handle);
+      }
+      InternetCloseHandle(http_request);
+    }
+    InternetCloseHandle(internet);
+  }
+  return len;
 }

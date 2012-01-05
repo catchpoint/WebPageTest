@@ -249,6 +249,9 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test, CString& test_string
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
+    DWORD timeout = 30000;
+    InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, 
+                      &timeout, sizeof(timeout));
     HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
                                 INTERNET_FLAG_NO_UI | 

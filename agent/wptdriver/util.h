@@ -61,3 +61,5 @@ void SaveHookOffsets(CString offsets_filename, const HookOffsets& offsets);
 bool GetSavedHookOffsets(CString offsets_filename, HookOffsets * hook_offsets);
 void TerminateProcessAndChildren(DWORD pid);
 bool IsBrowserDocument(HWND wnd);
+CString HttpGetText(CString url);
+DWORD   HttpSaveFile(CString url, CString file);

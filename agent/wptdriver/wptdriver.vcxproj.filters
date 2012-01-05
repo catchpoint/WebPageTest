@@ -103,6 +103,9 @@
     <ClCompile Include="zlib\zutil.c">
       <Filter>Third-Party\zlib</Filter>
     </ClCompile>
+    <ClCompile Include="browser_update.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -203,6 +206,9 @@
     </ClInclude>
     <ClInclude Include="zlib\zlib.h">
       <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="browser_update.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
