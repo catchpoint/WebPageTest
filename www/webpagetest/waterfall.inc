@@ -7,7 +7,7 @@ require_once('contentColors.inc');
 *
 * @param mixed $requests
 */
-function GetConnectionRows(&$requests) {
+function GetConnectionRows(&$requests, $show_labels = true) {
     $host_connections = array();  // group connections by host
     foreach ($requests as $request) {
         if (isset($request['socket'])) {
@@ -34,8 +34,12 @@ function GetConnectionRows(&$requests) {
     }
     $rows = call_user_func_array('array_merge', $host_connections);
     foreach (array_keys($rows) as $row_index) {
-        $rows[$row_index]['label'] = sprintf(
-            '%2d. %s', $row_index + 1, $rows[$row_index]['host']);
+        if ($show_labels) {
+            $rows[$row_index]['label'] = sprintf(
+                '%2d. %s', $row_index + 1, $rows[$row_index]['host']);
+        } else {
+            $rows[$row_index]['label'] = sprintf('%2d.', $row_index + 1);
+        }
     }
     return $rows;
 }
@@ -57,7 +61,7 @@ function _GetDotsRow() {
 /**
 * Return an array of rows to use in waterfall view.
 */
-function GetRequestRows($requests, $use_dots) {
+function GetRequestRows($requests, $use_dots, $show_labels = true) {
     $rows = array();
     $filtered_requests = FilterRequests($requests);
     if ($use_dots && count($filtered_requests) &&
@@ -67,7 +71,7 @@ function GetRequestRows($requests, $use_dots) {
     foreach ($filtered_requests as $request) {
         $rows[] = array(
             'is_connection' => false,
-            'label' => GetRequestLabel($request),
+            'label' => GetRequestLabel($request, $show_labels),
             'start' => $request['all_start'],
             'end' => $request['all_end'],
             'is_secure' => $request['is_secure'],
@@ -126,6 +130,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
     $is_mime = (bool)@$options['is_mime'];
     $is_state = (bool)@$options['is_state'];
     $is_thumbnail = (bool)@$options['is_thumbnail'];
+    $show_labels = (bool)@$options['show_labels'];
 
     $row_count = count($rows);
 
@@ -180,10 +185,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         $height += (2 * $row_height) + 2;
     }
 
-    if ($is_thumbnail) {
-        $data_x = (int)($width * 0.25); // width of request labels (no borders)
+    if ($show_labels) {
+        if ($is_thumbnail) {
+            $data_x = (int)($width * 0.25); // width of request labels (no borders)
+        } else {
+            $data_x = 250;
+        }
     } else {
-        $data_x = 250;
+        $data_x = 30;
     }
     $data_width = $width - $data_x - 3;
 
@@ -280,7 +289,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         // Draw performance backgrounds, labels, and borders.
         foreach ($perfs as $key => $p) {
             if ($p['count']) {
-                if (!$is_thumbnail) {
+                if (!$is_thumbnail && $show_labels) {
                     DrawPerfLabel($im, $key, $p, $font, $black);
                 }
                 DrawPerfBackground($im, $p, $data_x, $border_color,
@@ -450,7 +459,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
             } else {
                 $label_x = $column_x + intval($font_width / 2);
                 $label_max_len = $max_len - 1;
-                if ($is_secure) {
+                if ($is_secure && $show_labels) {
                     $lock_width = 12;
                     DrawLock($im, $label_x, $y, $lock_width, $row_height);
                     $label_x += $lock_width;
@@ -542,8 +551,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
 * @param mixed $requests
 */
 function FilterRequests($requests) {
-    if (isset($_REQUEST['requests'])) {
-        $filtered_requests = array();
+    $filtered_requests = array();
+    if (array_key_exists('requests', $_REQUEST) && strlen(trim($_REQUEST['requests']))) {
         $rlist = explode(',', urldecode($_REQUEST['requests']));
         foreach ($rlist as $r) {
             $r = str_replace(' ', '', trim($r));
@@ -552,7 +561,7 @@ function FilterRequests($requests) {
                 $range = explode('-', $r);
                 if (count($range) == 2) {
                     $start = max(0, $range[0] - 1);
-                    $end = min(count(requests) - 1, $range[1] - 1);
+                    $end = min(count($requests) - 1, $range[1] - 1);
                     if ($end > $start)  {
                         for ($i = $start; $i <= $end; $i++) {
                           $filtered_requests[$i] = &$requests[$i];
@@ -563,9 +572,11 @@ function FilterRequests($requests) {
                 }
             }
         }
-    } else {
-        $filtered_requests = $requests;
     }
+
+    if (!count($filtered_requests))
+        $filtered_requests = $requests;
+        
     return $filtered_requests;
 }
 
@@ -735,15 +746,19 @@ function DrawCenteredText($im, $x, $y, $label, $font, $font_width, $color) {
 * Format the label for a request.
 * @return string
 */
-function GetRequestLabel($request) {
+function GetRequestLabel($request, $show_labels = true) {
     $path = parse_url('http://' . $request['host'] . $request['url'],
                       PHP_URL_PATH);
     $path_base = basename($path);
     if (substr($path, -1) == '/') {
         $path_base .= '/';  // preserve trailing slash
     }
-    $request_label = sprintf(
-        '%2d. %s - %s', $request['index'] + 1, $request['host'], $path_base);
+    if ($show_labels) {
+        $request_label = sprintf(
+            '%2d. %s - %s', $request['index'] + 1, $request['host'], $path_base);
+    } else {
+        $request_label = sprintf('%2d.', $request['index'] + 1);
+    }
     return $request_label;
 }
 

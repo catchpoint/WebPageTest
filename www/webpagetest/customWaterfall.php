@@ -28,6 +28,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showCPU" type="checkbox" checked> Show CPU Utilization 
                     <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization 
                     <input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items
+                    <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                 </form>
             </div>
             <br>
@@ -82,6 +83,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 var showDots = 0;
                 if( $('#showDots').attr('checked') )
                     showDots = 1;
+                var showLabels = 0;
+                if( $('#showLabels').attr('checked') )
+                    showLabels = 1;
                 <?php
                 echo "var testId='$id';\n";
                 echo "var testRun='$run';\n";
@@ -89,7 +93,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var extension='$extension';\n";
                 ?>
                 
-                var src = '/waterfall.' + extension + '?test=' + testId + '&run=' + testRun + '&cached=' + cached + '&max=' + max + '&width=' + width + '&type=' + type + '&cpu=' + showCPU + '&bw=' + showBW + '&dots=' + showDots + '&requests=' + requests;
+                var src = '/waterfall.' + extension + '?test=' + testId + '&run=' + testRun + '&cached=' + cached + '&max=' + max + '&width=' + width + '&type=' + type + '&cpu=' + showCPU + '&bw=' + showBW + '&dots=' + showDots + '&labels=' + showLabels + '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };
         </script>
