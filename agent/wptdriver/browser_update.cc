@@ -1,7 +1,8 @@
 #include "StdAfx.h"
 #include "browser_update.h"
+#include <Shellapi.h>
 
-static const DWORD BROWSER_UPDATE_INTERVAL_MINUTES = 5;  // hourly
+static const DWORD BROWSER_UPDATE_INTERVAL_MINUTES = 60;  // hourly
 static const DWORD BROWSER_INSTALL_TIMEOUT = 600000;  // 10 minutes
 static const TCHAR * BROWSER_REG_ROOT = 
                             _T("Software\\WebPagetest\\wptdriver\\Browsers");
@@ -135,18 +136,40 @@ bool BrowserUpdate::InstallBrowser(CString browser, CString file_url,
                   _T("[wptdriver] Downloading - %s\n"), (LPCTSTR)file_url);
         if (HttpSaveFile(file_url, file_path)) {
           // run the install command from the download directory
-          PROCESS_INFORMATION pi;
-          STARTUPINFO si;
-          memset( &si, 0, sizeof(si) );
-          si.cb = sizeof(si);
-          if (CreateProcess(NULL, (LPTSTR)(LPCTSTR)command, 0, 0, FALSE, 
-                            NORMAL_PRIORITY_CLASS , 0, _directory, &si, &pi)) {
-            if (WaitForSingleObject(pi.hProcess, BROWSER_INSTALL_TIMEOUT) 
-                  == WAIT_OBJECT_0) {
+          SHELLEXECUTEINFO shell_info;
+          memset(&shell_info, 0, sizeof(shell_info));
+          shell_info.cbSize = sizeof(shell_info);
+          shell_info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+          TCHAR exe[MAX_PATH];
+          TCHAR parameters[MAX_PATH];
+          int separator = command.Find(_T(' '));
+          if (separator > 0) {
+            lstrcpy(exe, command.Left(separator).Trim());
+            lstrcpy(parameters, command.Mid(separator + 1).Trim());
+            if (lstrlen(parameters)) {
+              shell_info.lpParameters = parameters;
+            }
+          } else {
+            lstrcpy(exe, command);
+            lstrcpy(parameters, _T(''));
+          }
+          shell_info.lpFile = exe;
+          TCHAR directory[MAX_PATH];
+          lstrcpy(directory, _directory);
+          shell_info.lpDirectory = directory;
+          shell_info.nShow = SW_SHOWNORMAL;
+          WptTrace(loglevel::kTrace,
+                 _T("[wptdriver] Running '%s' with parameters '%s' in '%s'\n"),
+                 exe, parameters, directory);
+          if (ShellExecuteEx(&shell_info) && shell_info.hProcess) {
+            if (WaitForSingleObject(shell_info.hProcess, 
+                  BROWSER_INSTALL_TIMEOUT) == WAIT_OBJECT_0) {
               ok = true;
             }
-            CloseHandle(pi.hThread);
-            CloseHandle(pi.hProcess);
+            CloseHandle(shell_info.hProcess);
+          } else {
+            WptTrace(loglevel::kTrace,
+                      _T("[wptdriver] Error Running Installer\n"));
           }
           DeleteFile(file_path);
         }
