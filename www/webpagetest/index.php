@@ -1,6 +1,12 @@
 <?php 
 include 'common.inc';
 
+if (array_key_exists($_GET, 'bulk')) {
+    $settings['noBulk'] = 0;
+}
+if (!array_key_exists($settings, 'noBulk'))
+    $settings['noBulk'] = 0;
+
 // see if we are overriding the max runs
 if (isset($_COOKIE['maxruns'])) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
@@ -170,7 +176,7 @@ $loc = ParseLocations($locations);
                                 <?php if (isset($settings['enableVideo'])) { ?>
                                 <li><a href="#video">Video</a></li>
                                 <?php } ?>
-                                <?php if (!isset($settings['noBulk'])) { ?>
+                                <?php if (!$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -396,7 +402,7 @@ $loc = ParseLocations($locations);
                             </div>
                             <?php } ?>
 
-                            <?php if (!isset($settings['noBulk'])) { ?>
+                            <?php if (!$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox">
                                 <p>
                                     <label for="bulkurls" class="full_width">

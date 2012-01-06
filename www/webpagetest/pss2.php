@@ -169,6 +169,13 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
+                            <label for="backend">Back-End</label>
+                            <select name="backend" id="backend">
+                                <option value="prod" selected>Production</option>
+                                <option value="staging">Staging</option>
+                            </select>
+                        </li>
+                        <li>
                             <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
@@ -351,6 +358,11 @@ $page_description = "Comparison Test$testLabel.";
                 }
                 ?>
                 
+                var backend = form.backend.value;
+                if (backend == 'staging') {
+                    batch = batch.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
+                }
+
                 form.bulkurls.value=batch;
                 
                 var shard = form.shard.value;

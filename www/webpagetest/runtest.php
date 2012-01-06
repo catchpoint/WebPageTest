@@ -69,7 +69,7 @@
             $test['latency'] = (int)$req_latency;
             $test['testLatency'] = (int)$req_latency;
             $test['plr'] = trim($req_plr);
-            $test['callback'] = $req_callback;
+            $test['callback'] = $req_pingback;
             $test['agent'] = $req_agent;
             $test['aft'] = $req_aft;
             $test['aftEarlyCutoff'] = (int)$req_aftec;
@@ -1101,6 +1101,8 @@ function SubmitUrl($testId, $testData, &$test, $url)
         $script = trim($test['script']);
         if (strlen($url))
         {
+            if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+                $url = 'http://' . $url;
             $script = str_ireplace('%URL%', $url, $script);
             $parts = parse_url($url);
             $host = $parts['host'];
