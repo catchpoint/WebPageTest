@@ -135,7 +135,7 @@ function delimitedToArray($data, $delimiter, $header = false) {
     }
   }
   foreach ($lines as $key => $line) {
-    if ($header && $key == 0) {
+    if (!$header && $key == 0) {
       continue;
     }
     $items = explode($delimiter, $line);
