@@ -128,12 +128,12 @@ function delimitedToArray($data, $delimiter, $header = false) {
   $results = array();
   $lines = explode("\n", $data);
   $headers = array();
-  if ($header) {
-    $heads = explode($delimiter, $lines[0]);
-    foreach ($heads as $key => $h) {
-      $headers[] = trim($h);
-    }
+
+  $heads = explode($delimiter, $lines[0]);
+  foreach ($heads as $key => $h) {
+    $headers[] = trim($h);
   }
+
   foreach ($lines as $key => $line) {
     if (!$header && $key == 0) {
       continue;
