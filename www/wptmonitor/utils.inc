@@ -138,6 +138,9 @@ function delimitedToArray($data, $delimiter, $header = false) {
     if (!$header && $key == 0) {
       continue;
     }
+    if (empty($line)){
+      continue;
+    }
     $items = explode($delimiter, $line);
     foreach ($items as $key => $item) {
       $label = $headers[$key];
