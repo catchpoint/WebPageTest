@@ -653,10 +653,10 @@ function LoadPageSpeedData($file)
 * 
 * @param mixed $msg
 */
-function logMsg($msg, $logFile = './log.txt')
+function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
-    if ($debug || isset($force)) {
+    if ($debug || $force) {
         $file = fopen($logFile, 'a');
         if ($file) {
             fwrite($file, date('Y/m/d H:i:s - ') . $msg . "\n");
