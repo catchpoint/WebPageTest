@@ -109,15 +109,21 @@ if (isset($req_color)) {
 // Load the test-specific data
 $id = '';
 if (isset($req_test)) {
-  $id = htmlspecialchars($req_test);
+    if (preg_match('/[a-zA-Z0-9_]+/', $req_test, $matches)) {
+        if ($req_test == $matches[0])
+            $id = $matches[0];
+    }
 }
 
 // If we didn't get an id explicitly, try from cookie.
-if (!$id && isset($_COOKIE['tid'])) {
-    $id = $_COOKIE['tid'];
+if (!strlen($id) && isset($_COOKIE['tid'])) {
+    if (preg_match('/[a-zA-Z0-9_]+/', $_COOKIE['tid'], $matches)) {
+        if ($_COOKIE['tid'] == $matches[0])
+            $id = $matches[0];
+    }
 }
 $testLabel = '';
-if ($id) {
+if (strlen($id)) {
     // see if we are serving a relay request, if so - munge the id
     if (@strlen($req_rkey)) {
         $id = trim(htmlspecialchars($req_rkey)) . '.' . $id;
