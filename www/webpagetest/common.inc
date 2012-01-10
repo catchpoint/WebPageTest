@@ -108,49 +108,36 @@ if (isset($req_color)) {
 
 // Load the test-specific data
 $id = '';
-if (isset($req_test)) {
-    if (preg_match('/[a-zA-Z0-9_]+/', $req_test, $matches)) {
-        if ($req_test == $matches[0])
-            $id = $matches[0];
-    }
+if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
+    $id = $reg_test;
+} elseif (preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
+    $id = $_COOKIE['tid'];
 }
 
-// If we didn't get an id explicitly, try from cookie.
-if (!strlen($id) && isset($_COOKIE['tid'])) {
-    if (preg_match('/[a-zA-Z0-9_]+/', $_COOKIE['tid'], $matches)) {
-        if ($_COOKIE['tid'] == $matches[0])
-            $id = $matches[0];
-    }
-}
 $testLabel = '';
 if (strlen($id)) {
-    // see if we are serving a relay request, if so - munge the id
     if (@strlen($req_rkey)) {
-        $id = trim(htmlspecialchars($req_rkey)) . '.' . $id;
+        // We are serving a relay request, so munge the id accordingly.
+        $id = trim(htmlspecialchars($req_rkey)) . ".$id";
     }
-
-    // Set the test ID cookie (session cookie) if we're looking at a
-    // different test.
-    if (strcmp($id, $_COOKIE['tid'])) {
-        setcookie('tid', $id);
+    if ($id !== @$_COOKIE['tid']) {
+        setcookie('tid', $id);  // update session cookie
     }
     RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
-    // test if the testPath exists. If not, download from the remote storage.
-    if (@$settings['archive']) {
-        if (!is_dir($testPath) && is_file('storage/storage.ini') &&
-            is_file('storage/storage.inc')) {
-            require_once('storage/storage.inc');
-            DownloadResults($id);
-        }
+    if (@$settings['archive'] && !is_dir($testPath) &&
+        is_file('storage/storage.ini') && is_file('storage/storage.inc')) {
+        // testPath does not exist, so download from the remote storage.
+        require_once('storage/storage.inc');
+        DownloadResults($id);
     }
 
     $run = htmlspecialchars(@$req_run);
     if (!$run) {
         $run = (int)1;
     }
-    $cached = @(int)$req_cached;
+    $cached = @(int)$req_cached;  // define a global used in other files
     $cachedText = $cached ? '_Cached' : '';
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
