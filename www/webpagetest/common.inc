@@ -665,8 +665,8 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
 function logMalformedInput($msg)
 {
   $backtrace = debug_backtrace();
-  $file = $backtrace[1]["file"];
-  $line = $backtrace[1]["line"];
+  $file = $backtrace[0]["file"];
+  $line = $backtrace[0]["line"];
   logMsg("Unexpected input at $file:$line: $msg");
 }
 
