@@ -453,7 +453,7 @@ function ProcessHAR($testPath)
                 // pageTimings record.  Prefer the explicit properties.  Fall
                 // back to decoding the information from the name of the page
                 // record.
-                if (array_key_exists('_runNumber', $page['pageTimings']))
+                if (array_key_exists('_runNumber', $page))
                 {
                   $curPageData["run"] = $page['_runNumber'];
                   $curPageData["cached"] = $page['_cacheWarmed'];
