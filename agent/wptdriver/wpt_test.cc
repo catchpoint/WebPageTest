@@ -386,7 +386,6 @@ void WptTest::BuildScript() {
     command.command = _T("navigate");
     command.target = _url;
     command.record = true;
-
     _script_commands.AddTail(command);
   }
 
@@ -395,6 +394,14 @@ void WptTest::BuildScript() {
       command.command = _T("clearCache");
       command.record = false;
       _script_commands.AddHead(command);
+  }
+
+  if (_block.GetLength() ) {
+    ScriptCommand command;
+    command.command = _T("block");
+    command.target = _block;
+    command.record = false;
+    _script_commands.AddHead(command);
   }
 }
 
@@ -497,6 +504,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       }
   } else if (cmd == _T("block")) {
     _block_requests.AddTail(command.target);
+    continue_processing = false;
+    consumed = false;
   } else {
     continue_processing = false;
     consumed = false;
