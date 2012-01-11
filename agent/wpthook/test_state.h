@@ -98,6 +98,7 @@ public:
   void UpdateBrowserWindow();
   void SetDocument(HWND wnd);
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
+  void FindBrowserNameAndVersion();
 
   // times
   LARGE_INTEGER _start;
@@ -128,6 +129,8 @@ public:
   int _last_bytes_in;
   int _test_result;
   CString _title;
+  CString _browser_name;
+  CString _browser_version;
 
   bool  _active;
   bool _capturing_aft;

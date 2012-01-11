@@ -62,6 +62,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
+  FindBrowserNameAndVersion();
 }
 
 /*-----------------------------------------------------------------------------
@@ -686,4 +687,54 @@ DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
         (end.QuadPart - start.QuadPart) / _ms_frequency.QuadPart);
   }
   return elapsed_ms;
+}
+
+/*-----------------------------------------------------------------------------
+  Find the browser name and version.
+-----------------------------------------------------------------------------*/
+void TestState::FindBrowserNameAndVersion() {
+  TCHAR file_name[MAX_PATH];
+  if (GetModuleFileName(NULL, file_name, _countof(file_name))) {
+    DWORD unused;
+    DWORD info_size = GetFileVersionInfoSize(file_name, &unused);
+    if (info_size) {
+      LPBYTE version_info = new BYTE[info_size];
+      if (GetFileVersionInfo(file_name, 0, info_size, version_info)) {
+        VS_FIXEDFILEINFO *file_info = NULL;
+        UINT size = 0;
+        if (VerQueryValue(version_info, _T("\\"), (LPVOID*)&file_info, &size) &&
+            file_info) {
+          _browser_version.Format(_T("%d.%d.%d.%d"),
+                                  HIWORD(file_info->dwFileVersionMS),
+                                  LOWORD(file_info->dwFileVersionMS),
+                                  HIWORD(file_info->dwFileVersionLS),
+                                  LOWORD(file_info->dwFileVersionLS));
+        }
+
+        // Structure used to store enumerated languages and code pages.
+        struct LANGANDCODEPAGE {
+          WORD language;
+          WORD code_page;
+        } *translate;
+        // Read the list of languages and code pages.
+        if (VerQueryValue(version_info, TEXT("\\VarFileInfo\\Translation"),
+                          (LPVOID*)&translate, &size)) {
+          // Use the first language/code page.
+          CString key;
+          key.Format(_T("\\StringFileInfo\\%04x%04x\\FileDescription"),
+                     translate[0].language, translate[0].code_page);
+          LPTSTR file_desc = NULL;
+          if (VerQueryValue(version_info, key, (LPVOID*)&file_desc, &size)) {
+            _browser_name = file_desc;
+          }
+        }
+      }
+      delete[] version_info;
+    }
+    if (_browser_name.IsEmpty()) {
+      PathRemoveExtension(file_name);
+      PathStripPath(file_name);
+      _browser_name = file_name;
+    }
+  }
 }

@@ -90,13 +90,19 @@ function BuildResult(&$pageData)
     
     $result['log'] = array();
     $result['log']['version'] = '1.1';
-    $result['log']['creator'] = array( 'name' => 'WebPagetest', 'version' => '1.8' );
-    $result['log']['browser'] = array( 'name' => 'Internet Explorer', 'version' => '' );
+    $result['log']['creator'] = array(
+        'name' => 'WebPagetest',
+        'version' => '1.8'
+        );
     $result['log']['pages'] = array();
-    foreach( $pageData as $run => &$pageRun )
-    {
-        foreach( $pageRun as $cached => &$data )
-        {
+    foreach ($pageData as $run => $pageRun) {
+        foreach ($pageRun as $cached => $data) {
+            if (!array_key_exists('browser', $result['log'])) {
+                $result['log']['browser'] = array(
+                    'name' => $data['browser_name'],
+                    'version' => $data['browser_version']
+                    );
+            }
             $pd = array();
             $pd['startedDateTime'] = msdate($data['date']);
             $pd['title'] = "Run $run, ";

@@ -115,7 +115,9 @@ function loadPageData($file)
                                 'loadEventEnd' => (int)$fields[78],
                                 'domContentLoadedEventStart' => (int)$fields[79],
                                 'domContentLoadedEventEnd' => (int)$fields[80],
-                                'visualComplete' => (int)$fields[81]
+                                'visualComplete' => (int)$fields[81],
+                                'browser_name' => trim($fields[82]),
+                                'browser_version' => trim($fields[83])
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));

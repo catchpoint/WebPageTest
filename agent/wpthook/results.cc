@@ -566,6 +566,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Visually complete
     result += FormatTime(_visually_complete);
 
+    // Browser name and version.
+    result += _test_state._browser_name;
+    result += "\t";
+    result += _test_state._browser_version;
+    result += "\t";
+
     result += "\r\n";
 
     DWORD written;
