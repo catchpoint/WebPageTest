@@ -22,3 +22,4 @@ www/webpagetest/results
 www/webpagetest/log.txt
 www/webpagetest/tmp
 www/webpagetest/work/jobs/uniqueId.dat
+www/webpagetest/logs/*.log
