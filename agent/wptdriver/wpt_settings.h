@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "browser_update.h"
+#include "software_update.h"
 
 // constants
 const DWORD EXIT_TIMEOUT = 120000;
@@ -72,7 +72,7 @@ public:
   bool SetBrowser(CString browser);
   bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response);
-  void UpdateBrowsers();
+  void UpdateSoftware();
 
   CString _server;
   CString _location;
@@ -86,5 +86,5 @@ public:
   CString _ec2_instance;
 
   BrowserSettings _browser;
-  BrowserUpdate _browser_update;
+  SoftwareUpdate _software_update;
 };

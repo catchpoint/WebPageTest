@@ -111,7 +111,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <None Include="zlib\zlib.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="browser_update.h" />
+    <ClInclude Include="software_update.h" />
     <ClInclude Include="ipfw.h" />
     <ClInclude Include="ipfw_int.h" />
     <ClInclude Include="Resource.h" />
@@ -147,7 +147,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClInclude Include="zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="browser_update.cc" />
+    <ClCompile Include="software_update.cc" />
     <ClCompile Include="ipfw.cc" />
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -4,7 +4,8 @@ location=Test
 browser=chrome
 Time Limit=120
 ;key=TestKey123
-;debug=1
+;Automatically install and update support software (Flash, Silverlight, etc)
+software=http://www.webpagetest.org/installers/software.dat
 
 [chrome]
 exe="C:\Program Files\Google\Chrome\Application\chrome.exe"
