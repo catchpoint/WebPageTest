@@ -67,7 +67,7 @@ function GetJob() {
     BuildLocations($locations);
 
     $workDir = $locations[$location]['localDir'];
-    $locKey = @$locations[$location]['key'] || '';
+    $locKey = @$locations[$location]['key'];
     if (strlen($workDir) && (!strlen($locKey) || !strcmp($key, $locKey))) {
         // see if the tester is marked as being offline
         $offline = false;
