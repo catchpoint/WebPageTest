@@ -55,42 +55,44 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SoftwareUpdate::UpdateSoftware(void) {
-  UpdateBrowsers();
-  if (_software_url.GetLength()) {
-    CString info = HttpGetText(_software_url);
-    if (info.GetLength()) {
-      CString app, version, command, file_url, md5;
-      int token_position = 0;
-      CString line = info.Tokenize(_T("\r\n"), token_position).Trim();
-      while (token_position >= 0) {
-        if (line.Left(1) == _T('[')) {
-          if (app.GetLength()) {
-            InstallSoftware(app, file_url, md5, version, command);
+  if (TimeToCheck()) {
+    UpdateBrowsers();
+    if (_software_url.GetLength()) {
+      CString info = HttpGetText(_software_url);
+      if (info.GetLength()) {
+        CString app, version, command, file_url, md5;
+        int token_position = 0;
+        CString line = info.Tokenize(_T("\r\n"), token_position).Trim();
+        while (token_position >= 0) {
+          if (line.Left(1) == _T('[')) {
+            if (app.GetLength()) {
+              InstallSoftware(app, file_url, md5, version, command);
+            }
+            app = line.Trim(_T("[] \t"));
+            version.Empty();
+            command.Empty();
+            file_url.Empty();
+            md5.Empty();
+          } else if (app.GetLength()) {
+            int separator = line.Find(_T('='));
+            if (separator > 0) {
+              CString tag = line.Left(separator).Trim().MakeLower();
+              CString value = line.Mid(separator + 1).Trim();
+              if (tag == _T("url"))
+                file_url = value;
+              else if (tag == _T("md5"))
+                md5 = value;
+              else if (tag == _T("version"))
+                version = value;
+              else if (tag == _T("command"))
+                command = value;
+            }
           }
-          app = line.Trim(_T("[] \t"));
-          version.Empty();
-          command.Empty();
-          file_url.Empty();
-          md5.Empty();
-        } else if (app.GetLength()) {
-          int separator = line.Find(_T('='));
-          if (separator > 0) {
-            CString tag = line.Left(separator).Trim().MakeLower();
-            CString value = line.Mid(separator + 1).Trim();
-            if (tag == _T("url"))
-              file_url = value;
-            else if (tag == _T("md5"))
-              md5 = value;
-            else if (tag == _T("version"))
-              version = value;
-            else if (tag == _T("command"))
-              command = value;
-          }
+          line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
-        line = info.Tokenize(_T("\r\n"), token_position).Trim();
-      }
-      if (app.GetLength()) {
-        InstallSoftware(app, file_url, md5, version, command);
+        if (app.GetLength()) {
+          InstallSoftware(app, file_url, md5, version, command);
+        }
       }
     }
   }
@@ -101,49 +103,47 @@ void SoftwareUpdate::UpdateSoftware(void) {
 void SoftwareUpdate::UpdateBrowsers(void) {
   WptTrace(loglevel::kFunction,
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
-  if (TimeToCheck()) {
-    POSITION pos = _browsers.GetHeadPosition();
-    while (pos) {
-      bool ok = false;
-      DWORD update = 1;
-      POSITION current_pos = pos;
-      CString url = _browsers.GetNext(pos).Trim();
-      if (url.GetLength()) {
-        CString info = HttpGetText(url);
-        if (info.GetLength()) {
-          CString browser, version, command, file_url, md5;
-          int token_position = 0;
-          CString line = info.Tokenize(_T("\r\n"), token_position);
-          while (token_position >= 0) {
-            int separator = line.Find(_T('='));
-            if (separator > 0) {
-              CString tag = line.Left(separator).Trim().MakeLower();
-              CString value = line.Mid(separator + 1).Trim();
-              if (tag == _T("browser"))
-                browser = value;
-              else if (tag == _T("url"))
-                file_url = value;
-              else if (tag == _T("md5"))
-                md5 = value;
-              else if (tag == _T("version"))
-                version = value;
-              else if (tag == _T("command"))
-                command = value;
-              else if (tag == _T("update"))
-                update = _ttoi(value);
-            }
-            line = info.Tokenize(_T("\r\n"), token_position);
+  POSITION pos = _browsers.GetHeadPosition();
+  while (pos) {
+    bool ok = false;
+    DWORD update = 1;
+    POSITION current_pos = pos;
+    CString url = _browsers.GetNext(pos).Trim();
+    if (url.GetLength()) {
+      CString info = HttpGetText(url);
+      if (info.GetLength()) {
+        CString browser, version, command, file_url, md5;
+        int token_position = 0;
+        CString line = info.Tokenize(_T("\r\n"), token_position);
+        while (token_position >= 0) {
+          int separator = line.Find(_T('='));
+          if (separator > 0) {
+            CString tag = line.Left(separator).Trim().MakeLower();
+            CString value = line.Mid(separator + 1).Trim();
+            if (tag == _T("browser"))
+              browser = value;
+            else if (tag == _T("url"))
+              file_url = value;
+            else if (tag == _T("md5"))
+              md5 = value;
+            else if (tag == _T("version"))
+              version = value;
+            else if (tag == _T("command"))
+              command = value;
+            else if (tag == _T("update"))
+              update = _ttoi(value);
           }
-
-          ok = InstallSoftware(browser, file_url, md5, version, command);
+          line = info.Tokenize(_T("\r\n"), token_position);
         }
-      }
 
-      // if we don't need to automatically update the browser then 
-      // remove it from the list
-      if (ok && !update) {
-        _browsers.RemoveAt(current_pos);
+        ok = InstallSoftware(browser, file_url, md5, version, command);
       }
+    }
+
+    // if we don't need to automatically update the browser then 
+    // remove it from the list
+    if (ok && !update) {
+      _browsers.RemoveAt(current_pos);
     }
   }
   WptTrace(loglevel::kFunction,
