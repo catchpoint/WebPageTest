@@ -27,7 +27,15 @@ goog.provide('wpt.main');
 
 ((function() {  // namespace
 
-/** @const */
+/**
+ * Chrome does some work on startup that might have a performance impact.
+ * For example, if an extension is loaded using group policy, the installation
+ * will download and install that extension shortly after startup.  We don't
+ * want the timing of tests altered by this work, so wait a few seconds after
+ * startup before starting to perform measurements.
+ *
+ * @const
+ */
 var STARTUP_DELAY = 5000;
 
 /** @const */
@@ -42,17 +50,73 @@ var TASK_INTERVAL_SHORT = 0;
 /** @const */
 var RUN_FAKE_COMMAND_SEQUENCE = false;
 
+// Some extensions can alter timing.  Remove some extensions that are likely
+// to be installed on test machines.
+var UNWANTED_EXTENSIONS = [
+  'mkmaajnfmpmpebdcpfnjbkgaloeidlfa',
+  'amppcaoflpjiofjedecfhmmlekknkpdl'
+];
+
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 
-// On startup, kick off our testing
-window.setTimeout(wptStartup, STARTUP_DELAY);
+/**
+ * Uninstall a given set of extensions.  Run |onComplete| when done.
+ * @param {Array.<string>} idsToUninstall IDs to uninstall.
+ * @param {Function} onComplete Callback to run when uninstalls are done.
+ */
+wpt.main.uninstallUnwantedExtensions = function(idsToUninstall, onComplete) {
+  // How many callbacks are we waiting on?  The uninstalls are done when
+  // there are no more callbacks in flight.
+  var numPendingCallbacks = 0;
 
-function wptStartup() {
-  wpt.LOG.info("wptStartup");
+  var callOnCompleteWhenDone = function() {
+    if (numPendingCallbacks == 0)
+      onComplete();
+  };
+
+  var onUninstalled = function() {
+    --numPendingCallbacks;
+    callOnCompleteWhenDone();
+  };
+
+  // For each installed extension, uninstall if it is in |idsToUninstall|.
+  chrome.management.getAll(
+      function(extensionInfoArray) {
+        for (var i = 0; i < extensionInfoArray.length; ++i) {
+           if (idsToUninstall.indexOf(extensionInfoArray[i].id) != -1) {
+             ++numPendingCallbacks;
+             chrome.management.uninstall(
+                 extensionInfoArray[i].id, onUninstalled);
+             wpt.LOG.info("Uninstalling " + extensionInfoArray[i].name +
+                          " (id " +  extensionInfoArray[i].id + ").");
+           }
+        }
+        callOnCompleteWhenDone();
+      });
+};
+
+wpt.main.onStartup = function() {
+  // Before we start, remove any other extensions that could change our
+  // results.
+  window.setTimeout(function() {
+    wpt.main.uninstallUnwantedExtensions(UNWANTED_EXTENSIONS, function() {
+      // When uninstalls finish, kick off our testing.
+      wpt.main.startMeasurements();
+    });
+  }, STARTUP_DELAY);
+};
+
+wpt.main.startMeasurements = function() {
+  wpt.LOG.info("Enter wptStartMeasurements");
+
+  // All measurements are done in a tab.  Get the foreground tab,
+  // and remember its ID.  This ID is used to open a connection to
+  // the content script running in the web page hosted within the tab.
+  // to the content script in a
   chrome.tabs.getSelected(null, function(tab){
     wpt.LOG.info("Got tab id: " + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
@@ -270,5 +334,7 @@ function wptExecuteTask(task){
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 }
+
+wpt.main.onStartup();
 
 })());  // namespace
