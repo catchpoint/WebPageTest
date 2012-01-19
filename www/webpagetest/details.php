@@ -104,7 +104,7 @@ $page_description = "Website performance test details$testLabel";
                     <?php
 	    		        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
 			            if ( $settings['enable_google_csi'] )
-				            echo '<a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+				            echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
