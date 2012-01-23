@@ -642,10 +642,10 @@ function LoadPageSpeedData($file)
 }
 
 /**
-* Message logging
-* 
-* @param mixed $msg
-*/
+ * Message logging
+ *
+ * @param mixed $msg
+ */
 function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
@@ -659,15 +659,26 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
 }
 
 /**
- * Log unexpected input.  Usefull for debugging interaction with an agent.
- * Search for "Unexpected input" to find these messages in the logs.
+ * Message logging with the source location of the log message.
+ * @param mixed $msg
  */
-function logMalformedInput($msg)
+function logWithLocation($msg)
 {
   $backtrace = debug_backtrace();
   $file = $backtrace[0]["file"];
   $line = $backtrace[0]["line"];
-  logMsg("Unexpected input at $file:$line: $msg");
+  logMsg("$file:$line: $msg");
+}
+
+/**
+ * Log unexpected input.  Usefull for debugging interaction with an agent.
+ * Search for "Unexpected input" to find these messages in the logs.
+ * Set a breakpoint in this function to stop on unexpected input.
+ * @param mixed $msg
+ */
+function logMalformedInput($msg)
+{
+  logWithLocation("Unexpected input: " . $msg);
 }
 
 /**
