@@ -216,7 +216,7 @@
             if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
               
-            if( !$error )
+            if( !$error && !array_key_exists('id', $test) )
             {
                 if( $test['batch_locations'] && count($test['multiple_locations']) )
                 {
@@ -394,6 +394,9 @@
             // redirect the browser to the test results page
             if( !$error )
             {
+                if (array_key_exists('submit_callback', $test)) {
+                    $test['submit_callback']($test);
+                }
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
