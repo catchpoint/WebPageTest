@@ -395,7 +395,13 @@ function ProcessHAR($testPath)
             move_uploaded_file($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
     }
 
-    if ($done)
+    // TODO(skerner): Should be able to always do har processing if there is a
+    // HAR file.  Will need to test mobile agents.
+    if (!$done) {
+      logMsg("Processing har, but not done.  Potential backward compatibility issues.");
+    }
+
+    if (true)  // TODO(skerner): indentation.
     {
         // Save the json HAR file
         $rawHar = file_get_contents("{$testPath}/results.har");
