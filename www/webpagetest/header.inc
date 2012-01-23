@@ -185,11 +185,16 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br><a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a></h2>";
             
             echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
-            if (isset($test['testinfo']) && isset($test['testinfo']['completed']))
+            if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started'])) )
             {
-                $completed = (int)$test['testinfo']['completed'] + ($tz_offset * 60);
+                if (isset($test['testinfo']['completed'])) {
+                    $timeStr = $test['testinfo']['completed'];
+                } else {
+                    $timeStr = $test['testinfo']['started'];
+                }
+                $completed = (int)$timeStr + ($tz_offset * 60);
                 $time = strftime('%x %X', $completed);
-                echo "<span class=\"jsdate\" date=\"{$test['testinfo']['completed']}\">$time</span><br>\n";
+                echo "<span class=\"jsdate\" date=\"$timeStr\">$time</span><br>\n";
             }
 
             if( $dom ) 
