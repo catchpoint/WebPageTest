@@ -17,6 +17,10 @@ define('VER_CSS', 50);          // version of the sitewide css file
 define('VER_JS', 15);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
+define('UNKNOWN_TIME', -1);  // Value used as a flag for an unknown time.
+                             // To find code that fails to check that a time
+                             // is unknown, change this constant to a large
+                             // negative number.
 
 // SEO stuff
 $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
@@ -1416,9 +1420,9 @@ function LoadJobQueue($workDir, &$queue)
             
         foreach($files as $file)
         {
-            if( stripos($file, '.url') )
+            if ( stripos($file, '.url') )
                 $queue[0][] = $file;
-            else if( preg_match('/\.p([1-9])/i', $file, $matches) )
+            else if (preg_match('/\.p([1-9])/i', $file, $matches))
             {
                 $priority = (int)$matches[1];
                 $queue[$priority][] = $file;

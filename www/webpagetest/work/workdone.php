@@ -421,18 +421,24 @@ function ProcessHAR($testPath)
                 $curPageData["url"] = $page['title'];
 
                 $startFull = $page['startedDateTime'];
-                preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/", $startFull, $matches);
-                $curPageData["startDate"] = $matches[1];
-                $curPageData["startTime"] = $matches[2];
-                $curPageData["startFull"] = $startFull;
-                    
+                if (preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/",
+                               $startFull, $matches)) {
+                  $curPageData["startDate"] = $matches[1];
+                  $curPageData["startTime"] = $matches[2];
+                  $curPageData["startFull"] = $startFull;
+                } else {
+                  logMalformedInput(
+                      "Failed to parse page key 'startedDateTime'.  ".
+                       "Value of key is '$startFull'.");
+                }
+
                 if (array_key_exists('onRender', $page['pageTimings'])) {
                   $curPageData["onRender"] = $page['pageTimings']['onRender'];
                 } else if (array_key_exists('_onRender',$page['pageTimings'])) {
                   $curPageData["onRender"] = $page['pageTimings']['_onRender'];
                 } else {
                   logMsg("onRender not set for page $pageref");
-                  $curPageData["onRender"] = -1;
+                  $curPageData["onRender"] = UNKNOWN_TIME;
                 }
 
                 $curPageData["docComplete"] = $page['pageTimings']['onContentLoad'];
@@ -443,8 +449,10 @@ function ProcessHAR($testPath)
                 if ($curPageData["onRender"] <= 0)
                   $curPageData["onRender"] = 0;
 
-                if (0 >= preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/", $curPageData["url"], $urlMatches))
-                  logMalformedInput("HAR error: Could not match host in URL ".$curPageData["url"]);
+                if (!preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/",
+                                $curPageData["url"], $urlMatches))
+                  logMalformedInput("HAR error: Could not match host in URL ".
+                                    $curPageData["url"]);
 
                 $curPageData["host"] = $urlMatches[1];
 
@@ -458,7 +466,7 @@ function ProcessHAR($testPath)
                   $curPageData["run"] = $page['_runNumber'];
                   $curPageData["cached"] = $page['_cacheWarmed'];
                 }
-                else if (0 < preg_match("/page_(\d+)_([01])/", $pageref, $matches))
+                else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches))
                 {
                   $curPageData["run"] = $matches[1];
                   $curPageData["cached"] = $matches[2];
@@ -597,15 +605,22 @@ function ProcessHAR($testPath)
                 // Extract the variables
                 $reqHttpVer = $reqEnt['httpVersion'];
                 $respHttpVer = $respEnt['httpVersion'];
-                preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/", $startedDateTime, $matches);
-                $reqDate = $matches[1];
-                $reqTime = $matches[2];
+                if (preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/",
+                               $startedDateTime, $matches)) {
+                  $reqDate = $matches[1];
+                  $reqTime = $matches[2];
+                } else {
+                  logMalformedInput(
+                      "Sorted entry key 'startedDateTime' could ".
+                      "not be parsed.  Value is '$startedDateTime'");
+                }
                 $reqEventName = $curPageData['title'];
                 $reqAction = $reqEnt['method'];
 
-                logMsg("Processing resource " . $reqEnt['url']);
+                logMsg("Processing resource " . ShortenUrl($reqEnt['url']));
                 // Skip non-http URLs (in the future we may do something with them)
-                if (!preg_match("/^https?:\/\/([^\/?]+)([\/\?].*)?/", $reqEnt['url'], $matches)) {
+                if (!preg_match("/^https?:\/\/([^\/?]+)([\/\?].*)?/",
+                                $reqEnt['url'], $matches)) {
                     logMsg("Skipping https file " . $reqEnt['url']);
                     continue;
                 }
@@ -646,7 +661,7 @@ function ProcessHAR($testPath)
                 $reqEndTime = $reqStartTime + $reqLoadTime;
                 $reqCached = 0; // TODO: Extract from cache - or do we never have cached files since they aren't requested?
                 $reqEventUrl = $curPageData["url"];
-                $reqSecure = preg_match("/^https/", $reqEnt['url'])? 1 : 0;
+                $reqSecure = preg_match("/^https/", $reqEnt['url']) ? 1 : 0;
 
                 // Variables that are likely not important
                 // TODO: Check if they matter
@@ -779,7 +794,7 @@ function ProcessHAR($testPath)
                     $curPageData["nReqs304"] += 1;
                 } else if (preg_match('/^404$/', $reqRespCode)) {
                     $curPageData["nReqs404"] += 1;
-                }  else {
+                } else {
                     $curPageData["nReqsOther"] += 1;
                 }
 
@@ -799,7 +814,7 @@ function ProcessHAR($testPath)
                         $curPageData["nReqs304Doc"] += 1;
                     } else if (preg_match('/^404$/', $reqRespCode)) {
                         $curPageData["nReqs404Doc"] += 1;
-                    }  else {
+                    } else {
                         $curPageData["nReqsOtherDoc"] += 1;
                     }
                 }
@@ -915,9 +930,18 @@ function ProcessHAR($testPath)
 function GetDeltaMilliseconds($before, $after)
 {
     // Extract the date and milliseconds from the
-    preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $before, $matches);
+    if (!preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $before, $matches)) {
+      logMalformedInput("Failed to parse date: $before");
+      return UNKNOWN_TIME;
+    }
+
     $millisBefore = (double)$matches[1] / 1000.0;
-    preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $after, $matches);
+
+    if (!preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $after, $matches)) {
+      logMalformedInput("Failed to parse date: $after");
+      return UNKNOWN_TIME;
+    }
+
     $millisAfter = (double)$matches[1] / 1000.0;
 
     // Get the secs before & after
