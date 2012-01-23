@@ -23,3 +23,6 @@ www/webpagetest/log.txt
 www/webpagetest/tmp
 www/webpagetest/work/jobs/uniqueId.dat
 www/webpagetest/logs/*.log
+www/webpagetest/work/jobs
+www/webpagetest/work/video
+www/webpagetest/nbproject
