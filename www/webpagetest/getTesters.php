@@ -110,7 +110,8 @@ function GetRemoteTesters($server, $remote_location) {
         if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
             $cache_entry = array();
             foreach($remote['data']['location'] as &$location) {
-                $cache_entry[$location['id']] = $location['testers'];
+                $cache_entry[$location['id']] = array(  'elapsed' => $location['elapsed'],
+                                                        'testers' => $location['testers']['tester']);
             }
             $remote_cache[$server_hash] = $cache_entry;
         }
