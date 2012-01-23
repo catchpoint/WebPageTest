@@ -86,12 +86,12 @@ else
                     {
                         // delete the optimization file (generated dynamically now)
                         // or any files with sensitive data if we were asked to
-                        if( strpos($textFile, '_optimization') )
+                        if( $ini['sensitive'] && strpos($textFile, '_report') ) {
+                            RemoveSensitiveHeaders("$testPath/$textFile");
+                        }
+                        if( strpos($textFile, '_optimization') ) {
                             unlink("$testPath/$textFile");
-                        elseif( $ini['sensitive'] && strpos($textFile, '_report') )
-                            unlink("$testPath/$textFile");
-                        else
-                        {
+                        } else {
                             logMsg( "Compressing $testPath/$textFile\n" );
                             
                             if( gz_compress("$testPath/$textFile") )
@@ -958,6 +958,17 @@ function GetDeltaMilliseconds($before, $after)
     $deltaMillis = (int)($deltaSeconds*1000.0);
 
     return $deltaMillis;
+}
+
+/**
+* Remove sensitive data fields from HTTP headers (cookies and HTTP Auth)
+* 
+*/
+function RemoveSensitiveHeaders($file) {
+    $patterns = array('/(cookie:[ ]*)([^\r\n]*)/i','/(authenticate:[ ]*)([^\r\n]*)/i');
+    $data = file_get_contents($file);
+    $data = preg_replace($patterns, '\1XXXXXX', $data);
+    file_put_contents($file, $data);
 }
 ?>
 
