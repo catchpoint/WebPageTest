@@ -133,31 +133,54 @@ function ArchiveTest($id) {
 */
 function RestoreArchive($id) {
     global $settings;
+    global $debug;
+//    $debug = true;
     $ret = false;
     $testPath = './' . GetTestPath($id);
-    if (isset($settings['archive_dir']) || isset($settings['archive_s3_url'])) {
+    $url = '';
+    // see if we have a http path where the file is archived
+    $check_dir = $testPath;
+    for ($i = 0; $i <= 4; $i++) {
+        $check_dir = dirname($check_dir);
+        logMsg("Checking: $check_dir/archive.dat");
+        if (is_file("$check_dir/archive.dat")) {
+            $url = trim(file_get_contents("$check_dir/archive.dat"));
+            if (strlen($url))
+                break;
+        }
+    }
+    logMsg("Archive URL: $url");
+    if (strlen($url) || isset($settings['archive_dir']) || isset($settings['archive_s3_url'])) {
         mkdir( $testPath, 0777, true );
         $testPath = realpath($testPath);
         $zipfile = "./tmp/$id.zip";
-        if (isset($settings['archive_dir'])) {
-            $source = GetArchiveFile($id);
-            copy($source, $zipfile);
-        } elseif (isset($settings['archive_s3_url'])) {
-            $separator = strrpos($id, '_');
-            if ($separator !== false) {
-                $bucket = $settings['archive_s3_bucket'];
-                $file = "$id.zip";
-                if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
-                    // special-case Internet Archive storage
-                    $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
-                    $file = substr($id, $separator + 1);
+        if (strlen($url)) {
+            $url .= "/$id.zip";
+        } else {
+            if (isset($settings['archive_dir'])) {
+                $source = GetArchiveFile($id);
+                copy($source, $zipfile);
+            } elseif (isset($settings['archive_s3_url'])) {
+                $separator = strrpos($id, '_');
+                if ($separator !== false) {
+                    $bucket = $settings['archive_s3_bucket'];
+                    $file = "$id.zip";
+                    if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
+                        // special-case Internet Archive storage
+                        $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
+                        $file = substr($id, $separator + 1);
+                    }
+                    $url = trim($settings['archive_s3_url']) . "$bucket/$file.zip";
                 }
-                $url = trim($settings['archive_s3_url']) . "$bucket/$file.zip";
-                $data = file_get_contents($url);
-                if ($data) {
-                    file_put_contents($zipfile, $data);
-                    unset($data);
-                }
+            }
+        }
+        if (strlen($url)) {
+            logMsg("Downloading: $url");
+            $data = file_get_contents($url);
+            if ($data) {
+                logMsg("Saving: $url to $zipfile");
+                file_put_contents($zipfile, $data);
+                unset($data);
             }
         }
         $zip = new ZipArchive;
