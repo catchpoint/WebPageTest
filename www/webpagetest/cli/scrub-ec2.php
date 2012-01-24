@@ -80,7 +80,7 @@ if( $ec2 )
             echo "Offline: $offlineCount\n";
             $targetCount = $activeCount;
             if( $idleCount )
-                $targetCount = (int)($activeCount + ($idleCount / 2));
+                $targetCount = (int)($activeCount + ($idleCount / 4));
             elseif( $targetBacklog && $activeCount )
             {
                 // get the current backlog
