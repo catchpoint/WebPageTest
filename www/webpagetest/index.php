@@ -1,10 +1,10 @@
 <?php 
 include 'common.inc';
 
-if (array_key_exists($_GET, 'bulk')) {
+if (array_key_exists('bulk', $_GET)) {
     $settings['noBulk'] = 0;
 }
-if (!array_key_exists($settings, 'noBulk'))
+if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
 
 // see if we are overriding the max runs
