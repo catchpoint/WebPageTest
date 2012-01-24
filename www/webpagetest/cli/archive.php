@@ -7,7 +7,6 @@ set_time_limit(0);
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
-$invalid = 0;
 $log = fopen('./cli/archive.log', 'w');
 
 // check the old tests first
@@ -112,7 +111,6 @@ function CheckTest($testPath, $id)
 {
     global $archiveCount;
     global $deleted;
-    global $invalid;
     global $kept;
     global $log;
     $logLine = "$id : ";
@@ -122,25 +120,22 @@ function CheckTest($testPath, $id)
         $archiveCount++;
         $logLine .= "Archived";
 
-        if (VerifyArchive($id)) {
-            // Delete tests after 3 days of no access
-            $delete = false;
-            $elapsed = TestLastAccessed($id);
-            if( $elapsed > 3 )
-                $delete = true;
+        // Delete tests after 3 days of no access
+        $delete = false;
+        $elapsed = TestLastAccessed($id);
+        if( $elapsed > 3 )
+            $delete = true;
 
-            if( $delete )
-            {
+        if( $delete )
+        {
+            if (VerifyArchive($id)) {
                 delTree("$testPath/");
                 $deleted++;
                 $logLine .= " Deleted";
             }
-            else
-                $kept++;
-        } else {
-            $logLine .= " Invalid";
-            $invalid++;
         }
+        else
+            $kept++;
     }
         
     if( $log )
@@ -149,7 +144,7 @@ function CheckTest($testPath, $id)
         fwrite($log, $logLine);
     }
 
-    echo "\rArc:$archiveCount, Bad: $invalid, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
+    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 }
 
 ?>
