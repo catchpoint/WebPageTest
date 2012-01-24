@@ -19,7 +19,7 @@ $includeip = false;
 if( $admin || (int)$_GET["ip"] == 1 )
     $includeip = true;
 $includePrivate = false;
-if( $admin || (int)$_GET["private"] == 1 )
+if( $admin && (int)$_GET["private"] == 1 )
     $includePrivate = true;
 $onlyVideo = false;
 if( $_REQUEST['video'] )
