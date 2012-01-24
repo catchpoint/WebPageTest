@@ -499,7 +499,7 @@ void OptimizationChecks::CheckCDN() {
       // Get the remote ip address for this request.
       struct sockaddr_in addr;
       addr.sin_addr.S_un.S_addr = request->GetPeerAddress();
-      if( IsCDN(host, addr, request->_scores._cdn_provider) ) {
+      if( IsCDN(request, request->_scores._cdn_provider) ) {
         request->_scores._static_cdn_score = 100;
         // Add it to the CDN list if we don't already have it.
         bool found = false;
@@ -556,8 +556,9 @@ void OptimizationChecks::StartCDNLookups() {
         if( !request->GetHost().CompareNoCase(_cdn_requests[i]->GetHost()) )
           found = true;
       }
-      if( !found )
+      if (!found ) {
         _cdn_requests.Add(request);
+      }
     }
   }
   _requests.Unlock();
@@ -571,7 +572,8 @@ void OptimizationChecks::StartCDNLookups() {
     for( DWORD i = 0; i < count; i++ ) {
       unsigned int addr = 0;
       // Spawn a dns lookup thread for this host.
-      HANDLE hThread = (HANDLE)_beginthreadex( 0, 0, ::CdnLookupThread, (void *)i, 0, &addr);
+      HANDLE hThread = (HANDLE)_beginthreadex( 0, 0, ::CdnLookupThread, 
+                                                  (void *)i, 0, &addr);
       if( hThread ) {
         _h_cdn_threads.Add(hThread);
       }
@@ -588,28 +590,29 @@ void OptimizationChecks::CdnLookupThread(DWORD index)
   // Do a single lookup for the entry that is our responsibility
   if( index >= 0 && index < _cdn_requests.GetCount() ) {
     Request* request = _cdn_requests[index];
-    CStringA host = request->GetHost();
-    host.MakeLower();
     
     // We don't care about the result right now, it will get cached for later
     CStringA provider;
-    // Get the remote ip address for this request.
-    struct sockaddr_in addr;
-    addr.sin_addr.S_un.S_addr = request->GetPeerAddress();
-    IsCDN(host, addr, provider);
+    IsCDN(request, provider);
   }
 }
 
 /*-----------------------------------------------------------------------------
   See if the provided host belongs to a CDN
 -----------------------------------------------------------------------------*/
-bool OptimizationChecks::IsCDN(CStringA host, SOCKADDR_IN &server,
-  CStringA &provider)
+bool OptimizationChecks::IsCDN(Request * request, CStringA &provider)
 {
   provider.Empty();
   bool ret = false;
+
+  CStringA host = request->GetHost();
+  host.MakeLower();
   if( host.IsEmpty() )
     return ret;
+
+  // Get the remote ip address for this request.
+  struct sockaddr_in server;
+  server.sin_addr.S_un.S_addr = request->GetPeerAddress();
 
   // First check whether the current host is already in cache.
   bool found = false;
@@ -628,56 +631,74 @@ bool OptimizationChecks::IsCDN(CStringA host, SOCKADDR_IN &server,
   }
 
   if( !found )  {
-    // TODO: Move to getaddrinfo or atleast gethostbyname2. But since we don't
-    // care about ip-address (v4 or v6), we might not need this.
-    // Look it up and look at the cname entries for the host and cache it.
-    hostent * dnsinfo = gethostbyname(host);
-    Sleep(200);
-    if( dnsinfo && !WSAGetLastError() ) {
-      // Check all of the aliases
-      CAtlList<CStringA> names;
-      names.AddTail((LPCSTR)host);
-      names.AddTail(dnsinfo->h_name);
-      // Add all the aliases.
-      char ** alias = dnsinfo->h_aliases;
-      while( *alias ) {
-        names.AddTail(*alias);
-        alias++;
+    // now check http headers for known CDNs (cheap check)
+    int cdn_header_count = _countof(cdnHeaderList);
+    for (int i = 0; i < cdn_header_count && !found; i++) {
+      CDN_PROVIDER_HEADER * cdn_header = &cdnHeaderList[i];
+      CStringA header = request->GetResponseHeader(cdn_header->response_field);
+      header.MakeLower();
+      CStringA pattern = cdn_header->pattern;
+      pattern.MakeLower();
+      if (pattern.GetLength() && header.GetLength() && 
+        header.Find(pattern) >= 0) {
+          found = true;
+          ret = true;
+          provider = cdn_header->name;
       }
+    }
 
-      // Also try a reverse-lookup on the IP
-      if( server.sin_addr.S_un.S_addr ) {
-        DWORD addr = server.sin_addr.S_un.S_addr;
-        // Reverse lookup by address.
-        dnsinfo = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-        if( dnsinfo && !WSAGetLastError() ) {
-          if( dnsinfo->h_name )
-            names.AddTail(dnsinfo->h_name);
+    if (!found) {
+      // TODO: Move to getaddrinfo or atleast gethostbyname2. But since we don't
+      // care about ip-address (v4 or v6), we might not need this.
+      // Look it up and look at the cname entries for the host and cache it.
+      hostent * dnsinfo = gethostbyname(host);
+      Sleep(200);
+      if( dnsinfo && !WSAGetLastError() ) {
+        // Check all of the aliases
+        CAtlList<CStringA> names;
+        names.AddTail((LPCSTR)host);
+        names.AddTail(dnsinfo->h_name);
+        // Add all the aliases.
+        char ** alias = dnsinfo->h_aliases;
+        while( *alias ) {
+          names.AddTail(*alias);
+          alias++;
+        }
+
+        // Also try a reverse-lookup on the IP
+        if( server.sin_addr.S_un.S_addr ) {
+          DWORD addr = server.sin_addr.S_un.S_addr;
+          // Reverse lookup by address.
+          dnsinfo = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
+          if( dnsinfo && !WSAGetLastError() ) {
+            if( dnsinfo->h_name )
+              names.AddTail(dnsinfo->h_name);
           
-          // Add all the aliases.
-          alias = dnsinfo->h_aliases;
-          while( *alias ) {
-            names.AddTail(*alias);
-            alias++;
+            // Add all the aliases.
+            alias = dnsinfo->h_aliases;
+            while( *alias ) {
+              names.AddTail(*alias);
+              alias++;
+            }
           }
         }
-      }
 
-      if( !names.IsEmpty() ) {
-        POSITION pos = names.GetHeadPosition();
-        while( pos && !ret )  {
-          CStringA name = names.GetNext(pos);
-          name.MakeLower();
+        if( !names.IsEmpty() ) {
+          POSITION pos = names.GetHeadPosition();
+          while( pos && !ret )  {
+            CStringA name = names.GetNext(pos);
+            name.MakeLower();
   
-          // Use the globally defined CDN list from header file cdn.h
-          CDN_PROVIDER * cdn = cdnList;
-          // Iterate to check the hostname is a cdn or we reach end of list.
-          while( !ret && cdn->pattern && cdn->pattern.CompareNoCase("END_MARKER"))  {
-            if( name.Find(cdn->pattern) >= 0 )  {
-              ret = true;
-              provider = cdn->name;
+            // Use the globally defined CDN list from header file cdn.h
+            CDN_PROVIDER * cdn = cdnList;
+            // Iterate to check the hostname is a cdn or we reach end of list.
+            while( !ret && cdn->pattern && cdn->pattern.CompareNoCase("END_MARKER"))  {
+              if( name.Find(cdn->pattern) >= 0 )  {
+                ret = true;
+                provider = cdn->name;
+              }
+              cdn++;
             }
-            cdn++;
           }
         }
       }

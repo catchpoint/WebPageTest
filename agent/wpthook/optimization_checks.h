@@ -94,5 +94,5 @@ private:
   void CheckCombine();
   void StartCDNLookups();
   void CheckCDN();
-  bool IsCDN(CStringA host, SOCKADDR_IN &server, CStringA &provider);
+  bool IsCDN(Request * request, CStringA &provider);
 };

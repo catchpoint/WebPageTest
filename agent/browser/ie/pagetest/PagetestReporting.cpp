@@ -2050,7 +2050,7 @@ void CPagetestReporting::CheckCDN()
 				CString host = w->host;
 				host.MakeLower();
 
-				if( IsCDN(host, w->peer, w->cdnProvider) )
+				if( IsCDN(w, w->cdnProvider) )
 				{
 					w->staticCdnScore = 100;
 					
@@ -2721,10 +2721,12 @@ void CPagetestReporting::LogError(bool scriptError)
 /*-----------------------------------------------------------------------------
 	See if the provided host belongs to a CDN
 -----------------------------------------------------------------------------*/
-bool CPagetestReporting::IsCDN(CString host, SOCKADDR_IN &server, CString &provider)
+bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
 {
 	bool ret = false;
 	
+	CString host = w->host;
+	host.MakeLower();
 	if( !host.IsEmpty() )
 	{
 		// make sure we haven't already identified it
@@ -2746,60 +2748,77 @@ bool CPagetestReporting::IsCDN(CString host, SOCKADDR_IN &server, CString &provi
 		
 		if( !found )
 		{
-			// look it up and look at the cname entries for the host
-			hostent * dnsinfo = gethostbyname(CT2A(host));
-			if( dnsinfo && !WSAGetLastError() )
-			{
-				// check all of the aliases
-				CAtlList<CStringA> names;
-				names.AddTail((LPCSTR)CT2A(host));
-				names.AddTail(dnsinfo->h_name);
-				char ** alias = dnsinfo->h_aliases;
-				while( *alias )
-				{
-					names.AddTail(*alias);
-					alias++;
-				}
+      // now check http headers for known CDNs (cheap check)
+      int cdn_header_count = _countof(cdnHeaderList);
+      for (int i = 0; i < cdn_header_count && !found; i++) {
+        CDN_PROVIDER_HEADER * cdn_header = &cdnHeaderList[i];
+        CString header = w->GetResponseHeader((LPCTSTR)CA2T(cdn_header->response_field));
+        header.MakeLower();
+        CString pattern = CA2T(cdn_header->pattern);
+        pattern.MakeLower();
+        if (pattern.GetLength() && header.GetLength() && 
+          header.Find(pattern) >= 0) {
+            found = true;
+            ret = true;
+            provider = cdn_header->name;
+        }
+      }
+      if (!found) {
+			  // look it up and look at the cname entries for the host
+			  hostent * dnsinfo = gethostbyname(CT2A(host));
+			  if( dnsinfo && !WSAGetLastError() )
+			  {
+				  // check all of the aliases
+				  CAtlList<CStringA> names;
+				  names.AddTail((LPCSTR)CT2A(host));
+				  names.AddTail(dnsinfo->h_name);
+				  char ** alias = dnsinfo->h_aliases;
+				  while( *alias )
+				  {
+					  names.AddTail(*alias);
+					  alias++;
+				  }
 
-				// also try a reverse-lookup on the IP
-				if( server.sin_addr.S_un.S_addr )
-				{
-					//DWORD addr = htonl(server.sin_addr.S_un.S_addr);
-					DWORD addr = server.sin_addr.S_un.S_addr;
-					dnsinfo = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-					if( dnsinfo && !WSAGetLastError() )
-					{
-						if( dnsinfo->h_name )
-							names.AddTail(dnsinfo->h_name);
+				  // also try a reverse-lookup on the IP
+				  if( w->peer.sin_addr.S_un.S_addr )
+				  {
+					  //DWORD addr = htonl(server.sin_addr.S_un.S_addr);
+					  DWORD addr = w->peer.sin_addr.S_un.S_addr;
+					  dnsinfo = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
+					  if( dnsinfo && !WSAGetLastError() )
+					  {
+						  if( dnsinfo->h_name )
+							  names.AddTail(dnsinfo->h_name);
 
-						alias = dnsinfo->h_aliases;
-						while( *alias )
-						{
-							names.AddTail(*alias);
-							alias++;
-						}
-					}
-				}
+						  alias = dnsinfo->h_aliases;
+						  while( *alias )
+						  {
+							  names.AddTail(*alias);
+							  alias++;
+						  }
+					  }
+				  }
 
-				POSITION pos = names.GetHeadPosition();
-				while( pos && !ret )
-				{				
-					CStringA name = names.GetNext(pos);
-					name.MakeLower();
+				  POSITION pos = names.GetHeadPosition();
+				  while( pos && !ret )
+				  {				
+					  CStringA name = names.GetNext(pos);
+					  name.MakeLower();
 
-					CDN_PROVIDER * cdn = cdnList;
-					while( !ret && cdn->pattern)
-					{
-						if( name.Find(cdn->pattern) > -1 )
-						{
-							ret = true;
-							provider = cdn->name;
-						}
+					  CDN_PROVIDER * cdn = cdnList;
+					  while( !ret && cdn->pattern)
+					  {
+						  if( name.Find(cdn->pattern) > -1 )
+						  {
+							  ret = true;
+							  provider = cdn->name;
+						  }
 
-						cdn++;
-					}
-				}
-			}
+						  cdn++;
+					  }
+				  }
+			  }
+      }
 			
 			// add it to the list of resolved names
 			EnterCriticalSection(&csCDN);
@@ -3415,14 +3434,9 @@ void CPagetestReporting::cdnLookupThread(DWORD index)
 	// do a single lookup for the entry that is our responsibility
 	if( index < cdnRequests.GetCount() )
 	{
-		CWinInetRequest * w = cdnRequests[index];
-
-		CString host = w->host;
-		host.MakeLower();
-
 		// we don't care about the result right now, it will get cached for later
 		CString provider;
-		IsCDN(host, w->peer, provider);
+		IsCDN(cdnRequests[index], provider);
 	}
 }
 

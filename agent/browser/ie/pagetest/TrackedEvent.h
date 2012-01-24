@@ -230,6 +230,7 @@ public:
 	virtual void Process(void);
 	virtual void CrackHeaders(void);
 	virtual void Decompress(void);
+  CString GetResponseHeader(CString field);
 	
 	HINTERNET		hRequest;
 	CString			scheme;		// http, https, ftp, etc.

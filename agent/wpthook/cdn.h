@@ -37,6 +37,12 @@ typedef struct {
   CStringA name;
 } CDN_PROVIDER;
 
+typedef struct {
+  CStringA response_field;
+  CStringA pattern;
+  CStringA name;
+} CDN_PROVIDER_HEADER;
+
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
@@ -74,4 +80,8 @@ CDN_PROVIDER cdnList[] = {
   {".gslb.taobao.com", "Taobao"},
   {".gslb.tbcache.com", "Alimama"},
   {"END_MARKER", "END_MARKER"}
+};
+
+CDN_PROVIDER_HEADER cdnHeaderList[] = {
+  {"server", "cloudflare", "Cloudflare"},
 };

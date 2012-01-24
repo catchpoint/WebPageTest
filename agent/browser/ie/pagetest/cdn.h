@@ -41,3 +41,13 @@ CDN_PROVIDER cdnList[] = {
   {".gslb.tbcache.com", _T("Alimama")},
 	{NULL, NULL}
 };
+
+typedef struct {
+  char * response_field;
+  char * pattern;
+  TCHAR * name;
+} CDN_PROVIDER_HEADER;
+
+CDN_PROVIDER_HEADER cdnHeaderList[] = {
+  {"server", "cloudflare", _T("Cloudflare")},
+};

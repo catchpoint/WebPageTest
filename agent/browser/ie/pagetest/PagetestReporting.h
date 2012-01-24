@@ -196,7 +196,7 @@ protected:
 	CStringA html;
 	pagespeed::Results* pagespeedResults;
 
-	bool IsCDN(CString host, SOCKADDR_IN &server, CString &provider);
+	bool IsCDN(CWinInetRequest * w, CString &provider);
 	CAtlList<CCDNEntry> cdnLookups;
 private:
 	void SaveUrls(void);

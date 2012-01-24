@@ -305,3 +305,23 @@ void CWinInetRequest::Decompress(void)
 		}
 	}
 }
+
+
+/*-----------------------------------------------------------------------------
+	Retrieve a specific header field
+-----------------------------------------------------------------------------*/
+CString CWinInetRequest::GetResponseHeader(CString field) {
+  CString value;
+	int headerPos = 0;
+	CString line = inHeaders.Tokenize(_T("\r\n"), headerPos).Trim();
+	while (value.IsEmpty() && headerPos >= 0) {
+		int separator = line.Find(_T(':'));
+    if (separator > 0){
+			CString tag = line.Left(separator).Trim();
+      if (!tag.CompareNoCase(field))
+			  value = line.Mid(separator + 1).Trim();
+    }
+		line = inHeaders.Tokenize(_T("\r\n"), headerPos).Trim();
+  }
+  return value;
+}
