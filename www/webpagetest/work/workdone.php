@@ -77,7 +77,7 @@ else
             $f = scandir($testPath);
             foreach( $f as $textFile )
             {
-                logMsg( "Checking $textFile\n" );
+                logMsg("Checking $textFile\n");
                 if( is_file("$testPath/$textFile") )
                 {
                     $parts = pathinfo($textFile);
@@ -93,7 +93,7 @@ else
                             unlink("$testPath/$textFile");
                         } else {
                             logMsg( "Compressing $testPath/$textFile\n" );
-                            
+
                             if( gz_compress("$testPath/$textFile") )
                                 unlink("$testPath/$textFile");
                         }
@@ -592,7 +592,6 @@ function ProcessHAR($testPath)
         }
         ksort($sortedEntries);
 
-
         // Iterate the entries
         foreach ($sortedEntries as $entind => $entry)
         {
@@ -651,7 +650,15 @@ function ProcessHAR($testPath)
                 $curPageData["startFull"] = $startedDateTime;
             }
 
-            $reqStartTime = getDeltaMilliseconds($curPageData["startFull"], $startedDateTime);
+            $reqStartTime = getDeltaMillisecondsFromISO6801Dates(
+                $curPageData["startFull"], $startedDateTime);
+            if ($reqStartTime < 0.0) {
+              logMalformedInput(
+                  "Negative start offset ($reqStartTime mS) for request.\n".
+                  "\$curPageData[\"startFull\"] = ".
+                  $curPageData["startFull"] . "\n".
+                  "\$startedDateTime =          " . $startedDateTime."\n");
+            }
             $reqBytesOut = abs($reqEnt['headersSize']) + abs($reqEnt['bodySize']);
             $reqBytesIn = abs($respEnt['headersSize']) + abs($respEnt['bodySize']);
             $reqObjectSize = abs($respEnt['bodySize']);
@@ -766,7 +773,6 @@ function ProcessHAR($testPath)
                 file_put_contents($curPageData["reportFileName"],
                     "      {$header['name']}: {$header['value']}\r\n", FILE_APPEND);
             }
-
             // Write the response raw data
             // TODO: Fill real data
             file_put_contents($curPageData["reportFileName"],
@@ -925,50 +931,69 @@ function ProcessHAR($testPath)
 }
 
 /**
- * Calculate the delta in milliseconds between two string dates
+ * Helper for GetDeltaMillisecondsFromISO6801Dates().  Finds the millisecond
+ * offset of an ISO8601 date.  Caller ensures that $dateString is a valid
+ * ISO8601 date.  An invalid date will cause the method to return 0.0 .
+ *
+ * We avoid checking that the date is well-formed because the only caller
+ * already checks this.  If you use this method, you should check the date
+ * for validity before calling this method or add a check at the start of
+ * this method.
+ *
+ * @param string $dateString An ISO8601 date string.
+ * @return double The millisecond offset of an ISO8601 date.
+ */
+function GetMillisecondsFromValidISO8601String($dateString) {
+  // The \d+ below are:
+  // Year, month, day, hour, minute, whole second, fractional part of a second.
+  if (!preg_match('/^\d+-\d+-\d+T\d+:\d+:\d+\.(\d+)/', $dateString, $matches)) {
+    // A valid ISO8601 date does that does not match the above expression
+    // has no fractional part of a second.  Examples:
+    // "1997", "1997-07", "1997-07-16", "1997-07-16T19:20+01:00"
+    // "1997-07-16T19:20-2:30", ""1997-07-16T19:20Z".
+    return 0.0;
+  }
+  $fractionOfSeconds = $matches[1];
+  $fractionalPartInSec = (double)("0.".$fractionOfSeconds);
+
+  // 1000.0 milliseconds in a second.
+  return 1000.0 * $fractionalPartInSec;
+}
+
+/**
+ * Calculate the delta in milliseconds between two ISO8601 string dates.
  *
  * @param before
  * @param after
  */
-function GetDeltaMilliseconds($before, $after)
-{
-    // Extract the date and milliseconds from the
-    if (!preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $before, $matches)) {
-      logMalformedInput("Failed to parse date: $before");
-      return UNKNOWN_TIME;
-    }
+function GetDeltaMillisecondsFromISO6801Dates($before, $after) {
+  // strtotime() parses the time into a UNIX timestamp, with a resolution of
+  // seconds.  Because all the built in PHP date/time methods have this
+  // limitation, we will pull out the microseconds ourselves using a regular
+  // expression.  The second parameter is the time to use for a date that does
+  // not have hours or minutes.  We assume that "1997" means the first instant
+  // of 1997, which is midnight on new years eve.
+  $beforeTimeSeconds = strtotime($before, "00:00");
+  $afterTimeSeconds = strtotime($after, "00:00");
+  if ($beforeTimeSeconds === False ||
+      $afterTimeSeconds  === False)
+    return NULL;
 
-    $millisBefore = (double)$matches[1] / 1000.0;
-
-    if (!preg_match("/^.*\.(\d+)[+-]\d\d:?\d\d$/", $after, $matches)) {
-      logMalformedInput("Failed to parse date: $after");
-      return UNKNOWN_TIME;
-    }
-
-    $millisAfter = (double)$matches[1] / 1000.0;
-
-    // Get the secs before & after
-    $secsBefore = (double)strtotime($before) + $millisBefore;
-    $secsAfter = (double)strtotime($after) + $millisAfter;
-
-    // Calculate the number of seconds between the two
-    $deltaSeconds = $secsAfter - $secsBefore;
-
-    // Turn the delta into millis, adding the millis delta
-    $deltaMillis = (int)($deltaSeconds*1000.0);
-
-    return $deltaMillis;
+  return 1000.0 * (double)($afterTimeSeconds - $beforeTimeSeconds)
+         + GetMillisecondsFromValidISO8601String($after)
+         - GetMillisecondsFromValidISO8601String($before);
 }
 
 /**
-* Remove sensitive data fields from HTTP headers (cookies and HTTP Auth)
-* 
-*/
+ * Remove sensitive data fields from HTTP headers (cookies and HTTP Auth)
+ *
+ */
 function RemoveSensitiveHeaders($file) {
     $patterns = array('/(cookie:[ ]*)([^\r\n]*)/i','/(authenticate:[ ]*)([^\r\n]*)/i');
     $data = file_get_contents($file);
     $data = preg_replace($patterns, '\1XXXXXX', $data);
     file_put_contents($file, $data);
 }
+
 ?>
 
