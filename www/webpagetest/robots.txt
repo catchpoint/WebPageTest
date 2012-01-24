@@ -2,8 +2,9 @@ User-agent: *
 Disallow: /result/
 Disallow: /testlog/
 Disallow: /testlog.php
-Allow: /
+Disallow: /forums/attachment.php
 Disallow: /results/
+Allow: /
 
 User-agent: Mediapartners-Google
 Allow: /
