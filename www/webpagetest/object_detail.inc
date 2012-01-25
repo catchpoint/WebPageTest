@@ -280,13 +280,23 @@ function FixUpRequestTimes(&$requests) {
             }
         }
         $req['load_end'] = $req['load_start'] + $req['load_ms'];
-        if ($req['ttfb_ms']) {
-            $req['ttfb_start'] = $req['load_start'];
-            $req['ttfb_end'] = $req['ttfb_start'] + $req['ttfb_ms'];
-            $req['download_start'] = $req['load_start'] + $req['ttfb_ms'];
-            $req['download_end'] = $req['load_end'];
-            $req['download_ms'] = $req['download_end'] - $req['download_start'];
-        }
+
+        // iOS agents do not have any way to get the time to first byte,
+        // so it may be unset.  In that case, treat the entire time from
+        // load_start to load_end as download time.
+        // TODO(skerner): Once we figure out how to get TTFB on iOS, remove
+        // this logic.
+        $ttfb_ms = isset($req['ttfb_ms']) ? $req['ttfb_ms'] : 0;
+
+        $req['ttfb_start'] = $req['load_start'];
+        $req['ttfb_end'] = $req['ttfb_start'] + $req['ttfb_ms'];
+
+        // The download state starts when TTFB ends, and stops when loading
+        // is done.
+        $req['download_start'] = $req['load_start'] + $ttfb_ms;
+        $req['download_end'] = $req['load_end'];
+        $req['download_ms'] = $req['download_end'] - $req['download_start'];
+
         $req['all_start'] = $all_start;
         $req['all_end'] = $req['load_end'];
         $req['all_ms'] = $all_ms;
