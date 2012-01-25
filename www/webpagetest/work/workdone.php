@@ -6,12 +6,12 @@ header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(60*5*10);
-ignore_user_abort(true);
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
 $done = $_REQUEST['done'];
 $id = $_REQUEST['id'];
 $har = $_REQUEST['har'];
+$testInfo_dirty = false;
 
 if( $_REQUEST['video'] )
 {
@@ -106,8 +106,10 @@ else
         if( gz_is_file("$testPath/testinfo.json") )
         {
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-            if( isset($testInfo) )
+            if( isset($testInfo) ) {
                 $testInfo['last_updated'] = $time;
+                $testInfo_dirty = true;
+            }
         }
             
         // see if the test is complete
@@ -123,8 +125,10 @@ else
                     $beaconUrl .= '?key=' . trim($settings['showslow_key']);
                 if( $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
                     unset($beaconUrl);
-                else
+                else {
                     $testInfo['showslow'] = 1;
+                    $testInfo_dirty = true;
+                }
             }
 
             // do pre-complete post-processing
@@ -155,6 +159,8 @@ else
                 {
                     $testInfo['completed'] = $time;
                     $testInfo['medianRun'] = $medianRun;
+                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                    $testInfo_dirty = false;
                     
                     $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
                     if( $lockFile )
@@ -270,7 +276,7 @@ else
             ArchiveTest($id);
         }
         
-        if( isset($testInfo) )
+        if( isset($testInfo) && $testInfo_dirty )
             gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
     }
     else
