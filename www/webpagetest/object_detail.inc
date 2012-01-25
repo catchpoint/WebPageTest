@@ -238,24 +238,24 @@ function MergeDnsAndConnectionTimes($requests) {
 }
 
 /**
-* Compute consistent request time fields.
-*
-* Field keys:
-*   all      - Includes all activity (e.g. dns through download).
-*              all_ms is the sum of all the parts rather than (end - start).
-*   dns      - DNS look-up attributed to this request.
-*   connect  - TCP connection handshake.
-*   ssl      - SSL negotiation.
-*   load     - Includes request start through download end.
-*   ttfb     - Time to first (downloaded) byte.
-*   download - Time to download all bytes.
-*
-* For each key, define the following fields:
-*   _start - Milliseconds elapsed since test start.
-*   _end   - Milliseconds elapsed since test start.
-*   _ms    - (_end - _start)
-*
-*/
+ * Compute consistent request time fields.
+ *
+ * Field keys:
+ *   all      - Includes all activity (e.g. dns through download).
+ *              all_ms is the sum of all the parts rather than (end - start).
+ *   dns      - DNS look-up attributed to this request.
+ *   connect  - TCP connection handshake.
+ *   ssl      - SSL negotiation.
+ *   load     - Includes request start through download end.
+ *   ttfb     - Time to first (downloaded) byte.
+ *   download - Time to download all bytes.
+ *
+ * For each key, define the following fields:
+ *   _start - Milliseconds elapsed since test start.
+ *   _end   - Milliseconds elapsed since test start.
+ *   _ms    - (_end - _start)
+ *
+ */
 function FixUpRequestTimes(&$requests) {
     $requests = MergeDnsAndConnectionTimes($requests);
     foreach($requests as &$req) {
