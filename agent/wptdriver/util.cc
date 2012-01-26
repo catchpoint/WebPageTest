@@ -567,3 +567,13 @@ CString HashFileMD5(CString file) {
   }
   return hash_result;
 }
+
+/*-----------------------------------------------------------------------------
+  See if the given file exists
+-----------------------------------------------------------------------------*/
+bool FileExists(CString file) {
+  bool ret = false;
+  if (GetFileAttributes(file) != INVALID_FILE_ATTRIBUTES)
+    ret = true;
+  return ret;
+}

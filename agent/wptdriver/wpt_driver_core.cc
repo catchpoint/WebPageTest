@@ -38,6 +38,8 @@ const TCHAR * BROWSERS[] = {
   _T("iexplore.exe")
 };
 
+const DWORD SOFTWARE_INSTALL_RETRY_DELAY = 30000; // try every 30 seconds
+
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
 
@@ -260,7 +262,11 @@ void WptDriverCore::Init(void){
   KillBrowsers();
 
   _status.Set(_T("Installing software..."));
-  _settings.UpdateSoftware();
+  while( !_settings.UpdateSoftware() && !_exit ) {
+    _status.Set(_T("Software install failed, waiting to try again..."));
+    Sleep(SOFTWARE_INSTALL_RETRY_DELAY);
+    _status.Set(_T("Installing software..."));
+  }
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();

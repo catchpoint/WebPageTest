@@ -210,8 +210,8 @@ bool WptSettings::SetBrowser(CString browser) {
 /*-----------------------------------------------------------------------------
   Update the various browsers
 -----------------------------------------------------------------------------*/
-void WptSettings::UpdateSoftware() {
-  _software_update.UpdateSoftware();
+bool WptSettings::UpdateSoftware() {
+  return _software_update.UpdateSoftware();
 }
 
 /*-----------------------------------------------------------------------------

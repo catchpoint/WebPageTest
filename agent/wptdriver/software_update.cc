@@ -34,18 +34,24 @@ SoftwareUpdate::~SoftwareUpdate(void) {
 -----------------------------------------------------------------------------*/
 void SoftwareUpdate::LoadSettings(CString settings_ini) {
   TCHAR sections[10000];
-  TCHAR installer[1024];
+  TCHAR buff[1024];
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Software"), NULL, 
-        installer, _countof(installer), settings_ini)) {
-    _software_url = installer;
+        buff, _countof(buff), settings_ini)) {
+    _software_url = buff;
   }
   if (GetPrivateProfileSectionNames(sections, _countof(sections), 
       settings_ini)) {
     TCHAR * section = sections;
     while(lstrlen(section)) {
-      if (GetPrivateProfileString(section, _T("Installer"), NULL, installer, 
-          _countof(installer), settings_ini)) {
-        _browsers.AddTail(installer);
+      if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
+          _countof(buff), settings_ini)) {
+        BrowserInfo info;
+        info._installer = buff;
+        if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
+            _countof(buff), settings_ini)) {
+          info._exe = buff;
+        }
+        _browsers.AddTail(info);
       }
       section += lstrlen(section) + 1;
     }
@@ -54,19 +60,20 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void SoftwareUpdate::UpdateSoftware(void) {
+bool SoftwareUpdate::UpdateSoftware(void) {
+  bool ok = true;
   if (TimeToCheck()) {
-    UpdateBrowsers();
-    if (_software_url.GetLength()) {
+    ok = UpdateBrowsers();
+    if (ok && _software_url.GetLength()) {
       CString info = HttpGetText(_software_url);
       if (info.GetLength()) {
         CString app, version, command, file_url, md5;
         int token_position = 0;
         CString line = info.Tokenize(_T("\r\n"), token_position).Trim();
-        while (token_position >= 0) {
+        while (ok && token_position >= 0) {
           if (line.Left(1) == _T('[')) {
             if (app.GetLength()) {
-              InstallSoftware(app, file_url, md5, version, command);
+              ok = InstallSoftware(app, file_url, md5, version, command);
             }
             app = line.Trim(_T("[] \t"));
             version.Empty();
@@ -90,25 +97,27 @@ void SoftwareUpdate::UpdateSoftware(void) {
           }
           line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
-        if (app.GetLength()) {
-          InstallSoftware(app, file_url, md5, version, command);
+        if (ok && app.GetLength()) {
+          ok = InstallSoftware(app, file_url, md5, version, command);
         }
       }
     }
   }
+  return ok;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void SoftwareUpdate::UpdateBrowsers(void) {
+bool SoftwareUpdate::UpdateBrowsers(void) {
+  bool ok = true;
   WptTrace(loglevel::kFunction,
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
   POSITION pos = _browsers.GetHeadPosition();
-  while (pos) {
-    bool ok = false;
+  while (ok && pos) {
     DWORD update = 1;
     POSITION current_pos = pos;
-    CString url = _browsers.GetNext(pos).Trim();
+    BrowserInfo browser_info = _browsers.GetNext(pos);
+    CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
       CString info = HttpGetText(url);
       if (info.GetLength()) {
@@ -137,6 +146,9 @@ void SoftwareUpdate::UpdateBrowsers(void) {
         }
 
         ok = InstallSoftware(browser, file_url, md5, version, command);
+        if (ok && browser_info._exe.GetLength()) {
+          ok = FileExists(browser_info._exe);
+        }
       }
     }
 
@@ -148,6 +160,7 @@ void SoftwareUpdate::UpdateBrowsers(void) {
   }
   WptTrace(loglevel::kFunction,
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers complete\n"));
+  return ok;
 }
 
 /*-----------------------------------------------------------------------------
@@ -155,7 +168,7 @@ void SoftwareUpdate::UpdateBrowsers(void) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                                     CString version, CString command) {
-  bool ok = false;
+  bool ok = true;
 
   WptTrace(loglevel::kFunction,
             _T("[wptdriver] SoftwareUpdate::InstallSoftware - %s\n"),
@@ -179,6 +192,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
 
       // download and install it
       if (install) {
+        ok = false;
         DeleteDirectory(_directory, false);
         int file_pos = file_url.ReverseFind(_T('/'));
         if (file_pos > 0) {
@@ -240,8 +254,6 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
           RegSetValueEx(key, app, 0, REG_SZ, (const LPBYTE)(LPCTSTR)version, 
                         (version.GetLength() + 1) * sizeof(TCHAR));
         }
-      } else {
-        ok = true;
       }
 
       RegCloseKey(key);

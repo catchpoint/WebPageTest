@@ -64,3 +64,4 @@ bool IsBrowserDocument(HWND wnd);
 CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);
 CString HashFileMD5(CString file);
+bool FileExists(CString file);
