@@ -65,6 +65,8 @@
 #ifndef _XIMAWMF_H
 #define _XIMAWMF_H
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_WMF && CXIMAGE_SUPPORT_WINDOWS
 
 class CxImageWMF: public CxImage

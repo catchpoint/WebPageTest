@@ -1,6 +1,6 @@
 // xImaInt.cpp : interpolation functions
 /* 02/2004 - Branko Brevensek 
- * CxImage version 5.99c 17/Oct/2004 - Davide Pizzolato - www.xdp.it
+ * CxImage version 7.0.1 07/Jan/2011 - Davide Pizzolato - www.xdp.it
  */
 
 #include "ximage.h"
@@ -20,7 +20,7 @@
  *
  *  \author ***bd*** 2.2004
  */
-void CxImage::OverflowCoordinates(long &x, long &y, OverflowMethod const ofMethod)
+void CxImage::OverflowCoordinates(int32_t &x, int32_t &y, OverflowMethod const ofMethod)
 {
   if (IsInside(x,y)) return;  //if pixel is within bounds, no change
   switch (ofMethod) {
@@ -99,7 +99,7 @@ void CxImage::OverflowCoordinates(float &x, float &y, OverflowMethod const ofMet
  * \return color : color of pixel
  * \author ***bd*** 2.2004
  */
-RGBQUAD CxImage::GetPixelColorWithOverflow(long x, long y, OverflowMethod const ofMethod, RGBQUAD* const rplColor)
+RGBQUAD CxImage::GetPixelColorWithOverflow(int32_t x, int32_t y, OverflowMethod const ofMethod, RGBQUAD* const rplColor)
 {
   RGBQUAD color;          //color to return
   if ((!IsInside(x,y)) || pDib==NULL) {     //is pixel within bouns?:
@@ -129,8 +129,8 @@ RGBQUAD CxImage::GetPixelColorWithOverflow(long x, long y, OverflowMethod const 
         return color;
       case OM_BACKGROUND:
 		  //return background color (if it exists, otherwise input value)
-		  if (info.nBkgndIndex != -1) {
-			  if (head.biBitCount<24) color = GetPaletteColor((BYTE)info.nBkgndIndex);
+		  if (info.nBkgndIndex >= 0) {
+			  if (head.biBitCount<24) color = GetPaletteColor((uint8_t)info.nBkgndIndex);
 			  else color = info.nBkgndColor;
 		  }//if
 		  return color;
@@ -190,15 +190,15 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
   RGBQUAD* const rplColor)
 {
   //calculate nearest pixel
-  int xi=(int)(x); if (x<0) xi--;   //these replace (incredibly slow) floor (Visual c++ 2003, AMD Athlon)
-  int yi=(int)(y); if (y<0) yi--;
+  int32_t xi=(int32_t)(x); if (x<0) xi--;   //these replace (incredibly slow) floor (Visual c++ 2003, AMD Athlon)
+  int32_t yi=(int32_t)(y); if (y<0) yi--;
   RGBQUAD color;                    //calculated colour
 
   switch (inMethod) {
     case IM_NEAREST_NEIGHBOUR:
-      return GetPixelColorWithOverflow((long)(x+0.5f), (long)(y+0.5f), ofMethod, rplColor);
+      return GetPixelColorWithOverflow((int32_t)(x+0.5f), (int32_t)(y+0.5f), ofMethod, rplColor);
     default: {
-      //bilinear interpolation
+      //IM_BILINEAR: bilinear interpolation
       if (xi<-1 || xi>=head.biWidth || yi<-1 || yi>=head.biHeight) {  //all 4 points are outside bounds?:
         switch (ofMethod) {
           case OM_COLOR: case OM_TRANSPARENT: case OM_BACKGROUND:
@@ -207,35 +207,35 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
           default:
             //recalculate coordinates and use faster method later on
             OverflowCoordinates(x,y,ofMethod);
-            xi=(int)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
-            yi=(int)(y); if (y<0) yi--;
+            xi=(int32_t)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
+            yi=(int32_t)(y); if (y<0) yi--;
         }//switch
       }//if
       //get four neighbouring pixels
       if ((xi+1)<head.biWidth && xi>=0 && (yi+1)<head.biHeight && yi>=0 && head.biClrUsed==0) {
         //all pixels are inside RGB24 image... optimize reading (and use fixed point arithmetic)
-        WORD wt1=(WORD)((x-xi)*256.0f), wt2=(WORD)((y-yi)*256.0f);
-        WORD wd=wt1*wt2>>8;
-        WORD wb=wt1-wd;
-        WORD wc=wt2-wd;
-        WORD wa=256-wt1-wc;
-        WORD wrr,wgg,wbb;
-        BYTE *pxptr=(BYTE*)info.pImage+yi*info.dwEffWidth+xi*3;
+        uint16_t wt1=(uint16_t)((x-xi)*256.0f), wt2=(uint16_t)((y-yi)*256.0f);
+        uint16_t wd=wt1*wt2>>8;
+        uint16_t wb=wt1-wd;
+        uint16_t wc=wt2-wd;
+        uint16_t wa=256-wt1-wc;
+        uint16_t wrr,wgg,wbb;
+        uint8_t *pxptr=(uint8_t*)info.pImage+yi*info.dwEffWidth+xi*3;
         wbb=wa*(*pxptr++); wgg=wa*(*pxptr++); wrr=wa*(*pxptr++);
         wbb+=wb*(*pxptr++); wgg+=wb*(*pxptr++); wrr+=wb*(*pxptr);
         pxptr+=(info.dwEffWidth-5); //move to next row
         wbb+=wc*(*pxptr++); wgg+=wc*(*pxptr++); wrr+=wc*(*pxptr++); 
         wbb+=wd*(*pxptr++); wgg+=wd*(*pxptr++); wrr+=wd*(*pxptr); 
-        color.rgbRed=(BYTE) (wrr>>8); color.rgbGreen=(BYTE) (wgg>>8); color.rgbBlue=(BYTE) (wbb>>8);
+        color.rgbRed=(uint8_t) (wrr>>8); color.rgbGreen=(uint8_t) (wgg>>8); color.rgbBlue=(uint8_t) (wbb>>8);
 #if CXIMAGE_SUPPORT_ALPHA
         if (pAlpha) {
-          WORD waa;
+          uint16_t waa;
           //image has alpha layer... we have to do the same for alpha data
           pxptr=AlphaGetPointer(xi,yi);                           //pointer to first byte
           waa=wa*(*pxptr++); waa+=wb*(*pxptr);   //first two pixels
           pxptr+=(head.biWidth-1);                                //move to next row
           waa+=wc*(*pxptr++); waa+=wd*(*pxptr);   //and second row pixels
-          color.rgbReserved=(BYTE) (waa>>8);
+          color.rgbReserved=(uint8_t) (waa>>8);
         } else
 #endif
 		{ //Alpha not supported or no alpha at all
@@ -255,17 +255,14 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
         rgb12=GetPixelColorWithOverflow(xi, yi+1, ofMethod, rplColor);
         rgb22=GetPixelColorWithOverflow(xi+1, yi+1, ofMethod, rplColor);
         //calculate linear interpolation
-        color.rgbRed=(BYTE) (a*rgb11.rgbRed+b*rgb21.rgbRed+c*rgb12.rgbRed+d*rgb22.rgbRed);
-        color.rgbGreen=(BYTE) (a*rgb11.rgbGreen+b*rgb21.rgbGreen+c*rgb12.rgbGreen+d*rgb22.rgbGreen);
-        color.rgbBlue=(BYTE) (a*rgb11.rgbBlue+b*rgb21.rgbBlue+c*rgb12.rgbBlue+d*rgb22.rgbBlue);
+        color.rgbRed=(uint8_t) (a*rgb11.rgbRed+b*rgb21.rgbRed+c*rgb12.rgbRed+d*rgb22.rgbRed);
+        color.rgbGreen=(uint8_t) (a*rgb11.rgbGreen+b*rgb21.rgbGreen+c*rgb12.rgbGreen+d*rgb22.rgbGreen);
+        color.rgbBlue=(uint8_t) (a*rgb11.rgbBlue+b*rgb21.rgbBlue+c*rgb12.rgbBlue+d*rgb22.rgbBlue);
 #if CXIMAGE_SUPPORT_ALPHA
-        if (AlphaIsValid())
-			color.rgbReserved=(BYTE) (a*rgb11.rgbReserved+b*rgb21.rgbReserved+c*rgb12.rgbReserved+d*rgb22.rgbReserved);
-		else
+		color.rgbReserved=(uint8_t) (a*rgb11.rgbReserved+b*rgb21.rgbReserved+c*rgb12.rgbReserved+d*rgb22.rgbReserved);
+#else
+		color.rgbReserved = 0;
 #endif
-		{ //Alpha not supported or no alpha at all
-			color.rgbReserved = 0;
-		}
         return color;
       }//if
     }//default
@@ -282,6 +279,8 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
 	case IM_QUADRATIC:
 	case IM_MITCHELL:
 	case IM_CATROM:
+	case IM_HANNING:
+	case IM_POWER:
       //bicubic interpolation(s)
       if (((xi+2)<0) || ((xi-1)>=head.biWidth) || ((yi+2)<0) || ((yi-1)>=head.biHeight)) { //all points are outside bounds?:
         switch (ofMethod) {
@@ -292,18 +291,18 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
           default:
             //recalculate coordinates and use faster method later on
             OverflowCoordinates(x,y,ofMethod);
-            xi=(int)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
-            yi=(int)(y); if (y<0) yi--;
+            xi=(int32_t)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
+            yi=(int32_t)(y); if (y<0) yi--;
         }//switch
       }//if
 
       //some variables needed from here on
-      int xii,yii;                      //x any y integer indexes for loops
+      int32_t xii,yii;                      //x any y integer indexes for loops
       float kernel, kernelyc;           //kernel cache
       float kernelx[12], kernely[4];    //precalculated kernel values
       float rr,gg,bb,aa;                //accumulated color values
       //calculate multiplication factors for all pixels
-	  int i;
+	  int32_t i;
       switch (inMethod) {
         case IM_BICUBIC:
           for (i=0; i<4; i++) {
@@ -383,21 +382,29 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
             kernely[i]=KernelCatrom((float)(yi+i-1-y));
           }//for i
           break;
+        case IM_HANNING:
+          for (i=0; i<4; i++) {
+            kernelx[i]=KernelHanning((float)(xi+i-1-x));
+            kernely[i]=KernelHanning((float)(yi+i-1-y));
+          }//for i
+          break;
+        case IM_POWER:
+          for (i=0; i<4; i++) {
+            kernelx[i]=KernelPower((float)(xi+i-1-x));
+            kernely[i]=KernelPower((float)(yi+i-1-y));
+          }//for i
+          break;
       }//switch
       rr=gg=bb=aa=0;
       if (((xi+2)<head.biWidth) && xi>=1 && ((yi+2)<head.biHeight) && (yi>=1) && !IsIndexed()) {
         //optimized interpolation (faster pixel reads) for RGB24 images with all pixels inside bounds
-        BYTE *pxptr;
-#if CXIMAGE_SUPPORT_ALPHA
-        BYTE *pxptra;
-#endif
         for (yii=yi-1; yii<yi+3; yii++) {
-          pxptr=(BYTE *)BlindGetPixelPointer(xi-1, yii);    //calculate pointer to first byte in row
+          uint8_t *pxptr=(uint8_t *)BlindGetPixelPointer(xi-1, yii);    //calculate pointer to first byte in row
           kernelyc=kernely[yii-(yi-1)];
 #if CXIMAGE_SUPPORT_ALPHA
           if (AlphaIsValid()) {
-            //alpha is supported and valid (optimized bicubic int. for image with alpha)
-            pxptra=AlphaGetPointer(xi-1, yii);
+            //alpha is supported and valid (optimized bicubic int32_t. for image with alpha)
+            uint8_t *pxptra=AlphaGetPointer(xi-1, yii);
             kernel=kernelyc*kernelx[0];
             bb+=kernel*(*pxptr++); gg+=kernel*(*pxptr++); rr+=kernel*(*pxptr++); aa+=kernel*(*pxptra++);
             kernel=kernelyc*kernelx[1];
@@ -408,7 +415,7 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
             bb+=kernel*(*pxptr++); gg+=kernel*(*pxptr++); rr+=kernel*(*pxptr); aa+=kernel*(*pxptra);
           } else
 #endif
-          //alpha not supported or valid (optimized bicubic int. for no alpha channel)
+          //alpha not supported or valid (optimized bicubic int32_t. for no alpha channel)
           {
             kernel=kernelyc*kernelx[0];
             bb+=kernel*(*pxptr++); gg+=kernel*(*pxptr++); rr+=kernel*(*pxptr++);
@@ -438,17 +445,14 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
         }//yii
       }//if
       //for all colors, clip to 0..255 and assign to RGBQUAD
-      if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(BYTE) rr;
-      if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(BYTE) gg;
-      if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(BYTE) bb;
+      if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(uint8_t) rr;
+      if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(uint8_t) gg;
+      if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(uint8_t) bb;
 #if CXIMAGE_SUPPORT_ALPHA
-      if (AlphaIsValid()) {
-        if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(BYTE) aa;
-      } else
+      if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(uint8_t) aa;
+#else
+	  color.rgbReserved = 0;
 #endif
-		{ //Alpha not supported or no alpha at all
-			color.rgbReserved = 0;
-		}
       return color;
     case IM_LANCZOS:
       //lanczos window (16*16) sinc interpolation
@@ -462,8 +466,8 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
           default:
             //recalculate coordinates and use faster method later on
             OverflowCoordinates(x,y,ofMethod);
-            xi=(int)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
-            yi=(int)(y); if (y<0) yi--;
+            xi=(int32_t)(x); if (x<0) xi--;   //x and/or y have changed ... recalculate xi and yi
+            yi=(int32_t)(y); if (y<0) yi--;
         }//switch
       }//if
 
@@ -472,17 +476,13 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
 
       if (((xi+6)<head.biWidth) && ((xi-5)>=0) && ((yi+6)<head.biHeight) && ((yi-5)>=0) && !IsIndexed()) {
         //optimized interpolation (faster pixel reads) for RGB24 images with all pixels inside bounds
-        BYTE *pxptr;
-#if CXIMAGE_SUPPORT_ALPHA
-        BYTE *pxptra;
-#endif
         for (yii=yi-5; yii<yi+7; yii++) {
-          pxptr=(BYTE *)BlindGetPixelPointer(xi-5, yii);    //calculate pointer to first byte in row
+          uint8_t *pxptr=(uint8_t *)BlindGetPixelPointer(xi-5, yii);    //calculate pointer to first byte in row
           kernelyc=KernelLanczosSinc((float)(yii-y),6.0f);
 #if CXIMAGE_SUPPORT_ALPHA
           if (AlphaIsValid()) {
             //alpha is supported and valid
-            pxptra=AlphaGetPointer(xi-1, yii);
+            uint8_t *pxptra=AlphaGetPointer(xi-1, yii);
             for (xii=0; xii<12; xii++) {
               kernel=kernelyc*kernelx[xii];
               bb+=kernel*(*pxptr++); gg+=kernel*(*pxptr++); rr+=kernel*(*pxptr++); aa+=kernel*(*pxptra++);
@@ -515,17 +515,14 @@ RGBQUAD CxImage::GetPixelColorInterpolated(
         }//yii
       }//if
       //for all colors, clip to 0..255 and assign to RGBQUAD
-      if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(BYTE) rr;
-      if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(BYTE) gg;
-      if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(BYTE) bb;
+      if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(uint8_t) rr;
+      if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(uint8_t) gg;
+      if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(uint8_t) bb;
 #if CXIMAGE_SUPPORT_ALPHA
-      if (AlphaIsValid()) {
-        if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(BYTE) aa;   
-      } else
+      if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(uint8_t) aa;   
+#else
+	  color.rgbReserved = 0;
 #endif
-		{ //Alpha not supported or no alpha at all
-			color.rgbReserved = 0;
-		}
       return color;
   }//switch
 }
@@ -582,16 +579,16 @@ RGBQUAD CxImage::GetAreaColorInterpolated(
 	} else {
 		//area is wider and/or taller than one pixel:
 		CxRect2 area(xc-w/2.0f, yc-h/2.0f, xc+w/2.0f, yc+h/2.0f);   //area
-		int xi1=(int)(area.botLeft.x+0.49999999f);                //low x
-		int yi1=(int)(area.botLeft.y+0.49999999f);                //low y
+		int32_t xi1=(int32_t)(area.botLeft.x+0.49999999f);                //low x
+		int32_t yi1=(int32_t)(area.botLeft.y+0.49999999f);                //low y
 		
 		
-		int xi2=(int)(area.topRight.x+0.5f);                      //top x
-		int yi2=(int)(area.topRight.y+0.5f);                      //top y (for loops)
+		int32_t xi2=(int32_t)(area.topRight.x+0.5f);                      //top x
+		int32_t yi2=(int32_t)(area.topRight.y+0.5f);                      //top y (for loops)
 		
 		float rr,gg,bb,aa;                                        //red, green, blue and alpha components
 		rr=gg=bb=aa=0;
-		int x,y;                                                  //loop counters
+		int32_t x,y;                                                  //loop counters
 		float s=0;                                                //surface of all pixels
 		float cps;                                                //surface of current crosssection
 		if (h>1 && w>1) {
@@ -652,13 +649,13 @@ RGBQUAD CxImage::GetAreaColorInterpolated(
 		
 		s=area.Surface();
 		rr/=s; gg/=s; bb/=s; aa/=s;
-		if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(BYTE) rr;
-		if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(BYTE) gg;
-		if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(BYTE) bb;
+		if (rr>255) rr=255; if (rr<0) rr=0; color.rgbRed=(uint8_t) rr;
+		if (gg>255) gg=255; if (gg<0) gg=0; color.rgbGreen=(uint8_t) gg;
+		if (bb>255) bb=255; if (bb<0) bb=0; color.rgbBlue=(uint8_t) bb;
 #if CXIMAGE_SUPPORT_ALPHA
-		if (AlphaIsValid()) {
-			if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(BYTE) aa;
-		}//if
+		if (aa>255) aa=255; if (aa<0) aa=0; color.rgbReserved=(uint8_t) aa;
+#else
+		color.rgbReserved = 0;
 #endif
 	}//if
 	return color;
@@ -809,6 +806,12 @@ float CxImage::KernelHermite(const float x)
 //	return(0.5f+0.5f*(float)cos(PI*x));
 }
 ////////////////////////////////////////////////////////////////////////////////
+float CxImage::KernelHanning(const float x)
+{
+	if (fabs(x)>1) return 0.0f;
+	return (0.5f+0.5f*(float)cos(PI*x))*((float)sin(PI*x)/(PI*x));
+}
+////////////////////////////////////////////////////////////////////////////////
 float CxImage::KernelHamming(const float x)
 {
 	if (x < -1.0f)
@@ -839,7 +842,7 @@ float CxImage::KernelBessel_J1(const float x)
 {
 	double p, q;
 	
-	register long i;
+	register int32_t i;
 	
 	static const double
 	Pone[] =
@@ -881,7 +884,7 @@ float CxImage::KernelBessel_P1(const float x)
 {
 	double p, q;
 	
-	register long i;
+	register int32_t i;
 	
 	static const double
 	Pone[] =
@@ -917,7 +920,7 @@ float CxImage::KernelBessel_Q1(const float x)
 {
 	double p, q;
 	
-	register long i;
+	register int32_t i;
 	
 	static const double
 	Pone[] =
@@ -1030,6 +1033,12 @@ float CxImage::KernelCatrom(const float x)
 	if (x < 2.0)
 		return(0.5f*(4.0f+x*(-8.0f+x*(5.0f-x))));
 	return(0.0f);
+}
+////////////////////////////////////////////////////////////////////////////////
+float CxImage::KernelPower(const float x, const float a)
+{
+	if (fabs(x)>1) return 0.0f;
+	return (1.0f - (float)fabs(pow(x,a)));
 }
 ////////////////////////////////////////////////////////////////////////////////
 

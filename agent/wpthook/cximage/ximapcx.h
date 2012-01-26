@@ -12,6 +12,8 @@
 #if !defined(__ximaPCX_h)
 #define __ximaPCX_h
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_PCX
 
 class CxImagePCX: public CxImage

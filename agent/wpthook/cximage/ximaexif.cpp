@@ -2,7 +2,7 @@
  * File:	ximaexif.cpp
  * Purpose:	EXIF reader
  * 18/Aug/2002 Davide Pizzolato - www.xdp.it
- * CxImage version 5.99c 17/Oct/2004
+ * CxImage version 7.0.1 07/Jan/2011
  * based on jhead-1.8 by Matthias Wandel <mwandel(at)rim(dot)net>
  */
 
@@ -14,31 +14,31 @@
 ////////////////////////////////////////////////////////////////////////////////
 CxImageJPG::CxExifInfo::CxExifInfo(EXIFINFO* info)
 {
-	if (info) {
-		m_exifinfo = info;
-		freeinfo = false;
-	} else {
-		m_exifinfo = new EXIFINFO;
-		memset(m_exifinfo,0,sizeof(EXIFINFO));
-		freeinfo = true;
-	}
+  if (info) {
+    m_exifinfo = info;
+    freeinfo = false;
+  } else {
+    m_exifinfo = new EXIFINFO;
+    memset(m_exifinfo,0,sizeof(EXIFINFO));
+    freeinfo = true;
+  }
 
-	m_szLastError[0]='\0';
-	ExifImageWidth = MotorolaOrder = 0;
-	SectionsRead=0;
-	memset(&Sections, 0, MAX_SECTIONS * sizeof(Section_t));
+  m_szLastError[0]='\0';
+  ExifImageWidth = MotorolaOrder = 0;
+  SectionsRead=0;
+  memset(&Sections, 0, MAX_SECTIONS * sizeof(Section_t));
 }
 ////////////////////////////////////////////////////////////////////////////////
 CxImageJPG::CxExifInfo::~CxExifInfo()
 {
-	for(int i=0;i<MAX_SECTIONS;i++) if(Sections[i].Data) free(Sections[i].Data);
-	if (freeinfo) delete m_exifinfo;
+  for(int32_t i=0;i<MAX_SECTIONS;i++) if(Sections[i].Data) free(Sections[i].Data);
+  if (freeinfo) delete m_exifinfo;
 }
 ////////////////////////////////////////////////////////////////////////////////
-bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
+bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int32_t nReadMode)
 {
-    int a;
-    int HaveCom = FALSE;
+    int32_t a;
+    int32_t HaveCom = FALSE;
 
     a = hFile->GetC();
 
@@ -47,14 +47,14 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
     }
 
     for(;;){
-        int itemlen;
-        int marker = 0;
-        int ll,lh, got;
-        BYTE * Data;
+        int32_t itemlen;
+        int32_t marker = 0;
+        int32_t ll,lh, got;
+        uint8_t * Data;
 
         if (SectionsRead >= MAX_SECTIONS){
-			strcpy(m_szLastError,"Too many sections in jpg file");
-			return false;
+      strcpy(m_szLastError,"Too many sections in jpg file");
+      return false;
         }
 
         for (a=0;a<7;a++){
@@ -70,7 +70,7 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
         if (marker == 0xff){
             // 0xff is legal padding, but if we get that many, something's wrong.
             strcpy(m_szLastError,"too many padding bytes!");
-			return false;
+      return false;
         }
 
         Sections[SectionsRead].Type = marker;
@@ -83,26 +83,26 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
 
         if (itemlen < 2){
             strcpy(m_szLastError,"invalid marker");
-			return false;
+      return false;
         }
 
         Sections[SectionsRead].Size = itemlen;
 
-        Data = (BYTE *)malloc(itemlen);
+        Data = (uint8_t *)malloc(itemlen);
         if (Data == NULL){
             strcpy(m_szLastError,"Could not allocate memory");
-			return false;
+      return false;
         }
         Sections[SectionsRead].Data = Data;
 
         // Store first two pre-read bytes.
-        Data[0] = (BYTE)lh;
-        Data[1] = (BYTE)ll;
+        Data[0] = (uint8_t)lh;
+        Data[1] = (uint8_t)ll;
 
-        got = (int)hFile->Read(Data+2, 1, itemlen-2); // Read the whole section.
+        got = hFile->Read(Data+2, 1, itemlen-2); // Read the whole section.
         if (got != itemlen-2){
             strcpy(m_szLastError,"Premature end of file?");
-			return false;
+      return false;
         }
         SectionsRead += 1;
 
@@ -111,7 +111,7 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
             case M_SOS:   // stop before hitting compressed data 
                 // If reading entire image is requested, read the rest of the data.
                 if (nReadMode & EXIF_READ_IMAGE){
-                    int cp, ep, size;
+                    int32_t cp, ep, size;
                     // Determine how much file is left.
                     cp = hFile->Tell();
                     hFile->Seek(0, SEEK_END);
@@ -119,16 +119,16 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
                     hFile->Seek(cp, SEEK_SET);
 
                     size = ep-cp;
-                    Data = (BYTE *)malloc(size);
+                    Data = (uint8_t *)malloc(size);
                     if (Data == NULL){
                         strcpy(m_szLastError,"could not allocate data for entire image");
-						return false;
+            return false;
                     }
 
-                    got = (int)hFile->Read(Data, 1, size);
+                    got = hFile->Read(Data, 1, size);
                     if (got != size){
                         strcpy(m_szLastError,"could not read the rest of the image");
-						return false;
+            return false;
                     }
 
                     Sections[SectionsRead].Data = Data;
@@ -146,7 +146,7 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
                 if (HaveCom || ((nReadMode & EXIF_READ_EXIF) == 0)){
                     // Discard this section.
                     free(Sections[--SectionsRead].Data);
-					Sections[SectionsRead].Data=0;
+          Sections[SectionsRead].Data=0;
                 }else{
                     process_COM(Data, itemlen);
                     HaveCom = TRUE;
@@ -159,7 +159,7 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
                 // this program will re-create this marker on absence of exif marker.
                 // hence no need to keep the copy from the file.
                 free(Sections[--SectionsRead].Data);
-				Sections[SectionsRead].Data=0;
+        Sections[SectionsRead].Data=0;
                 break;
 
             case M_EXIF:
@@ -167,11 +167,11 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
                 // that uses marker 31 for non exif stuff.  Thus make sure 
                 // it says 'Exif' in the section before treating it as exif.
                 if ((nReadMode & EXIF_READ_EXIF) && memcmp(Data+2, "Exif", 4) == 0){
-                    m_exifinfo->IsExif = process_EXIF((BYTE *)Data+2, itemlen);
+                    m_exifinfo->IsExif = process_EXIF((uint8_t *)Data+2, itemlen);
                 }else{
                     // Discard this section.
                     free(Sections[--SectionsRead].Data);
-					Sections[SectionsRead].Data=0;
+          Sections[SectionsRead].Data=0;
                 }
                 break;
 
@@ -196,14 +196,14 @@ bool CxImageJPG::CxExifInfo::DecodeExif(CxFile * hFile, int nReadMode)
                 break;
         }
     }
-	return true;
+  return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*--------------------------------------------------------------------------
    Process a EXIF marker
    Describes all the drivel that most digital cameras include...
 --------------------------------------------------------------------------*/
-bool CxImageJPG::CxExifInfo::process_EXIF(unsigned char * CharBuf, unsigned int length)
+bool CxImageJPG::CxExifInfo::process_EXIF(uint8_t * CharBuf, uint32_t length)
 {
     m_exifinfo->FlashUsed = 0; 
     /* If it's from a digicam, and it used flash, it says so. */
@@ -212,11 +212,11 @@ bool CxImageJPG::CxExifInfo::process_EXIF(unsigned char * CharBuf, unsigned int 
     ExifImageWidth = 0;
 
     {   /* Check the EXIF header component */
-        static const unsigned char ExifHeader[] = "Exif\0\0";
+        static const uint8_t ExifHeader[] = "Exif\0\0";
         if (memcmp(CharBuf+0, ExifHeader,6)){
-			strcpy(m_szLastError,"Incorrect Exif header");
-			return false;
-		}
+      strcpy(m_szLastError,"Incorrect Exif header");
+      return false;
+    }
     }
 
     if (memcmp(CharBuf+6,"II",2) == 0){
@@ -226,92 +226,92 @@ bool CxImageJPG::CxExifInfo::process_EXIF(unsigned char * CharBuf, unsigned int 
             MotorolaOrder = 1;
         }else{
             strcpy(m_szLastError,"Invalid Exif alignment marker.");
-			return false;
+      return false;
         }
     }
 
     /* Check the next two values for correctness. */
     if (Get16u(CharBuf+8) != 0x2a){
         strcpy(m_szLastError,"Invalid Exif start (1)");
-		return false;
+    return false;
     }
 
-	int FirstOffset = Get32u(CharBuf+10);
+  int32_t FirstOffset = Get32u(CharBuf+10);
     /* <Richard Collins> 
-	if (FirstOffset < 8 || FirstOffset > 16){
+  if (FirstOffset < 8 || FirstOffset > 16){
         // I used to ensure this was set to 8 (website I used indicated its 8)
         // but PENTAX Optio 230 has it set differently, and uses it as offset. (Sept 11 2002)
         strcpy(m_szLastError,"Suspicious offset of first IFD value");
-		return false;
+    return false;
     }*/
 
-    unsigned char * LastExifRefd = CharBuf;
+    uint8_t * LastExifRefd = CharBuf;
 
     /* First directory starts 16 bytes in.  Offsets start at 8 bytes in. */
     if (!ProcessExifDir(CharBuf+14, CharBuf+6, length-6, m_exifinfo, &LastExifRefd))
-		return false;
+    return false;
 
-	/* <Richard Collins> give a chance for a second directory */
-	if (FirstOffset > 8) {
-		if (!ProcessExifDir(CharBuf+14+FirstOffset-8, CharBuf+6, length-6, m_exifinfo, &LastExifRefd))
-			return false;
-	}
+  /* <Richard Collins> give a chance for a second directory */
+  if (FirstOffset > 8) {
+    if (!ProcessExifDir(CharBuf+14+FirstOffset-8, CharBuf+6, length-6, m_exifinfo, &LastExifRefd))
+      return false;
+  }
 
     /* This is how far the interesting (non thumbnail) part of the exif went. */
-    // int ExifSettingsLength = LastExifRefd - CharBuf;
+    // int32_t ExifSettingsLength = LastExifRefd - CharBuf;
 
     /* Compute the CCD width, in milimeters. */
     if (m_exifinfo->FocalplaneXRes != 0){
         m_exifinfo->CCDWidth = (float)(ExifImageWidth * m_exifinfo->FocalplaneUnits / m_exifinfo->FocalplaneXRes);
     }
 
-	return true;
+  return true;
 }
 //--------------------------------------------------------------------------
 // Get 16 bits motorola order (always) for jpeg header stuff.
 //--------------------------------------------------------------------------
-int CxImageJPG::CxExifInfo::Get16m(void * Short)
+int32_t CxImageJPG::CxExifInfo::Get16m(void * Short)
 {
-    return (((unsigned char *)Short)[0] << 8) | ((unsigned char *)Short)[1];
+    return (((uint8_t *)Short)[0] << 8) | ((uint8_t *)Short)[1];
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*--------------------------------------------------------------------------
    Convert a 16 bit unsigned value from file's native byte order
 --------------------------------------------------------------------------*/
-int CxImageJPG::CxExifInfo::Get16u(void * Short)
+int32_t CxImageJPG::CxExifInfo::Get16u(void * Short)
 {
     if (MotorolaOrder){
-        return (((unsigned char *)Short)[0] << 8) | ((unsigned char *)Short)[1];
+        return (((uint8_t *)Short)[0] << 8) | ((uint8_t *)Short)[1];
     }else{
-        return (((unsigned char *)Short)[1] << 8) | ((unsigned char *)Short)[0];
+        return (((uint8_t *)Short)[1] << 8) | ((uint8_t *)Short)[0];
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*--------------------------------------------------------------------------
    Convert a 32 bit signed value from file's native byte order
 --------------------------------------------------------------------------*/
-long CxImageJPG::CxExifInfo::Get32s(void * Long)
+int32_t CxImageJPG::CxExifInfo::Get32s(void * Long)
 {
     if (MotorolaOrder){
-        return  ((( char *)Long)[0] << 24) | (((unsigned char *)Long)[1] << 16)
-              | (((unsigned char *)Long)[2] << 8 ) | (((unsigned char *)Long)[3] << 0 );
+        return  ((( char *)Long)[0] << 24) | (((uint8_t *)Long)[1] << 16)
+              | (((uint8_t *)Long)[2] << 8 ) | (((uint8_t *)Long)[3] << 0 );
     }else{
-        return  ((( char *)Long)[3] << 24) | (((unsigned char *)Long)[2] << 16)
-              | (((unsigned char *)Long)[1] << 8 ) | (((unsigned char *)Long)[0] << 0 );
+        return  ((( char *)Long)[3] << 24) | (((uint8_t *)Long)[2] << 16)
+              | (((uint8_t *)Long)[1] << 8 ) | (((uint8_t *)Long)[0] << 0 );
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*--------------------------------------------------------------------------
    Convert a 32 bit unsigned value from file's native byte order
 --------------------------------------------------------------------------*/
-unsigned long CxImageJPG::CxExifInfo::Get32u(void * Long)
+uint32_t CxImageJPG::CxExifInfo::Get32u(void * Long)
 {
-    return (unsigned long)Get32s(Long) & 0xffffffff;
+    return (uint32_t)Get32s(Long) & 0xffffffff;
 }
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Describes format descriptor */
-static const int BytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
+static const int32_t BytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 #define NUM_FORMATS 12
 
 #define FMT_BYTE       1 
@@ -377,31 +377,36 @@ static const int BytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 /*--------------------------------------------------------------------------
    Process one of the nested EXIF directories.
 --------------------------------------------------------------------------*/
-bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned char * OffsetBase, unsigned ExifLength,
-                           EXIFINFO * const m_exifinfo, unsigned char ** const LastExifRefdP )
+bool CxImageJPG::CxExifInfo::ProcessExifDir(uint8_t * DirStart, uint8_t * OffsetBase, unsigned ExifLength,
+                           EXIFINFO * const m_exifinfo, uint8_t ** const LastExifRefdP, int32_t NestingLevel)
 {
-    int de;
-    int a;
-    int NumDirEntries;
+    int32_t de;
+    int32_t a;
+    int32_t NumDirEntries;
     unsigned ThumbnailOffset = 0;
     unsigned ThumbnailSize = 0;
+
+    if (NestingLevel > 4){
+        strcpy(m_szLastError,"Maximum directory nesting exceeded (corrupt exif header)");
+        return false;
+    }
 
     NumDirEntries = Get16u(DirStart);
 
     if ((DirStart+2+NumDirEntries*12) > (OffsetBase+ExifLength)){
         strcpy(m_szLastError,"Illegally sized directory");
-		return false;
+    return false;
     }
 
     for (de=0;de<NumDirEntries;de++){
-        int Tag, Format, Components;
-        unsigned char * ValuePtr;
+        int32_t Tag, Format, Components;
+        uint8_t * ValuePtr;
             /* This actually can point to a variety of things; it must be
                cast to other types when used.  But we use it as a byte-by-byte
                cursor, so we declare it as a pointer to a generic byte here.
             */
-        int ByteCount;
-        unsigned char * DirEntry;
+        int32_t ByteCount;
+        uint8_t * DirEntry;
         DirEntry = DirStart+2+12*de;
 
         Tag = Get16u(DirEntry);
@@ -411,8 +416,8 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
         if ((Format-1) >= NUM_FORMATS) {
             /* (-1) catches illegal zero case as unsigned underflows to positive large */
             strcpy(m_szLastError,"Illegal format code in EXIF dir");
-			return false;
-		}
+      return false;
+    }
 
         ByteCount = Components * BytesPerFormat[Format];
 
@@ -423,7 +428,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
             if (OffsetVal+ByteCount > ExifLength){
                 /* Bogus pointer offset and / or bytecount value */
                 strcpy(m_szLastError,"Illegal pointer offset value in EXIF.");
-				return false;
+        return false;
             }
             ValuePtr = OffsetBase+OffsetVal;
         }else{
@@ -450,9 +455,9 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 strncpy(m_exifinfo->CameraModel, (char*)ValuePtr, 39);
                 break;
 
-			case TAG_EXIF_VERSION:
-				strncpy(m_exifinfo->Version,(char*)ValuePtr, 4);
-				break;
+      case TAG_EXIF_VERSION:
+        strncpy(m_exifinfo->Version,(char*)ValuePtr, 4);
+        break;
 
             case TAG_DATETIME_ORIGINAL:
                 strncpy(m_exifinfo->DateTime, (char*)ValuePtr, 19);
@@ -504,9 +509,9 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 }
                 break;
 
-			case TAG_BRIGHTNESS:
-				m_exifinfo->Brightness = (float)ConvertAnyFormat(ValuePtr, Format);
-				break;
+      case TAG_BRIGHTNESS:
+        m_exifinfo->Brightness = (float)ConvertAnyFormat(ValuePtr, Format);
+        break;
 
             case TAG_FOCALLENGTH:
                 /* Nice digital cameras actually save the focal length
@@ -544,7 +549,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 break;
 
             case TAG_FLASH:
-                if ((int)ConvertAnyFormat(ValuePtr, Format) & 7){
+                if ((int32_t)ConvertAnyFormat(ValuePtr, Format) & 7){
                     m_exifinfo->FlashUsed = 1;
                 }else{
                     m_exifinfo->FlashUsed = 0;
@@ -552,7 +557,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 break;
 
             case TAG_ORIENTATION:
-                m_exifinfo->Orientation = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->Orientation = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 if (m_exifinfo->Orientation < 1 || m_exifinfo->Orientation > 8){
                     strcpy(m_szLastError,"Undefined rotation value");
                     m_exifinfo->Orientation = 0;
@@ -564,7 +569,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 /* Use largest of height and width to deal with images
                    that have been rotated to portrait format.  
                 */
-                a = (int)ConvertAnyFormat(ValuePtr, Format);
+                a = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 if (ExifImageWidth < a) ExifImageWidth = a;
                 break;
 
@@ -576,8 +581,8 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 m_exifinfo->FocalplaneYRes = (float)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
-			case TAG_RESOLUTIONUNIT:
-                switch((int)ConvertAnyFormat(ValuePtr, Format)){
+      case TAG_RESOLUTIONUNIT:
+                switch((int32_t)ConvertAnyFormat(ValuePtr, Format)){
                     case 1: m_exifinfo->ResolutionUnit = 1.0f; break; /* 1 inch */
                     case 2:	m_exifinfo->ResolutionUnit = 1.0f; break;
                     case 3: m_exifinfo->ResolutionUnit = 0.3937007874f;    break;  /* 1 centimeter*/
@@ -587,7 +592,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 break;
 
             case TAG_FOCALPLANEUNITS:
-                switch((int)ConvertAnyFormat(ValuePtr, Format)){
+                switch((int32_t)ConvertAnyFormat(ValuePtr, Format)){
                     case 1: m_exifinfo->FocalplaneUnits = 1.0f; break; /* 1 inch */
                     case 2:	m_exifinfo->FocalplaneUnits = 1.0f; break;
                     case 3: m_exifinfo->FocalplaneUnits = 0.3937007874f;    break;  /* 1 centimeter*/
@@ -603,24 +608,24 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
                 break;
 
             case TAG_WHITEBALANCE:
-                m_exifinfo->Whitebalance = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->Whitebalance = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_METERING_MODE:
-                m_exifinfo->MeteringMode = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->MeteringMode = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_EXPOSURE_PROGRAM:
-                m_exifinfo->ExposureProgram = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->ExposureProgram = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_ISO_EQUIVALENT:
-                m_exifinfo->ISOequivalent = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->ISOequivalent = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 if ( m_exifinfo->ISOequivalent < 50 ) m_exifinfo->ISOequivalent *= 200;
                 break;
 
             case TAG_COMPRESSION_LEVEL:
-                m_exifinfo->CompressionLevel = (int)ConvertAnyFormat(ValuePtr, Format);
+                m_exifinfo->CompressionLevel = (int32_t)ConvertAnyFormat(ValuePtr, Format);
                 break;
 
             case TAG_XRESOLUTION:
@@ -641,17 +646,17 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
         }
 
         if (Tag == TAG_EXIF_OFFSET || Tag == TAG_INTEROP_OFFSET){
-            unsigned char * SubdirStart;
-			unsigned Offset = Get32u(ValuePtr);
-			if (Offset>8){
-				SubdirStart = OffsetBase + Offset;
-				if (SubdirStart < OffsetBase || 
-					SubdirStart > OffsetBase+ExifLength){
-					strcpy(m_szLastError,"Illegal subdirectory link");
-					return false;
-				}
-				ProcessExifDir(SubdirStart, OffsetBase, ExifLength, m_exifinfo, LastExifRefdP);
-			}
+            uint8_t * SubdirStart;
+      unsigned Offset = Get32u(ValuePtr);
+      if (Offset>8){
+        SubdirStart = OffsetBase + Offset;
+        if (SubdirStart < OffsetBase || 
+          SubdirStart > OffsetBase+ExifLength){
+          strcpy(m_szLastError,"Illegal subdirectory link");
+          return false;
+        }
+        ProcessExifDir(SubdirStart, OffsetBase, ExifLength, m_exifinfo, LastExifRefdP, NestingLevel+1);
+      }
             continue;
         }
     }
@@ -663,7 +668,7 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
            of each directory.  This has got to be the result of a
            committee!  
         */
-        unsigned char * SubdirStart;
+        uint8_t * SubdirStart;
         unsigned Offset;
         Offset = Get16u(DirStart+2+12*NumDirEntries);
         if (Offset){
@@ -671,9 +676,9 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
             if (SubdirStart < OffsetBase 
                 || SubdirStart > OffsetBase+ExifLength){
                 strcpy(m_szLastError,"Illegal subdirectory link");
-				return false;
+        return false;
             }
-            ProcessExifDir(SubdirStart, OffsetBase, ExifLength, m_exifinfo, LastExifRefdP);
+            ProcessExifDir(SubdirStart, OffsetBase, ExifLength, m_exifinfo, LastExifRefdP, NestingLevel+1);
         }
     }
 
@@ -686,20 +691,20 @@ bool CxImageJPG::CxExifInfo::ProcessExifDir(unsigned char * DirStart, unsigned c
         }
     }
 
-	return true;
+  return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /*--------------------------------------------------------------------------
-   Evaluate number, be it int, rational, or float from directory.
+   Evaluate number, be it int32_t, rational, or float from directory.
 --------------------------------------------------------------------------*/
-double CxImageJPG::CxExifInfo::ConvertAnyFormat(void * ValuePtr, int Format)
+double CxImageJPG::CxExifInfo::ConvertAnyFormat(void * ValuePtr, int32_t Format)
 {
     double Value;
     Value = 0;
 
     switch(Format){
         case FMT_SBYTE:     Value = *(signed char *)ValuePtr;  break;
-        case FMT_BYTE:      Value = *(unsigned char *)ValuePtr;        break;
+        case FMT_BYTE:      Value = *(uint8_t *)ValuePtr;        break;
 
         case FMT_USHORT:    Value = Get16u(ValuePtr);          break;
         case FMT_ULONG:     Value = Get32u(ValuePtr);          break;
@@ -707,7 +712,7 @@ double CxImageJPG::CxExifInfo::ConvertAnyFormat(void * ValuePtr, int Format)
         case FMT_URATIONAL:
         case FMT_SRATIONAL: 
             {
-                int Num,Den;
+                int32_t Num,Den;
                 Num = Get32s(ValuePtr);
                 Den = Get32s(4+(char *)ValuePtr);
                 if (Den == 0){
@@ -718,7 +723,7 @@ double CxImageJPG::CxExifInfo::ConvertAnyFormat(void * ValuePtr, int Format)
                 break;
             }
 
-        case FMT_SSHORT:    Value = (signed short)Get16u(ValuePtr);  break;
+        case FMT_SSHORT:    Value = (int16_t)Get16u(ValuePtr);  break;
         case FMT_SLONG:     Value = Get32s(ValuePtr);                break;
 
         /* Not sure if this is correct (never seen float used in Exif format)
@@ -729,12 +734,12 @@ double CxImageJPG::CxExifInfo::ConvertAnyFormat(void * ValuePtr, int Format)
     return Value;
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImageJPG::CxExifInfo::process_COM (const BYTE * Data, int length)
+void CxImageJPG::CxExifInfo::process_COM (const uint8_t * Data, int32_t length)
 {
-    int ch;
+    int32_t ch;
     char Comment[MAX_COMMENT+1];
-    int nch;
-    int a;
+    int32_t nch;
+    int32_t a;
 
     nch = 0;
 
@@ -759,9 +764,9 @@ void CxImageJPG::CxExifInfo::process_COM (const BYTE * Data, int length)
     strcpy(m_exifinfo->Comments,Comment);
 }
 ////////////////////////////////////////////////////////////////////////////////
-void CxImageJPG::CxExifInfo::process_SOFn (const BYTE * Data, int marker)
+void CxImageJPG::CxExifInfo::process_SOFn (const uint8_t * Data, int32_t marker)
 {
-    int data_precision, num_components;
+    int32_t data_precision, num_components;
 
     data_precision = Data[2];
     m_exifinfo->Height = Get16m((void*)(Data+3));
@@ -783,33 +788,33 @@ void CxImageJPG::CxExifInfo::process_SOFn (const BYTE * Data, int marker)
 /**
  * this will work only on a CxImageJPG object, if the image originally has valid EXIF data
  \verbatim
-	CxImageJPG jpg;
-	CxIOFile in,out;
-	in.Open("D:\\exif_in.jpg","rb");
-	out.Open("D:\\exif_out.jpg","w+b");
-	jpg.Decode(&in);
-	if (jpg.IsValid()){
-		jpg.RotateLeft();
-		jpg.Encode(&out);
-	}
+  CxImageJPG jpg;
+  CxIOFile in,out;
+  in.Open("D:\\exif_in.jpg","rb");
+  out.Open("D:\\exif_out.jpg","w+b");
+  jpg.Decode(&in);
+  if (jpg.IsValid()){
+    jpg.RotateLeft();
+    jpg.Encode(&out);
+  }
  \endverbatim
 */
 bool CxImageJPG::CxExifInfo::EncodeExif(CxFile * hFile)
 {
-    int a;
+    int32_t a;
 
     if (FindSection(M_SOS)==NULL){
-		strcpy(m_szLastError,"Can't write exif : didn't read all");
-		return false;
+    strcpy(m_szLastError,"Can't write exif : didn't read all");
+    return false;
     }
 
     // Initial static jpeg marker.
-	hFile->PutC(0xff);
-	hFile->PutC(0xd8);
+  hFile->PutC(0xff);
+  hFile->PutC(0xd8);
     
     if (Sections[0].Type != M_EXIF && Sections[0].Type != M_JFIF){
         // The image must start with an exif or jfif marker.  If we threw those away, create one.
-        static BYTE JfifHead[18] = {
+        static uint8_t JfifHead[18] = {
             0xff, M_JFIF,
             0x00, 0x10, 'J' , 'F' , 'I' , 'F' , 0x00, 0x01, 
             0x01, 0x01, 0x01, 0x2C, 0x01, 0x2C, 0x00, 0x00 
@@ -820,21 +825,21 @@ bool CxImageJPG::CxExifInfo::EncodeExif(CxFile * hFile)
     // Write all the misc sections
     for (a=0;a<SectionsRead-1;a++){
         hFile->PutC(0xff);
-        hFile->PutC(Sections[a].Type);
+        hFile->PutC((uint8_t)(Sections[a].Type));
         hFile->Write(Sections[a].Data, Sections[a].Size, 1);
     }
 
     // Write the remaining image data.
     hFile->Write(Sections[a].Data, Sections[a].Size, 1);
 
-	return true;
+  return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 void CxImageJPG::CxExifInfo::DiscardAllButExif()
 {
     Section_t ExifKeeper;
     Section_t CommentKeeper;
-    int a;
+    int32_t a;
 
     memset(&ExifKeeper, 0, sizeof(ExifKeeper));
     memset(&CommentKeeper, 0, sizeof(ExifKeeper));
@@ -846,7 +851,7 @@ void CxImageJPG::CxExifInfo::DiscardAllButExif()
             CommentKeeper = Sections[a];
         }else{
             free(Sections[a].Data);
-			Sections[a].Data = 0;
+      Sections[a].Data = 0;
         }
     }
     SectionsRead = 0;
@@ -858,9 +863,9 @@ void CxImageJPG::CxExifInfo::DiscardAllButExif()
     }
 }
 ////////////////////////////////////////////////////////////////////////////////
-void* CxImageJPG::CxExifInfo::FindSection(int SectionType)
+void* CxImageJPG::CxExifInfo::FindSection(int32_t SectionType)
 {
-    int a;
+    int32_t a;
     for (a=0;a<SectionsRead-1;a++){
         if (Sections[a].Type == SectionType){
             return &Sections[a];
@@ -871,4 +876,3 @@ void* CxImageJPG::CxExifInfo::FindSection(int SectionType)
 }
 ////////////////////////////////////////////////////////////////////////////////
 #endif 	// CXIMAGEJPG_SUPPORT_EXIF
-

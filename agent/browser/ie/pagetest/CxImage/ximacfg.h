@@ -13,7 +13,7 @@
 #define CXIMAGE_SUPPORT_DECODE	1
 #define CXIMAGE_SUPPORT_ENCODE	1		//<vho><T.Peck>
 #define	CXIMAGE_SUPPORT_WINDOWS 1
-#define	CXIMAGE_SUPPORT_WINCE   0		//<T.Peck>
+#define	CXIMAGE_SUPPORT_EXIF    1
 
 /////////////////////////////////////////////////////////////////////////////
 // CxImage supported formats
@@ -21,15 +21,12 @@
 #define CXIMAGE_SUPPORT_GIF 1
 #define CXIMAGE_SUPPORT_JPG 1
 #define CXIMAGE_SUPPORT_PNG 1
-#define CXIMAGE_SUPPORT_MNG 0
 #define CXIMAGE_SUPPORT_ICO 0
 #define CXIMAGE_SUPPORT_TIF 0
 #define CXIMAGE_SUPPORT_TGA 0
 #define CXIMAGE_SUPPORT_PCX 0
 #define CXIMAGE_SUPPORT_WBMP 0
 #define CXIMAGE_SUPPORT_WMF 0
-#define CXIMAGE_SUPPORT_J2K 0		// Beta, use JP2
-#define CXIMAGE_SUPPORT_JBG 0		// GPL'd see ../jbig/copying.txt & ../jbig/patents.htm
 
 #define CXIMAGE_SUPPORT_JP2 0
 #define CXIMAGE_SUPPORT_JPC 0
@@ -37,12 +34,22 @@
 #define CXIMAGE_SUPPORT_PNM 0
 #define CXIMAGE_SUPPORT_RAS 0
 
+#define CXIMAGE_SUPPORT_JBG 0		// GPL'd see ../jbig/copying.txt & ../jbig/patents.htm
+
+#define CXIMAGE_SUPPORT_MNG 0
+#define CXIMAGE_SUPPORT_SKA 0
+#define CXIMAGE_SUPPORT_RAW 0
+#define CXIMAGE_SUPPORT_PSD 0
 
 /////////////////////////////////////////////////////////////////////////////
-#define	CXIMAGE_MAX_MEMORY 256000000
+#define	CXIMAGE_MAX_MEMORY 268435456
+
+#define CXIMAGE_DEFAULT_DPI 96
 
 #define CXIMAGE_ERR_NOFILE "null file handler"
 #define CXIMAGE_ERR_NOIMAGE "null image!!!"
+
+#define CXIMAGE_SUPPORT_EXCEPTION_HANDLING 1
 
 /////////////////////////////////////////////////////////////////////////////
 //color to grey mapping <H. Muelner> <jurgene>

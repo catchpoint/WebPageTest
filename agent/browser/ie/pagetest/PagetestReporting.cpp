@@ -2562,7 +2562,7 @@ void CPagetestReporting::CheckImageCompression()
 									img.SetJpegQuality(85);
 									target = size = bodyLen;
 									BYTE * mem = NULL;
-									long len = 0;
+									int len = 0;
 									if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) )
 									{
 										img.FreeMemory(mem);

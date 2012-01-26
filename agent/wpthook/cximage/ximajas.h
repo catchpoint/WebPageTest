@@ -12,6 +12,8 @@
 #if !defined(__ximaJAS_h)
 #define __ximaJAS_h
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_JASPER
 
 #ifdef _LINUX

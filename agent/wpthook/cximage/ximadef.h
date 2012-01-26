@@ -3,13 +3,25 @@
 
 #include "ximacfg.h"
 
-#if defined(_AFXDLL)||defined(_USRDLL)
+#if /*defined(_AFXDLL)||*/defined(_USRDLL)
  #define DLL_EXP __declspec(dllexport)
 #elif defined(_MSC_VER)&&(_MSC_VER<1200)
  #define DLL_EXP __declspec(dllimport)
 #else
  #define DLL_EXP
 #endif
+
+
+#if CXIMAGE_SUPPORT_EXCEPTION_HANDLING
+  #define cx_try try
+  #define cx_throw(message) throw(message)
+  #define cx_catch catch (const char *message)
+#else
+  #define cx_try bool cx_error=false;
+  #define cx_throw(message) {cx_error=true; if(strcmp(message,"")) strncpy(info.szLastError,message,255); goto cx_error_catch;}
+  #define cx_catch cx_error_catch: char message[]=""; if(cx_error)
+#endif
+
 
 #if CXIMAGE_SUPPORT_JP2 || CXIMAGE_SUPPORT_JPC || CXIMAGE_SUPPORT_PGX || CXIMAGE_SUPPORT_PNM || CXIMAGE_SUPPORT_RAS
  #define CXIMAGE_SUPPORT_JASPER 1
@@ -31,14 +43,17 @@
  #define CXIMAGE_SUPPORT_INTERPOLATION 1
 #endif
 
-#if CXIMAGE_SUPPORT_WINCE
- #undef CXIMAGE_SUPPORT_WMF
- #define CXIMAGE_SUPPORT_WMF 0
- #undef	CXIMAGE_SUPPORT_WINDOWS
- #define	CXIMAGE_SUPPORT_WINDOWS 0
+#if (CXIMAGE_SUPPORT_DECODE == 0)
+#undef CXIMAGE_SUPPORT_EXIF
+ #define CXIMAGE_SUPPORT_EXIF 0
 #endif
 
-#ifndef WIN32
+#if defined (_WIN32_WCE)
+ #undef CXIMAGE_SUPPORT_WMF
+ #define CXIMAGE_SUPPORT_WMF 0
+#endif
+
+#if !defined(WIN32) && !defined(_WIN32_WCE)
  #undef CXIMAGE_SUPPORT_WINDOWS
  #define CXIMAGE_SUPPORT_WINDOWS 0
 #endif
@@ -55,14 +70,13 @@
 #endif
 
 
-#ifdef WIN32
+#if defined(WIN32) || defined(_WIN32_WCE)
 #include <windows.h>
 #include <tchar.h>
 #endif
 
 #include <stdio.h>
 #include <math.h>
-
 
 #ifdef __BORLANDC__
 
@@ -78,21 +92,20 @@ typedef struct tagcomplex {
 
 #endif
 
+#if defined(WIN32) || defined(_WIN32_WCE)
+ #include "stdint.h"
+#endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(_WIN32_WCE)
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-typedef unsigned char  BYTE;
-typedef unsigned short WORD;
-typedef unsigned long  DWORD;
-typedef unsigned int   UINT;
-
-typedef DWORD          COLORREF;
-typedef unsigned int   HANDLE;
-typedef void*          HRGN;
+typedef uint32_t   COLORREF;
+typedef void*      HANDLE;
+typedef void*      HRGN;
 
 #ifndef BOOL
 #define	BOOL bool
@@ -113,61 +126,61 @@ typedef void*          HRGN;
 
 typedef struct tagRECT
 {
-	long    left;
-	long    top;
-	long    right;
-	long    bottom;
+	int32_t    left;
+	int32_t    top;
+	int32_t    right;
+	int32_t    bottom;
 } RECT;
 
 typedef struct tagPOINT
 {
-	long  x;
-	long  y;
+	int32_t  x;
+	int32_t  y;
 } POINT;
 
 typedef struct tagRGBQUAD {
-	BYTE    rgbBlue;
-	BYTE    rgbGreen;
-	BYTE    rgbRed;
-	BYTE    rgbReserved;
+	uint8_t    rgbBlue;
+	uint8_t    rgbGreen;
+	uint8_t    rgbRed;
+	uint8_t    rgbReserved;
 } RGBQUAD;
 
 #pragma pack(1)
 
 typedef struct tagBITMAPINFOHEADER{
-	DWORD      biSize;
-	long       biWidth;
-	long       biHeight;
-	WORD       biPlanes;
-	WORD       biBitCount;
-	DWORD      biCompression;
-	DWORD      biSizeImage;
-	long       biXPelsPerMeter;
-	long       biYPelsPerMeter;
-	DWORD      biClrUsed;
-	DWORD      biClrImportant;
+	uint32_t   biSize;
+	int32_t    biWidth;
+	int32_t    biHeight;
+	uint16_t   biPlanes;
+	uint16_t   biBitCount;
+	uint32_t   biCompression;
+	uint32_t   biSizeImage;
+	int32_t    biXPelsPerMeter;
+	int32_t    biYPelsPerMeter;
+	uint32_t   biClrUsed;
+	uint32_t   biClrImportant;
 } BITMAPINFOHEADER;
 
 typedef struct tagBITMAPFILEHEADER {
-	WORD    bfType;
-	DWORD   bfSize;
-	WORD    bfReserved1;
-	WORD    bfReserved2;
-	DWORD   bfOffBits;
+	uint16_t   bfType;
+	uint32_t   bfSize;
+	uint16_t   bfReserved1;
+	uint16_t   bfReserved2;
+	uint32_t   bfOffBits;
 } BITMAPFILEHEADER;
 
 typedef struct tagBITMAPCOREHEADER {
-	DWORD   bcSize;
-	WORD    bcWidth;
-	WORD    bcHeight;
-	WORD    bcPlanes;
-	WORD    bcBitCount;
+	uint32_t   bcSize;
+	uint16_t   bcWidth;
+	uint16_t   bcHeight;
+	uint16_t   bcPlanes;
+	uint16_t   bcBitCount;
 } BITMAPCOREHEADER;
 
 typedef struct tagRGBTRIPLE {
-	BYTE    rgbtBlue;
-	BYTE    rgbtGreen;
-	BYTE    rgbtRed;
+	uint8_t    rgbtBlue;
+	uint8_t    rgbtGreen;
+	uint8_t    rgbtRed;
 } RGBTRIPLE;
 
 #pragma pack()
@@ -177,10 +190,10 @@ typedef struct tagRGBTRIPLE {
 #define BI_RLE4       2L
 #define BI_BITFIELDS  3L
 
-#define GetRValue(rgb)      ((BYTE)(rgb))
-#define GetGValue(rgb)      ((BYTE)(((WORD)(rgb)) >> 8))
-#define GetBValue(rgb)      ((BYTE)((rgb)>>16))
-#define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+#define GetRValue(rgb)      ((uint8_t)(rgb))
+#define GetGValue(rgb)      ((uint8_t)(((uint16_t)(rgb)) >> 8))
+#define GetBValue(rgb)      ((uint8_t)((rgb)>>16))
+#define RGB(r,g,b)          ((COLORREF)(((uint8_t)(r)|((uint16_t)((uint8_t)(g))<<8))|(((uint32_t)(uint8_t)(b))<<16)))
 
 #ifndef _COMPLEX_DEFINED
 

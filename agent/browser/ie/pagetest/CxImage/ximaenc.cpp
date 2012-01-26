@@ -1,6 +1,6 @@
 // xImaCodec.cpp : Encode Decode functions
 /* 07/08/2001 v1.00 - Davide Pizzolato - www.xdp.it
- * CxImage version 5.99c 17/Oct/2004
+ * CxImage version 7.0.1 07/Jan/2011
  */
 
 #include "ximage.h"
@@ -49,16 +49,24 @@
 #include "ximawmf.h" // <vho> - WMF/EMF support
 #endif
 
-#if CXIMAGE_SUPPORT_J2K
-#include "ximaj2k.h"
-#endif
-
 #if CXIMAGE_SUPPORT_JBG
 #include "ximajbg.h"
 #endif
 
 #if CXIMAGE_SUPPORT_JASPER
 #include "ximajas.h"
+#endif
+
+#if CXIMAGE_SUPPORT_SKA
+#include "ximaska.h"
+#endif
+
+#if CXIMAGE_SUPPORT_RAW
+#include "ximaraw.h"
+#endif
+
+#if CXIMAGE_SUPPORT_PSD
+#include "ximapsd.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +87,7 @@ bool CxImage::EncodeSafeCheck(CxFile *hFile)
 }
 ////////////////////////////////////////////////////////////////////////////////
 //#ifdef WIN32
-//bool CxImage::Save(LPCWSTR filename, DWORD imagetype)
+//bool CxImage::Save(LPCWSTR filename, uint32_t imagetype)
 //{
 //	FILE* hFile;	//file handle to write the image
 //	if ((hFile=_wfopen(filename,L"wb"))==NULL)  return false;
@@ -96,7 +104,7 @@ bool CxImage::EncodeSafeCheck(CxFile *hFile)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Save(const TCHAR * filename, DWORD imagetype)
+bool CxImage::Save(const TCHAR * filename, uint32_t imagetype)
 {
 	FILE* hFile;	//file handle to write the image
 
@@ -117,7 +125,7 @@ bool CxImage::Save(const TCHAR * filename, DWORD imagetype)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Encode(FILE *hFile, DWORD imagetype)
+bool CxImage::Encode(FILE *hFile, uint32_t imagetype)
 {
 	CxIOFile file(hFile);
 	return Encode(&file,imagetype);
@@ -132,7 +140,7 @@ bool CxImage::Encode(FILE *hFile, DWORD imagetype)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Encode(BYTE * &buffer, long &size, DWORD imagetype)
+bool CxImage::Encode(uint8_t * &buffer, int32_t &size, uint32_t imagetype)
 {
 	if (buffer!=NULL){
 		strcpy(info.szLastError,"the buffer must be empty");
@@ -150,168 +158,190 @@ bool CxImage::Encode(BYTE * &buffer, long &size, DWORD imagetype)
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Saves to disk the image in a specific format.
- * \param hFile: file handle (implemented using CxMemFile or CxIOFile),
- * open and enabled for writing.
+ * \param hFile: file handle (CxMemFile or CxIOFile), with write access.
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  * \sa ENUM_CXIMAGE_FORMATS
  */
-bool CxImage::Encode(CxFile *hFile, DWORD imagetype)
+bool CxImage::Encode(CxFile *hFile, uint32_t imagetype)
 {
 
 #if CXIMAGE_SUPPORT_BMP
-
-	if (imagetype==CXIMAGE_FORMAT_BMP){
-		CxImageBMP newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_BMP==imagetype){
+		CxImageBMP *newima = new CxImageBMP;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_ICO
-	if (imagetype==CXIMAGE_FORMAT_ICO){
-		CxImageICO newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_ICO==imagetype){
+		CxImageICO *newima = new CxImageICO;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_TIF
-	if (imagetype==CXIMAGE_FORMAT_TIF){
-		CxImageTIF newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_TIF==imagetype){
+		CxImageTIF *newima = new CxImageTIF;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_JPG
-	if (imagetype==CXIMAGE_FORMAT_JPG){
-		CxImageJPG newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_JPG==imagetype){
+		CxImageJPG *newima = new CxImageJPG;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_GIF
-	if (imagetype==CXIMAGE_FORMAT_GIF){
-		CxImageGIF newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_GIF==imagetype){
+		CxImageGIF *newima = new CxImageGIF;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_PNG
-	if (imagetype==CXIMAGE_FORMAT_PNG){
-		CxImagePNG newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_PNG==imagetype){
+		CxImagePNG *newima = new CxImagePNG;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_MNG
-	if (imagetype==CXIMAGE_FORMAT_MNG){
-		CxImageMNG newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_MNG==imagetype){
+		CxImageMNG *newima = new CxImageMNG;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_TGA
-	if (imagetype==CXIMAGE_FORMAT_TGA){
-		CxImageTGA newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_TGA==imagetype){
+		CxImageTGA *newima = new CxImageTGA;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_PCX
-	if (imagetype==CXIMAGE_FORMAT_PCX){
-		CxImagePCX newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_PCX==imagetype){
+		CxImagePCX *newima = new CxImagePCX;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_WBMP
-	if (imagetype==CXIMAGE_FORMAT_WBMP){
-		CxImageWBMP newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_WBMP==imagetype){
+		CxImageWBMP *newima = new CxImageWBMP;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_WMF && CXIMAGE_SUPPORT_WINDOWS // <vho> - WMF/EMF support
-	if (imagetype==CXIMAGE_FORMAT_WMF){
-		CxImageWMF newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_WMF==imagetype){
+		CxImageWMF *newima = new CxImageWMF;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_J2K
-	if (imagetype==CXIMAGE_FORMAT_J2K){
-		CxImageJ2K newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_JBG
-	if (imagetype==CXIMAGE_FORMAT_JBG){
-		CxImageJBG newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile)){
+	if (CXIMAGE_FORMAT_JBG==imagetype){
+		CxImageJBG *newima = new CxImageJBG;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
@@ -319,27 +349,78 @@ bool CxImage::Encode(CxFile *hFile, DWORD imagetype)
 #if CXIMAGE_SUPPORT_JASPER
 	if (
  #if	CXIMAGE_SUPPORT_JP2
-		imagetype==CXIMAGE_FORMAT_JP2 || 
+		CXIMAGE_FORMAT_JP2==imagetype || 
  #endif
  #if	CXIMAGE_SUPPORT_JPC
-		imagetype==CXIMAGE_FORMAT_JPC || 
+		CXIMAGE_FORMAT_JPC==imagetype || 
  #endif
  #if	CXIMAGE_SUPPORT_PGX
-		imagetype==CXIMAGE_FORMAT_PGX || 
+		CXIMAGE_FORMAT_PGX==imagetype || 
  #endif
  #if	CXIMAGE_SUPPORT_PNM
-		imagetype==CXIMAGE_FORMAT_PNM || 
+		CXIMAGE_FORMAT_PNM==imagetype || 
  #endif
  #if	CXIMAGE_SUPPORT_RAS
-		imagetype==CXIMAGE_FORMAT_RAS || 
+		CXIMAGE_FORMAT_RAS==imagetype || 
  #endif
 		 false ){
-		CxImageJAS newima;
-		newima.Ghost(this);
-		if (newima.Encode(hFile,imagetype)){
+		CxImageJAS *newima = new CxImageJAS;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile,imagetype)){
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
+			return false;
+		}
+	}
+#endif
+
+#if CXIMAGE_SUPPORT_SKA
+	if (CXIMAGE_FORMAT_SKA==imagetype){
+		CxImageSKA *newima = new CxImageSKA;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
+			return false;
+		}
+	}
+#endif
+
+#if CXIMAGE_SUPPORT_RAW
+	if (CXIMAGE_FORMAT_RAW==imagetype){
+		CxImageRAW *newima = new CxImageRAW;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
+			return false;
+		}
+	}
+#endif
+
+#if CXIMAGE_SUPPORT_PSD
+	if (CXIMAGE_FORMAT_PSD==imagetype){
+		CxImagePSD *newima = new CxImagePSD;
+		if (!newima) return false;
+		newima->Ghost(this);
+		if (newima->Encode(hFile)){
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			delete newima;
 			return false;
 		}
 	}
@@ -357,7 +438,7 @@ bool CxImage::Encode(CxFile *hFile, DWORD imagetype)
  * \param imagetype: can be CXIMAGE_FORMAT_TIF or CXIMAGE_FORMAT_GIF.
  * \return true if everything is ok
  */
-bool CxImage::Encode(FILE * hFile, CxImage ** pImages, int pagecount, DWORD imagetype)
+bool CxImage::Encode(FILE * hFile, CxImage ** pImages, int32_t pagecount, uint32_t imagetype)
 {
 	CxIOFile file(hFile);
 	return Encode(&file, pImages, pagecount,imagetype);
@@ -365,13 +446,13 @@ bool CxImage::Encode(FILE * hFile, CxImage ** pImages, int pagecount, DWORD imag
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Saves to disk or memory pagecount images, referenced by an array of CxImage pointers.
- * \param hFile: file handle (implemented using CxMemFile or CxIOFile).
+ * \param hFile: file handle (CxMemFile or CxIOFile), with write access.
  * \param pImages: array of CxImage pointers.
  * \param pagecount: number of images.
- * \param imagetype: can be CXIMAGE_FORMAT_TIF or CXIMAGE_FORMAT_GIF.
+ * \param imagetype: can be CXIMAGE_FORMAT_TIF, CXIMAGE_FORMAT_GIF or CXIMAGE_FORMAT_ICO.
  * \return true if everything is ok
  */
-bool CxImage::Encode(CxFile * hFile, CxImage ** pImages, int pagecount, DWORD imagetype)
+bool CxImage::Encode(CxFile * hFile, CxImage ** pImages, int32_t pagecount, uint32_t imagetype)
 {
 #if CXIMAGE_SUPPORT_TIF
 	if (imagetype==CXIMAGE_FORMAT_TIF){
@@ -388,6 +469,18 @@ bool CxImage::Encode(CxFile * hFile, CxImage ** pImages, int pagecount, DWORD im
 #if CXIMAGE_SUPPORT_GIF
 	if (imagetype==CXIMAGE_FORMAT_GIF){
 		CxImageGIF newima;
+		newima.Ghost(this);
+		if (newima.Encode(hFile,pImages,pagecount)){
+			return true;
+		} else {
+			strcpy(info.szLastError,newima.GetLastError());
+			return false;
+		}
+	}
+#endif
+#if CXIMAGE_SUPPORT_ICO
+	if (imagetype==CXIMAGE_FORMAT_ICO){
+		CxImageICO newima;
 		newima.Ghost(this);
 		if (newima.Encode(hFile,pImages,pagecount)){
 			return true;
@@ -408,9 +501,10 @@ bool CxImage::Encode(CxFile * hFile, CxImage ** pImages, int pagecount, DWORD im
  * the function allocates and fill the memory,
  * the application must free the buffer, see also FreeMemory().
  * \param size: output memory buffer size.
+ * \param bFlipY: direction of Y axis. default = false.
  * \return true if everything is ok
  */
-bool CxImage::Encode2RGBA(BYTE * &buffer, long &size)
+bool CxImage::Encode2RGBA(uint8_t * &buffer, int32_t &size, bool bFlipY)
 {
 	if (buffer!=NULL){
 		strcpy(info.szLastError,"the buffer must be empty");
@@ -418,7 +512,7 @@ bool CxImage::Encode2RGBA(BYTE * &buffer, long &size)
 	}
 	CxMemFile file;
 	file.Open();
-	if(Encode2RGBA(&file)){
+	if(Encode2RGBA(&file,bFlipY)){
 		buffer=file.GetBuffer();
 		size=file.Size();
 		return true;
@@ -428,15 +522,17 @@ bool CxImage::Encode2RGBA(BYTE * &buffer, long &size)
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * exports the image into a RGBA buffer, Useful for OpenGL applications.
- * \param hFile: file handle (implemented using CxMemFile or CxIOFile).
+ * \param hFile: file handle (CxMemFile or CxIOFile), with write access.
+ * \param bFlipY: direction of Y axis. default = false.
  * \return true if everything is ok
  */
-bool CxImage::Encode2RGBA(CxFile *hFile)
+bool CxImage::Encode2RGBA(CxFile *hFile, bool bFlipY)
 {
 	if (EncodeSafeCheck(hFile)) return false;
 
-	for (DWORD y = 0; y<GetHeight(); y++) {
-		for(DWORD x = 0; x<GetWidth(); x++) {
+	for (int32_t y1 = 0; y1 < head.biHeight; y1++) {
+		int32_t y = bFlipY ? head.biHeight - 1 - y1 : y1;
+		for(int32_t x = 0; x < head.biWidth; x++) {
 			RGBQUAD color = BlindGetPixelColor(x,y);
 			hFile->PutC(color.rgbRed);
 			hFile->PutC(color.rgbGreen);
@@ -464,8 +560,8 @@ bool CxImage::Encode2RGBA(CxFile *hFile)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Load(const TCHAR * filename, DWORD imagetype)
-//bool CxImage::Load(const char * filename, DWORD imagetype)
+bool CxImage::Load(const TCHAR * filename, uint32_t imagetype)
+//bool CxImage::Load(const char * filename, uint32_t imagetype)
 {
 	/*FILE* hFile;	//file handle to read the image
 	if ((hFile=fopen(filename,"rb"))==NULL)  return false;
@@ -474,7 +570,7 @@ bool CxImage::Load(const TCHAR * filename, DWORD imagetype)
 
 	/* automatic file type recognition */
 	bool bOK = false;
-	if ( imagetype > 0 && imagetype < CMAX_IMAGE_FORMATS ){
+	if ( GetTypeIndexFromId(imagetype) ){
 		FILE* hFile;	//file handle to read the image
 
 #ifdef WIN32
@@ -509,7 +605,7 @@ bool CxImage::Load(const TCHAR * filename, DWORD imagetype)
 }
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef WIN32
-//bool CxImage::Load(LPCWSTR filename, DWORD imagetype)
+//bool CxImage::Load(LPCWSTR filename, uint32_t imagetype)
 //{
 //	/*FILE* hFile;	//file handle to read the image
 //	if ((hFile=_wfopen(filename, L"rb"))==NULL)  return false;
@@ -518,7 +614,7 @@ bool CxImage::Load(const TCHAR * filename, DWORD imagetype)
 //
 //	/* automatic file type recognition */
 //	bool bOK = false;
-//	if ( imagetype > 0 && imagetype < CMAX_IMAGE_FORMATS ){
+//	if ( GetTypeIndexFromId(imagetype) ){
 //		FILE* hFile;	//file handle to read the image
 //		if ((hFile=_wfopen(filename,L"rb"))==NULL)  return false;
 //		bOK = Decode(hFile,imagetype);
@@ -547,9 +643,9 @@ bool CxImage::Load(const TCHAR * filename, DWORD imagetype)
  * \param hModule: NULL for internal resource, or external application/DLL hinstance returned by LoadLibray.
  * \return true if everything is ok
  */
-bool CxImage::LoadResource(HRSRC hRes, DWORD imagetype, HMODULE hModule)
+bool CxImage::LoadResource(HRSRC hRes, uint32_t imagetype, HMODULE hModule)
 {
-	DWORD rsize=SizeofResource(hModule,hRes);
+	uint32_t rsize=SizeofResource(hModule,hRes);
 	HGLOBAL hMem=::LoadResource(hModule,hRes);
 	if (hMem){
 		char* lpVoid=(char*)LockResource(hMem);
@@ -569,7 +665,7 @@ bool CxImage::LoadResource(HRSRC hRes, DWORD imagetype, HMODULE hModule)
 				return bOK;
 			}*/
 
-			CxMemFile fTmp((BYTE*)lpVoid,rsize);
+			CxMemFile fTmp((uint8_t*)lpVoid,rsize);
 			return Decode(&fTmp,imagetype);
 		}
 	} else strcpy(info.szLastError,"Unable to load resource!");
@@ -586,8 +682,8 @@ bool CxImage::LoadResource(HRSRC hRes, DWORD imagetype, HMODULE hModule)
 // > filename: file name
 // > imagetype: specify the image format (CXIMAGE_FORMAT_BMP,...)
 // For UNICODE support: char -> TCHAR
-CxImage::CxImage(const TCHAR * filename, DWORD imagetype)
-//CxImage::CxImage(const char * filename, DWORD imagetype)
+CxImage::CxImage(const TCHAR * filename, uint32_t imagetype)
+//CxImage::CxImage(const char * filename, uint32_t imagetype)
 {
 	Startup(imagetype);
 	Load(filename,imagetype);
@@ -598,7 +694,7 @@ CxImage::CxImage(const TCHAR * filename, DWORD imagetype)
  * \param stream: file handle, with read access.
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  */
-CxImage::CxImage(FILE * stream, DWORD imagetype)
+CxImage::CxImage(FILE * stream, uint32_t imagetype)
 {
 	Startup(imagetype);
 	Decode(stream,imagetype);
@@ -606,10 +702,10 @@ CxImage::CxImage(FILE * stream, DWORD imagetype)
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Constructor from CxFile object, see Decode()
- * \param stream: file handle (implemented using CxMemFile or CxIOFile), with read access.
+ * \param stream: file handle (CxMemFile or CxIOFile), with read access.
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  */
-CxImage::CxImage(CxFile * stream, DWORD imagetype)
+CxImage::CxImage(CxFile * stream, uint32_t imagetype)
 {
 	Startup(imagetype);
 	Decode(stream,imagetype);
@@ -621,7 +717,7 @@ CxImage::CxImage(CxFile * stream, DWORD imagetype)
  * \param size: size of buffer
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  */
-CxImage::CxImage(BYTE * buffer, DWORD size, DWORD imagetype)
+CxImage::CxImage(uint8_t * buffer, uint32_t size, uint32_t imagetype)
 {
 	Startup(imagetype);
 	CxMemFile stream(buffer,size);
@@ -635,7 +731,7 @@ CxImage::CxImage(BYTE * buffer, DWORD size, DWORD imagetype)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Decode(BYTE * buffer, DWORD size, DWORD imagetype)
+bool CxImage::Decode(uint8_t * buffer, uint32_t size, uint32_t imagetype)
 {
 	CxMemFile file(buffer,size);
 	return Decode(&file,imagetype);
@@ -647,7 +743,7 @@ bool CxImage::Decode(BYTE * buffer, DWORD size, DWORD imagetype)
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  */
-bool CxImage::Decode(FILE *hFile, DWORD imagetype)
+bool CxImage::Decode(FILE *hFile, uint32_t imagetype)
 {
 	CxIOFile file(hFile);
 	return Decode(&file,imagetype);
@@ -655,259 +751,341 @@ bool CxImage::Decode(FILE *hFile, DWORD imagetype)
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * Loads an image from CxFile object
- * \param hFile: file handle (implemented using CxMemFile or CxIOFile), with read access.
+ * \param hFile: file handle (CxMemFile or CxIOFile), with read access.
  * \param imagetype: file format, see ENUM_CXIMAGE_FORMATS
  * \return true if everything is ok
  * \sa ENUM_CXIMAGE_FORMATS
  */
-bool CxImage::Decode(CxFile *hFile, DWORD imagetype)
+bool CxImage::Decode(CxFile *hFile, uint32_t imagetype)
 {
+	if (hFile == NULL){
+		strcpy(info.szLastError,CXIMAGE_ERR_NOFILE);
+		return false;
+	}
 
-	if (imagetype==CXIMAGE_FORMAT_UNKNOWN){
-		DWORD pos = hFile->Tell();
+	uint32_t pos = hFile->Tell();
+
 #if CXIMAGE_SUPPORT_BMP
-		{ CxImageBMP newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_BMP==imagetype){
+		CxImageBMP *newima = new CxImageBMP;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_JPG
-		{ CxImageJPG newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_JPG==imagetype){
+		CxImageJPG *newima = new CxImageJPG;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_ICO
-		{ CxImageICO newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_ICO==imagetype){
+		CxImageICO *newima = new CxImageICO;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			info.nNumFrames = newima->info.nNumFrames;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_GIF
-		{ CxImageGIF newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_GIF==imagetype){
+		CxImageGIF *newima = new CxImageGIF;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			info.nNumFrames = newima->info.nNumFrames;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_PNG
-		{ CxImagePNG newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_PNG==imagetype){
+		CxImagePNG *newima = new CxImagePNG;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_TIF
-		{ CxImageTIF newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_TIF==imagetype){
+		CxImageTIF *newima = new CxImageTIF;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			info.nNumFrames = newima->info.nNumFrames;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_MNG
-		{ CxImageMNG newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_MNG==imagetype){
+		CxImageMNG *newima = new CxImageMNG;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			info.nNumFrames = newima->info.nNumFrames;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_TGA
-		{ CxImageTGA newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_TGA==imagetype){
+		CxImageTGA *newima = new CxImageTGA;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_PCX
-		{ CxImagePCX newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_PCX==imagetype){
+		CxImagePCX *newima = new CxImagePCX;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_WBMP
-		{ CxImageWBMP newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_WBMP==imagetype){
+		CxImageWBMP *newima = new CxImageWBMP;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
 #endif
 #if CXIMAGE_SUPPORT_WMF && CXIMAGE_SUPPORT_WINDOWS
-		{ CxImageWMF newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
-#endif
-#if CXIMAGE_SUPPORT_J2K
-		{ CxImageJ2K newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
-#endif
-#if CXIMAGE_SUPPORT_JBG
-		{ CxImageJBG newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
-#endif
-#if CXIMAGE_SUPPORT_JASPER
-		{ CxImageJAS newima; newima.CopyInfo(*this); if (newima.Decode(hFile)) { Transfer(newima); return true; } else hFile->Seek(pos,SEEK_SET); }
-#endif
-	}
-
-#if CXIMAGE_SUPPORT_BMP
-	if (imagetype==CXIMAGE_FORMAT_BMP){
-		CxImageBMP newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_WMF==imagetype){
+		CxImageWMF *newima = new CxImageWMF;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_JPG
-	if (imagetype==CXIMAGE_FORMAT_JPG){
-		CxImageJPG newima;
-		newima.CopyInfo(*this); // <ignacio>
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_ICO
-	if (imagetype==CXIMAGE_FORMAT_ICO){
-		CxImageICO newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			info.nNumFrames = newima.info.nNumFrames;
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_GIF
-	if (imagetype==CXIMAGE_FORMAT_GIF){
-		CxImageGIF newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			info.nNumFrames = newima.info.nNumFrames;
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_PNG
-	if (imagetype==CXIMAGE_FORMAT_PNG){
-		CxImagePNG newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_TIF
-	if (imagetype==CXIMAGE_FORMAT_TIF){
-		CxImageTIF newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			info.nNumFrames = newima.info.nNumFrames;
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_MNG
-	if (imagetype==CXIMAGE_FORMAT_MNG){
-		CxImageMNG newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			info.nNumFrames = newima.info.nNumFrames;
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_TGA
-	if (imagetype==CXIMAGE_FORMAT_TGA){
-		CxImageTGA newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_PCX
-	if (imagetype==CXIMAGE_FORMAT_PCX){
-		CxImagePCX newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_WBMP
-	if (imagetype==CXIMAGE_FORMAT_WBMP){
-		CxImageWBMP newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_WMF && CXIMAGE_SUPPORT_WINDOWS // vho - WMF support
-	if (imagetype == CXIMAGE_FORMAT_WMF){
-		CxImageWMF newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
-		}
-	}
-#endif
-#if CXIMAGE_SUPPORT_J2K
-	if (imagetype==CXIMAGE_FORMAT_J2K){
-		CxImageJ2K newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
-			return true;
-		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_JBG
-	if (imagetype==CXIMAGE_FORMAT_JBG){
-		CxImageJBG newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile)){
-			Transfer(newima);
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_JBG==imagetype){
+		CxImageJBG *newima = new CxImageJBG;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
-			return false;
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
 		}
 	}
 #endif
 #if CXIMAGE_SUPPORT_JASPER
-	if (
- #if	CXIMAGE_SUPPORT_JP2
-		imagetype==CXIMAGE_FORMAT_JP2 || 
- #endif
- #if	CXIMAGE_SUPPORT_JPC
-		imagetype==CXIMAGE_FORMAT_JPC || 
- #endif
- #if	CXIMAGE_SUPPORT_PGX
-		imagetype==CXIMAGE_FORMAT_PGX || 
- #endif
- #if	CXIMAGE_SUPPORT_PNM
-		imagetype==CXIMAGE_FORMAT_PNM || 
- #endif
- #if	CXIMAGE_SUPPORT_RAS
-		imagetype==CXIMAGE_FORMAT_RAS || 
- #endif
-		 false ){
-		CxImageJAS newima;
-		newima.CopyInfo(*this);
-		if (newima.Decode(hFile,imagetype)){
-			Transfer(newima);
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype ||
+#if	CXIMAGE_SUPPORT_JP2
+	 CXIMAGE_FORMAT_JP2==imagetype || 
+#endif
+#if	CXIMAGE_SUPPORT_JPC
+	 CXIMAGE_FORMAT_JPC==imagetype || 
+#endif
+#if	CXIMAGE_SUPPORT_PGX
+	 CXIMAGE_FORMAT_PGX==imagetype || 
+#endif
+#if	CXIMAGE_SUPPORT_PNM
+	 CXIMAGE_FORMAT_PNM==imagetype || 
+#endif
+#if	CXIMAGE_SUPPORT_RAS
+	 CXIMAGE_FORMAT_RAS==imagetype || 
+#endif
+	 false ){
+		CxImageJAS *newima = new CxImageJAS;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
 			return true;
 		} else {
-			strcpy(info.szLastError,newima.GetLastError());
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
+#endif
+#if CXIMAGE_SUPPORT_SKA
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_SKA==imagetype){
+		CxImageSKA *newima = new CxImageSKA;
+		if (!newima)
 			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
+#endif
+#if CXIMAGE_SUPPORT_RAW
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_RAW==imagetype){
+		CxImageRAW *newima = new CxImageRAW;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
+		}
+	}
+#endif
+#if CXIMAGE_SUPPORT_PSD
+	if (CXIMAGE_FORMAT_UNKNOWN==imagetype || CXIMAGE_FORMAT_PSD==imagetype){
+		CxImagePSD *newima = new CxImagePSD;
+		if (!newima)
+			return false;
+		newima->CopyInfo(*this);
+		if (newima->Decode(hFile)) {
+			Transfer(*newima);
+			delete newima;
+			return true;
+		} else {
+			strcpy(info.szLastError,newima->GetLastError());
+			hFile->Seek(pos,SEEK_SET);
+			delete newima;
+			if (CXIMAGE_FORMAT_UNKNOWN!=imagetype)
+				return false;
 		}
 	}
 #endif
@@ -915,6 +1093,67 @@ bool CxImage::Decode(CxFile *hFile, DWORD imagetype)
 	strcpy(info.szLastError,"Decode: Unknown or wrong format");
 	return false;
 }
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Loads an image from CxFile object
+ * \param hFile: file handle (CxMemFile or CxIOFile), with read access.
+ * \param imagetype: file format, default = 0 (CXIMAGE_FORMAT_UNKNOWN)
+ * \return : if imagetype is not 0, the function returns true when imagetype
+ *  matches the file image format. If imagetype is 0, the function returns true
+ *  when the file image format is recognized as a supported format.
+ *  If the returned value is true, use GetHeight(), GetWidth() or GetType()
+ *  to retrieve the basic image information.
+ * \sa ENUM_CXIMAGE_FORMATS
+ */
+bool CxImage::CheckFormat(CxFile * hFile, uint32_t imagetype)
+{
+	SetType(CXIMAGE_FORMAT_UNKNOWN);
+	SetEscape(-1);
+
+	if (!Decode(hFile,imagetype))
+		return false;
+
+	if (GetType() == CXIMAGE_FORMAT_UNKNOWN ||
+		((imagetype!=CXIMAGE_FORMAT_UNKNOWN)&&(GetType() != imagetype)))
+		return false;
+
+	return true;
+}
+////////////////////////////////////////////////////////////////////////////////
+bool CxImage::CheckFormat(uint8_t * buffer, uint32_t size, uint32_t imagetype)
+{
+	if (buffer==NULL || size==NULL){
+		strcpy(info.szLastError,"invalid or empty buffer");
+		return false;
+	}
+	CxMemFile file(buffer,size);
+	return CheckFormat(&file,imagetype);
+}
+////////////////////////////////////////////////////////////////////////////////
+#if CXIMAGE_SUPPORT_EXIF
+bool CxImage::GetExifThumbnail(const TCHAR *filename, const TCHAR *outname, int32_t type)
+{
+	switch (type){
+#if CXIMAGE_SUPPORT_RAW
+	case CXIMAGE_FORMAT_RAW:
+	{
+		CxImageRAW image;
+  		return image.GetExifThumbnail(filename, outname, type);
+	}
+#endif //CXIMAGE_SUPPORT_RAW
+#if CXIMAGE_SUPPORT_JPG
+	case CXIMAGE_FORMAT_JPG:
+	{
+  		CxImageJPG image;
+  		return image.GetExifThumbnail(filename, outname, type);
+	}
+#endif //CXIMAGE_SUPPORT_JPG
+	default:
+		return false;
+	}
+}
+#endif //CXIMAGE_SUPPORT_EXIF
+
 ////////////////////////////////////////////////////////////////////////////////
 #endif //CXIMAGE_SUPPORT_DECODE
 ////////////////////////////////////////////////////////////////////////////////

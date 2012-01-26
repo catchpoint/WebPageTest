@@ -12,6 +12,8 @@
 #if !defined(__ximaJBG_h)
 #define __ximaJBG_h
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_JBG
 
 extern "C" {

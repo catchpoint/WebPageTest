@@ -13,6 +13,8 @@
 #if !defined(__ximaPSD_h)
 #define __ximaPSD_h
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_PSD
 
 #define CXIMAGE_USE_LIBPSD 1

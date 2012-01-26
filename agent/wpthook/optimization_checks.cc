@@ -295,7 +295,7 @@ void OptimizationChecks::CheckImageCompression()
               img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
               img.SetJpegQuality(85);
               BYTE* mem = NULL;
-              long len = 0;
+              int len = 0;
               if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
                 img.FreeMemory(mem);
                 targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;

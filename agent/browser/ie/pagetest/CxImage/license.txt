@@ -9,9 +9,9 @@ this sentence.
 
 COPYRIGHT NOTICE, DISCLAIMER, and LICENSE:
 
-CxImage version 5.99c 17/Oct/2004
+CxImage version 7.0.1 07/Jan/2011
 
-CxImage : Copyright (C) 2001 - 2004, Davide Pizzolato
+CxImage : Copyright (C) 2001 - 2011, Davide Pizzolato
 
 Original CImage and CImageIterator implementation are:
 Copyright (C) 1995, Alejandro Aguilar Sierra (asierra(at)servidor(dot)unam(dot)mx)

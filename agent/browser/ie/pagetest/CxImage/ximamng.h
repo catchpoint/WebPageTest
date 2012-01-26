@@ -19,6 +19,8 @@
 #if !defined(__ximaMNG_h)
 #define __ximaMNG_h
 
+#include "ximage.h"
+
 #if CXIMAGE_SUPPORT_MNG
 
 //#define MNG_NO_CMS
