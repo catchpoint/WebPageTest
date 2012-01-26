@@ -483,16 +483,18 @@ function ProcessHAR($testPath)
             }
             else
             {
-              logMalformedInput("HAR error: Could not get runs or cache status, from ".
-                                "pages array or page name \"$pageref\".");
+              logMalformedInput("HAR error: Could not get runs or cache ".
+                                "status, from pages array or page name ".
+                                "\"$pageref\".");
               // Sensible defaults:
               $curPageData["run"] =  1;
               $curPageData["cached"] = 0;
             }
 
             if ($curPageData["run"] <= 0)
-              logMalformedInput("HAR error: \$curPageData[\"run\"] should always be positive.  ".
-                                "Value is ".$curPageData["run"]);
+              logMalformedInput("HAR error: \$curPageData[\"run\"] should ".
+                                "always be positive.  Value is ".
+                                $curPageData["run"]);
 
             $curPageData["title"] =
               ($curPageData["cached"] ? "Cached-" : "Cleared Cache-") .
@@ -500,7 +502,8 @@ function ProcessHAR($testPath)
                   "^" . $curPageData["url"];
 
             // Define filename prefix
-            $curPageData["runFilePrefix"] = $testPath . "/" . $curPageData["run"] . "_";
+            $curPageData["runFilePrefix"] =
+                $testPath . "/" . $curPageData["run"] . "_";
 
             if ($curPageData["cached"])
               $curPageData["runFilePrefix"] .= "Cached_";
@@ -592,7 +595,8 @@ function ProcessHAR($testPath)
         $sortedEntries;
         foreach ($parsedHar['log']['entries'] as $entrycount => $entry)
         {
-            // We use the textual start date as key, which should work fine for ISO dates
+            // We use the textual start date as key, which should work fine
+            // for ISO dates.
             $start = $entry['startedDateTime'];
             $sortedEntries[$start . "-" . $entrycount] = $entry;
         }
@@ -601,15 +605,23 @@ function ProcessHAR($testPath)
         // Iterate the entries
         foreach ($sortedEntries as $entind => $entry)
         {
-            // Get the pageref
-            $startedDateTime = $entry['startedDateTime'];
-            $pageref = $entry['pageref'];
-            $curPageData = $pageData[$pageref];
+            // See http://www.softwareishard.com/blog/har-12-spec/#entries
 
+            $pageref = $entry['pageref'];
+            $startedDateTime = $entry['startedDateTime'];
+            $entryTime = $entry['time'];
             $reqEnt = $entry['request'];
             $respEnt = $entry['response'];
             $cacheEnt = $entry['cache'];
             $timingsEnt = $entry['timings'];
+            $reqIpAddr = $entry['serverIPAddress'];
+
+            // The following HAR fields are in the HAR spec, but we do not
+            // use them:
+            // $entry['connection']
+            // $entry['comment']
+
+            $curPageData = $pageData[$pageref];
 
             // Extract the variables
             $reqHttpVer = $reqEnt['httpVersion'];
@@ -636,14 +648,17 @@ function ProcessHAR($testPath)
             $reqUrl = $matches[2];
             $reqHost = $matches[1];
             $reqRespCode = $respEnt['status'];
-            // For now, ignore status 0 responses, as we assume these are cached resources
+            // For now, ignore status 0 responses, as we assume these are
+            // cached resources.
             if ($reqRespCode == "0") {
                 logMsg("Skipping resp 0 resource " . $reqEnt['url']);
                 continue;
             }
             $reqRespCodeText = $respEnt['statusText'];
-            $reqLoadTime = 0 + $entry['time'];
-            // The specific times are currently unavailable, and set to arbitrary values
+            $reqLoadTime = 0 + $entryTime;
+
+            // The specific times are currently unavailable, and set to
+            // arbitrary values.
             $reqDnsTime = 0; // + $timingEnt['dns'];
             $reqConnectTime = 0; // + $timingEnt['connect'];
             $reqSslTime = 0;
@@ -682,7 +697,6 @@ function ProcessHAR($testPath)
 
             // Variables that are likely not important
             // TODO: Check if they matter
-            $reqIpAddr = "127.0.0.1";
             $reqSocketID = 3;
             $reqDocId = 3;
             $reqDescriptor = "Launch";
