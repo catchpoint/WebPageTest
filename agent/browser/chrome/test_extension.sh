@@ -146,7 +146,8 @@ ${COMPILE_JS} ${FOR_RELEASE} \
 
 cp manifest.json release/
 cp wpt/*.html release/wpt/
-cp wpt/*.jpg release/wpt/
+cp wpt/*.jpg  release/wpt/
+cp wpt/*.css  release/wpt/
 
 
 # Launch chrome, load the release extension.

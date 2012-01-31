@@ -5281,6 +5281,7 @@ goog.testing.AsyncTestCase.prototype.doNext_ = function() {
   this.doSuccess(/** @type {goog.testing.TestCase.Test} */(this.activeTest));
 };
 
+
 // Closure compiler needs to see a goog.provide, but we don't load
 // closure library outside tests.  Without closure, |goog| does not exist.
 // The goog.provide call is not indented, because the closure library
@@ -5341,8 +5342,8 @@ window.addEventListener('load', function() {
 /**
  * WebPageTest's scripting language has several commands that act on
  * DOM nodes.  These commands specify the DOM nodes using an attribute
- * and a value, separated by a single quote.  A matching DOM node has
- * an attribute with the corresponding value.
+ * and a value, separated by a single quote or equals sign.  A matching
+ * DOM node has an attribute with the corresponding value.
  *
  * If there is more than one match, all matches will be returned,
  * in DOM order.  Commands that use this function should use the

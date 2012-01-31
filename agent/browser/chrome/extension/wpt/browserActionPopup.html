@@ -1,50 +1,12 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
-    <style>
-a.popupButton {
-  background-color: blue;
-  border-bottom-color: white;
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
-  border-collapse: separate;
-  border-left-color: white;
-  border-left-style: solid;
-  border-left-width: 1px;
-  border-right-color: white;
-  border-right-style: solid;
-  border-right-width: 1px;
-  border-top-color: white;
-  border-top-style: solid;
-  border-top-width: 1px;
-  color: white;
-  cursor: auto;
-  display: block;
-  font-size: 20px;
-  height: 25px;
-  margin-bottom: 0px;
-  margin-left: 1px;
-  margin-right: 0px;
-  margin-top: 0px;
-  outline-color: #98BF21;
-  outline-style: solid;
-  outline-width: 1px;
-  overflow-x: visible;
-  overflow-y: visible;
-  padding-bottom: 4px;
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-top: 3px;
-  text-align: center;
-  text-decoration: none;
-  width: 200px;
-}
-    </style>
+    <link rel="stylesheet" type="text/css" href="browserActionPopup.css"></link>
     <script src="browserActionPopup.js"></script>
   </head>
   <body>
-    <a class="popupButton" href="about:blank" onclick="openLink('chrome://extensions');">Extensions Page</a>
+    <a class="popupButton" href="about:blank" id="openExtensionsPage">Extensions Page</a>
     <br/>
-    <a class="popupButton" href="about:blank" onclick="openLink('wpt/allTests.html');">Run Unit Tests</a>
+    <a class="popupButton" href="about:blank" id="runAllTests">Run Unit Tests</a>
   </body>
 </html>

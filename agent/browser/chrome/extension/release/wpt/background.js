@@ -13752,6 +13752,10 @@ var STARTUP_DELAY = 5000;
 /** @const */
 var TASK_INTERVAL = 1000;
 
+// Run tasks slowly when testing, so that we can see errors in the logs
+// before navigation closes the dev tools window.
+var FAKE_TASK_INTERVAL = 6000;
+
 /** @const */
 var TASK_INTERVAL_SHORT = 0;
 
@@ -13834,7 +13838,7 @@ wpt.main.startMeasurements = function() {
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
-      window.setInterval(wptFeedFakeTasks, TASK_INTERVAL);
+      window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
     } else {
       // Fetch tasks from wptdriver.exe .
       window.setInterval(wptGetTask, TASK_INTERVAL);
@@ -13875,9 +13879,9 @@ var FAKE_TASKS = [
 
     // Can we change the text/html of a page?
     FakeCommand('navigate', 'http://www.google.com/news'),
-    FakeCommand('setinnertext', 'class=kd-appname',
+    FakeCommand('setinnertext', 'class=kd-appname-wrapper',
                 'This text should replace the word news!'),
-    FakeCommand('setinnerhtml', 'class=kd-appname',
+    FakeCommand('setinnerhtml', 'class=kd-appname-wrapper',
                 'This <b>HTML</b> should replace the word news!'),
 
     // Search news after changing the page.
