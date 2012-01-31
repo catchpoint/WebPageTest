@@ -315,6 +315,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.minimumDuration = min(120, max(0, _ttol(value)));
 							else if( !key.CompareNoCase(_T("clearRV")) )
                 info.clearShortTermCacheSecs = _ttol(value);
+							else if( !key.CompareNoCase(_T("keepua")) )
+                info.keepua = _ttol(value);
 						}
 					}
 

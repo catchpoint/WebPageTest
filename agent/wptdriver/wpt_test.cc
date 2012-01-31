@@ -112,6 +112,7 @@ void WptTest::Reset(void) {
   _dns_name_override.RemoveAll();
   _block_requests.RemoveAll();
   _save_response_bodies = false;
+  _preserve_user_agent = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -183,6 +184,8 @@ bool WptTest::Load(CString& test) {
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim()))
           _save_response_bodies = true;
+        else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
+          _preserve_user_agent = true;
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -593,7 +596,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   if( !tag.CompareNoCase("User-Agent") ) {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
-    } else {
+    } else if(!_preserve_user_agent) {
       CStringA user_agent;
       user_agent.Format(" PTST/%d", _version);
       header += user_agent;

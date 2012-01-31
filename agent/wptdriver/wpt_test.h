@@ -142,6 +142,7 @@ public:
   bool    _png_screen_shot;
   DWORD   _minimum_duration;
   bool    _save_response_bodies;
+  bool    _preserve_user_agent;
   
   // current state
   int     _run;

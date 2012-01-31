@@ -67,7 +67,7 @@ void CWinInetEvents::BeforeInternetOpen(CString &agent)
 		{
 			agent = userAgent;
 		}
-		else if( script_modifyUserAgent )
+		else if( script_modifyUserAgent && !keepua )
 		{
 			// modify the user agent string
 			CString buff;
@@ -859,7 +859,7 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 				}
 			}
 		}
-		else if( script_modifyUserAgent )
+		else if( script_modifyUserAgent && !keepua )
 		{
 			CString agent;
 			agent.Format(_T("; PTST 2.%d"), build);
@@ -1158,7 +1158,7 @@ void CWinInetEvents::OnHttpAddRequestHeaders(HINTERNET hRequest, CString &header
 				}
 			}
 		}
-		else if( script_modifyUserAgent)
+		else if( script_modifyUserAgent && !keepua )
 		{
 			// modify the user agent string if it was passed as a custom header (IE8)
 			CString agent;

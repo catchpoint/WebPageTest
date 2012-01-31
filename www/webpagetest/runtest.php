@@ -89,6 +89,9 @@
             $test['bodies'] = $req_bodies;
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
+            $test['keepua'] = 0;
+            if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
+                $test['keepua'] = 1;
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -221,6 +224,7 @@
                 if( $test['batch_locations'] && count($test['multiple_locations']) )
                 {
                     $test['id'] = CreateTest($test, $test['url'], 0, 1);
+                    $test['batch_id'] = $test['id'];
 
                     $test['tests'] = array();
                     foreach( $test['multiple_locations'] as $location_string )
@@ -334,6 +338,7 @@
                     if( count($bulk['urls']) )
                     {
                         $test['id'] = CreateTest($test, $test['url'], 1);
+                        $test['batch_id'] = $test['id'];
                         
                         $testCount = 0;
                         foreach( $bulk['urls'] as &$entry )
@@ -1573,6 +1578,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "time={$test['time']}\r\n";
         if( $test['clear_rv'] )
             $testFile .= "clearRV={$test['clear_rv']}\r\n";
+        if( $test['keepua'] )
+            $testFile .= "\r\nkeepua=1";
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )

@@ -277,6 +277,18 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <?php
+                                        $checked = '';
+                                        if (array_key_exists('keepua', $settings) && $settings['keepua'])
+                                            $checked = ' checked=checked';
+                                        echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
+                                        ?>
+                                        <label for="keepua" class="auto_width">
+                                            Preserve original User Agent string<br>
+                                            <small>Do not add PTST to the browser UA string</small>
+                                        </label>
+                                    </li>
+                                    <li>
                                         <label for="dom_elements" class="auto_width">DOM Element</label>
                                         <input type="text" name="domelement" id="dom_elements" class="text">
                                         <div class="tooltip" style="display:none;">Waits for and records when the indicated DOM element becomes available on the page.  The DOM element 

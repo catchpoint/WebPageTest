@@ -47,6 +47,7 @@ public:
     pngScreenShot = 0;
     imageQuality = 0;
     bodies = 0;
+    keepua = 0;
     minimumDuration=0;
     clearShortTermCacheSecs=0;
 	}
@@ -85,6 +86,7 @@ public:
   DWORD bodies;             // save the content of text responses?
   DWORD minimumDuration;    // minimum test duration
   DWORD clearShortTermCacheSecs;  // in repeat view, delete objects with a expires of less than X seconds
+  DWORD keepua;             // preserve the original User Agent string
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

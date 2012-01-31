@@ -973,6 +973,7 @@ void CURLBlaster::ConfigurePagetest(void)
 		  RegSetValueEx(hKey, _T("pngScreenShot"), 0, REG_DWORD, (const LPBYTE)&info.pngScreenShot, sizeof(info.pngScreenShot));
 		  RegSetValueEx(hKey, _T("imageQuality"), 0, REG_DWORD, (const LPBYTE)&info.imageQuality, sizeof(info.imageQuality));
       RegSetValueEx(hKey, _T("bodies"), 0, REG_DWORD, (const LPBYTE)&info.bodies, sizeof(info.bodies));
+      RegSetValueEx(hKey, _T("keepua"), 0, REG_DWORD, (const LPBYTE)&info.keepua, sizeof(info.keepua));
       RegSetValueEx(hKey, _T("minimumDuration"), 0, REG_DWORD, (const LPBYTE)&info.minimumDuration, sizeof(info.minimumDuration));
 
 		  // Add the blockads bit.
