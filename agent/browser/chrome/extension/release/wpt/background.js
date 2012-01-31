@@ -13611,12 +13611,22 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // Create a listener which blocks all the requests that has the patterm. Also,
   // pass an empty filter and 'blocking' as the extraInfoSpec.
-  chrome.webRequest.onBeforeRequest.addListener(function(details) {
+  var onBeforeRequestCallback = function(details) {
     if (details.url.indexOf(blockPattern) != -1) {
       return {'cancel': true };
     }
     return {};
-  }, {}, ['blocking']);
+  };
+
+  var requestFilter = {
+    urls: [],
+    tabId: this.tabId_
+  };
+
+  chrome.webRequest.onBeforeRequest.addListener(
+      onBeforeRequestCallback,
+      requestFilter,
+      ['blocking']);
 };
 
 /**
