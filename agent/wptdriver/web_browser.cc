@@ -38,6 +38,20 @@ static const TCHAR * FLASH_CACHE_DIR =
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
+static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
+    _T("--enable-experimental-extension-apis"),
+    _T("--ignore-certificate-errors"),
+    _T("--disable-background-networking"),
+    _T("--no-default-browser-check"),
+    _T("--no-first-run"),
+    _T("--process-per-tab"),
+    _T("--new-window")
+};
+
+static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
+    _T("-no-remote")
+};
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
@@ -85,13 +99,18 @@ bool WebBrowser::RunAndWait() {
       CString exe(_browser._exe);
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
-        if (_browser._options.Find(
-            _T("--enable-experimental-extension-apis")) < 0) {
-          lstrcat( cmdLine, _T(" --enable-experimental-extension-apis") );
+        for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
+          if (_browser._options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
+            lstrcat(cmdLine, _T(" "));
+            lstrcat(cmdLine, CHROME_REQUIRED_OPTIONS[i]);
+          }
         }
-        if (_browser._options.Find(
-            _T("--ignore-certificate-errors")) < 0) {
-          lstrcat( cmdLine, _T(" --ignore-certificate-errors") );
+      } else if (exe.Find(_T("firefox.exe")) >= 0) {
+        for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
+          if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
+            lstrcat(cmdLine, _T(" "));
+            lstrcat(cmdLine, FIREFOX_REQUIRED_OPTIONS[i]);
+          }
         }
       }
       if (exe.Find(_T("iexplore.exe")) >= 0) {

@@ -9,13 +9,13 @@ software=http://www.webpagetest.org/installers/software.dat
 
 [chrome]
 exe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --new-window --no-proxy-server --no-first-run --no-default-browser-check --enable-experimental-extension-apis'
+options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --no-proxy-server'
 installer=http://www.webpagetest.org/installers/browsers/chrome.dat
 ;For SSL support in chrome, enable the downloading of debug symbols
 ;use symbols=1
 
 [Firefox]
 exe="C:\Program Files\Mozilla Firefox\firefox.exe"
-options='-profile "%PROFILE%" -no-remote'
+options='-profile "%PROFILE%"'
 installer=http://www.webpagetest.org/installers/browsers/firefox.dat
 template=firefox
