@@ -183,7 +183,7 @@ else
                 #waterfall
                 {
                     clear: both;
-                    position: relative;
+                    position: relative; left: 0; top: 0;
                     top: -3em;
                     width: 930px;
                 }
@@ -204,6 +204,15 @@ else
                     margin-right: auto;
                     margin-top: 10px;
                     display: block;
+                }
+                #marker {
+                    position: absolute; top: 0; left: 250px;
+                    height: 100%;
+                    width: 2px;
+                    background-color: #D00;
+                }
+                #waterfallImage {
+                    padding: 10px 0;
                 }
             </style>
         </head>
@@ -226,9 +235,46 @@ else
                 <?php include('footer.inc'); ?>
             </div>
 
-            <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/video/compare.js?v=5"></script> 
             <script type="text/javascript">
                 <?php echo "var maxCompare = $maxCompare;"; ?>
+                function ValidateInput(form)
+                {
+                    var ret = false;
+                    
+                    var count = $('input:checked[name="t[]"]').size();
+                    if( count > 0 )
+                    {
+                        if( count <= maxCompare )
+                            ret = true;
+                        else
+                        {
+                            alert("Select no more than " + maxCompare + " tests to compare");
+                            return false;
+                        }
+                    }
+                    else
+                        alert("Please select at least one test to create a video from");
+                    
+                    return ret;
+                }
+
+                function ShowAdvanced()
+                {
+                    $("#advanced").modal({opacity:80});
+                }
+
+                $("#videoDiv").scroll(function() {
+                    UpdateScrollPosition();
+                });
+
+                function UpdateScrollPosition() {
+                    var position = $("#videoDiv").scrollLeft();
+                    var viewable = $("#videoDiv").width();
+                    var width = $("#video").width();
+                    var marker = parseInt(250 + ((position / width) * 680));
+                    $('#marker').css('left', marker + 'px');
+                }
+                UpdateScrollPosition();
             </script>
         </body>
     </html>
@@ -251,6 +297,7 @@ function ScreenShotTable()
     if( strlen($_REQUEST['end']) )
         $endTime = trim($_REQUEST['end']);
 
+    $filmstrip_end_time = 0;
     if( count($tests) )
     {
         // figure out how many columns there are
@@ -312,6 +359,7 @@ function ScreenShotTable()
             {
                 $skipped = 0;
                 echo '<th>' . number_format((float)$frame / 10.0, 1) . 's</th>';
+                $filmstrip_end_time = $frame / 10.0;
             }
         }
         echo "</tr></thead><tbody>\n";
@@ -331,6 +379,7 @@ function ScreenShotTable()
             $frameCount = 0;
             $skipped = $interval;
             $last = $end + $interval - 1;
+            $progress = null;
             for( $frame = 0; $frame <= $last; $frame++ )
             {
                 $path = null;
@@ -345,6 +394,12 @@ function ScreenShotTable()
                     else
                         $path = $test['video']['frames'][0];
                 }
+
+                $ms = $frame * 100;
+                if (array_key_exists('progress', $test['video']) 
+                    && array_key_exists('frames', $test['video']['progress'])
+                    && array_key_exists($ms, $test['video']['progress']['frames']))
+                    $progress = $test['video']['progress']['frames'][$ms]['progress'];
 
                 if( !$lastThumb )
                     $lastThumb = $path;
@@ -382,6 +437,10 @@ function ScreenShotTable()
                         if( $height )
                             echo " height=\"$height\"";
                         echo " src=\"/thumbnail.php?test={$test['id']}&width=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                        
+                        if (isset($progress)) {
+                            echo "<br>$progress%";
+                        }
                         
                         $lastThumb = $path;
                     }
@@ -502,8 +561,16 @@ function ScreenShotTable()
                 $secure = false;
                 $haveLocations = false;
                 $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, false);
-                $options = array( 'id' => $tests[0]['id'], 'path' => $tests[0]['path'], 'run' => $tests[0]['run'], 'cached' => $tests[0]['cached'], 'cpu' => false );
-                $map = drawWaterfall($tests[0]['url'], $requests, $data, true, $options);
+                $options = array(
+                    'id' => $tests[0]['id'],
+                    'path' => $tests[0]['path'],
+                    'run_id' => $tests[0]['run'],
+                    'is_cached' => $tests[0]['cached'],
+                    'use_cpu' => false,
+                    'width' => 930
+                    );
+                $rows = GetRequestRows($requests, false);
+                $map = GetWaterfallMap($rows, $url, $options);
                 foreach($map as $entry)
                 {
                     if( $entry['request'] !== NULL )
@@ -519,8 +586,9 @@ function ScreenShotTable()
             </map>
             
             <?php
-            echo "<img id=\"waterfallImage\" usemap=\"#waterfall_map\" border=\"0\" alt=\"Waterfall\" src=\"/waterfall.php?width=930px&test={$tests[0]['id']}&run={$tests[0]['run']}&cached={$tests[0]['cached']}&cpu=0&bw=0\">";
+            echo "<img id=\"waterfallImage\" usemap=\"#waterfall_map\" border=\"0\" alt=\"\" src=\"/waterfall.php?width=930&max=$filmstrip_end_time&mime=1&state=1&test={$tests[0]['id']}&run={$tests[0]['run']}&cached={$tests[0]['cached']}&cpu=0&bw=0\">";
             ?>
+            <div id="marker"></div>
         </div>
         
         <?php

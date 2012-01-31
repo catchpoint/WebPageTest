@@ -1,6 +1,7 @@
 <?php
 
 // Shared code for creating the visual filmstrips
+require_once('visualProgress.inc.php');
 
 // build up the actual test data (needs to include testID and RUN in the requests)
 $tests = array();
@@ -142,6 +143,8 @@ $interval /= 100;
 function LoadTestData()
 {
     global $tests;
+    global $admin;
+    global $supportsAuth;
 
     foreach( $tests as &$test )
     {
@@ -166,13 +169,15 @@ function LoadTestData()
         $videoPath = "./$testPath/video_{$test['run']}";
         if( $test['cached'] )
             $videoPath .= '_cached';
-        
+            
         if( is_dir($videoPath) )
         {
             $test['video'] = array();
             $test['video']['start'] = 20000;
             $test['video']['end'] = 0;
             $test['video']['frames'] = array();
+            if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
+                $test['video']['progress'] = GetVisualProgress($videoPath);
             
             // get the path to each of the video files
             $dir = opendir($videoPath);
