@@ -116,6 +116,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 
 
 #bwTable {margin-left: 170px; margin-top: 10px;}
+#bwTable th {text-align: left;}
 #bwTable td {width: 100px;}
 .backlogWarn{color: #f1c52e; font-weight:bold;}
 .backlogHigh{color: red; font-weight:bold;}
