@@ -1,7 +1,7 @@
+goog.require('goog.testing.AsyncTestCase');
+goog.require('goog.testing.jsunit');
 goog.require('wpt.commands');
 goog.require('wpt.contentScript');
-goog.require('goog.testing.jsunit');
-goog.require('goog.testing.AsyncTestCase');
 
 goog.provide('wpt.allTests');
 
@@ -48,7 +48,7 @@ function testSetCookie() {
   commandRunner.doSetCookie(
       'http://www.a.com',
       'zip=20166');
-  assertArrayEquals("Cookie set without a date.",
+  assertArrayEquals('Cookie set without a date.',
                     [{
                        'url': 'http://www.a.com',
                        'name': 'zip',
@@ -65,8 +65,8 @@ function testSetCookie() {
   cookieLog = [];
   commandRunner.doSetCookie(
       'http://www.example.com',
-      'TestData=Test;expires='+dateString);
-  assertArrayEquals("Cookie set with a date.",
+      'TestData=Test;expires=' + dateString);
+  assertArrayEquals('Cookie set with a date.',
                     [{
                        'url': 'http://www.example.com',
                        'name': 'TestData',
@@ -77,8 +77,8 @@ function testSetCookie() {
   cookieLog = [];
   commandRunner.doSetCookie(
       'http://www.b.com',
-      '    TestData  =  Test  ;    expires  = '+ dateString +' ');
-  assertArrayEquals("Whitespace trimming works.",
+      '    TestData  =  Test  ;    expires  = ' + dateString + ' ');
+  assertArrayEquals('Whitespace trimming works.',
                     [{
                        'url': 'http://www.b.com',
                        'name': 'TestData',
@@ -86,27 +86,27 @@ function testSetCookie() {
                        'expirationDate': dateMsSinceEpoch
                      }],
                     cookieLog);
-};
+}
 
 function testFindDomElements() {
   // For testing, we search under a div in allTests.html:
   var root = document.getElementById('testFindDomElements');
 
-  assertArrayEquals("No elements with attribute 'zzz'",
+  assertArrayEquals('No elements with attribute "zzz"',
                     [], wpt.contentScript.findDomElements_(root, "zzz'one"));
 
 
-  assertArrayEquals("No elements with attribute 'aaa' that have value 'zzz'",
+  assertArrayEquals('No elements with attribute "aaa" that have value "zzz"',
                     [], wpt.contentScript.findDomElements_(root, "aaa'zzz"));
 
 
-  var actual = wpt.contentScript.findDomElements_(root, "aaa=one");
-  assertEquals("One item matching \"aaa=one\"", 1, actual.length);
-  assertEquals("First span", actual[0].innerText);
+  var actual = wpt.contentScript.findDomElements_(root, 'aaa=one');
+  assertEquals('One item matching "aaa=one"', 1, actual.length);
+  assertEquals('First span', actual[0].innerText);
 
   actual = wpt.contentScript.findDomElements_(root, "aaa'one");
   assertEquals("One item matching \"aaa'one\"", 1, actual.length);
-  assertEquals("First span", actual[0].innerText);
+  assertEquals('First span', actual[0].innerText);
 
 
   actual = wpt.contentScript.findDomElements_(root, "bbb'two");
@@ -527,7 +527,8 @@ function testSubmitFormCommand() {
 
   assertArrayEquals("No warnings", [], ipcr.warnings);
   assertArrayEquals(
-      ['Target to submitForm must match a FORM tag.  Matched tag is of type DIV'],
+      ['Target to submitForm must match a FORM tag.  Matched tag is of ' +
+       'type DIV'],
       ipcr.errors);
   assertEquals('Should fail.', 0, ipcr.successCalls);
 

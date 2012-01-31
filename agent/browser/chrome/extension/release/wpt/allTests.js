@@ -4468,435 +4468,6 @@ goog.testing.jsunit.AUTO_RUN_ONLOAD = true;
     }
   }
 })();
-
-// Closure compiler needs to see a goog.provide, but we don't load
-// closure library outside tests.  Without closure, |goog| does not exist.
-// The goog.provide call is not indented, because the closure library
-// dependency generation scrips use a regexp to find calls to goog.provide,
-// and it will not be matched if there is whitespace on the line.
-// TODO(skerner): Make the non-test content script flow have base.js,
-// so that goog.provide exists.
-if (window['goog'])
-goog.provide('wpt.contentScript');
-
-var DOM_ELEMENT_POLL_INTERVAL = 100;
-
-// If the namespace is not set up by goog.provide, define the objects
-// it would set up.  We could avoid this sort of hackery by injecting
-// base.js before injecting this script, but the script injection
-// this would do has the potential to be slow enough to change the
-// measured load time.
-// TODO(skerner): Measure the timing difference.
-window['wpt'] = window['wpt'] || {};
-window.wpt['contentScript'] = window.wpt['contentScript'] || {};
-
-window['goog'] = window['goog'] || {};
-window.goog['isNull'] = window.goog['isNull'] || function(val) {
-  return (val === null);
-};
-
-wpt.contentScript.reportTiming_ = function() {
-  var timingRequest = { 'message': 'wptWindowTiming' };
-  function addTime(name) {
-    if (window.performance.timing[name] > 0) {
-      timingRequest[name] = Math.max(0, (
-        window.performance.timing[name] -
-        window.performance.timing['navigationStart']));
-    }
-  };
-  addTime('domContentLoadedEventStart');
-  addTime('domContentLoadedEventEnd');
-  addTime('loadEventStart');
-  addTime('loadEventEnd');
-
-  // Send the times back to the extension.
-  chrome.extension.sendRequest(timingRequest, function(response) {});
-};
-
-// This script is automatically injected into every page before it loads.
-// We need to use it to register for the earliest onLoad callback
-// since the navigation timing times are sometimes questionable.
-window.addEventListener('load', function() {
-  window.setTimeout(wpt.contentScript.reportTiming_, 0);
-  chrome.extension.sendRequest({message: 'wptLoad'}, function(response) {});
-}, false);
-
-
-
-/**
- * WebPageTest's scripting language has several commands that act on
- * DOM nodes.  These commands specify the DOM nodes using an attribute
- * and a value, separated by a single quote.  A matching DOM node has
- * an attribute with the corresponding value.
- *
- * If there is more than one match, all matches will be returned,
- * in DOM order.  Commands that use this function should use the
- * first element.
- *
- * @param {!HTMLElement|Document} root The document to search under.
- *     Usually window.document, except in unit tests.
- * @param {!string} target The pattern to match.
- * @returns {Array.<HTMLElement>} The HTML elements that match |target|.
- */
-wpt.contentScript.findDomElements_ = function(root, target) {
-  var DELIMITERS = "='";
-
-  var delimiterFound = '';
-  for (var i = 0, ie = DELIMITERS.length; i < ie && !delimiterFound; ++i) {
-    var delimiterIndex = target.indexOf(DELIMITERS[i]);
-    if (delimiterIndex == -1)
-      continue;
-
-    delimiterFound = DELIMITERS[i];
-  }
-
-  if (!delimiterFound)
-    throw ("Invalid target \"" + target + "\": no delimiter found.");
-
-  var attribute = target.substring(0, delimiterIndex);
-  var value = target.substring(delimiterIndex + 1);
-
-  if (!attribute)
-    throw ("Invalid target \"" + target +
-           "\": The attribute to search for can not be empty.");
-
-  var matchingNodeList = [];
-  switch (attribute) {
-    case "id": {
-      var element = document.getElementById(value);
-      if (element)
-        matchingNodeList.push(element);
-      break;
-    }
-    case "name": {
-      // |elements| is a DOM NodeList, not a Javascript array, so we must
-      // move the elements into an array.
-      var elements = document.getElementsByName(value);
-      for (var i = 0, ie = elements.length; i < ie; ++i) {
-        matchingNodeList.push(elements[i]);
-      }
-      break;
-    }
-    default: {
-      var fullNodeList = root.getElementsByTagName('*');
-      for (var i = 0, ie = fullNodeList.length; i < ie; ++i) {
-        if (fullNodeList[i].getAttribute(attribute) !== value)
-          continue;
-
-        matchingNodeList.push(fullNodeList[i]);
-      }
-    }
-  }
-
-  return matchingNodeList;
-};
-
-var g_intervalId = 0;
-var g_domNameValues = [];
-
-// Add a listener for messages from background.
-chrome.extension.onRequest.addListener(
-  function(request, sender, sendResponse) {
-    if (request.message == "setDOMElements") {
-      g_domNameValues = request.name_values;
-      g_intervalId = window.setInterval(
-          function() { pollDOMElement(); },
-          DOM_ELEMENT_POLL_INTERVAL);
-    }
-    sendResponse({});
-});
-
-// Poll for a DOM element periodically.
-function pollDOMElement() {
-  var loaded_dom_element_indices = [];
-  // Check for presence of each dom-element and prepare the indices of the
-  // elements present.
-  // TODO: Make findDomElements_() take a set of targets.  This will allow a
-  // single DOM traversal to find all targets.
-  for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) {
-    // TODO: findDomElements_ will throw an exception on a malformed target.
-    if (wpt.contentScript.findDomElements_(window.document, g_domNameValues[i]).length > 0) {
-      postDOMElementLoaded(g_domNameValues[i]);
-      loaded_dom_element_indices.push(i);
-    }
-  }
-  // Remove the loaded elements from backwards using splice method.
-  for (var i = loaded_dom_element_indices.length-1; i >= 0; i--) {
-    g_domNameValues.splice(loaded_dom_element_indices[i], 1);
-  }
-
-  if (g_domNameValues.length <= 0) {
-    window.clearInterval(g_intervalId);
-    postAllDOMElementsLoaded();
-  }
-};
-
-// Post the DOM element loaded event to the extension.
-function postDOMElementLoaded(name_value) {
-  chrome.extension.sendRequest({message: "DOMElementLoaded", name_value: name_value}, function(response) {});
-}
-
-// Post all DOM elements loaded event to the extension.
-function postAllDOMElementsLoaded() {
-  chrome.extension.sendRequest({message: "AllDOMElementsLoaded"}, function(response) {});
-}
-
-/**
- * Class InPageCommandRunner works on behalf of wpt.commands.CommandRunner
- * to execute script commands.  Because it runs as a content script, it
- * can access the DOM of the page.
- *
- * @constructor
- * @param {?HTMLElement|Document} doc Many commands search for a DOM node.
- *     This element is the root of the DOM tree on which commands operate.
- *     Outside of unit tests, usually window.document.
- * @param {Object} chromeApi The base object of the chrome extension API.
- *                           Outside unit tests, usually window.chrome.
- * @param {Object} resultCallbacks Callbacks to run on success, failure, etc.
- *                                 These calls are used by unit tests to check
- *                                 results.  They are not used in production,
- *                                 except to log to the console in the content
- *                                 script.
- */
-wpt.contentScript.InPageCommandRunner = function(doc,
-                                                 chromeApi,
-                                                 resultCallbacks) {
-  this.doc_ = doc;
-  this.chromeApi_ = chromeApi;
-  this.resultCallbacks_ = resultCallbacks;
-
-  /**
-   * Map command names to the function that implements them.
-   * @const
-   * @type {Object.<string, Function.<Object>>}
-   */
-  this.commandMap_ = {
-    'click': this.doClick_,
-    'setInnerHTML': this.doSetInnerHTML_,
-    'setInnerText': this.doSetInnerText_,
-    'setValue': this.doSetValue_,
-    'submitForm': this.doSubmitForm_
-  };
-};
-
-/**
- * Signal that the command completed without error.
- */
-wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
-  console.log("Command successful.");
-  if (this.resultCallbacks_.success)
-    this.resultCallbacks_.success();
-};
-
-/**
- * Send a warning to the creator of the in-page command runner.
- * @param {string} warning
- */
-wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
-  console.log("Command generated warning: " + warning);
-  if (this.resultCallbacks_.warn)
-    this.resultCallbacks_.warn(warning);
-};
-
-/**
- * Signal that the command failed because of an error.
- * @param {string} error
- */
-wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
-  console.log("Command generated error: " + error);
-  if (this.resultCallbacks_.error)
-    this.resultCallbacks_.error(error);
-};
-
-/**
- * Several commands act on a DOM node, specified as a target pattern.
- * Given a target, return the first DOM node that matches, in DOM-tree order.
- * Log a fatal error if the target is malformed, or there is no matching DOM
- * node.  Log a warning if there is more than one matching node.  Return null
- * if there is no matching node.
- *
- * @param {string} command The command to be done on |target|.  Used for
- *     error messages.
- * @param {string} target The target DOM node, in attribute=value form.
- * @return {?Element} The matching DOM node.  null if there is no match.
- */
-wpt.contentScript.InPageCommandRunner.prototype.findTarget_ = function(
-    command, target) {
-  var domElements;
-  try {
-    domElements = wpt.contentScript.findDomElements_(this.doc_, target);
-  } catch (err) {
-    this.FatalError_("Command " + command + " failed: "+ err);
-    return null;
-  }
-
-  if (!domElements || domElements.length == 0) {
-    this.FatalError_("Command " + command + " failed: Could not find DOM " +
-                     "element matching target " + target);
-    return null;
-  }
-
-  if (domElements.length > 1) {
-    this.Warn_("Command " + command + ": " + domElements.length +
-               " matches for target \"" + target + "\".  Using first match.");
-  }
-
-  return domElements[0];
-};
-
-/**
- * Click on a page element.
- * @param {Object} commandObject Contains a 'target' param specifying the DOM
- *     element to click, in attribute'value form.
- */
-wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(
-    commandObject) {
-
-  var domElement = this.findTarget_(commandObject['command'],
-                                    commandObject['target']);
-  if (goog.isNull(domElement))
-    return;  // Error already flagged by findTarget_().
-
-  domElement.click();
-  this.Success_();
-};
-
-/**
- * Set the innerText of a DOM node.
- * @param {Object} commandObject Contains a 'target' param specifying the DOM
- *     element to click, in attribute'value form.
- */
-wpt.contentScript.InPageCommandRunner.prototype.doSetInnerText_ = function(
-    commandObject) {
-
-  var domElement = this.findTarget_(commandObject['command'],
-                                    commandObject['target']);
-  if (goog.isNull(domElement))
-    return;  // Error already flagged by findTarget_().
-
-  domElement.innerText = commandObject['value'];
-  this.Success_();
-};
-
-/**
- * Set the innerHtml of a DOM node.
- * @param {Object} commandObject Contains a 'target' param specifying the DOM
- *     element to click, in attribute'value form.
- */
-wpt.contentScript.InPageCommandRunner.prototype.doSetInnerHTML_ = function(
-    commandObject) {
-
-  var domElement = this.findTarget_(commandObject['command'],
-                                    commandObject['target']);
-  if (goog.isNull(domElement))
-    return;  // Error already flagged by findTarget_().
-
-  domElement.innerHTML = commandObject['value'];
-  this.Success_();
-};
-
-/**
- * Test if an HTML tag type string is in a set of HTML tag type strings.  The
- * test is case-insensitive.
- *
- * @param {string} tagType The type of an HTML tag.  Typically the nodeName
- *     property of a DOM element.
- * @param {Array.<string>} tagSet The set of tag types to look for.
- * @returns {boolean} Is |tagType| in |tagSet|?
- */
-wpt.contentScript.isTagNameInSet_ = function(tagType, tagSet) {
-  var normalizedTagType = tagType.toUpperCase();
-  for (var i = 0, ie = tagSet.length; i < ie; ++i) {
-    if (tagSet[i].toUpperCase() == normalizedTagType)
-      return true;
-  }
-  return false;
-};
-
-/**
- * Set the value of an attribute of a DOM node.
- * @param {Object} commandObject Contains a 'target' param specifying the DOM
- *     element to click, in attribute'value form.
- */
-wpt.contentScript.InPageCommandRunner.prototype.doSetValue_ = function(
-    commandObject) {
-
-  var domElement = this.findTarget_(commandObject['command'],
-                                    commandObject['target']);
-  if (goog.isNull(domElement))
-    return;  // Error already flagged by findTarget_().
-
-  // Currently, only "input" and "textArea" element types are supported.
-  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName,
-                                        ['INPUT', 'TEXTAREA'])) {
-    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
-                     'an INPUT or TEXTAREA tag.  Matched tag is of type ' +
-                     domElement.nodeName);
-    return;
-  }
-
-  domElement.setAttribute('value', commandObject['value']);
-
-  this.Success_();
-};
-
-/**
- * Submit a form.
- * @param {Object} commandObject Contains a 'target' param specifying the DOM
- *     element to submit, in attribute'value form.
- */
-wpt.contentScript.InPageCommandRunner.prototype.doSubmitForm_ = function(
-    commandObject) {
-
-  var domElement = this.findTarget_(commandObject['command'],
-                                    commandObject['target']);
-  if (goog.isNull(domElement))
-    return;  // Error already flagged by findTarget_().
-
-  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName, ['FORM'])) {
-    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
-                     'a FORM tag.  Matched tag is of type ' +
-                     domElement.nodeName);
-    return;
-  }
-
-  domElement.submit();
-
-  this.Success_();
-};
-
-/**
- * Run a command.  The backgrond page delegates commands to the content script
- * by calling this method on an instance of InPageCommandRunner.
- * @param {Object} commandObj
- */
-wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj) {
-  console.info("InPageCommandRunner got a command: ", commandObj);
-
-  var commandFun = this.commandMap_[commandObj['command']];
-  if (!commandFun) {
-    this.FatalError_("Unknown command " + commandObj['command']);
-    return;
-  }
-
-  try {
-    commandFun.call(this, commandObj);
-  } catch (ex) {
-    this.FatalError_("Exception running command: " + ex);
-    return;
-  }
-};
-
-
-/**
- * An instance of InPageCommandRunner whose well-known name can be used
- * by the background page.
- */
-wpt.contentScript.InPageCommandRunner.Instance =
-    new wpt.contentScript.InPageCommandRunner(
-        window.document,
-        chrome,
-        {});
 // Copyright 2010 The Closure Library Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -5709,6 +5280,457 @@ goog.testing.AsyncTestCase.prototype.doNext_ = function() {
   this.setNextStep_(this.doIteration_, 'doIteration');
   this.doSuccess(/** @type {goog.testing.TestCase.Test} */(this.activeTest));
 };
+
+// Closure compiler needs to see a goog.provide, but we don't load
+// closure library outside tests.  Without closure, |goog| does not exist.
+// The goog.provide call is not indented, because the closure library
+// dependency generation scrips use a regexp to find calls to goog.provide,
+// and it will not be matched if there is whitespace on the line.
+// TODO(skerner): Make the non-test content script flow have base.js,
+// so that goog.provide exists.
+if (window['goog'])
+goog.provide('wpt.contentScript');
+
+var DOM_ELEMENT_POLL_INTERVAL = 100;
+
+// If the namespace is not set up by goog.provide, define the objects
+// it would set up.  We could avoid this sort of hackery by injecting
+// base.js before injecting this script, but the script injection
+// this would do has the potential to be slow enough to change the
+// measured load time.
+// TODO(skerner): Measure the timing difference.
+window['wpt'] = window['wpt'] || {};
+window.wpt['contentScript'] = window.wpt['contentScript'] || {};
+
+window['goog'] = window['goog'] || {};
+window.goog['isNull'] = window.goog['isNull'] || function(val) {
+  return (val === null);
+};
+
+/**
+ * @private
+ */
+wpt.contentScript.reportTiming_ = function() {
+  var timingRequest = { 'message': 'wptWindowTiming' };
+  function addTime(name) {
+    if (window.performance.timing[name] > 0) {
+      timingRequest[name] = Math.max(0, (
+        window.performance.timing[name] -
+        window.performance.timing['navigationStart']));
+    }
+  };
+  addTime('domContentLoadedEventStart');
+  addTime('domContentLoadedEventEnd');
+  addTime('loadEventStart');
+  addTime('loadEventEnd');
+
+  // Send the times back to the extension.
+  chrome.extension.sendRequest(timingRequest, function(response) {});
+};
+
+// This script is automatically injected into every page before it loads.
+// We need to use it to register for the earliest onLoad callback
+// since the navigation timing times are sometimes questionable.
+window.addEventListener('load', function() {
+  window.setTimeout(wpt.contentScript.reportTiming_, 0);
+  chrome.extension.sendRequest({message: 'wptLoad'}, function(response) {});
+}, false);
+
+
+
+/**
+ * WebPageTest's scripting language has several commands that act on
+ * DOM nodes.  These commands specify the DOM nodes using an attribute
+ * and a value, separated by a single quote.  A matching DOM node has
+ * an attribute with the corresponding value.
+ *
+ * If there is more than one match, all matches will be returned,
+ * in DOM order.  Commands that use this function should use the
+ * first element.
+ *
+ * @param {!HTMLElement|Document} root The document to search under.
+ *     Usually window.document, except in unit tests.
+ * @param {!string} target The pattern to match.
+ * @return {Array.<HTMLElement>} The HTML elements that match |target|.
+ * @private
+ */
+wpt.contentScript.findDomElements_ = function(root, target) {
+  var DELIMITERS = "='";
+
+  var delimiterFound = '';
+  for (var i = 0, ie = DELIMITERS.length; i < ie && !delimiterFound; ++i) {
+    var delimiterIndex = target.indexOf(DELIMITERS[i]);
+    if (delimiterIndex == -1)
+      continue;
+
+    delimiterFound = DELIMITERS[i];
+  }
+
+  if (!delimiterFound)
+    throw ('Invalid target \"' + target + '\": no delimiter found.');
+
+  var attribute = target.substring(0, delimiterIndex);
+  var value = target.substring(delimiterIndex + 1);
+
+  if (!attribute)
+    throw ('Invalid target \"' + target +
+           '\": The attribute to search for can not be empty.');
+
+  var matchingNodeList = [];
+  switch (attribute) {
+    case 'id': {
+      var element = document.getElementById(value);
+      if (element)
+        matchingNodeList.push(element);
+      break;
+    }
+    case 'name': {
+      // |elements| is a DOM NodeList, not a Javascript array, so we must
+      // move the elements into an array.
+      var elements = document.getElementsByName(value);
+      for (var i = 0, ie = elements.length; i < ie; ++i) {
+        matchingNodeList.push(elements[i]);
+      }
+      break;
+    }
+    default: {
+      var fullNodeList = root.getElementsByTagName('*');
+      for (var i = 0, ie = fullNodeList.length; i < ie; ++i) {
+        if (fullNodeList[i].getAttribute(attribute) !== value)
+          continue;
+
+        matchingNodeList.push(fullNodeList[i]);
+      }
+    }
+  }
+
+  return matchingNodeList;
+};
+
+var g_intervalId = 0;
+var g_domNameValues = [];
+
+// Add a listener for messages from background.
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+    if (request.message == 'setDOMElements') {
+      g_domNameValues = request.name_values;
+      g_intervalId = window.setInterval(
+          function() { pollDOMElement(); },
+          DOM_ELEMENT_POLL_INTERVAL);
+    }
+    sendResponse({});
+});
+
+// Poll for a DOM element periodically.
+function pollDOMElement() {
+  var loaded_dom_element_indices = [];
+  // Check for presence of each dom-element and prepare the indices of the
+  // elements present.
+  // TODO: Make findDomElements_() take a set of targets.  This will allow a
+  // single DOM traversal to find all targets.
+  for (var i = 0, ie = g_domNameValues.length; i < ie; ++i) {
+    // TODO: findDomElements_ will throw an exception on a malformed target.
+    if (wpt.contentScript.findDomElements_(window.document,
+                                           g_domNameValues[i]).length > 0) {
+      postDOMElementLoaded(g_domNameValues[i]);
+      loaded_dom_element_indices.push(i);
+    }
+  }
+  // Remove the loaded elements from backwards using splice method.
+  for (var i = loaded_dom_element_indices.length - 1; i >= 0; i--) {
+    g_domNameValues.splice(loaded_dom_element_indices[i], 1);
+  }
+
+  if (g_domNameValues.length <= 0) {
+    window.clearInterval(g_intervalId);
+    postAllDOMElementsLoaded();
+  }
+}
+
+// Post the DOM element loaded event to the extension.
+function postDOMElementLoaded(name_value) {
+  chrome.extension.sendRequest({
+      'message': 'DOMElementLoaded',
+      'name_value': name_value
+  }, function(response) {});
+}
+
+// Post all DOM elements loaded event to the extension.
+function postAllDOMElementsLoaded() {
+  chrome.extension.sendRequest({message: 'AllDOMElementsLoaded'},
+                               function(response) {});
+}
+
+/**
+ * Class InPageCommandRunner works on behalf of wpt.commands.CommandRunner
+ * to execute script commands.  Because it runs as a content script, it
+ * can access the DOM of the page.
+ *
+ * @constructor
+ * @param {HTMLElement|Document|Null} doc Many commands search for a DOM node.
+ *     This element is the root of the DOM tree on which commands operate.
+ *     Outside of unit tests, usually window.document.
+ * @param {Object} chromeApi The base object of the chrome extension API.
+ *                           Outside unit tests, usually window.chrome.
+ * @param {Object} resultCallbacks Callbacks to run on success, failure, etc.
+ *                                 These calls are used by unit tests to check
+ *                                 results.  They are not used in production,
+ *                                 except to log to the console in the content
+ *                                 script.
+ */
+wpt.contentScript.InPageCommandRunner = function(doc,
+                                                 chromeApi,
+                                                 resultCallbacks) {
+  this.doc_ = doc;
+  this.chromeApi_ = chromeApi;
+  this.resultCallbacks_ = resultCallbacks;
+
+  /**
+   * Map command names to the function that implements them.
+   * @const
+   * @type {Object.<string, Function.<Object>>}
+   * @private
+   */
+  this.commandMap_ = {
+    'click': this.doClick_,
+    'setInnerHTML': this.doSetInnerHTML_,
+    'setInnerText': this.doSetInnerText_,
+    'setValue': this.doSetValue_,
+    'submitForm': this.doSubmitForm_
+  };
+};
+
+/**
+ * Signal that the command completed without error.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
+  console.log('Command successful.');
+  if (this.resultCallbacks_.success)
+    this.resultCallbacks_.success();
+};
+
+/**
+ * Send a warning to the creator of the in-page command runner.
+ * @param {string} warning Warning message.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
+  console.log('Command generated warning: ' + warning);
+  if (this.resultCallbacks_.warn)
+    this.resultCallbacks_.warn(warning);
+};
+
+/**
+ * Signal that the command failed because of an error.
+ * @param {string} error Error message.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
+  console.log('Command generated error: ' + error);
+  if (this.resultCallbacks_.error)
+    this.resultCallbacks_.error(error);
+};
+
+/**
+ * Several commands act on a DOM node, specified as a target pattern.
+ * Given a target, return the first DOM node that matches, in DOM-tree order.
+ * Log a fatal error if the target is malformed, or there is no matching DOM
+ * node.  Log a warning if there is more than one matching node.  Return null
+ * if there is no matching node.
+ *
+ * @param {string} command The command to be done on |target|.  Used for
+ *     error messages.
+ * @param {string} target The target DOM node, in attribute=value form.
+ * @return {?Element} The matching DOM node.  null if there is no match.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.findTarget_ = function(
+    command, target) {
+  var domElements;
+  try {
+    domElements = wpt.contentScript.findDomElements_(this.doc_, target);
+  } catch (err) {
+    this.FatalError_('Command ' + command + ' failed: ' + err);
+    return null;
+  }
+
+  if (!domElements || domElements.length == 0) {
+    this.FatalError_('Command ' + command + ' failed: Could not find DOM ' +
+                     'element matching target ' + target);
+    return null;
+  }
+
+  if (domElements.length > 1) {
+    this.Warn_('Command ' + command + ': ' + domElements.length +
+               ' matches for target \"' + target + '\".  Using first match.');
+  }
+
+  return domElements[0];
+};
+
+/**
+ * Click on a page element.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.click();
+  this.Success_();
+};
+
+/**
+ * Set the innerText of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetInnerText_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.innerText = commandObject['value'];
+  this.Success_();
+};
+
+/**
+ * Set the innerHtml of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetInnerHTML_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  domElement.innerHTML = commandObject['value'];
+  this.Success_();
+};
+
+/**
+ * Test if an HTML tag type string is in a set of HTML tag type strings.  The
+ * test is case-insensitive.
+ *
+ * @param {string} tagType The type of an HTML tag.  Typically the nodeName
+ *     property of a DOM element.
+ * @param {Array.<string>} tagSet The set of tag types to look for.
+ * @return {boolean} Is |tagType| in |tagSet|?
+ * @private
+ */
+wpt.contentScript.isTagNameInSet_ = function(tagType, tagSet) {
+  var normalizedTagType = tagType.toUpperCase();
+  for (var i = 0, ie = tagSet.length; i < ie; ++i) {
+    if (tagSet[i].toUpperCase() == normalizedTagType)
+      return true;
+  }
+  return false;
+};
+
+/**
+ * Set the value of an attribute of a DOM node.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to click, in attribute'value form.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSetValue_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  // Currently, only "input" and "textArea" element types are supported.
+  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName,
+                                        ['INPUT', 'TEXTAREA'])) {
+    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
+                     'an INPUT or TEXTAREA tag.  Matched tag is of type ' +
+                     domElement.nodeName);
+    return;
+  }
+
+  domElement.setAttribute('value', commandObject['value']);
+
+  this.Success_();
+};
+
+/**
+ * Submit a form.
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to submit, in attribute'value form.
+ * @private
+ */
+wpt.contentScript.InPageCommandRunner.prototype.doSubmitForm_ = function(
+    commandObject) {
+
+  var domElement = this.findTarget_(commandObject['command'],
+                                    commandObject['target']);
+  if (goog.isNull(domElement))
+    return;  // Error already flagged by findTarget_().
+
+  if (!wpt.contentScript.isTagNameInSet_(domElement.nodeName, ['FORM'])) {
+    this.FatalError_('Target to ' + commandObject['command'] + ' must match ' +
+                     'a FORM tag.  Matched tag is of type ' +
+                     domElement.nodeName);
+    return;
+  }
+
+  domElement.submit();
+
+  this.Success_();
+};
+
+/**
+ * Run a command.  The backgrond page delegates commands to the content script
+ * by calling this method on an instance of InPageCommandRunner.
+ * @param {Object} commandObj The command to run: See inPageCommendRunner for
+ *     details.
+ */
+wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(
+    commandObj) {
+  console.info('InPageCommandRunner got a command: ', commandObj);
+
+  var commandFun = this.commandMap_[commandObj['command']];
+  if (!commandFun) {
+    this.FatalError_('Unknown command ' + commandObj['command']);
+    return;
+  }
+
+  try {
+    commandFun.call(this, commandObj);
+  } catch (ex) {
+    this.FatalError_('Exception running command: ' + ex);
+    return;
+  }
+};
+
+
+/**
+ * An instance of InPageCommandRunner whose well-known name can be used
+ * by the background page.
+ */
+wpt.contentScript.InPageCommandRunner.Instance =
+    new wpt.contentScript.InPageCommandRunner(
+        window.document,
+        chrome,
+        {});
 // Copyright 2006 The Closure Library Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17741,7 +17763,6 @@ wpt.logging.closeWindowIfOpen = function() {
 
 })());  // namespace
 goog.require('wpt.logging');
-
 goog.provide('wpt.commands');
 
 ((function() {  // namespace
@@ -17759,9 +17780,9 @@ function moveOutOfexperimentalIfNeeded(apiName) {
   if (!chrome[apiName]) {
     // Use the experimental version if it exists.
     if (chrome.experimental[apiName]) {
-      chrome[apiName] =  chrome.experimental[apiName];
+      chrome[apiName] = chrome.experimental[apiName];
     } else {
-      throw 'Requested chrome API ' +  apiName + ' does not exist!';
+      throw 'Requested chrome API ' + apiName + ' does not exist!';
     }
   }
 }
@@ -17775,7 +17796,7 @@ moveOutOfexperimentalIfNeeded('webRequest');
  * @return {string}
  */
 function trim(stringToTrim) {
-  return stringToTrim.replace(/^\s+|\s+$/g,"");
+  return stringToTrim.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -17809,12 +17830,13 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject) {
 
-  console.log("Delegate a command to the content script: ", commandObject);
+  console.log('Delegate a command to the content script: ', commandObject);
 
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
-  this.chromeApi_.tabs.executeScript(this.tabId_, {code:code}, function() {});
+  this.chromeApi_.tabs.executeScript(
+      this.tabId_, {'code': code}, function() {});
 };
 
 /**
@@ -17825,7 +17847,7 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
  * @param {string} script
  */
 wpt.commands.CommandRunner.prototype.doExec = function(script) {
-  this.chromeApi_.tabs.executeScript(this.tabId_, {code:script});
+  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script});
 };
 
 /**
@@ -17833,7 +17855,7 @@ wpt.commands.CommandRunner.prototype.doExec = function(script) {
  * @param {string} url
  */
 wpt.commands.CommandRunner.prototype.doNavigate = function(url) {
-  this.chromeApi_.tabs.update(this.tabId_, {"url":url});
+  this.chromeApi_.tabs.update(this.tabId_, {'url': url});
 };
 
 /**
@@ -17847,7 +17869,7 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
   var cookie_expires = '';
 
   if (pos > 0) {
-    val = data.substring(0,pos);
+    val = data.substring(0, pos);
     var exp = trim(data.substring(pos + 1));
     pos = exp.indexOf('=');
     if (pos > 0) {
@@ -17856,7 +17878,7 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
   }
   pos = val.indexOf('=');
   if (pos > 0) {
-    var cookie_name = trim(val.substring(0,pos));
+    var cookie_name = trim(val.substring(0, pos));
     var cookie_value = trim(val.substring(pos + 1));
     if (cookie_name.length && cookie_value.length && cookie_path.length) {
       var cookie = {
@@ -17879,20 +17901,21 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
  */
 wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // Create a listener which blocks all the requests that has the patterm. Also,
-  // pass an empty filter and "blocking" as the extraInfoSpec.
-  chrome.webRequest.onBeforeRequest.addListener(function(details){
+  // pass an empty filter and 'blocking' as the extraInfoSpec.
+  chrome.webRequest.onBeforeRequest.addListener(function(details) {
     if (details.url.indexOf(blockPattern) != -1) {
-      return { "cancel": true };
+      return {'cancel': true };
     }
     return {};
-  }, {}, ["blocking"]);
+  }, {}, ['blocking']);
 };
 
 /**
- * Just before navigate to the url, register the setDOMElement. When this happens,
- * the content scripts seem to be loaded. When this behaviour seems broken, then we
- * might need to switch to "passing a sendrequest" from content script as the first
- * step to notify the background page that it is loaded.
+ * Just before navigate to the url, register the setDOMElement. When this
+ * happens, the content scripts seem to be loaded. When this behaviour
+ * seems broken, then we might need to switch to "passing a sendrequest"
+ * from content script as the first step to notify the background page
+ * that it is loaded.
  */
 chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
   wpt.commands.CommandRunner.prototype.doSetDOMElements();
@@ -17904,13 +17927,13 @@ chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
   if (wpt.commands.g_domElements.length > 0) {
     if (goog.isNull(this.tabId_))
-      throw ("It should not be posible to run the doSetDOMElements() method " +
-             "before we find the id of the tab in which pages are loaded.");
+      throw ('It should not be posible to run the doSetDOMElements() method ' +
+             'before we find the id of the tab in which pages are loaded.');
 
     chrome.tabs.sendRequest(
         this.tabId_,
-        {message: "setDOMElements", name_values: wpt.commands.g_domElements },
-        function(response) {} );
+        {'message': 'setDOMElements', name_values: wpt.commands.g_domElements},
+        function(response) {});
     wpt.LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);
   }
 };
@@ -17921,8 +17944,8 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
  */
 wpt.commands.CommandRunner.prototype.doClick = function(target) {
   this.SendCommandToContentScript_({
-      "command": "click",
-      "target": target
+      'command': 'click',
+      'target': target
   });
 };
 
@@ -17933,9 +17956,9 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
  */
 wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setInnerHTML",
-      "target": target,
-      "value": value
+      'command': 'setInnerHTML',
+      'target': target,
+      'value': value
   });
 };
 
@@ -17946,9 +17969,9 @@ wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setInnerText",
-      "target": target,
-      "value": value
+      'command': 'setInnerText',
+      'target': target,
+      'value': value
   });
 };
 
@@ -17959,9 +17982,9 @@ wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setValue",
-      "target": target,
-      "value": value
+      'command': 'setValue',
+      'target': target,
+      'value': value
   });
 };
 
@@ -17971,16 +17994,16 @@ wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
   this.SendCommandToContentScript_({
-      "command": "submitForm",
-      "target": target
+      'command': 'submitForm',
+      'target': target
   });
 };
 
 })());  // namespace
+goog.require('goog.testing.AsyncTestCase');
+goog.require('goog.testing.jsunit');
 goog.require('wpt.commands');
 goog.require('wpt.contentScript');
-goog.require('goog.testing.jsunit');
-goog.require('goog.testing.AsyncTestCase');
 
 goog.provide('wpt.allTests');
 
@@ -18027,7 +18050,7 @@ function testSetCookie() {
   commandRunner.doSetCookie(
       'http://www.a.com',
       'zip=20166');
-  assertArrayEquals("Cookie set without a date.",
+  assertArrayEquals('Cookie set without a date.',
                     [{
                        'url': 'http://www.a.com',
                        'name': 'zip',
@@ -18044,8 +18067,8 @@ function testSetCookie() {
   cookieLog = [];
   commandRunner.doSetCookie(
       'http://www.example.com',
-      'TestData=Test;expires='+dateString);
-  assertArrayEquals("Cookie set with a date.",
+      'TestData=Test;expires=' + dateString);
+  assertArrayEquals('Cookie set with a date.',
                     [{
                        'url': 'http://www.example.com',
                        'name': 'TestData',
@@ -18056,8 +18079,8 @@ function testSetCookie() {
   cookieLog = [];
   commandRunner.doSetCookie(
       'http://www.b.com',
-      '    TestData  =  Test  ;    expires  = '+ dateString +' ');
-  assertArrayEquals("Whitespace trimming works.",
+      '    TestData  =  Test  ;    expires  = ' + dateString + ' ');
+  assertArrayEquals('Whitespace trimming works.',
                     [{
                        'url': 'http://www.b.com',
                        'name': 'TestData',
@@ -18065,27 +18088,27 @@ function testSetCookie() {
                        'expirationDate': dateMsSinceEpoch
                      }],
                     cookieLog);
-};
+}
 
 function testFindDomElements() {
   // For testing, we search under a div in allTests.html:
   var root = document.getElementById('testFindDomElements');
 
-  assertArrayEquals("No elements with attribute 'zzz'",
+  assertArrayEquals('No elements with attribute "zzz"',
                     [], wpt.contentScript.findDomElements_(root, "zzz'one"));
 
 
-  assertArrayEquals("No elements with attribute 'aaa' that have value 'zzz'",
+  assertArrayEquals('No elements with attribute "aaa" that have value "zzz"',
                     [], wpt.contentScript.findDomElements_(root, "aaa'zzz"));
 
 
-  var actual = wpt.contentScript.findDomElements_(root, "aaa=one");
-  assertEquals("One item matching \"aaa=one\"", 1, actual.length);
-  assertEquals("First span", actual[0].innerText);
+  var actual = wpt.contentScript.findDomElements_(root, 'aaa=one');
+  assertEquals('One item matching "aaa=one"', 1, actual.length);
+  assertEquals('First span', actual[0].innerText);
 
   actual = wpt.contentScript.findDomElements_(root, "aaa'one");
   assertEquals("One item matching \"aaa'one\"", 1, actual.length);
-  assertEquals("First span", actual[0].innerText);
+  assertEquals('First span', actual[0].innerText);
 
 
   actual = wpt.contentScript.findDomElements_(root, "bbb'two");
@@ -18506,7 +18529,8 @@ function testSubmitFormCommand() {
 
   assertArrayEquals("No warnings", [], ipcr.warnings);
   assertArrayEquals(
-      ['Target to submitForm must match a FORM tag.  Matched tag is of type DIV'],
+      ['Target to submitForm must match a FORM tag.  Matched tag is of ' +
+       'type DIV'],
       ipcr.errors);
   assertEquals('Should fail.', 0, ipcr.successCalls);
 

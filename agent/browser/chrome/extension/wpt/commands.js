@@ -1,5 +1,4 @@
 goog.require('wpt.logging');
-
 goog.provide('wpt.commands');
 
 ((function() {  // namespace
@@ -17,9 +16,9 @@ function moveOutOfexperimentalIfNeeded(apiName) {
   if (!chrome[apiName]) {
     // Use the experimental version if it exists.
     if (chrome.experimental[apiName]) {
-      chrome[apiName] =  chrome.experimental[apiName];
+      chrome[apiName] = chrome.experimental[apiName];
     } else {
-      throw 'Requested chrome API ' +  apiName + ' does not exist!';
+      throw 'Requested chrome API ' + apiName + ' does not exist!';
     }
   }
 }
@@ -33,7 +32,7 @@ moveOutOfexperimentalIfNeeded('webRequest');
  * @return {string}
  */
 function trim(stringToTrim) {
-  return stringToTrim.replace(/^\s+|\s+$/g,"");
+  return stringToTrim.replace(/^\s+|\s+$/g, '');
 }
 
 /**
@@ -67,12 +66,13 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject) {
 
-  console.log("Delegate a command to the content script: ", commandObject);
+  console.log('Delegate a command to the content script: ', commandObject);
 
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
-  this.chromeApi_.tabs.executeScript(this.tabId_, {code:code}, function() {});
+  this.chromeApi_.tabs.executeScript(
+      this.tabId_, {'code': code}, function() {});
 };
 
 /**
@@ -83,7 +83,7 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
  * @param {string} script
  */
 wpt.commands.CommandRunner.prototype.doExec = function(script) {
-  this.chromeApi_.tabs.executeScript(this.tabId_, {code:script});
+  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script});
 };
 
 /**
@@ -91,7 +91,7 @@ wpt.commands.CommandRunner.prototype.doExec = function(script) {
  * @param {string} url
  */
 wpt.commands.CommandRunner.prototype.doNavigate = function(url) {
-  this.chromeApi_.tabs.update(this.tabId_, {"url":url});
+  this.chromeApi_.tabs.update(this.tabId_, {'url': url});
 };
 
 /**
@@ -105,7 +105,7 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
   var cookie_expires = '';
 
   if (pos > 0) {
-    val = data.substring(0,pos);
+    val = data.substring(0, pos);
     var exp = trim(data.substring(pos + 1));
     pos = exp.indexOf('=');
     if (pos > 0) {
@@ -114,7 +114,7 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
   }
   pos = val.indexOf('=');
   if (pos > 0) {
-    var cookie_name = trim(val.substring(0,pos));
+    var cookie_name = trim(val.substring(0, pos));
     var cookie_value = trim(val.substring(pos + 1));
     if (cookie_name.length && cookie_value.length && cookie_path.length) {
       var cookie = {
@@ -137,20 +137,21 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
  */
 wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // Create a listener which blocks all the requests that has the patterm. Also,
-  // pass an empty filter and "blocking" as the extraInfoSpec.
-  chrome.webRequest.onBeforeRequest.addListener(function(details){
+  // pass an empty filter and 'blocking' as the extraInfoSpec.
+  chrome.webRequest.onBeforeRequest.addListener(function(details) {
     if (details.url.indexOf(blockPattern) != -1) {
-      return { "cancel": true };
+      return {'cancel': true };
     }
     return {};
-  }, {}, ["blocking"]);
+  }, {}, ['blocking']);
 };
 
 /**
- * Just before navigate to the url, register the setDOMElement. When this happens,
- * the content scripts seem to be loaded. When this behaviour seems broken, then we
- * might need to switch to "passing a sendrequest" from content script as the first
- * step to notify the background page that it is loaded.
+ * Just before navigate to the url, register the setDOMElement. When this
+ * happens, the content scripts seem to be loaded. When this behaviour
+ * seems broken, then we might need to switch to "passing a sendrequest"
+ * from content script as the first step to notify the background page
+ * that it is loaded.
  */
 chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
   wpt.commands.CommandRunner.prototype.doSetDOMElements();
@@ -162,13 +163,13 @@ chrome.webNavigation.onBeforeNavigate.addListener(function(details) {
 wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
   if (wpt.commands.g_domElements.length > 0) {
     if (goog.isNull(this.tabId_))
-      throw ("It should not be posible to run the doSetDOMElements() method " +
-             "before we find the id of the tab in which pages are loaded.");
+      throw ('It should not be posible to run the doSetDOMElements() method ' +
+             'before we find the id of the tab in which pages are loaded.');
 
     chrome.tabs.sendRequest(
         this.tabId_,
-        {message: "setDOMElements", name_values: wpt.commands.g_domElements },
-        function(response) {} );
+        {'message': 'setDOMElements', name_values: wpt.commands.g_domElements},
+        function(response) {});
     wpt.LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);
   }
 };
@@ -179,8 +180,8 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
  */
 wpt.commands.CommandRunner.prototype.doClick = function(target) {
   this.SendCommandToContentScript_({
-      "command": "click",
-      "target": target
+      'command': 'click',
+      'target': target
   });
 };
 
@@ -191,9 +192,9 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
  */
 wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setInnerHTML",
-      "target": target,
-      "value": value
+      'command': 'setInnerHTML',
+      'target': target,
+      'value': value
   });
 };
 
@@ -204,9 +205,9 @@ wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setInnerText",
-      "target": target,
-      "value": value
+      'command': 'setInnerText',
+      'target': target,
+      'value': value
   });
 };
 
@@ -217,9 +218,9 @@ wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
   this.SendCommandToContentScript_({
-      "command": "setValue",
-      "target": target,
-      "value": value
+      'command': 'setValue',
+      'target': target,
+      'value': value
   });
 };
 
@@ -229,8 +230,8 @@ wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
  */
 wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
   this.SendCommandToContentScript_({
-      "command": "submitForm",
-      "target": target
+      'command': 'submitForm',
+      'target': target
   });
 };
 

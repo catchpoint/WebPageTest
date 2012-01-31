@@ -43,11 +43,19 @@
 # http://closure-compiler.googlecode.com/files/compiler-latest.zip
 CLOSURE_COMPILER_JAR=${HOME}/closure/compiler.jar
 
+# The latest release of the closure linter can be downloaded from
+# http://closure-linter.googlecode.com/files/closure_linter-latest.tar.gz
+# It includes install instructions using python's easy_install mechanism.
+CLOSURE_LINTER=gjslint
+
 # Path to chromium or chrome.
 CHROME='google-chrome'
 
 # Path to a temp directory.
 TEMP="/tmp/test_extension/$$"
+
+# Command to lint javascript code.
+LINT_JS="$CLOSURE_LINTER"
 
 # Command to invoke closure compiler.
 COMPILE_JS="third_party/closure-library/closure/bin/build/closurebuilder.py
@@ -73,6 +81,22 @@ FOR_RELEASE="\
 "
 
 cd $(dirname $0)/extension
+
+# Some errors are a pain to fix, and unlikely to show real issues.
+# Disable them for now.
+#
+# E:0131 is 'Single-quoted string preferred over double-quoted string.'
+# Because many string constants include a ' as a target separator, we
+# are not strict about this rule.
+
+# E:0214 is 'issuing description in @ tag'.  We use @param and @returns
+# for type checking, but many values are obvious.  TODO(skerner): Fix
+# all instances and enable this.
+
+${LINT_JS} \
+  'wpt/*.js' \
+  | grep -v 'E:0131' \
+  | grep -v 'E:0214' \
 
 # Compile the logging code.
 ${COMPILE_JS} ${FOR_WARNINGS} \
