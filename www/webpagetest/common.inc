@@ -14,7 +14,7 @@ else
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 50);          // version of the sitewide css file
-define('VER_JS', 15);            // version of the sitewide javascript file
+define('VER_JS', 16);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);  // Value used as a flag for an unknown time.
