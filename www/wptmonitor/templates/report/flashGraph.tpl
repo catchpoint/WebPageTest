@@ -183,9 +183,18 @@ function updateGraph() {
           <select onmouseup="checkJobCount();" id="jobs" multiple="true"
                   name="job_id[]"
                   size="7"
-                  style="width:330px;">{html_options options=$jobs selected=$job_ids}</select>
-
-          <div style="font-size:x-small;">Select up to 3 jobs</div>
+                  style="width:330px;">
+          {html_options options=$jobs selected=$job_ids}
+            {*{foreach $jobs as $key=>$job}*}
+                {*{if $job.MultiStep and $job.SequenceNumber eq '0'}*}
+                    {*{assign var="style" value="background-image: url(img/application-cascade-icon.png);"}*}
+                {*{else}*}
+                    {*{assign var="style" value="background-image: url(img/application-cascade-icon.png);"}*}
+                {*{/if}*}
+                {*<option class="imagebacked" style="{$style}" value="{$job.WPTJobId}">{$job.WPTJob.Label}</option>*}
+            {*{/foreach}*}
+          </select>
+            <div style="font-size:x-small;">Select up to 3 jobs</div>
         </td>
         <td valign="top" align="left">
           <input id="startTime" type="hidden" name="startTime">

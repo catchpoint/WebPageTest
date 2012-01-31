@@ -17,7 +17,7 @@ class WPTScript extends Doctrine_Record {
     $this->hasColumn('AuthUser', 'string', 255, array('type' => 'string', 'length' => 255));
     $this->hasColumn('AuthPassword', 'string', 255, array('type' => 'string', 'length' => 255));
     // Is this a multi step/page test
-    $this->hasColumn('MultiStep', 'boolean');
+//    $this->hasColumn('MultiStep', 'boolean');
     // Apply validation rule
     $this->hasColumn('Validate', 'boolean');
     // REGEX of http request to use for validation of result. Copied to result table at time of job execution

@@ -42,15 +42,24 @@
   $wptLocs = array();
   foreach ($wptLocations as $loc) {
     $key = $loc['Location'];
-    $wptLocs[$loc->WPTHost['HostURL'] . ' ' . $key] = $loc->WPTHost['HostURL'] . ' ' . $key;
+    $wptLocs[$loc->WPTHost['HostURL'] . ' ' . $key] = $loc->WPTHost['HostURL'] . ' ' . $key.' '.$loc['Label'];
   }
 
+  // Support for new multiple locations side by sideselect box
+  $wptAvailLocations = array();
+  $tmpLoc = array();
+  foreach ($wptLocations as $loc) {
+    $key = $loc['Location'];
+//    $wptLocs[$loc->WPTHost['HostURL'] . ' ' . $key] = $loc->WPTHost['HostURL'] . ' ' . $key.' '.$loc['Label'];
+
+    $wptLocs[$loc->WPTHost['HostURL'] . ' ' . $key] = $loc['Label'];
+  }
   if (isset($jobId)) {
     $q = Doctrine_Query::create()->from('WPTJob j')->where('j.Id= ?', $jobId);
     $result = $q->fetchOne();
     $q->free(true);
     $scriptId = $result['WPTScript']['Id'];
-    $smarty->assign('selectedLocation', $result['Host'] . ' ' . $result['Location']);
+//    $smarty->assign('selectedLocation', $result['Host'] . ' ' . $result['Location']);
   } else {
     $result = new WPTJob();
     $result['Frequency'] = 60;
@@ -88,6 +97,7 @@
     $id = $script['Id'];
     $scriptArray[$id] = $script['Label'];
   }
+  // Fetch alerts for this job
   $q = Doctrine_Query::create()->from('Alert a')->orderBy('a.Label');
 
   if (!empty($alertFolderIds) && $folderId > -1 && hasPermission('Alert', $folderId, PERMISSION_UPDATE)) {
@@ -107,7 +117,6 @@
     $alert['Selected'] = 0;
     $alertArray[$idx] = $alert;
   }
-
   $q = Doctrine_Query::create()->from('WPTJob_Alert a');
   if (isset($jobId)){
     $q->where('a.WPTJobId= ?', $jobId);
@@ -120,6 +129,38 @@
       $alertArray[$aid]['Selected'] = 1;
     }
   }
+
+// Fetch locations for this job
+  $q = Doctrine_Query::create()->from('WPTLocation l')->orderBy('l.Label');
+  $locations = $q->fetchArray();
+  $q->free(true);
+  $locationArray = array();
+  $location = array();
+  foreach ($locations as $l) {
+    $idx = $l['Id'];
+    $location['Id'] = $l['Id'];
+    $location['Label'] = $l['Label'];
+    $location['Browser'] = $l['Browser'];
+    $location['Active'] = $l['Active'];
+    $location['Selected'] = 0;
+    $locationArray[$idx] = $location;
+  }
+
+  $q = Doctrine_Query::create()->from('WPTJob_WPTLocation l');
+  if (isset($jobId)){
+    $q->where('l.WPTJobId= ?', $jobId);
+    $selectedLocations = $q->fetchArray();
+  }
+  $q->free(true);
+  if ( isset($selectedLocations)){
+    foreach ($selectedLocations as $selected) {
+      $lid = $selected['WPTLocationId'];
+      if ($a = $locationArray[$lid]['Id']) {
+        $locationArray[$lid]['Selected'] = 1;
+      }
+    }
+  }
+
 
   // Set vars for smarty
   if(!isset($maxJobsPerMonth)){
@@ -134,6 +175,7 @@
   $smarty->assign('shares', $shares);
   $smarty->assign('folderId', $folderId);
   $smarty->assign('alerts', $alertArray);
+  $smarty->assign('locations', $locationArray);
   $smarty->assign('maxJobsPerMonth', $maxJobsPerMonth);
   $smarty->assign('currentJobCount', $currentJobCount);
   $smarty->assign('job', $result);

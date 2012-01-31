@@ -65,18 +65,18 @@
                   <td><textarea id="navigationscript" name="navigationscript"
                                 style="height:180px;width:500px">{$script.NavigationScript}</textarea></td>
                 </tr>
-                <tr>
-                  <td></td>
-                  <td>
-                    <hr>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="right"><label><a class="tooltip" name="multistep">Multi
-                    Step<span>Multi Step/Page Test</span></a></label></span></td>
-                  <td><input type="checkbox" name="multistep" value="1" {if $script.MultiStep}checked="true" {/if}/>
-                  </td>
-                </tr>
+                {*<tr>*}
+                  {*<td></td>*}
+                  {*<td>*}
+                    {*<hr>*}
+                  {*</td>*}
+                {*</tr>*}
+                {*<tr>*}
+                  {*<td align="right"><label><a class="tooltip" name="multistep">Multi*}
+                    {*Step<span>Multi Step/Page Test</span></a></label></span></td>*}
+                  {*<td><input type="checkbox" name="multistep" value="1" {if $script.MultiStep}checked="true" {/if}/>*}
+                  {*</td>*}
+                {*</tr>*}
                 <tr>
                   <td></td>
                   <td>

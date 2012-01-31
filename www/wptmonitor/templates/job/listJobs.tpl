@@ -125,8 +125,8 @@
                   <option {if $jobsFilterField eq 'WPTScript.Label'} selected="true"{/if} value="WPTScript.Label">
                     Scipt
                   </option>
-                  <option {if $jobsFilterField eq 'Host'} selected="true"{/if}>Host</option>
-                  <option {if $jobsFilterField eq 'Location'} selected="true"{/if}>Location</option>
+                  {*<option {if $jobsFilterField eq 'Host'} selected="true"{/if}>Host</option>*}
+                  {*<option {if $jobsFilterField eq 'Location'} selected="true"{/if}>Location</option>*}
                 </select>
                   <input type="text" name="filterValue" value="{$jobsFilterValue}">
                   <input type="submit" value="Filter">
@@ -165,15 +165,17 @@
               </a>{/if}
               </th>
               <th align="left">
-                <a href="?orderBy=Host">{if $orderJobsBy eq "Host"}<b>{/if}Host</a>{if $orderJobsBy eq "Host"}</b><a
-                  href="?orderBy=Host&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}<img
-                  width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
-              </a>{/if}<br>
-                <a href="?orderBy=Location">{if $orderJobsBy eq "Location"}<b>{/if}
-                  Location</a>{if $orderJobsBy eq "Location"}</b><a
-                  href="?orderBy=Location&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}<img
-                  width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}
-              </a>{/if}
+                {*<a href="?orderBy=Host">{if $orderJobsBy eq "Host"}<b>{/if}Host</a>{if $orderJobsBy eq "Host"}</b><a*}
+                  {*href="?orderBy=Host&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}<img*}
+                  {*width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}*}
+              {*</a>{/if}*}
+                {*<a href="?orderBy=Location">{if $orderJobsBy eq "Location"}<b>{/if}*}
+                  Location(s)
+                  {*</a>{if $orderJobsBy eq "Location"}</b><a*}
+                  {*href="?orderBy=Location&orderByDir={$orderJobsByDirectionInv}">{if $orderJobsByDirection eq "ASC"}<img*}
+                  {*width="10" height="10" src='img/Up.png'>{else}<img width="10" height="10" src='img/Down.png'>{/if}*}
+              {*</a>*}
+              {*{/if}*}
               </th>
               <th align="right" style="padding-bottom:0%;vertical-align:top;">
                 <a title="Frequency in minutes" href="?orderBy=Frequency">{if $orderJobsBy eq "Frequency"}<b>{/if}
@@ -197,7 +199,7 @@
             {foreach from=$result item=res}
             {if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
               <tr class="{$eo}">
-                <td>
+                <td style="padding-bottom:0%;vertical-align:top;">
                 {if $hasUpdatePermission}
                 <a title="Toggle Active/Inactive" href=toggleJobActive.php?job_id[]={$res.Id}&state={$res.Active}>{/if}
                 {if $res.Active}
@@ -206,21 +208,24 @@
                   <img src="img/paused.png" width="20" height="20">
                 {/if}</a>
                 </td>
-                <td align="center"><input type="checkbox" name="selectedJob" id="selectedJob" value="{$res.Id}"></td>
-                <td colspan="2" nowrap="true">
+                <td style="padding-bottom:0%;vertical-align:top;"><input type="checkbox" name="selectedJob" id="selectedJob" value="{$res.Id}"></td>
+                <td style="padding-bottom:0%;vertical-align:top;" colspan="2" nowrap="true">
                 {if $folderId eq -1}<a href=listJobs.php?folderId={$res.WPTJobFolder.id}>{$res.WPTJobFolder.Label}</a> <br>{/if}
                   <a href=listResults.php?folderId={$res.WPTJobFolderId}&filterField=WPTJob.Id&filterValue={$res.Id}>{$res.Label|truncate:60}</a><br>
                   {*{if hasPermission("WPTScript",$res.WPTScript.WPTScriptFolderId, $smarty.const.PERMISSION_UPDATE)}*}
                   <a href=editScript.php?id={$res.WPTScript.Id}>
                   {*{/if}*}
                   {$res.WPTScript.Label|truncate:60}</a></td>
-                <td>{$res.Host}<br>{$res.Location}</td>
+                <td>{foreach $res.WPTJob_WPTLocation as $loc}
+                    {$loc.WPTLocation.Label} - {$loc.WPTLocation.Browser}<br>
+                    {/foreach}
+                </td>
                 <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.Frequency}<br>{$res.WPTBandwidthDown}</td>
                 <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.Runs}{if !$res.FirstViewOnly}R{/if}<br>{$res.WPTBandwidthUp}</td>
                 <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.ResultCount}<br>{$res.WPTBandwidthLatency}</td>
                 {*<td>calc</td>*}
                 <td align="right" nowrap="true" style="padding-bottom:0%;vertical-align:top;">{$res.Lastrun|date_format:"%D"} {$res.Lastrun|date_format:"%H:%M"}<br>{$res.WPTBandwidthPacketLoss}</td>
-                <td align="right">
+                <td align="right" style="padding-bottom:0%;vertical-align:top;">
                   <table>
                     <tr>
                     {if $hasUpdatePermission}

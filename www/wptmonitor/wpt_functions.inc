@@ -358,7 +358,7 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
   // Update location information
   $locationInformation = getLocationInformation();
 
-  logOutput("[DEBUG] [processJobsForUsers] start: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+  //logOutput("[DEBUG] [processJobsForUsers] start: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
 
   $userTable = Doctrine_Core::getTable('User');
   $user = $userTable->find($userId);
@@ -381,98 +381,132 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
         ->where('j.UserId = ?',$userId)->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
     $result = $q->fetchArray();
   }
-  
-  logOutput("[DEBUG] [processJobsForUsers] before looping through results: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+
+  //logOutput("[DEBUG] [processJobsForUsers] before looping through results: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
   try {
     foreach ($result as $row)
     {
-      // Check current queue size for the jobs configured location
-      // If it's greater than the threshold then skip the job submission.
-      $skipJobSubmission = false;
-      foreach ($locationInformation as $location){
-        if ( $location['hostURL'] == $row['Host'] && $location['id'] == $row['Location'] ){
-          $queueSize = $location['PendingTests'];
-          $threshold = getLocationThreshold($location['hostURL'],$location['id']);
+      // Get list of locations from which this job is configured to execute.
+      $q = Doctrine_Query::create()->from('WPTJob_WPTLocation l')->where('l.WPTJobId = ?', $row['Id']);
+      $jobLocations = $q->fetchArray();
+      $q->free(true);
 
-          if ( $threshold != 0 && ( $queueSize && $threshold && ($queueSize > $threshold) ) ){
-            logOutput("[INFO] [ProcessJob] Skipping job due to high load on location: ".$location['hostURL']." ".$location['id']." queue size: ".$queueSize." greater than the threshold: ".$threshold);
-            $skipJobSubmission = true;
-            break;
+      foreach ($jobLocations as $jobLocation){
+        $q = Doctrine_Query::create()->from('WPTLocation l')->where('l.Id = ?', $jobLocation['WPTLocationId']);
+        $locationInfo = $q->fetchOne();
+
+        $q = Doctrine_Query::create()->from('WPTHost h')->where('h.Id = ?', $locationInfo['WPTHostId']);
+        $hostInfo= $q->fetchOne();
+        $q->free(true);
+
+        // Check current queue size for the jobs configured location
+        // If it's greater than the threshold then skip the job submission.
+        $skipJobSubmission = false;
+        foreach ($locationInformation as $key=>$location){
+          if ( $key== $jobLocation['WPTLocationId']){
+            $queueSize = $location['PendingTests'];
+            $threshold = getLocationThreshold($location['hostURL'],$location['id']);
+
+            if ( $threshold != 0 && ( $queueSize && $threshold && ($queueSize > $threshold) ) ){
+              logOutput("[INFO] [ProcessJob] Skipping job due to high load on location: ".$location['hostURL']." ".$location['id']." queue size: ".$queueSize." greater than the threshold: ".$threshold);
+              $skipJobSubmission = true;
+              break;
+            }
           }
         }
-      }
-      if ($skipJobSubmission)
-        continue;
+        if ($skipJobSubmission)
+          continue;
 
-      $id = $row['Id'];
-      $label = $row['Label'];
-      $dte = current_seconds();
-      $script = $scriptTable->find($row['WPTScriptId']);
-      
-      // Data stored in the table is in minutes, convert it to seconds.
-      $frequencyInSeconds = $row['Frequency'] * 60;
+        $id = $row['Id'];
+        $label = $row['Label'];
+        $dte = current_seconds();
+        $script = $scriptTable->find($row['WPTScriptId']);
 
-      if ($row['Active'] == 0 && !$force) {
-        logOutput("[INFO] [ProcessJob] Skipped Inactive job. Id:$id Label:$label");
-      } else {
-        // If the field is empty or time is up it's time to run
-        if ($force || ((!$row['Lastrun'] || $dte > $row['Lastrun'] + $frequencyInSeconds))) {
-          // Process script if it exists
-          if ($script['URLScript']) {
-            $url = processURLScript($script['URLScript'], $script['URL']);
-                logOutput("[INFO] [ProcessJob] Id:$id Label:$label URL:$url");
-          } else {
-            $url = $script['URL'];
-          }
-          if ($script['NavigationScript']) {
-            $navscript = processURLScript($script['URLScript'], $script['NavigationScript']);
-          } else {
-            $navscript = $script['NavigationScript'];
-          }
-          $authenticate = $script['Authenticate'];
-          $authuser = $script['AuthUser'];
-          $authpassword= $script['AuthPassword'];
-          $wptResult = new WPTResult();
-          $wptResult['WPTJobId']=$row['Id'];
-          $wptResult['Date'] = current_seconds();
-          $wptResult['RunLabel'] = $runLabel;
-          // TODO: Add option in JOB Table for inclusion of tracking param
-//          if ( true ){
-//            $mjid=$row['Id'];
-//            if ( strpos($url,"?") > -1 ){
-//              $url = $url.'&__wptmjid='.$mjid.'_'.$wptResult['Date'];
-//            } else {
-//              $url = $url.'?__wptmjid='.$mjid.'_'.$wptResult['Date'];
-//            }
-//          }
-          // Default DSL settings
+        // Data stored in the table is in minutes, convert it to seconds.
+        $frequencyInSeconds = $row['Frequency'] * 60;
 
-          $private = 1;
-          $bwDown = 1500;
-          $bwUp = 384;
-          $latency = 50;
-          $plr = 0;
+        if ($row['Active'] == 0 && !$force) {
+          logOutput("[INFO] [ProcessJob] Skipped Inactive job. Id:$id Label:$label");
+        } else {
+          // If the field is empty or time is up it's time to run
+          if ($force || ((!$row['Lastrun'] || $dte > $row['Lastrun'] + $frequencyInSeconds))) {
+            // Process script if it exists
+            if ($script['URLScript']) {
+              $url = processURLScript($script['URLScript'], $script['URL']);
+                  logOutput("[INFO] [ProcessJob] Id:$id Label:$label URL:$url");
+            } else {
+              $url = $script['URL'];
+            }
+            if ($script['NavigationScript']) {
+              $navscript = processURLScript($script['URLScript'], $script['NavigationScript']);
+            } else {
+              $navscript = $script['NavigationScript'];
+            }
+            $authenticate = $script['Authenticate'];
+            $authuser = $script['AuthUser'];
+            $authpassword= $script['AuthPassword'];
+            $wptResult = new WPTResult();
+            $wptResult['WPTJobId']=$row['Id'];
+            $wptResult['SequenceNumber']='0';
+            $wptResult['Date'] = current_seconds();
+            $wptResult['RunLabel'] = $runLabel;
+            // TODO: Add option in JOB Table for inclusion of tracking param
+  //          if ( true ){
+  //            $mjid=$row['Id'];
+  //            if ( strpos($url,"?") > -1 ){
+  //              $url = $url.'&__wptmjid='.$mjid.'_'.$wptResult['Date'];
+  //            } else {
+  //              $url = $url.'?__wptmjid='.$mjid.'_'.$wptResult['Date'];
+  //            }
+  //          }
+            // Default DSL settings
 
-          if ( $row['WPTBandwidthDown'])
-            $bwDown = $row['WPTBandwidthDown'];
+            $private = 1;
+            $bwDown = 1500;
+            $bwUp = 384;
+            $latency = 50;
+            $plr = 0;
 
-          if ( $row['WPTBandwidthUp'])
-            $bwUp = $row['WPTBandwidthUp'];
+            if ( $row['WPTBandwidthDown'])
+              $bwDown = $row['WPTBandwidthDown'];
 
-          if ( $row['WPTBandwidthLatency'])
-            $latency = $row['WPTBandwidthLatency'];
+            if ( $row['WPTBandwidthUp'])
+              $bwUp = $row['WPTBandwidthUp'];
 
-          if ( $row['WPTBandwidthPacketLoss'])
-            $plr = $row['WPTBandwidthPacketLoss'];
+            if ( $row['WPTBandwidthLatency'])
+              $latency = $row['WPTBandwidthLatency'];
 
-          $format = "xml";
+            if ( $row['WPTBandwidthPacketLoss'])
+              $plr = $row['WPTBandwidthPacketLoss'];
 
-          logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+            $format = "xml";
+
+            //logOutput("[DEBUG] [processJobsForUsers] before submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+//              $wptRes = submitWPTRequest(
+//              $row['Host'] .$wptRuntest,
+//              $url,
+//              $row['Label'],
+//              $row['Location'],
+//              $row['Runs'],
+//              $row['FirstViewOnly'],
+//              $row['Video'],
+//              $navscript,
+//              $authenticate,
+//              $authuser,
+//              $authpassword,
+//              $format,
+//              $private,
+//              $bwDown,
+//              $bwUp,
+//              $latency,
+//              $plr,
+//              $priority);
+
             $wptRes = submitWPTRequest(
-            $row['Host'] .$wptRuntest,
+            $hostInfo['HostURL'] .$wptRuntest,
             $url,
             $row['Label'],
-            $row['Location'],
+            $locationInfo['Location'],
             $row['Runs'],
             $row['FirstViewOnly'],
             $row['Video'],
@@ -488,52 +522,54 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
             $plr,
             $priority);
 
-          $wptResultId = $wptRes['wptResultId'];
-          $wptResultText = $wptRes['statusText'];
-          logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
-//          $row['Lastrun'] = $dte;
-          if ($wptResultId == "-1"){
-            $wptResult['Status'] = "905";
-            $wptResult['ValidationState'] = 2;
-          }else{
-            $wptResult['Status'] = "100";
-          }
-          $wptResult['WPTResultId'] = $wptResultId;
-          $wptResult['WPTHost'] = $row['Host'];
-          $wptResult['DownloadResultXml'] = $row['DownloadResultXml'];
-          $wptResult['DownloadDetails'] = $row['DownloadDetails'];
-          $wptResult['MaxDownloadAttempts'] = $row['MaxDownloadAttempts'];
-          $wptResult['Runs'] = $row['Runs'];
-          $wptResult['RunToUseForAverage'] = $row['RunToUseForAverage'];
-          $wptResult['FirstStatusUpdate'] = current_seconds();
-          $wptResult['LastStatusUpdate'] = current_seconds();
-          $wptResult['MultiStep'] = $script['MultiStep']; 
-          $wptResult['Validate'] = $script['Validate'];
-          $wptResult['ValidationRequest'] = $script['ValidationRequest'];
-          $wptResult['ValidationType'] = $script['ValidationType'];
-          $wptResult['ValidationMarkAs'] = $script['ValidationMarkAs'];
-          $wptResult['ValidationMarkAsElse'] = $script['ValidationMarkAsElse'];
-          $wptResult['WPTBandwidthDown'] = $bwDown;
-          $wptResult['WPTBandwidthUp'] = $bwUp;
-          $wptResult['WPTBandwidthLatency'] = $latency;
-          $wptResult['WPTBandwidthPacketLoss'] = $plr;
+            $wptResultId = $wptRes['wptResultId'];
+            $wptResultText = $wptRes['statusText'];
+            //logOutput("[DEBUG] [processJobsForUsers] after submitWPTRequest: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+  //          $row['Lastrun'] = $dte;
+            if ($wptResultId == "-1"){
+              $wptResult['Status'] = "905";
+              $wptResult['ValidationState'] = 2;
+            }else{
+              $wptResult['Status'] = "100";
+            }
+            $wptResult['WPTResultId'] = $wptResultId;
+            //$wptResult['WPTHost'] = $row['Host'];
+            $wptResult['WPTHost'] = $hostInfo['HostURL'];
+            $wptResult['WPTLocation'] = $locationInfo['Location'];
+            $wptResult['DownloadResultXml'] = $row['DownloadResultXml'];
+            $wptResult['DownloadDetails'] = $row['DownloadDetails'];
+            $wptResult['MaxDownloadAttempts'] = $row['MaxDownloadAttempts'];
+            $wptResult['Runs'] = $row['Runs'];
+            $wptResult['RunToUseForAverage'] = $row['RunToUseForAverage'];
+            $wptResult['FirstStatusUpdate'] = current_seconds();
+            $wptResult['LastStatusUpdate'] = current_seconds();
+            $wptResult['Validate'] = $script['Validate'];
+            $wptResult['ValidationRequest'] = $script['ValidationRequest'];
+            $wptResult['ValidationType'] = $script['ValidationType'];
+            $wptResult['ValidationMarkAs'] = $script['ValidationMarkAs'];
+            $wptResult['ValidationMarkAsElse'] = $script['ValidationMarkAsElse'];
+            $wptResult['WPTBandwidthDown'] = $bwDown;
+            $wptResult['WPTBandwidthUp'] = $bwUp;
+            $wptResult['WPTBandwidthLatency'] = $latency;
+            $wptResult['WPTBandwidthPacketLoss'] = $plr;
 
-          $wptResult->save();
-          $r = $jobTable->find($id);
-          $r['Lastrun'] = $dte;
-          $r->save();
-          unset($row);
-          unset($r);
-          unset($wptResult);
-          logOutput("[INFO] [ProcessJob] Id:$id Label:$label Sumitted job for processing\n url: " . $url);
-          if ($navscript) {
-            logOutput("[INFO] [ProcessJob] Id:$id Label:$label Nav Script\n" . $navscript);
+            $wptResult->save();
+            $r = $jobTable->find($id);
+            $r['Lastrun'] = $dte;
+            $r->save();
+            unset($r);
+            unset($wptResult);
+            logOutput("[INFO] [ProcessJob] Id:$id Label:$label Sumitted job for processing\n url: " . $url);
+            if ($navscript) {
+              logOutput("[INFO] [ProcessJob] Id:$id Label:$label Nav Script\n" . $navscript);
+            }
+          } else {
+            logOutput("[INFO] [ProcessJob] Skipping Job. Scheduled interval not passed. Id:$id Label:$label ");
           }
-        } else {
-          logOutput("[INFO] [ProcessJob] Skipping Job. Scheduled interval not passed. Id:$id Label:$label ");
         }
       }
-    }
+      unset($row);
+      }
   }
   catch (Exception $e)
   {
@@ -541,11 +577,11 @@ function processJobsForUser($userId, $jobId = null, $force = false, $runLabel=""
     logOutput('[ERROR] [processJobsForUsers] Exception : ' . $e->getMessage() . "");
     exit;
   }
-  logOutput("[DEBUG] [processJobsForUsers] after looping: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+  //logOutput("[DEBUG] [processJobsForUsers] after looping: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
   unset($result);
   $user->free(true);
   unset($user);
-  logOutput("[DEBUG] [processJobsForUsers] after cleanup: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
+  //logOutput("[DEBUG] [processJobsForUsers] after cleanup: " .timestamp()." mem: ". intval(memory_get_usage() / 1024));
 }
 
 /**
@@ -586,9 +622,11 @@ function processResultsForAll( $resultId = null ) {
       $results = $q->execute();
     }
     $q->free(true);
+
     foreach ($results as $result)
     {
       $wptResultId = $result['WPTResultId'];
+      $wptJobId = $result['WPTJobId'];
       $runToUse = $result['RunToUseForAverage'];
 
       // If we have no valid wpt result id then skip and continue
@@ -616,7 +654,7 @@ function processResultsForAll( $resultId = null ) {
       try {
         $resultXml = file_get_contents($result['WPTHost'] . $wptXmlResult . $wptResultId . "/");
       } catch (Exception $e) {
-        logOutput("[ERROR] [ProcessResults] Failed to retrieve xml for WPTResultId: $wptResultId Id: $id");
+        logOutput("[ERROR] [ProcessResults] Failed to retrieve xml for WPTResultId: $wptResultId Id: $id Message: ".$e->getMessage());
         continue;
       }
 
@@ -629,7 +667,7 @@ function processResultsForAll( $resultId = null ) {
         $xml = new SimpleXMLElement($resultXml);
       } catch (Exception $e) {
         // Ignore and continue
-        logOutput("[ERROR] [ProcessResults] Failed to parse XML for WPTResultId: $wptResultId Id: $id");
+        logOutput("[ERROR] [ProcessResults] Failed to parse XML for WPTResultId: $wptResultId Id: $id Message: ".$e->getMessage());
         continue;
       }
       $status = $xml->statusCode;
@@ -650,10 +688,7 @@ function processResultsForAll( $resultId = null ) {
         logOutput("[INFO] [ProcessResults] $wptResultId Completed");
         // Check for empty run
         $headersLocation = $xml->data->run[$runToUse - 1]->firstView->rawData->headers;
-        // TODO: Remove Strangeloop specific code, or make this feature generic.
         $headers = file_get_contents($headersLocation);
-        $request57 = strpos($headers,"Request 6:");
-
         $pageDataLocation = $xml->data->run[0]->firstView->rawData->pageData;
         $pageData = file_get_contents($pageDataLocation);
         $pageDataLocationRepeatView = $xml->data->run[0]->repeatView->rawData->pageData;
@@ -692,48 +727,143 @@ function processResultsForAll( $resultId = null ) {
           updateJobStatus($id, "999");
           continue;
         }
-        $testComplete = $xml->data->run->firstView->results->date;
+
         // if = then use average.
         $avgRun = $xml->data->average->firstView->avgRun;
 
         if ( $runToUse == 0 ){
-          $avgFV = $xml->data->average->firstView;
-          $avgRV = $xml->data->average->repeatView;
+//          $avgFV = $xml->data->average->firstView;
+//          $avgRV = $xml->data->average->repeatView;
           $requestDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->requestsData;
           $requestDataLocationRepeatView = $xml->data->run[$avgRun-1]->repeatView->rawData->requestsData;
           $pageDataLocation = $xml->data->run[$avgRun-1]->firstView->rawData->pageData;
+          // TODO: Not sure if this was left out as a copy paste error 1/8/2012
+          $pageDataLocationRepeatView = $xml->data->run[$avgRun-1]->repeatView->rawData->pageData;
         } else {
-          $avgFV = $xml->data->run[$runToUse - 1]->firstView->results;
-          $avgRV = $xml->data->run[$runToUse - 1]->repeatView->results;
+//          $avgFV = $xml->data->run[$runToUse - 1]->firstView->results;
+//          $avgRV = $xml->data->run[$runToUse - 1]->repeatView->results;
           $requestDataLocation = $xml->data->run[$runToUse-1]->firstView->rawData->requestsData;
           $requestDataLocationRepeatView = $xml->data->run[$runToUse-1]->repeatView->rawData->requestsData;
-          $pageDataLocationRepeatView = $xml->data->run[$avgRun-1]->repeatView->rawData->pageData;
+          // TODO: Not sure if this was left out as a copy paste error 1/8/2012
+          $pageDataLocation = $xml->data->run[$runToUse-1]->firstView->rawData->pageData;
+          // TODO: Not sure if this was a copy paste error 1/8/2012
+          //$pageDataLocationRepeatView = $xml->data->run[$avgRun-1]->repeatView->rawData->pageData;
+          $pageDataLocationRepeatView = $xml->data->run[$runToUse-1]->repeatView->rawData->pageData;
        }
         $result['DialerId']=$dialerId;
-        if ($avgFV) {
-          $result['AvgFirstViewLoadTime'] = $avgFV->loadTime;
-          $result['AvgFirstViewFirstByte'] = $avgFV->TTFB;
-          $result['AvgFirstViewStartRender'] = $avgFV->render;
-          $result['AvgFirstViewDocCompleteTime'] = $avgFV->docTime;
-          $result['AvgFirstViewDocCompleteRequests'] = $avgFV->requestsDoc;
-          $result['AvgFirstViewDocCompleteBytesIn'] = $avgFV->bytesInDoc;
-          $result['AvgFirstViewDomTime'] = $avgFV->domTime;
-          $result['AvgFirstViewFullyLoadedTime'] = $avgFV->fullyLoaded;
-          $result['AvgFirstViewFullyLoadedRequests'] = $avgFV->requests;
-          $result['AvgFirstViewFullyLoadedBytesIn'] = $avgFV->bytesIn;
+
+        // Iterate through raw data and gather results
+        try {
+          $pageData = file_get_contents($pageDataLocation);
+          $pageDataArray = delimitedToArray($pageData,"\t",false);
+
+          $pageDataRepeatView = file_get_contents($pageDataLocationRepeatView);
+          $pageDataArrayRepeatView = delimitedToArray($pageDataRepeatView,"\t",false);
+        } catch (Exception $ex){
+          logOutput("[WARN] [ProcessResults] Exception processing page data. Message: ".$ex->getMessage());
+          continue;
         }
-        if ($avgRV) {
-          $result['AvgRepeatViewLoadTime'] = $avgRV->loadTime;
-          $result['AvgRepeatViewFirstByte'] = $avgRV->TTFB;
-          $result['AvgRepeatViewStartRender'] = $avgRV->render;
-          $result['AvgRepeatViewDocCompleteTime'] = $avgRV->docTime;
-          $result['AvgRepeatViewDocCompleteRequests'] = $avgRV->requestsDoc;
-          $result['AvgRepeatViewDocCompleteBytesIn'] = $avgRV->bytesInDoc;
-          $result['AvgRepeatViewDomTime'] = $avgRV->domTime;
-          $result['AvgRepeatViewFullyLoadedTime'] = $avgRV->fullyLoaded;
-          $result['AvgRepeatViewFullyLoadedRequests'] = $avgRV->requests;
-          $result['AvgRepeatViewFullyLoadedBytesIn'] = $avgRV->bytesIn;
-        }
+        foreach ( $pageDataArray as $key=>$data ){
+          $repeatViewData = $pageDataArrayRepeatView[$key];
+          // The first record in a job that is a sequence will be the sum of all the pages.
+          if ($key == 0){
+            // Is this job multistep / sequence
+            if ( sizeof($pageDataArray) > 1){
+              $result['MultiStep'] = true;
+            }
+             // Get host/location from record 0 to add subsequent seq #s
+             $host = $result['WPTHost'];
+             $location = $result['WPTLocation'];
+             $result['TimeToLoadTitle'] = array_sum(getArrayFor($pageDataArray,'Time to Title'));
+             $result['AvgFirstViewLoadTime'] = array_sum(getArrayFor($pageDataArray,'Load Time (ms)'));
+             $result['AvgFirstViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArray,'Doc Complete Time (ms)'));
+             $result['AvgFirstViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArray,'Requests (Doc)'));
+             $result['AvgFirstViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In (Doc)'));
+             $result['AvgFirstViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArray,'Activity Time(ms)'));
+             $result['AvgFirstViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArray,'Requests'));
+             $result['AvgFirstViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In'));
+             $result['AvgFirstViewFirstByte'] = array_sum(getArrayFor($pageDataArray,'Time to First Byte (ms)'));
+             $result['AvgFirstViewStartRender'] = array_sum(getArrayFor($pageDataArray,'Time to Start Render (ms)'));
+           if ( isset($pageDataArrayRepeatView) && sizeof($pageDataArrayRepeatView) > 0){
+             $result['TimeToLoadTitleRepeatView'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Time to Title'));
+             $result['AvgRepeatViewLoadTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Load Time (ms)'));
+             $result['AvgRepeatViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Doc Complete Time (ms)'));
+             $result['AvgRepeatViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests (Doc)'));
+             $result['AvgRepeatViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In (Doc)'));
+             $result['AvgRepeatViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Activity Time(ms)'));
+             $result['AvgRepeatViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests'));
+             $result['AvgRepeatViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In'));
+             $result['AvgRepeatViewFirstByte'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Time to Repeat Byte (ms)'));
+             $result['AvgRepeatViewStartRender'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Time to Start Render (ms)'));
+             $result->save();
+           }
+          }
+          if ( sizeof($pageDataArray) < 2 ){
+            continue;
+          }
+          // Check if this is the first and/or only result item in the sequence.
+          // If not, create a new $result object
+//          if ($key > 0){
+            $result = new WPTResult();
+            $result['WPTResultId'] = $wptResultId;
+            $result['WPTJobId'] = $wptJobId;
+            $result['WPTHost'] = $host;
+            $result['WPTLocation'] = $location;
+//          }
+          $dte = new DateTime($data['Date'].' '.$data['Time']);
+          $testComplete = abs($dte->getTimestamp());
+          $result['SequenceNumber'] = $key+1;
+          $result['WPTEventName'] = $data['Event Name'];
+          $result['WPTPageTitle'] = $data['Page Title'];
+          $result['TimeToLoadTitle'] = $data['Time to Title'];
+          $result['AvgFirstViewLoadTime'] = $data['Load Time (ms)'];
+          $result['AvgFirstViewFirstByte'] = $data['Time to First Byte (ms)'];
+          $result['AvgFirstViewStartRender'] = $data['Time to Start Render (ms)'];
+          $result['AvgFirstViewDocCompleteTime'] = $data['Doc Complete Time (ms)'];
+          $result['AvgFirstViewDocCompleteRequests'] = $data['Requests (Doc)'];
+          $result['AvgFirstViewDocCompleteBytesIn'] = $data['Bytes In (Doc)'];
+          $result['AvgFirstViewDomTime'] = $data['Time to DOM Element (ms)'];
+          $result['AvgFirstViewFullyLoadedTime'] = $data['Activity Time(ms)'];
+          $result['AvgFirstViewFullyLoadedRequests'] = $data['Requests'];
+          $result['AvgFirstViewFullyLoadedBytesIn'] = $data['Bytes In'];
+
+          $result['TimeToLoadTitleRepeatView'] = $repeatViewData['Time to Title'];
+          $result['AvgRepeatViewLoadTime'] = $repeatViewData['Load Time (ms)'];
+          $result['AvgRepeatViewFirstByte'] = $repeatViewData['Time to First Byte (ms)'];
+          $result['AvgRepeatViewStartRender'] = $repeatViewData['Time to Start Render (ms)'];
+          $result['AvgRepeatViewDocCompleteTime'] = $repeatViewData['Doc Complete Time (ms)'];
+          $result['AvgRepeatViewDocCompleteRequests'] = $repeatViewData['Requests (Doc)'];
+          $result['AvgRepeatViewDocCompleteBytesIn'] = $repeatViewData['Bytes In (Doc)'];
+          $result['AvgRepeatViewDomTime'] = $repeatViewData['Time to DOM Element (ms)'];
+          $result['AvgRepeatViewFullyLoadedTime'] = $repeatViewData['Activity Time(ms)'];
+          $result['AvgRepeatViewFullyLoadedRequests'] = $repeatViewData['Requests'];
+          $result['AvgRepeatViewFullyLoadedBytesIn'] = $repeatViewData['Bytes In'];
+
+// DONE: Replaced XML with processing of raw data in order to capture all pages in a sequence 2012/01/08
+//        if ($avgFV) {
+//          $result['AvgFirstViewLoadTime'] = $avgFV->loadTime;
+//          $result['AvgFirstViewFirstByte'] = $avgFV->TTFB;
+//          $result['AvgFirstViewStartRender'] = $avgFV->render;
+//          $result['AvgFirstViewDocCompleteTime'] = $avgFV->docTime;
+//          $result['AvgFirstViewDocCompleteRequests'] = $avgFV->requestsDoc;
+//          $result['AvgFirstViewDocCompleteBytesIn'] = $avgFV->bytesInDoc;
+//          $result['AvgFirstViewDomTime'] = $avgFV->domTime;
+//          $result['AvgFirstViewFullyLoadedTime'] = $avgFV->fullyLoaded;
+//          $result['AvgFirstViewFullyLoadedRequests'] = $avgFV->requests;
+//          $result['AvgFirstViewFullyLoadedBytesIn'] = $avgFV->bytesIn;
+//        }
+//        if ($avgRV) {
+//          $result['AvgRepeatViewLoadTime'] = $avgRV->loadTime;
+//          $result['AvgRepeatViewFirstByte'] = $avgRV->TTFB;
+//          $result['AvgRepeatViewStartRender'] = $avgRV->render;
+//          $result['AvgRepeatViewDocCompleteTime'] = $avgRV->docTime;
+//          $result['AvgRepeatViewDocCompleteRequests'] = $avgRV->requestsDoc;
+//          $result['AvgRepeatViewDocCompleteBytesIn'] = $avgRV->bytesInDoc;
+//          $result['AvgRepeatViewDomTime'] = $avgRV->domTime;
+//          $result['AvgRepeatViewFullyLoadedTime'] = $avgRV->fullyLoaded;
+//          $result['AvgRepeatViewFullyLoadedRequests'] = $avgRV->requests;
+//          $result['AvgRepeatViewFullyLoadedBytesIn'] = $avgRV->bytesIn;
+//        }
 
 
         if ($testComplete) {
@@ -741,79 +871,81 @@ function processResultsForAll( $resultId = null ) {
         } else {
           $result['Date'] = current_seconds();
         }
-        if ($result['DownloadResultXml']) {
-          saveWPTXmlResults($wptResultId, $resultXml);
-        }
-        if ($result['DownloadDetails']) {
-          saveWPTAssets($wptResultId, $resultXml);
-        }
-        if ($result['Validate']){
-          $validationRequest = $result['ValidationRequest'];
-          $validationType = $result['ValidationType'];
-          $validationMarkAs = $result['ValidationMarkAs'];
-          $validationMarkAsElse = $result['ValidationMarkAsElse'];
-          $requestData = retrieveRequestsData($requestDataLocation );
-          $requestDataRepeatView = retrieveRequestsData($requestDataLocationRepeatView );
-          $requestDataArray[] = $requestData;
-          $requestDataArray[] = $requestDataRepeatView;
-          $result['ValidationState'] = $validationMarkAsElse;
-          foreach($requestDataArray as $reqData){
-            foreach ($reqData as $request){
-              if ( preg_match($validationRequest, $request['url']) ){
-                if ( $validationType == VALIDATION_TYPE_MATCH ){
-                  $result['ValidationState'] = $validationMarkAs;
-                  break;
-                } else {
-                  if ($validationType == VALIDATION_TYPE_NOMATCH){
-                    break;
-                  } else {
-                    $result['ValidationState'] = $validationMarkAs;
-                  }
-                }
-              }
-            }
-          }
-        }
-        if ( $result['AvgFirstViewLoadTime']=0
-            && $result['AvgFirstViewFirstByte']=0
-            && $result['AvgFirstViewDocCompleteTime']=0
-            && $result['AvgFirstViewStartRender']=0){
-          $result['ValidationState'] = 2;
-        }
+        // TODO: Deprecated
+//        if ($result['DownloadResultXml']) {
+//          saveWPTXmlResults($wptResultId, $resultXml);
+//        }
+//        if ($result['DownloadDetails']) {
+//          saveWPTAssets($wptResultId, $resultXml);
+//        }
+
+//        if ($result['Validate']){
+//          $validationRequest = $result['ValidationRequest'];
+//          $validationType = $result['ValidationType'];
+//          $validationMarkAs = $result['ValidationMarkAs'];
+//          $validationMarkAsElse = $result['ValidationMarkAsElse'];
+//          $requestData = retrieveRequestsData($requestDataLocation );
+//          $requestDataRepeatView = retrieveRequestsData($requestDataLocationRepeatView );
+//          $requestDataArray[] = $requestData;
+//          $requestDataArray[] = $requestDataRepeatView;
+//          $result['ValidationState'] = $validationMarkAsElse;
+//          foreach($requestDataArray as $reqData){
+//            foreach ($reqData as $request){
+//              if ( preg_match($validationRequest, $request['url']) ){
+//                if ( $validationType == VALIDATION_TYPE_MATCH ){
+//                  $result['ValidationState'] = $validationMarkAs;
+//                  break;
+//                } else {
+//                  if ($validationType == VALIDATION_TYPE_NOMATCH){
+//                    break;
+//                  } else {
+//                    $result['ValidationState'] = $validationMarkAs;
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//        if ( $result['AvgFirstViewLoadTime']=0
+//            && $result['AvgFirstViewFirstByte']=0
+//            && $result['AvgFirstViewDocCompleteTime']=0
+//            && $result['AvgFirstViewStartRender']=0){
+//          $result['ValidationState'] = 2;
+//        }
         // If this is a multi page job page test will report incorrect numbers. This routine
         // Will calculate correct numbers from the actual request data.
         // Sums up the total for each element across all pages.
-        if ( $result['MultiStep'] ){
-          $pageData = file_get_contents($pageDataLocation);
-          if ($pageData){
-            $pageDataArray = delimitedToArray($pageData,"\t",true);
-            if ( $pageDataArray ){
-              $result['AvgFirstViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArray,'Doc Complete Time (ms)'));
-              $result['AvgFirstViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArray,'Requests (Doc)'));
-              $result['AvgFirstViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In (Doc)'));
-              $result['AvgFirstViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArray,'Activity Time(ms)'));
-              $result['AvgFirstViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArray,'Requests'));
-              $result['AvgFirstViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In'));
-              $result['AvgFirstViewFirstByte'] = array_sum(getArrayFor($pageDataArray,'Time to First Byte (ms)'));
-              $result['AvgFirstViewStartRender'] = array_sum(getArrayFor($pageDataArray,'Time to Start Render (ms)'));
-            }
-          }
-          $pageDataRepeatView = file_get_contents($pageDataLocationRepeatView);
-          if ($pageDataRepeatView){
-            $pageDataArrayRepeatView = delimitedToArray($pageDataRepeatView,"\t",true);
-            if ( $pageDataArrayRepeatView ){
-              $result['AvgRepeatViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Doc Complete Time (ms)'));
-              $result['AvgRepeatViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests (Doc)'));
-              $result['AvgRepeatViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In (Doc)'));
-              $result['AvgRepeatViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Activity Time(ms)'));
-              $result['AvgRepeatViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests'));
-              $result['AvgRepeatViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In'));
-              $result['AvgRepeatViewFirstByte'] = array_sum(getArrayFor($pageDataArray,'Time to Repeat Byte (ms)'));
-              $result['AvgRepeatViewStartRender'] = array_sum(getArrayFor($pageDataArray,'Time to Start Render (ms)'));
-            }
-          }
-        }
+        // multi page/sequence jobs are detected by the raw page data having more than a single entry.
+        // Also, if it is a multi sequence job we add entries for each page in the run to provide the ability
+        // to do finer grain reporting
+//        if ( sizeof($pageDataArray) > 1){
+//          if ($pageData){
+//            if ( $pageDataArray ){
+//              $result['AvgFirstViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArray,'Doc Complete Time (ms)'));
+//              $result['AvgFirstViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArray,'Requests (Doc)'));
+//              $result['AvgFirstViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In (Doc)'));
+//              $result['AvgFirstViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArray,'Activity Time(ms)'));
+//              $result['AvgFirstViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArray,'Requests'));
+//              $result['AvgFirstViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArray,'Bytes In'));
+//              $result['AvgFirstViewFirstByte'] = array_sum(getArrayFor($pageDataArray,'Time to First Byte (ms)'));
+//              $result['AvgFirstViewStartRender'] = array_sum(getArrayFor($pageDataArray,'Time to Start Render (ms)'));
+//            }
+//          }
+//          if ($pageDataRepeatView){
+//            if ( $pageDataArrayRepeatView ){
+//              $result['AvgRepeatViewDocCompleteTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Doc Complete Time (ms)'));
+//              $result['AvgRepeatViewDocCompleteRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests (Doc)'));
+//              $result['AvgRepeatViewDocCompleteBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In (Doc)'));
+//              $result['AvgRepeatViewFullyLoadedTime'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Activity Time(ms)'));
+//              $result['AvgRepeatViewFullyLoadedRequests'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Requests'));
+//              $result['AvgRepeatViewFullyLoadedBytesIn'] = array_sum(getArrayFor($pageDataArrayRepeatView,'Bytes In'));
+//              $result['AvgRepeatViewFirstByte'] = array_sum(getArrayFor($pageDataArray,'Time to Repeat Byte (ms)'));
+//              $result['AvgRepeatViewStartRender'] = array_sum(getArrayFor($pageDataArray,'Time to Start Render (ms)'));
+//            }
+//          }
+//        }
         $result->save();
+        }
         updateJobstatus($id, $status);
       }
     }
@@ -1263,5 +1395,20 @@ function updateLocations($id){
     print $e;
     exit;
   }
+}
+/*
+ * Given a job:seq ID ( 9:1 ) return an array with $res['jobId'] and $res['sequenceId']
+ */
+function parseJobSequenceIds($id){
+  $idx = strpos($id,':');
+
+  if ( isset($idx) && $idx > 0 ){
+    $seq_id = substr($id,$idx+1);
+    $job_id = substr($id,0,$idx);
+  }
+  $res['jobId'] = $job_id;
+  $res['sequenceId'] = $seq_id;
+
+  return $res;
 }
 ?>

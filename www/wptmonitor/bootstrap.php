@@ -15,6 +15,7 @@
   spl_autoload_register(array('Doctrine_Core', 'modelsAutoload'));
 
   $dsn= 'sqlite:///'.dirname(__FILE__).'/db/wpt_monitor.sqlite';
+//$dsn= 'mysql://root@localhost/wptmonitor';
   $dataConn = Doctrine_Manager::connection($dsn,'data');
 //
 //  $configDsn= 'sqlite:///'.dirname(__FILE__).'/db/config.sqlite';

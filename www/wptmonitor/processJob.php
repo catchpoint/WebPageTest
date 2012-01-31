@@ -2,17 +2,35 @@
   require("login/login.php");
   include 'monitor.inc';  
 
-  $jobId = $_REQUEST['job_id'];
-  $resultId= $_REQUEST['result_id'];
-  $forwardTo = $_REQUEST['forward_to'];
-  $force = $_REQUEST['force'];
-  $priority = $_REQUEST['priority'];
-  if ( ! ($numberOfRuns = $_REQUEST['numberofruns'] ) ){
+  $force = false;
+  $runLabel = "On Demand";
+  $priority = "1";
+
+  if (isset($_REQUEST['job_id']))
+    $jobId = $_REQUEST['job_id'];
+
+  if (isset($_REQUEST['result_id']))
+    $resultId= $_REQUEST['result_id'];
+
+  if (isset($_REQUEST['forward_to']))
+    $forwardTo = $_REQUEST['forward_to'];
+
+  if (isset($_REQUEST['force']))
+    $force = $_REQUEST['force'];
+
+  if (isset($_REQUEST['priority']))
+    $priority = $_REQUEST['priority'];
+
+  if ( !isset($_REQUEST['numberofruns'] )){
     $numberOfRuns = 1;
+  } else {
+    $numberOfRuns = $_REQUEST['numberofruns'];
   }
 
   $userId = getCurrentUserId();
-  $runLabel=$_REQUEST['runLabel'];
+
+if (isset($_REQUEST['runLabel']))
+    $runLabel=$_REQUEST['runLabel'];
 
   if ( $jobId && $userId ){
     foreach($jobId as $jid){

@@ -40,11 +40,14 @@ class WPTJob extends Doctrine_Record {
   }
 
   public function setUp() {
+    $this->hasMany('WPTJob_WPTLocation', array(
+      'local' => 'Id',
+      'foreign' => 'WPTJobId')
+    );
     $this->hasMany('WPTJob_Alert', array(
       'local' => 'Id',
       'foreign' => 'WPTJobId')
     );
-    
     $this->hasMany('WPTResult', array(
       'local' => 'Id',
       'foreign' => 'WPTJobId'

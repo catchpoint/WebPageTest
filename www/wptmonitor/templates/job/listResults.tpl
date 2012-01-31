@@ -154,7 +154,7 @@
     BWDown<br>BWUp
   </th>
   <th align="right" style="padding-bottom:0%;vertical-align:bottom;">
-    Latency<br>Pkt Loss
+    Sequence
   </th>
 
   <th align="left" style="padding-bottom:0%;vertical-align:bottom;">
@@ -187,7 +187,7 @@
 </tr>
 <tr>
   <th align="left" colspan="4"></th>
-  <th><input type="checkbox" id="toggleAllDisplayedResults"></th>
+  <th align="left"><input type="checkbox" id="toggleAllDisplayedResults"></th>
   <th align="right">
     <a title="WPT Remote Agent Dialer ID" href="?orderBy=DialerId">{if $orderResultsBy eq "DialerId"}
     <b>{/if}Agent</a>{if $orderResultsBy eq "DialerId"}</b><a
@@ -254,8 +254,10 @@
 </tr>
 {assign var="eo" value="odd"}
 {foreach from=$result item=res}
-{if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}
+{if $res.SequenceNumber eq '0'}{if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}{/if}
+    {if $res.SequenceNumber > 0}<tr><td colspan="6" style="padding-bottom:1px;padding-top:0%;"></td> <td colspan="100%" style="padding-bottom:1px;padding-top:0%;vertical-align:middle;background-color: #336633;"></td></tr>{/if}
 <tr class="monitoringJobRow {$eo}">
+    {if $res.SequenceNumber eq '0'}
   {if $res.Status eq '100' || $res.Status eq '910'}
     <td>
       <form action="processJob.php">
@@ -283,21 +285,27 @@
   </td>
   <td><a target="_blank" title="{$res.WPTResultId}"
          href={$res.WPTHost}{$wptResultURL}{$res.WPTResultId}><img src="img/favicon.ico" width="17"
-                                                                   title="Show WPT Result"></a></td>
+                                                                   title="Show WPT Result"></a>&nbsp; {if $res.MultiStep}<img src="img/application-cascade-icon.png" width="18" title="Mutli Sequence Job"> {/if}</td>
   <td><input type="checkbox" name="selectedResult" id="selectedResult" value="{$res.Id}"></td>
+    {else}
+    <td colspan="5"></td>
+    {/if}
+
   <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.WPTBandwidthDown}<br>{$res.WPTBandwidthUp}<br>{$res.DialerId}</td>
-  <td align="right" style="padding-bottom:0%;vertical-align:top;">{$res.WPTBandwidthLatency}<br>{$res.WPTBandwidthPacketLoss}<br>
+  <td align="right" style="padding-bottom:0%;vertical-align:top;">
+      {*{$res.WPTBandwidthLatency}<br>{$res.WPTBandwidthPacketLoss}<br>*}
+    {$res.SequenceNumber}<br>
     {if $res.ValidationState eq 1}<img title="{$res.Id} - Valid Result" src=img/Valid.png>
     {elseif $res.ValidationState eq 2}<img title="{$res.Id} - Invalid Result" src=img/Invalid.png>
     {elseif $res.ValidationState eq 3}<img title="{$res.Id} - Needs Review" src=img/NeedsReview.png>
     {/if}
   </td>
-  <td align="left">{$res.RunLabel}<br>{$res.Date|date_format:"%D %H:%M"}<br>
-    {if $statusCodes[$res.Status]}{$statusCodes[$res.Status]}{else}{$res.Status}{/if}<br></td>
+  <td align="left" style="padding-bottom:0%;vertical-align:top;">{if $res.SequenceNumber == 0}{$res.RunLabel}<br>{/if}{$res.Date|date_format:"%D %H:%M:%S"}<br>
+    {if $res.Status}{if $statusCodes[$res.Status]}{$statusCodes[$res.Status]}{else}{$res.Status}{/if}{/if}<br></td>
   <td align="left"><a title="JOB: {$res.WPTJob.Label} --- SCRIPT: {$res.WPTJob.WPTScript.Label}"
                       href="listResults.php?filterField=WPTJob.Id&filterValue={$res.WPTJob.Id}">{$res.WPTJob.Label|truncate:45}</a><br>{$res.WPTHost|truncate:45}
-    <br>{$res.Runs} ( {if $res.RunToUseForAverage eq 0}Average{else}{$res.RunToUseForAverage}{/if} )
-  </td>
+    <br>{$res.Runs} ( {if $res.RunToUseForAverage eq 0}Average{else}{$res.RunToUseForAverage})
+  {/if}</td>
   <td align="right" valign="top">{$res.AvgFirstViewFirstByte/1000}
     <hr>{$res.AvgRepeatViewFirstByte/1000}</td>
   <td align="right" valign="top">{$res.AvgFirstViewStartRender/1000}
@@ -327,6 +335,9 @@
     <hr>{($res.AvgRepeatViewFullyLoadedBytesIn/1000)|string_format:"%d"}K
   </td>
 </tr>
+
+{*<tr class="monitoringJobRow {$eo}">*}
+{*<td colspan="100%">{$res.WPTResultId}</td></tr>*}
 {if ($showResultsThumbs eq 'true' || $showWaterfallThumbs eq 'true') && $res.Status != 100}
 <tr class="monitoringJobRow {$eo}">
   <td colspan="19">

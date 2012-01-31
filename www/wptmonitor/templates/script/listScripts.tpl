@@ -87,9 +87,9 @@
                 {if $folderId eq -1}Folder<br>{/if}
                 <a href="?orderBy=Label&folderId={$folderId}">{if $orderScriptsBy eq "Label"}<strong>{/if}Label</strong></a>
               </td>
-              <td><a href="?orderBy=URL&folderId={$folderId}">{if $orderScriptsBy eq "URL"}<strong>{/if}URL</strong></a></td>
-              <td colspan="1" align="center"><a href="?orderBy=MultiStep&folderId={$folderId}">{if $orderScriptsBy eq "MultiStep"}
-              <strong>{/if}MultiStep</strong></a></td>
+              <td colspan="2"><a href="?orderBy=URL&folderId={$folderId}">{if $orderScriptsBy eq "URL"}<strong>{/if}URL</strong></a></td>
+              {*<td colspan="1" align="center"><a href="?orderBy=MultiStep&folderId={$folderId}">{if $orderScriptsBy eq "MultiStep"}*}
+              {*<strong>{/if}MultiStep</strong></a></td>*}
               <td align="center"><a href="?orderBy=Validate&folderId={$folderId}">{if $orderScriptsBy eq "Validate"}<strong>{/if}
                 Validate</strong></a></td>
               <td align="center">Actions</td>
@@ -102,8 +102,8 @@
                 <td colspan="2" nowrap="true">
                   {if $folderId eq -1}<a href=listScripts.php?folderId={$res.WPTScriptFolder.id}>{$res.WPTScriptFolder.Label}</a><br>{/if}
                   {$res.Label}</td>
-                <td>{$res.URL|truncate:60}</td>
-                <td align="center">{if $res.MultiStep}Yes{else}No{/if}</td>
+                <td colspan="2">{$res.URL|truncate:60}</td>
+                {*<td align="center">{if $res.MultiStep}Yes{else}No{/if}</td>*}
                 <td align="center">{if $res.Validate}Yes{else}No{/if}</td>
                 <td align="right">
                   <table>

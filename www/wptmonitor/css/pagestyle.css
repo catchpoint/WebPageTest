@@ -230,3 +230,9 @@ em { font-weight: bold; padding-right: 1em; vertical-align: top; }
 color:#f5f5f5;
 background-color:#a9a9a9;
 }
+option.imagebacked {
+padding: 2px 0 2px 20px;
+background-repeat: no-repeat;
+background-position: 1px 2px;
+vertical-align: middle;
+}

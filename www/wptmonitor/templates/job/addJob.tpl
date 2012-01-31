@@ -25,12 +25,20 @@
           {literal}
               <script type="text/javascript">
                 $().ready(function() {
-                  $('#remove').click(function() {
+                  $('#removeAlert').click(function() {
                     return !$('#alerts option:selected').remove().appendTo('#availableAlerts');
                   });
-                  $('#add').click(function() {
+                  $('#addAlert').click(function() {
                     return !$('#availableAlerts option:selected').remove().appendTo('#alerts');
                   });
+                });
+                $().ready(function () {
+                    $('#removeLocation').click(function () {
+                        return !$('#locations option:selected').remove().appendTo('#availableLocations');
+                    });
+                    $('#addLocation').click(function () {
+                        return !$('#availableLocations option:selected').remove().appendTo('#locations');
+                    });
                 });
               </script>
 
@@ -63,6 +71,9 @@
                   $('#alerts option').each(function(i) {
                     $(this).attr("selected", "selected");
                   });
+                $('#locations option').each(function(i) {
+                  $(this).attr("selected", "selected");
+                });
 
                   if (!allowUpdate)
                     if (!jobActive) {
@@ -143,8 +154,8 @@
                     </select>
                   </div>
                   <div align="center" style="vertical-align:middle;float:left;padding:10px">
-                    <br><input type="image" id="add" src="img/Back.png" class="actionIcon">
-                    <br><input type="image" src="img/Forward.png" id="remove" class="actionIcon">
+                    <br><input type="image" id="addAlert" src="img/Back.png" class="actionIcon">
+                    <br><input type="image" src="img/Forward.png" id="removeAlert" class="actionIcon">
                   </div>
                   <div>
                     Available Alerts ( Red indicates alert is not active )<br>
@@ -241,11 +252,41 @@
 
                 </select></td>
               </tr>
+              {*<tr>*}
+                {*<td align="right"><label title="From which WPT Host and Location to execute the test.">Location</label></td>*}
+                {*<td><select name="location">*}
+                  {*{html_options options=$wptLocations selected=$selectedLocation}*}
+              {*</tr>*}
               <tr>
-                <td align="right"><label title="From which WPT Host and Location to execute the test.">Location</label></td>
-                <td><select name="location">
-                  {html_options options=$wptLocations selected=$selectedLocation}
-              </tr>
+                  <td valign="top" align="right"><label title="Locations from which to execute this job." for="locations"><br>Locations</label></td>
+                  <td nowrap="true">
+                    <div style="float:left;">
+                      Selected Locations<br>
+                      <select style="width:280px;height:100px;" name="locations[]" multiple id="locations">
+                        {foreach from=$locations key=k item=v}
+                        {if $v.Selected}
+                          <option {if $v.Active}{else}style="color:red;"
+                                  title="This location is not currently enabled." {/if} value="{$v.Id}">{$v.Label} : {$v.Browser}</option>
+                        {/if}
+                        {/foreach}
+                      </select>
+                    </div>
+                    <div align="center" style="vertical-align:middle;float:left;padding:10px">
+                      <br><input type="image" id="addLocation" src="img/Back.png" class="actionIcon">
+                      <br><input type="image" src="img/Forward.png" id="removeLocation" class="actionIcon">
+                    </div>
+                    <div>
+                      Available Locations<br>
+                        <select style="width:280px;height:100px;" multiple id="availableLocations">
+                          {foreach from=$locations key=k item=v}
+                          {if !$v.Selected}
+                            <option {if $v.Active}{else}style="color:red;"
+                                    title="This job is not currently enabled." {/if} value="{$v.Id}">{$v.Label} : {$v.Browser}</option>
+                          {/if}
+                          {/foreach}
+                        </select>
+                    </div>
+                </tr>
               <tr>
                 <td align="right"><label title="How often the job should be executed.">Frequency</label></td>
                 <td><select id="jobFrequency" name="frequency" onblur="updateJobCount();" onkeyup="updateJobCount();"

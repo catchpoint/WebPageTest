@@ -20,6 +20,7 @@
   $location = $_REQUEST['location'];
   $script = $_REQUEST['script'];
   $alerts = $_REQUEST['alerts'];
+  $locations = $_REQUEST['locations'];
   // Extract host and location from $location field
   $hostloc = explode(" ", $location);
 
@@ -51,6 +52,8 @@
     } else {
       $wptJob = new WPTJob();
       $wptJob['UserId'] = $userId;
+      $wptJob->save();
+      $id = $wptJob['Id'];
     }
     $wptJob['Active'] = $active;
     $wptJob['WPTJobFolderId'] = $folderId;
@@ -81,10 +84,24 @@
     // Add update links
     if ($alerts) {
       foreach ($alerts as $alert) {
-        echo "id: ".$id." alert: ".$alert;
         $link = new WPTJob_Alert();
         $link['WPTJobId'] = $id;
         $link['AlertId'] = $alert;
+        $link->save();
+      }
+    }
+
+    // Update Locations
+    // Remove old links
+    $q = Doctrine_Query::create()->delete('WPTJob_WPTLocation l')->where('l.WPTJobId= ?', $id);
+    $jobLocations = $q->execute();
+    $q->free(true);
+    // Add update links
+    if ($locations) {
+      foreach ($locations as $loc) {
+        $link = new WPTJob_WPTLocation();
+        $link['WPTJobId'] = $id;
+        $link['WPTLocationId'] = $loc;
         $link->save();
       }
     }

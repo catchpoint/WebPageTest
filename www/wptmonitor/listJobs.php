@@ -87,11 +87,12 @@
 
     $orderJobsBy = "j.".$_SESSION['orderJobsBy'].' '.$_SESSION['orderJobsByDirection'];
 
-    $selectFields = 'j.Active, j.Id, j.Label, j.Host, j.Location, j.Frequency, j.LastRun, a.Id, COUNT(r.Id) AS ResultCount, f.Label';
+    $selectFields = 'j.Active, j.Id, j.Label, x.Label j.Frequency, j.LastRun, a.Id, COUNT(r.Id) AS ResultCount, f.Label';
 
-    $q = Doctrine_Query::create()->select($selectFields)->from('WPTJob j, j.WPTResult r')
+    $q = Doctrine_Query::create()->select($selectFields)->from('WPTJob j, j.WPTResult r, j.WPTJob_WPTLocation l, l.WPTLocation x')
                                 ->orderBy($orderJobsBy)
                                 ->groupBy('j.Id');
+
 
     if ( !$showInactiveJobs ){
       $q->andWhere('j.Active = ?', true);

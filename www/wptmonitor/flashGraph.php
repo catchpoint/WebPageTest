@@ -82,11 +82,13 @@ $smarty->assign('startTime', $startDateTime);
 $smarty->assign('endTime', $endDateTime);
 // End start/end times
 
+$q = Doctrine_Query::create()->from('WPTResult r, r.WPTJob j')->select('r.MultiStep, r.SequenceNumber, r.WPTResultId, r.WPTJobId, j.Label, j.WPTJobFolderId, j.UserId, j.Active');
+
 // Create jobs list
-$q = Doctrine_Query::create()->select('j.Id, j.Label')
-        ->from('WPTJob j')
-        ->orderBy('j.Label')
-        ->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
+//$q = Doctrine_Query::create()->select('j.Id, j.Label')
+//        ->from('WPTJob j')
+//        ->orderBy('j.Label')
+//        ->setHydrationMode(Doctrine_Core::HYDRATE_ARRAY);
     if ($folderId > -1 && hasPermission('WPTJob',$folderId,PERMISSION_READ)) {
       $q->andWhere('j.WPTJobFolderId = ?', $folderId);
     } else {
@@ -104,11 +106,20 @@ $smarty->assign('shares',$shares);
 
 $jobs = $q->fetchArray();
 $q->free(true);
+//print_r($jobs);exit;
 $jobArray = array();
 
 foreach ($jobs as $j) {
-  $i = $j['Id'];
-  $l = $j['Label'];
+  $i = $j['WPTJob']['Id'].':'.$j['SequenceNumber'];
+  if ($j['SequenceNumber'] > 0 ){
+    $l = '&nbsp;&nbsp;'.$j['SequenceNumber']." : ".$j['WPTJob']['Label'];
+  }else {
+    if ( $j['MultiStep'] ){
+      $l = 'SEQ : '.$j['WPTJob']['Label'];
+    }else {
+      $l = $j['WPTJob']['Label'];
+    }
+  }
   $jobArray[$i] = $l;
 }
 $smarty->assign('jobs', $jobArray);
@@ -230,10 +241,16 @@ if ($_REQUEST['act'] == 'report') {
           $idx++;
         }
       }
+
 //      $timeStamps[$idx] = date('m/d H:i', $endDateTime);
       if ( sizeof($data) > 0){
-        $job = $jobTable->find($jobId);
-        $jobLabel = $job['Label'];
+        $parsedId = parseJobSequenceIds($jobId);
+        $job = $jobTable->find($parsedId['jobId']);
+        if ( $parsedId['sequenceId'] > 0){
+          $jobLabel = $job['Label']." - Sequence:".$parsedId['sequenceId'];
+        }else {
+          $jobLabel = $job['Label'];
+        }
         $datas[$jobLabel." - ".$availField] = $data;
       }
     }

@@ -25,9 +25,9 @@
   if ( !$validate = $_REQUEST['validate'] ){
     $validate = 0;
   }
-  if ( !$multistep = $_REQUEST['multistep'] ){
-    $multistep  = 0;
-  }
+//  if ( !$multistep = $_REQUEST['multistep'] ){
+//    $multistep  = 0;
+//  }
   if ( !$authenticate = $_REQUEST['authenticate'] ){
     $authenticate = 0;
   }
@@ -55,7 +55,7 @@
     $wptScript['URLScript'] = $urlscript;
     $wptScript['NavigationScript'] = $navigationscript;
     $wptScript['Validate'] = $validate;
-    $wptScript['MultiStep'] = $multistep;
+//    $wptScript['MultiStep'] = $multistep;
     $wptScript['ValidationRequest'] = $validationrequest;
     $wptScript['ValidationType'] = $validationtype;
     $wptScript['ValidationMarkAs'] = $validationmarkas;

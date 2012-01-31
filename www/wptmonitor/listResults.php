@@ -155,6 +155,12 @@ try
 
   if ( $resultsFilterField && $resultsFilterValue ) {
     if ( $resultsFilterField == "WPTJob.Id" ) {
+      // 2012/01/21: Added sequence support
+      if (($idx = strrpos($resultsFilterValue,":")) > 0){
+        $sequenceNumber = substr($resultsFilterValue,$idx+1);
+        $resultsFilterValue = substr($resultsFilterValue,0,$idx);
+        $q->andWhere( 'r.SequenceNumber = ?', $sequenceNumber);
+      }
       $q->andWhere( 'r.' . $resultsFilterField . '= ?', $resultsFilterValue )
               ->andWhere( 'r.Date < ?', $endDateTime )
               ->andWhere( 'r.Date > ?', $startDateTime );
@@ -167,6 +173,7 @@ try
     $q->andWhere( 'r.Date < ?', $endDateTime )
             ->andWhere( 'r.Date > ?', $startDateTime );
   }
+  $q->orderBy('r.WPTResultId');
   $pager = new Doctrine_Pager( $q, $resultsCurrentPage, $resultsPerPage );
   $result = $pager->execute();
   $smarty->assign( 'wptResultURL', $wptResult );
@@ -178,6 +185,9 @@ try
 }
 catch ( Exception $e )
 {
+  if ( !isset($wptResultId)){
+    $wptResultId="NULL";
+  }
   error_log( "[WPTMonitor] Failed while Listing jobs: " . $wptResultId . " message: " . $e->getMessage() );
   print 'Exception : ' . $e->getMessage();
 }

@@ -236,6 +236,7 @@ function getSeriesDataForMultiJobs($user_id, $jobIds, $startDateTime, $endDateTi
     }
   }
   sort($result);
+
   return $result;
 }
 
@@ -262,6 +263,14 @@ function getGraphData($user_id,
   $trimAbove = $trimAbove * 1000;
   $trimBelow = $trimBelow * 1000;
 
+  // Added to support sequences 2012/01/15
+  $idx = strpos($job_id,':');
+
+  if ( isset($idx) && $idx > 0 ){
+    $seq_id = substr($job_id,$idx+1);
+    $job_id = substr($job_id,0,$idx);
+  }
+
   if (!$fields) {
     $fields = "r.*";
   }
@@ -275,7 +284,9 @@ function getGraphData($user_id,
       ->andWhere('r.WPTJobId = ?', $job_id)
       ->andWhere('r.Date <= ?', $endDateTime)
       ->andWhere('r.Date >= ?', $startDateTime);
-
+  if (isset($seq_id)){
+    $q->andWhere('r.SequenceNumber = ?', $seq_id);
+  }
   if ($trimAbove) {
     $q->andWhere('r.' . $adjustUsing . ' < ?', $trimAbove);
   }
