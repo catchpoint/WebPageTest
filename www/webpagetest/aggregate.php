@@ -35,7 +35,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                             'TTFB' => 'First Byte',
                             'render' => 'Start Render',
                             'bytesInDoc' => 'Bytes In (Doc)',
-                            'requestsDoc' => 'Requests (Doc)' );
+                            'requestsDoc' => 'Requests (Doc)',
+                            'loadEventStart' => 'Load Event Start' );
         
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
