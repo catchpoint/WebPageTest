@@ -16,6 +16,7 @@
       "run_at": "document_start"
     }
   ],
+  "content_security_policy": "default-src 'self'; connect-src http://127.0.0.1:8888",
   "permissions": [
     "cookies",
     "experimental",
