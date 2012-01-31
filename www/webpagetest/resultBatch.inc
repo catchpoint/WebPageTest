@@ -26,6 +26,12 @@ elseif( gz_is_file("$testPath/tests.json") )
     foreach( $legacyData as &$legacyTest )
         $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
 }
+$videoDirty = false;
+if( gz_is_file("$testPath/video.json") )
+    $videoInfo = json_decode(gz_file_get_contents("$testPath/video.json"), true);
+else {
+    $videoInfo = array('vID' => @$tests['vID'], 'vPathID' => @$tests['vPathID']);
+}
 
 // grab the location from the first test
 $location = $test['test']['location'];
@@ -292,6 +298,17 @@ else
 <?php
 } // csv
 
+if ($videoDirty) {
+    gz_file_put_contents("$testPath/video.json", json_encode($videoInfo));
+}
+// rewrite the bulk file if it changed
+if( $dirty )
+{
+    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    $dirty = false;
+}
+
+
 /**
 * Display a straight data table of the test results
 * 
@@ -431,6 +448,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $location;
     global $json;
     global $json_response;
+    global $videoInfo;
+    global $videoDirty;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -708,34 +727,41 @@ function DisplayPSS(&$tests, $video, &$dirty)
     if( $complete && $video && !$csv )
     {
         $videoComplete = true;
-        if( !strlen($tests['vID']) )
+        // regenerate a video if it was created a while ago and still isn't available
+        if( strlen($videoInfo['vID']) ) {
+            if (!CheckVideo($videoInfo['vID'], $regenerate_video) && $regenerate_video) {
+                $videoInfo['vID'] = null;
+                $videoDirty = true;
+            }
+        }
+        if( !strlen($videoInfo['vID']) )
         {
-            $tests['vID'] = CreateVideo($tests['urls']);
-            $dirty = true;
+            $videoInfo['vID'] = CreateVideo($tests['urls']);
+            $videoDirty = true;
             $videoComplete = false;
-            if( !strlen($tests['vID']) )
+            if( !strlen($videoInfo['vID']) )
             {
                 // bail on the video if it couldn't be created
                 $videoComplete = true;
-                $tests['vReady'] = true;
+                $videoInfo['vReady'] = true;
             }
         }
-        elseif( !$tests['vReady'] )
+        elseif( !$videoInfo['vReady'] )
         {
-            $tests['vReady'] = CheckVideo($tests['vID']);
-            if( $tests['vReady'] )
-                $dirty = true;
+            $videoInfo['vReady'] = CheckVideo($videoInfo['vID'], $regenerate_video);
+            if( $videoInfo['vReady'] )
+                $videoDirty = true;
             else
                 $videoComplete = false;
         }
         
         if ($json) {
-            $json_response['data']['VideoID'] = $tests['vID'];
+            $json_response['data']['VideoID'] = $videoInfo['vID'];
             if ($videoComplete) {
                 $json_response['statusCode'] = 200;
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id={$tests['vID']}";
+                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id={$videoInfo['vID']}";
             } else {
                 $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
@@ -744,7 +770,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $videoComplete )
             {
                 echo '<h2>Visual Comparison*</h2>';
-                VideoHtml($tests['vID']);
+                VideoHtml($videoInfo['vID']);
             }
             else
             {
@@ -767,7 +793,9 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     global $csv;
     global $complete;
     global $testInfo;
-    require_once('object_detail.inc');
+    global $videoInfo;
+    global $videoDirty;
+    require_once('./google/google_lib.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
         $includeRender = false;
@@ -796,6 +824,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
                 $variation = 'Page';
                 $videoTests[] = $test;
             } else {
+                $variation = 'Path';
                 $videoPathTests[] = $test;
             }
             
@@ -815,6 +844,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
                 $entry['median_run'] = GetMedianRun($entry['pageData'], 0);
                 $entry['median'] = $entry['pageData'][$entry['median_run']][0];
                 $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
+                $entry['median']['csi'] = ParseCsiInfo($test['id'], $testPath, $entry['median_run'], 0, true);
                 $entry['domains'] = array();
                 $entry['mime_stats'] = array();
                 GetRequestStats($entry['requests'], $entry['domains'], $entry['mime_stats']);
@@ -896,45 +926,113 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
         }
         echo '</table><br>';
         
+        global $supportsAuth;
+        global $admin;
+        if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
+            $csi = array();
+            foreach ($testData as $variation => &$configs) {
+                foreach($configs['Optimized']['median']['csi'] as $name => $value) {
+                    if ($name == 'CRITICAL_IMAGES_LOW_RES_LOADED' ||
+                        $name == 'CRITICAL_IMAGES_HI_RES_LOADED' ||
+                        $name == 'NON_CRITICAL_LOADED' ||
+                        $name == 'START_PARSE_TIME' ||
+                        $name == 'CRITICAL_DATA_RECEIVED' ||
+                        $name == 'CRITICAL_DATA_LOADED' ||
+                        $name == 'CRITICAL_IMAGES_RECEIVED' ||
+                        $name == 'CRITICAL_IMAGES_INLINED' ) {
+                        if( !array_key_exists($name, $csi)) {
+                            $csi[$name] = array();
+                        }
+                        $csi[$name][$variation] = $value;
+                    }
+                }
+            }
+            if (count($csi)) {
+                echo '<table class="batchResults" border="1" cellpadding="15" cellspacing="0"><tr><th class="empty"></th>';
+                foreach ($testData as $variation => &$configs) {
+                    $label = 'Site Navigation';
+                    if ($variation == 'Page')
+                        $label = 'First View';
+                    echo "<th>$label</th>";
+                }
+                echo '</tr>';
+                foreach($csi as $name => &$values) {
+                    if ($name == 'CRITICAL_IMAGES_INLINED' || 
+                        $name == 'CRITICAL_DATA_RECEIVED' ||
+                        $name == 'CRITICAL_DATA_LOADED' ||
+                        $name == 'CRITICAL_IMAGES_RECEIVED' ||
+                        $name == 'START_PARSE_TIME') {
+                        echo '<tr class="hidden">';
+                    } else {
+                        echo '<tr>';
+                    }
+                    echo "<td>$name</td>";
+                    foreach ($testData as $variation => &$configs) {
+                        echo '<td>';
+                        if (array_key_exists($variation, $csi[$name]))
+                            echo $csi[$name][$variation];
+                        echo '</td>';
+                    }
+                    echo '</tr>';
+                }
+                echo '</table><br>';
+            }
+        }
+        
         // video
         if ($complete && $video) {
             $videoComplete = true;
-            if (!strlen($tests['vID'])) {
-                $tests['vID'] = CreateVideo($videoTests, 'all');
-                $dirty = true;
-                $videoComplete = false;
-                if (!strlen($tests['vID'])) {
-                    $videoComplete = true;
-                    $tests['vReady'] = true;
+            // regenerate a video if it was created a while ago and still isn't available
+            if( strlen($videoInfo['vID']) ) {
+                if (!CheckVideo($videoInfo['vID'], $regenerate_video) && $regenerate_video) {
+                    $videoInfo['vID'] = null;
+                    $videoDirty = true;
                 }
-            } elseif( !$tests['vReady'] ) {
-                $tests['vReady'] = CheckVideo($tests['vID']);
-                if( $tests['vReady'] )
-                    $dirty = true;
+            }
+            if (!strlen($videoInfo['vID'])) {
+                $videoInfo['vID'] = CreateVideo($videoTests, 'all');
+                $videoDirty = true;
+                $videoComplete = false;
+                if (!strlen($videoInfo['vID'])) {
+                    $videoComplete = true;
+                    $videoInfo['vReady'] = true;
+                }
+            } elseif( !$videoInfo['vReady'] ) {
+                $videoInfo['vReady'] = CheckVideo($videoInfo['vID'], $regenerate_video);
+                if( $videoInfo['vReady'] )
+                    $videoDirty = true;
                 else
                     $videoComplete = false;
             }
-            if (!strlen($tests['vPathID'])) {
-                $tests['vPathID'] = CreateVideo($videoPathTests, 'all');
-                $dirty = true;
-                $videoComplete = false;
-                if (!strlen($tests['vPathID'])) {
-                    $videoComplete = true;
-                    $tests['vPathReady'] = true;
+            if( strlen($videoInfo['vPathID']) ) {
+                if (!CheckVideo($videoInfo['vPathID'], $regenerate_video) && $regenerate_video) {
+                    $videoInfo['vPathID'] = null;
+                    $videoDirty = true;
                 }
-            } elseif( !$tests['vPathReady'] ) {
-                $tests['vPathReady'] = CheckVideo($tests['vPathID']);
-                if( $tests['vPathReady'] )
-                    $dirty = true;
+            }
+            if (!strlen($videoInfo['vPathID'])) {
+                $videoInfo['vPathID'] = CreateVideo($videoPathTests, 'all');
+                $videoDirty = true;
+                $videoComplete = false;
+                if (!strlen($videoInfo['vPathID'])) {
+                    $videoComplete = true;
+                    $videoInfo['vPathReady'] = true;
+                }
+            } elseif( !$videoInfo['vPathReady'] ) {
+                $videoInfo['vPathReady'] = CheckVideo($videoInfo['vPathID'], $regenerate_video);
+                if( $videoInfo['vPathReady'] )
+                    $videoDirty = true;
                 else
                     $videoComplete = false;
             }
             
             if( $videoComplete ) {
                 echo '<h2>First View Visual Comparison*</h2>';
-                VideoHtml($tests['vID']);
+                VideoHtml($videoInfo['vID']);
+                echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Page']['Original']['id']},{$testData['Page']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
                 echo '<br><br><h2>Site Navigation Visual Comparison*</h2>';
-                VideoHtml($tests['vPathID']);
+                VideoHtml($videoInfo['vPathID']);
+                echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Path']['Original']['id']},{$testData['Path']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
             } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
                 echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
@@ -1000,7 +1098,7 @@ function DisplayBlink(&$tests, $video, &$dirty)
             }
             elseif( !$tests['videoReady'] )
             {
-                $tests['videoReady'] = CheckVideo($tests['videoId']);
+                $tests['videoReady'] = CheckVideo($tests['videoId'], $regenerate_video);
                 if( $tests['videoReady'] )
                     $dirty = true;
                 else
@@ -1033,7 +1131,7 @@ function DisplayBlink(&$tests, $video, &$dirty)
             }
             elseif( !$tests['NCvideoReady'] )
             {
-                $tests['NCvideoReady'] = CheckVideo($tests['NCvideoId']);
+                $tests['NCvideoReady'] = CheckVideo($tests['NCvideoId'], $regenerate_video);
                 if( $tests['NCvideoReady'] )
                     $dirty = true;
                 else
@@ -1227,7 +1325,7 @@ function DisplayPathMetric($label, &$configs, $metric, $digits = 3) {
         $class = 'good';
     echo "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s";
     if ($configs['Optimized']['median'][$metric])
-        echo ' (' . number_format(abs($delta / $configs['Optimized']['median'][$metric]) * 100.0, 1) . ')';
+        echo ' (' . number_format(abs($delta / $configs['Original']['median'][$metric]) * 100.0, 1) . '%)';
     echo "</td>";
     echo '</tr>';
 }
@@ -1272,9 +1370,11 @@ function CreateVideo(&$tests, $end = null)
 * 
 * @param mixed $videoID
 */
-function CheckVideo($videoID)
+function CheckVideo($videoID, &$regenerate_video)
 {
     $done = false;
+    $regenerate_video = false;
+    $elapsed = 0;
 
     $dir = GetVideoPath($videoID, true);
     if( is_dir("./$dir") )
@@ -1284,9 +1384,20 @@ function CheckVideo($videoID)
         {
             $done = true;
             GenerateVideoThumbnail("./$dir");
+        } else {
+            $created = filemtime("./$dir");
+            if ($created !== false) {
+                $elapsed = time() - $created;
+                if ($elapsed > 3600)
+                    $regenerate_video = true;
+            }
         }
-    }
-    
+        if ($regenerate_video) {
+            delTree("./$dir");
+        }
+    } else
+        $regenerate_video = true;
+        
     return $done;
 }
 
@@ -1351,13 +1462,6 @@ function VideoHtml($id)
                 </script>\n
                 <br>* The video may extend past the measured load time if the page was still updating after it was technically loaded\n
                 <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
-}
-
-// rewrite the bulk file if it changed
-if( $dirty )
-{
-    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
-    $dirty = false;
 }
 
 /**
