@@ -63,10 +63,14 @@ var FAKE_COMMANDS = [
     FakeCommand('navigate', 'http://www.example.com/'),
 
     // Can exec read the DOM of the page?
-    FakeCommand('exec', 'dump("window.location.href is: " + window.location.href + "\\n");'),
+    FakeCommand(
+        'exec',
+        'dump("window.location.href is: " + window.location.href + "\\n");'),
 
     // Can exec alter the DOM of the page?
-    FakeCommand('exec', 'window.document.title = "This title is from an exec command"'),
+    FakeCommand(
+        'exec',
+        'window.document.title = "This title is from an exec command"'),
 
     // Is exec in a page limited to the permissions of that page?
     FakeCommand('exec', [
@@ -78,8 +82,10 @@ var FAKE_COMMANDS = [
         '}'].join('\n')),
     FakeCommand('exec', [
         'try {',
-        '  var foo = Components.classes["@mozilla.org/network/standard-url;1"];',
-        '  alert("BUG: sandbox should hide Components.classes[...] from a web page.");',
+        '  var foo = ',
+        '      Components.classes["@mozilla.org/network/standard-url;1"];',
+        '  alert("BUG: sandbox should hide Components.classes[...] " +',
+        '        "from a web page.");',
         '} catch (ex) {',
         '  dump("GOOD: Got ex:" + ex);',
         '}'].join('\n')),
@@ -96,10 +102,10 @@ var FAKE_COMMANDS = [
 
     // Alter the heading on news.google.com.
     FakeCommand('navigate', 'http://www.google.com/news'),
-    FakeCommand('setinnertext', 'class=kd-appname',
+    FakeCommand('setinnertext', 'class=kd-appname-wrapper',
                 'This text should replace the word news!'),
 
-    FakeCommand('setinnerhtml', 'class=kd-appname',
+    FakeCommand('setinnerhtml', 'class=kd-appname-wrapper',
                 'This <b>HTML</b> should replace the word news!'),
 
     FakeCommand('setvalue', 'class=searchField', 'Susie, the Qmiester'),
@@ -107,10 +113,12 @@ var FAKE_COMMANDS = [
 
     // Test that we can set cookies.
     FakeCommand('setcookie', 'http://www.xol.com', 'zip = 20166'),
-    FakeCommand('setcookie', 'http://www.yol.com',
-                'TestData=bTest; expires=Fri Aug 12 2030 18:50:34 GMT-0400 (EDT)'),
-    FakeCommand('setcookie', 'http://www.zol.com',
-                'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)')
+    FakeCommand(
+        'setcookie', 'http://www.yol.com',
+        'TestData=bTest; expires=Fri Aug 12 2030 18:50:34 GMT-0400 (EDT)'),
+    FakeCommand(
+        'setcookie', 'http://www.zol.com',
+        'TestData = cTest; expires = Fri Aug 12 2030 19:50:34 GMT-0400 (EDT)')
 ];
 
 

@@ -61,10 +61,11 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
  * in DOM order.  Commands that use this function should use the
  * first element.
  *
+ * @private
  * @param {!HTMLElement|Document} root The document to search under.
  *     Usually window.document, except in unit tests.
  * @param {!string} target The pattern to match.
- * @returns {Array.<HTMLElement>} The HTML elements that match |target|.
+ * @return {Array.<HTMLElement>} The HTML elements that match |target|.
  */
 wpt.contentScript.findDomElements_ = function(root, target) {
   var DELIMITERS = "='";
@@ -125,7 +126,7 @@ wpt.contentScript.findDomElements_ = function(root, target) {
  * can access the DOM of the page.
  *
  * @constructor
- * @param {?HTMLElement|Document} doc Many commands search for a DOM node.
+ * @param {HTMLElement|Document|Null} doc Many commands search for a DOM node.
  *     This element is the root of the DOM tree on which commands operate.
  *     Outside of unit tests, usually window.document.
  * @param {Object} chromeApi The base object of the chrome extension API.
@@ -145,6 +146,7 @@ wpt.contentScript.InPageCommandRunner = function(doc,
 
   /**
    * Map command names to the function that implements them.
+   * @private
    * @const
    * @type {Object.<string, Function.<Object>>}
    */
@@ -160,6 +162,7 @@ wpt.contentScript.InPageCommandRunner = function(doc,
 
 /**
  * Signal that the command completed without error.
+ * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
   console.log("Command successful.");
@@ -169,6 +172,7 @@ wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
 
 /**
  * Send a warning to the creator of the in-page command runner.
+ * @private
  * @param {string} warning
  */
 wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
@@ -179,6 +183,7 @@ wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
 
 /**
  * Signal that the command failed because of an error.
+ * @private
  * @param {string} error
  */
 wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
@@ -194,6 +199,7 @@ wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
  * node.  Log a warning if there is more than one matching node.  Return null
  * if there is no matching node.
  *
+ * @private
  * @param {string} command The command to be done on |target|.  Used for
  *     error messages.
  * @param {string} target The target DOM node, in attribute=value form.
@@ -205,7 +211,7 @@ wpt.contentScript.InPageCommandRunner.prototype.findTarget_ = function(
   try {
     domElements = wpt.contentScript.findDomElements_(this.doc_, target);
   } catch (err) {
-    this.FatalError_("Command " + command + " failed: "+ err);
+    this.FatalError_("Command " + command + " failed: " + err);
     return null;
   }
 
@@ -225,6 +231,7 @@ wpt.contentScript.InPageCommandRunner.prototype.findTarget_ = function(
 
 /**
  * Click on a page element.
+ * @private
  * @param {Object} commandObject Contains a 'target' param specifying the DOM
  *     element to click, in attribute'value form.
  */
@@ -242,6 +249,7 @@ wpt.contentScript.InPageCommandRunner.prototype.doClick_ = function(
 
 /**
  * Set the innerText of a DOM node.
+ * @private
  * @param {Object} commandObject Contains a 'target' param specifying the DOM
  *     element to click, in attribute'value form.
  */
@@ -266,6 +274,7 @@ wpt.contentScript.InPageCommandRunner.prototype.doSetInnerText_ = function(
 
 /**
  * Set the innerHtml of a DOM node.
+ * @private
  * @param {Object} commandObject Contains a 'target' param specifying the DOM
  *     element to click, in attribute'value form.
  */
@@ -284,11 +293,11 @@ wpt.contentScript.InPageCommandRunner.prototype.doSetInnerHTML_ = function(
 /**
  * Test if an HTML tag type string is in a set of HTML tag type strings.  The
  * test is case-insensitive.
- *
+ * @private
  * @param {string} tagType The type of an HTML tag.  Typically the nodeName
  *     property of a DOM element.
  * @param {Array.<string>} tagSet The set of tag types to look for.
- * @returns {boolean} Is |tagType| in |tagSet|?
+ * @return {boolean} Is |tagType| in |tagSet|?
  */
 wpt.contentScript.isTagNameInSet_ = function(tagType, tagSet) {
   var normalizedTagType = tagType.toUpperCase();
@@ -301,6 +310,7 @@ wpt.contentScript.isTagNameInSet_ = function(tagType, tagSet) {
 
 /**
  * Set the value of an attribute of a DOM node.
+ * @private
  * @param {Object} commandObject Contains a 'target' param specifying the DOM
  *     element to click, in attribute'value form.
  */
@@ -328,6 +338,7 @@ wpt.contentScript.InPageCommandRunner.prototype.doSetValue_ = function(
 
 /**
  * Submit a form.
+ * @private
  * @param {Object} commandObject Contains a 'target' param specifying the DOM
  *     element to submit, in attribute'value form.
  */
@@ -350,7 +361,13 @@ wpt.contentScript.InPageCommandRunner.prototype.doSubmitForm_ = function(
 
   this.Success_();
 };
-
+/**
+ * Test for the presence of a DOM element.
+ * @private
+ * @param {Object} commandObject Contains a 'target' param specifying the DOM
+ *     element to find.
+ * @return {Boolean} Is there a matching target in the currnet DOM?
+ */
 wpt.contentScript.InPageCommandRunner.prototype.doIsTargetInDom_ = function(
     commandObject) {
   var domElements;
@@ -360,7 +377,7 @@ wpt.contentScript.InPageCommandRunner.prototype.doIsTargetInDom_ = function(
   try {
     domElements = wpt.contentScript.findDomElements_(this.doc_, target);
   } catch (err) {
-    this.FatalError_("Command " + command + " failed: "+ err);
+    this.FatalError_("Command " + command + " failed: " + err);
     return undefined;
   }
 
@@ -371,8 +388,10 @@ wpt.contentScript.InPageCommandRunner.prototype.doIsTargetInDom_ = function(
  * Run a command.  The backgrond page delegates commands to the content script
  * by calling this method on an instance of InPageCommandRunner.
  * @param {Object} commandObj
+ * @return {*}
  */
-wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(commandObj) {
+wpt.contentScript.InPageCommandRunner.prototype.RunCommand = function(
+    commandObj) {
   var commandFun = this.commandMap_[commandObj['command']];
   if (!commandFun) {
     this.FatalError_("Unknown command " + commandObj['command']);

@@ -27,6 +27,10 @@ window.wpt.moz['main'] = window.wpt.moz['main'] || {};
 (function() {  // Begin closure
 
 var STARTUP_DELAY = 5000;
+
+// Running test commands slowly makes debugging easier.
+var TEST_TASK_INTERVAL = 5000;
+
 var TASK_INTERVAL = 1000;
 var TASK_INTERVAL_SHORT = 0;
 var DOM_ELEMENT_POLL_INTERVAL = 100;
@@ -38,7 +42,7 @@ var g_requesting_task = false;
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
 
-// nuke all of the bookmarks to prevent any live feeds from updating
+// Nuke all of the bookmarks to prevent any live feeds from updating
 // TODO: possibly be more forgiving and query for a list of live bookmarks
 wpt.moz.clearAllBookmarks();
 
@@ -86,7 +90,7 @@ wpt.moz.main.onStartup = function() {
       var nextCommand = wpt.fakeCommandSource.next();
       if (nextCommand)
         wpt.moz.main.executeTask(nextCommand);
-    }, TASK_INTERVAL);
+    }, TEST_TASK_INTERVAL);
   } else {
     // Fetch tasks from wptdriver.exe .
     window.setInterval(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
@@ -96,20 +100,22 @@ wpt.moz.main.onStartup = function() {
 // Start loading tasks.
 setTimeout(function() {wpt.moz.main.onStartup();}, STARTUP_DELAY);
 
-// monitor for page title changes
-// TODO: only track changes for the main browser window (alert boxes will fire as well)
+// Monitor for page title changes
+// TODO: only track changes for the main browser window (alert boxes will
+// fire as well)
 (function() {
-  var windowMediator = wpt.moz.getService('@mozilla.org/appshell/window-mediator;1',
-                                          'nsIWindowMediator');
+  var windowMediator = wpt.moz.getService(
+      '@mozilla.org/appshell/window-mediator;1',
+      'nsIWindowMediator');
   var listener = {
     onWindowTitleChange: function(aWindow, aNewTitle) {
       wpt.moz.main.sendEventToDriver_('title', {'title': aNewTitle});
     },
-    onOpenWindow: function( aWindow ) {
+    onOpenWindow: function(aWindow) {
     },
-    onCloseWindow: function( aWindow ) {
+    onCloseWindow: function(aWindow) {
     }
-  }
+  };
   windowMediator.addListener(listener);
 })();
 
@@ -125,7 +131,7 @@ wpt.moz.main.getTask = function() {
           if (xhr.responseText.length > 0) {
             try {
               var resp = JSON.parse(xhr.responseText);
-            } catch(err) {
+            } catch (err) {
               alert('Error parsing response as JSON: ' +
                     xhr.responseText.substr(0, 120) + '[...]\n');
             }
@@ -136,7 +142,7 @@ wpt.moz.main.getTask = function() {
         }
       };
       xhr.send();
-    } catch(err) {}
+    } catch (err) {}
     g_requesting_task = false;
   }
 };
@@ -239,7 +245,7 @@ window.addEventListener('unload', function() { wptExtension.uninit(); }, false);
                       Utility Functions
 ***********************************************************/
 function trim(stringToTrim) {
-  return stringToTrim.replace(/^\s+|\s+$/g,'');
+  return stringToTrim.replace(/^\s+|\s+$/g, '');
 }
 
 /***********************************************************

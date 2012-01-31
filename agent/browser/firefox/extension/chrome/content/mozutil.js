@@ -68,7 +68,7 @@ wpt.moz.stringifyFlags = function(interfaceName, flagMatcher, flagValue) {
   // We masked out all the bits that were printed.  If any are left,
   // add a string that shows them in hex.
   if (flagValue != 0)
-    result.push('<Leftover bits: '+ flagValue.toString(16) + '>');
+    result.push('<Leftover bits: ' + flagValue.toString(16) + '>');
   return result;
 };
 
@@ -116,14 +116,18 @@ wpt.moz.execScriptInSelectedTab = function(scriptText, exportedFunctions) {
   // the page has.  Docs are here:
   // https://developer.mozilla.org/en/Components.utils.evalInSandbox .
 
-  // Get the window object of the foremosst tab.
+  // Get the window object of the foremost tab.  Use it as the prototype of
+  // the global object for code run in the sandbox.  A global reference that
+  // is not defined on the sandbox will refer to the item on this window.
+  // However, because it is wrapped, there is no way code in the sandbox
+  // can redefine functions in the global scope.  In other words, there is
+  // nothing code in the sandbox can do to alter the window object in a way
+  // that will cause code outside the sandbox to run code added in the
+  // sandbox.
   var wrappedWindow = gBrowser.contentWindow;
   var sandbox = new CU.Sandbox(
       wrappedWindow,  // Same limitations as the javascript in the window.
-      {sandboxPrototype: wrappedWindow});  // Window is the prototype of the global
-                                           // object.  A global reference that is
-                                           // not defined on the sandbox will refer
-                                           // to the item on the window.
+      {sandboxPrototype: wrappedWindow});
 
   for (var fnName in exportedFunctions) {
     sandbox[fnName] = exportedFunctions[fnName];
@@ -167,7 +171,8 @@ wpt.moz.clearAllBookmarks = function() {
   bookmarksService.removeFolderChildren(bookmarksService.toolbarFolder);
   bookmarksService.removeFolderChildren(bookmarksService.bookmarksMenuFolder);
   bookmarksService.removeFolderChildren(bookmarksService.tagsFolder);
-  bookmarksService.removeFolderChildren(bookmarksService.unfiledBookmarksFolder);
+  bookmarksService.removeFolderChildren(
+      bookmarksService.unfiledBookmarksFolder);
 };
 
 wpt.moz.nsUriIsWptController = function(uri) {
@@ -206,8 +211,8 @@ wpt.moz.RequestBlockerSinglton_ = {
     var chanel = subject.QueryInterface(CI.nsIChannel);
     var currentUri = chanel.URI.spec;
 
-    // We shoudl never block XHRs to webpagetest.  Because the hook is in-process,
-    // these requests will always be to localhost.
+    // We should never block XHRs to webpagetest.  Because the hook is
+    // in-process, these requests will always be to localhost.
     if (wpt.moz.nsUriIsWptController(httpChannel.originalURI)) {
       //dump('Saw WPT traffic.  Do not block.  url = ' + originalUri + '\n');
       return;
@@ -224,8 +229,8 @@ wpt.moz.RequestBlockerSinglton_ = {
       }
 
       if (currentUri.indexOf(blockString) != -1) {
-        wpt.moz.logInfo('BLOCK current URI ', currentUri, ' because it matched ',
-                        'block string ', blockString);
+        wpt.moz.logInfo('BLOCK current URI ', currentUri,
+                        ' because it matched block string ', blockString);
         subject.cancel(CR.NS_BINDING_ABORTED);
         return;
       }
