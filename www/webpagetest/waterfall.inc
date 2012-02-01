@@ -255,13 +255,21 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         if ($is_thumbnail) {
             $time_scale_color = GetColor($im, 208, 208, 208);  // mid-grey
             $border_color = $dark_grey;
-            $perfs['cpu']['color'] = GetColor($im, 255, 183, 112);
-            $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
+            if (array_key_exists('cpu', $perfs)) {
+                $perfs['cpu']['color'] = GetColor($im, 255, 183, 112);
+            }
+            if (array_key_exists('bw', $perfs)) {
+                $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
+            }
         } else {
             $time_scale_color = $dark_grey;
             $border_color = $black;
-            $perfs['cpu']['color'] = GetColor($im, 255, 127, 0);
-            $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
+            if (array_key_exists('cpu', $perfs)) {
+                $perfs['cpu']['color'] = GetColor($im, 255, 127, 0);
+            }
+            if (array_key_exists('bw', $perfs)) {
+                $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
+            }
         }
 
         $bg_colors = array(
@@ -288,7 +296,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
 
         // Draw performance backgrounds, labels, and borders.
         foreach ($perfs as $key => $p) {
-            if ($p['count']) {
+            if (array_key_exists('count', $p)) {
                 if (!$is_thumbnail && $show_labels) {
                     DrawPerfLabel($im, $key, $p, $font, $black);
                 }
@@ -315,9 +323,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                 imageline($im, $x, 1 + $row_height,
                           $x, $data_height - $row_height, $time_scale_color);
                 foreach ($perfs as $p) {
-                    // Add gridline to performance chart area.
-                    imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1,
-                              $time_scale_color);
+                    if (array_key_exists('count', $p)) {
+                        // Add gridline to performance chart area.
+                        imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1,
+                                  $time_scale_color);
+                    }
                 }
                 // Draw the time label.
                 if (!$is_thumbnail) {
@@ -345,9 +355,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                     array('y1' => 1 + $row_height,
                           'y2' => $data_height - $row_height));
                 foreach ($perfs as $p) {
-                    // Add event lines in performance chart area.
-                    $endpoints[] = array('y1' => $p['y1'] + 1,
-                                         'y2' => $p['y2'] - 1);
+                    if (array_key_exists('count', $p)) {
+                        // Add event lines in performance chart area.
+                        $endpoints[] = array('y1' => $p['y1'] + 1,
+                                             'y2' => $p['y2'] - 1);
+                    }
                 }
                 foreach ($endpoints as $y1y2) {
                     $y1 = $y1y2['y1'];
