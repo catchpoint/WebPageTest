@@ -13913,7 +13913,20 @@ wpt.main.startMeasurements = function() {
   // and remember its ID.  This ID is used to open a connection to
   // the content script running in the web page hosted within the tab.
   // to the content script in a
-  chrome.tabs.getSelected(null, function(tab) {
+  var queryForFocusedTab = {
+    'active': true,
+    'windowId': chrome.windows.WINDOW_ID_CURRENT
+  };
+
+  chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
+    if (focusedTabs.length != 1) {
+      wpt.LOG.error('There should be exactly one focused tab, but ' +
+                    'chrome.tabs.query() returned ' + focusedTabs.length +
+                    '.  Is the query details object incorrect?  tabs = ' +
+                    JSON.stringify(focusedTabs, null, 2));
+    }
+    // Use the first one even if the length is not the expected value.
+    var tab = focusedTabs[0];
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
 
