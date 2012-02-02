@@ -145,8 +145,17 @@ chrome.tabs.getAllInWindow = function(windowId, callback) {};
 /**
  * @param {number?} windowId Window id.
  * @param {function(Tab) : void} callback Callback.
+ * Deprecated in version 16.  Commenting out to hit a type error on use.
+ * Leaving in the file so that grep finds this note, and users see that
+ * it is deprecated.
  */
-chrome.tabs.getSelected = function(windowId, callback) {};
+//chrome.tabs.getSelected = function(windowId, callback) {};  // Deprecated!
+
+/**
+ * @param {Object} queryInfo Properties of the tabs to find.
+ * @param {function(Array.<Object>): void} callback Callback.
+ */
+chrome.tabs.query = function(queryInfo, callback) {};
 
 /**
  * @param {number?} tabId Tab id.
@@ -254,6 +263,12 @@ chrome.windows.onRemoved;
  * @type {number}
  */
 chrome.windows.WINDOW_ID_NONE;
+
+/**
+ * @see http://code.google.com/chrome/extensions/trunk/windows.html#property-WINDOW_ID_CURRENT
+ * @type {number}
+ */
+chrome.windows.WINDOW_ID_CURRENT;
 
 /** @see http://code.google.com/chrome/extensions/i18n.html */
 chrome.i18n = {};
