@@ -29,8 +29,11 @@
 
  ******************************************************************************/
 
-// Open a link from a browser action popup.  Normal links don't work,
-// because they would navigate in the popup itself.
+/**
+ * Open a link from a browser action popup.  Normal links don't work,
+ * because they would navigate in the popup itself.
+ * @param {String} url The URL to open.
+ */
 function openLink(url) {
   chrome.tabs.create({
       url: url,
@@ -38,9 +41,14 @@ function openLink(url) {
   });
 }
 
+/**
+ * Add an onclick handler for a DOM element that opens a URL.
+ * @param {string} id ID of the dom element to add the onclick listner to.
+ * @param {string} url The url to open on a click.
+ */
 function makeElementOpenLinkOnClick(id, url) {
   var el = document.getElementById(id);
-  el.addEventListener("click", function() {
+  el.addEventListener('click', function() {
     openLink(url);
   });
 }
