@@ -16,6 +16,6 @@ installer=http://www.webpagetest.org/installers/browsers/chrome.dat
 
 [Firefox]
 exe="C:\Program Files\Mozilla Firefox\firefox.exe"
-options='-profile "%PROFILE%"'
+options='-profile "%PROFILE%" -no-remote'
 installer=http://www.webpagetest.org/installers/browsers/firefox.dat
 template=firefox
