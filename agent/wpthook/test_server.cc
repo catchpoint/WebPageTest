@@ -31,18 +31,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpthook.h"
 #include "wpt_test_hook.h"
 #include "mongoose/mongoose.h"
-#include "wpt_test_hook.h"
 #include "test_state.h"
+#include "requests.h"
 #include <atlutil.h>
 
-static TestServer * _global_test_server = NULL;
+static TestServer * _globaltest__server = NULL;
 
 // definitions
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
 
-static const DWORD RESPONSE_ERROR_NO_TEST = 404;
-static const char * RESPONSE_ERROR_NO_TEST_STR = "ERROR: No Test";
+static const DWORD RESPONSE_ERROR_NOtest_ = 404;
+static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
@@ -50,11 +50,13 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state)
-  :_mongoose_context(NULL)
-  ,_hook(hook)
-  ,_test(test)
-  ,_test_state(test_state) {
+TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
+                        Requests& requests)
+  :mongoose_context_(NULL)
+  ,hook_(hook)
+  ,test_(test)
+  ,test_state_(test_state)
+  ,requests_(requests) {
   InitializeCriticalSection(&cs);
 }
 
@@ -72,8 +74,8 @@ static void *MongooseCallbackStub(enum mg_event event,
                            const struct mg_request_info *request_info) {
   void *processed = "yes";
 
-  if (_global_test_server)
-    _global_test_server->MongooseCallback(event, conn, request_info);
+  if (_globaltest__server)
+    _globaltest__server->MongooseCallback(event, conn, request_info);
 
   return processed;
 }
@@ -84,7 +86,7 @@ static void *MongooseCallbackStub(enum mg_event event,
 bool TestServer::Start(void){
   bool ret = false;
 
-  _global_test_server = this;
+  _globaltest__server = this;
 
   static const char *options[] = {
     "listening_ports", "127.0.0.1:8888",
@@ -92,8 +94,8 @@ bool TestServer::Start(void){
     NULL
   };
 
-  _mongoose_context = mg_start(&MongooseCallbackStub, options);
-  if (_mongoose_context)
+  mongoose_context_ = mg_start(&MongooseCallbackStub, options);
+  if (mongoose_context_)
     ret = true;
 
   return ret;
@@ -103,11 +105,11 @@ bool TestServer::Start(void){
   Stop the local HTTP server
 -----------------------------------------------------------------------------*/
 void TestServer::Stop(void){
-  if (_mongoose_context) {
-    mg_stop(_mongoose_context);
-    _mongoose_context = NULL;
+  if (mongoose_context_) {
+    mg_stop(mongoose_context_);
+    mongoose_context_ = NULL;
   }
-  _global_test_server = NULL;
+  _globaltest__server = NULL;
 }
 
 /*-----------------------------------------------------------------------------
@@ -126,32 +128,32 @@ void TestServer::MongooseCallback(enum mg_event event,
     if (strcmp(request_info->uri, "/task") == 0) {
       CStringA task;
       bool record = false;
-      _test.GetNextTask(task, record);
+      test_.GetNextTask(task, record);
       if (record)
-        _hook.Start();
+        hook_.Start();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       // Browsers may get "/event/window_timing" to set "onload" time.
-      _hook.OnLoad();
+      hook_.OnLoad();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/window_timing") == 0) {
       DWORD start = GetDwordParam(request_info->query_string,
                                   "domContentLoadedEventStart");
       DWORD end = GetDwordParam(request_info->query_string,
                                 "domContentLoadedEventEnd");
-      _hook.SetDomContentLoadedEvent(start, end);
+      hook_.SetDomContentLoadedEvent(start, end);
 
       // To set "onload" time, browsers may request "/event/load".
       start = GetDwordParam(request_info->query_string, "loadEventStart");
       end = GetDwordParam(request_info->query_string, "loadEventEnd");
-      _hook.SetLoadEvent(start, end);
+      hook_.SetLoadEvent(start, end);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
-      _hook.OnNavigate();
+      hook_.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri,"/event/all_dom_elements_loaded")==0) {
       DWORD load_time = GetDwordParam(request_info->query_string, "load_time");
-      _hook.OnAllDOMElementsLoaded(load_time);
+      hook_.OnAllDOMElementsLoaded(load_time);
       // TODO: Log the all dom elements loaded time into its metric.
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/dom_element") == 0) {
@@ -163,13 +165,19 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/title") == 0) {
       CString title = GetParam(request_info->query_string, "title");
       if (!title.IsEmpty()) {
-        _test_state.TitleSet(title);
+        test_state_.TitleSet(title);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/status") == 0) {
       CString status = GetParam(request_info->query_string, "status");
       if (!status.IsEmpty()) {
-        _test_state.OnStatusMessage(status);
+        test_state_.OnStatusMessage(status);
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
+      if (test_state_._active) {
+        CString body = GetPostBody(conn, request_info);
+        requests_.ProcessBrowserRequest(body);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
@@ -284,4 +292,32 @@ CString TestServer::GetUnescapedParam(const CString query_string,
   AtlUnescapeUrl((LPCTSTR)value, buff, &len, _countof(buff));
   value = CStringA(buff);
   return value;
+}
+
+/*-----------------------------------------------------------------------------
+  Process the body of a post and return it as a string
+-----------------------------------------------------------------------------*/
+CString TestServer::GetPostBody(struct mg_connection *conn,
+                      const struct mg_request_info *request_info){
+  CString body;
+  const char * length_string = mg_get_header(conn, "Content-Length");
+  if (length_string) {
+    int length = atoi(length_string);
+    if (length) {
+      char * buff = (char *)malloc(length + 1);
+      if (buff) {
+        while (length) {
+          int bytes = mg_read(conn, buff, length);
+          if (bytes && bytes <= length) {
+            buff[bytes] = 0;
+            body += CA2T(buff);
+            length -= bytes;
+          }
+        }
+        free(buff);
+      }
+    }
+  }
+
+  return body;
 }

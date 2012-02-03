@@ -396,8 +396,7 @@ void CPagetestReporting::FlushResults(void)
             if( !noHeaders )
 						  SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
-            if( bodies )
-              SaveBodies(logFile+step+_T("_bodies.zip"));
+            SaveBodies(logFile+step+_T("_bodies.zip"));
 
             if( aft )
               msAFT = CalculateAFT();
@@ -1349,6 +1348,7 @@ void CPagetestReporting::SaveBodies(CString file)
 	{
 	  DWORD count = 0;
     DWORD bodiesCount = 0;
+    bool saved = false;
 	  POSITION pos = events.GetHeadPosition();
 	  while( pos )
 	  {
@@ -1362,8 +1362,10 @@ void CPagetestReporting::SaveBodies(CString file)
         {
 				  count++;
           if(r->result == 200 && r->body && r->bodyLen &&
+             (bodies || !saved) &&
              (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
 			    {
+            saved = true;
             CStringA name;
             name.Format("%03d-response.txt", count);
 						// add the file to the archive

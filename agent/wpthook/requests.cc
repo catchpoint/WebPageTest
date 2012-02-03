@@ -64,6 +64,7 @@ void Requests::Reset() {
   _active_requests.RemoveAll();
   while (!_requests.IsEmpty())
     delete _requests.RemoveHead();
+  browser_request_data_.RemoveAll();
   LeaveCriticalSection(&cs);
   _sockets.Reset();
   _dns.Reset();
@@ -225,7 +226,7 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id,
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id, bool is_spdy) {
   Request * request = new Request(_test_state, socket_id, _sockets, _dns,
-                                  _test, is_spdy);
+                                  _test, is_spdy, *this);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
   return request;
@@ -238,4 +239,76 @@ Request * Requests::GetActiveRequest(DWORD socket_id) {
   Request * request = NULL;
   _active_requests.Lookup(socket_id, request);
   return request;
+}
+
+/*-----------------------------------------------------------------------------
+  Request information passed in from a browser-specific extension
+  For now this is only Chrome and we only use it to get the initiator 
+  information
+-----------------------------------------------------------------------------*/
+void Requests::ProcessBrowserRequest(CString request_data) {
+  CString browser, url, initiator, initiator_line, initiator_column;
+  bool processing_values = true;
+  int position = 0;
+  CString line = request_data.Tokenize(_T("\n"), position);
+  while (position >= 0) {
+    if (processing_values) {
+      if (!line.Left(1).Compare(_T("["))) {
+        processing_values = false;
+      } else {
+        int separator = line.Find(_T('='));
+        if (separator > 0) {
+          CString key = line.Left(separator).Trim();
+          CString value = line.Mid(separator + 1).Trim();
+          if (key.GetLength() && value.GetLength()) {
+            if (!key.CompareNoCase(_T("browser"))) {
+              browser = value;
+            } else if (!key.CompareNoCase(_T("url"))) {
+              url = value;
+            } else if (!key.CompareNoCase(_T("initiatorUrl"))) {
+              initiator = value;
+            } else if (!key.CompareNoCase(_T("initiatorLineNumber"))) {
+              initiator_line = value;
+            } else if (!key.CompareNoCase(_T("initiatorColumnNumber"))) {
+              initiator_column = value;
+            }
+          }
+        }
+      }
+    }
+    line = request_data.Tokenize(_T("\n"), position);
+  }
+  if (url.GetLength() && initiator.GetLength()) {
+    BrowserRequestData data(url);
+    data.initiator_ = initiator;
+    EnterCriticalSection(&cs);
+    browser_request_data_.AddTail(data);
+    LeaveCriticalSection(&cs);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Get the browser request information from the URL and optionally remove it
+  from the list (claiming it)
+-----------------------------------------------------------------------------*/
+bool Requests::GetBrowserRequest(BrowserRequestData &data, bool remove) {
+  bool found = false;
+
+  EnterCriticalSection(&cs);
+  POSITION pos = browser_request_data_.GetHeadPosition();
+  while (pos && !found) {
+    POSITION current_pos = pos;
+    BrowserRequestData browser_data = browser_request_data_.GetNext(pos);
+    if (!browser_data.url_.Compare(data.url_)) {
+      found = true;
+      data = browser_data;
+      if (remove) {
+        browser_request_data_.RemoveAt(current_pos);
+      }
+    }
+  }
+  browser_request_data_.AddTail(data);
+  LeaveCriticalSection(&cs);
+
+  return found;
 }

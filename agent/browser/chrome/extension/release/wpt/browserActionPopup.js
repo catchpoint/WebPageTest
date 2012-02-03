@@ -48,7 +48,7 @@ function openLink(url) {
  */
 function makeElementOpenLinkOnClick(id, url) {
   var el = document.getElementById(id);
-  el.addEventListener("click", function() {
+  el.addEventListener('click', function() {
     openLink(url);
   });
 }

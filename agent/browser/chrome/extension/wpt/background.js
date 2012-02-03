@@ -30,6 +30,7 @@
  ******************************************************************************/
 
 goog.require('wpt.commands');
+goog.require('wpt.chromeDebugger');
 goog.require('wpt.logging');
 
 goog.provide('wpt.main');
@@ -75,6 +76,7 @@ var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
+var g_chromeDebugger = null;	// global debugger instance
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -146,6 +148,7 @@ wpt.main.startMeasurements = function() {
     var tab = focusedTabs[0];
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
+		g_chromeDebugger = new wpt.chromeDebugger.Init(tab.id, window.chrome);
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
@@ -255,7 +258,7 @@ function wptSendEvent(event_name, query_string) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string,
              true);
-    xhr.send();
+		xhr.send();
   } catch (err) {
     wpt.LOG.warning('Error sending page load XHR: ' + err);
   }

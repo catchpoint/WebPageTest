@@ -25,6 +25,7 @@
     "webRequest",
     "webRequestBlocking",
     "management",
+		"debugger",
     "http://*/*",
     "https://*/*"
   ]

@@ -34,6 +34,21 @@ class TrackSockets;
 class TrackDns;
 class WptTest;
 
+class BrowserRequestData {
+public:
+  BrowserRequestData(CString url):url_(url){}
+  BrowserRequestData(const BrowserRequestData& src){*this = src;}
+  ~BrowserRequestData(){}
+  const BrowserRequestData& operator=(const BrowserRequestData& src) {
+    url_ = src.url_;
+    initiator_ = src.initiator_;
+    return src;
+  }
+
+  CString  url_;
+  CString  initiator_;
+};
+
 class Requests {
 public:
   Requests(TestState& test_state, TrackSockets& sockets, TrackDns& dns,
@@ -45,9 +60,11 @@ public:
   bool ModifyDataOut(DWORD socket_id, DataChunk& chunk);
   void DataOut(DWORD socket_id, DataChunk& chunk);
   bool HasActiveRequest(DWORD socket_id);
+  void ProcessBrowserRequest(CString request_data);
   void Lock();
   void Unlock();
   void Reset();
+  bool GetBrowserRequest(BrowserRequestData &data, bool remove = true);
 
   CAtlList<Request *>       _requests;        // all requests
   CAtlMap<DWORD, Request *> _active_requests; // requests indexed by socket
@@ -58,6 +75,7 @@ private:
   TrackSockets&     _sockets;
   TrackDns&         _dns;
   WptTest&          _test;
+  CAtlList<BrowserRequestData>  browser_request_data_;
 
   bool IsHttpRequest(const DataChunk& chunk) const;
   bool IsSpdyRequest(const DataChunk& chunk) const;

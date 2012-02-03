@@ -56,7 +56,7 @@ WptHook::WptHook(void):
   ,_results(_test_state, _test, _requests, _sockets, _dns, _screen_capture)
   ,_dns(_test_state, _test)
   ,_done(false)
-  ,_test_server(*this, _test, _test_state)
+  ,_test_server(*this, _test, _test_state, _requests)
   ,_test(shared_test_timeout) {
   _file_base = shared_results_file_base;
   // grab the version number of the dll

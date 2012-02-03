@@ -31,11 +31,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class WptHook;
 class WptTestHook;
 class TestState;
+class Requests;
 
 class TestServer
 {
 public:
-  TestServer(WptHook& hook, WptTestHook &test, TestState& test_state);
+  TestServer(WptHook& hook, WptTestHook &test, TestState& test_state, 
+            Requests& requests);
   ~TestServer(void);
 
   bool Start(void);
@@ -45,10 +47,11 @@ public:
                         const struct mg_request_info *request_info);
 
 private:
-  WptHook&          _hook;
-  struct mg_context *_mongoose_context;
-  WptTestHook&      _test;
-  TestState&        _test_state;
+  WptHook&          hook_;
+  struct mg_context *mongoose_context_;
+  WptTestHook&      test_;
+  TestState&        test_state_;
+  Requests&         requests_;
   CRITICAL_SECTION  cs;
 
   void SendResponse(struct mg_connection *conn,
@@ -60,4 +63,6 @@ private:
   DWORD GetDwordParam(const CString query_string, const CString key) const;
   CString GetUnescapedParam(const CString query_string,
                              const CString key) const;
+  CString GetPostBody(struct mg_connection *conn,
+                      const struct mg_request_info *request_info);
 };

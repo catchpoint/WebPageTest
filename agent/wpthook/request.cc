@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "track_dns.h"
 #include "../wptdriver/wpt_test.h"
+#include "requests.h"
 #include <wininet.h>
 #include <zlib.h>
 
@@ -311,7 +312,7 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id,
                  TrackSockets& sockets, TrackDns& dns, WptTest& test,
-                 bool is_spdy)
+                 bool is_spdy, Requests& requests)
   : _processed(false)
   , _socket_id(socket_id)
   , _is_spdy(is_spdy)
@@ -330,7 +331,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _dns(dns)
   , _is_active(true)
   , _are_headers_complete(false)
-  , _data_sent(false) {
+  , _data_sent(false)
+  , requests_(requests) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -476,6 +478,17 @@ bool Request::Process() {
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
       else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
         _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+    }
+
+    // see if we have a matching request with browser data
+    CString url = _T("http://");
+    if (_is_ssl)
+      url = _T("https://");
+    url += CA2T(GetHost());
+    url += CA2T(_request_data.GetObject());
+    BrowserRequestData data(url);
+    if (requests_.GetBrowserRequest(data)) {
+      initiator_ = data.initiator_;
     }
   }
   LeaveCriticalSection(&cs);

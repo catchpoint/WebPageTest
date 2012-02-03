@@ -335,6 +335,7 @@ void WebBrowser::FindHookFunctions(HANDLE process) {
       // Go ahead and save offsets even on failure to avoid expensive retries.
       SaveHookOffsets(offsets_filename, hook_offsets);
     }
+    DeleteDirectory(data_dir + _T("\\symbols"), false);
   }
 }
 

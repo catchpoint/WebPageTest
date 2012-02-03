@@ -32,6 +32,7 @@ class TestState;
 class TrackSockets;
 class TrackDns;
 class WptTest;
+class Requests;
 
 class DataChunk {
 public:
@@ -196,7 +197,8 @@ public:
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id,
-          TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy);
+          TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy,
+          Requests& requests);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
@@ -215,12 +217,14 @@ public:
   LARGE_INTEGER GetStartTime();
   bool GetExpiresRemaining(bool& expiration_set, int& seconds_remaining);
   ULONG GetPeerAddress();
+  CString GetUrl();
 
   bool  _processed;
   DWORD _socket_id;
   ULONG _peer_address;
   bool  _is_ssl;
   bool  _is_spdy;
+  CString initiator_;
 
   RequestData  _request_data;
   ResponseData _response_data;
@@ -248,6 +252,7 @@ private:
   WptTest&      _test;
   TrackSockets& _sockets;
   TrackDns&     _dns;
+  Requests&     requests_;
 
   CRITICAL_SECTION cs;
   bool _is_active;
