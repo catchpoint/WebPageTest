@@ -99,6 +99,10 @@ public:
   void SetDocument(HWND wnd);
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
+  void AddConsoleLogMessage(CString message);
+  void AddTimelineEvent(CString timeline_event);
+  CString GetConsoleLogJSON();
+  CString GetTimelineJSON();
 
   // times
   LARGE_INTEGER _start;
@@ -153,6 +157,8 @@ private:
   HANDLE  _render_check_thread;
   HANDLE  _check_render_event;
   HANDLE  _data_timer;
+  CAtlList<CString>        _timeline_events;  // Chrome dev tools timeline
+  CAtlList<CString>        _console_log_messages; // messages to the console
 
   // tracking of the periodic data capture
   LARGE_INTEGER  _last_data;

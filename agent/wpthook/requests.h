@@ -42,11 +42,15 @@ public:
   const BrowserRequestData& operator=(const BrowserRequestData& src) {
     url_ = src.url_;
     initiator_ = src.initiator_;
+    initiator_line_ = src.initiator_line_;
+    initiator_column_ = src.initiator_column_;
     return src;
   }
 
   CString  url_;
   CString  initiator_;
+  CString  initiator_line_;
+  CString  initiator_column_;
 };
 
 class Requests {

@@ -51,6 +51,8 @@ static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
+static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
+static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -102,6 +104,8 @@ void Results::Save(void) {
     SaveStatusMessages();
     SavePageData(checks);
     SaveResponseBodies();
+    SaveConsoleLog();
+    SaveTimeline();
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -834,6 +838,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += buff;
   // initiator
   result += request->initiator_ + _T("\t");
+  result += request->initiator_line_ + _T("\t");
+  result += request->initiator_column_ + _T("\t");
 
   result += "\r\n";
 
@@ -910,5 +916,35 @@ void Results::SaveResponseBodies(void) {
     zipClose(zip, 0);
     if(!bodies_count)
       DeleteFile(file);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveConsoleLog(void) {
+  CStringA log = CT2A(_test_state.GetConsoleLogJSON());
+  if (log.GetLength()) {
+    HANDLE file = CreateFile(_file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveTimeline(void) {
+  CStringA timeline = CT2A(_test_state.GetTimelineJSON());
+  if (timeline.GetLength()) {
+    HANDLE file = CreateFile(_file_base + TIMELINE_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)timeline, timeline.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
   }
 }

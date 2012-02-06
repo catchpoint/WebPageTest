@@ -281,6 +281,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   if (url.GetLength() && initiator.GetLength()) {
     BrowserRequestData data(url);
     data.initiator_ = initiator;
+    data.initiator_line_ = initiator_line;
+    data.initiator_column_ = initiator_column;
     EnterCriticalSection(&cs);
     browser_request_data_.AddTail(data);
     LeaveCriticalSection(&cs);

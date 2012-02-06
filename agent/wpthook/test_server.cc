@@ -180,6 +180,18 @@ void TestServer::MongooseCallback(enum mg_event event,
         requests_.ProcessBrowserRequest(body);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
+      if (test_state_._active) {
+        CString body = GetPostBody(conn, request_info);
+        test_state_.AddConsoleLogMessage(body);
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/timeline") == 0) {
+      if (test_state_._active) {
+        CString body = GetPostBody(conn, request_info);
+        test_state_.AddTimelineEvent(body);
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 

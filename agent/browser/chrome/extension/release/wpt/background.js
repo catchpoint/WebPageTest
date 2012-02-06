@@ -13800,8 +13800,8 @@ goog.provide('wpt.chromeDebugger');
  */
 wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 	var self = this;
-  this.tabId_ = tabId;
-  this.chromeApi_ = chromeApi;
+	this.tabId_ = tabId;
+	this.chromeApi_ = chromeApi;
 	if (this.chromeApi_.experimental['debugger']) {
 		this.chromeApi_.experimental.debugger.attach(this.tabId_, function(){
 			wpt.LOG.info('attached to debugger extension interface');
@@ -13809,6 +13809,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 			
 			// attach the event listener
 			self.chromeApi_.experimental.debugger.onEvent.addListener(function(tabId, message, params) {
+				// Network events
 				if (message === "Network.requestWillBeSent") {
 					if (params.request.url.indexOf('http') == 0) {
 						var detail = {};
@@ -13831,9 +13832,23 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 						wpt.chromeDebugger.sendRequestDetails(request);
 					}
 				}
+				
+				// console events
+				else if (message === "Console.messageAdded") {
+					wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
+				}
+				
+				// Timeline
+				else if (message === "Timeline.eventRecorded") {
+					wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
+				}
 			});
 			
+			// start the different interfaces we are interested in monitoring
 			self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Network.enable");
+			self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Console.enable");
+			// the timeline is pretty resource intensive - TODO, make this optional
+			//self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Timeline.start");
 		});
 	}
 };
@@ -13892,10 +13907,20 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 		if (request.response['headersText'] !== undefined)
 			eventData += '[Response Headers]\n' + request.response.headersText + '\n'
 	}
+  wpt.chromeDebugger.sendEvent('request_data', eventData);
+}
+
+
+/**
+ * Send an event to the c++ code
+ * @param {string} event event string
+ * @param {string} data event data (post body)
+ */
+wpt.chromeDebugger.sendEvent = function (event, data) {
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/request_data', true);
-		xhr.send(eventData);
+    xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
+		xhr.send(data);
   } catch (err) {
     wpt.LOG.warning('Error sending request data XHR: ' + err);
   }

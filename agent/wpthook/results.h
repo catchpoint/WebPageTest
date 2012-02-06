@@ -74,4 +74,6 @@ private:
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
+  void SaveConsoleLog(void);
+  void SaveTimeline(void);
 };

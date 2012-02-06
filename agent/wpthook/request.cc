@@ -489,6 +489,8 @@ bool Request::Process() {
     BrowserRequestData data(url);
     if (requests_.GetBrowserRequest(data)) {
       initiator_ = data.initiator_;
+      initiator_line_ = data.initiator_line_;
+      initiator_column_ = data.initiator_column_;
     }
   }
   LeaveCriticalSection(&cs);

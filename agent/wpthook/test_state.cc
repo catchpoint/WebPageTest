@@ -129,6 +129,8 @@ void TestState::Reset(bool cascade) {
     _title_time.QuadPart = 0;
     _aft_time_ms = 0;
     _title.Empty();
+    _timeline_events.RemoveAll();
+    _console_log_messages.RemoveAll();
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -738,3 +740,68 @@ void TestState::FindBrowserNameAndVersion() {
     }
   }
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::AddConsoleLogMessage(CString message) {
+  EnterCriticalSection(&_data_cs);
+  _console_log_messages.AddTail(message);
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::AddTimelineEvent(CString timeline_event) {
+  EnterCriticalSection(&_data_cs);
+  _timeline_events.AddTail(timeline_event);
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString TestState::GetConsoleLogJSON() {
+  CString ret;
+  EnterCriticalSection(&_data_cs);
+  if (!_console_log_messages.IsEmpty()) {
+    ret = _T("[");
+    bool first = true;
+    POSITION pos = _console_log_messages.GetHeadPosition();
+    while (pos) {
+      CString entry = _console_log_messages.GetNext(pos);
+      if (entry.GetLength()) {
+        if (!first)
+          ret += _T(",");
+        ret += entry;
+        first = false;
+      }
+    }
+    ret += _T("]");
+  }
+  LeaveCriticalSection(&_data_cs);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString TestState::GetTimelineJSON() {
+  CString ret;
+  EnterCriticalSection(&_data_cs);
+  if (!_timeline_events.IsEmpty()) {
+    ret = _T("[");
+    bool first = true;
+    POSITION pos = _timeline_events.GetHeadPosition();
+    while (pos) {
+      CString entry = _timeline_events.GetNext(pos);
+      if (entry.GetLength()) {
+        if (!first)
+          ret += _T(",");
+        ret += entry;
+        first = false;
+      }
+    }
+    ret += _T("]");
+  }
+  LeaveCriticalSection(&_data_cs);
+  return ret;
+}
+

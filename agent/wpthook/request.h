@@ -225,6 +225,8 @@ public:
   bool  _is_ssl;
   bool  _is_spdy;
   CString initiator_;
+  CString initiator_line_;
+  CString initiator_column_;
 
   RequestData  _request_data;
   ResponseData _response_data;
