@@ -45,7 +45,9 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--no-default-browser-check"),
     _T("--no-first-run"),
     _T("--process-per-tab"),
-    _T("--new-window")
+    _T("--new-window"),
+    _T("--disable-translate"),
+    _T("--disable-desktop-notifications")
 };
 
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
