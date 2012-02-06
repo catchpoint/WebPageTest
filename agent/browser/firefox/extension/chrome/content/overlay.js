@@ -241,14 +241,10 @@ var wptExtension = {
 
   },
   loadStart: function() {
-    if (g_active) {
-      wpt.moz.main.onNavigate();
-    }
+	wpt.moz.main.onNavigate();
   },
   loadStop: function(win) {
-    if (g_active) {
-      wpt.moz.main.onLoad(win);
-    }
+	wpt.moz.main.onLoad(win);
   }
 };
 window.addEventListener('load', function() { wptExtension.init(); }, false);
