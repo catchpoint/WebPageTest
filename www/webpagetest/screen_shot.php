@@ -10,6 +10,9 @@ if( $cached )
     
 // get the status messages
 $messages = LoadStatusMessages($testPath . '/' . $run . $cachedText . '_status.txt');
+$console_log_file = $testPath . '/' . $run . $cachedText . '_console_log.json';
+if (gz_is_file($console_log_file))
+    $console_log = json_decode(gz_file_get_contents($console_log_file), true);
     
 // re-build the videos
 MoveVideoFiles($testPath);
@@ -46,8 +49,41 @@ $page_description = "Website performance test screen shots$testLabel.";
         #messages td {
             padding: 0.2em 1em;
         }
+        #console-log {
+            text-align: left;
+            width: 100%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #console-log th {
+            padding: 0.2em 1em;
+            text-align: left;
+        }
+        #console-log td {
+            padding: 0.2em 1em;
+        }
+        #console-log td.source {
+            width: 50px;
+        }
+        #console-log td.level {
+            width: 40px;
+        }
+        #console-log td.message {
+            width: 500px;
+        }
+        #console-log td.line {
+            width: 30px;
+        }
+        div.url {
+            overflow: hidden;
+            width: 300px;
+        }
         .time {
             white-space:nowrap; 
+        }
+        tr.even {
+            background: whitesmoke;
         }
         </style>
     </head>
@@ -131,6 +167,20 @@ $page_description = "Website performance test screen shots$testLabel.";
                     echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
                     foreach( $messages as $message )
                         echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";
+                    echo "</table>\n";
+                }
+                
+                $row = 0;
+                if (isset($console_log) && count($console_log)) {
+                    echo "\n<br><br><a name=\"console-log\"><h1>Console Log</h1></a>\n";
+                    echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
+                    foreach( $console_log as &$log_entry ) {
+                        $row++;
+                        $rowClass = '';
+                        if ($row % 2 == 0)
+                            $rowClass = ' class="even"';
+                        echo "<tr$rowClass><td class=\"source\">{$log_entry['source']}</td><td class=\"level\">{$log_entry['level']}</td><td class=\"message\">{$log_entry['text']}</td><td><div class=\"url\"><a href=\"{$log_entry['url']}\">{$log_entry['url']}</a></div></td><td class=\"line\">{$log_entry['line']}</td></tr>\n";
+                    }
                     echo "</table>\n";
                 }
             ?>
