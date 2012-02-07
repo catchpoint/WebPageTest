@@ -13,8 +13,8 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 50);          // version of the sitewide css file
-define('VER_JS', 16);            // version of the sitewide javascript file
+define('VER_CSS', 52);          // version of the sitewide css file
+define('VER_JS', 17);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);  // Value used as a flag for an unknown time.
@@ -1263,6 +1263,8 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($location, &$count, &$avgTime)
 {
+    $parts = explode(':', $location);
+    $location = $parts[0];
     $total = 0;
     $count = 0;
     $avgTime = 0;
@@ -1293,6 +1295,8 @@ function GetPendingTests($location, &$count, &$avgTime)
 */
 function GetTesterCount($location)
 {
+    $parts = explode(':', $location);
+    $location = $parts[0];
     $count = 0;
     $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
     if( count($testers) )

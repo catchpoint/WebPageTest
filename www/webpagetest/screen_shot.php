@@ -69,15 +69,16 @@ $page_description = "Website performance test screen shots$testLabel.";
         #console-log td.level {
             width: 40px;
         }
-        #console-log td.message {
-            width: 500px;
+        #console-log td.message div {
+            width: 420px;
+            overflow: auto;
         }
         #console-log td.line {
             width: 30px;
         }
-        div.url {
+        #console-log td.url div{
+            width: 220px;
             overflow: hidden;
-            width: 300px;
         }
         .time {
             white-space:nowrap; 
@@ -179,7 +180,7 @@ $page_description = "Website performance test screen shots$testLabel.";
                         $rowClass = '';
                         if ($row % 2 == 0)
                             $rowClass = ' class="even"';
-                        echo "<tr$rowClass><td class=\"source\">{$log_entry['source']}</td><td class=\"level\">{$log_entry['level']}</td><td class=\"message\">{$log_entry['text']}</td><td><div class=\"url\"><a href=\"{$log_entry['url']}\">{$log_entry['url']}</a></div></td><td class=\"line\">{$log_entry['line']}</td></tr>\n";
+                        echo "<tr$rowClass><td class=\"source\">{$log_entry['source']}</td><td class=\"level\">{$log_entry['level']}</td><td class=\"message\"><div>{$log_entry['text']}</div></td><td class=\"url\"><div><a href=\"{$log_entry['url']}\">{$log_entry['url']}</a></div></td><td class=\"line\">{$log_entry['line']}</td></tr>\n";
                     }
                     echo "</table>\n";
                 }

@@ -138,7 +138,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
     if ((int)@$options['width']) {
         $width = (int)$options['width'];
     }
-    if (!$width || (!$is_thumbnail && $width < 300) || $width > 2000) {
+    if (!$width || (!$is_thumbnail && $width < 300) || $width > 200000) {
         $width = 930;
     }
 

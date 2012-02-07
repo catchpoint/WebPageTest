@@ -293,10 +293,38 @@ $page_description = "Website performance test details$testLabel";
                 ?>
                 </map>
                 <?php
+                    echo '<div class="position-container">';
                     if( FRIENDLY_URLS )
-                        echo '<img class="progress" alt="Page load waterfall diagram" usemap="#waterfall_map" id="waterfall" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_waterfall.png">';
+                        echo '<img onmouseout="HideOverlays()" class="progress position-background" alt="Page load waterfall diagram" usemap="#waterfall_map" id="waterfall" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_waterfall.png">';
                     else
-                        echo "<img class=\"progress\" alt=\"Page load waterfall diagram\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached\">";
+                        echo "<img onmouseout=\"HideOverlays()\" class=\"progress position-background\" alt=\"Page load waterfall diagram\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached\">";
+                    // see if we have initiator information
+                    $has_initiator = false;
+                    foreach ($requests as &$request) {
+                        if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
+                            $has_initiator = true;
+                            break;
+                        }
+                    }
+                    if ($has_initiator && array_key_exists('dependencies', $_GET) && $_GET['dependencies']) {
+                        // draw div's over each of the waterfall elements (use the image map as a reference)
+                        foreach($map as $entry) {
+                            if (isset($entry['request'])) {
+                                $index = $entry['request'] + 1;
+                                $top = $entry['top'];
+                                $height = abs($entry['bottom'] - $entry['top']) + 1;
+                                echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" onclick=\"HighlightDependencies($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+                            }
+                        }
+                        
+                        $dependencies = BuildDependencies($requests);
+                        echo "<script type=\"text/javascript\">\n";
+                        echo "var wptRequestCount=" . count($requests) . ";\n";
+                        echo "var wptRequestDependencies=" . json_encode($dependencies) . ";\n";
+                        echo "var wptRequestData=" . json_encode($requests) . ";\n";
+                        echo "</script>";
+                    }
+                    echo '</div>';
                     echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
                     echo "<a href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
                 ?>
@@ -357,6 +385,15 @@ $page_description = "Website performance test details$testLabel";
             <?php include('footer.inc'); ?>
         </div>
 
+        <div id="request-dialog" class="jqmDialog">
+            <div id="dialog-title" class="jqmdTC jqDrag"></div>
+            <div class="jqmdBC">
+                <div id="dialog-contents" class="jqmdMSG">
+                </div>
+            </div>
+            <input type="image" src="/images/dialog-close.gif" class="jqmdX jqmClose" />
+        </div>        
+
         <script type="text/javascript">
         $(document).ready(function() { $("#tableDetails").tablesorter({ 
             headers: { 3: { sorter:'currency' } , 
@@ -368,6 +405,130 @@ $page_description = "Website performance test details$testLabel";
                        9: { sorter:'currency' } 
                      } 
         }); } ); 
+
+        var HideOverlays = function(hash) {
+            hash.w.hide();
+            for (i=1;i<=wptRequestCount;i++) {
+                $("#request-overlay-" + i).addClass("transparent");
+            }
+        }
+
+        // initialize the pop-up dialog        
+        $('#request-dialog').jqm({overlay: 0, onHide: HideOverlays})
+            .jqDrag('.jqDrag');
+        $('input.jqmdX')
+            .hover( function(){ $(this).addClass('jqmdXFocus'); }, 
+                    function(){ $(this).removeClass('jqmdXFocus'); })
+            .focus( function(){ this.hideFocus=true; $(this).addClass('jqmdXFocus'); })
+            .blur( function(){ $(this).removeClass('jqmdXFocus'); });
+        
+        function HighlightDependencies(request) {
+            $("#dialog-title").html('Request ' + request);
+            var body='';
+            if (wptRequestData[request - 1] !== undefined) {
+                var r = wptRequestData[request - 1];
+                if (r['full_url'] !== undefined)
+                    body += 'URL: ' + r['full_url'] + '<br>';
+                if (r['initiator'] !== undefined)
+                    body += 'Loaded By: ' + r['initiator'] + '<br>';
+            }
+            $("#dialog-contents").html(body);
+            $('#request-dialog').jqmShow();
+            console.log('Operating on request ' + request);
+            var requests=new Array();
+            for (i=0;i<=wptRequestCount;i++) {
+                requests[i]=false;
+            }
+            requests[request]=true;
+            for (i=0,len=wptRequestDependencies[request].length;i<len;i++) {
+                requests[wptRequestDependencies[request][i]]=true;
+            }
+            for (i=1,len=requests.length;i<len;i++) {
+                if (requests[i]) {
+                    $("#request-overlay-" + i).addClass("transparent");
+                } else {
+                    $("#request-overlay-" + i).removeClass("transparent");
+                }
+            }
+        }
         </script>
     </body>
 </html>
+
+<?php
+/**
+* Build the list of dependencies for each request
+* 
+* @param mixed $requests
+*/
+function BuildDependencies(&$requests) {
+    $dependencies = array();
+    $dependencies[] = '';  // dummy entry, 1-based indexes
+    foreach($requests as &$request) {
+        $entry = array();
+        RequestLoads($request['number'], $requests, $entry);
+        RequestLoadedBy($request['number'], $requests, $entry);
+        $dependencies[] = $entry;
+    }
+    
+    return $dependencies;
+}
+
+/**
+* Figure out all of the resources loaded by the given resource
+* 
+* @param mixed $index
+* @param mixed $requests
+* @param mixed $map
+* @param mixed $entry
+*/
+function RequestLoads($request_number, &$requests, &$entry) {
+    $request = &$requests[$request_number - 1];
+    if (array_key_exists('full_url', $request)) {
+        $url = $request['full_url'];
+        foreach ($requests as &$req) {
+            if (array_key_exists('initiator', $req) && $req['initiator'] == $url) {
+                $loads_request = $req['number'];
+                $entry_exists = false;
+                foreach($entry as $entry_request) {
+                    if ($entry_request == $loads_request)
+                        $entry_exists = true;
+                }
+                if (!$entry_exists) {
+                    $entry[] = $loads_request;
+                    RequestLoads($loads_request, $requests, $entry);
+                }
+            }
+        }
+    }
+}
+
+/**
+* Figure out all of the resources required to load the given resource
+* 
+* @param mixed $index
+* @param mixed $requests
+* @param mixed $map
+* @param mixed $entry
+*/
+function RequestLoadedBy($request_number, &$requests, &$entry) {
+    $request = &$requests[$request_number - 1];
+    if (array_key_exists('initiator', $request)) {
+        $initiator = $request['initiator'];
+        foreach ($requests as &$req) {
+            if (array_key_exists('full_url', $req) && $req['full_url'] == $initiator) {
+                $loaded_by = $req['number'];
+                $entry_exists = false;
+                foreach($entry as $entry_request) {
+                    if ($entry_request == $loaded_by)
+                        $entry_exists = true;
+                }
+                if (!$entry_exists) {
+                    $entry[] = $loaded_by;
+                    RequestLoadedBy($loaded_by, $requests, $entry);
+                }
+            }
+        }
+    }
+}
+?>

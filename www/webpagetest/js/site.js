@@ -130,6 +130,765 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
 (function($){$.extend({tablesorter:new function(){var parsers=[],widgets=[];this.defaults={cssHeader:"header",cssAsc:"headerSortUp",cssDesc:"headerSortDown",sortInitialOrder:"asc",sortMultiSortKey:"shiftKey",sortForce:null,sortAppend:null,textExtraction:"simple",parsers:{},widgets:[],widgetZebra:{css:["even","odd"]},headers:{},widthFixed:false,cancelSelection:true,sortList:[],headerList:[],dateFormat:"us",decimal:'.',debug:false};function benchmark(s,d){log(s+","+(new Date().getTime()-d.getTime())+"ms");}this.benchmark=benchmark;function log(s){if(typeof console!="undefined"&&typeof console.debug!="undefined"){console.log(s);}else{alert(s);}}function buildParserCache(table,$headers){if(table.config.debug){var parsersDebug="";}var rows=table.tBodies[0].rows;if(table.tBodies[0].rows[0]){var list=[],cells=rows[0].cells,l=cells.length;for(var i=0;i<l;i++){var p=false;if($.metadata&&($($headers[i]).metadata()&&$($headers[i]).metadata().sorter)){p=getParserById($($headers[i]).metadata().sorter);}else if((table.config.headers[i]&&table.config.headers[i].sorter)){p=getParserById(table.config.headers[i].sorter);}if(!p){p=detectParserForColumn(table,cells[i]);}if(table.config.debug){parsersDebug+="column:"+i+" parser:"+p.id+"\n";}list.push(p);}}if(table.config.debug){log(parsersDebug);}return list;};function detectParserForColumn(table,node){var l=parsers.length;for(var i=1;i<l;i++){if(parsers[i].is($.trim(getElementText(table.config,node)),table,node)){return parsers[i];}}return parsers[0];}function getParserById(name){var l=parsers.length;for(var i=0;i<l;i++){if(parsers[i].id.toLowerCase()==name.toLowerCase()){return parsers[i];}}return false;}function buildCache(table){if(table.config.debug){var cacheTime=new Date();}var totalRows=(table.tBodies[0]&&table.tBodies[0].rows.length)||0,totalCells=(table.tBodies[0].rows[0]&&table.tBodies[0].rows[0].cells.length)||0,parsers=table.config.parsers,cache={row:[],normalized:[]};for(var i=0;i<totalRows;++i){var c=table.tBodies[0].rows[i],cols=[];cache.row.push($(c));for(var j=0;j<totalCells;++j){cols.push(parsers[j].format(getElementText(table.config,c.cells[j]),table,c.cells[j]));}cols.push(i);cache.normalized.push(cols);cols=null;};if(table.config.debug){benchmark("Building cache for "+totalRows+" rows:",cacheTime);}return cache;};function getElementText(config,node){if(!node)return"";var t="";if(config.textExtraction=="simple"){if(node.childNodes[0]&&node.childNodes[0].hasChildNodes()){t=node.childNodes[0].innerHTML;}else{t=node.innerHTML;}}else{if(typeof(config.textExtraction)=="function"){t=config.textExtraction(node);}else{t=$(node).text();}}return t;}function appendToTable(table,cache){if(table.config.debug){var appendTime=new Date()}var c=cache,r=c.row,n=c.normalized,totalRows=n.length,checkCell=(n[0].length-1),tableBody=$(table.tBodies[0]),rows=[];for(var i=0;i<totalRows;i++){rows.push(r[n[i][checkCell]]);if(!table.config.appender){var o=r[n[i][checkCell]];var l=o.length;for(var j=0;j<l;j++){tableBody[0].appendChild(o[j]);}}}if(table.config.appender){table.config.appender(table,rows);}rows=null;if(table.config.debug){benchmark("Rebuilt table:",appendTime);}applyWidget(table);setTimeout(function(){$(table).trigger("sortEnd");},0);};function buildHeaders(table){if(table.config.debug){var time=new Date();}var meta=($.metadata)?true:false,tableHeadersRows=[];for(var i=0;i<table.tHead.rows.length;i++){tableHeadersRows[i]=0;};$tableHeaders=$("thead th",table);$tableHeaders.each(function(index){this.count=0;this.column=index;this.order=formatSortingOrder(table.config.sortInitialOrder);if(checkHeaderMetadata(this)||checkHeaderOptions(table,index))this.sortDisabled=true;if(!this.sortDisabled){$(this).addClass(table.config.cssHeader);}table.config.headerList[index]=this;});if(table.config.debug){benchmark("Built headers:",time);log($tableHeaders);}return $tableHeaders;};function checkCellColSpan(table,rows,row){var arr=[],r=table.tHead.rows,c=r[row].cells;for(var i=0;i<c.length;i++){var cell=c[i];if(cell.colSpan>1){arr=arr.concat(checkCellColSpan(table,headerArr,row++));}else{if(table.tHead.length==1||(cell.rowSpan>1||!r[row+1])){arr.push(cell);}}}return arr;};function checkHeaderMetadata(cell){if(($.metadata)&&($(cell).metadata().sorter===false)){return true;};return false;}function checkHeaderOptions(table,i){if((table.config.headers[i])&&(table.config.headers[i].sorter===false)){return true;};return false;}function applyWidget(table){var c=table.config.widgets;var l=c.length;for(var i=0;i<l;i++){getWidgetById(c[i]).format(table);}}function getWidgetById(name){var l=widgets.length;for(var i=0;i<l;i++){if(widgets[i].id.toLowerCase()==name.toLowerCase()){return widgets[i];}}};function formatSortingOrder(v){if(typeof(v)!="Number"){i=(v.toLowerCase()=="desc")?1:0;}else{i=(v==(0||1))?v:0;}return i;}function isValueInArray(v,a){var l=a.length;for(var i=0;i<l;i++){if(a[i][0]==v){return true;}}return false;}function setHeadersCss(table,$headers,list,css){$headers.removeClass(css[0]).removeClass(css[1]);var h=[];$headers.each(function(offset){if(!this.sortDisabled){h[this.column]=$(this);}});var l=list.length;for(var i=0;i<l;i++){h[list[i][0]].addClass(css[list[i][1]]);}}function fixColumnWidth(table,$headers){var c=table.config;if(c.widthFixed){var colgroup=$('<colgroup>');$("tr:first td",table.tBodies[0]).each(function(){colgroup.append($('<col>').css('width',$(this).width()));});$(table).prepend(colgroup);};}function updateHeaderSortCount(table,sortList){var c=table.config,l=sortList.length;for(var i=0;i<l;i++){var s=sortList[i],o=c.headerList[s[0]];o.count=s[1];o.count++;}}function multisort(table,sortList,cache){if(table.config.debug){var sortTime=new Date();}var dynamicExp="var sortWrapper = function(a,b) {",l=sortList.length;for(var i=0;i<l;i++){var c=sortList[i][0];var order=sortList[i][1];var s=(getCachedSortType(table.config.parsers,c)=="text")?((order==0)?"sortText":"sortTextDesc"):((order==0)?"sortNumeric":"sortNumericDesc");var e="e"+i;dynamicExp+="var "+e+" = "+s+"(a["+c+"],b["+c+"]); ";dynamicExp+="if("+e+") { return "+e+"; } ";dynamicExp+="else { ";}var orgOrderCol=cache.normalized[0].length-1;dynamicExp+="return a["+orgOrderCol+"]-b["+orgOrderCol+"];";for(var i=0;i<l;i++){dynamicExp+="}; ";}dynamicExp+="return 0; ";dynamicExp+="}; ";eval(dynamicExp);cache.normalized.sort(sortWrapper);if(table.config.debug){benchmark("Sorting on "+sortList.toString()+" and dir "+order+" time:",sortTime);}return cache;};function sortText(a,b){return((a<b)?-1:((a>b)?1:0));};function sortTextDesc(a,b){return((b<a)?-1:((b>a)?1:0));};function sortNumeric(a,b){return a-b;};function sortNumericDesc(a,b){return b-a;};function getCachedSortType(parsers,i){return parsers[i].type;};this.construct=function(settings){return this.each(function(){if(!this.tHead||!this.tBodies)return;var $this,$document,$headers,cache,config,shiftDown=0,sortOrder;this.config={};config=$.extend(this.config,$.tablesorter.defaults,settings);$this=$(this);$headers=buildHeaders(this);this.config.parsers=buildParserCache(this,$headers);cache=buildCache(this);var sortCSS=[config.cssDesc,config.cssAsc];fixColumnWidth(this);$headers.click(function(e){$this.trigger("sortStart");var totalRows=($this[0].tBodies[0]&&$this[0].tBodies[0].rows.length)||0;if(!this.sortDisabled&&totalRows>0){var $cell=$(this);var i=this.column;this.order=this.count++%2;if(!e[config.sortMultiSortKey]){config.sortList=[];if(config.sortForce!=null){var a=config.sortForce;for(var j=0;j<a.length;j++){if(a[j][0]!=i){config.sortList.push(a[j]);}}}config.sortList.push([i,this.order]);}else{if(isValueInArray(i,config.sortList)){for(var j=0;j<config.sortList.length;j++){var s=config.sortList[j],o=config.headerList[s[0]];if(s[0]==i){o.count=s[1];o.count++;s[1]=o.count%2;}}}else{config.sortList.push([i,this.order]);}};setTimeout(function(){setHeadersCss($this[0],$headers,config.sortList,sortCSS);appendToTable($this[0],multisort($this[0],config.sortList,cache));},1);return false;}}).mousedown(function(){if(config.cancelSelection){this.onselectstart=function(){return false};return false;}});$this.bind("update",function(){this.config.parsers=buildParserCache(this,$headers);cache=buildCache(this);}).bind("sorton",function(e,list){$(this).trigger("sortStart");config.sortList=list;var sortList=config.sortList;updateHeaderSortCount(this,sortList);setHeadersCss(this,$headers,sortList,sortCSS);appendToTable(this,multisort(this,sortList,cache));}).bind("appendCache",function(){appendToTable(this,cache);}).bind("applyWidgetId",function(e,id){getWidgetById(id).format(this);}).bind("applyWidgets",function(){applyWidget(this);});if($.metadata&&($(this).metadata()&&$(this).metadata().sortlist)){config.sortList=$(this).metadata().sortlist;}if(config.sortList.length>0){$this.trigger("sorton",[config.sortList]);}applyWidget(this);});};this.addParser=function(parser){var l=parsers.length,a=true;for(var i=0;i<l;i++){if(parsers[i].id.toLowerCase()==parser.id.toLowerCase()){a=false;}}if(a){parsers.push(parser);};};this.addWidget=function(widget){widgets.push(widget);};this.formatFloat=function(s){var i=parseFloat(s);return(isNaN(i))?0:i;};this.formatInt=function(s){var i=parseInt(s);return(isNaN(i))?0:i;};this.isDigit=function(s,config){var DECIMAL='\\'+config.decimal;var exp='/(^[+]?0('+DECIMAL+'0+)?$)|(^([-+]?[1-9][0-9]*)$)|(^([-+]?((0?|[1-9][0-9]*)'+DECIMAL+'(0*[1-9][0-9]*)))$)|(^[-+]?[1-9]+[0-9]*'+DECIMAL+'0+$)/';return RegExp(exp).test($.trim(s));};this.clearTableBody=function(table){if($.browser.msie){function empty(){while(this.firstChild)this.removeChild(this.firstChild);}empty.apply(table.tBodies[0]);}else{table.tBodies[0].innerHTML="";}};}});$.fn.extend({tablesorter:$.tablesorter.construct});var ts=$.tablesorter;ts.addParser({id:"text",is:function(s){return true;},format:function(s){return $.trim(s.toLowerCase());},type:"text"});ts.addParser({id:"digit",is:function(s,table){var c=table.config;return $.tablesorter.isDigit(s,c);},format:function(s){return $.tablesorter.formatFloat(s);},type:"numeric"});ts.addParser({id:"currency",is:function(s){return/^[£$€?.]/.test(s);},format:function(s){return $.tablesorter.formatFloat(s.replace(new RegExp(/[^0-9.]/g),""));},type:"numeric"});ts.addParser({id:"ipAddress",is:function(s){return/^\d{2,3}[\.]\d{2,3}[\.]\d{2,3}[\.]\d{2,3}$/.test(s);},format:function(s){var a=s.split("."),r="",l=a.length;for(var i=0;i<l;i++){var item=a[i];if(item.length==2){r+="0"+item;}else{r+=item;}}return $.tablesorter.formatFloat(r);},type:"numeric"});ts.addParser({id:"url",is:function(s){return/^(https?|ftp|file):\/\/$/.test(s);},format:function(s){return jQuery.trim(s.replace(new RegExp(/(https?|ftp|file):\/\//),''));},type:"text"});ts.addParser({id:"isoDate",is:function(s){return/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(s);},format:function(s){return $.tablesorter.formatFloat((s!="")?new Date(s.replace(new RegExp(/-/g),"/")).getTime():"0");},type:"numeric"});ts.addParser({id:"percent",is:function(s){return/\%$/.test($.trim(s));},format:function(s){return $.tablesorter.formatFloat(s.replace(new RegExp(/%/g),""));},type:"numeric"});ts.addParser({id:"usLongDate",is:function(s){return s.match(new RegExp(/^[A-Za-z]{3,10}\.? [0-9]{1,2}, ([0-9]{4}|'?[0-9]{2}) (([0-2]?[0-9]:[0-5][0-9])|([0-1]?[0-9]:[0-5][0-9]\s(AM|PM)))$/));},format:function(s){return $.tablesorter.formatFloat(new Date(s).getTime());},type:"numeric"});ts.addParser({id:"shortDate",is:function(s){return/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/.test(s);},format:function(s,table){var c=table.config;s=s.replace(/\-/g,"/");if(c.dateFormat=="us"){s=s.replace(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,"$3/$1/$2");}else if(c.dateFormat=="uk"){s=s.replace(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,"$3/$2/$1");}else if(c.dateFormat=="dd/mm/yy"||c.dateFormat=="dd-mm-yy"){s=s.replace(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})/,"$1/$2/$3");}return $.tablesorter.formatFloat(new Date(s).getTime());},type:"numeric"});ts.addParser({id:"time",is:function(s){return/^(([0-2]?[0-9]:[0-5][0-9])|([0-1]?[0-9]:[0-5][0-9]\s(am|pm)))$/.test(s);},format:function(s){return $.tablesorter.formatFloat(new Date("2000/01/01 "+s).getTime());},type:"numeric"});ts.addParser({id:"metadata",is:function(s){return false;},format:function(s,table,cell){var c=table.config,p=(!c.parserMetadataName)?'sortValue':c.parserMetadataName;return $(cell).metadata()[p];},type:"numeric"});ts.addWidget({id:"zebra",format:function(table){if(table.config.debug){var time=new Date();}$("tr:visible",table.tBodies[0]).filter(':even').removeClass(table.config.widgetZebra.css[1]).addClass(table.config.widgetZebra.css[0]).end().filter(':odd').removeClass(table.config.widgetZebra.css[0]).addClass(table.config.widgetZebra.css[1]);if(table.config.debug){$.tablesorter.benchmark("Applying Zebra widget",time);}}});})(jQuery);
 
 /*
+ * jqModal - Minimalist Modaling with jQuery
+ *   (http://dev.iceburg.net/jquery/jqModal/)
+ *
+ * Copyright (c) 2007,2008 Brice Burgess <bhb@iceburg.net>
+ * Dual licensed under the MIT and GPL licenses:
+ *   http://www.opensource.org/licenses/mit-license.php
+ *   http://www.gnu.org/licenses/gpl.html
+ * 
+ * $Version: 03/01/2009 +r14
+ */
+(function($) {
+$.fn.jqm=function(o){
+var p={
+overlay: 50,
+overlayClass: 'jqmOverlay',
+closeClass: 'jqmClose',
+trigger: '.jqModal',
+ajax: F,
+ajaxText: '',
+target: F,
+modal: F,
+toTop: F,
+onShow: F,
+onHide: F,
+onLoad: F
+};
+return this.each(function(){if(this._jqm)return H[this._jqm].c=$.extend({},H[this._jqm].c,o);s++;this._jqm=s;
+H[s]={c:$.extend(p,$.jqm.params,o),a:F,w:$(this).addClass('jqmID'+s),s:s};
+if(p.trigger)$(this).jqmAddTrigger(p.trigger);
+});};
+
+$.fn.jqmAddClose=function(e){return hs(this,e,'jqmHide');};
+$.fn.jqmAddTrigger=function(e){return hs(this,e,'jqmShow');};
+$.fn.jqmShow=function(t){return this.each(function(){t=t||window.event;$.jqm.open(this._jqm,t);});};
+$.fn.jqmHide=function(t){return this.each(function(){t=t||window.event;$.jqm.close(this._jqm,t)});};
+
+$.jqm = {
+hash:{},
+open:function(s,t){var h=H[s],c=h.c,cc='.'+c.closeClass,z=(parseInt(h.w.css('z-index'))),z=(z>0)?z:3000,o=$('<div></div>').css({height:'100%',width:'100%',position:'fixed',left:0,top:0,'z-index':z-1,opacity:c.overlay/100});if(h.a)return F;h.t=t;h.a=true;h.w.css('z-index',z);
+ if(c.modal) {if(!A[0])L('bind');A.push(s);}
+ else if(c.overlay > 0)h.w.jqmAddClose(o);
+ else o=F;
+
+ h.o=(o)?o.addClass(c.overlayClass).prependTo('body'):F;
+ if(ie6){$('html,body').css({height:'100%',width:'100%'});if(o){o=o.css({position:'absolute'})[0];for(var y in {Top:1,Left:1})o.style.setExpression(y.toLowerCase(),"(_=(document.documentElement.scroll"+y+" || document.body.scroll"+y+"))+'px'");}}
+
+ if(c.ajax) {var r=c.target||h.w,u=c.ajax,r=(typeof r == 'string')?$(r,h.w):$(r),u=(u.substr(0,1) == '@')?$(t).attr(u.substring(1)):u;
+  r.html(c.ajaxText).load(u,function(){if(c.onLoad)c.onLoad.call(this,h);if(cc)h.w.jqmAddClose($(cc,h.w));e(h);});}
+ else if(cc)h.w.jqmAddClose($(cc,h.w));
+
+ if(c.toTop&&h.o)h.w.before('<span id="jqmP'+h.w[0]._jqm+'"></span>').insertAfter(h.o);    
+ (c.onShow)?c.onShow(h):h.w.show();e(h);return F;
+},
+close:function(s){var h=H[s];if(!h.a)return F;h.a=F;
+ if(A[0]){A.pop();if(!A[0])L('unbind');}
+ if(h.c.toTop&&h.o)$('#jqmP'+h.w[0]._jqm).after(h.w).remove();
+ if(h.c.onHide)h.c.onHide(h);else{h.w.hide();if(h.o)h.o.remove();} return F;
+},
+params:{}};
+var s=0,H=$.jqm.hash,A=[],ie6=$.browser.msie&&($.browser.version == "6.0"),F=false,
+i=$('<iframe src="javascript:false;document.write(\'\');" class="jqm"></iframe>').css({opacity:0}),
+e=function(h){if(ie6)if(h.o)h.o.html('<p style="width:100%;height:100%"/>').prepend(i);else if(!$('iframe.jqm',h.w)[0])h.w.prepend(i); f(h);},
+f=function(h){try{$(':input:visible',h.w)[0].focus();}catch(_){}},
+L=function(t){$()[t]("keypress",m)[t]("keydown",m)[t]("mousedown",m);},
+m=function(e){var h=H[A[A.length-1]],r=(!$(e.target).parents('.jqmID'+h.s)[0]);if(r)f(h);return !r;},
+hs=function(w,t,c){return w.each(function(){var s=this._jqm;$(t).each(function() {
+ if(!this[c]){this[c]=[];$(this).click(function(){for(var i in {jqmShow:1,jqmHide:1})for(var s in this[i])if(H[this[i][s]])H[this[i][s]].w[i](this);return F;});}this[c].push(s);});});};
+})(jQuery);
+
+/*
+ * jqDnR - Minimalistic Drag'n'Resize for jQuery.
+ *
+ * Copyright (c) 2007 Brice Burgess <bhb@iceburg.net>, http://www.iceburg.net
+ * Licensed under the MIT License:
+ * http://www.opensource.org/licenses/mit-license.php
+ * 
+ * $Version: 2007.08.19 +r2
+ */
+
+(function($){
+$.fn.jqDrag=function(h){return i(this,h,'d');};
+$.fn.jqResize=function(h){return i(this,h,'r');};
+$.jqDnR={dnr:{},e:0,
+drag:function(v){
+ if(M.k == 'd')E.css({left:M.X+v.pageX-M.pX,top:M.Y+v.pageY-M.pY});
+ else E.css({width:Math.max(v.pageX-M.pX+M.W,0),height:Math.max(v.pageY-M.pY+M.H,0)});
+  return false;},
+stop:function(){E.css('opacity',M.o);$(document).unbind('mousemove',J.drag).unbind('mouseup',J.stop);}
+};
+var J=$.jqDnR,M=J.dnr,E=J.e,
+i=function(e,h,k){return e.each(function(){h=(h)?$(h,e):e;
+ h.bind('mousedown',{e:e,k:k},function(v){var d=v.data,p={};E=d.e;
+ // attempt utilization of dimensions plugin to fix IE issues
+ if(E.css('position') != 'relative'){try{E.position(p);}catch(e){}}
+ M={X:p.left||f('left')||0,Y:p.top||f('top')||0,W:f('width')||E[0].scrollWidth||0,H:f('height')||E[0].scrollHeight||0,pX:v.pageX,pY:v.pageY,k:d.k,o:E.css('opacity')};
+ E.css({opacity:0.8});$(document).mousemove($.jqDnR.drag).mouseup($.jqDnR.stop);
+ return false;
+ });
+});},
+f=function(k){return parseInt(E.css(k))||false;};
+})(jQuery);
+
+/* Copyright (c) 2007 Paul Bakaus (paul.bakaus@googlemail.com) and Brandon Aaron (brandon.aaron@gmail.com || http://brandonaaron.net)
+ * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
+ * and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
+ *
+ * $LastChangedDate$
+ * $Rev$
+ *
+ * Version: 1.1.2
+ *
+ * Requires: jQuery 1.1.3+
+ */
+
+(function($){
+
+// store a copy of the core height and width methods
+var height = $.fn.height,
+    width  = $.fn.width;
+
+$.fn.extend({
+    /**
+     * If used on document, returns the document's height (innerHeight).
+     * If used on window, returns the viewport's (window) height.
+     * See core docs on height() to see what happens when used on an element.
+     *
+     * @example $("#testdiv").height()
+     * @result 200
+     *
+     * @example $(document).height()
+     * @result 800
+     *
+     * @example $(window).height()
+     * @result 400
+     *
+     * @name height
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    height: function() {
+        if ( !this[0] ) error();
+        if ( this[0] == window )
+            if ( $.browser.opera || ($.browser.safari && parseInt($.browser.version) > 520) )
+                return self.innerHeight - (($(document).height() > self.innerHeight) ? getScrollbarWidth() : 0);
+            else if ( $.browser.safari )
+                return self.innerHeight;
+            else
+                return $.boxModel && document.documentElement.clientHeight || document.body.clientHeight;
+        
+        if ( this[0] == document ) 
+            return Math.max( ($.boxModel && document.documentElement.scrollHeight || document.body.scrollHeight), document.body.offsetHeight );
+        
+        return height.apply(this, arguments);
+    },
+    
+    /**
+     * If used on document, returns the document's width (innerWidth).
+     * If used on window, returns the viewport's (window) width.
+     * See core docs on width() to see what happens when used on an element.
+     *
+     * @example $("#testdiv").width()
+     * @result 200
+     *
+     * @example $(document).width()
+     * @result 800
+     *
+     * @example $(window).width()
+     * @result 400
+     *
+     * @name width
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    width: function() {
+        if (!this[0]) error();
+        if ( this[0] == window )
+            if ( $.browser.opera || ($.browser.safari && parseInt($.browser.version) > 520) )
+                return self.innerWidth - (($(document).width() > self.innerWidth) ? getScrollbarWidth() : 0);
+            else if ( $.browser.safari )
+                return self.innerWidth;
+            else
+                return $.boxModel && document.documentElement.clientWidth || document.body.clientWidth;
+
+        if ( this[0] == document )
+            if ($.browser.mozilla) {
+                // mozilla reports scrollWidth and offsetWidth as the same
+                var scrollLeft = self.pageXOffset;
+                self.scrollTo(99999999, self.pageYOffset);
+                var scrollWidth = self.pageXOffset;
+                self.scrollTo(scrollLeft, self.pageYOffset);
+                return document.body.offsetWidth + scrollWidth;
+            }
+            else 
+                return Math.max( (($.boxModel && !$.browser.safari) && document.documentElement.scrollWidth || document.body.scrollWidth), document.body.offsetWidth );
+
+        return width.apply(this, arguments);
+    },
+    
+    /**
+     * Gets the inner height (excludes the border and includes the padding) for the first matched element.
+     * If used on document, returns the document's height (innerHeight).
+     * If used on window, returns the viewport's (window) height.
+     *
+     * @example $("#testdiv").innerHeight()
+     * @result 210
+     *
+     * @name innerHeight
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    innerHeight: function() {
+        if (!this[0]) error();
+        return this[0] == window || this[0] == document ?
+            this.height() :
+            this.is(':visible') ?
+                this[0].offsetHeight - num(this, 'borderTopWidth') - num(this, 'borderBottomWidth') :
+                this.height() + num(this, 'paddingTop') + num(this, 'paddingBottom');
+    },
+    
+    /**
+     * Gets the inner width (excludes the border and includes the padding) for the first matched element.
+     * If used on document, returns the document's width (innerWidth).
+     * If used on window, returns the viewport's (window) width.
+     *
+     * @example $("#testdiv").innerWidth()
+     * @result 210
+     *
+     * @name innerWidth
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    innerWidth: function() {
+        if (!this[0]) error();
+        return this[0] == window || this[0] == document ?
+            this.width() :
+            this.is(':visible') ?
+                this[0].offsetWidth - num(this, 'borderLeftWidth') - num(this, 'borderRightWidth') :
+                this.width() + num(this, 'paddingLeft') + num(this, 'paddingRight');
+    },
+    
+    /**
+     * Gets the outer height (includes the border and padding) for the first matched element.
+     * If used on document, returns the document's height (innerHeight).
+     * If used on window, returns the viewport's (window) height.
+     *
+     * The margin can be included in the calculation by passing an options map with margin
+     * set to true.
+     *
+     * @example $("#testdiv").outerHeight()
+     * @result 220
+     *
+     * @example $("#testdiv").outerHeight({ margin: true })
+     * @result 240
+     *
+     * @name outerHeight
+     * @type Number
+     * @param Map options Optional settings to configure the way the outer height is calculated.
+     * @cat Plugins/Dimensions
+     */
+    outerHeight: function(options) {
+        if (!this[0]) error();
+        options = $.extend({ margin: false }, options || {});
+        return this[0] == window || this[0] == document ?
+            this.height() :
+            this.is(':visible') ?
+                this[0].offsetHeight + (options.margin ? (num(this, 'marginTop') + num(this, 'marginBottom')) : 0) :
+                this.height() 
+                    + num(this,'borderTopWidth') + num(this, 'borderBottomWidth') 
+                    + num(this, 'paddingTop') + num(this, 'paddingBottom')
+                    + (options.margin ? (num(this, 'marginTop') + num(this, 'marginBottom')) : 0);
+    },
+    
+    /**
+     * Gets the outer width (including the border and padding) for the first matched element.
+     * If used on document, returns the document's width (innerWidth).
+     * If used on window, returns the viewport's (window) width.
+     *
+     * The margin can be included in the calculation by passing an options map with margin
+     * set to true.
+     *
+     * @example $("#testdiv").outerWidth()
+     * @result 1000
+     *
+     * @example $("#testdiv").outerWidth({ margin: true })
+     * @result 1020
+     * 
+     * @name outerHeight
+     * @type Number
+     * @param Map options Optional settings to configure the way the outer width is calculated.
+     * @cat Plugins/Dimensions
+     */
+    outerWidth: function(options) {
+        if (!this[0]) error();
+        options = $.extend({ margin: false }, options || {});
+        return this[0] == window || this[0] == document ?
+            this.width() :
+            this.is(':visible') ?
+                this[0].offsetWidth + (options.margin ? (num(this, 'marginLeft') + num(this, 'marginRight')) : 0) :
+                this.width() 
+                    + num(this, 'borderLeftWidth') + num(this, 'borderRightWidth') 
+                    + num(this, 'paddingLeft') + num(this, 'paddingRight')
+                    + (options.margin ? (num(this, 'marginLeft') + num(this, 'marginRight')) : 0);
+    },
+    
+    /**
+     * Gets how many pixels the user has scrolled to the right (scrollLeft).
+     * Works on containers with overflow: auto and window/document.
+     *
+     * @example $(window).scrollLeft()
+     * @result 100
+     *
+     * @example $(document).scrollLeft()
+     * @result 100
+     * 
+     * @example $("#testdiv").scrollLeft()
+     * @result 100
+     *
+     * @name scrollLeft
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    /**
+     * Sets the scrollLeft property for each element and continues the chain.
+     * Works on containers with overflow: auto and window/document.
+     *
+     * @example $(window).scrollLeft(100).scrollLeft()
+     * @result 100
+     * 
+     * @example $(document).scrollLeft(100).scrollLeft()
+     * @result 100
+     *
+     * @example $("#testdiv").scrollLeft(100).scrollLeft()
+     * @result 100
+     *
+     * @name scrollLeft
+     * @param Number value A positive number representing the desired scrollLeft.
+     * @type jQuery
+     * @cat Plugins/Dimensions
+     */
+    scrollLeft: function(val) {
+        if (!this[0]) error();
+        if ( val != undefined )
+            // set the scroll left
+            return this.each(function() {
+                if (this == window || this == document)
+                    window.scrollTo( val, $(window).scrollTop() );
+                else
+                    this.scrollLeft = val;
+            });
+        
+        // return the scroll left offest in pixels
+        if ( this[0] == window || this[0] == document )
+            return self.pageXOffset ||
+                $.boxModel && document.documentElement.scrollLeft ||
+                document.body.scrollLeft;
+                
+        return this[0].scrollLeft;
+    },
+    
+    /**
+     * Gets how many pixels the user has scrolled to the bottom (scrollTop).
+     * Works on containers with overflow: auto and window/document.
+     *
+     * @example $(window).scrollTop()
+     * @result 100
+     *
+     * @example $(document).scrollTop()
+     * @result 100
+     * 
+     * @example $("#testdiv").scrollTop()
+     * @result 100
+     *
+     * @name scrollTop
+     * @type Number
+     * @cat Plugins/Dimensions
+     */
+    /**
+     * Sets the scrollTop property for each element and continues the chain.
+     * Works on containers with overflow: auto and window/document.
+     *
+     * @example $(window).scrollTop(100).scrollTop()
+     * @result 100
+     * 
+     * @example $(document).scrollTop(100).scrollTop()
+     * @result 100
+     *
+     * @example $("#testdiv").scrollTop(100).scrollTop()
+     * @result 100
+     *
+     * @name scrollTop
+     * @param Number value A positive number representing the desired scrollTop.
+     * @type jQuery
+     * @cat Plugins/Dimensions
+     */
+    scrollTop: function(val) {
+        if (!this[0]) error();
+        if ( val != undefined )
+            // set the scroll top
+            return this.each(function() {
+                if (this == window || this == document)
+                    window.scrollTo( $(window).scrollLeft(), val );
+                else
+                    this.scrollTop = val;
+            });
+        
+        // return the scroll top offset in pixels
+        if ( this[0] == window || this[0] == document )
+            return self.pageYOffset ||
+                $.boxModel && document.documentElement.scrollTop ||
+                document.body.scrollTop;
+
+        return this[0].scrollTop;
+    },
+    
+    /** 
+     * Gets the top and left positioned offset in pixels.
+     * The positioned offset is the offset between a positioned
+     * parent and the element itself.
+     *
+     * For accurate calculations make sure to use pixel values for margins, borders and padding.
+     *
+     * @example $("#testdiv").position()
+     * @result { top: 100, left: 100 }
+     *
+     * @example var position = {};
+     * $("#testdiv").position(position)
+     * @result position = { top: 100, left: 100 }
+     * 
+     * @name position
+     * @param Object returnObject Optional An object to store the return value in, so as not to break the chain. If passed in the
+     *                            chain will not be broken and the result will be assigned to this object.
+     * @type Object
+     * @cat Plugins/Dimensions
+     */
+    position: function(returnObject) {
+        return this.offset({ margin: false, scroll: false, relativeTo: this.offsetParent() }, returnObject);
+    },
+    
+    /**
+     * Gets the location of the element in pixels from the top left corner of the viewport.
+     * The offset method takes an optional map of key value pairs to configure the way
+     * the offset is calculated. Here are the different options.
+     *
+     * (Boolean) margin - Should the margin of the element be included in the calculations? True by default.
+     * (Boolean) border - Should the border of the element be included in the calculations? False by default. 
+     * (Boolean) padding - Should the padding of the element be included in the calculations? False by default. 
+     * (Boolean) scroll - Should the scroll offsets of the parent elements be included in the calculations? True by default.
+     *                    When true it adds the total scroll offsets of all parents to the total offset and also adds two
+     *                    properties to the returned object, scrollTop and scrollLeft.
+     * (Boolean) lite - When true it will use the offsetLite method instead of the full-blown, slower offset method. False by default.
+     *                  Only use this when margins, borders and padding calculations don't matter.
+     * (HTML Element) relativeTo - This should be a parent of the element and should have position (like absolute or relative).
+     *                             It will retreive the offset relative to this parent element. By default it is the body element.
+     *
+     * Also an object can be passed as the second paramater to
+     * catch the value of the return and continue the chain.
+     *
+     * For accurate calculations make sure to use pixel values for margins, borders and padding.
+     * 
+     * Known issues:
+     *  - Issue: A div positioned relative or static without any content before it and its parent will report an offsetTop of 0 in Safari
+     *    Workaround: Place content before the relative div ... and set height and width to 0 and overflow to hidden
+     *
+     * @example $("#testdiv").offset()
+     * @result { top: 100, left: 100, scrollTop: 10, scrollLeft: 10 }
+     *
+     * @example $("#testdiv").offset({ scroll: false })
+     * @result { top: 90, left: 90 }
+     *
+     * @example var offset = {}
+     * $("#testdiv").offset({ scroll: false }, offset)
+     * @result offset = { top: 90, left: 90 }
+     *
+     * @name offset
+     * @param Map options Optional settings to configure the way the offset is calculated.
+     * @param Object returnObject An object to store the return value in, so as not to break the chain. If passed in the
+     *                            chain will not be broken and the result will be assigned to this object.
+     * @type Object
+     * @cat Plugins/Dimensions
+     */
+    offset: function(options, returnObject) {
+        if (!this[0]) error();
+        var x = 0, y = 0, sl = 0, st = 0,
+            elem = this[0], parent = this[0], op, parPos, elemPos = $.css(elem, 'position'),
+            mo = $.browser.mozilla, ie = $.browser.msie, oa = $.browser.opera,
+            sf = $.browser.safari, sf3 = $.browser.safari && parseInt($.browser.version) > 520,
+            absparent = false, relparent = false, 
+            options = $.extend({ margin: true, border: false, padding: false, scroll: true, lite: false, relativeTo: document.body }, options || {});
+        
+        // Use offsetLite if lite option is true
+        if (options.lite) return this.offsetLite(options, returnObject);
+        // Get the HTMLElement if relativeTo is a jquery collection
+        if (options.relativeTo.jquery) options.relativeTo = options.relativeTo[0];
+        
+        if (elem.tagName == 'BODY') {
+            // Safari 2 is the only one to get offsetLeft and offsetTop properties of the body "correct"
+            // Except they all mess up when the body is positioned absolute or relative
+            x = elem.offsetLeft;
+            y = elem.offsetTop;
+            // Mozilla ignores margin and subtracts border from body element
+            if (mo) {
+                x += num(elem, 'marginLeft') + (num(elem, 'borderLeftWidth')*2);
+                y += num(elem, 'marginTop')  + (num(elem, 'borderTopWidth') *2);
+            } else
+            // Opera ignores margin
+            if (oa) {
+                x += num(elem, 'marginLeft');
+                y += num(elem, 'marginTop');
+            } else
+            // IE does not add the border in Standards Mode
+            if ((ie && jQuery.boxModel)) {
+                x += num(elem, 'borderLeftWidth');
+                y += num(elem, 'borderTopWidth');
+            } else
+            // Safari 3 doesn't not include border or margin
+            if (sf3) {
+                x += num(elem, 'marginLeft') + num(elem, 'borderLeftWidth');
+                y += num(elem, 'marginTop')  + num(elem, 'borderTopWidth');
+            }
+        } else {
+            do {
+                parPos = $.css(parent, 'position');
+            
+                x += parent.offsetLeft;
+                y += parent.offsetTop;
+
+                // Mozilla and IE do not add the border
+                // Mozilla adds the border for table cells
+                if ((mo && !parent.tagName.match(/^t[d|h]$/i)) || ie || sf3) {
+                    // add borders to offset
+                    x += num(parent, 'borderLeftWidth');
+                    y += num(parent, 'borderTopWidth');
+
+                    // Mozilla does not include the border on body if an element isn't positioned absolute and is without an absolute parent
+                    if (mo && parPos == 'absolute') absparent = true;
+                    // IE does not include the border on the body if an element is position static and without an absolute or relative parent
+                    if (ie && parPos == 'relative') relparent = true;
+                }
+
+                op = parent.offsetParent || document.body;
+                if (options.scroll || mo) {
+                    do {
+                        if (options.scroll) {
+                            // get scroll offsets
+                            sl += parent.scrollLeft;
+                            st += parent.scrollTop;
+                        }
+                        
+                        // Opera sometimes incorrectly reports scroll offset for elements with display set to table-row or inline
+                        if (oa && ($.css(parent, 'display') || '').match(/table-row|inline/)) {
+                            sl = sl - ((parent.scrollLeft == parent.offsetLeft) ? parent.scrollLeft : 0);
+                            st = st - ((parent.scrollTop == parent.offsetTop) ? parent.scrollTop : 0);
+                        }
+                
+                        // Mozilla does not add the border for a parent that has overflow set to anything but visible
+                        if (mo && parent != elem && $.css(parent, 'overflow') != 'visible') {
+                            x += num(parent, 'borderLeftWidth');
+                            y += num(parent, 'borderTopWidth');
+                        }
+                
+                        parent = parent.parentNode;
+                    } while (parent != op);
+                }
+                parent = op;
+                
+                // exit the loop if we are at the relativeTo option but not if it is the body or html tag
+                if (parent == options.relativeTo && !(parent.tagName == 'BODY' || parent.tagName == 'HTML'))  {
+                    // Mozilla does not add the border for a parent that has overflow set to anything but visible
+                    if (mo && parent != elem && $.css(parent, 'overflow') != 'visible') {
+                        x += num(parent, 'borderLeftWidth');
+                        y += num(parent, 'borderTopWidth');
+                    }
+                    // Safari 2 and opera includes border on positioned parents
+                    if ( ((sf && !sf3) || oa) && parPos != 'static' ) {
+                        x -= num(op, 'borderLeftWidth');
+                        y -= num(op, 'borderTopWidth');
+                    }
+                    break;
+                }
+                if (parent.tagName == 'BODY' || parent.tagName == 'HTML') {
+                    // Safari 2 and IE Standards Mode doesn't add the body margin for elments positioned with static or relative
+                    if (((sf && !sf3) || (ie && $.boxModel)) && elemPos != 'absolute' && elemPos != 'fixed') {
+                        x += num(parent, 'marginLeft');
+                        y += num(parent, 'marginTop');
+                    }
+                    // Safari 3 does not include the border on body
+                    // Mozilla does not include the border on body if an element isn't positioned absolute and is without an absolute parent
+                    // IE does not include the border on the body if an element is positioned static and without an absolute or relative parent
+                    if ( sf3 || (mo && !absparent && elemPos != 'fixed') || 
+                         (ie && elemPos == 'static' && !relparent) ) {
+                        x += num(parent, 'borderLeftWidth');
+                        y += num(parent, 'borderTopWidth');
+                    }
+                    break; // Exit the loop
+                }
+            } while (parent);
+        }
+
+        var returnValue = handleOffsetReturn(elem, options, x, y, sl, st);
+
+        if (returnObject) { $.extend(returnObject, returnValue); return this; }
+        else              { return returnValue; }
+    },
+    
+    /**
+     * Gets the location of the element in pixels from the top left corner of the viewport.
+     * This method is much faster than offset but not as accurate when borders and margins are
+     * on the element and/or its parents. This method can be invoked
+     * by setting the lite option to true in the offset method.
+     * The offsetLite method takes an optional map of key value pairs to configure the way
+     * the offset is calculated. Here are the different options.
+     *
+     * (Boolean) margin - Should the margin of the element be included in the calculations? True by default.
+     * (Boolean) border - Should the border of the element be included in the calculations? False by default. 
+     * (Boolean) padding - Should the padding of the element be included in the calcuations? False by default. 
+     * (Boolean) scroll - Sould the scroll offsets of the parent elements be included int he calculations? True by default.
+     *                    When true it adds the total scroll offsets of all parents to the total offset and also adds two
+     *                    properties to the returned object, scrollTop and scrollLeft.
+     * (HTML Element) relativeTo - This should be a parent of the element and should have position (like absolute or relative).
+     *                             It will retreive the offset relative to this parent element. By default it is the body element.
+     *
+     * @name offsetLite
+     * @param Map options Optional settings to configure the way the offset is calculated.
+     * @param Object returnObject An object to store the return value in, so as not to break the chain. If passed in the
+     *                            chain will not be broken and the result will be assigned to this object.
+     * @type Object
+     * @cat Plugins/Dimensions
+     */
+    offsetLite: function(options, returnObject) {
+        if (!this[0]) error();
+        var x = 0, y = 0, sl = 0, st = 0, parent = this[0], offsetParent, 
+            options = $.extend({ margin: true, border: false, padding: false, scroll: true, relativeTo: document.body }, options || {});
+                
+        // Get the HTMLElement if relativeTo is a jquery collection
+        if (options.relativeTo.jquery) options.relativeTo = options.relativeTo[0];
+        
+        do {
+            x += parent.offsetLeft;
+            y += parent.offsetTop;
+
+            offsetParent = parent.offsetParent || document.body;
+            if (options.scroll) {
+                // get scroll offsets
+                do {
+                    sl += parent.scrollLeft;
+                    st += parent.scrollTop;
+                    parent = parent.parentNode;
+                } while(parent != offsetParent);
+            }
+            parent = offsetParent;
+        } while (parent && parent.tagName != 'BODY' && parent.tagName != 'HTML' && parent != options.relativeTo);
+
+        var returnValue = handleOffsetReturn(this[0], options, x, y, sl, st);
+
+        if (returnObject) { $.extend(returnObject, returnValue); return this; }
+        else              { return returnValue; }
+    },
+    
+    /**
+     * Returns a jQuery collection with the positioned parent of 
+     * the first matched element. This is the first parent of 
+     * the element that has position (as in relative or absolute).
+     *
+     * @name offsetParent
+     * @type jQuery
+     * @cat Plugins/Dimensions
+     */
+    offsetParent: function() {
+        if (!this[0]) error();
+        var offsetParent = this[0].offsetParent;
+        while ( offsetParent && (offsetParent.tagName != 'BODY' && $.css(offsetParent, 'position') == 'static') )
+            offsetParent = offsetParent.offsetParent;
+        return $(offsetParent);
+    }
+});
+
+/**
+ * Throws an error message when no elements are in the jQuery collection
+ * @private
+ */
+var error = function() {
+    throw "Dimensions: jQuery collection is empty";
+};
+
+/**
+ * Handles converting a CSS Style into an Integer.
+ * @private
+ */
+var num = function(el, prop) {
+    return parseInt($.css(el.jquery?el[0]:el,prop))||0;
+};
+
+/**
+ * Handles the return value of the offset and offsetLite methods.
+ * @private
+ */
+var handleOffsetReturn = function(elem, options, x, y, sl, st) {
+    if ( !options.margin ) {
+        x -= num(elem, 'marginLeft');
+        y -= num(elem, 'marginTop');
+    }
+
+    // Safari and Opera do not add the border for the element
+    if ( options.border && (($.browser.safari && parseInt($.browser.version) < 520) || $.browser.opera) ) {
+        x += num(elem, 'borderLeftWidth');
+        y += num(elem, 'borderTopWidth');
+    } else if ( !options.border && !(($.browser.safari && parseInt($.browser.version) < 520) || $.browser.opera) ) {
+        x -= num(elem, 'borderLeftWidth');
+        y -= num(elem, 'borderTopWidth');
+    }
+
+    if ( options.padding ) {
+        x += num(elem, 'paddingLeft');
+        y += num(elem, 'paddingTop');
+    }
+    
+    // do not include scroll offset on the element ... opera sometimes reports scroll offset as actual offset
+    if ( options.scroll && (!$.browser.opera || elem.offsetLeft != elem.scrollLeft && elem.offsetTop != elem.scrollLeft) ) {
+        sl -= elem.scrollLeft;
+        st -= elem.scrollTop;
+    }
+
+    return options.scroll ? { top: y - st, left: x - sl, scrollTop:  st, scrollLeft: sl }
+                          : { top: y, left: x };
+};
+
+/**
+ * Gets the width of the OS scrollbar
+ * @private
+ */
+var scrollbarWidth = 0;
+var getScrollbarWidth = function() {
+    if (!scrollbarWidth) {
+        var testEl = $('<div>')
+                .css({
+                    width: 100,
+                    height: 100,
+                    overflow: 'auto',
+                    position: 'absolute',
+                    top: -1000,
+                    left: -1000
+                })
+                .appendTo('body');
+        scrollbarWidth = 100 - testEl
+            .append('<div>')
+            .find('div')
+                .css({
+                    width: '100%',
+                    height: 200
+                })
+                .width();
+        testEl.remove();
+    }
+    return scrollbarWidth;
+};
+
+})(jQuery);
+
+/*
  *    Tabby jQuery plugin version 0.12
  *
  *    Ted Devito - http://teddevito.com/demos/textarea.html

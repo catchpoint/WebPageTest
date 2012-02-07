@@ -27,6 +27,10 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .bold {font-weight: bold;}
 
 .arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
+.position-container {position: relative; left: 0; top: 0;}
+.position-background {position: relative; left: 0; top: 0;}
+.transparent {opacity:0.0 !important; filter:alpha(opacity=0) !important;}
+.request-overlay {padding: 0; margin: 0; width: 928px; left: 1px; background-color: #FFF; overflow: hidden; opacity:0.9; filter:alpha(opacity=90);}
 
 #optimization {float:right; width:414px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}
@@ -245,3 +249,60 @@ table.pretty td.even { background: whitesmoke; }
 /*pagespeed results*/
 #pagespeed_results {width: 960px; background-color: #fff; padding: 0px 10px 10px; margin: -15px -20px 0px;}
 #pagespeed_results h2 {text-align: center; padding: 10px 0 0 0;}
+
+.request-overlay {cursor:pointer;}
+
+/* jqModal base Styling courtesy of;
+    Brice Burgess <bhb@iceburg.net> */
+
+/* The Window's CSS z-index value is respected (takes priority). If none is supplied,
+    the Window's z-index value will be set to 3000 by default (via jqModal.js). */
+.jqmWindow {display: none; position: fixed; top: 17%; left: 50%; margin-left: -300px; width: 600px; background-color: #EEE; color: #333; border: 1px solid black; padding: 12px; }
+.jqmOverlay { background-color: #000; }
+div.jqDrag {cursor: move;}
+
+/* jqmModal dialog CSS courtesy of;
+    Brice Burgess <bhb@iceburg.net> */
+
+div.jqmDialog {display: none; position: fixed; top: 5%; left: 100%; margin-left: -420px; width: 400px; 
+                overflow: hidden; font-family:verdana,tahoma,helvetica;
+                color: #000; background: #fff; border: 1px solid #000; }
+
+/* [[[ Title / Top Classes ]]] */
+div.jqmdTC { 
+    background: #303030; 
+    color: #fff;
+    padding: 7px 22px 5px 5px;
+    font-family:"sans serif",verdana,tahoma,helvetica;
+    font-weight: bold;
+    * zoom: 1;
+}
+
+
+/* [[[ Body / Message Classes ]]] */
+div.jqmdBC {
+    padding: 7px 7px 7px;
+    height: 180px;
+    overflow: auto;
+}
+
+
+/* [[[ Button classes ]]] */
+input.jqmdX {
+    position: absolute;
+    right: 7px;
+    top: 4px;
+    padding: 0 0 0 19px;
+    height: 19px;
+    width: 0px;
+    background: url(/images/dialog-close.gif) no-repeat top left;
+    overflow: hidden;
+}
+input.jqmdXFocus {background-position: bottom left; outline: none;}
+
+div.jqmdBC button {
+    margin: 8px 10px 4px 10px;
+    color: #777;
+    background-color: #fff;
+    cursor: pointer;
+}
