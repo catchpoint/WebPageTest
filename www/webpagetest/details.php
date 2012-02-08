@@ -313,7 +313,14 @@ $page_description = "Website performance test details$testLabel";
                                 $index = $entry['request'] + 1;
                                 $top = $entry['top'];
                                 $height = abs($entry['bottom'] - $entry['top']) + 1;
-                                echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" onclick=\"HighlightDependencies($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+                                $tooltip = $entry['url'];
+                                if (strlen($tooltip) > 100) {
+                                    $split = strpos($tooltip, '?');
+                                    if ($split !== false)
+                                        $tooltip = substr($tooltip, 0, $split) . '...';
+                                    $tooltip = FitText($tooltip, 100);
+                                }
+                                echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" tooltip=\"$tooltip\" onclick=\"HighlightDependencies($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
                             }
                         }
                         
@@ -386,12 +393,25 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <div id="request-dialog" class="jqmDialog">
-            <div id="dialog-title" class="jqmdTC jqDrag"></div>
-            <div class="jqmdBC">
-                <div id="dialog-contents" class="jqmdMSG">
+            <div id="dialog-resize" class="jqHandle jqResize"></div>
+            <div id="dialog-header" class="jqmdTC">
+                <div id="dialog-title"></div>
+                <div id="radio">
+                    <input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label>
+                    <input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request Headers</label>
+                    <input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response Headers</label>
+                    <input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Response Body</label>
                 </div>
             </div>
-            <input type="image" src="/images/dialog-close.gif" class="jqmdX jqmClose" />
+            <div class="jqmdBC">
+                <div id="dialog-contents" class="jqmdMSG">
+                    <div id="request-details" class="dialog-tab-content"></div>
+                    <div id="request-headers" class="dialog-tab-content"></div>
+                    <div id="response-headers" class="dialog-tab-content"></div>
+                    <div id="response-body" class="dialog-tab-content"></div>
+                </div>
+            </div>
+            <div class="jqmdX jqmClose"></div>
         </div>        
 
         <script type="text/javascript">
@@ -415,24 +435,57 @@ $page_description = "Website performance test details$testLabel";
 
         // initialize the pop-up dialog        
         $('#request-dialog').jqm({overlay: 0, onHide: HideOverlays})
-            .jqDrag('.jqDrag');
+              .jqResize('.jqResize');
         $('input.jqmdX')
             .hover( function(){ $(this).addClass('jqmdXFocus'); }, 
                     function(){ $(this).removeClass('jqmdXFocus'); })
             .focus( function(){ this.hideFocus=true; $(this).addClass('jqmdXFocus'); })
             .blur( function(){ $(this).removeClass('jqmdXFocus'); });
+            
+        // initialize the tooltips
+        $('div.request-overlay').tooltip({ 
+            track: true, 
+            delay: 250, 
+            showURL: false, 
+            bodyHandler: function() {
+                return $(this).attr("tooltip");
+            },
+            fade: 250 
+        });        
+        $("#radio").buttonset();
+        $("#radio").change(function() {
+            var panel=$('input[type=radio]:checked').val();
+            $("#dialog-contents div.dialog-tab-content").hide();
+            $("#" + panel).show();
+        });
         
         function HighlightDependencies(request) {
-            $("#dialog-title").html('Request ' + request);
-            var body='';
+            $("#dialog-title").html('Request #' + request);
+            var details='';
+            var requestHeaders='';
+            var responseHeaders='';
             if (wptRequestData[request - 1] !== undefined) {
                 var r = wptRequestData[request - 1];
                 if (r['full_url'] !== undefined)
-                    body += 'URL: ' + r['full_url'] + '<br>';
+                    details += '<b>URL:</b> ' + r['full_url'] + '<br>';
                 if (r['initiator'] !== undefined)
-                    body += 'Loaded By: ' + r['initiator'] + '<br>';
+                    details += '<b>Loaded By:</b> ' + r['initiator'] + '<br>';
+                if (r['headers'] !== undefined){
+                    if (r.headers['request'] !== undefined){
+                        for (i=0;i<r.headers.request.length;i++) {
+                            requestHeaders += r.headers.request[i] + '<br>';
+                        }
+                    }
+                    if (r.headers['response'] !== undefined){
+                        for (i=0;i<r.headers.response.length;i++) {
+                            responseHeaders += r.headers.response[i] + '<br>';
+                        }
+                    }
+                }
             }
-            $("#dialog-contents").html(body);
+            $("#request-details").html(details);
+            $("#request-headers").html(requestHeaders);
+            $("#response-headers").html(responseHeaders);
             $('#request-dialog').jqmShow();
             console.log('Operating on request ' + request);
             var requests=new Array();

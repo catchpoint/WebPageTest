@@ -244,18 +244,18 @@ function ConnectionChanged()
         {
             waitText = 'Location is offline, please select a different browser or location';
             $('#wait').removeClass('backlogWarn').addClass('backlogHigh');
-            $('#start_test-button').hide();
+            //$('#start_test-button').hide();
         }
         else if( wait > 120 )
         {
             waitText = 'Location is exceptionally busy, please select a different location or try again later';
             $('#wait').removeClass('backlogWarn').addClass('backlogHigh');
-            $('#start_test-button').hide();
+            //$('#start_test-button').hide();
         }
         else
         {
             $('#wait').removeClass('backlogWarn , backlogHigh');
-            $('#start_test-button').show();
+            //$('#start_test-button').show();
             if( wait == 1 )
                 waitText = '1 minute';
             else if (wait > 0)
