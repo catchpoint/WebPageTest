@@ -26,17 +26,19 @@ if (@strlen($ec2)) {
 }
 logMsg("getwork.php location:$location tester:$tester ex2:$ec2 recover:$recover");
 
-// See if there is an update.
 $is_done = false;
-if (!$is_done && $_GET['ver']) {
-    $is_done = GetUpdate();
-}
-// see if there is a video  job
-if (!$is_done && @$_GET['video']) {
-    $is_done = GetVideoJob();
-}
-if (!$is_done) {
-    $is_done = GetJob();
+if (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1) {
+    // See if there is an update.
+    if (!$is_done && $_GET['ver']) {
+        $is_done = GetUpdate();
+    }
+    // see if there is a video  job
+    if (!$is_done && @$_GET['video']) {
+        $is_done = GetVideoJob();
+    }
+    if (!$is_done) {
+        $is_done = GetJob();
+    }
 }
 
 // Send back a blank result if we didn't have anything.
