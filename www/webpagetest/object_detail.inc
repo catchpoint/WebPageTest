@@ -348,7 +348,11 @@ function AddHeaders(&$requests, $headers_file_name) {
             if (!$is_started) {
                 $is_started = ($trimmed == 'Request details:');
             } else {
-                if (!strncmp($line, 'Request ', 8)) {
+                if ($trimmed == 'Request Headers:' && isset($index)) {
+                    $headers_key = 'request';
+                } elseif ($trimmed == 'Response Headers:' && isset($index)) {
+                    $headers_key = 'response';
+                } elseif (!strncmp($line, 'Request ', 8)) {
                     _AddHeadersSave($requests, $index, $headers);
                     _AddHeadersInit($index, $headers, $headers_key);
 
@@ -357,10 +361,6 @@ function AddHeaders(&$requests, $headers_file_name) {
                     if ($request_num > 0) {
                         $index = $request_num - 1;
                     }
-                } elseif ($trimmed == 'Request Headers:' && isset($index)) {
-                    $headers_key = 'request';
-                } elseif ($trimmed == 'Response Headers:' && isset($index)) {
-                    $headers_key = 'response';
                 } elseif (strlen($trimmed) && isset($headers_key)) {
                     $headers[$headers_key][] = $trimmed;
                 }
