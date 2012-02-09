@@ -13786,6 +13786,8 @@ goog.provide('wpt.chromeDebugger');
 
 ((function() {  // namespace
 
+var g_instance = {};
+
 /**
  * Construct an object that connectes to the Chrome debugger.
  *
@@ -13799,60 +13801,103 @@ goog.provide('wpt.chromeDebugger');
  *                           object.
  */
 wpt.chromeDebugger.Init = function(tabId, chromeApi) {
-	var self = this;
-	this.tabId_ = tabId;
-	this.chromeApi_ = chromeApi;
-	if (this.chromeApi_.experimental['debugger']) {
-		this.chromeApi_.experimental.debugger.attach(this.tabId_, function(){
-			wpt.LOG.info('attached to debugger extension interface');
-			self.requests = {};
-			
-			// attach the event listener
-			self.chromeApi_.experimental.debugger.onEvent.addListener(function(tabId, message, params) {
-				// Network events
-				if (message === "Network.requestWillBeSent") {
-					if (params.request.url.indexOf('http') == 0) {
-						var detail = {};
-						detail.url = params.request.url;
-						detail.initiator = params.initiator;
-						detail.startTime = params.timestamp;
-						self.requests[params.requestId] = detail;
-					}
-				} else if (message === "Network.dataReceived") {
-					if (self.requests[params.requestId] !== undefined && 
-							self.requests[params.requestId]['firstByteTime'] === undefined) {
-						self.requests[params.requestId].firstByteTime = params.timestamp;
-					}
-				} else if (message === "Network.responseReceived") {
-					if (!params.response.fromDiskCache && 
-							self.requests[params.requestId] !== undefined) {
-						request = self.requests[params.requestId];
-						request.endTime = params.timestamp;
-						request.response = params.response;
-						wpt.chromeDebugger.sendRequestDetails(request);
-					}
-				}
-				
-				// console events
-				else if (message === "Console.messageAdded") {
-					wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
-				}
-				
-				// Timeline
-				else if (message === "Timeline.eventRecorded") {
-					wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
-				}
-			});
-			
-			// start the different interfaces we are interested in monitoring
-			self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Network.enable");
-			self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Console.enable");
-			// the timeline is pretty resource intensive - TODO, make this optional
-			//self.chromeApi_.experimental.debugger.sendRequest(self.tabId_, "Timeline.start");
-		});
-	}
+	try {
+		g_instance.tabId_ = tabId;
+		g_instance.chromeApi_ = chromeApi;
+		if (g_instance.chromeApi_.experimental['debugger']) {
+			// deal with the different function signatures for different chrome versions
+			try {
+				g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
+			} catch (err) {
+				var version = "0.1";
+				g_instance.chromeApi_.experimental.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
+			}
+		}
+  } catch (err) {
+    wpt.LOG.warning('Error initializing debugger interfaces: ' + err);
+  }
 };
 
+/**
+ * Actual message callback
+ */
+wpt.chromeDebugger.OnMessage = function(message, params) {
+	// Network events
+	if (message === "Network.requestWillBeSent") {
+		if (params.request.url.indexOf('http') == 0) {
+			var detail = {};
+			detail.url = params.request.url;
+			detail.initiator = params.initiator;
+			detail.startTime = params.timestamp;
+			g_instance.requests[params.requestId] = detail;
+		}
+	} else if (message === "Network.dataReceived") {
+		if (g_instance.requests[params.requestId] !== undefined && 
+				g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
+			g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+		}
+	} else if (message === "Network.responseReceived") {
+		if (!params.response.fromDiskCache && 
+				g_instance.requests[params.requestId] !== undefined) {
+			request = g_instance.requests[params.requestId];
+			request.endTime = params.timestamp;
+			request.response = params.response;
+			wpt.chromeDebugger.sendRequestDetails(request);
+		}
+	}
+	
+	// console events
+	else if (message === "Console.messageAdded") {
+		wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
+	}
+	
+	// Timeline
+	else if (message === "Timeline.eventRecorded") {
+		wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
+	}
+}
+
+/**
+ * Trampoline using the old interface
+ */
+wpt.chromeDebugger.OnMessageExperimental = function(tabId, message, params) {
+	wpt.chromeDebugger.OnMessage(message, params);
+}
+
+/**
+ * Attached using the old experimental interface
+ */
+wpt.chromeDebugger.OnAttachOld = function(){
+	wpt.LOG.info('attached to debugger old experimental extension interface');
+	g_instance.requests = {};
+	
+	// attach the event listener
+	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessageExperimental);
+	
+	// start the different interfaces we are interested in monitoring
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Network.enable");
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Console.enable");
+	// the timeline is pretty resource intensive - TODO, make this optional
+	//g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+}
+
+/**
+ * Attached using the new experimental interface
+ */
+wpt.chromeDebugger.OnAttachExperimental = function(){
+	wpt.LOG.info('attached to debugger experimental extension interface');
+	g_instance.requests = {};
+	
+	// attach the event listener
+	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessageExperimental);
+	
+	// start the different interfaces we are interested in monitoring
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
+	// the timeline is pretty resource intensive - TODO, make this optional
+	//g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+}
+			
 /**
  * Process and send the data for a single request
  * to the hook for processing
