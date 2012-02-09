@@ -73,7 +73,7 @@ bool SoftwareUpdate::UpdateSoftware(void) {
         while (ok && token_position >= 0) {
           if (line.Left(1) == _T('[')) {
             if (app.GetLength()) {
-              ok = InstallSoftware(app, file_url, md5, version, command);
+              ok = InstallSoftware(app, file_url, md5, version, command, 1);
             }
             app = line.Trim(_T("[] \t"));
             version.Empty();
@@ -98,7 +98,7 @@ bool SoftwareUpdate::UpdateSoftware(void) {
           line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
         if (ok && app.GetLength()) {
-          ok = InstallSoftware(app, file_url, md5, version, command);
+          ok = InstallSoftware(app, file_url, md5, version, command, 1);
         }
       }
     }
@@ -122,6 +122,8 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
+      WptTrace(loglevel::kFunction,
+                _T("[wptdriver] Checking browser - %s\n"), (LPCTSTR)url);
       CString info = HttpGetText(url);
       if (info.GetLength()) {
         CString browser, version, command, file_url, md5;
@@ -148,7 +150,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
           line = info.Tokenize(_T("\r\n"), token_position);
         }
 
-        ok = InstallSoftware(browser, file_url, md5, version, command);
+        ok = InstallSoftware(browser, file_url, md5, version, command, update);
         if (ok && browser_info._exe.GetLength()) {
           ok = FileExists(browser_info._exe);
         }
@@ -162,7 +164,8 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
     }
   }
   WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers complete\n"));
+            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers complete: %s\n"),
+            ok ? _T("Succeeded") : _T("FAILED!"));
   return ok;
 }
 
@@ -170,7 +173,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
   Download and install the software if necessary
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
-                                    CString version, CString command) {
+                             CString version, CString command, DWORD update) {
   bool ok = true;
 
   WptTrace(loglevel::kFunction,
@@ -188,7 +191,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
       DWORD len = sizeof(buff);
       if (RegQueryValueEx(key, app, 0, 0, (LPBYTE)buff, &len) 
           == ERROR_SUCCESS) {
-        if (!version.Compare(buff)) {
+        if (!version.Compare(buff) || !update) {
           install = false;
         }
       }
@@ -264,8 +267,8 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
   }
 
   WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::InstallSoftware Complete %s\n"),
-            (LPCTSTR)app);
+           _T("[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s\n"),
+           (LPCTSTR)app, ok ? _T("Succeeded") : _T("FAILED!"));
 
   return ok;
 }

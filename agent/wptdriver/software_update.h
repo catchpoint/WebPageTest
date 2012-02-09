@@ -31,7 +31,7 @@ protected:
 
   bool UpdateBrowsers(void);
   bool InstallSoftware(CString browser, CString file_url, CString md5,
-                        CString version, CString command);
+                        CString version, CString command, DWORD update);
   bool TimeToCheck(void);
 };
 
