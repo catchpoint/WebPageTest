@@ -11,7 +11,12 @@ $key = $_REQUEST['key'];
 $done = $_REQUEST['done'];
 $id = $_REQUEST['id'];
 $har = $_REQUEST['har'];
+$pcap = $_REQUEST['pcap'];
 $testInfo_dirty = false;
+// Android client sends the run-state in post params.
+$runNumber = $_REQUEST['_runNumber'];
+$cacheWarmed = $_REQUEST['_cacheWarmed'];
+$docComplete = $_REQUEST['_docComplete'];
 
 if( $_REQUEST['video'] )
 {
@@ -58,11 +63,15 @@ else
         // figure out the path to the results
         $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
-            
-        if (isset($har) && $har && isset($_FILES['file']['tmp_name']))
+         
+        if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
         {
             ProcessHAR($testPath);
         }
+	else if(isset($pcap) && $pcap && isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
+	{
+	    ProcessPCAP($testPath);
+	}
         elseif( isset($_FILES['file']) )
         {
             // extract the zip file
@@ -378,6 +387,30 @@ function KeepVideoForRun($testPath, $run)
     }
 }
 
+function ProcessPCAP($testPath)
+{
+    require_once('./lib/pcltar.lib.php3');
+    require_once('./lib/pclerror.lib.php3');
+    require_once('./lib/pcltrace.lib.php3');
+    global $runNumber;
+    global $cacheWarmed;
+    $pcapfile = $testPath . "/network.pcap";
+    move_uploaded_file($_FILES['file']['tmp_name'], $pcapfile);
+
+    // Execute pcap2har
+    $outfile = $testPath . "/results.har";
+    $consoleOut = array();
+    $returnCode = 0;
+    putenv("PYTHONPATH=./mobile/dpkt-1.7:./mobile/simplejson");
+    $retLine = exec("/usr/bin/python ./mobile/pcap2har/main.py $pcapfile $outfile 2>&1", $consoleOut, $returnCode);
+
+    $harText = file_get_contents($outfile);
+    if ($returnCode == 0)
+    {
+ 	ProcessHARText($testPath);		
+    }
+}
+
 function ProcessHAR($testPath)
 {
     require_once('./lib/pcltar.lib.php3');
@@ -400,7 +433,12 @@ function ProcessHAR($testPath)
         else
             move_uploaded_file($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
     }
+    ProcessHARText($testPath);
+}
 
+function ProcessHARText($testPath)
+{
+    global $done;
     // TODO(skerner): Should be able to always do har processing if there is a
     // HAR file.  Will need to test mobile agents.
     if (!$done) {
@@ -471,11 +509,23 @@ function ProcessHAR($testPath)
             // pageTimings record.  Prefer the explicit properties.  Fall
             // back to decoding the information from the name of the page
             // record.
+	    global $runNumber;
+	    global $cacheWarmed;
+	    global $docComplete;
             if (array_key_exists('_runNumber', $page))
             {
               $curPageData["run"] = $page['_runNumber'];
               $curPageData["cached"] = $page['_cacheWarmed'];
             }
+	    else if (isset($runNumber) && isset($cacheWarmed))
+	    {
+	      $curPageData["run"] = $runNumber;
+	      $curPageData["cached"] = $cacheWarmed;
+	      if (isset($docComplete) && $curPageData["docComplete"] <= 0)
+	      {
+		$curPageData["docComplete"] = $docComplete;
+	      }
+	    }
             else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches))
             {
               $curPageData["run"] = $matches[1];
@@ -484,8 +534,8 @@ function ProcessHAR($testPath)
             else
             {
               logMalformedInput("HAR error: Could not get runs or cache ".
-                                "status, from pages array or page name ".
-                                "\"$pageref\".");
+                                "status, from post params, pages array ".
+                                "or page name \"$pageref\".");
               // Sensible defaults:
               $curPageData["run"] =  1;
               $curPageData["cached"] = 0;
