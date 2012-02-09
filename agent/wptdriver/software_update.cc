@@ -102,6 +102,9 @@ bool SoftwareUpdate::UpdateSoftware(void) {
         }
       }
     }
+    if (ok) {
+      QueryPerformanceCounter(&_last_update_check);
+    }
   }
   return ok;
 }
@@ -286,8 +289,5 @@ bool SoftwareUpdate::TimeToCheck(void) {
     }
   }
 
-  if (should_check) {
-    _last_update_check.QuadPart = now.QuadPart;
-  }
   return should_check;
 }
