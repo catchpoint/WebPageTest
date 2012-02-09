@@ -493,6 +493,13 @@ CString HttpGetText(CString url) {
 DWORD HttpSaveFile(CString url, CString file) {
   DWORD len = 0;
 
+  TCHAR directory[MAX_PATH];
+  lstrcpy(directory, file);
+  *PathFindFileName(directory) = NULL;
+  if (lstrlen(directory) > 3) {
+    SHCreateDirectoryEx(NULL, directory, NULL);
+  }
+
   HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
@@ -517,11 +524,11 @@ DWORD HttpSaveFile(CString url, CString file) {
           len += bytes_read;
         }
         CloseHandle(file_handle);
-      }
+      } 
       InternetCloseHandle(http_request);
-    }
+    } 
     InternetCloseHandle(internet);
-  }
+  } 
   return len;
 }
 

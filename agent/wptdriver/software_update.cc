@@ -16,7 +16,9 @@ SoftwareUpdate::SoftwareUpdate(void) {
                                 NULL, SHGFP_TYPE_CURRENT, path)) ) {
     PathAppend(path, _T("webpagetest"));
     CreateDirectory(path, NULL);
-    lstrcat(path, _T("_data\\updates"));
+    lstrcat(path, _T("_data"));
+    CreateDirectory(path, NULL);
+    lstrcat(path, _T("\\updates"));
     CreateDirectory(path, NULL);
     _directory = path;
     _last_update_check.QuadPart = 0;
