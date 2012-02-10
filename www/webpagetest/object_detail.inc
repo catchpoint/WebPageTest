@@ -27,6 +27,9 @@ function getRequests($id, $test_path, $run, $is_cached,
 
     $has_secure_requests = false;
     foreach ($requests as $index => &$request) {
+        if (@$request['body']) {
+            $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&request={$request['number']}";
+        }
         if ($request['is_secure']) {
             $has_secure_requests = true;
         }

@@ -84,6 +84,25 @@ $page_description = "Website performance test details$testLabel";
 		table.details td.error {
 		  background: #ff8888;
 		}
+        .request-overlay {cursor:pointer;}
+        #dialog-title {display: inline;}
+        #dialog-title a {color: #fff;}
+        #radio {display:inline; padding-left: 20px; font-weight: normal; }
+        #request-headers, #response-headers, #response-body {display:none;}
+
+        .jqmWindow {display: none; position: fixed; top: 17%; left: 50%; margin-left: -300px; width: 600px; background-color: #dfdfdf; color: #333; border: 1px solid black; padding: 12px; }
+        .jqmOverlay { background-color: #000; }
+        div.jqDrag {cursor: move;}
+        .jqResize {width: 100%; height: 3px; background: #dfdfdf; border-top: 1px solid #a3a3a3; border-bottom: 1px solid #a3a3a3; cursor: ns-resize;}
+        div.jqmDialog {display: none; position: absolute; top: 17%; right: 20px; width: 600px; height: 300px;
+                        overflow: hidden; font-family:verdana,tahoma,helvetica;
+                        color: #000; background: #fff; border: 1px solid #000; }
+        div.jqmdTC { background: #303030; color: #000; height: 25px; padding: 7px 22px 5px 5px; font-family:"sans serif",verdana,tahoma,helvetica; font-weight: bold; * zoom: 1; cursor: move;}
+        div.jqmdBC { height: 250px; padding: 7px 7px 7px; overflow: auto;}
+        div.jqmdX { position: absolute; right: 7px; top: 8px; padding: 0 0 0 16px; height: 16px; width: 0px; background: url(/images/dialog-close.png) no-repeat 0px -16px; overflow: hidden;}
+        div.jqmdX:hover {background-position: 0px 0px;}
+        div.jqmdBC button {margin: 8px 10px 4px 10px; color: #777; background-color: #fff; cursor: pointer; }
+        
         /* Jquery UI */
         .ui-helper-hidden { display: none; }
         .ui-helper-hidden-accessible { position: absolute !important; clip: rect(1px 1px 1px 1px); clip: rect(1px,1px,1px,1px); }
@@ -140,7 +159,7 @@ $page_description = "Website performance test details$testLabel";
         .ui-button-icons-only { width: 3.4em; } 
         button.ui-button-icons-only { width: 3.7em; } 
         .ui-button .ui-button-text { display: block; line-height: 1.1;  }
-        .ui-button-text-only .ui-button-text { padding: 5px 10px; }
+        .ui-button-text-only .ui-button-text { padding: 2px 5px; }
         .ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text { padding: .4em; text-indent: -9999999px; }
         .ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: .4em 1em .4em 2.1em; }
         .ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text { padding: .4em 2.1em .4em 1em; }
@@ -476,14 +495,13 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <div id="request-dialog" class="jqmDialog">
-            <div id="dialog-resize" class="jqHandle jqResize"></div>
-            <div id="dialog-header" class="jqmdTC">
+            <div id="dialog-header" class="jqmdTC jqDrag">
                 <div id="dialog-title"></div>
                 <div id="radio">
-                    <input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label>
-                    <input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request Headers</label>
-                    <input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response Headers</label>
-                    <input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Response Body</label>
+                    <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
+                    <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
+                    <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
+                    <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Response Body</label></span>
                 </div>
             </div>
             <div class="jqmdBC">
@@ -518,7 +536,7 @@ $page_description = "Website performance test details$testLabel";
 
         // initialize the pop-up dialog        
         $('#request-dialog').jqm({overlay: 0, onHide: HideOverlays})
-              .jqResize('.jqResize');
+              .jqDrag('.jqDrag');
         $('input.jqmdX')
             .hover( function(){ $(this).addClass('jqmdXFocus'); }, 
                     function(){ $(this).removeClass('jqmdXFocus'); })
@@ -542,17 +560,68 @@ $page_description = "Website performance test details$testLabel";
             $("#" + panel).show();
         });
         
+        var wptBodyRequest;
+        
         function HighlightDependencies(request) {
-            $("#dialog-title").html('Request #' + request);
+            $('#request-dialog').css('top', $("#request-overlay-" + request).offset().top);
+            $("#dialog-title").html('<a href="#request' + request + '">Request #' + request + '</a>');
             var details='';
             var requestHeaders='';
             var responseHeaders='';
+            $("#response-body").html('');
+            $('#response-body-button').hide();
+            try {
+                if (wptBodyRequest !== undefined)
+                    wptBodyRequest.abort();
+            } catch (err) {
+            }
             if (wptRequestData[request - 1] !== undefined) {
                 var r = wptRequestData[request - 1];
                 if (r['full_url'] !== undefined)
                     details += '<b>URL:</b> ' + r['full_url'] + '<br>';
-                if (r['initiator'] !== undefined)
-                    details += '<b>Loaded By:</b> ' + r['initiator'] + '<br>';
+                if (r['initiator'] !== undefined) {
+                    details += '<b>Loaded By:</b> ' + r['initiator'];
+                    if (r['initiator_line'] !== undefined)
+                        details += ':' + r['initiator_line'];
+                    details += '<br>';
+                }
+                if (r['host'] !== undefined)
+                    details += '<b>Host: </b>' + r['host'] + '<br>';
+                if (r['ip_addr'] !== undefined)
+                    details += '<b>IP: </b>' + r['ip_addr'] + '<br>';
+                if (r['location'] !== undefined && r['location'].length)
+                    details += '<b>Location: </b>' + r['location'] + '<br>';
+                if (r['responseCode'] !== undefined)
+                    details += '<b>Error/Status Code: </b>' + r['responseCode'] + '<br>';
+                if (r['load_start'] !== undefined)
+                    details += '<b>Start Offset: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
+                if (r['dns_ms'] !== undefined && r['dns_ms'] != -1) {
+                    details += '<b>DNS Lookup: </b>' + r['dns_ms'] + ' ms<br>';
+                } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
+                    var dnsTime = r['dns_end'] - r['dns_start'];
+                    details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
+                }
+                if (r['connect_ms'] !== undefined && r['connect_ms'] != -1) {
+                    details += '<b>Initial Connection: </b>' + r['connect_ms'] + ' ms<br>';
+                    if (r['is_secure'] !== undefined && r['is_secure'] && r['sslTime'] !== undefined) {
+                        details += '<b>SSL Negotiation: </b>' + r['sslTime'] + ' ms<br>';
+                    }
+                } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
+                    var connectTime = r['connect_end'] - r['connect_start'];
+                    details += '<b>Initial Connection: </b>' + connectTime + ' ms<br>';
+                    if( r['ssl_end'] !== undefined && r['ssl_start'] !== undefined && r['ssl_end'] > 0 ) {
+                        var sslTime = r['ssl_end'] - r['ssl_start'];
+                        details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
+                    }
+                }
+                if (r['ttfb_ms'] !== undefined)
+                    details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms<br>';
+                if (r['download_ms'] !== undefined && r['download_ms'] >= 0)
+                    details += '<b>Content Download: </b>' + r['download_ms'] + ' ms<br>';
+                if (r['bytesIn'] !== undefined)
+                    details += '<b>Bytes In (downloaded): </b>' + (r['bytesIn'] / 1024.0).toFixed(1) + ' KB<br>';
+                if (r['bytesOut'] !== undefined)
+                    details += '<b>Bytes Out (uploaded): </b>' + (r['bytesOut'] / 1024.0).toFixed(1) + ' KB<br>';
                 if (r['headers'] !== undefined){
                     if (r.headers['request'] !== undefined){
                         for (i=0;i<r.headers.request.length;i++) {
@@ -563,6 +632,25 @@ $page_description = "Website performance test details$testLabel";
                         for (i=0;i<r.headers.response.length;i++) {
                             responseHeaders += r.headers.response[i] + '<br>';
                         }
+                    }
+                }
+                if (r['body_url'] !== undefined && r['body_url'].length) {
+                    try {
+                        $("#response-body").text('Loading...');
+                        $('#response-body-button').show();
+                        wptBodyRequest = new XMLHttpRequest();
+                        wptBodyRequest.open('GET', r['body_url'], true);
+                        wptBodyRequest.onreadystatechange = function() {
+                        if (wptBodyRequest.readyState == 4) {
+                            if (wptBodyRequest.status == 200) {
+                                $("#response-body").text(wptBodyRequest.responseText);
+                            } else {
+                                $("#response-body").text('');
+                            }
+                        }
+                      }
+                      wptBodyRequest.send();
+                    } catch (err) {
                     }
                 }
             }

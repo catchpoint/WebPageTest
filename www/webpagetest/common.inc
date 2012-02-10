@@ -13,7 +13,7 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 55);          // version of the sitewide css file
+define('VER_CSS', 56);          // version of the sitewide css file
 define('VER_JS', 18);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
