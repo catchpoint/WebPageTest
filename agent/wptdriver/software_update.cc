@@ -75,7 +75,8 @@ bool SoftwareUpdate::UpdateSoftware(void) {
         while (ok && token_position >= 0) {
           if (line.Left(1) == _T('[')) {
             if (app.GetLength()) {
-              ok = InstallSoftware(app, file_url, md5, version, command, 1);
+              ok = InstallSoftware(app, file_url, md5, version, command, 1, 
+                                    _T(""));
             }
             app = line.Trim(_T("[] \t"));
             version.Empty();
@@ -100,7 +101,8 @@ bool SoftwareUpdate::UpdateSoftware(void) {
           line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
         if (ok && app.GetLength()) {
-          ok = InstallSoftware(app, file_url, md5, version, command, 1);
+          ok = InstallSoftware(app, file_url, md5, version, command, 1, 
+                                _T(""));
         }
       }
     }
@@ -152,10 +154,8 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
           line = info.Tokenize(_T("\r\n"), token_position);
         }
 
-        ok = InstallSoftware(browser, file_url, md5, version, command, update);
-        if (ok && browser_info._exe.GetLength()) {
-          ok = FileExists(browser_info._exe);
-        }
+        ok = InstallSoftware(browser, file_url, md5, version, command, update,
+                              browser_info._exe);
       }
     }
 
@@ -175,7 +175,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
   Download and install the software if necessary
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
-                             CString version, CString command, DWORD update) {
+          CString version, CString command, DWORD update, CString check_file) {
   bool ok = true;
 
   WptTrace(loglevel::kFunction,
@@ -259,8 +259,12 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
           }
         }
         if (ok) {
-          RegSetValueEx(key, app, 0, REG_SZ, (const LPBYTE)(LPCTSTR)version, 
-                        (version.GetLength() + 1) * sizeof(TCHAR));
+          if (check_file.GetLength())
+            ok = FileExists(check_file);
+          if (ok) {
+            RegSetValueEx(key, app, 0, REG_SZ, (const LPBYTE)(LPCTSTR)version, 
+                          (version.GetLength() + 1) * sizeof(TCHAR));
+          }
         }
       }
 
