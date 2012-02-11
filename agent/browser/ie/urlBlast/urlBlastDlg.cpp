@@ -1172,13 +1172,25 @@ void CurlBlastDlg::KillProcs(void)
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::CloseDialogs(void)
 {
+	TCHAR szTitle[1025];
+  // make sure wptdriver isn't doing a software install
+  bool installing = false;
+  HWND hWptDriver = ::FindWindow(_T("wptdriver_wnd"), NULL);
+  if (hWptDriver) {
+    if (::GetWindowText(hWptDriver, szTitle, _countof(szTitle))) {
+      CString title = szTitle;
+      title.MakeLower();
+      if (title.Find(_T(" software")) >= 0)
+        installing = true;
+    }
+  }
+
 	// if there are any explorer windows open, disable this code (for local debugging and other work)
-	if( !::FindWindow(_T("CabinetWClass"), NULL ) )
+	if( !installing && !::FindWindow(_T("CabinetWClass"), NULL ) )
 	{
 		HWND hDesktop = ::GetDesktopWindow();
 		HWND hWnd = ::GetWindow(hDesktop, GW_CHILD);
 		TCHAR szClass[100];
-		TCHAR szTitle[1025];
 		CArray<HWND> hDlg;
 		const TCHAR * szKeepOpen[] = { 
 			_T("urlblast")
