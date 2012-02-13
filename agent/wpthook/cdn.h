@@ -79,6 +79,7 @@ CDN_PROVIDER cdnList[] = {
   {".fastly.net", "Fastly"},
   {".gslb.taobao.com", "Taobao"},
   {".gslb.tbcache.com", "Alimama"},
+  {".mirror-image.net", "Mirror Image"},
   {"END_MARKER", "END_MARKER"}
 };
 
