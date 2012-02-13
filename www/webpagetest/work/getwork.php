@@ -41,6 +41,9 @@ if (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1) {
     }
 }
 
+// kick off any cron work we need to do asynchronously
+CheckCron();
+
 // Send back a blank result if we didn't have anything.
 if (!$is_done) {
     header('Content-type: text/plain');
@@ -426,6 +429,63 @@ function GetUpdate()
     }
     
     return $ret;
+}
+
+/**
+* Send a quick http request locally if we need to process cron events (to each of the cron entry points)
+* 
+* This only runs events on 15-minute intervals and tries to keep it close to the clock increments (00, 15, 30, 45)
+* 
+*/
+function CheckCron() {
+    // open and lock the cron job file - abandon quickly if we can't get a lock
+    $should_run = false;
+    $cron_lock = fopen('./tmp/wpt_cron.lock', 'w+');
+    if ($cron_lock !== false) {
+        if (flock($cron_lock, LOCK_EX)) {
+            $last_run = 0;
+            if (is_file('./tmp/wpt_cron.dat'))
+                $last_run = file_get_contents('./tmp/wpt_cron.dat');
+            $now = time();
+            $elapsed = $now - $last_run;
+            if (!$last_run || $elapsed > 600) {
+                if ($elapsed > 1200) {
+                    // if it has been over 20 minutes, run regardless of the wall-clock time
+                    $should_run = true;
+                } else {
+                    $minute = date('i', $now) % 15;
+                    if ($minute < 5)
+                        $should_run = true;
+                }
+            }
+            if ($should_run) {
+                file_put_contents('./tmp/wpt_cron.dat', $now);
+            }
+        }
+        fclose($cron_lock);
+    }
+    
+    // send the crone requests
+    if ($should_run) {
+        SendCronRequest('/benchmarks/cron.php');
+    }
+}
+
+/**
+* Send a request with a really short timeout to fire an async cron event
+* 
+* @param mixed $relative_url
+*/
+function SendCronRequest($relative_url) {
+    $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($c, CURLOPT_TIMEOUT, 5);
+    curl_exec($c);
+    curl_close($c);
 }
 
 ?>
