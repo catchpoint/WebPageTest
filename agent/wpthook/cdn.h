@@ -80,6 +80,7 @@ CDN_PROVIDER cdnList[] = {
   {".gslb.taobao.com", "Taobao"},
   {".gslb.tbcache.com", "Alimama"},
   {".mirror-image.net", "Mirror Image"},
+  {".yottaa.net", "Yottaa"},
   {"END_MARKER", "END_MARKER"}
 };
 
