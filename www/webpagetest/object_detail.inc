@@ -35,6 +35,9 @@ function getRequests($id, $test_path, $run, $is_cached,
         }
         $request['index'] = $index;
     }
+    
+    BuildRequestDependencies($requests);
+    
     return $requests;
 }
 
@@ -404,6 +407,80 @@ function GetBasePage(&$requests) {
         }
     }
     return $basePage;
+}
+
+/**
+* Build the list of dependencies for each request
+* 
+* @param mixed $requests
+*/
+function BuildRequestDependencies(&$requests) {
+    foreach($requests as &$request) {
+        $request['loads'] = array();
+        RequestLoads($request['number'], $requests, $request['loads']);
+        $request['loaded_by'] = array();
+        RequestLoadedBy($request['number'], $requests, $request['loaded_by']);
+    }
+    
+    return $dependencies;
+}
+
+/**
+* Figure out all of the resources loaded by the given resource
+* 
+* @param mixed $index
+* @param mixed $requests
+* @param mixed $map
+* @param mixed $entry
+*/
+function RequestLoads($request_number, &$requests, &$entry) {
+    $request = &$requests[$request_number - 1];
+    if (array_key_exists('full_url', $request)) {
+        $url = $request['full_url'];
+        foreach ($requests as &$req) {
+            if (array_key_exists('initiator', $req) && $req['initiator'] == $url) {
+                $loads_request = $req['number'];
+                $entry_exists = false;
+                foreach($entry as $entry_request) {
+                    if ($entry_request == $loads_request)
+                        $entry_exists = true;
+                }
+                if (!$entry_exists) {
+                    $entry[] = $loads_request;
+                    RequestLoads($loads_request, $requests, $entry);
+                }
+            }
+        }
+    }
+}
+
+/**
+* Figure out all of the resources required to load the given resource
+* 
+* @param mixed $index
+* @param mixed $requests
+* @param mixed $map
+* @param mixed $entry
+*/
+function RequestLoadedBy($request_number, &$requests, &$entry) {
+    $request = &$requests[$request_number - 1];
+    if (array_key_exists('initiator', $request)) {
+        $initiator = $request['initiator'];
+        foreach ($requests as &$req) {
+            if (array_key_exists('full_url', $req) && $req['full_url'] == $initiator) {
+                $loaded_by = $req['number'];
+                $entry_exists = false;
+                foreach($entry as $entry_request) {
+                    if ($entry_request == $loaded_by)
+                        $entry_exists = true;
+                }
+                if (!$entry_exists) {
+                    $entry[] = $loaded_by;
+                    RequestLoadedBy($loaded_by, $requests, $entry);
+                }
+            }
+        }
+    }
 }
 
 ?>

@@ -28,9 +28,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 
 .arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
 .position-container {position: relative; left: 0; top: 0;}
-.position-background {position: relative; left: 0; top: 0;}
-.request-overlay {padding: 0; margin: 0; width: 928px; left: 1px; background-color: #FFF; overflow: hidden; opacity:0.9; filter:alpha(opacity=90);}
-.transparent {opacity:0.0; filter:alpha(opacity=0);}
+.position-background {position: absolute; left: 0; top: 0;}
 
 #optimization {float:right; width:414px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}

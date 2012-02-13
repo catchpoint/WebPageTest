@@ -13,8 +13,8 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 56);          // version of the sitewide css file
-define('VER_JS', 18);            // version of the sitewide javascript file
+define('VER_CSS', 57);          // version of the sitewide css file
+define('VER_JS', 19);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);  // Value used as a flag for an unknown time.
@@ -1283,8 +1283,10 @@ function GetPendingTests($location, &$count, &$avgTime)
     }
     // now count just the low priority tests
     if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-        foreach( $queue as &$q )
-            $total += count($q);
+        foreach( $queue as $priority => &$q ) {
+            if ($priority < 9)
+                $total += count($q);
+        }
         $count = count($queue[0]);
     }
     return $total;

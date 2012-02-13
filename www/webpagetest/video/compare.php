@@ -180,13 +180,6 @@ else
                     margin-right:auto; 
                     clear: both;
                 }
-                #waterfall
-                {
-                    clear: both;
-                    position: relative; left: 0; top: 0;
-                    top: -3em;
-                    width: 930px;
-                }
                 #advanced
                 {
                     background: black;
@@ -211,9 +204,10 @@ else
                     width: 2px;
                     background-color: #D00;
                 }
-                #waterfallImage {
-                    padding: 10px 0;
-                }
+                <?php
+                include "waterfall.css";
+                ?>
+                div.waterfall-container {top: -8em;}
             </style>
         </head>
         <body>
@@ -275,6 +269,10 @@ else
                     $('#marker').css('left', marker + 'px');
                 }
                 UpdateScrollPosition();
+                
+                <?php
+                include "waterfall.js";
+                ?>
             </script>
         </body>
     </html>
@@ -553,45 +551,11 @@ function ScreenShotTable()
         // display the waterfall if there is only one test
         if( count($tests) == 1 )
         {
-        ?>
-        <div id="waterfall">
-            <map name="waterfall_map">
-            <?php
-                $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
-                $secure = false;
-                $haveLocations = false;
-                $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, false);
-                $options = array(
-                    'id' => $tests[0]['id'],
-                    'path' => $tests[0]['path'],
-                    'run_id' => $tests[0]['run'],
-                    'is_cached' => $tests[0]['cached'],
-                    'use_cpu' => false,
-                    'width' => 930
-                    );
-                $rows = GetRequestRows($requests, false);
-                $map = GetWaterfallMap($rows, $url, $options);
-                foreach($map as $entry)
-                {
-                    if( $entry['request'] !== NULL )
-                    {
-                        $index = $entry['request'] + 1;
-                        $title = $index . ': ' . $entry['url'];
-                        echo '<area alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                    }
-                    else
-                        echo '<area alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                }
-            ?>
-            </map>
-            
-            <?php
-            echo "<img id=\"waterfallImage\" usemap=\"#waterfall_map\" border=\"0\" alt=\"\" src=\"/waterfall.php?width=930&max=$filmstrip_end_time&mime=1&state=1&test={$tests[0]['id']}&run={$tests[0]['run']}&cached={$tests[0]['cached']}&cpu=0&bw=0\">";
-            ?>
-            <div id="marker"></div>
-        </div>
-        
-        <?php
+            $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
+            $secure = false;
+            $haveLocations = false;
+            $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
+            InsertWaterfall($url, $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
         }
         ?>
         

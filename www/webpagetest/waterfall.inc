@@ -858,4 +858,89 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
     }
 }
 
+/**
+* Insert an interactive waterfall into the current page
+* 
+*/
+function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_options = '') {
+    // create the image map (this is for fallback when Javascript isn't enabled
+    // but also gives us the position for each request)
+    echo '<map name="waterfall_map">';
+    $options = array(
+        'id' => $id,
+        'path' => $testPath,
+        'run_id' => $run,
+        'is_cached' => @$_GET['cached'],
+        'use_cpu' => true,
+        'width' => 930
+        );
+    $rows = GetRequestRows($requests, false);
+    $map = GetWaterfallMap($rows, $url, $options);
+    foreach($map as $entry) {
+        if (isset($entry['request'])) {
+            $index = $entry['request'] + 1;
+            $title = $index . ': ' . $entry['url'];
+            echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+        } elseif (isset($entry['url'])) {
+            echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+        } elseif (isset($entry['csi'])) {
+            echo '<area nohref="nohref" alt="' . $entry['csi'] . '" title="' . $entry['csi'] . '" shape=POLYGON coords="' . $entry['coords'] . '">' . "\n";
+        }
+    }
+    echo '</map>';
+    
+    // main container for the waterfall
+    echo '<div class="waterfall-container">';
+    echo "<img class=\"waterfall-image\" alt=\"\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+
+    // draw div's over each of the waterfall elements (use the image map as a reference)
+    foreach($map as $entry) {
+        if (isset($entry['request'])) {
+            $index = $entry['request'] + 1;
+            $top = $entry['top'];
+            $height = abs($entry['bottom'] - $entry['top']) + 1;
+            $tooltip = "$index: {$entry['url']}";
+            if (strlen($tooltip) > 100) {
+                $split = strpos($tooltip, '?');
+                if ($split !== false)
+                    $tooltip = substr($tooltip, 0, $split) . '...';
+                $tooltip = FitText($tooltip, 100);
+            }
+            echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+        }
+    }
+
+    ?>
+    <div id="request-dialog" class="jqmDialog">
+        <div id="dialog-header" class="jqmdTC jqDrag">
+            <div id="dialog-title"></div>
+            <div id="request-dialog-radio">
+                <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
+                <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
+                <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
+                <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Response Body</label></span>
+            </div>
+        </div>
+        <div class="jqmdBC">
+            <div id="dialog-contents" class="jqmdMSG">
+                <div id="request-details" class="dialog-tab-content"></div>
+                <div id="request-headers" class="dialog-tab-content"></div>
+                <div id="response-headers" class="dialog-tab-content"></div>
+                <div id="response-body" class="dialog-tab-content"></div>
+            </div>
+        </div>
+        <div class="jqmdX jqmClose"></div>
+    </div>
+    <div id="marker"></div>
+    <?php
+
+    echo '</div>'; // container
+    
+    // script support
+    echo "<script type=\"text/javascript\">\n";
+    echo "var wptRequestCount=" . count($requests) . ";\n";
+    echo "var wptRequestData=" . json_encode($requests) . ";\n";
+    echo "</script>";
+}
+
 ?>
