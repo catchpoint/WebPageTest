@@ -7,6 +7,7 @@ set_time_limit(0);
 chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
+require 'breakdown.inc';
 
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
@@ -135,6 +136,12 @@ function CollectResults($benchmark, &$state) {
                     $test_data['cached'] = $cached;
                     $test_data['run'] = $run;
                     $test_data['id'] = $test['id'];
+                    $breakdown = getBreakdown($test['id'], $testPath, $run, $cached, $requests);
+                    foreach ($breakdown as $mime => $mime_data) {
+                        $test_data["{$mime}_requests"] = $mime_data['requests'];
+                        $test_data["{$mime}_bytes"] = $mime_data['bytes'];
+                    }
+                    unset($requests);
                     $data[] = $test_data;
                 }
             }
