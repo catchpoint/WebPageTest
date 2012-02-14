@@ -9,20 +9,12 @@ require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
 
-@ob_start();
-function FlushOutput() {
-    if (ob_get_length()){            
-        @ob_flush();
-        @flush();
-        @ob_end_flush();
-    }
-    @ob_start();
-}
-
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
 if ($lock !== false) {
     if (flock($lock, LOCK_EX | LOCK_NB)) {
+        unlink('./benchmark.log');
+
         // see if we are using API keys
         $key = null;
         if (is_file('./settings/keys.ini')) {
@@ -41,8 +33,6 @@ if ($lock !== false) {
     }
     fclose($lock);
 }
-
-FlushOutput();
 
 /**
 * Do all of the processing for a given benchmark
@@ -81,14 +71,13 @@ function ProcessBenchmark($benchmark) {
                 $state['last_run'] = 0;
             $now = time();
             if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now)) {
-                echo "Running benchmark '$benchmark'<br>\n";
-                FlushOutput();
+                logMsg("Running benchmark '$benchmark'", './benchmark.log', true);
                 if (SubmitBenchmark($configurations, $state)) {
                     $state['last_run'] = $now;
                     $state['running'] = true;
                 }
             } else {
-                echo "Benchmark '$benchmark' does not need to be run<br>\n";
+                logMsg("Benchmark '$benchmark' does not need to be run", './benchmark.log', true);
             }
         }
     }
@@ -109,21 +98,22 @@ function CheckBenchmarkStatus(&$state) {
                 $status = GetTestStatus($test['id'], false);
                 $now = time();
                 if ($status['statusCode'] >= 400) {
-                    echo "Test {$test['id']} : Failed<br>\n";
+                    logMsg("Test {$test['id']} : Failed", './benchmark.log', true);
                     $test['completed'] = $now;
                 } elseif( $status['statusCode'] == 200 ) {
-                    echo "Test {$test['id']} : Completed<br>\n";
-                    if ($status['completeTime']) {
+                    logMsg("Test {$test['id']} : Completed", './benchmark.log', true);
+                    if (array_key_exists('completeTime', $status) && $status['completeTime']) {
                         $test['completed'] = $status['completeTime'];
+                    } elseif (array_key_exists('startTime', $status) && $status['startTime']) {
+                        $test['completed'] = $status['startTime'];
                     } else {
                         $test['completed'] = $now;
                     }
                 } else {
                     $done = false;
-                    echo "Test {$test['id']} : {$status['statusText']}<br>\n";
+                    logMsg("Test {$test['id']} : {$status['statusText']}", './benchmark.log', true);
                 }
             }
-            FlushOutput();
         }
         
         if ($done) {
@@ -170,8 +160,7 @@ function CollectResults($benchmark, &$state) {
         }
         
         if (count($data)) {
-            echo "Collected data for " . count($data) . " individual runs<br>\n";
-            FlushOutput();
+            logMsg("Collected data for " . count($data) . " individual runs", './benchmark.log', true);
             if (!is_dir("./results/benchmarks/$benchmark/data"))
                 mkdir("./results/benchmarks/$benchmark/data", 0777, true);
             $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $start_time) . '.json';
@@ -288,13 +277,12 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
                 array_key_exists('data', $result) && 
                 array_key_exists('testId', $result['data']) ){
                 $id = $result['data']['testId'];
-                echo "Test submitted: $id<br>\n";
+                logMsg("Test submitted: $id", './benchmark.log', true);
             } else {
-                echo "Error submitting benchmark test: {$result['statusText']}<br>\n";
+                logMsg("Error submitting benchmark test: {$result['statusText']}", './benchmark.log', true);
             }
         }
     }
-    FlushOutput();
     
     return $id;
 }
