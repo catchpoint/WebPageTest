@@ -16,7 +16,7 @@ $pcap = $_REQUEST['pcap'];
 // When we upgrade the pcap to har converter, we need to test
 // each agent.  Agents can opt in to testing the latest
 // version by setting this POST param.
-$useLatestPCap2Har = $_REQUEST['$useLatestPCap2Har'] || false;
+$useLatestPCap2Har = $_REQUEST['useLatestPCap2Har'];
 
 // Android client sends the run-state in post params.
 $runNumber = $_REQUEST['_runNumber'];
