@@ -9,6 +9,16 @@ require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
 
+@ob_start();
+function FlushOutput() {
+    if (ob_get_length()){            
+        @ob_flush();
+        @flush();
+        @ob_end_flush();
+    }
+    @ob_start();
+}
+
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
 if ($lock !== false) {
@@ -31,6 +41,8 @@ if ($lock !== false) {
     }
     fclose($lock);
 }
+
+FlushOutput();
 
 /**
 * Do all of the processing for a given benchmark
@@ -70,6 +82,7 @@ function ProcessBenchmark($benchmark) {
             $now = time();
             if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now)) {
                 echo "Running benchmark '$benchmark'<br>\n";
+                FlushOutput();
                 if (SubmitBenchmark($configurations, $state)) {
                     $state['last_run'] = $now;
                     $state['running'] = true;
@@ -109,6 +122,7 @@ function CheckBenchmarkStatus(&$state) {
                     echo "Test {$test['id']} : {$status['statusText']}<br>\n";
                 }
             }
+            FlushOutput();
         }
         
         if ($done) {
@@ -156,6 +170,7 @@ function CollectResults($benchmark, &$state) {
         
         if (count($data)) {
             echo "Collected data for " . count($data) . " individual runs<br>\n";
+            FlushOutput();
             if (!is_dir("./results/benchmarks/$benchmark/data"))
                 mkdir("./results/benchmarks/$benchmark/data", 0777, true);
             $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $start_time) . '.json';
@@ -278,6 +293,7 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
             }
         }
     }
+    FlushOutput();
     
     return $id;
 }
