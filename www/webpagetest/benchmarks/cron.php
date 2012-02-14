@@ -12,7 +12,7 @@ require 'breakdown.inc';
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
 if ($lock !== false) {
-    if (flock($lock, LOCK_EX)) {
+    if (flock($lock, LOCK_EX | LOCK_NB)) {
         // see if we are using API keys
         $key = null;
         if (is_file('./settings/keys.ini')) {
