@@ -107,15 +107,16 @@ function CheckBenchmarkStatus(&$state) {
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
                 $status = GetTestStatus($test['id'], false);
+                $now = time();
                 if ($status['statusCode'] >= 400) {
                     echo "Test {$test['id']} : Failed<br>\n";
-                    $test['completed'] = now;
+                    $test['completed'] = $now;
                 } elseif( $status['statusCode'] == 200 ) {
                     echo "Test {$test['id']} : Completed<br>\n";
                     if ($status['completeTime']) {
                         $test['completed'] = $status['completeTime'];
                     } else {
-                        $test['completed'] = now;
+                        $test['completed'] = $now;
                     }
                 } else {
                     $done = false;
