@@ -12,11 +12,19 @@ $done = $_REQUEST['done'];
 $id = $_REQUEST['id'];
 $har = $_REQUEST['har'];
 $pcap = $_REQUEST['pcap'];
-$testInfo_dirty = false;
+
+// When we upgrade the pcap to har converter, we need to test
+// each agent.  Agents can opt in to testing the latest
+// version by setting this POST param.
+$useLatestPCap2Har = $_REQUEST['$useLatestPCap2Har'] || false;
+
 // Android client sends the run-state in post params.
 $runNumber = $_REQUEST['_runNumber'];
 $cacheWarmed = $_REQUEST['_cacheWarmed'];
 $docComplete = $_REQUEST['_docComplete'];
+
+$testInfo_dirty = false;
+
 
 if( $_REQUEST['video'] )
 {
@@ -68,10 +76,12 @@ else
         {
             ProcessHAR($testPath);
         }
-	else if(isset($pcap) && $pcap && isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
-	{
-	    ProcessPCAP($testPath);
-	}
+        elseif(isset($pcap) && $pcap &&
+               isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
+        {
+             ProcessPCAP($testPath);
+
+        }
         elseif( isset($_FILES['file']) )
         {
             // extract the zip file
@@ -387,6 +397,48 @@ function KeepVideoForRun($testPath, $run)
     }
 }
 
+/**
+ * Exec the pcap2har python script, which converts a
+ * .pcap file to a .har .
+ *
+ * @param string $pcapPath Path to read the PCAP file from.
+ * @param string $harPath Path to which the HAR file will be written.
+ * @param boolean $useLatestPCap2Har Use the latest version of pcap2har.py,
+ *                as opposed to the stable version.
+ * @param &array<string> $consoleOut Console output will be stored
+ *                       in this array.
+ * @return int The return code from pcap2har.py.
+ */
+function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
+                      &$consoleOut) {
+
+  putenv("PYTHONPATH=./mobile/dpkt-1.7:./mobile/simplejson");
+
+  // When we update pcap2har, we need to test that each
+  // agent can use the new version.  To make testing easy,
+  // the agent that uploads a .pcap can control which version
+  // of pcap2har.py is used.  If $useLatestPcap is false,
+  // use the stable version.  If $useLatestPcap is true,
+  // use the latest version.  Once a version is known to
+  // work with all agents, we promote the latest version
+  // to stable.
+  if ($useLatestPCap2Har) {
+    $pcap2harExe = "./mobile/pcap2har_latest/main.py";
+  } else {
+    $pcap2harExe = "./mobile/pcap2har/main.py";
+  }
+
+  $retLine = exec("/usr/bin/python ".
+                  "$pcap2harExe $pcapPath $harPath 2>&1",
+                  $consoleOut,
+                  $returnCode);
+
+  return $returnCode;
+}
+
+/**
+ * @param string $testPath
+ */
 function ProcessPCAP($testPath)
 {
     require_once('./lib/pcltar.lib.php3');
@@ -394,21 +446,27 @@ function ProcessPCAP($testPath)
     require_once('./lib/pcltrace.lib.php3');
     global $runNumber;
     global $cacheWarmed;
+
     $pcapfile = $testPath . "/network.pcap";
     move_uploaded_file($_FILES['file']['tmp_name'], $pcapfile);
 
-    // Execute pcap2har
-    $outfile = $testPath . "/results.har";
-    $consoleOut = array();
-    $returnCode = 0;
-    putenv("PYTHONPATH=./mobile/dpkt-1.7:./mobile/simplejson");
-    $retLine = exec("/usr/bin/python ./mobile/pcap2har/main.py $pcapfile $outfile 2>&1", $consoleOut, $returnCode);
+    $harFile = $testPath . "/results.har";
 
-    $harText = file_get_contents($outfile);
-    if ($returnCode == 0)
+    $consoleOut = array();
+
+    // Execute pcap2har
+    $returnCode = ExecPcap2Har($pcapfile, $harFile,
+                               $useLatestPCap2Har,
+                               $consoleOut);
+
+    if ($returnCode != 0)
     {
- 	ProcessHARText($testPath);		
+       logMalformedInput("pcap to HAR converter returned $returnCode.  ".
+                        "Expected 0.  pcap file is $pcapfile .  ".
+                        "Console output is $consoleOut .");
+       return;
     }
+    ProcessHARText($testPath);
 }
 
 function ProcessHAR($testPath)
@@ -442,7 +500,8 @@ function ProcessHARText($testPath)
     // TODO(skerner): Should be able to always do har processing if there is a
     // HAR file.  Will need to test mobile agents.
     if (!$done) {
-      logMsg("Processing har, but not done.  Potential backward compatibility issues.");
+        logMsg("Processing har, but not done.  ".
+               "Potential backward compatibility issues.");
     }
 
     // Save the json HAR file
@@ -452,7 +511,7 @@ function ProcessHARText($testPath)
     $parsedHar = json_decode($rawHar, true);
     if (!$parsedHar)
     {
-      logMalformedInput("Failed to parse json file");
+        logMalformedInput("Failed to parse json file");
     }
     else
     {

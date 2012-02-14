@@ -29,7 +29,7 @@ date_default_timezone_set('UTC');
 //   of a second
 //       YYYY-MM-DDThh:mm:ss.sTZD (eg 1997-07-16T19:20:30.45+01:00)
 
-class ExampleClassTests extends \Enhance\TestFixture
+class WorkDoneDateTests extends \Enhance\TestFixture
 {
   public function TestInvalidISO8601Dates() {
     // "not a date" should fail to parse as a date.
