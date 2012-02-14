@@ -8,21 +8,26 @@ chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
 
+// make sure we don't execute multiple cron jobs concurrently
+$lock = fopen("./tmp/benchmark_cron.lock", "w+");
+if ($lock !== false) {
+    if (flock($lock, LOCK_EX)) {
+        // see if we are using API keys
+        $key = null;
+        if (is_file('./settings/keys.ini')) {
+            $keys = parse_ini_file('./settings/keys.ini', true);
+            if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
+                $key = $keys['server']['key'];
+        }
 
-// see if we are using API keys
-$key = null;
-if (is_file('./settings/keys.ini')) {
-    $keys = parse_ini_file('./settings/keys.ini', true);
-    if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
-        $key = $keys['server']['key'];
-}
-
-// load the list of benchmarks
-$bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-if (!count($bm_list))
-    $bm_list = glob('./settings/benchmarks/*.php');
-foreach ($bm_list as $benchmark) {
-    ProcessBenchmark(basename($benchmark, '.php'));
+        // load the list of benchmarks
+        $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (!count($bm_list))
+            $bm_list = glob('./settings/benchmarks/*.php');
+        foreach ($bm_list as $benchmark) {
+            ProcessBenchmark(basename($benchmark, '.php'));
+        }
+    }
 }
 
 /**
