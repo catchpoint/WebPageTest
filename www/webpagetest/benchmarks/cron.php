@@ -124,6 +124,7 @@ function CollectResults($benchmark, &$state) {
                     $data_row = $test_data;
                     unset($test_data['URL']);
                     $test_data['url'] = $test['url'];
+                    $test_data['label'] = $test['label'];
                     $test_data['location'] = $test['location'];
                     $test_data['config'] = $test['config'];
                     $test_data['cached'] = $cached;
@@ -160,10 +161,17 @@ function SubmitBenchmark(&$configurations, &$state) {
     foreach ($configurations as $config_label => &$config) {
         $urls = file("./settings/benchmarks/{$config['url_file']}", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($urls as $url) {
+            $label = '';
+            $separator = strpos($url, "\t");
+            if ($separator !== false) {
+                $label = substr($url, 0, $separator);
+                $url = substr($url, $separator + 1);
+            }
             foreach ($config['locations'] as $location) {
                 $id = SubmitBenchmarkTest($url, $location, $config['settings']);
                 if ($id !== false ) {
                     $state['tests'][] = array(  'id' => $id, 
+                                                'label' => $label,
                                                 'url' => $url, 
                                                 'location' => $location, 
                                                 'config' => $config_label,
@@ -210,8 +218,16 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
         $data .= "\r\n--$boundary\r\n"; 
     }
 
-    $data .= "Content-Disposition: form-data; name=\"url\"\r\n\r\n$url";
-    $data .= "\r\n--$boundary\r\n"; 
+    if (!strncasecmp($url, 'script:', 7)) {
+        $url = str_replace('\r', "\r", $url);
+        $url = str_replace('\n', "\n", $url);
+        $url = str_replace('\t', "\t", $url);
+        $data .= "Content-Disposition: form-data; name=\"script\"\r\n\r\n$url";
+        $data .= "\r\n--$boundary\r\n"; 
+    } else {
+        $data .= "Content-Disposition: form-data; name=\"url\"\r\n\r\n$url";
+        $data .= "\r\n--$boundary\r\n"; 
+    }
     $data .= "Content-Disposition: form-data; name=\"location\"\r\n\r\n$location";
     $data .= "\r\n--$boundary\r\n"; 
     $data .= "Content-Disposition: form-data; name=\"f\"\r\n\r\njson";
