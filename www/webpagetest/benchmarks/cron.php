@@ -29,6 +29,7 @@ if ($lock !== false) {
             ProcessBenchmark(basename($benchmark, '.php'));
         }
     }
+    fclose($lock);
 }
 
 /**
@@ -53,6 +54,12 @@ function ProcessBenchmark($benchmark) {
         CollectResults($benchmark, $state);
     } else {
         $state['running'] = false;
+    }
+    
+    if (!$state['running'] && 
+        (array_key_exists('runs', $state) && count($state['runs'])) &&
+        (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation']) ){
+        //AggregateResults($benchmark, $state);
     }
     
     // see if we need to kick off a new benchmark run
@@ -156,6 +163,7 @@ function CollectResults($benchmark, &$state) {
             $state['runs'][] = $start_time;
         }
         unset($state['tests']);
+        $state['needs_aggregation'] = true;
     }
 }
 
@@ -272,5 +280,234 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
     }
     
     return $id;
+}
+
+/**
+* Generate aggregate metrics for the given test
+* 
+* @param mixed $benchmark
+* @param mixed $state
+*/
+function AggregateResults($benchmark, $state) {
+    if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
+        mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
+    if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
+        $info = json_decode("./results/benchmarks/$benchmark/aggregate/info.json");
+    } else {
+        $info = array('runs' => array());
+    }
+    
+    if (!array_key_exists('runs', $info)) {
+        $info['runs'] = array();
+    }
+    
+    // store a list of metrics that we aggregate in the info block
+    $info['metrics'] = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 
+                                'connections', 'requests', 'requestsDoc', 'render', 
+                                'fullyLoaded', 'docTime', 'domTime', 'score_cache', 'score_cdn',
+                                'score_gzip', 'score_keep-alive', 'score_compress', 'gzip_total', 'gzip_savings',
+                                'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time', 
+                                'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete',
+                                'js_requests', 'js_bytes', 'css_requests', 'css_bytes', 'html_requests', 'html_bytes', 
+                                'text_requests', 'text_bytes', 'image_requests', 'image_bytes', 'flash_requests', 'flash_bytes');
+
+    // loop through all of the runs and see which ones we don't have aggregates for
+    foreach ($state['runs'] as $run_time) {
+        if (!array_key_exists($run_time, $info['runs'])) {
+            $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $run_time) . '.json';
+            if (gz_is_file($file_name)) {
+                $data = json_decode(gz_file_get_contents($file_name), true);
+                CreateAggregates($info, $data, $benchmark, $run_time);
+                unset($data);
+                $info['runs'][$run_time] = 1;
+            }
+        }
+    }
+    
+    $state['needs_aggregation'] = false;
+}
+
+/**
+* Create the various aggregations for the given data chunk
+* 
+* @param mixed $info
+* @param mixed $data
+* @param mixed $benchmark
+*/
+function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
+    foreach ($info['metrics'] as $metric) {
+        $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+        if (gz_is_file($metric_file)) {
+            $agg_data = json_decode(gz_file_get_contents($metric_file), true);
+        } else {
+            $agg_data = array();
+        }
+        AggregateMetric($metric, $info, $data, $run_time, $agg_data);
+        gz_file_put_contents($metric_file, json_encode($agg_data));
+        unset($agg_data);
+        
+        if (array_key_exists('labels', $info) && count($info['labels'])) {
+            $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.labels.json";
+            if (gz_is_file($metric_file)) {
+                $agg_data = json_decode(gz_file_get_contents($metric_file), true);
+            } else {
+                $agg_data = array();
+            }
+            AggregateMetricByLabel($metric, $info, $data, $run_time, $agg_data);
+            gz_file_put_contents($metric_file, json_encode($agg_data));
+            unset($agg_data);
+        }
+    }
+}
+
+/**
+* Create the aggregates for the given metric grouped by config and cached state
+* 
+* @param mixed $info
+* @param mixed $data
+* @param mixed $run_time
+* @param mixed $agg_data
+*/
+function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
+    $configs = array();
+    // group the individual records
+    foreach ($data as &$record) {
+        if (array_key_exists($metric, $record) && 
+            array_key_exists('result', $record) && 
+            array_key_exists('config', $record) && 
+            array_key_exists('cached', $record) && 
+            strlen($record['config']) &&
+            ($record['result'] == 0 || $record['result'] == 99999)) {
+            $config = $record['config'];
+            $cached = $record['cached'];
+            if (!array_key_exists($config, $configs)) {
+                $configs[$config] = array();
+            }
+            if (!array_key_exists($cached, $configs[$config])) {
+                $configs[$config][$cached] = array();
+            }
+            $configs[$config][$cached][] = $record[$metric];
+            
+            if (array_key_exists('label', $record) &&
+                strlen($record['label'])) {
+                if (!array_key_exists('labels', $info)) {
+                    $info['labels'] = array();
+                }
+                if (!array_key_exists($record['label'], $info['labels'])) {
+                    $info['labels'][$record['label']] = $record['label'];
+                }
+            }
+        }
+    }
+    
+    foreach ($configs as $config => &$cache_state) {
+        foreach ($cache_state as $cached => &$records) {
+            $entry = CalculateMetrics($records);
+            if (is_array($entry)) {
+                $entry['time'] = $run_time;
+                $entry['config'] = $config;
+                $entry['cached'] = $cached;
+                $agg_data[] = $entry;
+                unset ($entry);
+            }
+        }
+    }
+}
+
+/**
+* Create the aggregates for the given metric grouped by config, label and cached state
+* 
+* @param mixed $info
+* @param mixed $data
+* @param mixed $run_time
+* @param mixed $agg_data
+*/
+function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
+    $labels = array();
+    // group the individual records
+    foreach ($data as &$record) {
+        if (array_key_exists($metric, $record) && 
+            array_key_exists('result', $record) && 
+            array_key_exists('config', $record) && 
+            array_key_exists('cached', $record) && 
+            array_key_exists('label', $record) && 
+            strlen($record['config']) &&
+            strlen($record['label']) &&
+            ($record['result'] == 0 || $record['result'] == 99999)) {
+            $label = $record['label'];
+            $config = $record['config'];
+            $cached = $record['cached'];
+            if (!array_key_exists($label, $labels)) {
+                $labels[$label] = array();
+            }
+            if (!array_key_exists($config, $labels[$label])) {
+                $labels[$label][$config] = array();
+            }
+            if (!array_key_exists($cached, $labels[$label][$config])) {
+                $labels[$label][$config][$cached] = array();
+            }
+            $labels[$label][$config][$cached][] = $record[$metric];
+        }
+    }
+
+    foreach ($labels as $label => &$configs) {
+        foreach ($configs as $config => &$cache_state) {
+            foreach ($cache_state as $cached => &$records) {
+                $entry = CalculateMetrics($records);
+                if (is_array($entry)) {
+                    $entry['time'] = $run_time;
+                    $entry['label'] = $label;
+                    $entry['config'] = $config;
+                    $entry['cached'] = $cached;
+                    $agg_data[] = $entry;
+                    unset ($entry);
+                }
+            }
+        }
+    }
+}
+
+/** 
+* Calculate several aggregations on the given data set
+* 
+* @param mixed $records
+*/
+function CalculateMetrics(&$records) {
+    $entry = null;
+    sort($records, SORT_NUMERIC);
+    $count = count($records);
+    if ($count) {
+        $entry = array('count' => $count);
+        // average
+        $sum = 0;
+        foreach ($records as $value) {
+            $sum += $value;
+        }
+        $avg = $sum / $count;
+        $entry['avg'] = $avg;
+        // geometric mean
+        $mul = 0;
+        foreach($records as $i => $value) {
+             $mul = $i == 0 ? $value : $mul*$value; 
+        }
+        $entry['geo-mean'] = pow($mul,1/$count);  
+        // median
+        if ($count %2) {
+            $entry['median'] = $records[floor($count * 0.5)];
+        } else {
+            $entry['median'] = ($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2;
+        }
+        // 75th percentile
+        $entry['75pct'] = $records[floor($count * 0.75)];  // 0-based array, hence the floor instead of ceil
+        // 95th percentile
+        $entry['95pct'] = $records[floor($count * 0.95)];  // 0-based array, hence the floor instead of ceil
+        // standard deviation
+        $sum = 0;
+        foreach ($records as $value) {
+            $sum += pow($value - $avg, 2);
+        }
+        $entry['stddev'] = sqrt($sum / $count);
+    }
+    return $entry;
 }
 ?>
