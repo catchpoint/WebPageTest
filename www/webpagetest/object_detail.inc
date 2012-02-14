@@ -34,6 +34,7 @@ function getRequests($id, $test_path, $run, $is_cached,
             $has_secure_requests = true;
         }
         $request['index'] = $index;
+        $request['number'] = $index + 1;
     }
     
     BuildRequestDependencies($requests);
@@ -153,13 +154,10 @@ function LoadRequests($request_file_name) {
         70 => 'initiator_column'
         );
     $request_lines = gz_file($request_file_name);
-    $request_number = 0;
     foreach($request_lines as $linenum => &$line) {
         $columns = explode("\t", str_replace("\t", "\t ", $line));
         if (count($columns)) {
-            $request_number++;
             $request = array();
-            $request['number'] = $request_number;
             foreach ($columns as $i => $value) {
                 if (array_key_exists($i + 1, $needed_columns)) {
                     $request[$needed_columns[$i + 1]] = trim($value);
