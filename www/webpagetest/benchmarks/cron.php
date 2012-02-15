@@ -8,12 +8,14 @@ chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
+$debug=true;
 
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
 if ($lock !== false) {
     if (flock($lock, LOCK_EX | LOCK_NB)) {
         unlink('./benchmark.log');
+        logMsg("Running benchmarks cron processing", './benchmark.log', true);
 
         // see if we are using API keys
         $key = null;
@@ -30,6 +32,9 @@ if ($lock !== false) {
         foreach ($bm_list as $benchmark) {
             ProcessBenchmark(basename($benchmark, '.php'));
         }
+        logMsg("Done", './benchmark.log', true);
+    } else {
+        echo "Benchmark cron job is already running<br>\n";
     }
     fclose($lock);
 }
@@ -40,6 +45,7 @@ if ($lock !== false) {
 * @param mixed $benchmark
 */
 function ProcessBenchmark($benchmark) {
+    logMsg("Processing benchmark '$benchmark'", './benchmark.log', true);
     if (!is_dir("./results/benchmarks/$benchmark"))
         mkdir("./results/benchmarks/$benchmark", 0777, true);
     if (is_file("./results/benchmarks/$benchmark/state.json")) {
@@ -53,7 +59,10 @@ function ProcessBenchmark($benchmark) {
     
     if (array_key_exists('running', $state)) {
         CheckBenchmarkStatus($state);
+        // update the state between steps
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
         CollectResults($benchmark, $state);
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     } else {
         $state['running'] = false;
     }
@@ -61,7 +70,8 @@ function ProcessBenchmark($benchmark) {
     if (!$state['running'] && 
         (array_key_exists('runs', $state) && count($state['runs'])) &&
         (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation']) ){
-        //AggregateResults($benchmark, $state);
+        AggregateResults($benchmark, $state);
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
     
     // see if we need to kick off a new benchmark run
@@ -81,7 +91,7 @@ function ProcessBenchmark($benchmark) {
             }
         }
     }
-    
+
     file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
 }
 
@@ -95,6 +105,7 @@ function CheckBenchmarkStatus(&$state) {
         $done = true;
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
+                logMsg("Checking status for {$test['id']}", './benchmark.log', true);
                 $status = GetTestStatus($test['id'], false);
                 $now = time();
                 if ($status['statusCode'] >= 400) {
@@ -113,12 +124,16 @@ function CheckBenchmarkStatus(&$state) {
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", './benchmark.log', true);
                 }
+            } else {
+                logMsg("Test {$test['id']} : Already complete", './benchmark.log', true);
             }
         }
         
         if ($done) {
             $state['running'] = false;
         }
+        
+        logMsg("Done checking status", './benchmark.log', true);
     }
 }
 
@@ -128,6 +143,7 @@ function CheckBenchmarkStatus(&$state) {
 * @param mixed $state
 */
 function CollectResults($benchmark, &$state) {
+    logMsg("Collecting results for '$benchmark'", './benchmark.log', true);
     if (!$state['running'] && array_key_exists('tests', $state)) {
         $start_time = time();
         $data = array();
@@ -136,6 +152,7 @@ function CollectResults($benchmark, &$state) {
                 $start_time = $test['submitted'];
             }
             $testPath = './' . GetTestPath($test['id']);
+            logMsg("Loading page data from $testPath", './benchmark.log', true);
             $page_data = loadAllPageData($testPath);
             foreach ($page_data as $run => &$page_run) {
                 foreach ($page_run as $cached => &$test_data) {
@@ -148,13 +165,8 @@ function CollectResults($benchmark, &$state) {
                     $test_data['cached'] = $cached;
                     $test_data['run'] = $run;
                     $test_data['id'] = $test['id'];
-                    $breakdown = getBreakdown($test['id'], $testPath, $run, $cached, $requests);
-                    foreach ($breakdown as $mime => $mime_data) {
-                        $test_data["{$mime}_requests"] = $mime_data['requests'];
-                        $test_data["{$mime}_bytes"] = $mime_data['bytes'];
-                    }
-                    unset($requests);
                     $data[] = $test_data;
+                    $test['has_data'] = 1;
                 }
             }
         }
@@ -166,6 +178,8 @@ function CollectResults($benchmark, &$state) {
             $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $start_time) . '.json';
             gz_file_put_contents($file_name, json_encode($data));
             $state['runs'][] = $start_time;
+        } else {
+            logMsg("No test data collected", './benchmark.log', true);
         }
         unset($state['tests']);
         $state['needs_aggregation'] = true;
@@ -293,11 +307,11 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
 * @param mixed $benchmark
 * @param mixed $state
 */
-function AggregateResults($benchmark, $state) {
+function AggregateResults($benchmark, &$state) {
     if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
         mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
     if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
-        $info = json_decode("./results/benchmarks/$benchmark/aggregate/info.json");
+        $info = json_decode(file_get_contents("./results/benchmarks/$benchmark/aggregate/info.json"), true);
     } else {
         $info = array('runs' => array());
     }
@@ -312,9 +326,7 @@ function AggregateResults($benchmark, $state) {
                                 'fullyLoaded', 'docTime', 'domTime', 'score_cache', 'score_cdn',
                                 'score_gzip', 'score_keep-alive', 'score_compress', 'gzip_total', 'gzip_savings',
                                 'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time', 
-                                'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete',
-                                'js_requests', 'js_bytes', 'css_requests', 'css_bytes', 'html_requests', 'html_bytes', 
-                                'text_requests', 'text_bytes', 'image_requests', 'image_bytes', 'flash_requests', 'flash_bytes');
+                                'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete');
 
     // loop through all of the runs and see which ones we don't have aggregates for
     foreach ($state['runs'] as $run_time) {
@@ -329,6 +341,7 @@ function AggregateResults($benchmark, $state) {
         }
     }
     
+    file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", json_encode($info));
     $state['needs_aggregation'] = false;
 }
 
@@ -412,7 +425,20 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
                 $entry['time'] = $run_time;
                 $entry['config'] = $config;
                 $entry['cached'] = $cached;
-                $agg_data[] = $entry;
+                
+                // see if we already have a record that matches that we need to overwrite
+                $exists = false;
+                foreach ($agg_data as $i => &$row) {
+                    if ($row['time'] == $run_time && 
+                        $row['config'] == $config &&
+                        $row['cached'] == $cached) {
+                        $exists = true;
+                        $agg_data[$i] = $entry;
+                        break;
+                    }
+                }
+                if (!$exists)
+                    $agg_data[] = $entry;
                 unset ($entry);
             }
         }
@@ -464,7 +490,20 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
                     $entry['label'] = $label;
                     $entry['config'] = $config;
                     $entry['cached'] = $cached;
-                    $agg_data[] = $entry;
+                    // see if we already have a record that matches that we need to overwrite
+                    $exists = false;
+                    foreach ($agg_data as $i => &$row) {
+                        if ($row['time'] == $run_time && 
+                            $row['config'] == $config &&
+                            $row['cached'] == $cached &&
+                            $row['label'] == $label) {
+                            $exists = true;
+                            $agg_data[$i] = $entry;
+                            break;
+                        }
+                    }
+                    if (!$exists)
+                        $agg_data[] = $entry;
                     unset ($entry);
                 }
             }
@@ -488,19 +527,19 @@ function CalculateMetrics(&$records) {
         foreach ($records as $value) {
             $sum += $value;
         }
-        $avg = $sum / $count;
+        $avg = intval(round($sum / $count));
         $entry['avg'] = $avg;
         // geometric mean
-        $mul = 0;
-        foreach($records as $i => $value) {
-             $mul = $i == 0 ? $value : $mul*$value; 
+        $sum = 0.0;
+        foreach($records as $value) {
+             $sum += log($value);
         }
-        $entry['geo-mean'] = pow($mul,1/$count);  
+        $entry['geo-mean'] = intval(round(exp($sum/$count)));  
         // median
         if ($count %2) {
             $entry['median'] = $records[floor($count * 0.5)];
         } else {
-            $entry['median'] = ($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2;
+            $entry['median'] = intval(round(($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2));
         }
         // 75th percentile
         $entry['75pct'] = $records[floor($count * 0.75)];  // 0-based array, hence the floor instead of ceil
@@ -511,7 +550,7 @@ function CalculateMetrics(&$records) {
         foreach ($records as $value) {
             $sum += pow($value - $avg, 2);
         }
-        $entry['stddev'] = sqrt($sum / $count);
+        $entry['stddev'] = intval(round(sqrt($sum / $count)));
     }
     return $entry;
 }
