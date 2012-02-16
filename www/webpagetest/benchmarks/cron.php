@@ -154,20 +154,41 @@ function CollectResults($benchmark, &$state) {
             $testPath = './' . GetTestPath($test['id']);
             logMsg("Loading page data from $testPath", './benchmark.log', true);
             $page_data = loadAllPageData($testPath);
-            foreach ($page_data as $run => &$page_run) {
-                foreach ($page_run as $cached => &$test_data) {
-                    $data_row = $test_data;
-                    unset($test_data['URL']);
-                    $test_data['url'] = $test['url'];
-                    $test_data['label'] = $test['label'];
-                    $test_data['location'] = $test['location'];
-                    $test_data['config'] = $test['config'];
-                    $test_data['cached'] = $cached;
-                    $test_data['run'] = $run;
-                    $test_data['id'] = $test['id'];
-                    $data[] = $test_data;
-                    $test['has_data'] = 1;
+            if (count($page_data)) {
+                foreach ($page_data as $run => &$page_run) {
+                    foreach ($page_run as $cached => &$test_data) {
+                        $data_row = $test_data;
+                        unset($data_row['URL']);
+                        // figure out the per-type request info (todo: measure how expensive this is and see if we have a better way)
+                        $breakdown = getBreakdown($test['id'], $testPath, $run, $cached, $requests);
+                        foreach ($breakdown as $mime => &$values) {
+                            $data_row["{$mime}_requests"] = $values['requests'];
+                            $data_row["{$mime}_bytes"] = $values['bytes'];
+                        }
+                        // capture the page speed score
+                        if ($cached)
+                            $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_Cached_pagespeed.txt");
+                        else
+                            $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_pagespeed.txt");
+                        $data_row['url'] = $test['url'];
+                        $data_row['label'] = $test['label'];
+                        $data_row['location'] = $test['location'];
+                        $data_row['config'] = $test['config'];
+                        $data_row['cached'] = $cached;
+                        $data_row['run'] = $run;
+                        $data_row['id'] = $test['id'];
+                        $data[] = $data_row;
+                        $test['has_data'] = 1;
+                    }
                 }
+            } else {
+                $data_row = array();
+                $data_row['url'] = $test['url'];
+                $data_row['label'] = $test['label'];
+                $data_row['location'] = $test['location'];
+                $data_row['config'] = $test['config'];
+                $data_row['id'] = $test['id'];
+                $data[] = $data_row;
             }
         }
         
@@ -326,7 +347,10 @@ function AggregateResults($benchmark, &$state) {
                                 'fullyLoaded', 'docTime', 'domTime', 'score_cache', 'score_cdn',
                                 'score_gzip', 'score_keep-alive', 'score_compress', 'gzip_total', 'gzip_savings',
                                 'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time', 
-                                'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete');
+                                'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete',
+                                'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
+                                'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
+                                'other_bytes', 'other_requests');
 
     // loop through all of the runs and see which ones we don't have aggregates for
     foreach ($state['runs'] as $run_time) {
