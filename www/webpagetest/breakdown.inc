@@ -9,33 +9,51 @@ require_once('contentColors.inc');
 */
 function getBreakdown($id, $testPath, $run, $cached, &$requests)
 {
-    // get all of the requests
-    $secure = false;
-    $haveLocations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+    $cache = array();
+    $cache_file = "$testPath/breakdown.json";
+    if (is_file($cache_file)) {
+        $cache = json_decode(file_get_contents($cache_file), true);
+    }
     
-    $breakdown = array();
-    $mime_colors = MimeColors();
-    
-    foreach($requests as $request)
-    {
-        $contentType = ContentType($request['contentType']);
-        $object = strtolower($request['url']);
-        if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) )
-        {
-            if( !isset($breakdown[$contentType]) )
-            {
-                $entry = array(
-                    'color' => $mime_colors[$contentType],
-                    'bytes' => 0,
-                    'requests' => 0
-                    );
-                $breakdown["$contentType"] = $entry;
-            }
-            
-            $breakdown["$contentType"]['bytes'] += $request['bytesIn'];
-            $breakdown["$contentType"]['requests']++;
+    if (array_key_exists($run, $cache)) {
+        if (array_key_exists($cached, $cache[$run])) {
+            $breakdown = $cache[$run][$cached];
         }
+    } else {
+        $cache[$run] = array($cached => array());
+    }
+
+    if (!isset($breakdown)) {
+        // get all of the requests
+        $secure = false;
+        $haveLocations = false;
+        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        
+        $breakdown = array();
+        $mime_colors = MimeColors();
+        
+        foreach($requests as $request)
+        {
+            $contentType = ContentType($request['contentType']);
+            $object = strtolower($request['url']);
+            if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) )
+            {
+                if( !isset($breakdown[$contentType]) )
+                {
+                    $entry = array(
+                        'color' => $mime_colors[$contentType],
+                        'bytes' => 0,
+                        'requests' => 0
+                        );
+                    $breakdown["$contentType"] = $entry;
+                }
+                
+                $breakdown["$contentType"]['bytes'] += $request['bytesIn'];
+                $breakdown["$contentType"]['requests']++;
+            }
+        }
+        $cache[$run][$cached] = $breakdown;
+        file_put_contents($cache_file, json_encode($cache));
     }
     
     return $breakdown;
