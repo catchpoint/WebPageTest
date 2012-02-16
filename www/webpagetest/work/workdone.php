@@ -158,6 +158,17 @@ else
             require_once 'page_data.inc';
             $pageData = loadAllPageData($testPath);
             $medianRun = GetMedianRun($pageData, 0);
+            
+            // calculate and cache the content breakdown information
+            if( isset($testInfo) ) {
+                require_once('breakdown.inc');
+                for ($i = 1; $i <= $testInfo['runs']; $i++) {
+                    getBreakdown($id, $testPath, $i, 0, $requests);
+                    if (!$testInfo['fvonly']) {
+                        getBreakdown($id, $testPath, $i, 1, $requests);
+                    }
+                }
+            }
 
             $test = file_get_contents("$testPath/testinfo.ini");
             $now = date("m/d/y G:i:s", $time);

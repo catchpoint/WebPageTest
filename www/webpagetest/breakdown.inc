@@ -15,12 +15,12 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         $cache = json_decode(file_get_contents($cache_file), true);
     }
     
-    if (array_key_exists($run, $cache)) {
-        if (array_key_exists($cached, $cache[$run])) {
-            $breakdown = $cache[$run][$cached];
+    if (array_key_exists("run_$run", $cache)) {
+        if (array_key_exists("cached_$cached", $cache["run_$run"])) {
+            $breakdown = $cache["run_$run"]["cached_$cached"];
         }
     } else {
-        $cache[$run] = array($cached => array());
+        $cache["run_$run"] = array("cached_$cached" => array());
     }
 
     if (!isset($breakdown)) {
@@ -52,7 +52,7 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
                 $breakdown["$contentType"]['requests']++;
             }
         }
-        $cache[$run][$cached] = $breakdown;
+        $cache["run_$run"]["cached_$cached"] = $breakdown;
         file_put_contents($cache_file, json_encode($cache));
     }
     
