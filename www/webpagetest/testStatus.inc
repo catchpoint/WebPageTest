@@ -272,8 +272,12 @@ function GetRelayStatus($id, $testPath, &$test)
 {
     $ret = null;
     $locations = parse_ini_file('./settings/locations.ini', true);
-    $server = $locations[$test['location']]['relayServer'];
-    $key = $locations[$test['location']]['relayKey'];
+    $location = $test['location'];
+    $split = strpos($location, ':');
+    if ($split > 0)
+        $location = substr($location, 0, $split);
+    $server = $locations[$location]['relayServer'];
+    $key = $locations[$location]['relayKey'];
     
     $status = json_decode(file_get_contents("{$server}testStatus.php?test=$id&rkey=$key&pos=1"), true);
     if( is_array($status) )
