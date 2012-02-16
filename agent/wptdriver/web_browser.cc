@@ -257,6 +257,9 @@ void WebBrowser::ClearUserData() {
   if (GetTempPath(MAX_PATH, path)) {
       DeleteDirectory(path, false);
   }
+  GetModuleFileName(NULL, path, MAX_PATH);
+  lstrcpy(PathFindFileName(path), _T("symbols"));
+  DeleteDirectory(path, false);
 }
 
 /*-----------------------------------------------------------------------------
