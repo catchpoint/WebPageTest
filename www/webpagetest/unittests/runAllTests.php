@@ -4,14 +4,14 @@
 // $ php runAllTests.php
 
 // Include the test framework.
-include('../lib/EnhanceTestFramework.php');
+include_once('../lib/EnhanceTestFramework.php');
 
 // Find the tests - '.' is the current directory.
 // It would be nice to put tests in the same directory as the code
 // being tested.  Unfortunately, WebPageTest code uses the word 'test'
 // in many file and function names that are not unit tests.  Placing
 // unit tests in the same directory would be confusing.
-\Enhance\Core::discoverTests('.');
+\Enhance\Core::discoverTests('tests');
 
 // Run the tests.
 \Enhance\Core::runTests();

@@ -422,9 +422,6 @@ function KeepVideoForRun($testPath, $run)
  */
 function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
                       &$consoleOut) {
-
-  putenv("PYTHONPATH=./mobile/dpkt-1.7:./mobile/simplejson");
-
   // When we update pcap2har, we need to test that each
   // agent can use the new version.  To make testing easy,
   // the agent that uploads a .pcap can control which version
@@ -433,11 +430,14 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
   // use the latest version.  Once a version is known to
   // work with all agents, we promote the latest version
   // to stable.
-  if ($useLatestPCap2Har) {
-    $pcap2harExe = "./mobile/pcap2har_latest/main.py";
-  } else {
-    $pcap2harExe = "./mobile/pcap2har/main.py";
-  }
+  $pathContainingPCapToHar = ($useLatestPCap2Har ? "./mobile/latest"
+                                                 : "./mobile");
+  putenv("PYTHONPATH=".
+         "$pathContainingPCapToHar:".
+         "./mobile/dpkt-1.7:".
+         "./mobile/simplejson");
+
+  $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
 
   $retLine = exec("/usr/bin/python ".
                   "$pcap2harExe $pcapPath $harPath 2>&1",
