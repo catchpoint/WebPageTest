@@ -388,7 +388,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
         gz_file_put_contents($metric_file, json_encode($agg_data));
         unset($agg_data);
         
-        if (array_key_exists('labels', $info) && count($info['labels'])) {
+        if (array_key_exists('labels', $info) && count($info['labels']) <= 20) {
             $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.labels.json";
             if (gz_is_file($metric_file)) {
                 $agg_data = json_decode(gz_file_get_contents($metric_file), true);
