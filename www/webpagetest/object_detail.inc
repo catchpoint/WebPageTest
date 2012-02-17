@@ -1,4 +1,13 @@
 <?php
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('LoadRequests');
+    newrelic_add_custom_tracer('FixUpRequestTimes');
+    newrelic_add_custom_tracer('AddLocationData');
+    newrelic_add_custom_tracer('AddHeaders');
+    newrelic_add_custom_tracer('AddResponseBodyFlags');
+    newrelic_add_custom_tracer('BuildRequestDependencies');
+}
+
 /**
 * Load the object data file.
 */
@@ -37,7 +46,9 @@ function getRequests($id, $test_path, $run, $is_cached,
         $request['number'] = $index + 1;
     }
     
-    BuildRequestDependencies($requests);
+    // this is disabled for right now - there were indications that it was
+    // spiking CPU to 100% on WPT so there may be a loop condition of some kind
+    //BuildRequestDependencies($requests);
     
     return $requests;
 }
