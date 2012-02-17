@@ -104,8 +104,9 @@
             }
             
             // Extract the location, browser and connectivity.
-            // location.connectivity:browser
-            if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) )
+            // location:browser.connectivity
+            if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) ||
+                preg_match('/([^\.:]+)[:]*(.*)/i', trim($req_location), $matches))
             {
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2])))
