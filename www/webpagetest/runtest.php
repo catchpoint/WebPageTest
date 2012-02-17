@@ -90,6 +90,7 @@
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
             $test['keepua'] = 0;
+            $test['benchmark'] = $req_benchmark;
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
             

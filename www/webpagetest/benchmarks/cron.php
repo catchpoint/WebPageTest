@@ -82,7 +82,7 @@ function ProcessBenchmark($benchmark) {
             $now = time();
             if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now)) {
                 logMsg("Running benchmark '$benchmark'", './benchmark.log', true);
-                if (SubmitBenchmark($configurations, $state)) {
+                if (SubmitBenchmark($configurations, $state, $benchmark)) {
                     $state['last_run'] = $now;
                     $state['running'] = true;
                 }
@@ -213,7 +213,7 @@ function CollectResults($benchmark, &$state) {
 * @param mixed $configurations
 * @param mixed $state
 */
-function SubmitBenchmark(&$configurations, &$state) {
+function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     $submitted = false;
     
     $state['tests'] = array();
@@ -228,7 +228,7 @@ function SubmitBenchmark(&$configurations, &$state) {
                 $url = substr($url, $separator + 1);
             }
             foreach ($config['locations'] as $location) {
-                $id = SubmitBenchmarkTest($url, $location, $config['settings']);
+                $id = SubmitBenchmarkTest($url, $location, $config['settings'], $benchmark);
                 if ($id !== false ) {
                     $state['tests'][] = array(  'id' => $id, 
                                                 'label' => $label,
@@ -256,7 +256,7 @@ function SubmitBenchmark(&$configurations, &$state) {
 * @param mixed $location
 * @param mixed $settings
 */
-function SubmitBenchmarkTest($url, $location, &$settings) {
+function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $id = false;
     global $key;
     $priority = 8;  // default to a really low priority
@@ -289,6 +289,8 @@ function SubmitBenchmarkTest($url, $location, &$settings) {
         $data .= "\r\n--$boundary\r\n"; 
     }
     $data .= "Content-Disposition: form-data; name=\"location\"\r\n\r\n$location";
+    $data .= "\r\n--$boundary\r\n"; 
+    $data .= "Content-Disposition: form-data; name=\"benchmark\"\r\n\r\n$benchmark";
     $data .= "\r\n--$boundary\r\n"; 
     $data .= "Content-Disposition: form-data; name=\"f\"\r\n\r\njson";
     $data .= "\r\n--$boundary\r\n"; 
