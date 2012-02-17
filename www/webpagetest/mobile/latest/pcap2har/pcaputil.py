@@ -3,7 +3,6 @@ Various small, useful functions which have no other home.
 '''
 
 import dpkt
-from socket import inet_ntoa
 
 def friendly_tcp_flags(flags):
     '''
@@ -18,14 +17,13 @@ def friendly_tcp_flags(flags):
 
 def friendly_socket(sock):
     '''
-    returns a socket where the addresses are converted by inet_ntoa into
-    human-friendly strings. sock is in tuple format, like
+    returns a human-friendly string representing a socket in the format:
     ((sip, sport),(dip, sport))
     '''
     return '((%s, %d), (%s, %d))' % (
-        inet_ntoa(sock[0][0]),
+        sock[0][0],
         sock[0][1],
-        inet_ntoa(sock[1][0]),
+        sock[1][0],
         sock[1][1]
     )
 
@@ -61,8 +59,16 @@ class ModifiedReader(object):
     '''
 
     def __init__(self, fileobj):
-        self.name = fileobj.name
-        self.fd = fileobj.fileno()
+        if hasattr(fileobj, 'name'):
+          self.name = fileobj.name
+        else:
+          self.name = '<unknown>'
+
+        if hasattr(fileobj, 'fileno'):
+          self.fd = fileobj.fileno()
+        else:
+          self.fd = None
+
         self.__f = fileobj
         buf = self.__f.read(dpkt.pcap.FileHdr.__hdr_len__)
         self.__fh = dpkt.pcap.FileHdr(buf)

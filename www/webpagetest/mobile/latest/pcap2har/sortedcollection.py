@@ -135,13 +135,7 @@ class SortedCollection(object):
         i = bisect_left(self._keys, key)
         self._keys.insert(i, key)
         self._items.insert(i, item)
-        
-    def remove(self, index):
-        'Remove the item at the passed index'
-        # lets IndexError fall out if indices are invalid
-        del self._items[index]
-        del self._keys[index]
-        
+
     def insert_right(self, item):
         'Insert a new item.  If equal keys are found, add to the right'
         key = self._key(item)

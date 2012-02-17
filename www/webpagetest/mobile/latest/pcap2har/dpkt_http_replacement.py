@@ -7,6 +7,7 @@ fix the bug where a body is parsed for a request that shouldn't have a body."""
 
 import cStringIO
 import dpkt
+import settings
 
 def parse_headers(f):
     """Return dict of HTTP headers parsed from a file object."""
@@ -49,13 +50,13 @@ def parse_body(f, headers):
                 l.append(buf)
             else:
                 break
-        if not found_end:
+        if settings.strict_http_parse_body and not found_end:
             raise dpkt.NeedData('premature end of chunked body')
         body = ''.join(l)
     elif 'content-length' in headers:
         n = int(headers['content-length'])
         body = f.read(n)
-        if len(body) != n:
+        if settings.strict_http_parse_body and len(body) != n:
             raise dpkt.NeedData('short body (missing %d bytes)' % (n - len(body)))
     else:
         # XXX - need to handle HTTP/0.9

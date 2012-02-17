@@ -1,8 +1,8 @@
-from tcp.direction import Direction
-import tcp
+from direction import Direction
+import common as tcp
 
 import seq # hopefully no name collisions
-from sortedcollection import SortedCollection
+from ..sortedcollection import SortedCollection
 from dpkt.tcp import *
 import logging as log
 
@@ -30,13 +30,21 @@ class Flow:
         called for every packet coming in, instead of iterating through
         a list
         '''
-        # make sure packet is in time order
-        if len(self.packets): # if we have received packets before...
-            if self.packets[-1].ts > pkt.ts: # if this one is out of order...
-                # error out
-                raise ValueError("packet added to tcp.Flow out of "
-                                 "chronological order")
-        self.packets.append(pkt)
+        # maintain an invariant that packets are ordered by ts;
+        # perform ordered insertion (as in insertion sort) if they're
+        # not in order because sometimes libpcap writes packets out of
+        # order.
+
+        # the correct position for pkt is found by looping i from
+        # len(self.packets) descending back to 0 (inclusive);
+        # normally, this loop will only run for one iteration.
+        for i in xrange(len(self.packets), -1, -1):
+            # pkt is at the correct position if it is at the
+            # beginning, or if it is >= the packet at its previous
+            # position.
+            if i == 0 or self.packets[i - 1].ts <= pkt.ts: break
+        self.packets.insert(i, pkt)
+
         # look out for handshake
         # add it to the appropriate direction, if we've found or given up on
         # finding handshake
@@ -83,6 +91,7 @@ class Flow:
             self.flush_packets()
         self.fwd.finish()
         self.rev.finish()
+
     def samedir(self, pkt):
         '''
         returns whether the passed packet is in the same direction as the
@@ -103,7 +112,9 @@ class Flow:
         writes out the data in the flows to two files named basename-fwd.dat and
         basename-rev.dat.
         '''
-        with open(basename + '-fwd.dat', 'wb') as f:
-            f.write(self.fwd.data)
-        with open(basename + '-rev.dat', 'wb') as f:
-            f.write(self.rev.data)
+        f = open(basename + '-fwd.dat', 'wb')
+        f.write(self.fwd.data)
+        f.close()
+        f = open(basename + '-rev.dat', 'wb')
+        f.write(self.rev.data)
+        f.close()

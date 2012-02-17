@@ -9,6 +9,9 @@ from pagetracker import PageTracker
 import http
 import logging as log
 import settings
+import sys
+
+import dpkt.dpkt
 
 class Entry:
     '''
@@ -129,9 +132,11 @@ class HttpSession(object):
         for flow in packetdispatcher.tcp.flowdict.itervalues():
             try:
                 self.flows.append(http.Flow(flow))
-            except http.Error as error:
+            except (http.Error,):
+                error = sys.exc_info()[1]
                 log.warning(error)
-            except dpkt.dpkt.Error as error:
+            except (dpkt.dpkt.Error,):
+                error = sys.exc_info()[1]
                 log.warning(error)
         # combine the messages into a list
         pairs = reduce(lambda p, f: p+f.pairs, self.flows, [])

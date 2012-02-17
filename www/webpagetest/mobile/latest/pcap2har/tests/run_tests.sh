@@ -4,9 +4,6 @@
 # sure it didn't fail, then if there is an existing har file for that
 # pcap, it diffs them to make sure the pcap didn't change.
 
-mkdir -p diffs
-rm -f diffs/*.diff
-
 for pcap in `ls *.pcap`
 do
 	echo $pcap
@@ -20,7 +17,6 @@ do
 				rm $pcap.new.har
 				continue
 			else
-				diff $pcap.har $pcap.new.har > diffs/$pcap.diff
 				echo "$pcap produced different har, log in $pcap.log"
 			fi
 		else

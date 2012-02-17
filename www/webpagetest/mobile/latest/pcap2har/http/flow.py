@@ -1,7 +1,9 @@
 import logging
 import dpkt
-import http
-from http import Request, Response
+import common as http
+from request import Request
+from response import Response
+import sys
 
 class Flow:
     '''
@@ -87,7 +89,8 @@ def gather_messages(MessageClass, tcpdir):
         curr_data = tcpdir.data[pointer:pointer+200] # debug var
         try:
             msg = MessageClass(tcpdir, pointer)
-        except dpkt.Error as error: # if the message failed
+        except (dpkt.Error,): # if the message failed
+            error = sys.exc_info()[1]
             if pointer == 0: # if this is the first message
                 raise http.Error('Invalid http')
             else: # we're done parsing messages
@@ -115,7 +118,8 @@ def parse_streams(request_stream, response_stream):
     try:
         requests = gather_messages(Request, request_stream)
         responses = gather_messages(Response, response_stream)
-    except dpkt.UnpackError as e:
+    except (dpkt.UnpackError,):
+        e = sys.exc_info()[1]
         print 'failed to parse http: ', e
         return False, None, None
     else:

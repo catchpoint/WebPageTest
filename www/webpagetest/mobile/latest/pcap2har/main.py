@@ -4,28 +4,32 @@
 Main program that converts pcaps to HAR's.
 '''
 
-import pcap
 import os
 import optparse
 import logging
 import sys
-import http
-import httpsession
-import har
 import json
-import tcp
-import settings
-from packetdispatcher import PacketDispatcher
+
+from pcap2har import pcap
+from pcap2har import http
+from pcap2har import httpsession
+from pcap2har import har
+from pcap2har import tcp
+from pcap2har import settings
+from pcap2har.packetdispatcher import PacketDispatcher
 
 # get cmdline args/options
 parser = optparse.OptionParser(
     usage='usage: %prog inputfile outputfile'
 )
 parser.add_option('--no-pages', action="store_false", dest="pages", default=True)
+parser.add_option('--pad_missing_tcp_data', action="store_true",
+                  dest="pad_missing_tcp_data", default=False)
 options, args = parser.parse_args()
 
 # copy options to settings module
 settings.process_pages = options.pages
+settings.pad_missing_tcp_data = options.pad_missing_tcp_data
 
 # setup logs
 logging.basicConfig(filename='pcap2har.log', level=logging.INFO)

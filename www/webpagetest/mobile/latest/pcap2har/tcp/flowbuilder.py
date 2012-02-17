@@ -1,4 +1,4 @@
-import tcp
+import flow as tcp
 import logging as log
 
 class FlowBuilder:

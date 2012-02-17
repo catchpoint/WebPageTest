@@ -14,3 +14,9 @@ Changes:
 2012/02/13: skerner at google dot com:
   Download commit 0c668bc3144c238e60c3bf500e61269b8f595c5c
   from https://github.com/andrewf/pcap2har.git .
+
+2012/02/17: skerner at google dot com:
+  Integrate changes on branch 'velodrome' from
+  https://github.com/mdwelsh/pcap2har.git .
+  At this time, the velodrome branch points to
+  commit  2f0db924b39fe0b70defda90f5e99472ab6c7f34 .

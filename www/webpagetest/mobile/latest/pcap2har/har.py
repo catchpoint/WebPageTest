@@ -1,5 +1,9 @@
 import http
-import json
+try:
+  import json
+except ImportError:
+  # In order to work with Google AppEngine
+  from django.utils import simplejson as json
 
 '''
 functions and classes for generating HAR data from parsed http data
@@ -50,11 +54,7 @@ def HTTPResponseJsonRepr(self):
         'mimeType': self.mimeType
     }
     if self.text:
-        if self.encoding:
-            content['text'] = self.text
-            content['encoding'] = self.encoding
-        else:
-            content['text'] = self.text.encode('utf8') # must transcode to utf-8
+        content['text'] = self.text.encode('utf8') # must transcode to utf8
     return {
         'status': int(self.msg.status),
         'statusText': self.msg.reason,

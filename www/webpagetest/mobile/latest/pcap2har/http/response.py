@@ -1,12 +1,12 @@
 import gzip
 import zlib
 import cStringIO
-import dpkt_http_replacement as dpkt_http
-import http
-from mediatype import MediaType
+from .. import dpkt_http_replacement as dpkt_http
+import common as http
+import message
+from ..mediatype import MediaType
 import logging as log
 #from http import DecodingError # exception class from parent module
-from base64 import encodestring as b64encode
 
 # try to import UnicodeDammit from BeautifulSoup
 # otherwise, set the name to None
@@ -15,20 +15,19 @@ try:
 except ImportError:
     UnicodeDammit = None
 
-class Response(http.Message):
+class Response(message.Message):
     '''
     HTTP response.
     Members:
     * mediaType: mediatype.MediaType, constructed from content-type
     * mimeType: string mime type of returned data
     * body: http decoded body data, otherwise unmodified
-    * text: body text, unicoded if possible, otherwise base64 encoded
-    * encoding: 'base64' if self.text is base64 encoded binary data, else None
+    * text: body text, unicoded if possible, or None if the body is not text
     * compression: string, compression type
     * original_encoding: string, original text encoding/charset/whatever
     '''
     def __init__(self, tcpdir, pointer):
-        http.Message.__init__(self, tcpdir, pointer, dpkt_http.Response)
+        message.Message.__init__(self, tcpdir, pointer, dpkt_http.Response)
         # uncompress body if necessary
         self.handle_compression()
         # get mime type
@@ -75,6 +74,10 @@ class Response(http.Message):
             elif encoding == 'identity':
                 # no compression
                 self.body = self.raw_body
+            elif 'sdch' in encoding:
+                # ignore sdch, a Google proposed modification to HTTP/1.1
+                # not in RFC 2616.
+                self.body = self.raw_body
             else:
                 # I'm pretty sure the above are the only allowed encoding types
                 # see RFC 2616 sec 3.5 (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.5)
@@ -92,7 +95,6 @@ class Response(http.Message):
         self.mediaType is valid.
         '''
         self.text = None
-        self.encoding = None
         # if the body is text
         if (self.mediaType and
             (self.mediaType.type == 'text' or
@@ -137,7 +139,4 @@ class Response(http.Message):
                     self.text = u or None
         else:
             # body is not text
-            # base64 encode it and set self.encoding
-            # TODO: check with list that this is right
-            self.text = b64encode(self.body)
-            self.encoding = 'base64'
+            self.text = None
