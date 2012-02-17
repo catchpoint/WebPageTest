@@ -2,6 +2,10 @@
 include 'object_detail.inc';
 require_once('contentColors.inc'); 
 
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('getBreakdown');
+    newrelic_add_custom_tracer('getBreakdownCombined');
+}
 /**
 * Aggregate the individual requests by mime type
 * 
