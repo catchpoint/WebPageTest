@@ -27,6 +27,9 @@ if( $_REQUEST['video'] )
 $all = false;
 if( $_REQUEST['all'] )
     $all = true;
+$nolimit = false;
+if( $_REQUEST['nolimit'] )
+    $nolimit = true;
 $csv = false;
 if( !strcasecmp($_GET["f"], 'csv') )
     $csv = true;
@@ -72,7 +75,7 @@ else
                             <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
                          </select> test log for URLs containing <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>"> <input id="SubmitBtn" type="submit" value="Update List"><br>
                          <?php
-                            if( isset($uid) )
+                            if( isset($uid) || (isset($owner) && strlen($owner)) )
                             {
                                 $checked = '';
                                 if( $all )
@@ -83,7 +86,12 @@ else
                             $checked = '';
                             if( $onlyVideo )
                                 $checked = ' checked=checked';
-                            echo "<input id=\"video\" type=\"checkbox\" name=\"video\"$checked onclick=\"this.form.submit();\"> Only list tests that include video\n";
+                            echo "<input id=\"video\" type=\"checkbox\" name=\"video\"$checked onclick=\"this.form.submit();\"> Only list tests that include video &nbsp;&nbsp;\n";
+
+                            $checked = '';
+                            if( $nolimit )
+                                $checked = ' checked=checked';
+                            echo "<input id=\"nolimit\" type=\"checkbox\" name=\"nolimit\"$checked onclick=\"this.form.submit();\"> Do not limit the number of results (warning, WILL be slow)\n";
                          ?>
                 </form>
                 <h4>Clicking on an url will bring you to the results for that test</h4>
@@ -109,8 +117,10 @@ else
     }  // if( $csv )
 			        // loop through the number of days we are supposed to display
                     $rowCount = 0;
+                    $done = false;
+                    $totalCount = 0;
 			        $targetDate = new DateTime($from, new DateTimeZone('GMT'));
-			        for($offset = 0; $offset <= $days; $offset++)
+			        for($offset = 0; $offset <= $days && !$done; $offset++)
 			        {
 				        // figure out the name of the log file
 				        $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
@@ -170,6 +180,7 @@ else
                                                 case 10: $testUser = $token; break;
                                                 case 11: $video = ($token == '1'); break;
                                                 case 12: $label = htmlspecialchars($token); break;
+                                                case 13: $o = $token; break;
 								            }
 							            }
 							            
@@ -180,18 +191,26 @@ else
 						            if( $date && $location && $url && $guid)
 						            {
                                         // see if it is supposed to be filtered out
-                                        if( $private && !$includePrivate && (!$uid  || $uid != $testUID))
+                                        if( $private && !$includePrivate && 
+                                            (!$uid  || $uid != $testUID) &&
+                                            (!isset($owner) || !strlen($owner) || $owner != $o)) {
                                             $ok = false;
+                                        }
                                             
                                         if( $onlyVideo and !$video )
                                             $ok = false;
                                             
-                                        if( isset($uid) && !$all && $uid != $testUID )
+                                        if( !$all && 
+                                            ((isset($uid) && $uid != $testUID) ||
+                                            (isset($owner) && strlen($owner) && $owner != $o))
+                                            ) {
                                             $ok = false;
+                                        }
                                         
                                         if( $ok )
                                         {
                                             $rowCount++;
+                                            $totalCount++;
                                             $newDate = strftime('%x %X', $date + ($tz_offset * 60));
 							                
                                             if( $csv )
@@ -256,6 +275,11 @@ else
                                                     flush();
                                                     ob_flush();
                                                 }
+                                            }
+                                            
+                                            if (!$nolimit && $totalCount > 100) {
+                                                $done = true;
+                                                break;
                                             }
                                         }
                                     }
