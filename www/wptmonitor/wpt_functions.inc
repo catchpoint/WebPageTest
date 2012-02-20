@@ -1299,7 +1299,12 @@ function checkTesterRatioAndEmailAlert(){
   // TODO: Make configurable, or improve method of determining optimum run rate
   $locations = getLocationInformation();
   $message = "";
-  foreach ($locations as $location){
+  foreach ($locations as $key=>$location){
+    if ( stripos($key,"_wptdriver") ){
+      // TODO: For now ignore the _wptdriver locations as they are the same as IE9
+      // This may require calcs to be done differently. 2012/02/19
+        continue;
+      }
     $id = $location['id'];
     $queueStat = $queueStatus["'".$id."'"];
     if (empty($location) || !array_key_exists('id',$location) || empty($location['id'])){

@@ -26,8 +26,28 @@
   }
   $lastEc2StatusCheck = getEC2TesterStatusLastCheckTime();
 
+// IE9 and IE9_wptdriver handle IE9, Chrome, and Firefox. Ignore duplicate entries
+// As IE9 and IE9_wptdriver are reported separately.
+$locs = array();
+foreach( $locations as $key=>$loc){
+  if ( stripos($key,"_wptdriver") ){
+    $key = substr($key,0,stripos($key,"_wptdriver"))."'";
+  }
+
+  if (array_key_exists($key,$locs)){
+    continue;
+//    $locs[$key]["PendingTests"][0] += $loc["PendingTests"][0];
+//    $locs[$key]["PendingTestsHighPriority"][0] += $loc["PendingTestsHighPriority"][0];
+//    $locs[$key]["PendingTestsLowPriority"][0] += $loc["PendingTestsLowPriority"][0];
+//    $locs[$key]["AgentCount"] += $loc["AgentCount"];
+
+  } else {
+    $locs[$key] = $loc;
+  }
+}
+
   $smarty->assign('lastEc2StatusCheck',$lastEc2StatusCheck);
-  $smarty->assign('locations',$locations);
+  $smarty->assign('locations',$locs);
   $smarty->assign('testers',$testers);
   $smarty->assign('runRateInfo',$runRateInfo);
   $smarty->display('host/wptHostStatus.tpl');

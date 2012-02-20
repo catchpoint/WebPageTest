@@ -88,7 +88,7 @@
   define("VALIDATION_STATE_INVALID",2);
   define("VALIDATION_STATE_NEEDS_REVIEW",3);
   define("TARGET_RUN_RATE_RATIO",150);
-  define("EC2_MAXIMUM_INSTANCES_PER_REGION",20);
+  define("EC2_MAXIMUM_INSTANCES_PER_REGION",40);
   define("EC2_MAXIMUM_SPOT_PRICE",0.15);
   define("EC2_USER_DATA",'wpt_server=wptm.strangeloopnetworks.com wpt_key=slfast wpt_timeout=120');
 

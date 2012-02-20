@@ -257,8 +257,8 @@
 {if $res.SequenceNumber eq '0'}{if $eo == "even"} {assign var="eo" value="odd"} {else} {assign var="eo" value= "even"}{/if}{/if}
     {if $res.SequenceNumber > 0}<tr><td colspan="6" style="padding-bottom:1px;padding-top:0%;"></td> <td colspan="100%" style="padding-bottom:1px;padding-top:0%;vertical-align:middle;background-color: #336633;"></td></tr>{/if}
 <tr class="monitoringJobRow {$eo}">
-    {if $res.SequenceNumber eq '0'}
-  {if $res.Status eq '100' || $res.Status eq '910'}
+    {if $res.SequenceNumber eq '0' || !$res.SequenceNumber}
+  {*{if $res.Status eq '100' || $res.Status eq '910'}*}
     <td>
       <form action="processJob.php">
         <input type="hidden" name="result_id" value="{$res.WPTResultId}">
@@ -266,9 +266,9 @@
         <input title="Refresh" class="actionIcon" type="image" src="img/refresh_icon.png" width="18">
       </form>
     </td>
-  {else}
-    <td colspan="1"></td>
-  {/if}
+  {*{else}*}
+    {*<td colspan="1"></td>*}
+  {*{/if}*}
   <td>
     <form action="deleteResult.php" onsubmit="return confirm('Confirm Deletion')">
       <input type="hidden" name="result_id" value="{$res.Id}">
