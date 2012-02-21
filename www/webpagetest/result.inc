@@ -1,6 +1,8 @@
 <?php
 require_once('optimization_detail.inc.php');
+require_once('breakdown.inc');
 
+$breakdown = array();
 $video = false;
 if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['video'] )
     $video = true;
@@ -419,28 +421,29 @@ $page_description = "Website performance test result$testLabel.";
                 </tr>
                 <?php } ?>
                 
-                <?php if( $testComplete && $run == $fvMedian ) { ?>
+                <?php if( $testComplete && $run == $fvMedian ) { 
+                    $b = getBreakdown($id, $testPath, $run, 0, $requests);
+                    if (is_array($b)) {
+                        $breakdown[] = array('run' => $run, 'data' => $b);
+                    }
+                ?>
                 <tr>
-                    <td align="left" valign="middle">Content Breakdown</td>
-                    <?php
-                    $span = 2;
-                    if($pageData[$run][0]['optimization_checked'])
-                        $span++;
-                    if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-                        $span++;
-                    if( $video )
-                        $span++;
-                    echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
-                    ?>
-                        <a href="/result/<?php echo "$id/$run/breakdown/"; ?>">
+                    <td align="left" valign="middle"><a href="/result/<?php echo "$id/$run/breakdown/"; ?>">Content Breakdown</a></td>
                         <?php
-                            $extension = 'php';
-                            if( FRIENDLY_URLS )
-                                $extension = 'png';
+                        $span = 2;
+                        if($pageData[$run][0]['optimization_checked'])
+                            $span++;
+                        if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+                            $span++;
+                        if( $video )
+                            $span++;
+                        echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
+                        $extension = 'php';
+                        if( FRIENDLY_URLS )
+                            $extension = 'png';
+                        echo "<div><div id=\"requests_$run\" style=\"width: 390px; height: 200px; display: inline;\"></div>";
+                        echo "<div id=\"bytes_$run\" style=\"width: 390px; height: 200px; display: inline;\"></div></div>";
                         ?>
-                        <img width=390 height=200 src="<?php echo "/breakdownPie.$extension?width=390&height=200&type=Requests&fontSize=8&test=$id&run=$run"; ?>">
-                        <img width=390 height=200 src="<?php echo "/breakdownPie.$extension?width=390&height=200&type=Bytes&fontSize=8&test=$id&run=$run"; ?>">
-                        </a>
                     </td>
                 </tr>
                 <?php } ?>
@@ -458,6 +461,60 @@ $page_description = "Website performance test result$testLabel.";
             
             <?php include('footer.inc'); ?>
         </div>
+        <script type="text/javascript" src="//www.google.com/jsapi"></script>
+        <script type="text/javascript">
+          <?php
+          echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
+          ?>
+
+          google.load("visualization", "1", {packages:["corechart"]});
+          google.setOnLoadCallback(drawCharts);
+            function RGBtoHex(R,G,B) {return toHex(R)+toHex(G)+toHex(B)}
+            function toHex(N) {
+                if (N==null) return "00";
+                N=parseInt(N); if (N==0 || isNaN(N)) return "00";
+                N=Math.max(0,N); N=Math.min(N,255); N=Math.round(N);
+                return "0123456789ABCDEF".charAt((N-N%16)/16)
+                  + "0123456789ABCDEF".charAt(N%16);
+            }
+          function drawCharts() {
+            for (index in wptBreakdown) {
+                var bytes = new google.visualization.DataTable();
+                bytes.addColumn('string', 'Content Type');
+                bytes.addColumn('number', 'Bytes');
+                var bytesColors = new Array();
+                for (i in wptBreakdown[index].data) {
+                    bytes.addRow([i, wptBreakdown[index].data[i].bytes]);
+                    var color = RGBtoHex(wptBreakdown[index].data[i].color[0], wptBreakdown[index].data[i].color[1], wptBreakdown[index].data[i].color[2]);
+                    bytesColors.push('#' + color);
+                }
+                var bytesOptions = {
+                  width: 390, height: 200,
+                  title: 'Bytes',
+                  colors: bytesColors
+                };
+                var bytesChart = new google.visualization.PieChart(document.getElementById('bytes_' + wptBreakdown[index].run));
+                bytesChart.draw(bytes, bytesOptions);
+
+                var requests = new google.visualization.DataTable();
+                requests.addColumn('string', 'Content Type');
+                requests.addColumn('number', 'Requests');
+                var requestsColors = new Array();
+                for (i in wptBreakdown[index].data) {
+                    requests.addRow([i, wptBreakdown[index].data[i].requests]);
+                    var color = RGBtoHex(wptBreakdown[index].data[i].color[0], wptBreakdown[index].data[i].color[1], wptBreakdown[index].data[i].color[2]);
+                    requestsColors.push('#' + color);
+                }
+                var requestsOptions = {
+                  width: 390, height: 200,
+                  title: 'Requests',
+                  colors: requestsColors
+                };
+                var requestsChart = new google.visualization.PieChart(document.getElementById('requests_' + wptBreakdown[index].run));
+                requestsChart.draw(requests, requestsOptions);
+            }
+          }
+        </script>
     </body>
 </html>
 

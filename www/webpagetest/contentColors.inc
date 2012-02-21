@@ -69,13 +69,13 @@ function GetMimeColor($mime) {
 */
 function MimeColors() {
     $colors = array(
-        'other' => array(196,196,196),
+        'html'  => array(130,181,252),
         'js'    => array(254,197,132),
         'css'   => array(178,234,148),
-        'html'  => array(130,181,252),
         'text'  => array(254,241,132),
         'image' => array(196,154,232),
-        'flash' => array(45,183,193)
+        'flash' => array(45,183,193),
+        'other' => array(196,196,196)
         );
     return $colors;
 }

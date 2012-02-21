@@ -1,5 +1,5 @@
 <?php
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('contentColors.inc'); 
 
 if(extension_loaded('newrelic')) { 
@@ -35,23 +35,19 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         
         $breakdown = array();
         $mime_colors = MimeColors();
+        foreach ($mime_colors as $contentType => $color) {
+            $entry = array(
+                'color' => $color,
+                'bytes' => 0,
+                'requests' => 0
+                );
+            $breakdown["$contentType"] = $entry;
+        }
         
-        foreach($requests as $request)
-        {
+        foreach($requests as $request) {
             $contentType = ContentType($request['contentType']);
             $object = strtolower($request['url']);
-            if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) )
-            {
-                if( !isset($breakdown[$contentType]) )
-                {
-                    $entry = array(
-                        'color' => $mime_colors[$contentType],
-                        'bytes' => 0,
-                        'requests' => 0
-                        );
-                    $breakdown["$contentType"] = $entry;
-                }
-                
+            if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
                 $breakdown["$contentType"]['bytes'] += $request['bytesIn'];
                 $breakdown["$contentType"]['requests']++;
             }
