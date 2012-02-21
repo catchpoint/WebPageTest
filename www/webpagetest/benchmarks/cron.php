@@ -279,6 +279,7 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     }
 
     if (!strncasecmp($url, 'script:', 7)) {
+        $url = substr($url, 7);
         $url = str_replace('\r', "\r", $url);
         $url = str_replace('\n', "\n", $url);
         $url = str_replace('\t', "\t", $url);
@@ -309,7 +310,7 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
         $response = @stream_get_contents($fp);
         if ($response && strlen($response)) {
             $result = json_decode($response, true);
-            if (array_key_exists('statusCode', $result) && 
+            if (is_array($result) && array_key_exists('statusCode', $result) && 
                 $result['statusCode'] == 200 && 
                 array_key_exists('data', $result) && 
                 array_key_exists('testId', $result['data']) ){
