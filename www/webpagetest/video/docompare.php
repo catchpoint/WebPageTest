@@ -74,7 +74,7 @@ function SubmitTest($url, $label, $key)
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);
     if( $ip )
-        $testUrl .= "&ip=$ip";
+        $testUrl .= "&addr=$ip";
     if( $uid )
         $testUrl .= "&uid=$uid";
     if( $user )
