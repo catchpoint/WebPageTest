@@ -191,20 +191,27 @@ else
 						            if( $date && $location && $url && $guid)
 						            {
                                         // see if it is supposed to be filtered out
-                                        if( $private && !$includePrivate && 
-                                            (!$uid  || $uid != $testUID) &&
-                                            (!isset($owner) || !strlen($owner) || $owner != $o)) {
+                                        if ($private) {
                                             $ok = false;
+                                            if ($includePrivate) {
+                                                $ok = true;
+                                            } elseif (isset($uid) && $uid == $testUID) {
+                                                $ok = true;
+                                            } elseif (isset($owner) && strlen($owner) && $owner == $o) {
+                                                $ok = true;
+                                            }
                                         }
                                             
                                         if( $onlyVideo and !$video )
                                             $ok = false;
                                             
-                                        if( !$all && 
-                                            ((isset($uid) && $uid != $testUID) ||
-                                            (isset($owner) && strlen($owner) && $owner != $o))
-                                            ) {
+                                        if ($ok && !$all) {
                                             $ok = false;
+                                            if (isset($uid) && $uid == $testUID) {
+                                                $ok = true;
+                                            } elseif (isset($owner) && strlen($owner) && $owner == $o) {
+                                                $ok = true;
+                                            }
                                         }
                                         
                                         if( $ok )
