@@ -43,10 +43,14 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="mv" value="1">
-            <input type="hidden" name="web10" value="1">
+            <?php
+                if( !array_key_exists('activity', $_REQUEST) )
+                    echo '<input type="hidden" name="web10" value="1">';
+            ?>
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="runs" value="8">
             <input type="hidden" name="discard" value="3">
+            <input type="hidden" name="bodies" value="1">
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
             <?php
@@ -173,7 +177,12 @@ $page_description = "Comparison Test$testLabel.";
                             <select name="backend" id="backend">
                                 <option value="prod" selected>Production</option>
                                 <option value="staging">Staging</option>
+                                <option value="rahul">Rahul Playground</option>
                             </select>
+                        </li>
+                        <li>
+                            <label for="blank">New Blank Page<br><small>[host]/pss/wpt_blank</small></label>
+                            <input type="checkbox" name="blank" id="blank" class="checkbox">
                         </li>
                         <li>
                             <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
@@ -287,6 +296,7 @@ $page_description = "Comparison Test$testLabel.";
                             '{test}\n' .
                             'label=Optimized\n' .
                             '{script}\n' .
+                            'overrideHost\t%HOSTR%\tpsa.pssdemos.com\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
                             '{/test}\n' .
@@ -297,6 +307,7 @@ $page_description = "Comparison Test$testLabel.";
                             'setDnsName\t%HOSTR%\t' . $_GET['origin'] . '\n'.
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
+                            'navigate\tabout:blank\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -306,7 +317,9 @@ $page_description = "Comparison Test$testLabel.";
                             'label=Optimized Path\n' .
                             '{script}\n' .
                             'logdata\t0\n' .
+                            'overrideHost\t%HOSTR%\tpsa.pssdemos.com\n' .
                             'navigate\t" + landing + "\n' .
+                            'navigate\tabout2\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -337,6 +350,7 @@ $page_description = "Comparison Test$testLabel.";
                             '{script}\n' .
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
+                            'navigate\tabout:blank\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -349,6 +363,7 @@ $page_description = "Comparison Test$testLabel.";
                             'overrideHost\t%HOSTR%\tpsa.pssdemos.com\n' .
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
+                            'navigate\tabout2\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -361,6 +376,19 @@ $page_description = "Comparison Test$testLabel.";
                 var backend = form.backend.value;
                 if (backend == 'staging') {
                     batch = batch.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
+                } else if (backend == 'rahul') {
+                    batch = batch.replace(/psa\.pssdemos\.com/g, 'rahulbansal-wpt.pssplayground.com' + 
+                        '\nsetDnsName\tproxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                        '\nsetDnsName\t1-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                        '\nsetDnsName\t2-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                        '\nsetDnsName\t3-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                        '\nsetDnsName\t4-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com');
+                }
+
+                if (form.blank.checked) {
+                    batch = batch.replace(/about2/g, '%HOSTR%/pss/wpt_blank');
+                } else {
+                    batch = batch.replace(/about2/g, 'about:blank');
                 }
 
                 form.bulkurls.value=batch;

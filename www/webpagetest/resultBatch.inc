@@ -488,11 +488,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 {
                     $optimized[0] = $pageData[$fvMedian][0];
                     $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                    $optimized[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
                 }
                 else
                 {
                     $original[0] = $pageData[$fvMedian][0];
                     $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                    $original[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
                 }
                 if( !strlen($url) )
                     $url = $pageData[$fvMedian][0]['URL'];
@@ -507,11 +509,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 {
                     $optimized[1] = $pageData[$rvMedian][1];
                     $optimized[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                    $optimized[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                 }
                 else
                 {
                     $original[1] = $pageData[$rvMedian][1];
                     $original[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                    $original[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                 }
             }
         }
@@ -625,6 +629,10 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $json_response['data']['Original_RV_Visually_Complete'] = $original[1]['visualComplete'];
         $json_response['data']['Optimized_RV_Visually_Complete'] = $optimized[1]['visualComplete'];
         $json_response['data']['Tested_From'] = $location;
+        $json_response['data']['Original_FV_Page_Speed_Score'] = $original[0]['page_speed'];
+        $json_response['data']['Optimized_FV_Page_Speed_Score'] = $optimized[0]['page_speed'];
+        $json_response['data']['Original_RV_Page_Speed_Score'] = $original[1]['page_speed'];
+        $json_response['data']['Optimized_RV_Page_Speed_Score'] = $optimized[1]['page_speed'];
         
         if ($csv) {
             foreach ($json_response['data'] as $label => $value) {
@@ -769,7 +777,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         } else {
             if( $videoComplete )
             {
-                echo '<h2>Visual Comparison*</h2>';
+                echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 VideoHtml($videoInfo['vID']);
             }
             else
@@ -912,7 +920,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
             echo '</div>';
         }
-        
+/*        
         echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
                 <tr><th class="empty"></th><th>Original</th><th>Optimized</th><th>Difference</th></tr>';
 
@@ -925,7 +933,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             DisplayPathMetric($label, $configs, 'loadTime');
         }
         echo '</table><br>';
-        
+*/        
         global $supportsAuth;
         global $admin;
         if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
