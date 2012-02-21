@@ -442,7 +442,7 @@ function CheckCron() {
     $should_run = false;
     $cron_lock = fopen('./tmp/wpt_cron.lock', 'w+');
     if ($cron_lock !== false) {
-        if (flock($cron_lock, LOCK_EX)) {
+        if (flock($cron_lock, LOCK_EX | LOCK_NB)) {
             $last_run = 0;
             if (is_file('./tmp/wpt_cron.dat'))
                 $last_run = file_get_contents('./tmp/wpt_cron.dat');
