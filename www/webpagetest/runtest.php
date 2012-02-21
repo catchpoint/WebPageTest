@@ -70,6 +70,9 @@
             $test['testLatency'] = (int)$req_latency;
             $test['plr'] = trim($req_plr);
             $test['callback'] = $req_pingback;
+            if (!$json && !isset($req_pingback) && isset($req_callback)) {
+                $test['callback'] = $req_callback;
+            }
             $test['agent'] = $req_agent;
             $test['aft'] = $req_aft;
             $test['aftEarlyCutoff'] = (int)$req_aftec;

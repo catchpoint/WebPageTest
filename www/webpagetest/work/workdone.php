@@ -277,21 +277,35 @@ else
             // send a callback request
             if( isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback']) )
             {
-                // build up the url we are going to ping
-                $url = $testInfo['callback'];
-                if( strncasecmp($url, 'http', 4) )
-                    $url = "http://" . $url;
-                if( strpos($url, '?') == false )
-                    $url .= '?';
-                else
-                    $url .= '&';
-                $url .= "id=$id";
+                $send_callback = true;
+                $testId = $id;
                 
-                // set a 10 second timeout on the request
-                $ctx = stream_context_create(array('http' => array('timeout' => 10))); 
+                if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
+                    require_once('testStatus.inc');
+                    $testId = $testInfo['batch_id'];
+                    $status = GetTestStatus($testId);
+                    $send_callback = false;
+                    if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
+                        $send_callback = true;
+                }
+                
+                if ($send_callback) {
+                    // build up the url we are going to ping
+                    $url = $testInfo['callback'];
+                    if( strncasecmp($url, 'http', 4) )
+                        $url = "http://" . $url;
+                    if( strpos($url, '?') == false )
+                        $url .= '?';
+                    else
+                        $url .= '&';
+                    $url .= "id=$testId";
+                    
+                    // set a 10 second timeout on the request
+                    $ctx = stream_context_create(array('http' => array('timeout' => 10))); 
 
-                // send the request (we don't care about the response)
-                file_get_contents($url, 0, $ctx);
+                    // send the request (we don't care about the response)
+                    file_get_contents($url, 0, $ctx);
+                }
             }
             
             // send a beacon?
