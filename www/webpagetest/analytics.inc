@@ -1,5 +1,5 @@
 <?php 
-if($settings['analytics']) 
+if(array_key_exists('analytics', $settings) && strlen($settings['analytics'])) 
 { 
 ?>
     <script type="text/javascript">

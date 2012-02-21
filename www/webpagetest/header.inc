@@ -35,7 +35,7 @@
         if( !defined('BARE_UI') )
         {
             // see if we have a location that the test was run from (for a custom ad)
-            $testLoc;
+            $testLoc = null;
             if( isset($adLoc) )
                 $testLoc = $adLoc;
             elseif( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
@@ -43,7 +43,7 @@
             elseif(isset($_COOKIE["cfg"]))
                 $testLoc = $_COOKIE["cfg"];
             
-            if( strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
+            if( isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
                 include("./custom/$testLoc/headerAd.inc");
             elseif( is_file('./ads/header.inc') && $_SERVER['HTTP_SSL'] != 'On' )
                 include('./ads/header.inc');

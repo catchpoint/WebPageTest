@@ -77,14 +77,19 @@
     <?php
         // display the sponsor logos across the bottom of the page
         $sponsors = array();
-        $s = parse_ini_file('./settings/sponsors.ini', true);
-        foreach( $s as &$entry )
-            if( strlen($entry['logo']) ) {
-                $offset = 0;
-                if( $entry['index'] )
-                    $offset = -40 * $entry['index'];
-                $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset);
+        if (is_file('./settings/sponsors.ini')) {
+            $s = parse_ini_file('./settings/sponsors.ini', true);
+            if (is_array($s) && count($s)) {
+                foreach( $s as &$entry ){
+                    if( strlen($entry['logo']) ) {
+                        $offset = 0;
+                        if( $entry['index'] )
+                            $offset = -40 * $entry['index'];
+                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset);
+                    }
+                }
             }
+        }
         
         $count = count($sponsors);
         if( $count && !defined('BARE_UI') )
@@ -130,6 +135,11 @@
             document.getElementById("more_feeds_" + column).className = "";
             return false;
         }
+        <?php
+        if (!$privateInstall) {
+            echo '(function(a,b,c){function d(){var a=b.createElement(c),d=b.getElementsByTagName(c)[0];a.async=a.src="http://s2.cdnplanet.com/static/rum/rum.js",d.parentNode.insertBefore(a,d)}if(a.location.protocol=="https:")return;a.addEventListener&&a.addEventListener("load",d,!1)})(window,document,"script")';
+        }
+        ?>
     </script>
     <?php
     if(extension_loaded('newrelic'))

@@ -24,9 +24,11 @@ if (isset($_REQUEST['map'])) {
 }
 // load the secret key (if there is one)
 $secret = '';
-$keys = parse_ini_file('./settings/keys.ini', true);
-if ($keys && isset($keys['server']) && isset($keys['server']['secret'])) {
-  $secret = trim($keys['server']['secret']);
+if (is_file('./settings/keys.ini')) {
+    $keys = parse_ini_file('./settings/keys.ini', true);
+    if (is_array($keys) && array_key_exists('server', $keys) && array_key_exists('secret', $keys['server'])) {
+      $secret = trim($keys['server']['secret']);
+    }
 }
 $url = '';
 if (isset($req_url)) {
