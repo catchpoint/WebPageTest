@@ -46,6 +46,8 @@ foreach($compTests as $t)
         $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
         if( $testInfo !== FALSE )
         {
+            if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
+                $test['location'] = $testInfo['test']['location'];
             if( isset($testInfo['test']) && isset($testInfo['test']['completeTime']) )
             {
                 $test['done'] = true;

@@ -40,8 +40,19 @@ else
 
     $title = 'Web page visual comparison';
     $labels = '';
+    $location = null;
     foreach( $tests as &$test )
     {
+        if (array_key_exists('location', $test)) {
+            if (!isset($location)) {
+                $location = $test['location'];
+            } elseif ($test['location'] != $location) {
+                $location = '';
+            }
+        } else {
+            $location = '';
+        }
+        
         if( strlen($test['name']) )
         {
             if( strlen($labels) )
@@ -204,6 +215,11 @@ else
                     width: 2px;
                     background-color: #D00;
                 }
+                #location {
+                    text-align: left;
+                    padding: 5px;
+                    width: 100%;
+                }
                 <?php
                 include "waterfall.css";
                 ?>
@@ -218,12 +234,16 @@ else
                 $filmstrip = $_REQUEST['tests'];
                 include 'header.inc';
 
-                if( $error )
+                if( $error ) {
                     echo "<h1>$error</h1>";
-                elseif( $ready )
+                } elseif( $ready ) {
+                    if (isset($location) && strlen($location)) {
+                        echo "<div id=\"location\">Tested From: $location</div>";
+                    }
                     ScreenShotTable();
-                else
+                } else {
                     DisplayStatus();
+                }
                 ?>
             
                 <?php include('footer.inc'); ?>

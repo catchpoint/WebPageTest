@@ -164,11 +164,12 @@ else
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
                 }
 
-                if( !strlen($test['label']) )
-                {
-                    $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
+                $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
+                if( !strlen($test['label']) ) {
                     $test['label'] = trim($testInfo['label']);
                 }
+                if (array_key_exists('locationText', $testInfo))
+                    $test['location'] = $testInfo['locationText'];
                 if( !strlen($test['label']) )
                     $test['label'] = trim($test['pageData'][1][0]['URL']);
                 $labels[] = $test['label'];
@@ -276,6 +277,7 @@ else
                         mkdir($dest, 0777, true);
                     if( count($labels) )
                         file_put_contents("$dest/labels.txt", json_encode($labels));
+                    gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
                     
                     // move the file to the video work directory
                     rename( $zipFile, "./work/video/$id.zip" );

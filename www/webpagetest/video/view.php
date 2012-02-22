@@ -53,6 +53,24 @@ if( is_dir("./$dir") )
             $title .= $label;
         }
     }
+    
+    $location = null;
+    if (gz_is_file("./$dir/testinfo.json")) {
+        $tests = json_decode(gz_file_get_contents("./$dir/testinfo.json"), true);
+        if (is_array($tests) && count($tests)) {
+            foreach($tests as &$test) {
+                if (array_key_exists('location', $test)) {
+                    if (!isset($location)) {
+                        $location = $test['location'];
+                    } elseif ($location != $test['location']) {
+                        $location = '';
+                    }
+                } else {
+                    $location = '';
+                }
+            }
+        }
+    }
 }
 
 if( $xml || $json )
@@ -160,6 +178,11 @@ else
                 margin-left: auto;
                 margin-right: auto;
             }
+            #location {
+                text-align: left;
+                padding: 5px;
+                width: 100%;
+            }
             <?php
             if( $embed )
                 echo 'body {background-color: black;}';
@@ -180,6 +203,10 @@ else
 
             if( $valid && ($done || $embed) )
             {
+                if (isset($location) && strlen($location)) {
+                    echo "<div id=\"location\">Tested From: $location</div>";
+                }
+
                 $width = 800;
                 $height = 600;
 
