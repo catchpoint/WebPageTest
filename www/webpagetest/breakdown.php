@@ -208,7 +208,7 @@ if( (int)$test[test][fvonly] == 0 )
             var fvColors = new Array();
             var fvBytes = new google.visualization.DataTable();
             fvBytes.addColumn('string', 'Content Type');
-            fvBytes.addColumn('number', 'Requests');
+            fvBytes.addColumn('number', 'Bytes');
             fvBytes.addRows(<?php echo count($breakdownFv); ?>);
             <?php
             $index = 0;
@@ -259,7 +259,7 @@ if( (int)$test[test][fvonly] == 0 )
                 var rvColors = new Array();
                 var rvBytes = new google.visualization.DataTable();
                 rvBytes.addColumn('string', 'Content Type');
-                rvBytes.addColumn('number', 'Requests');
+                rvBytes.addColumn('number', 'Bytes');
                 rvBytes.addRows(<?php echo count($breakdownRv); ?>);
                 <?php
                 $index = 0;
