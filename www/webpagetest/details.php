@@ -106,7 +106,7 @@ $page_description = "Website performance test details$testLabel";
                     </div>
                     <?php
 	    		        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
-			            if ( $settings['enable_google_csi'] )
+			            if ( is_dir('./google') && $settings['enable_google_csi'] )
 				            echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
@@ -193,7 +193,7 @@ $page_description = "Website performance test details$testLabel";
                     </tr>
                 </table><br>
 		        <?php
-		        if( isset($test['testinfo']['extract_csi']) )
+		        if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
 		        {
 			        require_once('google/google_lib.inc');
                     $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);

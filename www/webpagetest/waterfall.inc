@@ -212,7 +212,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
     // Get the CSI information.
-    if ($settings['enable_google_csi'] == 1) {
+    if (is_dir('./google') && $settings['enable_google_csi'] == 1) {
         require_once('./google/google_lib.inc');
         if (@$settings['enable_google_csi_filter'] == 1) {
             $filter = array('prt' => 1, 'ol' => 1, 'aft' => 1);

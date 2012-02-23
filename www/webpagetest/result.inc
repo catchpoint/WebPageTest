@@ -110,7 +110,7 @@ $page_description = "Website performance test result$testLabel.";
                     echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
                     if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
                         echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
-		            if( $settings['enable_google_csi'] )
+		            if( is_dir('./google') && $settings['enable_google_csi'] )
 			            echo '<br><a href="/google/view_csi.php?test=' . $id . '">View CSI data</a>';
                     if( $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
@@ -247,7 +247,7 @@ $page_description = "Website performance test result$testLabel.";
                     ?>
                     <br>
                 <?php
-                    if( isset($test['testinfo']['extract_csi']) && $fvMedian && count($pageData) > 1 )
+                    if( is_dir('./google') && isset($test['testinfo']['extract_csi']) && $fvMedian && count($pageData) > 1 )
 		            {
 			        require_once('google/google_lib.inc');
 			        // Draw the table and print the first-view details.

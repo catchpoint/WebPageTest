@@ -1,5 +1,6 @@
 <?php
 set_time_limit(300);
+require_once('./video/visualProgress.inc.php');
 if( !defined('BARE_UI') )
     define('BARE_UI', true);
 $csv = false;
@@ -450,6 +451,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $json_response;
     global $videoInfo;
     global $videoDirty;
+    global $admin;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -459,6 +461,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $fvRenderTimes = array();
     $rvLoadTimes = array();
     $rvRenderTimes = array();
+    $fvFLI = array();
+    $rvFLI = array();
     $original = array();
     $optimized = array();
     $count = 0;
@@ -472,6 +476,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $fvRenderTime = null;
         $rvLoadTime = null;
         $rvRenderTime = null;
+        $fvFLIvalue = null;
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
         $testPath = './' . $test['path'];
@@ -484,17 +489,23 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $test['fvMedian'] = $fvMedian;
                 $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
                 $fvRenderTime = $pageData[$fvMedian][0]['render'];
+                $visual = GetVisualProgress("$testPath/video_{$fvMedian}");
+                if (array_key_exists('FLI', $visual)) {
+                    $fvFLIvalue = $visual['FLI'];
+                }
                 if( $count )
                 {
                     $optimized[0] = $pageData[$fvMedian][0];
                     $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                     $optimized[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+                    $optimized[0]['FLI'] = $fvFLIvalue;
                 }
                 else
                 {
                     $original[0] = $pageData[$fvMedian][0];
                     $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                     $original[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+                    $original[0]['FLI'] = $fvFLIvalue;
                 }
                 if( !strlen($url) )
                     $url = $pageData[$fvMedian][0]['URL'];
@@ -525,10 +536,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         $fvLoadTimes[$count] = $fvLoadTime;
         $fvRenderTimes[$count] = $fvRenderTime;
+        $fvFLI[$count] = $fvFLIvalue;
         if( !$fvonly )
         {
             $rvLoadTimes[$count] = $rvLoadTime;
             $rvRenderTimes[$count] = $rvRenderTime;
+            $rvFLI[$count] = $rvFLIvalue;
         }
         $count++;
     }
@@ -633,6 +646,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $json_response['data']['Optimized_FV_Page_Speed_Score'] = $optimized[0]['page_speed'];
         $json_response['data']['Original_RV_Page_Speed_Score'] = $original[1]['page_speed'];
         $json_response['data']['Optimized_RV_Page_Speed_Score'] = $optimized[1]['page_speed'];
+        $json_response['data']['Original_FV_Feels_Like'] = $original[0]['FLI'];
+        $json_response['data']['Optimized_FV_Feels_Like'] = $optimized[0]['FLI'];
         
         if ($csv) {
             foreach ($json_response['data'] as $label => $value) {
@@ -690,6 +705,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
             DisplayMetric('Page Load Time', $fvLoadTimes, $count);
             if( $includeRender )
                 DisplayMetric('Start Render Time', $fvRenderTimes, $count);
+            if( $admin || strpos($_COOKIE['google_email'], '@google.com') !== false ) {
+                DisplayMetric('Speed Index (lower is better)', $fvFLI, $count, false, false);
+            }
             if( !$fvonly )
             {
                 DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
@@ -1255,7 +1273,7 @@ function DisplayBlinkTable($tests, $tableLabel)
 * @param mixed $values
 * @param mixed $count
 */
-function DisplayMetric($metric, &$values, $count, $reverse = false)
+function DisplayMetric($metric, &$values, $count, $reverse = false, $seconds = true)
 {
     // the actual values
     echo "<tr><td class=\"right\"><b>$metric</b></td>";
@@ -1263,8 +1281,13 @@ function DisplayMetric($metric, &$values, $count, $reverse = false)
     for( $i = 0; $i < $count; $i++ )
     {
         echo '<td>';
-        if ($values[$i])
-            echo number_format( $values[$i] / 1000.0, 3) . 's';
+        if ($values[$i]) {
+            if ($seconds) {
+                echo number_format( $values[$i] / 1000.0, 3) . 's';
+            } else {
+                echo $values[$i];
+            }
+        }
         echo '</td>';
         if( $i )
         {
@@ -1284,7 +1307,11 @@ function DisplayMetric($metric, &$values, $count, $reverse = false)
                 }
                 elseif( $delta < 0 )
                     $class = 'good';
-                echo "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
+                if ($seconds) {
+                    echo "<td class=\"$class\">$direction" . number_format( $delta / 1000.0, 3) . "s ($pct%)</td>";
+                } else {
+                    echo "<td class=\"$class\">$direction{$delta} ($pct%)</td>";
+                }
             }
             else
                 echo '<td></td>';
