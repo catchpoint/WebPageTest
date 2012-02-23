@@ -5,7 +5,7 @@
 function GetVisualProgress($video_directory) {
     $cache_file = "$video_directory/progress.dat";
     $dirty = false;
-    $current_version = 2;
+    $current_version = 3;
     if (gz_is_file($cache_file)) {
         $frames = json_decode(gz_file_get_contents($cache_file), true);
         if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
@@ -22,7 +22,7 @@ function GetVisualProgress($video_directory) {
         $last_file = null;
         $first_file = null;
         foreach ($files as $file) {
-            if (strpos($file,'frame_') !== false) {
+            if (strpos($file,'frame_') !== false && strpos($file,'.hist') === false) {
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
                     if (!isset($first_file))
@@ -66,31 +66,52 @@ function GetVisualProgress($video_directory) {
 */
 function GetImageHistogram($image_file) {
     $histogram = null;
-    $im = imagecreatefromjpeg($image_file);
-    if ($im !== false) {
-        $width = imagesx($im);
-        $height = imagesy($im);
-        if ($width > 0 && $height > 0) {
-            $histogram = array();
-            $histogram['r'] = array();
-            $histogram['g'] = array();
-            $histogram['b'] = array();
-            for ($i = 0; $i < 256; $i++) {
-                $histogram['r'][$i] = 0;
-                $histogram['g'][$i] = 0;
-                $histogram['b'][$i] = 0;
-            }
-            for ($y = 0; $y < $height; $y++) {
-                for ($x = 0; $x < $width; $x++) {
-                    $rgb = ImageColorAt($im, $x, $y); 
-                    $r = ($rgb >> 16) & 0xFF;
-                    $g = ($rgb >> 8) & 0xFF;
-                    $b = $rgb & 0xFF;
-                    // ignore white pixels
-                    if ($r != 255 || $g != 255 || $b != 255) {
-                        $histogram['r'][$r]++;
-                        $histogram['g'][$g]++;
-                        $histogram['b'][$b]++;
+    $ext = strripos($image_file, '.jpg');
+    if ($ext !== false) {
+        $histogram_file = substr($image_file, 0, $ext) . '.hist';
+    }
+    // first, see if we have a client-generated histogram
+    if (isset($histogram_file) && is_file($histogram_file)) {
+        $histogram = json_decode(file_get_contents($histogram_file), true);
+        if (!is_array($histogram) || 
+            !array_key_exists('r', $histogram) ||
+            !array_key_exists('g', $histogram) ||
+            !array_key_exists('b', $histogram) ||
+            count($histogram['r']) != 256 ||
+            count($histogram['g']) != 256 ||
+            count($histogram['b']) != 256) {
+            unset($histogram);
+        }
+    }
+    
+    // generate a histogram from the image itself
+    if (!isset($histogram)) {
+        $im = imagecreatefromjpeg($image_file);
+        if ($im !== false) {
+            $width = imagesx($im);
+            $height = imagesy($im);
+            if ($width > 0 && $height > 0) {
+                $histogram = array();
+                $histogram['r'] = array();
+                $histogram['g'] = array();
+                $histogram['b'] = array();
+                for ($i = 0; $i < 256; $i++) {
+                    $histogram['r'][$i] = 0;
+                    $histogram['g'][$i] = 0;
+                    $histogram['b'][$i] = 0;
+                }
+                for ($y = 0; $y < $height; $y++) {
+                    for ($x = 0; $x < $width; $x++) {
+                        $rgb = ImageColorAt($im, $x, $y); 
+                        $r = ($rgb >> 16) & 0xFF;
+                        $g = ($rgb >> 8) & 0xFF;
+                        $b = $rgb & 0xFF;
+                        // ignore white pixels
+                        if ($r != 255 || $g != 255 || $b != 255) {
+                            $histogram['r'][$r]++;
+                            $histogram['g'][$g]++;
+                            $histogram['b'][$b]++;
+                        }
                     }
                 }
             }
@@ -136,7 +157,7 @@ function CalculateFeelsLikeIndex(&$frames) {
             $last_progress = $frame['progress'] / 100.0;
         }
     }
-    $index = (int)(2 * $index);
+    $index = (int)($index);
     
     return $index;
 }
