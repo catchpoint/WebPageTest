@@ -81,7 +81,7 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
         while($file = readdir($dir)) 
         {
             $path = $videoDir  . "/$file";
-            if( is_file($path) && !strncmp($file, 'frame_', 6)  &&  strpos($file, '.thm') === false)
+            if( is_file($path) && !strncmp($file, 'frame_', 6)  &&  strpos($file, '.thm') === false && strpos($file, '.hist') === false)
             {
                 $parts = explode('_', $file);
                 if( count($parts) >= 2 )
