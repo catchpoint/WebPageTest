@@ -100,9 +100,6 @@
     RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4&run=$5&cached=1
     RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4_$5&run=$6&cached=1
 
-    #other charts (just converting .png to .php)
-    RewriteRule ^breakdownPie.png$ /breakdownPie.php [qsa]
-
     #location cookie dropping
     RewriteRule ^loc/([a-zA-Z0-9_]+)$ /util/setloc.php?location=$1 
     RewriteRule ^loc/([a-zA-Z0-9_]+)$/ /util/setloc.php?location=$1 
