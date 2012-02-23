@@ -41,7 +41,7 @@ function SelectRequest(request) {
         var r = wptRequestData[request - 1];
         if (r['full_url'] !== undefined)
             details += '<b>URL:</b> ' + r['full_url'] + '<br>';
-        if (r['initiator'] !== undefined) {
+        if (r['initiator'] !== undefined && r['initiator'].length > 0) {
             details += '<b>Loaded By:</b> ' + r['initiator'];
             if (r['initiator_line'] !== undefined)
                 details += ':' + r['initiator_line'];
