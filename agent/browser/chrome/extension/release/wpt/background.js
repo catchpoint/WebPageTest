@@ -13804,7 +13804,10 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 	try {
 		g_instance.tabId_ = tabId;
 		g_instance.chromeApi_ = chromeApi;
-		if (g_instance.chromeApi_.experimental['debugger']) {
+		if (g_instance.chromeApi_['debugger']) {
+				var version = "1.0";
+				g_instance.chromeApi_.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
+		} else if (g_instance.chromeApi_.experimental['debugger']) {
 			// deal with the different function signatures for different chrome versions
 			try {
 				g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
@@ -13821,7 +13824,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 /**
  * Actual message callback
  */
-wpt.chromeDebugger.OnMessage = function(message, params) {
+wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 	// Network events
 	if (message === "Network.requestWillBeSent") {
 		if (params.request.url.indexOf('http') == 0) {
@@ -13858,12 +13861,22 @@ wpt.chromeDebugger.OnMessage = function(message, params) {
 }
 
 /**
- * Trampoline using the old interface
+ * Attached using the 1.0 released interface
  */
-wpt.chromeDebugger.OnMessageExperimental = function(tabId, message, params) {
-	wpt.chromeDebugger.OnMessage(message, params);
+wpt.chromeDebugger.OnAttachDebugger = function(){
+	wpt.LOG.info('attached to debugger extension interface');
+	g_instance.requests = {};
+	
+	// attach the event listener
+	g_instance.chromeApi_.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
+	
+	// start the different interfaces we are interested in monitoring
+	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
+	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
+	// the timeline is pretty resource intensive - TODO, make this optional
+	//g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
 }
-
+			
 /**
  * Attached using the old experimental interface
  */
@@ -13872,7 +13885,7 @@ wpt.chromeDebugger.OnAttachOld = function(){
 	g_instance.requests = {};
 	
 	// attach the event listener
-	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessageExperimental);
+	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
 	
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Network.enable");
@@ -13889,7 +13902,7 @@ wpt.chromeDebugger.OnAttachExperimental = function(){
 	g_instance.requests = {};
 	
 	// attach the event listener
-	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessageExperimental);
+	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
 	
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
