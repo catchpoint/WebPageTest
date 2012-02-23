@@ -174,7 +174,8 @@ bool WebPagetest::TestDone(WptTestDriver& test){
 void WebPagetest::GetImageFiles(const CString& directory,
                                 CAtlList<CString>& image_files) {
   TCHAR * glob_patterns[] = {
-    _T("*.jpg"), _T("*.png"), _T("*.dtas"), _T("*.cap"), _T("*.gz")
+    _T("*.jpg"), _T("*.png"), _T("*.dtas"), _T("*.cap"), 
+    _T("*.gz"), _T("*.hist")
   };
   for (int i = 0; i < _countof(glob_patterns); i++) {
     GetFiles(directory, glob_patterns[i], image_files);

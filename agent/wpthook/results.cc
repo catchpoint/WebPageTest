@@ -249,10 +249,10 @@ void Results::SaveVideo(void) {
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
     CxImage * img = new CxImage;
     if (image.Get(*img)) {
-      DWORD image_time = _test_state.ElapsedMsFromStart(image._capture_time);
+      DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
       // we save the frames in increments of 100ms (for now anyway)
       // round it to the closest interval
-      image_time = ((image_time + 50) / 100);
+      DWORD image_time = ((image_time_ms + 50) / 100);
       // resize the image down to a max width of 400 to reduce bandwidth/space
       DWORD newWidth = min(400, img->GetWidth() / 2);
       DWORD newHeight = (DWORD)((double)img->GetHeight() * 
@@ -273,6 +273,9 @@ void Results::SaveVideo(void) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                             image_time);
           SaveImage(*img, file_name, false, _test._image_quality);
+          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
+                            image_time);
+          SaveHistogram(*img, file_name);
         }
       } else {
         width = img->GetWidth();
@@ -280,6 +283,8 @@ void Results::SaveVideo(void) {
         // always save the first image at time zero
         file_name = _file_base + _T("_progress_0000.jpg");
         SaveImage(*img, file_name, false, _test._image_quality);
+        file_name = _file_base + _T("_progress_0000.hist");
+        SaveHistogram(*img, file_name);
       }
 
       if (last_image)
@@ -335,6 +340,66 @@ void Results::SaveImage(CxImage& image, CString file,
     image.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
     image.SetJpegQuality((BYTE)quality);
     image.Save(file, CXIMAGE_FORMAT_JPG);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Save the image histogram as a json data structure
+-----------------------------------------------------------------------------*/
+void Results::SaveHistogram(CxImage& image, CString file) {
+  if (image.IsValid()) {
+    DWORD r[256], g[256], b[256];
+    for (int i = 0; i < 256; i++) {
+      r[i] = g[i] = b[i] = 0;
+    }
+    DWORD width = image.GetWidth();
+    DWORD height = image.GetHeight();
+    for (DWORD y = 0; y < height; y++) {
+      for (DWORD x = 0; x < width; x++) {
+        RGBQUAD pixel = image.GetPixelColor(x,y);
+        r[pixel.rgbRed]++;
+        g[pixel.rgbGreen]++;
+        b[pixel.rgbBlue]++;
+      }
+    }
+    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
+                                    CREATE_ALWAYS, 0, 0);
+    if (file_handle != INVALID_HANDLE_VALUE) {
+      DWORD bytes;
+      CStringA buff = "{\"r\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", r[i]);
+        } else {
+          buff.Format("%d", r[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "],\"g\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", g[i]);
+        } else {
+          buff.Format("%d", g[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "],\"b\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", b[i]);
+        } else {
+          buff.Format("%d", b[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "]}";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      CloseHandle(file_handle);
+    }
   }
 }
 
