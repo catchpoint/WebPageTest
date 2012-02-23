@@ -1,0 +1,466 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\PageTestExe.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "../pagetest/Pagetest.ico"
+IDR_PageTestExeTYPE     ICON                    "../pagetest/Pagetest.ico"
+IDI_WARN                ICON                    "../pagetest/warning.ico"
+IDI_STAR                ICON                    "../pagetest/Favorites.ico"
+IDI_LOCK                ICON                    "../pagetest/lock.ico"
+IDI_INACTIVE            ICON                    "../pagetest/inactive.ico"
+IDI_CROSS               ICON                    "../pagetest/error.ico"
+IDI_CHECK               ICON                    "../pagetest/Check.ico"
+IDI_ACTIVE              ICON                    "../pagetest/Pagetest.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About PageTestExe...",       ID_APP_ABOUT
+    END
+END
+
+IDR_MENU1 MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New",                        32774, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Save &Load Details...",       ID_FILE_SAVEREPORT, GRAYED
+        MENUITEM "Save &Optimization Report...", ID_FILE_SAVEOPTIMIZATIONREPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Export Waterfall...",        ID_FILE_EXPORTWATERFALL, GRAYED
+        MENUITEM "Export &Checklist...",        ID_FILE_EXPORTOPTIMIZATIONCHART
+        MENUITEM SEPARATOR
+        MENUITEM "&Run Script...",              ID_FILE_RUNSCRIPT
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Font"
+        BEGIN
+            MENUITEM "&Small",                      ID_FONT_SMALL
+            MENUITEM "&Normal",                     ID_FONT_NORMAL, CHECKED
+        END
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Stop Measurement",           ID_TOOLS_STOPMEASUREMENT, GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Quick Start Guide",          ID_HELP_QUICKSTARTGUIDE
+        MENUITEM "&Pagetest on the web",        ID_HELP_PAGETESTONTHEWEB
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                      ID_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS 
+BEGIN
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_F1,          ID_SHOW_UI,             VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About PageTestExe"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,14,14,21,20
+    LTEXT           "PageTestExe, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,42,26,114,8
+    DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
+END
+
+IDD_WATCHDLG DIALOGEX 0, 0, 426, 302
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "AOL Pagetest"
+MENU IDR_MENU1
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_WATERFALL,"SysTreeView32",TVS_HASBUTTONS | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | TVS_FULLROWSELECT | TVS_INFOTIP | WS_BORDER | WS_HSCROLL | WS_TABSTOP,222,74,197,221,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_RICHEDIT,"RichEdit20W",NOT WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | 0x2884,7,74,159,210
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,7,316,61
+END
+
+IDD_DETAILSDLG DIALOGEX 0, 0, 414, 241
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Request Details"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,7,400,227
+    EDITTEXT        IDC_DETAILS,7,21,400,213,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_ABOUTDLG DIALOGEX 0, 0, 175, 98
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "About AOL Pagetest"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,62,75,50,16
+    ICON            IDI_ACTIVE,IDC_STATIC,7,7,21,20
+    LTEXT           "AOL Pagetest\nCopyright (c) 2007, AOL LLC.",IDC_STATIC,36,7,132,18
+    LTEXT           "Version:",IDC_STATIC,52,32,26,8
+    LTEXT           "0.0.0.0",IDC_VERSION,81,32,52,8
+    LTEXT           "This software is based in part on the work of the Independent JPEG Group.",IDC_STATIC,7,49,161,22
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,2,0,312
+ PRODUCTVERSION 2,2,0,312
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "WebPagetest LLC"
+            VALUE "FileDescription", "PageTest Web Site Testing"
+            VALUE "FileVersion", "2.2.0.312"
+            VALUE "InternalName", "PageTestExe.exe"
+            VALUE "LegalCopyright", "(c) 2011 WebPagetest LLC,  All rights reserved."
+            VALUE "OriginalFilename", "PageTest.exe"
+            VALUE "ProductName", "Pagetest"
+            VALUE "ProductVersion", "2.2.0.312"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 163
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 55
+    END
+
+    IDD_WATCHDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 419
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 295
+        HORZGUIDE, 27
+    END
+
+    IDD_DETAILSDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 407
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 234
+    END
+
+    IDD_ABOUTDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 168
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  Make sure that the OLE libraries are the correct version."
+    IDP_SOCKETS_INIT_FAILED "Windows sockets initialization failed."
+END
+
+STRINGTABLE 
+BEGIN
+    IDR_MAINFRAME           "PageTest\n\nPageTest\n\n\nPageTest.Document\nPageTest.Document"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "PageTest"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_DIRECT    "Print the active document using current options\nQuick Print"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+    ID_FILE_MRU_FILE5       "Open this document"
+    ID_FILE_MRU_FILE6       "Open this document"
+    ID_FILE_MRU_FILE7       "Open this document"
+    ID_FILE_MRU_FILE8       "Open this document"
+    ID_FILE_MRU_FILE9       "Open this document"
+    ID_FILE_MRU_FILE10      "Open this document"
+    ID_FILE_MRU_FILE11      "Open this document"
+    ID_FILE_MRU_FILE12      "Open this document"
+    ID_FILE_MRU_FILE13      "Open this document"
+    ID_FILE_MRU_FILE14      "Open this document"
+    ID_FILE_MRU_FILE15      "Open this document"
+    ID_FILE_MRU_FILE16      "Open this document"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE 
+BEGIN
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle Status Bar"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\PageTestExe.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

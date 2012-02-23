@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="stdafx.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wptdriver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="webpagetest.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_driver_core.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_settings.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_status.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="web_browser.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ipfw.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="traceroute.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winpcap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wpt_test_driver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="web_page_replay.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\adler32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\compress.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\crc32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\deflate.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzclose.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzlib.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzread.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\gzwrite.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\infback.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\inffast.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\inflate.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\inftrees.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\ioapi.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\iowin32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\mztools.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\trees.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\uncompr.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\unzip.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\zip.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\zutil.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="software_update.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipfw.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wptdriver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ipfw_int.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="traceroute.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="web_browser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="web_page_replay.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="webpagetest.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_driver_core.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_settings.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_status.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_test.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wpt_test_driver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\zutil.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\crc32.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\crypt.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\deflate.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\inffast.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\inffixed.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\inflate.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\inftrees.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\ioapi.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\iowin32.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\mztools.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\trees.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\unzip.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\zconf.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\zip.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\zlib.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="software_update.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="wptdriver.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="wptdriver.ini" />
+    <None Include="zlib\zlib.vcxproj.filters">
+      <Filter>Third-Party</Filter>
+    </None>
+    <None Include="wptdriver.ini.sample" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{32652dac-94aa-4c20-b5f0-79159b8e775f}</UniqueIdentifier>
+      <Extensions>.h, .cc, .cpp</Extensions>
+    </Filter>
+    <Filter Include="Third-Party">
+      <UniqueIdentifier>{1a451f93-d49f-4b58-945e-6529be20f380}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{ed1face4-e056-4fc9-a4c0-70e27b58510e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\zlib">
+      <UniqueIdentifier>{acc57133-2a97-41a2-9d4d-b960de240cee}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wptdriver.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

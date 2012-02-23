@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /result/
+Disallow: /testlog/
+Disallow: /testlog.php
+Disallow: /forums/attachment.php
+Disallow: /results/
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /

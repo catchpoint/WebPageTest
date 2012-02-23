@@ -1,0 +1,99 @@
+<?php
+
+require_once('common.inc');
+
+/*
+    Helper functions to deal with aggregate benchmark data
+*/
+
+/**
+* Load data for the given request (benchmark/metric)
+* 
+*/
+function LoadData(&$data, &$columns) {
+    $ok = false;
+    $data = array();
+    if (array_key_exists('benchmark', $_REQUEST) && 
+        array_key_exists('metric', $_REQUEST) && 
+        array_key_exists('aggregate', $_REQUEST) && 
+        array_key_exists('cached', $_REQUEST)) {
+        $benchmark = $_REQUEST['benchmark'];
+        if (GetConfigurationNames($benchmark, $columns)) {
+            $cached = (int)$_REQUEST['cached'];
+            $metric = $_REQUEST['metric'];
+            $aggregate = $_REQUEST['aggregate'];
+            $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+            if (gz_is_file($data_file)) {
+                $raw_data = json_decode(gz_file_get_contents($data_file), true);
+                if (count($raw_data)) {
+                    $ok = true;
+                    foreach($raw_data as &$row) {
+                        if ($row['cached'] == $cached &&
+                            array_key_exists($aggregate, $row)) {
+                            $time = $row['time'];
+                            if (!array_key_exists($time, $data)) {
+                                $data[$time] = array();
+                            }
+                            $data[$time][$row['config']] = $row[$aggregate];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $ok;
+}
+
+/**
+* Get the list of configurations for the given benchmark
+* 
+* @param mixed $benchmark
+*/
+function GetConfigurationNames($benchmark, &$configs) {
+    $ok = false;
+    $configs = array();
+    if (include "./settings/benchmarks/$benchmark.php") {
+        $ok = true;
+        foreach ($configurations as $name => &$config) {
+            $configs[] = $name;
+        }
+    }
+    return $ok;
+}
+
+/**
+* Get information about the various benchmarks that are configured
+* 
+*/
+function GetBenchmarks() {
+    $benchmarks = array();
+    $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!count($bm_list))
+        $bm_list = glob('./settings/benchmarks/*.php');
+    foreach ($bm_list as $benchmark) {
+        $benchmarks[] = GetBenchmarkInfo(basename($benchmark, '.php'));
+    }
+    return $benchmarks;
+}
+
+/**
+* Get the information for a single benchmark
+* 
+* @param mixed $benchmark
+*/
+function GetBenchmarkInfo($benchmark) {
+    $info = array('name' => $benchmark);
+    if(include "./settings/benchmarks/$benchmark.php") {
+        if (isset($title)) {
+            $info['title'] = $title;
+        }
+        if (isset($description)) {
+            $info['description'] = $description;
+        }
+        if (isset($configurations)) {
+            $info['configurations'] = $configurations;
+        }
+    }
+    return $info;
+}
+?>
