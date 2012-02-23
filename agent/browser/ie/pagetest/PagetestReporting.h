@@ -208,5 +208,6 @@ private:
   DWORD CalculateAFT();
   void SaveVideo();
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
+  void SaveHistogram(CxImage& image, CString file);
 };
 

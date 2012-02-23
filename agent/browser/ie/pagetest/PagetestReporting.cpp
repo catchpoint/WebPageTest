@@ -639,7 +639,7 @@ void CPagetestReporting::ProcessResults(void)
 					// calculate bytes only for the wininet events						
 					in += w->in;
 					out += w->out;
-					if( w->docID )
+					if( endDoc && w->start < endDoc )
 					{
 						in_doc += w->in;
 						out_doc += w->out;
@@ -649,7 +649,7 @@ void CPagetestReporting::ProcessResults(void)
 					if( w->dnsStart )
 					{
 						nDns++; 
-						if( w->docID )
+						if( endDoc && w->start < endDoc )
 							nDns_doc++; 
 					}
 					
@@ -657,7 +657,7 @@ void CPagetestReporting::ProcessResults(void)
 					if( w->socketConnect )
 					{
 						nConnect++;
-						if( w->docID )
+						if( endDoc && w->start < endDoc )
 							nConnect_doc++;
 					}
 
@@ -672,7 +672,7 @@ void CPagetestReporting::ProcessResults(void)
 						default: nReqOther++; otherResponseCodes.AddTail(w->result); break;
 					}
 
-					if( event->docID )
+					if( endDoc && event->start < endDoc )
 					{
 						nRequest_doc++;
 						switch(w->result)
@@ -692,7 +692,7 @@ void CPagetestReporting::ProcessResults(void)
 					// flag errors based on the wininet events
 					if( !errorCode && (w->result >= 400 || w->result < 0) )
 					{
-						if( w->docID || abm == 1 )
+						if( (endDoc && w->start < endDoc) || abm == 1 )
 							errorCode = 99999;
 					}
 						
@@ -3209,6 +3209,70 @@ void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resi
 }
 
 /*-----------------------------------------------------------------------------
+  Save the image histogram as a json data structure
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
+  if (image.IsValid()) {
+    DWORD r[256], g[256], b[256];
+    for (int i = 0; i < 256; i++) {
+      r[i] = g[i] = b[i] = 0;
+    }
+    DWORD width = image.GetWidth();
+    DWORD height = image.GetHeight();
+    for (DWORD y = 0; y < height; y++) {
+      for (DWORD x = 0; x < width; x++) {
+        RGBQUAD pixel = image.GetPixelColor(x,y);
+        if (pixel.rgbRed != 255 || 
+            pixel.rgbGreen != 255 || 
+            pixel.rgbBlue != 255) {
+          r[pixel.rgbRed]++;
+          g[pixel.rgbGreen]++;
+          b[pixel.rgbBlue]++;
+        }
+      }
+    }
+    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
+                                    CREATE_ALWAYS, 0, 0);
+    if (file_handle != INVALID_HANDLE_VALUE) {
+      DWORD bytes;
+      CStringA buff = "{\"r\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", r[i]);
+        } else {
+          buff.Format("%d", r[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "],\"g\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", g[i]);
+        } else {
+          buff.Format("%d", g[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "],\"b\":[";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          buff.Format(",%d", b[i]);
+        } else {
+          buff.Format("%d", b[i]);
+        }
+        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      }
+      buff = "]}";
+      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      CloseHandle(file_handle);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
 	Write out the browser status updates (tab-delimited)
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveStatusUpdates(CString file)
@@ -3528,6 +3592,8 @@ void CPagetestReporting::SaveVideo()
         if (ImagesAreDifferent(last_image, img)) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
           SaveProgressImage(*img, file_name, false, imageQuality);
+          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)logFile, image_time);
+          SaveHistogram(*img, file_name);
           msVisualComplete = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
         }
       } 
@@ -3536,6 +3602,8 @@ void CPagetestReporting::SaveVideo()
         // always save the first image at time zero
         file_name = logFile + _T("_progress_0000.jpg");
         SaveProgressImage(*img, file_name, false, imageQuality);
+        file_name = logFile + _T("_progress_0000.hist");
+        SaveHistogram(*img, file_name);
       }
 
       if (last_image)

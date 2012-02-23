@@ -344,7 +344,7 @@ void Results::SaveImage(CxImage& image, CString file,
 }
 
 /*-----------------------------------------------------------------------------
-  Save the image histogram as a json data structure
+  Save the image histogram as a json data structure (ignoring white pixels)
 -----------------------------------------------------------------------------*/
 void Results::SaveHistogram(CxImage& image, CString file) {
   if (image.IsValid()) {
@@ -357,9 +357,13 @@ void Results::SaveHistogram(CxImage& image, CString file) {
     for (DWORD y = 0; y < height; y++) {
       for (DWORD x = 0; x < width; x++) {
         RGBQUAD pixel = image.GetPixelColor(x,y);
-        r[pixel.rgbRed]++;
-        g[pixel.rgbGreen]++;
-        b[pixel.rgbBlue]++;
+        if (pixel.rgbRed != 255 || 
+            pixel.rgbGreen != 255 || 
+            pixel.rgbBlue != 255) {
+          r[pixel.rgbRed]++;
+          g[pixel.rgbGreen]++;
+          b[pixel.rgbBlue]++;
+        }
       }
     }
     HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
