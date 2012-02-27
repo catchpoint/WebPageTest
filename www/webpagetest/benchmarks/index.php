@@ -31,24 +31,30 @@ $page_description = "WebPagetest benchmarks";
             $benchmarks = GetBenchmarks();
             $count = 0;
             foreach ($benchmarks as &$benchmark) {
-                $count++;
-                if (array_key_exists('title', $benchmark))
-                    $title = $benchmark['title'];
-                else
-                    $title = $benchmark['name'];
-                echo "<h2>$title</h2>\n";
-                if (array_key_exists('description', $benchmark))
-                    echo "<p>{$benchmark['description']}</p>\n";
-                $bm = urlencode($benchmark['name']);
-                $id = "g$count";
-                echo "<div id=\"$id\" class=\"benchmark-chart\"></div>\n";
-                echo "<script type=\"text/javascript\">
-                        $id = new Dygraph(
-                            document.getElementById(\"$id\"),
-                            \"/benchmarks/dygraph.php?benchmark=$bm&metric=docTime&cached=0&aggregate=avg\",
-                            {drawPoints: true}
-                        );
-                      </script>\n";
+                $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', 'avg');
+                if (isset($tsv) && strlen($tsv)) {
+                    $count++;
+                    if (array_key_exists('title', $benchmark))
+                        $title = $benchmark['title'];
+                    else
+                        $title = $benchmark['name'];
+                    $bm = urlencode($benchmark['name']);
+                    echo "<h2><a href=\"view.php?benchmark=$bm\">$title</a></h2>\n";
+                    if (array_key_exists('description', $benchmark))
+                        echo "<p>{$benchmark['description']}</p>\n";
+                    $id = "g$count";
+                    echo "<div id=\"$id\" class=\"benchmark-chart\"></div>\n";
+                    echo "<script type=\"text/javascript\">
+                            $id = new Dygraph(
+                                document.getElementById(\"$id\"),
+                                \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
+                                {drawPoints: true,
+                                legend: \"always\",
+                                xlabel: \"Date\",
+                                ylabel: \"Time to onload\"}
+                            );
+                          </script>\n";
+                }
             }
             ?>
             </div>

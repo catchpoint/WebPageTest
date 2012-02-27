@@ -6,36 +6,66 @@ require_once('common.inc');
     Helper functions to deal with aggregate benchmark data
 */
 
+function LoadDataTSV($benchmark, $cached, $metric, $aggregate) {
+    $tsv = null;
+    $isbytes = false;
+    $istime = false;
+    if (stripos($metric, 'bytes') !== false) {
+        $isbytes = true;
+    } elseif (stripos($metric, 'time') !== false || 
+            stripos($metric, 'render') !== false || 
+            stripos($metric, 'fullyloaded') !== false || 
+            stripos($metric, 'visualcomplete') !== false || 
+            stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'ttfb') !== false) {
+        $istime = true;
+    }
+    if (LoadData($data, $columns, $benchmark, $cached, $metric, $aggregate)) {
+        $tsv = 'Date';
+        foreach($columns as $column) {
+            $tsv .= "\t$column";
+        }
+        $tsv .= "\n";
+        foreach ($data as $time => &$row) {
+            $tsv .= date('Y-m-d H:i:s', $time);
+            foreach($columns as $column) {
+                $tsv .= "\t";
+                if (array_key_exists($column, $row)) {
+                    $value = $row[$column];
+                    if ($isbytes)
+                        $value = number_format($value / 1024.0, 3);
+                    elseif ($istime)
+                        $value = number_format($value / 1000.0, 3);
+                    $tsv .= $value;
+                }
+            }
+            $tsv .= "\n";
+        }
+    }
+    return $tsv;
+}
+
 /**
 * Load data for the given request (benchmark/metric)
 * 
 */
-function LoadData(&$data, &$columns) {
+function LoadData(&$data, &$columns, $benchmark, $cached, $metric, $aggregate) {
     $ok = false;
     $data = array();
-    if (array_key_exists('benchmark', $_REQUEST) && 
-        array_key_exists('metric', $_REQUEST) && 
-        array_key_exists('aggregate', $_REQUEST) && 
-        array_key_exists('cached', $_REQUEST)) {
-        $benchmark = $_REQUEST['benchmark'];
-        if (GetConfigurationNames($benchmark, $columns)) {
-            $cached = (int)$_REQUEST['cached'];
-            $metric = $_REQUEST['metric'];
-            $aggregate = $_REQUEST['aggregate'];
-            $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
-            if (gz_is_file($data_file)) {
-                $raw_data = json_decode(gz_file_get_contents($data_file), true);
-                if (count($raw_data)) {
-                    $ok = true;
-                    foreach($raw_data as &$row) {
-                        if ($row['cached'] == $cached &&
-                            array_key_exists($aggregate, $row)) {
-                            $time = $row['time'];
-                            if (!array_key_exists($time, $data)) {
-                                $data[$time] = array();
-                            }
-                            $data[$time][$row['config']] = $row[$aggregate];
+    if (GetConfigurationNames($benchmark, $columns)) {
+        $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+        if (gz_is_file($data_file)) {
+            $raw_data = json_decode(gz_file_get_contents($data_file), true);
+            if (count($raw_data)) {
+                $ok = true;
+                foreach($raw_data as &$row) {
+                    if ($row['cached'] == $cached &&
+                        array_key_exists($aggregate, $row)) {
+                        $time = $row['time'];
+                        if (!array_key_exists($time, $data)) {
+                            $data[$time] = array();
                         }
+                        $data[$time][$row['config']] = $row[$aggregate];
                     }
                 }
             }

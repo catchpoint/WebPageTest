@@ -7,20 +7,13 @@
 chdir('..');
 include './benchmarks/data.inc.php';
 
-if (LoadData($data, $columns)) {
-    echo "Date";
-    foreach($columns as $column) {
-        echo ",$column";
-    }
-    echo "\n";
-    foreach ($data as $time => &$row) {
-        echo date('Y-m-d H:i:s', $time);
-        foreach($columns as $column) {
-            echo ',';
-            if (array_key_exists($column, $row))
-                echo $row[$column];
-        }
-        echo "\n";
+if (array_key_exists('benchmark', $_REQUEST) && 
+    array_key_exists('metric', $_REQUEST) && 
+    array_key_exists('aggregate', $_REQUEST) && 
+    array_key_exists('cached', $_REQUEST)) {
+    $tsv = LoadDataTSV($_REQUEST['benchmark'], $_REQUEST['cached'], $_REQUEST['metric'], $_REQUEST['aggregate']);
+    if (isset($tsv) && strlen($tsv)) {
+        echo $tsv;
     }
 }
 ?>
