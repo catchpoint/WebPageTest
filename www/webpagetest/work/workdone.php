@@ -22,6 +22,7 @@ $useLatestPCap2Har = $_REQUEST['useLatestPCap2Har'];
 $runNumber = $_REQUEST['_runNumber'];
 $cacheWarmed = $_REQUEST['_cacheWarmed'];
 $docComplete = $_REQUEST['_docComplete'];
+$urlUnderTest = $_REQUEST['_urlUnderTest'];
 
 $testInfo_dirty = false;
 
@@ -553,15 +554,18 @@ function ProcessHARText($testPath)
             $curPageData["url"] = $page['title'];
 
             $startFull = $page['startedDateTime'];
-            if (preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/",
-                           $startFull, $matches)) {
-              $curPageData["startDate"] = $matches[1];
-              $curPageData["startTime"] = $matches[2];
+            $startFullDatePart = '';
+            $startFullTimePart = '';
+            if (SplitISO6801DateIntoDateAndTime(
+                    $startFull,  // Split this datetime
+                    $startFullDatePart, $startFullTimePart)) {  // into these parts.
+              $curPageData["startDate"] = $startFullDatePart;
+              $curPageData["startTime"] = $startFullTimePart;
               $curPageData["startFull"] = $startFull;
             } else {
               logMalformedInput(
-                  "Failed to parse page key 'startedDateTime'.  ".
-                   "Value of key is '$startFull'.");
+                  "Failed to split page key 'startedDateTime' into a date and ".
+                  "a time part.  Value of key is '$startFull'.");
             }
 
             if (array_key_exists('onRender', $page['pageTimings'])) {
@@ -581,42 +585,46 @@ function ProcessHARText($testPath)
             if ($curPageData["onRender"] <= 0)
               $curPageData["onRender"] = 0;
 
-            if (!preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/",
-                            $curPageData["url"], $urlMatches))
-              logMalformedInput("HAR error: Could not match host in URL ".
-                                $curPageData["url"]);
+            // Agents that upload .pcap files must tell us the URL being tested,
+            // because the URL is not always in the .pcap file.  If POST
+            // parameter _urlUnderTest is set, use it as the URL being measured.
+            global $urlUnderTest;
+            $curPageDataUrl = (isset($urlUnderTest) ? $urlUnderTest
+                                                    : $curPageData["url"]);
 
-            $curPageData["host"] = $urlMatches[1];
+            if (preg_match("/^https?:\/\/([^\/?]+)(((?:\/|\\?).*$)|$)/",
+                            $curPageDataUrl, $urlMatches)) {
+              $curPageData["host"] = $urlMatches[1];
+            } else {
+              logMalformedInput("HAR error: Could not match host in URL ".
+                                $curPageDataUrl);
+            }
 
             // Some clients encode the run number and cache status in the
             // page name.  Others give the information in properties on the
             // pageTimings record.  Prefer the explicit properties.  Fall
             // back to decoding the information from the name of the page
             // record.
-	    global $runNumber;
-	    global $cacheWarmed;
-	    global $docComplete;
-            if (array_key_exists('_runNumber', $page))
-            {
+            global $runNumber;
+            global $cacheWarmed;
+            global $docComplete;
+            if (array_key_exists('_runNumber', $page)) {
               $curPageData["run"] = $page['_runNumber'];
               $curPageData["cached"] = $page['_cacheWarmed'];
-            }
-	    else if (isset($runNumber) && isset($cacheWarmed))
-	    {
-	      $curPageData["run"] = $runNumber;
-	      $curPageData["cached"] = $cacheWarmed;
-	      if (isset($docComplete) && $curPageData["docComplete"] <= 0)
-	      {
-		$curPageData["docComplete"] = $docComplete;
-	      }
-	    }
-            else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches))
-            {
+
+            } else if (isset($runNumber) && isset($cacheWarmed)) {
+              $curPageData["run"] = $runNumber;
+              $curPageData["cached"] = $cacheWarmed;
+
+              if (isset($docComplete) && $curPageData["docComplete"] <= 0) {
+                $curPageData["docComplete"] = $docComplete;
+              }
+
+            } else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches)) {
               $curPageData["run"] = $matches[1];
               $curPageData["cached"] = $matches[2];
-            }
-            else
-            {
+
+            } else {
               logMalformedInput("HAR error: Could not get runs or cache ".
                                 "status, from post params, pages array ".
                                 "or page name \"$pageref\".");
@@ -760,15 +768,18 @@ function ProcessHARText($testPath)
             // Extract the variables
             $reqHttpVer = $reqEnt['httpVersion'];
             $respHttpVer = $respEnt['httpVersion'];
-            if (preg_match("/^(.+)T(.+)\.\d+[+-]\d\d:?\d\d$/",
-                           $startedDateTime, $matches)) {
-              $reqDate = $matches[1];
-              $reqTime = $matches[2];
-            } else {
+
+            $reqDate = '';
+            $reqTime = '';
+            if (!SplitISO6801DateIntoDateAndTime(
+                    $startedDateTime,  // Split this datetime
+                    $reqDate, $reqTime)) {  // into these parts.
               logMalformedInput(
                   "Sorted entry key 'startedDateTime' could ".
-                  "not be parsed.  Value is '$startedDateTime'");
+                  "not be split into a date and time part.  ".
+                  "Value is '$startedDateTime'");
             }
+
             $reqEventName = $curPageData['title'];
             $reqAction = $reqEnt['method'];
 
@@ -1136,6 +1147,38 @@ function GetDeltaMillisecondsFromISO6801Dates($before, $after) {
   return 1000.0 * (double)($afterTimeSeconds - $beforeTimeSeconds)
          + GetMillisecondsFromValidISO8601String($after)
          - GetMillisecondsFromValidISO8601String($before);
+}
+
+/**
+ * Split an ISO8601 string into a date part, and a time part.
+ * Tricky because we want to preserve the exiact time, but PHP date objects
+ * are limited to a resolution of seconds.
+ */
+function SplitISO6801DateIntoDateAndTime($ISO8601String,
+                                         &$out_dateString, &$out_timeString) {
+  $timestamp = strtotime($ISO8601String, "00:00");
+  if ($timestamp === False)
+    return False;  // Invalid date/time.
+
+  // Because strtotime parsed |$ISO8601String|, we know it is well formed.
+  // Split the string at the first 'T', which should be the border between
+  // the date part and the time part.
+  $dateAndTimeParts = explode("T", $ISO8601String, 2);
+  $numParts = count($dateAndTimeParts);
+  switch ($numParts) {
+    case 1:
+      $out_dateString = $dateAndTimeParts[0];
+      $out_timeString = "";
+      return True;
+
+    case 2:
+      $out_dateString = $dateAndTimeParts[0];
+      $out_timeString = $dateAndTimeParts[1];
+      return True;
+
+    default:
+      return False;
+  }
 }
 
 /**

@@ -668,11 +668,11 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
  * Message logging with the source location of the log message.
  * @param mixed $msg
  */
-function logWithLocation($msg)
+function logWithLocation($msg, $backtraceFrameIndex = 0)
 {
   $backtrace = debug_backtrace();
-  $file = $backtrace[0]["file"];
-  $line = $backtrace[0]["line"];
+  $file = $backtrace[$backtraceFrameIndex]["file"];
+  $line = $backtrace[$backtraceFrameIndex]["line"];
   logMsg("$file:$line: $msg");
 }
 
@@ -684,7 +684,8 @@ function logWithLocation($msg)
  */
 function logMalformedInput($msg)
 {
-  logWithLocation("Unexpected input: " . $msg);
+  logWithLocation("Unexpected input: " . $msg,
+                  1);  // 1 -> Log the caller of this method, not this line.
 }
 
 /**
