@@ -554,14 +554,14 @@ function CalculateMetrics(&$records) {
         foreach ($records as $value) {
             $sum += $value;
         }
-        $avg = intval(round($sum / $count));
+        $avg = $sum / $count;
         $entry['avg'] = $avg;
         // geometric mean
         $sum = 0.0;
         foreach($records as $value) {
              $sum += log($value);
         }
-        $entry['geo-mean'] = intval(round(exp($sum/$count)));  
+        $entry['geo-mean'] = exp($sum/$count);  
         // median
         if ($count %2) {
             $entry['median'] = $records[floor($count * 0.5)];
@@ -577,7 +577,7 @@ function CalculateMetrics(&$records) {
         foreach ($records as $value) {
             $sum += pow($value - $avg, 2);
         }
-        $entry['stddev'] = intval(round(sqrt($sum / $count)));
+        $entry['stddev'] = sqrt($sum / $count);
     }
     return $entry;
 }
