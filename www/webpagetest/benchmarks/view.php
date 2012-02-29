@@ -16,7 +16,7 @@ $page_description = "WebPagetest benchmark details";
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
         <script type="text/javascript" src="/js/dygraph-combined.js"></script>
         <style type="text/css">
-        .benchmark-chart { clear: both; width: 600px; height: 300px; margin-left: auto; margin-right: auto;}
+        .benchmark-chart { clear: both; width: 800px; height: 350px; margin-left: auto; margin-right: auto;}
         </style>
     </head>
     <body>
@@ -60,17 +60,17 @@ $page_description = "WebPagetest benchmark details";
                 if (array_key_exists('description', $info))
                     echo "<p>{$info['description']}</p>\n";
                 foreach( $metrics as $metric => $label) {
+                    if (array_key_exists('title', $benchmark))
+                        $title = $benchmark['title'];
+                    else
+                        $title = $benchmark['name'];
+                    $bm = urlencode($benchmark['name']);
+                    echo "<h2>$label</h2>\n";
+                    if (array_key_exists('description', $benchmark))
+                        echo "<p>{$benchmark['description']}</p>\n";
                     $tsv = LoadDataTSV($benchmark, 0, $metric, 'avg');
                     if (isset($tsv) && strlen($tsv)) {
                         $count++;
-                        if (array_key_exists('title', $benchmark))
-                            $title = $benchmark['title'];
-                        else
-                            $title = $benchmark['name'];
-                        $bm = urlencode($benchmark['name']);
-                        echo "<h2>$label</h2>\n";
-                        if (array_key_exists('description', $benchmark))
-                            echo "<p>{$benchmark['description']}</p>\n";
                         $id = "g$count";
                         echo "<div id=\"$id\" class=\"benchmark-chart\"></div>\n";
                         echo "<script type=\"text/javascript\">
@@ -78,9 +78,27 @@ $page_description = "WebPagetest benchmark details";
                                     document.getElementById(\"$id\"),
                                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
                                     {drawPoints: true,
+                                    title: \"$label (First View)\",
                                     legend: \"always\"}
                                 );
                               </script>\n";
+                    }
+                    if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
+                        $tsv = LoadDataTSV($benchmark, 1, $metric, 'avg');
+                        if (isset($tsv) && strlen($tsv)) {
+                            $count++;
+                            $id = "g$count";
+                            echo "<br><div id=\"$id\" class=\"benchmark-chart\"></div>\n";
+                            echo "<script type=\"text/javascript\">
+                                    $id = new Dygraph(
+                                        document.getElementById(\"$id\"),
+                                        \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
+                                        {drawPoints: true,
+                                        title: \"$label (Repeat View)\",
+                                        legend: \"always\"}
+                                    );
+                                  </script>\n";
+                        }
                     }
                 }
             }

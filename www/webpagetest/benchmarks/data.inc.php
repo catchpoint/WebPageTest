@@ -120,8 +120,20 @@ function GetBenchmarkInfo($benchmark) {
         if (isset($description)) {
             $info['description'] = $description;
         }
+        $info['fvonly'] = false;
+        $info['video'] = false;
         if (isset($configurations)) {
             $info['configurations'] = $configurations;
+            foreach($configurations as &$configuration) {
+                if (array_key_exists('settings', $configuration)) {
+                    foreach ($configuration['settings'] as $key => $value) {
+                        if ($key == 'fvonly' && $value)
+                            $info['fvonly'] = true;
+                        elseif ($key == 'video' && $value)
+                            $info['video'] = true;
+                    }
+                }
+            }
         }
     }
     return $info;

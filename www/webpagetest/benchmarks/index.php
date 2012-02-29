@@ -16,7 +16,7 @@ $page_description = "WebPagetest benchmarks";
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
         <script type="text/javascript" src="/js/dygraph-combined.js"></script>
         <style type="text/css">
-        .benchmark-chart { clear: both; width: 600px; height: 300px; margin-left: auto; margin-right: auto;}
+        .benchmark-chart { clear: both; width: 800px; height: 350px; margin-left: auto; margin-right: auto;}
         </style>
     </head>
     <body>
@@ -31,17 +31,17 @@ $page_description = "WebPagetest benchmarks";
             $benchmarks = GetBenchmarks();
             $count = 0;
             foreach ($benchmarks as &$benchmark) {
+                if (array_key_exists('title', $benchmark))
+                    $title = $benchmark['title'];
+                else
+                    $title = $benchmark['name'];
+                $bm = urlencode($benchmark['name']);
+                echo "<h2><a href=\"view.php?benchmark=$bm\">$title</a></h2>\n";
+                if (array_key_exists('description', $benchmark))
+                    echo "<p>{$benchmark['description']}</p>\n";
                 $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', 'avg');
                 if (isset($tsv) && strlen($tsv)) {
                     $count++;
-                    if (array_key_exists('title', $benchmark))
-                        $title = $benchmark['title'];
-                    else
-                        $title = $benchmark['name'];
-                    $bm = urlencode($benchmark['name']);
-                    echo "<h2><a href=\"view.php?benchmark=$bm\">$title</a></h2>\n";
-                    if (array_key_exists('description', $benchmark))
-                        echo "<p>{$benchmark['description']}</p>\n";
                     $id = "g$count";
                     echo "<div id=\"$id\" class=\"benchmark-chart\"></div>\n";
                     echo "<script type=\"text/javascript\">
@@ -49,11 +49,33 @@ $page_description = "WebPagetest benchmarks";
                                 document.getElementById(\"$id\"),
                                 \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
                                 {drawPoints: true,
+                                rollPeriod: 1,
+                                showRoller: true,
                                 legend: \"always\",
                                 xlabel: \"Date\",
-                                ylabel: \"Time to onload\"}
+                                ylabel: \"Time to onload (First View)\"}
                             );
                           </script>\n";
+                }
+                if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
+                    $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', 'avg');
+                    if (isset($tsv) && strlen($tsv)) {
+                        $count++;
+                        $id = "g$count";
+                        echo "<div id=\"$id\" class=\"benchmark-chart\"></div>\n";
+                        echo "<script type=\"text/javascript\">
+                                $id = new Dygraph(
+                                    document.getElementById(\"$id\"),
+                                    \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
+                                    {drawPoints: true,
+                                    rollPeriod: 1,
+                                    showRoller: true,
+                                    legend: \"always\",
+                                    xlabel: \"Date\",
+                                    ylabel: \"Time to onload (Repeat View)\"}
+                                );
+                              </script>\n";
+                    }
                 }
             }
             ?>
