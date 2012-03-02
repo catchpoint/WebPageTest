@@ -80,8 +80,9 @@ else
         elseif(isset($pcap) && $pcap &&
                isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
         {
-             ProcessPCAP($testPath);
-
+            $pcapFileName = $_FILES['file']['name'];
+            move_uploaded_file($_FILES['file']['tmp_name'], "$testPath/$pcapFileName");
+            ProcessPCAP($testPath, $pcapFileName);
         }
         elseif( isset($_FILES['file']) )
         {
@@ -465,7 +466,7 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
 /**
  * @param string $testPath
  */
-function ProcessPCAP($testPath)
+function ProcessPCAP($testPath, $pcapFile)
 {
     require_once('./lib/pcltar.lib.php3');
     require_once('./lib/pclerror.lib.php3');
@@ -473,25 +474,29 @@ function ProcessPCAP($testPath)
     global $runNumber;
     global $cacheWarmed;
 
-    $pcapfile = $testPath . "/network.pcap";
-    move_uploaded_file($_FILES['file']['tmp_name'], $pcapfile);
-
-    $harFile = $testPath . "/results.har";
+    $pcapFilePath = "$testPath/$pcapFile";
+    $harFilePath = $pcapFilePath . ".har";
 
     $consoleOut = array();
 
     // Execute pcap2har
-    $returnCode = ExecPcap2Har($pcapfile, $harFile,
+    $returnCode = ExecPcap2Har($pcapFilePath, $harFilePath,
                                $useLatestPCap2Har,
                                $consoleOut);
 
     if ($returnCode != 0)
     {
        logMalformedInput("pcap to HAR converter returned $returnCode.  ".
-                        "Expected 0.  pcap file is $pcapfile .  ".
-                        "Console output is $consoleOut .");
+                        "Expected 0.  pcap file is $pcapFilePath .  ".
+                        "Console output is :\n". print_r($consoleOut, true));
        return;
     }
+
+    // The mobile agents assume the har file is named results.har.  Make a copy
+    // with the expected path.  We don't just write a file with this name,
+    // because we want to keep the har from each run.
+    copy($harFilePath, $testPath . "/results.har");
+
     ProcessHARText($testPath);
 }
 
