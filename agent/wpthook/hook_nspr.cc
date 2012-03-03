@@ -109,37 +109,6 @@ void NsprHook::Init() {
         "nspr4.dll", "PR_Write", PR_Write_Hook);
     _PR_Read = _hook->createHookByName(
         "nspr4.dll", "PR_Read", PR_Read_Hook);
-  } else {
-    // Hook Chrome.
-    HANDLE process = GetCurrentProcess();
-    MODULEENTRY32 module;
-    if (GetModuleByName(process, _T("chrome.dll"), &module) &&
-        module.modBaseAddr) {
-      CString data_dir = CreateAppDataDir();
-      CString offsets_filename = GetHookOffsetsFileName(
-          data_dir, module.szExePath);
-      HookOffsets offsets;
-      GetSavedHookOffsets(offsets_filename, &offsets);
-      DWORD64 offset = 0;
-
-      if (offsets.Lookup(CStringA("SSL_ImportFD"), offset) && offset) {
-        g_ssl_importfd = _hook->createHook(
-            (PFN_Chrome_SSL_ImportFD)(module.modBaseAddr + offset),
-            Chrome_SSL_ImportFD_Hook);
-      }
-      if (offsets.Lookup(CStringA("ssl_Read"), offset) && offset) {
-        PRReadFN real_func = (PRReadFN)(module.modBaseAddr + offset);
-        _PR_Read = _hook->createHook(real_func, PR_Read_Hook);
-      }
-      if (offsets.Lookup(CStringA("ssl_Write"), offset) && offset) {
-        PRWriteFN real_func = (PRWriteFN)(module.modBaseAddr + offset);
-        _PR_Write = _hook->createHook(real_func, PR_Write_Hook);
-      }
-      if (offsets.Lookup(CStringA("ssl_Close"), offset) && offset) {
-        PRCloseFN real_func = (PRCloseFN)(module.modBaseAddr + offset);
-        _PR_Close = _hook->createHook(real_func, PR_Close_Hook);
-      }
-    }
   }
 }
 
