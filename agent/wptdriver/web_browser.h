@@ -42,9 +42,6 @@ public:
 
 private:
   void InjectDll();
-  void FindHookFunctions(HANDLE process);
-  CStringA GetHookFunctionIniFilename();
-  bool SaveHookFunctionOffsets(const char *names[], const int offsets[]);
   bool ConfigureIpfw(WptTestDriver& test);
   void ResetIpfw(void);
   bool FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi);
@@ -58,6 +55,6 @@ private:
   HANDLE        _browser_process;
 
   CRITICAL_SECTION  cs;
-	SECURITY_ATTRIBUTES null_dacl;
-	SECURITY_DESCRIPTOR SD;
+  SECURITY_ATTRIBUTES null_dacl;
+  SECURITY_DESCRIPTOR SD;
 };

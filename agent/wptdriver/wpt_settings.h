@@ -47,7 +47,7 @@ class WptTest;
 
 class BrowserSettings {
 public:
-  BrowserSettings():_use_symbols(false) {}
+  BrowserSettings(){}
   ~BrowserSettings(){}
   bool Load(const TCHAR * browser, const TCHAR * iniFile);
   void ResetProfile();
@@ -59,7 +59,6 @@ public:
   CString _wpt_directory;
   CString _exe_directory;
   CString _profile_directory;
-  bool    _use_symbols;
 };
 
 // dynamic settings loaded from file

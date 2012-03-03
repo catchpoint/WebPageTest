@@ -55,10 +55,6 @@ typedef CAtlMap<CStringA, DWORD64> HookOffsets;
 CString CreateAppDataDir();
 bool GetModuleByName(HANDLE process, LPCTSTR module_name,
     MODULEENTRY32 * module);
-CString GetHookOffsetsFileName(CString dir, CString hooked_exe_path);
-void GetHookSymbolNames(HookSymbolNames * names);
-void SaveHookOffsets(CString offsets_filename, const HookOffsets& offsets);
-bool GetSavedHookOffsets(CString offsets_filename, HookOffsets * hook_offsets);
 void TerminateProcessAndChildren(DWORD pid);
 bool IsBrowserDocument(HWND wnd);
 CString HttpGetText(CString url);

@@ -11,8 +11,6 @@ software=http://www.webpagetest.org/installers/software.dat
 exe="C:\Program Files\Google\Chrome\Application\chrome.exe"
 options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --no-proxy-server'
 installer=http://www.webpagetest.org/installers/browsers/chrome.dat
-;For SSL support in chrome, enable the downloading of debug symbols
-;use symbols=1
 
 [Firefox]
 exe="C:\Program Files\Mozilla Firefox\firefox.exe"

@@ -34,14 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "../wpthook/wpthook_dll.h"
 
-const char HOOK_OFFSETS_FILE_VERSION[] = "005";
-const char * HOOK_OFFSETS_SYMBOL_NAMES[] = {
-  "SSL_ImportFD",
-  "ssl_Close",
-  "ssl_Write",
-  "ssl_Read",
-};
-
 static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   _T("Internet Explorer_Server"),
   _T("Chrome_RenderWidgetHostHWND"),
@@ -325,101 +317,6 @@ bool GetModuleByName(HANDLE process, LPCTSTR module_name,
     CloseHandle(snap);
   }
   return is_found;
-}
-
-/*-----------------------------------------------------------------------------
-  Get the hook offsets filename based on a hash of the binary to be hooked.
------------------------------------------------------------------------------*/
-CString GetHookOffsetsFileName(CString dir, CString hooked_exe_path) {
-  CString hook_offsets_filename;
-  CString hash;
-  if (HashFile(hooked_exe_path, hash)) {
-    hook_offsets_filename.Format(_T("%s\\offsets-%S-%s.csv"),
-        dir, HOOK_OFFSETS_FILE_VERSION, hash);
-  }
-  return hook_offsets_filename;
-}
-
-/*-----------------------------------------------------------------------------
-  Return a copy of the symbol names to hook. 
------------------------------------------------------------------------------*/
-void GetHookSymbolNames(HookSymbolNames * names) {
-  if (names != NULL) {
-    names->RemoveAll();
-    for (int i = 0; i < _countof(HOOK_OFFSETS_SYMBOL_NAMES); i++) {
-      names->AddTail(CStringA(HOOK_OFFSETS_SYMBOL_NAMES[i]));
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
-  Helper function for GetSavedHookOffsets.
------------------------------------------------------------------------------*/
-bool ParseHookOffsets(const CStringA& offsets_data,
-                      HookOffsets * hook_offsets) {
-  bool is_loaded = false;
-  if (hook_offsets != NULL) {
-    int line_pos = 0;
-    CStringA line = offsets_data.Tokenize("\n", line_pos);
-    while (line != _T("")) {
-      int separator_pos = line.Find(',');
-      if (separator_pos > 0) {
-        CStringA symbol_name = line.Left(separator_pos).Trim();
-        __int64 offset = _atoi64(line.Mid(separator_pos + 1).Trim());
-        if (symbol_name.GetLength() > 0 && offset > 0) {
-          hook_offsets->SetAt(symbol_name, offset);
-          is_loaded = true;
-        }
-      }
-      line = offsets_data.Tokenize("\n", line_pos);
-    }
-  }
-  return is_loaded;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-bool GetSavedHookOffsets(CString offsets_filename,
-                         HookOffsets * hook_offsets) {
-  bool is_loaded = false;
-  HANDLE offsets_fh = CreateFile(offsets_filename, GENERIC_READ, 0, NULL,
-                                 OPEN_EXISTING, 0, 0);
-  if (offsets_fh != INVALID_HANDLE_VALUE) {
-    DWORD len = GetFileSize(offsets_fh, NULL);
-    if (len) {
-      CStringA offsets_data;
-      DWORD num_bytes = 0;
-      if (ReadFile(offsets_fh, offsets_data.GetBuffer(len), len,
-                   &num_bytes, 0)) {
-        offsets_data.ReleaseBuffer(num_bytes);
-        is_loaded = ParseHookOffsets(offsets_data, hook_offsets);
-      }
-    }
-    CloseHandle(offsets_fh);
-  }
-  return is_loaded;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SaveHookOffsets(CString offsets_filename,
-                     const HookOffsets& hook_offsets) {
-  HANDLE offsets_fh = CreateFile(offsets_filename, GENERIC_WRITE, 0, NULL,
-                                 CREATE_ALWAYS, 0, 0);
-  if (offsets_fh != INVALID_HANDLE_VALUE) {
-    DWORD bytes;
-    CString symbol_name;
-    DWORD64 offset;
-    CStringA line;
-    POSITION pos = hook_offsets.GetStartPosition();
-    while (pos) {
-      symbol_name = hook_offsets.GetKeyAt(pos);
-      offset = hook_offsets.GetNextValue(pos);
-      line.Format("%S,%I64u\n", symbol_name, offset);
-      WriteFile(offsets_fh, line, line.GetLength(), &bytes, 0);
-    }
-    CloseHandle(offsets_fh);
-  }
 }
 
 /*-----------------------------------------------------------------------------
