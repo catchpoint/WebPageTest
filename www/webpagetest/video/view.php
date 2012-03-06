@@ -11,6 +11,12 @@ if( $_REQUEST['embed'] )
     header('Last-Modified: ' . date('r'));
     header('Expires: '.gmdate('r', time() + 31536000));
 }
+$bgcolor = "black";
+if (array_key_exists('bgcolor', $_REQUEST))
+    $bgcolor = $_REQUEST['bgcolor'];
+$autoplay = 'false';
+if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
+    $autoplay = 'true';
 
 $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
 $page_description = "Side-by-side video comparison of website performance.";
@@ -185,7 +191,7 @@ else
             }
             <?php
             if( $embed )
-                echo 'body {background-color: black;}';
+                echo "body {background-color: $bgcolor; margin:0; padding: 0;}";
             ?>
         </style>
         <script type="text/javascript" src="/video/player/flowplayer-3.2.6.min.js"></script>
@@ -203,7 +209,7 @@ else
 
             if( $valid && ($done || $embed) )
             {
-                if (isset($location) && strlen($location)) {
+                if (isset($location) && strlen($location) && !$embed) {
                     echo "<div id=\"location\">Tested From: $location</div>";
                 }
 
@@ -245,10 +251,10 @@ else
                                             if( $hasThumb )
                                             {
                                                 echo "{ url: '/$dir/video.png'} ,\n";
-                                                echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
+                                                echo "{ url: '/$dir/video.mp4', autoPlay: $autoplay, autoBuffering: false}\n";
                                             }
                                             else
-                                                echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
+                                                echo "{ url: '/$dir/video.mp4', autoPlay: $autoplay, autoBuffering: true}\n";
                                             ?>
                                         ],
                                         plugins: {
