@@ -232,6 +232,21 @@ else
                 foreach($files as $file)
                     unlink($file);
             }
+
+            // log any slow tests
+            if (isset($testInfo) && array_key_exists('slow_test_time', $settings)) {
+                $elapsed = $time - $testInfo['started'];
+                if ($elapsed > $settings['slow_test_time']) {
+                    $log_entry = date("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
+                    $log_file = fopen('./tmp/slow_tests.log', 'a+');
+                    if ($log_file) {
+                        if (flock($log_file, LOCK_EX)) {
+                            fwrite($log_file, $log_entry);
+                        }
+                        fclose($log_file);
+                    }
+                }
+            }
             
             // see if it is an industry benchmark test
             if( strlen($ini['industry']) && strlen($ini['industry_page']) )
@@ -316,10 +331,6 @@ else
                 @include('./work/beacon.inc');
                 @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
             }
-            
-            // archive the test result
-            require_once('archive.inc');
-            ArchiveTest($id);
         }
         
         if( isset($testInfo) && $testInfo_dirty )

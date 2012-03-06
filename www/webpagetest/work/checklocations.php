@@ -48,34 +48,51 @@ foreach( $files as $file )
                 {
                     $subject = "$loc WebPagetest ALERT";
                     $body = "The $loc location has not checked for new jobs in $minutes minutes.";
-
-                    // send the e-mail through an SMTP server?
-                    if (array_key_exists('mailserver', $settings))
-                    {
-                        require_once "Mail.php";
-                        $mailServerSettings = $settings['mailserver'];
-                        $mailInit = array ();
-                        if (array_key_exists('host', $mailServerSettings))
-                            $mailInit['host'] = $mailServerSettings['hos t'];
-                        if (array_key_exists('port', $mailServerSettings))
-                            $mailInit['port'] = $mailServerSettings['po rt'];
-                        if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth'])
-                        {
-                            $mailInit['auth'] = true;
-                            $mailInit['username'] = $mailServerSettings[ 'username'];
-                            $mailInit['password'] = $mailServerSettings['password'];
-                        }
-                        $smtp = Mail::factory('smtp', $mailInit);
-                        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
-                        $mail = $smtp->send($to, $headers, $body);
-                    }
-                    else
-                        mail($to, $subject, $body);
+                    SendMessage($to, $subject, $body);
                 }
             }
             
             echo "$loc: $elapsed sec\r\n";
         }
     }
+}
+
+// send the slow logs from the last hour
+if (array_key_exists('notify', $settings['settings'])) {
+    $to = $settings['settings']['notify'];
+    if (strlen($to) && is_file('./tmp/slow_tests.log')) {
+        $slow = file_get_contents('./tmp/slow_tests.log');
+        unlink('./tmp/slow_tests.log');
+        if ($slow !== false && strlen($slow)) {
+            SendMessage($to, 'Slow tests report', $slow);
+        }
+    }
+}
+
+function SendMessage($to, $subject, &$body) {
+    global $settings;
+
+    // send the e-mail through an SMTP server?
+    if (array_key_exists('mailserver', $settings))
+    {
+        require_once "Mail.php";
+        $mailServerSettings = $settings['mailserver'];
+        $mailInit = array ();
+        if (array_key_exists('host', $mailServerSettings))
+            $mailInit['host'] = $mailServerSettings['hos t'];
+        if (array_key_exists('port', $mailServerSettings))
+            $mailInit['port'] = $mailServerSettings['po rt'];
+        if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth'])
+        {
+            $mailInit['auth'] = true;
+            $mailInit['username'] = $mailServerSettings[ 'username'];
+            $mailInit['password'] = $mailServerSettings['password'];
+        }
+        $smtp = Mail::factory('smtp', $mailInit);
+        $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
+        $mail = $smtp->send($to, $headers, $body);
+    }
+    else
+        mail($to, $subject, $body);
 }
 ?>

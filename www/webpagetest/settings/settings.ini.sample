@@ -34,6 +34,9 @@ iq=75
 ;save png full-resolution screen shots
 ;pngss=1
 
+;Log tests that take longer than X seconds
+;slow_test_time=240
+
 ; archiving to s3 (using the s3 protocol, not necessarily just s3)
 ;archive_s3_server=s3.amazonaws.com
 ;archive_s3_key=<access key>

@@ -215,6 +215,14 @@
             $use_closest = true;
         }
         
+        // populate the IP address of the user who submitted it
+        if (!array_key_exists('ip', $test) || !strlen($test['ip'])) {
+            $test['ip'] = $_SERVER['REMOTE_ADDR'];
+            if ($test['ip'] == '127.0.0.1') {
+                $test['ip'] = @getenv("HTTP_X_FORWARDED_FOR");
+            }
+        }
+        
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
         if( !$error && CheckIp($test) && CheckUrl($test['url']) )
@@ -1338,7 +1346,7 @@ function LogTest(&$test, $testId, $url)
     if( $file )
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        if( $test['ip'] && strlen($test['ip']) )
+        if( array_key_exists('ip',$test) && strlen($test['ip']) )
             $ip = $test['ip'];
         
         $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
@@ -1362,7 +1370,7 @@ function LogTest(&$test, $testId, $url)
 function CheckIp(&$test)
 {
     $ok = true;
-    $ip2 = $test['ip'];
+    $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
     $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach( $blockIps as $block )
