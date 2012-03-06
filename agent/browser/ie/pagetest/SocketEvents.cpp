@@ -151,12 +151,15 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 		
 		if(!IsFakeSocket(s, len, buff) )
 		{
-	        ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketSend - socket %d, currentDoc = %d\n"), GetCurrentThreadId(), s, currentDoc);
+      ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketSend - socket %d, currentDoc = %d\n"), GetCurrentThreadId(), s, currentDoc);
+
+      // last chance to override host headers (redirect case)
+      ModifyDataOut(buff, len);
 	        
-	        // figure out what the client port is
-	        struct sockaddr_in local;
-	        int localLen = sizeof(local);
-	        getsockname(s, (sockaddr *)&local, &localLen);
+      // figure out what the client port is
+      struct sockaddr_in local;
+      int localLen = sizeof(local);
+      getsockname(s, (sockaddr *)&local, &localLen);
 
 			// see if this socket had an existing connect.  If so, end that now
 			EnterCriticalSection(&cs);
@@ -561,4 +564,104 @@ bool CSocketEvents::CheckFlaggedConnection(CSocketConnect * c, DWORD hostAddr)
 */
 	
 	return found;
+}
+
+/*-----------------------------------------------------------------------------
+	Allow for an in-place modification of HTTP headers
+  (must keep the size the same so we have to remove data from the UA string
+  and possibly eliminate other headers)
+-----------------------------------------------------------------------------*/
+void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
+  if (len > 4 && buff) {
+    // make sure we have an outbound HTTP request
+    if (!memcmp(buff, "GET ", 4) || 
+        !memcmp(buff, "PUT ", 4) || 
+        !memcmp(buff, "POST ", 5) || 
+        !memcmp(buff, "HEAD ", 5)) {
+      CStringA original((char *)buff, len);
+      CStringA out;
+      bool modified = false;
+      int token_pos = 0;
+      CStringA line = original.Tokenize("\r\n", token_pos).Trim();
+      while (token_pos >= 0) {
+        int separator = line.Find(":");
+        if (separator > 0) {
+          CStringA token = line.Left(separator).Trim();
+          CStringA value = line.Mid(separator + 1).Trim();
+          // modify the host header
+          if (hostOverride.GetCount() && !token.CompareNoCase("Host")) {
+            POSITION pos = hostOverride.GetHeadPosition();
+            while(pos) {
+              CHostOverride hostPair = hostOverride.GetNext(pos);
+              if( !value.CompareNoCase(CT2A(hostPair.originalHost)) ) {
+                line = CStringA("Host: ") + CStringA(CT2A(hostPair.newHost)) + "\r\n";
+                line += CStringA("x-Host: ") + value;
+                modified = true;
+              }
+            }
+          }
+        }
+        out += line + "\r\n";
+        line = original.Tokenize("\r\n", token_pos).Trim();
+      }
+      out += "\r\n";
+
+      // see if we need to reduce the size of the request by stripping out headers
+      if (modified) {
+        if (out.GetLength() > (int)len) {
+          CStringA reduced = "";
+          token_pos = 0;
+          line = out.Tokenize("\r\n", token_pos).Trim();
+          while (token_pos >= 0) {
+            bool keep = true;
+            int separator = line.Find(":");
+            if (separator > 0) {
+              CStringA token = line.Left(separator).Trim();
+              CStringA value = line.Mid(separator + 1).Trim();
+              if (!token.CompareNoCase("Accept-Language")) {
+                keep = false;
+              } else if (!token.CompareNoCase("Referer")) {
+                keep = false;
+              } else if (!token.CompareNoCase("Accept")) {
+                line = "Accept: */*";
+              } else if (!token.CompareNoCase("Accept-Encoding")) {
+                line.Replace(", deflate", "");
+              } else if (!token.CompareNoCase("User-Agent")) {
+                int msie = line.Find("MSIE");
+                if (msie > 0) {
+                  msie = line.Find(";", msie);
+                  if (msie > 0) {
+                    line = line.Left(msie) + ";)";
+                  }
+                }
+              }
+            }
+            if (keep)
+              reduced += line + "\r\n";
+            line = out.Tokenize("\r\n", token_pos).Trim();
+          }
+          out = reduced + "\r\n";
+        }
+
+        // add padding
+        if (out.GetLength() < (int)len) {
+          out = out.Trim() + "\r\nx: ";
+          int needed = (int)len - out.GetLength();
+          if (needed > 4) {
+            while (needed > 4) {
+              needed--;
+              out += "x";
+            }
+            out += "\r\n\r\n";
+          } else {
+            modified = false;
+          }
+        }
+
+        if (modified && out.GetLength() == (int)len) {
+          memcpy(buff, (LPCSTR)out, len);
+        }
+      }
+    }
+  }
 }

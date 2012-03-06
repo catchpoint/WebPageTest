@@ -538,12 +538,7 @@ void DeleteDirectory( LPCTSTR inPath, bool remove )
 					else
 					{
 						cacheCount++;
-						if( !DeleteFile(path) )
-						{
-							CString buff;
-							buff.Format(_T("Failed to delete '%s'\n"), (LPCTSTR)path);
-							OutputDebugString(buff);
-						}
+						DeleteFile(path);
 					}
 				}
 			}while(FindNextFile(hFind, &fd));

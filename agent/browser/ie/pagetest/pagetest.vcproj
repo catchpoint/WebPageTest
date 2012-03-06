@@ -274,6 +274,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SchannelHook.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\screen_capture.cc"
 				>
 			</File>
@@ -393,6 +397,10 @@
 			</File>
 			<File
 				RelativePath=".\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SchannelHook.h"
 				>
 			</File>
 			<File

@@ -128,13 +128,10 @@ void CIEHook::InstallHooks(void)
 
 		ATLTRACE(_T("[Pagetest] - Installing Hooks"));
 		
-		// hook winsock
+		// Install our API hooks
 		WinsockInstallHooks();
-		
-		// hook wininet
 		WinInetInstallHooks();
-		
-		// hook GDI
+    SchannelInstallHooks();
 		GDIInstallHooks();
 	}
 }

@@ -44,6 +44,7 @@ public:
 	virtual void CloseSocket(SOCKET s);
 	virtual void SocketSend(SOCKET s, DWORD len, LPBYTE buff);
 	virtual void SocketRecv(SOCKET s, DWORD len, LPBYTE buff);
+  virtual void ModifyDataOut(LPBYTE buff, unsigned long len);
 	virtual void SocketConnect(SOCKET s, struct sockaddr_in * addr);
 	virtual void SocketBind(SOCKET s, struct sockaddr_in * addr);
 	virtual bool IsFakeSocket(SOCKET s, DWORD dataLen, LPBYTE buff);

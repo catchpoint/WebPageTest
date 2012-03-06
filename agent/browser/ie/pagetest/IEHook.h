@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ExDispID.h>
 #include "WsHook.h"
 #include "WinInetHook.h"
+#include "SchannelHook.h"
 #include "GDIHook.h"
 #include "chrome_tab_h.h"
 

@@ -637,14 +637,6 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 
 	if( active )
 	{
-    if( !hostOverride.IsEmpty() ||
-        !script_basicAuth.IsEmpty() ||
-        !basicAuth.IsEmpty() ||
-        !userAgent.IsEmpty() ||
-        !headersAdd.IsEmpty() ||
-        !headersSet.IsEmpty() )
-      dwFlags |= INTERNET_FLAG_NO_AUTO_REDIRECT;
-
 		// make sure it is an async request (ignore blocking requests)
 		bool async = true;
 		winInetAsync.Lookup(hConnect, async);
