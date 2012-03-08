@@ -1343,46 +1343,46 @@ void CPagetestReporting::GenerateReport(CString &szReport)
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveBodies(CString file)
 {
-	zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
-	if( zip )
-	{
-	  DWORD count = 0;
-    DWORD bodiesCount = 0;
-    bool saved = false;
-	  POSITION pos = events.GetHeadPosition();
-	  while( pos )
+  if (bodies)
+  {
+	  zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
+	  if( zip )
 	  {
-		  CTrackedEvent * event = events.GetNext(pos);
-		  if( event && event->type == CTrackedEvent::etWinInetRequest )
-		  {
-			  CWinInetRequest * r = (CWinInetRequest *)event;
-			  CString mime = r->response.contentType;
-			  mime.MakeLower();
-        if( r->valid && r->fromNet )
-        {
-				  count++;
-          if(r->result == 200 && r->body && r->bodyLen &&
-             (bodies || !saved) &&
-             (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
-			    {
-            saved = true;
-            CStringA name;
-            name.Format("%03d-response.txt", count);
-						// add the file to the archive
-						if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
-						{
-							// write the file to the archive
-              zipWriteInFileInZip( zip, r->body, r->bodyLen );
-							zipCloseFileInZip( zip );
-              bodiesCount++;
-						}
+	    DWORD count = 0;
+      DWORD bodiesCount = 0;
+	    POSITION pos = events.GetHeadPosition();
+	    while( pos )
+	    {
+		    CTrackedEvent * event = events.GetNext(pos);
+		    if( event && event->type == CTrackedEvent::etWinInetRequest )
+		    {
+			    CWinInetRequest * r = (CWinInetRequest *)event;
+			    CString mime = r->response.contentType;
+			    mime.MakeLower();
+          if( r->valid && r->fromNet )
+          {
+				    count++;
+            if(r->result == 200 && r->body && r->bodyLen &&
+               (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
+			      {
+              CStringA name;
+              name.Format("%03d-response.txt", count);
+						  // add the file to the archive
+						  if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
+						  {
+							  // write the file to the archive
+                zipWriteInFileInZip( zip, r->body, r->bodyLen );
+							  zipCloseFileInZip( zip );
+                bodiesCount++;
+						  }
+            }
           }
-        }
-		  }
-	  }
-		zipClose(zip, 0);
-    if(!bodiesCount)
-      DeleteFile(file);
+		    }
+	    }
+		  zipClose(zip, 0);
+      if(!bodiesCount)
+        DeleteFile(file);
+    }
   }
 }
 
