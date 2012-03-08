@@ -154,6 +154,7 @@ else
 
             // do pre-complete post-processing
             require_once('video.inc');
+            require_once('video/visualProgress.inc.php');
             MoveVideoFiles($testPath);
             BuildVideoScripts($testPath);
             
@@ -161,13 +162,15 @@ else
             $pageData = loadAllPageData($testPath);
             $medianRun = GetMedianRun($pageData, 0);
             
-            // calculate and cache the content breakdown information
+            // calculate and cache the content breakdown and visual progress information
             if( isset($testInfo) ) {
                 require_once('breakdown.inc');
                 for ($i = 1; $i <= $testInfo['runs']; $i++) {
                     getBreakdown($id, $testPath, $i, 0, $requests);
+                    GetVisualProgress($testPath, $i, 0);
                     if (!$testInfo['fvonly']) {
                         getBreakdown($id, $testPath, $i, 1, $requests);
+                        GetVisualProgress($testPath, $i, 1);
                     }
                 }
             }
