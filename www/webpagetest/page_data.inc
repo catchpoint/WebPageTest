@@ -1,4 +1,5 @@
 <?php
+
 /**
 * Load the page results directly from the results files
 * 
@@ -7,7 +8,7 @@
 * @param mixed $run
 * @param mixed $cached
 */
-function loadAllPageData($testPath)
+function loadAllPageData($testPath, $options = null)
 {
     $ret = array();
     
@@ -19,14 +20,14 @@ function loadAllPageData($testPath)
     $fvonly = $ini['test']['fvonly'];
     for( $run = 1; $run <= $runs; $run++ )
     {
-        $data = loadPageRunData($testPath, $run, 0);
+        $data = loadPageRunData($testPath, $run, 0, $options);
         if( isset($data) )
             $ret[$run][0] = $data;
         
         if( !$fvonly )
         {
             unset( $data );
-            $data = loadPageRunData($testPath, $run, 1);
+            $data = loadPageRunData($testPath, $run, 1, $options);
             if( isset($data) )
                 $ret[$run][1] = $data;
         }
@@ -43,14 +44,14 @@ function loadAllPageData($testPath)
 * @param mixed $fv
 * @param mixed $rv
 */
-function loadPageRunData($testPath, $run, $cached)
+function loadPageRunData($testPath, $run, $cached, $options = null)
 {
     $ret = null;
 
     if( $cached )
-        $ret = loadPageData("$testPath/{$run}_Cached_IEWPG.txt");
+        $ret = loadPageData("$testPath/{$run}_Cached_IEWPG.txt", $options);
     else
-        $ret = loadPageData("$testPath/{$run}_IEWPG.txt");
+        $ret = loadPageData("$testPath/{$run}_IEWPG.txt", $options);
 
     return $ret;
 }
@@ -60,7 +61,7 @@ function loadPageRunData($testPath, $run, $cached)
 * 
 * @param mixed $file
 */
-function loadPageData($file)
+function loadPageData($file, $options = null)
 {
     $ret = null;
     $lines = gz_file($file);
@@ -130,20 +131,29 @@ function loadPageData($file)
     }
     
     // see if we have video files to calculate a visually complete time from
-    if( isset($ret) && (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) )
+    if( isset($ret) )
     {
         $video_dir = dirname($file) . '/video_';
         $filename = basename($file);
         $video_dir .= (int)$filename;
+        $cached = 0;
         if (stripos($filename, 'Cached') !== false)
-            $video_dir .= '_cached';
+            $cached = 1;
         if( is_dir($video_dir) ) {
-            $frames = loadVideo($video_dir);
-            if( $frames && count($frames) )
-            {
-                $last = end(array_keys($frames));
-                if( $last )
-                    $ret['visualComplete'] = $last * 100;
+            if (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
+                $frames = loadVideo($video_dir);
+                if( $frames && count($frames) ) {
+                    $last = end(array_keys($frames));
+                    if( $last )
+                        $ret['visualComplete'] = $last * 100;
+                }
+            }
+            if (isset($options) && array_key_exists('SpeedIndex', $options) && $options['SpeedIndex']) {
+                require_once('./video/visualProgress.inc.php');
+                $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
+                if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                    $ret['SpeedIndex'] = $progress['FLI'];
+                }
             }
         }
     }
@@ -379,18 +389,15 @@ function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, 
     // first pass, calculate the average and array of values for grabbing the median
     $values = array();
     $sum = 0;
-    foreach( $pageData as &$run )
-    {
-        if( ($run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999) && isset($run[$cached][$metric]) )
-        {
+    foreach( $pageData as &$run ) {
+        if( ($run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999) && array_key_exists($metric, $run[$cached]) ) {
             $values[] = $run[$cached][$metric];
             $sum += $run[$cached][$metric];
             $count++;
         }
     }
     
-    if( $count )
-    {
+    if( $count ) {
         $avg = $sum / $count;
         sort($values, SORT_NUMERIC);
         $medianIndex = (int)($count / 2);

@@ -2,8 +2,11 @@
 /**
 * Calculate the progress for all of the images in a given directory
 */
-function GetVisualProgress($video_directory) {
-    $cache_file = "$video_directory/progress.dat";
+function GetVisualProgress($testPath, $run, $cached) {
+    $video_directory = "$testPath/video_{$run}";
+    if ($cached)
+        $video_directory .= '_cached';
+    $cache_file = "$testPath/$run.$cached.visual.dat";
     $dirty = false;
     $current_version = 3;
     if (gz_is_file($cache_file)) {
@@ -12,6 +15,18 @@ function GetVisualProgress($video_directory) {
             unset($frames);
         elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
             unset($frames);
+    }
+    if (!isset($frames) || !count($frames)) {
+        $old_cache_file = "$video_directory/progress.dat";
+        if (gz_is_file($old_cache_file)) {
+            $dirty = true;
+            $frames = json_decode(gz_file_get_contents($old_cache_file), true);
+            if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
+                unset($frames);
+            elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
+                unset($frames);
+            unlink($old_cache_file);
+        }
     }
     if (!isset($frames) || !count($frames)) {
         $frames = array('version' => $current_version);

@@ -234,7 +234,7 @@ else
             }
 
             // log any slow tests
-            if (isset($testInfo) && array_key_exists('slow_test_time', $settings)) {
+            if (isset($testInfo) && array_key_exists('slow_test_time', $settings) && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
                 $elapsed = $time - $testInfo['started'];
                 if ($elapsed > $settings['slow_test_time']) {
                     $log_entry = date("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";

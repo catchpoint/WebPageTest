@@ -1,6 +1,7 @@
 <?php
 include 'common.inc';
 include 'page_data.inc';
+set_time_limit(300);
 
 $use_median_run = false;
 if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
@@ -36,7 +37,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                             'render' => 'Start Render',
                             'bytesInDoc' => 'Bytes In (Doc)',
                             'requestsDoc' => 'Requests (Doc)',
-                            'loadEventStart' => 'Load Event Start' );
+                            'loadEventStart' => 'Load Event Start',
+                            'SpeedIndex' => 'Speed Index' );
         
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
@@ -94,7 +96,7 @@ if( isset($test['test']) && $test['test']['batch'] )
             $label = $test['l'];
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
-            $pageData = loadAllPageData($testPath);
+            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
             if( count($pageData) )
             {
                 echo "\"$label\",\"$url\",";

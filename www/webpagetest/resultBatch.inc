@@ -59,6 +59,10 @@ $stats['rv'] = array();
 $fvonly = false;
 if( $test['test']['fvonly'] )
     $fvonly = true;
+$showSpeedIndex = false;
+if( $test['test']['video'] && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
+    $showSpeedIndex = true;
+
     
 // run a quick check to see if the tests are complete
 $dirty = false;
@@ -317,6 +321,7 @@ if( $dirty )
 */
 function DisplayTests(&$tests)
 {
+    global $showSpeedIndex;
     global $fvonly;
     echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
@@ -324,6 +329,9 @@ function DisplayTests(&$tests)
             <th>Median load time (First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time (Repeat view)</th>';
+    if( $showSpeedIndex ) {
+        echo '<th>Median Speed Index (First View)</th>';
+    }
     echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -345,6 +353,7 @@ function DisplayTests(&$tests)
 */
 function DisplayTestsWithVariations(&$tests)
 {
+    global $showSpeedIndex;
     global $fvonly;
     echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
         <tr>
@@ -352,6 +361,9 @@ function DisplayTestsWithVariations(&$tests)
             <th>Median load time (First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time (Repeat view)</th>';
+    if( $showSpeedIndex ) {
+        echo '<th>Median Speed Index (First View)</th>';
+    }
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -377,6 +389,7 @@ function DisplayTestsWithVariations(&$tests)
 */
 function DisplayTest($id, $url, $label, $complete)
 {
+    global $showSpeedIndex;
     global $stats;
     global $fvonly;
     RestoreTest($id);
@@ -392,7 +405,10 @@ function DisplayTest($id, $url, $label, $complete)
         echo "<td><a href=\"/results.php?test=$id\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
     if( $complete )
     {
-        $pageData = loadAllPageData($testPath);
+        $options = null;
+        if ($showSpeedIndex)
+            $options = array('SpeedIndex' => true);
+        $pageData = loadAllPageData($testPath, $options);
         $fvMedian = GetMedianRun($pageData, 0);
         $rvMedian = GetMedianRun($pageData, 1);
         $rvMedian_column = '';
@@ -406,6 +422,12 @@ function DisplayTest($id, $url, $label, $complete)
             if ($pageData[$rvMedian][1]['loadTime'])
                 $stats['rv'][] = $pageData[$rvMedian][1]['loadTime'];
             echo "<td>$rvMedian_column</td>";
+        }
+        if ($showSpeedIndex) {
+            echo '<td>';
+            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
+                echo $pageData[$fvMedian][0]['SpeedIndex'];
+            echo '</td>';
         }
         if( FRIENDLY_URLS )
         {
@@ -468,6 +490,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $count = 0;
     global $fvonly;
     $url = '';
+    $host  = $_SERVER['HTTP_HOST'];
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
@@ -480,6 +503,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
         $testPath = './' . $test['path'];
+        $path = substr($testPath, 1);
         if( $test['c'] )
         {
             $pageData = loadAllPageData($testPath);
@@ -489,7 +513,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $test['fvMedian'] = $fvMedian;
                 $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
                 $fvRenderTime = $pageData[$fvMedian][0]['render'];
-                $visual = GetVisualProgress("$testPath/video_{$fvMedian}");
+                $visual = GetVisualProgress($testPath, $fvMedian, 0);
                 if (array_key_exists('FLI', $visual)) {
                     $fvFLIvalue = $visual['FLI'];
                 }
@@ -498,6 +522,18 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     $optimized[0] = $pageData[$fvMedian][0];
                     $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                     $optimized[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+                    if ($json) {
+                        $optimized[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
+                        $optimized[0]['video_frames'] = array();
+                        $frames = loadVideo("$testPath/video_{$fvMedian}");
+                        if( is_array($frames) && count($frames) ) {
+                            foreach( $frames as $time => $frameFile ) {
+                                $optimized[0]['video_frames'][] = array (   
+                                    'time' => number_format((double)$time / 10.0, 1),
+                                    'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                            }
+                        }
+                    }
                     $optimized[0]['FLI'] = $fvFLIvalue;
                 }
                 else
@@ -505,6 +541,18 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     $original[0] = $pageData[$fvMedian][0];
                     $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
                     $original[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+                    if ($json) {
+                        $original[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
+                        $original[0]['video_frames'] = array();
+                        $frames = loadVideo("$testPath/video_{$fvMedian}");
+                        if( is_array($frames) && count($frames) ) {
+                            foreach( $frames as $time => $frameFile ) {
+                                $original[0]['video_frames'][] = array (   
+                                    'time' => number_format((double)$time / 10.0, 1),
+                                    'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                            }
+                        }
+                    }
                     $original[0]['FLI'] = $fvFLIvalue;
                 }
                 if( !strlen($url) )
@@ -521,12 +569,36 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     $optimized[1] = $pageData[$rvMedian][1];
                     $optimized[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
                     $optimized[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+                    if ($json) {
+                        $optimized[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+                        $optimized[1]['video_frames'] = array();
+                        $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
+                        if( is_array($frames) && count($frames) ) {
+                            foreach( $frames as $time => $frameFile ) {
+                                $optimized[1]['video_frames'][] = array (   
+                                    'time' => number_format((double)$time / 10.0, 1),
+                                    'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                            }
+                        }
+                    }
                 }
                 else
                 {
                     $original[1] = $pageData[$rvMedian][1];
                     $original[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
                     $original[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+                    if ($json) {
+                        $original[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+                        $original[1]['video_frames'] = array();
+                        $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
+                        if( is_array($frames) && count($frames) ) {
+                            foreach( $frames as $time => $frameFile ) {
+                                $original[1]['video_frames'][] = array (   
+                                    'time' => number_format((double)$time / 10.0, 1),
+                                    'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -661,6 +733,18 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 else
                     echo $value . ',';
             }
+        }
+
+        // responses that are only in the JSON
+        if ($json) {
+            $json_response['data']['Original_FV_Page_Speed_Data'] = $original[0]['page_speed_data'];
+            $json_response['data']['Optimized_FV_Page_Speed_Data'] = $optimized[0]['page_speed_data'];
+            $json_response['data']['Original_RV_Page_Speed_Data'] = $original[1]['page_speed_data'];
+            $json_response['data']['Optimized_RV_Page_Speed_Data'] = $optimized[1]['page_speed_data'];
+            $json_response['data']['Original_FV_Video_Frames'] = $original[0]['video_frames'];
+            $json_response['data']['Optimized_FV_Video_Frames'] = $optimized[0]['video_frames'];
+            $json_response['data']['Original_RV_Video_Frames'] = $original[1]['video_frames'];
+            $json_response['data']['Optimized_RV_Video_Frames'] = $optimized[1]['video_frames'];
         }
     }
     else
