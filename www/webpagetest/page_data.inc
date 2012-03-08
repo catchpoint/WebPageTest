@@ -139,21 +139,19 @@ function loadPageData($file, $options = null)
         $cached = 0;
         if (stripos($filename, 'Cached') !== false)
             $cached = 1;
-        if( is_dir($video_dir) ) {
-            if (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
-                $frames = loadVideo($video_dir);
-                if( $frames && count($frames) ) {
-                    $last = end(array_keys($frames));
-                    if( $last )
-                        $ret['visualComplete'] = $last * 100;
-                }
+        if( is_dir($video_dir) && (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete'])) {
+            $frames = loadVideo($video_dir);
+            if( $frames && count($frames) ) {
+                $last = end(array_keys($frames));
+                if( $last )
+                    $ret['visualComplete'] = $last * 100;
             }
-            if (isset($options) && array_key_exists('SpeedIndex', $options) && $options['SpeedIndex']) {
-                require_once('./video/visualProgress.inc.php');
-                $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
-                if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-                    $ret['SpeedIndex'] = $progress['FLI'];
-                }
+        }
+        if (isset($options) && array_key_exists('SpeedIndex', $options) && $options['SpeedIndex']) {
+            require_once('./video/visualProgress.inc.php');
+            $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
+            if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                $ret['SpeedIndex'] = $progress['FLI'];
             }
         }
     }
