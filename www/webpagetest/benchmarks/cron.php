@@ -51,7 +51,25 @@ function ProcessBenchmark($benchmark) {
     if (is_file("./results/benchmarks/$benchmark/state.json")) {
         $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
     } else {
-        $state = array('running' => false);
+        $state = array('running' => false, 'needs_aggregation' => true, 'runs' => array());
+        // build up a list of runs if we have data
+        if (is_dir("./results/benchmarks/$benchmark/data")) {
+            $files = scandir("./results/benchmarks/$benchmark/data");
+            $last_run = 0;
+            foreach( $files as $file ) {
+                if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
+                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                    $time = $date->getTimestamp();
+                    $state['runs'][] = $time;
+                    if ($time > $last_run)
+                        $last_run = $time;
+                }
+            }
+            if ($last_run) {
+                $state['last_run'] = $last_run;
+            }
+        }
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
     }
     if (!is_array($state)) {
         $state = array('running' => false);
@@ -155,7 +173,7 @@ function CollectResults($benchmark, &$state) {
             }
             $testPath = './' . GetTestPath($test['id']);
             logMsg("Loading page data from $testPath", './benchmark.log', true);
-            $page_data = loadAllPageData($testPath);
+            $page_data = loadAllPageData($testPath, array('SpeedIndex' => true));
             if (count($page_data)) {
                 foreach ($page_data as $run => &$page_run) {
                     foreach ($page_run as $cached => &$test_data) {
@@ -355,7 +373,7 @@ function AggregateResults($benchmark, &$state) {
                                 'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete',
                                 'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
                                 'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
-                                'other_bytes', 'other_requests');
+                                'other_bytes', 'other_requests', 'SpeedIndex');
 
     // loop through all of the runs and see which ones we don't have aggregates for
     foreach ($state['runs'] as $run_time) {
@@ -417,23 +435,30 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
 */
 function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
     $configs = array();
+    
     // group the individual records
     foreach ($data as &$record) {
         if (array_key_exists($metric, $record) && 
             array_key_exists('result', $record) && 
             array_key_exists('config', $record) && 
             array_key_exists('cached', $record) && 
+            array_key_exists('location', $record) && 
             strlen($record['config']) &&
+            strlen($record['location']) &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
             $config = $record['config'];
+            $location = $record['location'];
             $cached = $record['cached'];
             if (!array_key_exists($config, $configs)) {
                 $configs[$config] = array();
             }
-            if (!array_key_exists($cached, $configs[$config])) {
-                $configs[$config][$cached] = array();
+            if (!array_key_exists($location, $configs[$config])) {
+                $configs[$config][$location] = array();
             }
-            $configs[$config][$cached][] = $record[$metric];
+            if (!array_key_exists($cached, $configs[$config][$location])) {
+                $configs[$config][$location][$cached] = array();
+            }
+            $configs[$config][$location][$cached][] = $record[$metric];
             
             if (array_key_exists('label', $record) &&
                 strlen($record['label'])) {
@@ -447,28 +472,32 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
         }
     }
     
-    foreach ($configs as $config => &$cache_state) {
-        foreach ($cache_state as $cached => &$records) {
-            $entry = CalculateMetrics($records);
-            if (is_array($entry)) {
-                $entry['time'] = $run_time;
-                $entry['config'] = $config;
-                $entry['cached'] = $cached;
-                
-                // see if we already have a record that matches that we need to overwrite
-                $exists = false;
-                foreach ($agg_data as $i => &$row) {
-                    if ($row['time'] == $run_time && 
-                        $row['config'] == $config &&
-                        $row['cached'] == $cached) {
-                        $exists = true;
-                        $agg_data[$i] = $entry;
-                        break;
+    foreach ($configs as $config => &$locations) {
+        foreach ($locations as $location => &$cache_state) {
+            foreach ($cache_state as $cached => &$records) {
+                $entry = CalculateMetrics($records);
+                if (is_array($entry)) {
+                    $entry['time'] = $run_time;
+                    $entry['config'] = $config;
+                    $entry['location'] = $location;
+                    $entry['cached'] = $cached;
+                    
+                    // see if we already have a record that matches that we need to overwrite
+                    $exists = false;
+                    foreach ($agg_data as $i => &$row) {
+                        if ($row['time'] == $run_time && 
+                            $row['config'] == $config &&
+                            $row['location'] == $location &&
+                            $row['cached'] == $cached) {
+                            $exists = true;
+                            $agg_data[$i] = $entry;
+                            break;
+                        }
                     }
+                    if (!$exists)
+                        $agg_data[] = $entry;
+                    unset ($entry);
                 }
-                if (!$exists)
-                    $agg_data[] = $entry;
-                unset ($entry);
             }
         }
     }
@@ -489,13 +518,16 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
         if (array_key_exists($metric, $record) && 
             array_key_exists('result', $record) && 
             array_key_exists('config', $record) && 
+            array_key_exists('location', $record) && 
             array_key_exists('cached', $record) && 
             array_key_exists('label', $record) && 
             strlen($record['config']) &&
+            strlen($record['location']) &&
             strlen($record['label']) &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
             $label = $record['label'];
             $config = $record['config'];
+            $location = $record['location'];
             $cached = $record['cached'];
             if (!array_key_exists($label, $labels)) {
                 $labels[$label] = array();
@@ -503,37 +535,44 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
             if (!array_key_exists($config, $labels[$label])) {
                 $labels[$label][$config] = array();
             }
-            if (!array_key_exists($cached, $labels[$label][$config])) {
-                $labels[$label][$config][$cached] = array();
+            if (!array_key_exists($location, $labels[$label][$config])) {
+                $labels[$label][$config][$location] = array();
             }
-            $labels[$label][$config][$cached][] = $record[$metric];
+            if (!array_key_exists($cached, $labels[$label][$config][$location])) {
+                $labels[$label][$config][$location][$cached] = array();
+            }
+            $labels[$label][$config][$location][$cached][] = $record[$metric];
         }
     }
 
     foreach ($labels as $label => &$configs) {
-        foreach ($configs as $config => &$cache_state) {
-            foreach ($cache_state as $cached => &$records) {
-                $entry = CalculateMetrics($records);
-                if (is_array($entry)) {
-                    $entry['time'] = $run_time;
-                    $entry['label'] = $label;
-                    $entry['config'] = $config;
-                    $entry['cached'] = $cached;
-                    // see if we already have a record that matches that we need to overwrite
-                    $exists = false;
-                    foreach ($agg_data as $i => &$row) {
-                        if ($row['time'] == $run_time && 
-                            $row['config'] == $config &&
-                            $row['cached'] == $cached &&
-                            $row['label'] == $label) {
-                            $exists = true;
-                            $agg_data[$i] = $entry;
-                            break;
+        foreach ($configs as $config => &$locations) {
+            foreach ($locations as $location => &$cache_state) {
+                foreach ($cache_state as $cached => &$records) {
+                    $entry = CalculateMetrics($records);
+                    if (is_array($entry)) {
+                        $entry['time'] = $run_time;
+                        $entry['label'] = $label;
+                        $entry['config'] = $config;
+                        $entry['location'] = $location;
+                        $entry['cached'] = $cached;
+                        // see if we already have a record that matches that we need to overwrite
+                        $exists = false;
+                        foreach ($agg_data as $i => &$row) {
+                            if ($row['time'] == $run_time && 
+                                $row['config'] == $config &&
+                                $row['location'] == $location &&
+                                $row['cached'] == $cached &&
+                                $row['label'] == $label) {
+                                $exists = true;
+                                $agg_data[$i] = $entry;
+                                break;
+                            }
                         }
+                        if (!$exists)
+                            $agg_data[] = $entry;
+                        unset ($entry);
                     }
-                    if (!$exists)
-                        $agg_data[] = $entry;
-                    unset ($entry);
                 }
             }
         }
@@ -598,6 +637,16 @@ function PruneTestData($id) {
         // just do the videos for now
         if (strpos($file, 'video_') !== false && is_dir("$testPath/$file")) {
             delTree("$testPath/$file");
+        } elseif (strpos($file, 'bodies') !== false) {
+            unlink("$testPath/$file");
+        } elseif (strpos($file, 'pagespeed') !== false) {
+            unlink("$testPath/$file");
+        } elseif (strpos($file, '_doc.jpg') !== false) {
+            unlink("$testPath/$file");
+        } elseif (strpos($file, '_render.jpg') !== false) {
+            unlink("$testPath/$file");
+        } elseif (strpos($file, 'status.txt') !== false) {
+            unlink("$testPath/$file");
         }
     }
 }

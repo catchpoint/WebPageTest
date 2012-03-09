@@ -6,7 +6,7 @@ require_once('common.inc');
     Helper functions to deal with aggregate benchmark data
 */
 
-function LoadDataTSV($benchmark, $cached, $metric, $aggregate) {
+function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null) {
     $tsv = null;
     $isbytes = false;
     $istime = false;
@@ -20,23 +20,38 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate) {
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }
-    if (LoadData($data, $columns, $benchmark, $cached, $metric, $aggregate)) {
+    if (LoadData($data, $configurations, $benchmark, $cached, $metric, $aggregate, $loc)) {
         $tsv = 'Date';
-        foreach($columns as $column) {
-            $tsv .= "\t$column";
+        foreach($configurations as &$configuration) {
+            if (count($configuration['locations']) > 1) {
+                $name = "{$configuration['name']} ";
+                if (count($configurations) == 1)
+                    $name = '';
+                foreach ($configuration['locations'] as &$location) {
+                    if (is_numeric($location['label'])) {
+                        $tsv .= "\t$name{$location['location']}";
+                    } else {
+                        $tsv .= "\t$name{$location['label']}";
+                    }
+                }
+            } else {
+                $tsv .= "\t{$configuration['name']}";
+            }
         }
         $tsv .= "\n";
         foreach ($data as $time => &$row) {
             $tsv .= date('Y-m-d H:i:s', $time);
-            foreach($columns as $column) {
-                $tsv .= "\t";
-                if (array_key_exists($column, $row)) {
-                    $value = $row[$column];
-                    if ($isbytes)
-                        $value = number_format($value / 1024.0, 3);
-                    elseif ($istime)
-                        $value = number_format($value / 1000.0, 3);
-                    $tsv .= $value;
+            foreach($configurations as &$configuration) {
+                foreach ($configuration['locations'] as &$location) {
+                    $tsv .= "\t";
+                    if (array_key_exists($configuration['name'], $row) && array_key_exists($location['location'], $row[$configuration['name']])) {
+                        $value = $row[$configuration['name']][$location['location']];
+                        if ($isbytes)
+                            $value = number_format($value / 1024.0, 3);
+                        elseif ($istime)
+                            $value = number_format($value / 1000.0, 3);
+                        $tsv .= $value;
+                    }
                 }
             }
             $tsv .= "\n";
@@ -49,23 +64,31 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate) {
 * Load data for the given request (benchmark/metric)
 * 
 */
-function LoadData(&$data, &$columns, $benchmark, $cached, $metric, $aggregate) {
+function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggregate, $loc) {
     $ok = false;
     $data = array();
-    if (GetConfigurationNames($benchmark, $columns)) {
+    if (GetConfigurationNames($benchmark, $configurations, $loc)) {
         $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
         if (gz_is_file($data_file)) {
             $raw_data = json_decode(gz_file_get_contents($data_file), true);
             if (count($raw_data)) {
-                $ok = true;
                 foreach($raw_data as &$row) {
                     if ($row['cached'] == $cached &&
-                        array_key_exists($aggregate, $row)) {
+                        array_key_exists($aggregate, $row) &&
+                        strlen($row[$aggregate])) {
                         $time = $row['time'];
-                        if (!array_key_exists($time, $data)) {
-                            $data[$time] = array();
+                        $config = $row['config'];
+                        $location = $row['location'];
+                        if (!isset($loc) || $loc == $location) {
+                            $ok = true;
+                            if (!array_key_exists($time, $data)) {
+                                $data[$time] = array();
+                            }
+                            if (!array_key_exists($config, $data[$time])) {
+                                $data[$time][$config] = array();
+                            }
+                            $data[$time][$config][$location] = $row[$aggregate];
                         }
-                        $data[$time][$row['config']] = $row[$aggregate];
                     }
                 }
             }
@@ -79,13 +102,21 @@ function LoadData(&$data, &$columns, $benchmark, $cached, $metric, $aggregate) {
 * 
 * @param mixed $benchmark
 */
-function GetConfigurationNames($benchmark, &$configs) {
+function GetConfigurationNames($benchmark, &$configs, $loc) {
     $ok = false;
     $configs = array();
     if (include "./settings/benchmarks/$benchmark.php") {
         $ok = true;
         foreach ($configurations as $name => &$config) {
-            $configs[] = $name;
+            $entry = array('name' => $name, 'locations' => array());
+            if (array_key_exists('locations', $config)) {
+                foreach ($config['locations'] as $label => $location) {
+                    if (!isset($loc) || $location == $loc) {
+                        $entry['locations'][] = array('location' => $location, 'label' => $label);
+                    }
+                }
+            }
+            $configs[] = $entry;
         }
     }
     return $ok;
@@ -122,8 +153,12 @@ function GetBenchmarkInfo($benchmark) {
         }
         $info['fvonly'] = false;
         $info['video'] = false;
+        $info['expand'] = false;
+        if (isset($expand) && $expand)
+            $info['expand'] = true;
         if (isset($configurations)) {
             $info['configurations'] = $configurations;
+            $info['locations'] = array();
             foreach($configurations as &$configuration) {
                 if (array_key_exists('settings', $configuration)) {
                     foreach ($configuration['settings'] as $key => $value) {
@@ -131,6 +166,11 @@ function GetBenchmarkInfo($benchmark) {
                             $info['fvonly'] = true;
                         elseif ($key == 'video' && $value)
                             $info['video'] = true;
+                    }
+                }
+                if (array_key_exists('locations', $configuration)) {
+                    foreach ($configuration['locations'] as $label => $location) {
+                        $info['locations'][$location] = $label;
                     }
                 }
             }
