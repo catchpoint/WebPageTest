@@ -528,9 +528,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         $frames = loadVideo("$testPath/video_{$fvMedian}");
                         if( is_array($frames) && count($frames) ) {
                             foreach( $frames as $time => $frameFile ) {
-                                $optimized[0]['video_frames'][] = array (   
+                                $entry = array (   
                                     'time' => number_format((double)$time / 10.0, 1),
                                     'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                $ms = $time * 100;
+                                if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
+                                    $entry['progress'] = $visual['frames'][$ms]['progress'];
+                                $optimized[0]['video_frames'][] = $entry;
                             }
                         }
                     }
@@ -547,9 +551,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         $frames = loadVideo("$testPath/video_{$fvMedian}");
                         if( is_array($frames) && count($frames) ) {
                             foreach( $frames as $time => $frameFile ) {
-                                $original[0]['video_frames'][] = array (   
+                                $entry = array (   
                                     'time' => number_format((double)$time / 10.0, 1),
                                     'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                $ms = $time * 100;
+                                if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
+                                    $entry['progress'] = $visual['frames'][$ms]['progress'];
+                                $original[0]['video_frames'][] = $entry;
                             }
                         }
                     }
@@ -575,9 +583,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
                         if( is_array($frames) && count($frames) ) {
                             foreach( $frames as $time => $frameFile ) {
-                                $optimized[1]['video_frames'][] = array (   
+                                $entry = array (   
                                     'time' => number_format((double)$time / 10.0, 1),
                                     'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                $ms = $time * 100;
+                                if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
+                                    $entry['progress'] = $visual['frames'][$ms]['progress'];
+                                $optimized[1]['video_frames'][] = $entry;
                             }
                         }
                     }
@@ -593,9 +605,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
                         if( is_array($frames) && count($frames) ) {
                             foreach( $frames as $time => $frameFile ) {
-                                $original[1]['video_frames'][] = array (   
+                                $entry = array (   
                                     'time' => number_format((double)$time / 10.0, 1),
                                     'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                $ms = $time * 100;
+                                if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
+                                    $entry['progress'] = $visual['frames'][$ms]['progress'];
+                                $original[1]['video_frames'][] = $entry;
                             }
                         }
                     }
