@@ -441,8 +441,8 @@ $page_description = "Website performance test result$testLabel.";
                         $extension = 'php';
                         if( FRIENDLY_URLS )
                             $extension = 'png';
-                        echo "<div><div id=\"requests_$run\" style=\"width: 390px; height: 200px; display: inline;\"></div>";
-                        echo "<div id=\"bytes_$run\" style=\"width: 390px; height: 200px; display: inline;\"></div></div>";
+                        echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
+                        echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
                         ?>
                     </td>
                 </tr>
@@ -489,7 +489,7 @@ $page_description = "Website performance test result$testLabel.";
                     bytesColors.push('#' + color);
                 }
                 var bytesOptions = {
-                  width: 390, height: 200,
+                  width: 370, height: 200,
                   title: 'Bytes',
                   colors: bytesColors
                 };
@@ -506,7 +506,7 @@ $page_description = "Website performance test result$testLabel.";
                     requestsColors.push('#' + color);
                 }
                 var requestsOptions = {
-                  width: 390, height: 200,
+                  width: 370, height: 200,
                   title: 'Requests',
                   colors: requestsColors
                 };
