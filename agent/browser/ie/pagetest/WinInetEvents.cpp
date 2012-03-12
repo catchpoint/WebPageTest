@@ -477,6 +477,8 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 								req->host = host;
 								req->object = CString(object) + extra;
 								req->scheme = scheme;
+                if (!req->scheme.Left(5).CompareNoCase(_T("https")))
+                  req->secure = true;
 							}
 							
 							EnterCriticalSection(&cs);
