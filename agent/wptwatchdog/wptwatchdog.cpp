@@ -3,12 +3,14 @@
 
 #include "stdafx.h"
 #include "wptwatchdog.h"
+#include <Psapi.h>
 
 // Global Variables:
 static LPCTSTR window_class = _T("WPT_Watchdog");
 HINSTANCE hInst;				// current instance
 HANDLE process_handle = NULL;  // process we are watching
 bool  must_exit = false;
+static TCHAR command_line[MAX_PATH];
 
 // Forward declarations of functions included in this code module:
 BOOL				InitInstance(HINSTANCE, int);
@@ -37,14 +39,25 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
+  command_line[0] = 0;
 
   DWORD process_id = _ttol(lpCmdLine);
-  if (process_id)
-    process_handle = OpenProcess(SYNCHRONIZE, FALSE, process_id);
+  if (process_id) {
+    process_handle = OpenProcess(SYNCHRONIZE | 
+                                  PROCESS_QUERY_INFORMATION | 
+                                  PROCESS_VM_READ, FALSE, process_id);
+    if (process_handle) {
+      GetModuleFileNameEx(process_handle, NULL, command_line, 
+                          _countof(command_line));
+      if (!lstrcmpi(PathFindFileName(command_line), _T("urlblast.exe"))) {
+        window_class = _T("Urlblast_Watchdog");
+      }
+    }
+  }
 
   // only allow a single instance to run
-  HANDLE instance_mutex = CreateMutex(NULL, FALSE, _T("WPT Watchdog"));
-  if (process_handle && 
+  HANDLE instance_mutex = CreateMutex(NULL, FALSE, window_class);
+  if (process_handle && lstrlen(command_line) &&
       GetLastError() != ERROR_ALREADY_EXISTS && 
       GetLastError() != ERROR_ACCESS_DENIED) {
     MSG msg;
@@ -139,9 +152,6 @@ HANDLE  LaunchWptdriver(void) {
   si.cb = sizeof(si);
   si.dwFlags = STARTF_USESHOWWINDOW;
   si.wShowWindow = SW_SHOWMINNOACTIVE;
-  TCHAR command_line[MAX_PATH];
-  GetModuleFileName(NULL, command_line, MAX_PATH);
-  lstrcpy(PathFindFileName(command_line), _T("wptdriver.exe"));
   if (CreateProcess(NULL, command_line, 0, 0, FALSE, 
                     NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
     process = pi.hProcess;

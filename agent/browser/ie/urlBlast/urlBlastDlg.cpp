@@ -131,6 +131,41 @@ END_MESSAGE_MAP()
 
 
 /*-----------------------------------------------------------------------------
+  Launch the provided process and wait for it to finish 
+  (unless process_handle is provided in which case it will return immediately)
+-----------------------------------------------------------------------------*/
+bool LaunchProcess(CString command_line, HANDLE * process_handle){
+  bool ret = false;
+
+  if (command_line.GetLength()) {
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    memset( &si, 0, sizeof(si) );
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    if (CreateProcess(NULL, (LPTSTR)(LPCTSTR)command_line, 0, 0, FALSE, 
+                      NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
+      if (process_handle) {
+        *process_handle = pi.hProcess;
+        ret = true;
+        CloseHandle(pi.hThread);
+      } else {
+        WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);
+        DWORD code;
+        if( GetExitCodeProcess(pi.hProcess, &code) && code == 0 )
+          ret = true;
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+      }
+    }
+  } else
+    ret = true;
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 BOOL CurlBlastDlg::OnInitDialog()
 {
@@ -147,6 +182,17 @@ BOOL CurlBlastDlg::OnInitDialog()
 	
 	// disable font smoothing
 	SystemParametersInfo(SPI_SETFONTSMOOTHING, FALSE, NULL, SPIF_UPDATEINIFILE);
+
+  // launch the watchdog
+  TCHAR path[MAX_PATH];
+  GetModuleFileName(NULL, path, MAX_PATH);
+  lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
+  CString watchdog;
+  watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
+  HANDLE process = NULL;
+  LaunchProcess(watchdog, &process);
+  if (process)
+    CloseHandle(process);
 
 	// start up minimized
 	ShowWindow(SW_MINIMIZE);
@@ -394,7 +440,12 @@ void CurlBlastDlg::DoStartup(void)
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::KillWorkers(void)
 {
-	// signal all of the workers to stop
+  // kill the watchdog
+  HWND watchdog = ::FindWindow(_T("Urlblast_Watchdog"), NULL);
+  if (watchdog)
+    ::SendMessageTimeout(watchdog, WM_CLOSE, 0, 0, 0, 10000, NULL);
+
+  // signal all of the workers to stop
 	CURLBlaster * blaster;
 	for( int i = 0; i < workers.GetCount(); i++ )
 	{
