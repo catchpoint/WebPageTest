@@ -572,7 +572,7 @@ bool CSocketEvents::CheckFlaggedConnection(CSocketConnect * c, DWORD hostAddr)
   and possibly eliminate other headers)
 -----------------------------------------------------------------------------*/
 void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
-  if (len > 4 && buff) {
+  if (hostOverride.GetCount() && len > 4 && buff) {
     // make sure we have an outbound HTTP request
     if (!memcmp(buff, "GET ", 4) || 
         !memcmp(buff, "PUT ", 4) || 
@@ -580,35 +580,48 @@ void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
         !memcmp(buff, "HEAD ", 5)) {
       CStringA original((char *)buff, len);
       CStringA out;
+      bool xhost_exists = false;
       bool modified = false;
       int token_pos = 0;
       CStringA line = original.Tokenize("\r\n", token_pos).Trim();
       while (token_pos >= 0) {
+        bool keep = true;
         int separator = line.Find(":");
         if (separator > 0) {
           CStringA token = line.Left(separator).Trim();
           CStringA value = line.Mid(separator + 1).Trim();
           // modify the host header
-          if (hostOverride.GetCount() && !token.CompareNoCase("Host")) {
+          if (!token.CompareNoCase("Host")) {
             POSITION pos = hostOverride.GetHeadPosition();
             while(pos) {
               CHostOverride hostPair = hostOverride.GetNext(pos);
               if( !value.CompareNoCase(CT2A(hostPair.originalHost)) ) {
-                line = CStringA("Host: ") + CStringA(CT2A(hostPair.newHost)) + "\r\n";
-                line += CStringA("x-Host: ") + value;
+                line = CStringA("Host: ") + CStringA(CT2A(hostPair.newHost));
+                if (!xhost_exists) {
+                  line += CStringA("\r\nx-Host: ") + value;
+                  xhost_exists = true;
+                }
                 modified = true;
-              }
+              } 
+            }
+          } else if (!token.CompareNoCase("x-Host")) {
+            if (xhost_exists) {
+              keep = false;
+            } else {
+              xhost_exists = true;
             }
           }
         }
-        out += line + "\r\n";
+        if (keep) {
+          out += line + "\r\n";
+        }
         line = original.Tokenize("\r\n", token_pos).Trim();
       }
       out += "\r\n";
 
       // see if we need to reduce the size of the request by stripping out headers
       if (modified) {
-        if (out.GetLength() > (int)len) {
+        if (out.GetLength() != (int)len) {
           CStringA reduced = "";
           token_pos = 0;
           line = out.Tokenize("\r\n", token_pos).Trim();
