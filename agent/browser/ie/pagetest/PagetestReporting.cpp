@@ -2432,7 +2432,7 @@ void CPagetestReporting::CheckMinify()
 				else
 				{
 					// run JSMin on the file and see how much smaller it is
-					DWORD len = origLen;
+					DWORD len = origLen + 1;
 					char * minified = new char [len];
 					JSMin jsmin;
 					if( jsmin.Minify((const char *)body, minified, len) )

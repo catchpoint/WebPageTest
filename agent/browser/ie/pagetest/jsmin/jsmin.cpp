@@ -47,20 +47,26 @@ JSMin::~JSMin()
 -----------------------------------------------------------------------------*/
 bool JSMin::Minify(const char * inBuff, char * outBuff, unsigned long &outBuffLen)
 {
-	ret = true;
-	theLookahead = EOF;
+	ret = false;
+	__try
+	{
+	  theLookahead = EOF;
 
-	in = inBuff;
-	out = outBuff;
-	outLen = outBuffLen;
-	len = 0;
-	
-	Run();
-	
-	if( len < outLen )
-		*out = 0;	// NULL terminate it for convenience
-	
-	outBuffLen = len;
+	  in = inBuff;
+	  out = outBuff;
+	  outLen = outBuffLen;
+	  len = 0;
+  	
+	  Run();
+  	
+	  if( len < outLen )
+		  *out = 0;	// NULL terminate it for convenience
+  	
+	  outBuffLen = len;
+    ret = true;
+	}__except(1)
+	{
+	}
 	
 	return ret;
 }
