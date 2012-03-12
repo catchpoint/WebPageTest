@@ -150,6 +150,8 @@ BOOL CurlBlastDlg::OnInitDialog()
 
 	// start up minimized
 	ShowWindow(SW_MINIMIZE);
+  ClipCursor(NULL);
+  SetCursorPos(0,0);
 	
 	LoadSettings();
 

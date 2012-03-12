@@ -76,6 +76,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   WSAStartup(wVersionRequested, &wsaData);
 
   // start up the actual core code
+  ClipCursor(NULL);
+  SetCursorPos(0,0);
   WptStatus status(hWnd);
   global_status = &status;
 
