@@ -39,6 +39,8 @@ static const DWORD AFT_TIMEOUT = 240000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
+static const DWORD BROWSER_WIDTH = 1024;
+static const DWORD BROWSER_HEIGHT = 768;
 
 
 /*-----------------------------------------------------------------------------
@@ -113,6 +115,10 @@ void WptTest::Reset(void) {
   _block_requests.RemoveAll();
   _save_response_bodies = false;
   _preserve_user_agent = false;
+  _browser_width = BROWSER_WIDTH;
+  _browser_height = BROWSER_HEIGHT;
+  _viewport_width = 0;
+  _viewport_height = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -534,6 +540,20 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
     CDNSName entry(command.target, command.value);
     if (entry.name.GetLength() && entry.realName.GetLength())
       _dns_name_override.AddTail(entry);
+  } else if (cmd == _T("setbrowsersize")) {
+    int width = _ttoi(command.target);
+    int height = _ttoi(command.value);
+    if (width > 0 && height > 0) {
+      _browser_width = (DWORD)width;
+      _browser_height = (DWORD)height;
+    }
+  } else if (cmd == _T("setviewportsize")) {
+    int width = _ttoi(command.target);
+    int height = _ttoi(command.value);
+    if (width > 0 && height > 0) {
+      _viewport_width = (DWORD)width;
+      _viewport_height = (DWORD)height;
+    }
   } else {
     processed = false;
   }

@@ -65,12 +65,13 @@ public:
   void Unlock();
   void Reset();
   void SetViewport(RECT& viewport);
+  void ClearViewport();
   bool IsViewportSet();
 
   CAtlList<CapturedImage> _captured_images;
+  RECT _viewport;
 
 private:
   CRITICAL_SECTION cs;
-  RECT _viewport;
   bool _viewport_set;
 };

@@ -174,8 +174,35 @@ void TestState::Start() {
 
   // position the browser window
   if (_frame_window) {
+    DWORD browser_width = _test._browser_width;
+    DWORD browser_height = _test._browser_height;
     ::ShowWindow(_frame_window, SW_RESTORE);
-    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 1024, 768, SWP_NOACTIVATE);
+    if (_test._viewport_width && _test._viewport_height) {
+      ::UpdateWindow(_frame_window);
+      FindViewport();
+      RECT browser;
+      GetWindowRect(_frame_window, &browser);
+      RECT viewport = {0,0,0,0};
+      if (_screen_capture.IsViewportSet()) {
+        memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
+      } else {
+        if (_document_window) {
+          GetWindowRect(_document_window, &viewport);
+        }
+      }
+      int vp_width = abs(viewport.right - viewport.left);
+      int vp_height = abs(viewport.top - viewport.bottom);
+      int br_width = abs(browser.right - browser.left);
+      int br_height = abs(browser.top - browser.bottom);
+      if (vp_width && vp_height && br_width && br_height && 
+        br_width >= vp_width && br_height >= vp_height) {
+        browser_width = _test._viewport_width + (br_width - vp_width);
+        browser_height = _test._viewport_height + (br_height - vp_height);
+      }
+      _screen_capture.ClearViewport();
+    }
+    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                    browser_width, browser_height, SWP_NOACTIVATE);
     ::UpdateWindow(_frame_window);
     FindViewport();
   }

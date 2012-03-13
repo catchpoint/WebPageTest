@@ -1023,6 +1023,8 @@ function ScriptParameterCount($command)
         !strcasecmp($command, 'setCookie') || 
         !strcasecmp($command, 'setDNS') || 
         !strcasecmp($command, 'setDnsName') ||
+        !strcasecmp($command, 'setBrowserSize') ||
+        !strcasecmp($command, 'setViewportSize') ||
         !strcasecmp($command, 'overrideHost') ||
         !strcasecmp($command, 'overrideHostUrl') )
     {

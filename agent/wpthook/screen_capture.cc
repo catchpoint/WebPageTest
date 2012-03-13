@@ -125,6 +125,13 @@ void ScreenCapture::Unlock() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void ScreenCapture::ClearViewport() {
+  memset(&_viewport, 0, sizeof(_viewport));
+  _viewport_set = false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void ScreenCapture::SetViewport(RECT& viewport) {
   memcpy(&_viewport, &viewport, sizeof(_viewport));
   _viewport_set = true;

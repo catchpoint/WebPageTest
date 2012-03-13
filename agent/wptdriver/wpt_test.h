@@ -143,6 +143,11 @@ public:
   DWORD   _minimum_duration;
   bool    _save_response_bodies;
   bool    _preserve_user_agent;
+  DWORD   _browser_width;
+  DWORD   _browser_height;
+  DWORD   _viewport_width;
+  DWORD   _viewport_height;
+
   
   // current state
   int     _run;
