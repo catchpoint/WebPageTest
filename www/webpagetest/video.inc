@@ -75,8 +75,10 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
     if( $endTime )
         $endTime = (int)(($endTime + 99) / 100);
     
-    $dir = opendir($videoDir);
-    if( $dir )
+    $dir = null;
+    if (is_dir($videoDir))
+        $dir = opendir($videoDir);
+    if( isset($dir) && $dir !== false )
     {
         while($file = readdir($dir)) 
         {
@@ -192,7 +194,7 @@ function BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, $syncStar
     // load the page-level data for the run
     require_once('./page_data.inc');
     $pageData = loadPageRunData($testPath, $run, $cached);
-    if( $pageData && count($pageData))
+    if( $pageData && count($pageData) && is_dir($videoDir))
     {
         if (!$syncStartRender)
             $syncStartRender = $pageData['render'];

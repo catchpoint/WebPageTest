@@ -79,7 +79,7 @@ $page_description = "Website performance optimization recommendations$testLabel.
                 $haveLocations = false;
                 $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
 
-                dumpOptimizationReport($pageData, $requests, $id, $run, $test);
+                dumpOptimizationReport($pageData, $requests, $id, $run, $cached, $test);
                 echo '<p></p><br>';
                 include('./ads/optimization_bottom.inc');
                 echo '<br>';

@@ -273,6 +273,11 @@ $page_description = "Comparison Test$testLabel.";
                     form.url.focus();
                     return false
                 }
+                var proto = url.substring(0, 6).toLowerCase();
+                if (proto == 'https:') {
+                    alert( "HTTPS sites are not currently supported" );
+                    return false;
+                }
                 
                 form.label.value = 'Page Speed Service Comparison for ' + url;
                 

@@ -232,32 +232,38 @@ function FormatLabel(&$format, $newFormat)
 {
     $ret = '';
     
-    if( $newFormat )
-    {
-        $ret = $format['format'];
-        foreach( $format['args'] as $index => &$arg )
+    if (isset($format) && is_array($format)) {
+        if( $newFormat )
         {
-            $key = $index + 1;
-            $key = '$' . $key;
-            $type = $arg['type'];
-            if( $type == 'url' )
-                $value = "<a rel=\"nofollow\" href=\"{$arg['localized_value']}\" target=\"_blank\">" . htmlspecialchars(FitText($arg['localized_value'],80)) . '</a>';
-            else
-                $value = htmlspecialchars($arg['localized_value']);
-            $ret = str_replace($key, $value, $ret);
-        }
-    }
-    else
-    {
-        foreach( $format as &$item )
-        {
-            $type = $item['type'];
-            if( $type == 'url' )
-            {
-                $ret .= "<a rel=\"nofollow\" href=\"{$item['value']}\" target=\"_blank\">" . htmlspecialchars(FitText($item['value'],80)) . '</a>';
+            if (array_key_exists('format', $format)) {
+                $ret = $format['format'];
             }
-            else
-                $ret .= htmlspecialchars($item['value']);
+            if (array_key_exists('args', $format)) {
+                foreach( $format['args'] as $index => &$arg )
+                {
+                    $key = $index + 1;
+                    $key = '$' . $key;
+                    $type = $arg['type'];
+                    if( $type == 'url' )
+                        $value = "<a rel=\"nofollow\" href=\"{$arg['localized_value']}\" target=\"_blank\">" . htmlspecialchars(FitText($arg['localized_value'],80)) . '</a>';
+                    else
+                        $value = htmlspecialchars($arg['localized_value']);
+                    $ret = str_replace($key, $value, $ret);
+                }
+            }
+        }
+        else
+        {
+            foreach( $format as &$item )
+            {
+                $type = $item['type'];
+                if( $type == 'url' )
+                {
+                    $ret .= "<a rel=\"nofollow\" href=\"{$item['value']}\" target=\"_blank\">" . htmlspecialchars(FitText($item['value'],80)) . '</a>';
+                }
+                else
+                    $ret .= htmlspecialchars($item['value']);
+            }
         }
     }
     

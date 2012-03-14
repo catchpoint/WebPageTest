@@ -117,7 +117,6 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
 } elseif (preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
     $id = $_COOKIE['tid'];
 }
-ValidateTestId($id);
 
 $testLabel = '';
 if (strlen($id)) {

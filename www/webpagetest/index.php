@@ -491,7 +491,7 @@ $loc = ParseLocations($locations);
                     $offset = -40 * $sponsor['index'];
                 $sponsor['offset'] = $offset;
             }
-            echo "var sponsors = " . json_encode($sponsors) . ";\n";
+            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 

@@ -271,11 +271,16 @@ $page_description = "Comparison Test$testLabel.";
                     return false
                 }
                 var landing = form.testurl_landing.value;
-                if( url == "" || landing == "Landing Page" )
+                if( landing == "" || landing == "Landing Page" )
                 {
                     alert( "Please enter a landing page to navigate from." );
                     form.testurl_landing.focus();
                     return false
+                }
+                var proto = url.substring(0, 6).toLowerCase();
+                if (proto == 'https:') {
+                    alert( "HTTPS sites are not currently supported" );
+                    return false;
                 }
 
                 form.label.value = 'Page Speed Service Comparison for ' + url;

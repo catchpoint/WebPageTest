@@ -145,12 +145,13 @@ function GetBacklog($dir, $locationId)
     }
 
     $testers = GetTesters($locationId);
-    foreach($testers['testers'] as &$tester)
-    {
-        if( $tester['busy'] )
-            $testing++;
-        else
-            $idle++;
+    if (isset($testers) && is_array($testers) && array_key_exists('testers', $testers)) {
+        foreach($testers['testers'] as &$tester) {
+            if( $tester['busy'] )
+                $testing++;
+            else
+                $idle++;
+        }
     }
     
     $backlog['Total'] = $userCount + $lowCount + $testing;

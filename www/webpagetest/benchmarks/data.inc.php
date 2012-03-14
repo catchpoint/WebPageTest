@@ -48,7 +48,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$an
         $tsv .= "\n";
         $dates = array();
         foreach ($data as $time => &$row) {
-            $date_text = date('Y-m-d H:i:s', $time);
+            $date_text = date('Y-m-d H:i', $time);
             $tsv .= $date_text;
             $dates[$date_text] = $time;
             foreach($configurations as &$configuration) {

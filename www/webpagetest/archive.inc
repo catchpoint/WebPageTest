@@ -151,7 +151,9 @@ function RestoreArchive($id) {
     }
     logMsg("Archive URL: $url");
     if (strlen($url) || isset($settings['archive_dir']) || isset($settings['archive_s3_url'])) {
-        mkdir( $testPath, 0777, true );
+        if (!is_dir($testPath)) {
+            mkdir( $testPath, 0777, true );
+        }
         $testPath = realpath($testPath);
         $zipfile = "./tmp/$id.zip";
         if (strlen($url)) {
@@ -159,7 +161,9 @@ function RestoreArchive($id) {
         } else {
             if (isset($settings['archive_dir'])) {
                 $source = GetArchiveFile($id);
-                copy($source, $zipfile);
+                if (is_file($source)) {
+                    copy($source, $zipfile);
+                }
             } elseif (isset($settings['archive_s3_url'])) {
                 $separator = strrpos($id, '_');
                 if ($separator !== false) {
@@ -214,7 +218,7 @@ function RestoreArchive($id) {
             $ret = true;
         }    
         if (is_file($zipfile))
-            unlink($zipfile);
+            @unlink($zipfile);
     }
     else
         $ret = true;
