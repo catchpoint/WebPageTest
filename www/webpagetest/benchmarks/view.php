@@ -7,6 +7,9 @@ $page_description = "WebPagetest benchmark details";
 $aggregate = 'avg';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
+$benchmark = '';
+if (array_key_exists('benchmark', $_REQUEST))
+    $benchmark = $_REQUEST['benchmark'];
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -32,6 +35,20 @@ if (array_key_exists('aggregate', $_REQUEST))
             ?>
             
             <div class="translucent">
+            <div style="text-align:right; clear:both;">
+                <form name="aggregation" method="get" action="view.php">
+                    <?php
+                    echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                    ?>
+                    Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
+                        <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
+                        <option value="geo-mean" <?php if ($aggregate == 'geo-mean') echo "selected"; ?>>Geometric Mean</option>
+                        <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
+                        <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
+                        <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
+                    </select>
+                </form>
+            </div>
             <?php
             $metrics = array('SpeedIndex' => 'Speed Index',
                             'docTime' => 'Load Time (onload)', 
@@ -100,7 +117,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
-    $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc);
+    $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc, $annotations);
     if (isset($tsv) && strlen($tsv)) {
         $count++;
         $id = "g$count";
@@ -116,13 +133,16 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     labelsDiv: document.getElementById('{$id}_legend'),
                     $chart_title
                     legend: \"always\"}
-                );
-              </script>\n";
+                );";
+        if (isset($annotations) && count($annotations)) {
+            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+        }
+        echo "</script>\n";
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
-        $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc);
+        $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc, $annotations);
         if (isset($tsv) && strlen($tsv)) {
             $count++;
             $id = "g$count";
@@ -138,8 +158,11 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         labelsDiv: document.getElementById('{$id}_legend'),
                         $chart_title
                         legend: \"always\"}
-                    );
-                  </script>\n";
+                    );";
+            if (isset($annotations) && count($annotations)) {
+                echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+            }
+            echo "</script>\n";
         }
     }
 }    

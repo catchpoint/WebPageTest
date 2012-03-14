@@ -32,6 +32,17 @@ if (array_key_exists('aggregate', $_REQUEST))
             ?>
             
             <div class="translucent">
+            <div style="text-align:right; clear:both;">
+                <form name="aggregation" method="get" action="index.php">
+                    Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
+                        <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
+                        <option value="geo-mean" <?php if ($aggregate == 'geo-mean') echo "selected"; ?>>Geometric Mean</option>
+                        <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
+                        <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
+                        <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
+                    </select>
+                </form>
+            </div>
             <?php
             $benchmarks = GetBenchmarks();
             $count = 0;
@@ -41,7 +52,7 @@ if (array_key_exists('aggregate', $_REQUEST))
                 else
                     $title = $benchmark['name'];
                 $bm = urlencode($benchmark['name']);
-                echo "<h2><a href=\"view.php?benchmark=$bm\">$title</a></h2>\n";
+                echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a></h2>\n";
                 if (array_key_exists('description', $benchmark))
                     echo "<p>{$benchmark['description']}</p>\n";
                 
@@ -76,10 +87,10 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
-    $tsv = LoadDataTSV($benchmark['name'], 0, 'SpeedIndex', $aggregate, $loc);
+    $tsv = LoadDataTSV($benchmark['name'], 0, 'SpeedIndex', $aggregate, $loc, $annotations);
     if (!isset($tsv) || !strlen($tsv)) {
         $label = 'Time to onload (First View)';
-        $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', $aggregate, $loc);
+        $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', $aggregate, $loc, $annotations);
     }
     if (isset($tsv) && strlen($tsv)) {
         $count++;
@@ -98,17 +109,20 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                     legend: \"always\",
                     xlabel: \"Date\",
                     ylabel: \"$label\"}
-                );
-              </script>\n";
+                );\n";
+        if (isset($annotations) && count($annotations)) {
+            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+        }
+        echo "</script>\n";
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         $label = 'Speed Index (Repeat View)';
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
-        $tsv = LoadDataTSV($benchmark['name'], 1, 'SpeedIndex', $aggregate, $loc);
+        $tsv = LoadDataTSV($benchmark['name'], 1, 'SpeedIndex', $aggregate, $loc, $annotations);
         if (!isset($tsv) || !strlen($tsv)) {
             $label = 'Time to onload (Repeat View)';
-            $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', $aggregate, $loc);
+            $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', $aggregate, $loc, $annotations);
         }
         if (isset($tsv) && strlen($tsv)) {
             $count++;
@@ -127,8 +141,11 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                         legend: \"always\",
                         xlabel: \"Date\",
                         ylabel: \"$label\"}
-                    );
-                  </script>\n";
+                    );";
+            if (isset($annotations) && count($annotations)) {
+                echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+            }
+            echo "</script>\n";
         }
     }
 }
