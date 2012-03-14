@@ -117,6 +117,7 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
 } elseif (preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
     $id = $_COOKIE['tid'];
 }
+ValidateTestId($id);
 
 $testLabel = '';
 if (strlen($id)) {
@@ -1189,28 +1190,30 @@ function RestoreTest($id)
 {
     global $settings;
     $ret = false;
-    $testPath = './' . GetTestPath($id);
-    if( isset($settings['archive_dir']) || isset($settings['archive_s3_url']) )
-    {
-        if( is_dir($testPath) && is_file("$testPath/testinfo.json") )
+    if (ValidateTestId($id)) {
+        $testPath = './' . GetTestPath($id);
+        if( isset($settings['archive_dir']) || isset($settings['archive_s3_url']) )
         {
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-            if( $testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY') )
+            if( is_dir($testPath) && is_file("$testPath/testinfo.json") )
+            {
+                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                if( $testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY') )
+                    $restore = true;
+            }
+            else
                 $restore = true;
-        }
-        else
-            $restore = true;
-        
-        if( $restore )
-        {
-            require_once('archive.inc');
-            $ret = RestoreArchive($id);
+            
+            if( $restore )
+            {
+                require_once('archive.inc');
+                $ret = RestoreArchive($id);
+            }
+            else
+                $ret = true;
         }
         else
             $ret = true;
     }
-    else
-        $ret = true;
         
     return $ret;
 }
@@ -1264,33 +1267,36 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 * Get the number of pending high-priority page loads at the given location
 * and the average time per page load (from the last 100 tests)
 */
-function GetPendingTests($location, &$count, &$avgTime)
+function GetPendingTests($loc, &$count, &$avgTime)
 {
-    $parts = explode(':', $location);
-    $location = $parts[0];
-    $total = 0;
-    $count = 0;
-    $avgTime = 0;
-    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-    if( $tests )
-    {
-        $count = (int)$tests['tests'];
-        $timeCount = count($tests['times']);
-        if( $timeCount )
+    $locations = explode(',', $loc);
+    foreach($locations as $location) {
+        $parts = explode(':', $location);
+        $location = $parts[0];
+        $total = 0;
+        $count = 0;
+        $avgTime = 0;
+        $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+        if( $tests )
         {
-            $timeTotal = 0;
-            foreach( $tests['times'] as $time )
-                $timeTotal += $time;
-            $avgTime = ceil($timeTotal / $timeCount);
+            $count = (int)$tests['tests'];
+            $timeCount = count($tests['times']);
+            if( $timeCount )
+            {
+                $timeTotal = 0;
+                foreach( $tests['times'] as $time )
+                    $timeTotal += $time;
+                $avgTime = ceil($timeTotal / $timeCount);
+            }
         }
-    }
-    // now count just the low priority tests
-    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-        foreach( $queue as $priority => &$q ) {
-            if ($priority < 9)
-                $total += count($q);
+        // now count just the low priority tests
+        if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+            foreach( $queue as $priority => &$q ) {
+                if ($priority < 9)
+                    $total += count($q);
+            }
+            $count = count($queue[0]);
         }
-        $count = count($queue[0]);
     }
     return $total;
 }
@@ -1628,5 +1634,20 @@ function json_response(&$response) {
 
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
+}
+
+/**
+* Check to make sure a test ID is valid
+* 
+* @param mixed $id
+*/
+function ValidateTestId(&$id) {
+    $valid = false;
+    if (preg_match('/^[a-zA-Z0-9_]+$/', @$id)) {
+        $valid = true;
+    } else {
+        $id = '';
+    }
+    return $valid;
 }
 ?>

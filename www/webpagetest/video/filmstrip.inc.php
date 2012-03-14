@@ -20,83 +20,85 @@ foreach($compTests as $t)
     {
         $test = array();
         $test['id'] = $parts[0];
-        $test['cached'] = 0;
-        $test['end'] = $endTime;
-        
-        for( $i = 1; $i < count($parts); $i++ )
-        {
-            $p = explode(':', $parts[$i]);
-            if( count($p) >= 2 )
+        if (ValidateTestId($test['id'])) {
+            $test['cached'] = 0;
+            $test['end'] = $endTime;
+            
+            for( $i = 1; $i < count($parts); $i++ )
             {
-                if( $p[0] == 'r' )
-                    $test['run'] = (int)$p[1];
-                if( $p[0] == 'l' )
-                    $test['label'] = $p[1];
-                if( $p[0] == 'c' )
-                    $test['cached'] = (int)$p[1];
-                if( $p[0] == 'e' )
-                    $test['end'] = trim($p[1]);
-            }
-        }
-        
-        RestoreTest($test['id']);
-        $test['path'] = GetTestPath($test['id']);
-        $test['pageData'] = loadAllPageData($test['path']);
-        
-        $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
-        if( $testInfo !== FALSE )
-        {
-            if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
-                $test['location'] = $testInfo['test']['location'];
-            if( isset($testInfo['test']) && isset($testInfo['test']['completeTime']) )
-            {
-                $test['done'] = true;
-
-                if( !$test['run'] )
-                    $test['run'] = GetMedianRun($test['pageData']);
-                $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
-
-                $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
-                if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
-                    $fastest = $loadTime;
-
-                // figure out the real end time (in ms)
-                if( isset($test['end']) )
+                $p = explode(':', $parts[$i]);
+                if( count($p) >= 2 )
                 {
-                    if( !strcmp($test['end'], 'doc') )
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                    elseif(!strncasecmp($test['end'], 'doc+', 4))
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
-                    elseif( !strcmp($test['end'], 'full') )
-                        $test['end'] = 0;
-                    elseif( !strcmp($test['end'], 'all') )
-                        $test['end'] = -1;
-                    elseif( !strcmp($test['end'], 'aft') )
-                    {
-                        $test['end'] = $test['aft'];
-                        if( !$test['end'] )
-                            $test['end'] = -1;
-                    }
-                    else
-                        $test['end'] = (int)((double)$test['end'] * 1000.0);
+                    if( $p[0] == 'r' )
+                        $test['run'] = (int)$p[1];
+                    if( $p[0] == 'l' )
+                        $test['label'] = $p[1];
+                    if( $p[0] == 'c' )
+                        $test['cached'] = (int)$p[1];
+                    if( $p[0] == 'e' )
+                        $test['end'] = trim($p[1]);
                 }
-                else
-                    $test['end'] = 0;
-                if( !$test['end'] )
-                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
-            }
-            else
-            {
-                $test['done'] = false;
-                $ready = false;
-                
-                if( isset($testInfo['test']) && isset($testInfo['test']['startTime']) )
-                    $test['started'] = true;
-                else
-                    $test['started'] = false;
             }
             
-            $tests[] = $test;
+            RestoreTest($test['id']);
+            $test['path'] = GetTestPath($test['id']);
+            $test['pageData'] = loadAllPageData($test['path']);
+            
+            $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
+            if( $testInfo !== FALSE )
+            {
+                if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
+                    $test['location'] = $testInfo['test']['location'];
+                if( isset($testInfo['test']) && isset($testInfo['test']['completeTime']) )
+                {
+                    $test['done'] = true;
+
+                    if( !$test['run'] )
+                        $test['run'] = GetMedianRun($test['pageData']);
+                    $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+
+                    $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                    if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
+                        $fastest = $loadTime;
+
+                    // figure out the real end time (in ms)
+                    if( isset($test['end']) )
+                    {
+                        if( !strcmp($test['end'], 'doc') )
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
+                        elseif(!strncasecmp($test['end'], 'doc+', 4))
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
+                        elseif( !strcmp($test['end'], 'full') )
+                            $test['end'] = 0;
+                        elseif( !strcmp($test['end'], 'all') )
+                            $test['end'] = -1;
+                        elseif( !strcmp($test['end'], 'aft') )
+                        {
+                            $test['end'] = $test['aft'];
+                            if( !$test['end'] )
+                                $test['end'] = -1;
+                        }
+                        else
+                            $test['end'] = (int)((double)$test['end'] * 1000.0);
+                    }
+                    else
+                        $test['end'] = 0;
+                    if( !$test['end'] )
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                }
+                else
+                {
+                    $test['done'] = false;
+                    $ready = false;
+                    
+                    if( isset($testInfo['test']) && isset($testInfo['test']['startTime']) )
+                        $test['started'] = true;
+                    else
+                        $test['started'] = false;
+                }
+                
+                $tests[] = $test;
+            }
         }
     }
 }
