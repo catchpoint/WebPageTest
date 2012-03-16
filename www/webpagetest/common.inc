@@ -1193,7 +1193,8 @@ function RestoreTest($id)
         $testPath = './' . GetTestPath($id);
         if( isset($settings['archive_dir']) || isset($settings['archive_s3_url']) )
         {
-            if( is_dir($testPath) && is_file("$testPath/testinfo.json") )
+            $restore = false;
+            if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
             {
                 $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                 if( $testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY') )
