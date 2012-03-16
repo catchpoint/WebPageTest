@@ -1,6 +1,54 @@
 <?php
 
 require_once('common.inc');
+$raw_data = null;
+
+/**
+* Get a list of the series to display
+* 
+*/
+function GetSeriesLabels($benchmark) {
+    $series = null;
+    $info = GetBenchmarkInfo($benchmark);
+    if ($info && is_array($info)) {
+        $loc = null;
+        if ($info['expand'] && count($info['locations'] > 1)) {
+            foreach ($info['locations'] as $location => $label) {
+                $loc = $location;
+                break;
+            }
+        }
+        
+        if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
+            $series = array();
+            foreach($configurations as &$configuration) {
+                if (array_key_exists('title', $configuration) && strlen($configuration['title']))
+                    $title = $configuration['title'];
+                else
+                    $title = $configuration['name'];
+                if (count($configuration['locations']) > 1) {
+                    $name = "$title ";
+                    if (count($configurations) == 1)
+                        $name = '';
+                    foreach ($configuration['locations'] as &$location) {
+                        if (is_numeric($location['label'])) {
+                            $tsv .= "\t$name{$location['location']}";
+                            $series[] = array('name' => "$name{$location['location']}", 'configuration' => $configuration['name'], 'location' => $location['location']);
+                        } else {
+                            $tsv .= "\t$name{$location['label']}";
+                            $series[] = array('name' => "$name{$location['label']}", 'configuration' => $configuration['name'], 'location' => $location['location']);
+                        }
+                    }
+                } else {
+                    $tsv .= "\t$title";
+                    $series[] = array('name' => $title, 'configuration' => $configuration['name'], 'location' => $locations[0]['location']);
+                }
+            }
+        }
+    }
+    return $series;
+}
+
 
 /*
     Helper functions to deal with aggregate benchmark data
@@ -43,12 +91,13 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$an
                 }
             } else {
                 $tsv .= "\t$title";
+                $series[] = $title;
             }
         }
         $tsv .= "\n";
         $dates = array();
         foreach ($data as $time => &$row) {
-            $date_text = date('Y-m-d H:i', $time);
+            $date_text = date('c', $time);
             $tsv .= $date_text;
             $dates[$date_text] = $time;
             foreach($configurations as &$configuration) {
@@ -74,7 +123,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$an
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date);
+                    $date = DateTime::createFromFormat('c', $note_date);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
@@ -91,22 +140,13 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$an
                 if (isset($note_date) && array_key_exists('text', $note) && strlen($note['text'])) {
                     $i++;
                     foreach($series as $data_series) {
-                        $annotations[] = array('series' => $data_series, 'attachAtBottom' => true, 'x' => $note_date, 'shortText' => "$i", 'text' => $note['text']);
+                        $annotations[] = array('series' => $data_series, 'x' => $note_date, 'shortText' => "$i", 'text' => $note['text']);
                     }
                 }
             }
         }
     }
     return $tsv;
-}
-
-/**
-* Load the annotations for the given location and return them in a form that is suitable for Dygraph to use
-* 
-* @param mixed $benchmark
-* @param mixed $loc
-*/
-function GetAnnotations($benchmark, $loc = null) {
 }
 
 /**
@@ -241,5 +281,179 @@ function GetBenchmarkInfo($benchmark) {
         }
     }
     return $info;
+}
+
+/**
+* Load the raw data for the given test
+* 
+*/
+function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc = null) {
+    $tsv = null;
+    $isbytes = false;
+    $istime = false;
+    $annotations = array();
+    if (stripos($metric, 'bytes') !== false) {
+        $isbytes = true;
+    } elseif (stripos($metric, 'time') !== false || 
+            stripos($metric, 'render') !== false || 
+            stripos($metric, 'fullyloaded') !== false || 
+            stripos($metric, 'visualcomplete') !== false || 
+            stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'ttfb') !== false) {
+        $istime = true;
+    }
+    if (LoadTestData($data, $configurations, $benchmark, $cached, $metric, $test, $meta, $loc)) {
+        $series = array();
+        $tsv = 'URL';
+        foreach($configurations as &$configuration) {
+            if (array_key_exists('title', $configuration) && strlen($configuration['title']))
+                $title = $configuration['title'];
+            else
+                $title = $configuration['name'];
+            if (count($configuration['locations']) > 1) {
+                $name = "$title ";
+                if (count($configurations) == 1)
+                    $name = '';
+                foreach ($configuration['locations'] as &$location) {
+                    if (is_numeric($location['label'])) {
+                        $tsv .= "\t$name{$location['location']}";
+                        $series[] = "$name{$location['location']}";
+                    } else {
+                        $tsv .= "\t$name{$location['label']}";
+                        $series[] = "$name{$location['label']}";
+                    }
+                }
+            } else {
+                $tsv .= "\t$title";
+                $series[] = $title;
+            }
+        }
+        $tsv .= "\n";
+        foreach ($data as $url => &$row) {
+            $data_points = 0;
+            $url_data = array();
+            // figure out the maximum number of data points we have
+            foreach($configurations as &$configuration) {
+                foreach ($configuration['locations'] as &$location) {
+                    if (array_key_exists($configuration['name'], $row) && 
+                        array_key_exists($location['location'], $row[$configuration['name']]) &&
+                        is_array($row[$configuration['name']][$location['location']])) {
+                        $count = count($row[$configuration['name']][$location['location']]);
+                        if ($count > $data_points)
+                            $data_points = $count;
+                    }
+                }
+            }
+            for ($i = 0; $i < $data_points; $i++) {
+                $tsv .= $url;
+                $column = 0;
+                foreach($configurations as &$configuration) {
+                    foreach ($configuration['locations'] as &$location) {
+                        $value = ' ';
+                        if (array_key_exists($configuration['name'], $row) && 
+                            array_key_exists($location['location'], $row[$configuration['name']]) &&
+                            is_array($row[$configuration['name']][$location['location']])) {
+                            $count = count($row[$configuration['name']][$location['location']]);
+                            if ($i < $count) {
+                                if (!array_key_exists('tests', $meta[$url])) {
+                                    $meta[$url]['tests'] = array();
+                                    for ($j = 0; $j < count($series); $j++)
+                                        $meta[$url]['tests'][] = '';
+                                }
+                                $meta[$url]['tests'][$column] = $row[$configuration['name']][$location['location']][$i]['test'];
+                                $value = $row[$configuration['name']][$location['location']][$i]['value'];
+                                if ($isbytes)
+                                    $value = number_format($value / 1024.0, 3);
+                                elseif ($istime)
+                                    $value = number_format($value / 1000.0, 3);
+                            }
+                        }
+                        $tsv .= "\t$value";
+                        $column++;
+                    }
+                }
+                $tsv .= "\n";
+            }
+        }
+    }
+    return $tsv;
+}
+
+/**
+* Load the raw data for a given test
+* 
+*/
+function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $test, &$meta, $loc) {
+    global $raw_data;
+    $ok = false;
+    $data = array();
+    $meta = array();
+    if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
+        $date = date('Ymd_Hi', $test);
+        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        if (gz_is_file($data_file)) {
+            if (!is_array($raw_data)) {
+                $raw_data = json_decode(gz_file_get_contents($data_file), true);
+            }
+            if (count($raw_data)) {
+                foreach($raw_data as &$row) {
+                    if ($row['cached'] == $cached &&
+                        array_key_exists('url', $row) && 
+                        array_key_exists('config', $row) && 
+                        array_key_exists('location', $row) && 
+                        array_key_exists($metric, $row) && 
+                        strlen($row[$metric])) {
+                        $url = GetUrlIndex($row['url'], $meta);
+                        $config = $row['config'];
+                        $location = $row['location'];
+                        if (isset($loc_aliases) && count($loc_aliases)) {
+                            foreach($loc_aliases as $loc_name => &$aliases) {
+                                foreach($aliases as $alias) {
+                                    if ($location == $alias) {
+                                        $location = $loc_name;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                        if (!isset($loc) || $loc == $location) {
+                            $ok = true;
+                            if (!array_key_exists($url, $data)) {
+                                $data[$url] = array();
+                            }
+                            if (!array_key_exists($config, $data[$url])) {
+                                $data[$url][$config] = array();
+                            }
+                            $data[$url][$config][$location][] = array('value' => $row[$metric], 'test' => $row['id']);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $ok;
+}
+
+/**
+* Convert the URLs into indexed numbers
+* 
+* @param mixed $url
+* @param mixed $urls
+*/
+function GetUrlIndex($url, &$meta) {
+    $index = 0;
+    $found = false;
+    foreach($meta as $i => &$u) {
+        if ($u['url'] == $url) {
+            $index = $i;
+            $found = true;
+            break;
+        }
+    }
+    if (!$found) {
+        $index = count($meta);
+        $meta[] = array('url' => $url);
+    }
+    return $index;
 }
 ?>

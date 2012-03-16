@@ -31,6 +31,15 @@ if (array_key_exists('aggregate', $_REQUEST))
             include 'header.inc';
             ?>
             
+            <script type="text/javascript">
+            function SelectedPoint(benchmark, metric, series, time, cached) {
+                time = parseInt(time / 1000, 10);
+                var isCached = 0;
+                if (cached)
+                    isCached = 1;
+                window.location.href = "viewtest.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&cached=" + isCached + "&time=" + time;
+            }
+            </script>
             <div class="translucent">
             <div style="text-align:right; clear:both;">
                 <form name="aggregation" method="get" action="index.php">
@@ -88,9 +97,11 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
     $tsv = LoadDataTSV($benchmark['name'], 0, 'SpeedIndex', $aggregate, $loc, $annotations);
+    $metric = 'SpeedIndex';
     if (!isset($tsv) || !strlen($tsv)) {
         $label = 'Time to onload (First View)';
         $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', $aggregate, $loc, $annotations);
+        $metric = 'docTime';
     }
     if (isset($tsv) && strlen($tsv)) {
         $count++;
@@ -106,6 +117,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                     labelsSeparateLines: true,
                     $chart_title
                     labelsDiv: document.getElementById('{$id}_legend'),
+                    pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
                     legend: \"always\",
                     xlabel: \"Date\",
                     ylabel: \"$label\"}
@@ -120,9 +132,11 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
         $tsv = LoadDataTSV($benchmark['name'], 1, 'SpeedIndex', $aggregate, $loc, $annotations);
+        $metric = 'SpeedIndex';
         if (!isset($tsv) || !strlen($tsv)) {
             $label = 'Time to onload (Repeat View)';
             $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', $aggregate, $loc, $annotations);
+            $metric = 'docTime';
         }
         if (isset($tsv) && strlen($tsv)) {
             $count++;
@@ -138,6 +152,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                         labelsSeparateLines: true,
                         $chart_title
                         labelsDiv: document.getElementById('{$id}_legend'),
+                        pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
                         legend: \"always\",
                         xlabel: \"Date\",
                         ylabel: \"$label\"}

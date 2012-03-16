@@ -3,18 +3,33 @@ chdir('..');
 include 'common.inc';
 include './benchmarks/data.inc.php';
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "WebPagetest benchmark details";
-$aggregate = 'avg';
-if (array_key_exists('aggregate', $_REQUEST))
-    $aggregate = $_REQUEST['aggregate'];
+$page_description = "WebPagetest benchmark test details";
 $benchmark = '';
 if (array_key_exists('benchmark', $_REQUEST))
     $benchmark = $_REQUEST['benchmark'];
+$test_time = 0;
+if (array_key_exists('time', $_REQUEST))
+    $test_time = $_REQUEST['time'];
+else {
+    // figure out the time of the most recent test
+    if (is_dir("./results/benchmarks/$benchmark/data")) {
+        $files = scandir("./results/benchmarks/$benchmark/data");
+        foreach( $files as $file ) {
+            if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
+                $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                $time = $date->getTimestamp();
+                if ($time > $test_time)
+                    $test_time = $time;
+            }
+        }
+    }
+}
+$series = GetSeriesLabels($benchmark);
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <title>WebPagetest - Benchmark details</title>
+        <title>WebPagetest - Benchmark test details</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -25,6 +40,7 @@ if (array_key_exists('benchmark', $_REQUEST))
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
         .benchmark-legend { float: right; width: 150px; height: 350px; }
+        .dygraph-axis-label-x {display:none;}
         </style>
     </head>
     <body>
@@ -35,29 +51,42 @@ if (array_key_exists('benchmark', $_REQUEST))
             ?>
             
             <div class="translucent">
-            <div style="text-align:right; clear:both;">
+            <div style="text-align:center; clear:both;">
+                <script type="text/javascript">
+                    var charts = new Array();
+                    <?php
+                    echo 'var seriesData = ' . json_encode($series) . ";\n";
+                    ?>
+                    function ToggleSeries(checked, series) {
+                        setTimeout('ToggleSeriesDelayed(' + checked + ',' + series + ');', 1);
+                    }
+                    function ToggleSeriesDelayed(checked,series) {
+                        for(i=0; i < charts.length; i++) {
+                            eval(charts[i] + '.setVisibility(' + series + ',' + checked + ');');
+                        }
+                    }
+                    function SelectedPoint(url, tests, series, index, cached) {
+                        var menu = '<div><h4>View test for ' + url + '</h4>';
+                        for( i = 0; i < tests.length; i++ ) {
+                            menu += '<a href="/result/' + tests[i] + '/" target="_blank">' + seriesData[i].name + '</a><br>';
+                        }
+                        menu += '</div>';
+                        $.modal(menu, {overlayClose:true});
+                    }
+                </script>
                 <form name="aggregation" method="get" action="view.php">
                     <?php
-                    echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                    if ($series && count($series)) {
+                        echo 'Display: ';
+                        $index = 0;
+                        foreach($series as &$series_data) {
+                            echo "<input type=\"checkbox\" checked onclick=\"ToggleSeries(this.checked, $index);\"> {$series_data['name']} &nbsp; ";
+                            $index++;
+                        }
+                    }
                     ?>
-                    Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
-                        <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
-                        <option value="geo-mean" <?php if ($aggregate == 'geo-mean') echo "selected"; ?>>Geometric Mean</option>
-                        <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
-                        <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
-                        <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
-                    </select>
                 </form>
             </div>
-            <script type="text/javascript">
-            function SelectedPoint(benchmark, metric, series, time, cached) {
-                time = parseInt(time / 1000, 10);
-                var isCached = 0;
-                if (cached)
-                    isCached = 1;
-                window.location.href = "viewtest.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&cached=" + isCached + "&time=" + time;
-            }
-            </script>
             <?php
             $metrics = array('SpeedIndex' => 'Speed Index',
                             'docTime' => 'Load Time (onload)', 
@@ -115,35 +144,33 @@ if (array_key_exists('benchmark', $_REQUEST))
     </body>
 </html>
 <?php
-/**
-* Display the charts for the given benchmark/metric
-* 
-* @param mixed $benchmark
-*/
 function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) {
     global $count;
     global $aggregate;
+    global $test_time;
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
-    $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc, $annotations);
+    $tsv = LoadTestDataTSV($benchmark['name'], 0, $metric, $test_time, $meta, $loc);
     if (isset($tsv) && strlen($tsv)) {
         $count++;
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
         echo "<script type=\"text/javascript\">
+                var {$id}meta = " . json_encode($meta) . ";
                 $id = new Dygraph(
                     document.getElementById(\"$id\"),
                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
                     {drawPoints: true,
-                    rollPeriod: 1,
-                    showRoller: true,
+                    strokeWidth: 0.0,
                     labelsSeparateLines: true,
                     labelsDiv: document.getElementById('{$id}_legend'),
-                    pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
+                    axes: {x: {valueFormatter: function(urlid) {return {$id}meta[urlid].url;}}},
+                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta[p.xval].url, {$id}meta[p.xval]['tests'], p.name, p.xval, false);},
                     $chart_title
                     legend: \"always\"}
-                );";
+                );
+                charts.push('$id');";
         if (isset($annotations) && count($annotations)) {
             echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
         }
@@ -152,24 +179,26 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
-        $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc, $annotations);
+        $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $test_time, $meta, $loc);
         if (isset($tsv) && strlen($tsv)) {
             $count++;
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
             echo "<script type=\"text/javascript\">
+                    var {$id}meta = " . json_encode($meta) . ";
                     $id = new Dygraph(
                         document.getElementById(\"$id\"),
                         \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
                         {drawPoints: true,
-                        rollPeriod: 1,
-                        showRoller: true,
+                        strokeWidth: 0.0,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('{$id}_legend'),
-                        pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
+                        axes: {x: {valueFormatter: function(urlid) {return {$id}meta[urlid].url;}}},
+                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta[p.xval].url, {$id}meta[p.xval]['tests'], p.name, p.xval, true);},
                         $chart_title
                         legend: \"always\"}
-                    );";
+                    );
+                    charts.push('$id');";
             if (isset($annotations) && count($annotations)) {
                 echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
             }
