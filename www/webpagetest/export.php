@@ -133,7 +133,7 @@ function BuildResult(&$pageData)
             {
                 $entry = array();
                 $entry['pageref'] = $pd['id'];
-                $entry['startedDateTime'] = msdate((double)$data['date'] + ($r['offset'] / 1000.0));
+                $entry['startedDateTime'] = msdate((double)$data['date'] + ($r['load_start'] / 1000.0));
                 $entry['time'] = $r['all_ms'];
                 
                 $request = array();
