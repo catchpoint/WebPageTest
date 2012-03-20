@@ -123,7 +123,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$an
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('c', $note_date);
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
