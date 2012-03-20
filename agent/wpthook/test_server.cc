@@ -47,6 +47,18 @@ static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
                                                       "ERROR: Not Implemented";
+static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
+    "Cache: no-cache\r\n"
+    "Content-Type:text/html\r\n"
+    "\r\n"
+    "<html><head><title>Blank</title>\r\n"
+    "<style type=\"text/css\">\r\n"
+    "body {background-color: #FFF;}\r\n"
+    "</style>\r\n"
+    "<script type=\"text/javascript\">\r\n"
+    "var dummy=1;\r\n"
+    "</script>\r\n"
+    "</head></html>";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -192,6 +204,8 @@ void TestServer::MongooseCallback(enum mg_event event,
         test_state_.AddTimelineEvent(body);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/blank.html") == 0) {
+      mg_printf(conn, BLANK_HTML);
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 
