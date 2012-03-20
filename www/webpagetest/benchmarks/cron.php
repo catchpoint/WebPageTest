@@ -10,6 +10,8 @@ require 'testStatus.inc';
 require 'breakdown.inc';
 $debug=true;
 
+$nonZero = array('TTFB', 'bytesIn', 'connections', 'requests', 'render', 'fullyLoaded');
+
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
 if ($lock !== false) {
@@ -435,6 +437,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
 */
 function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
     $configs = array();
+    global $nonZero;
     
     // group the individual records
     foreach ($data as &$record) {
@@ -445,28 +448,40 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
             array_key_exists('location', $record) && 
             strlen($record['config']) &&
             strlen($record['location']) &&
+            $record['loadTime'] != 0 &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
-            $config = $record['config'];
-            $location = $record['location'];
-            $cached = $record['cached'];
-            if (!array_key_exists($config, $configs)) {
-                $configs[$config] = array();
-            }
-            if (!array_key_exists($location, $configs[$config])) {
-                $configs[$config][$location] = array();
-            }
-            if (!array_key_exists($cached, $configs[$config][$location])) {
-                $configs[$config][$location][$cached] = array();
-            }
-            $configs[$config][$location][$cached][] = $record[$metric];
-            
-            if (array_key_exists('label', $record) &&
-                strlen($record['label'])) {
-                if (!array_key_exists('labels', $info)) {
-                    $info['labels'] = array();
+                
+            // make sure all of the metrics that we expect to be non-zero are
+            $ok = true;
+            foreach($nonZero as $nzMetric) {
+                if (!array_key_exists($nzMetric, $record) || $record[$nzMetric] == 0) {
+                    $ok = false;
+                    break;
                 }
-                if (!array_key_exists($record['label'], $info['labels'])) {
-                    $info['labels'][$record['label']] = $record['label'];
+            }
+            if ($ok) {
+                $config = $record['config'];
+                $location = $record['location'];
+                $cached = $record['cached'];
+                if (!array_key_exists($config, $configs)) {
+                    $configs[$config] = array();
+                }
+                if (!array_key_exists($location, $configs[$config])) {
+                    $configs[$config][$location] = array();
+                }
+                if (!array_key_exists($cached, $configs[$config][$location])) {
+                    $configs[$config][$location][$cached] = array();
+                }
+                $configs[$config][$location][$cached][] = $record[$metric];
+                
+                if (array_key_exists('label', $record) &&
+                    strlen($record['label'])) {
+                    if (!array_key_exists('labels', $info)) {
+                        $info['labels'] = array();
+                    }
+                    if (!array_key_exists($record['label'], $info['labels'])) {
+                        $info['labels'][$record['label']] = $record['label'];
+                    }
                 }
             }
         }
@@ -513,6 +528,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
 */
 function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
     $labels = array();
+    global $nonZero;
     // group the individual records
     foreach ($data as &$record) {
         if (array_key_exists($metric, $record) && 
@@ -525,23 +541,33 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
             strlen($record['location']) &&
             strlen($record['label']) &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
-            $label = $record['label'];
-            $config = $record['config'];
-            $location = $record['location'];
-            $cached = $record['cached'];
-            if (!array_key_exists($label, $labels)) {
-                $labels[$label] = array();
+            // make sure all of the metrics that we expect to be non-zero are
+            $ok = true;
+            foreach($nonZero as $nzMetric) {
+                if (!array_key_exists($nzMetric, $record) || $record[$nzMetric] == 0) {
+                    $ok = false;
+                    break;
+                }
             }
-            if (!array_key_exists($config, $labels[$label])) {
-                $labels[$label][$config] = array();
+            if ($ok) {
+                $label = $record['label'];
+                $config = $record['config'];
+                $location = $record['location'];
+                $cached = $record['cached'];
+                if (!array_key_exists($label, $labels)) {
+                    $labels[$label] = array();
+                }
+                if (!array_key_exists($config, $labels[$label])) {
+                    $labels[$label][$config] = array();
+                }
+                if (!array_key_exists($location, $labels[$label][$config])) {
+                    $labels[$label][$config][$location] = array();
+                }
+                if (!array_key_exists($cached, $labels[$label][$config][$location])) {
+                    $labels[$label][$config][$location][$cached] = array();
+                }
+                $labels[$label][$config][$location][$cached][] = $record[$metric];
             }
-            if (!array_key_exists($location, $labels[$label][$config])) {
-                $labels[$label][$config][$location] = array();
-            }
-            if (!array_key_exists($cached, $labels[$label][$config][$location])) {
-                $labels[$label][$config][$location][$cached] = array();
-            }
-            $labels[$label][$config][$location][$cached][] = $record[$metric];
         }
     }
 
