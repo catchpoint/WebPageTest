@@ -168,14 +168,16 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         } else {
             $perf_height = 50;
         }
-        foreach (array_keys($perfs) as $key) {
-            if ($perfs[$key]['count']) {
-                $perfs[$key]['x1'] = 0;
-                $perfs[$key]['x2'] = $width - 1;
-                $perfs[$key]['y1'] = $height - 1;  // share border with above
-                $perfs[$key]['y2'] = $height + $perf_height - 2;
-                $perfs[$key]['height'] = $perf_height;
-                $height += $perf_height - 1;
+        if (isset($perfs) && is_array($perfs)) {
+            foreach (array_keys($perfs) as $key) {
+                if ($perfs[$key]['count']) {
+                    $perfs[$key]['x1'] = 0;
+                    $perfs[$key]['x2'] = $width - 1;
+                    $perfs[$key]['y1'] = $height - 1;  // share border with above
+                    $perfs[$key]['y2'] = $height + $perf_height - 2;
+                    $perfs[$key]['height'] = $perf_height;
+                    $height += $perf_height - 1;
+                }
             }
         }
     }
@@ -255,20 +257,24 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         if ($is_thumbnail) {
             $time_scale_color = GetColor($im, 208, 208, 208);  // mid-grey
             $border_color = $dark_grey;
-            if (array_key_exists('cpu', $perfs)) {
-                $perfs['cpu']['color'] = GetColor($im, 255, 183, 112);
-            }
-            if (array_key_exists('bw', $perfs)) {
-                $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
+            if (isset($perfs) && is_array($perfs)) {
+                if (array_key_exists('cpu', $perfs)) {
+                    $perfs['cpu']['color'] = GetColor($im, 255, 183, 112);
+                }
+                if (array_key_exists('bw', $perfs)) {
+                    $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
+                }
             }
         } else {
             $time_scale_color = $dark_grey;
             $border_color = $black;
-            if (array_key_exists('cpu', $perfs)) {
-                $perfs['cpu']['color'] = GetColor($im, 255, 127, 0);
-            }
-            if (array_key_exists('bw', $perfs)) {
-                $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
+            if (isset($perfs) && is_array($perfs)) {
+                if (array_key_exists('cpu', $perfs)) {
+                    $perfs['cpu']['color'] = GetColor($im, 255, 127, 0);
+                }
+                if (array_key_exists('bw', $perfs)) {
+                    $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
+                }
             }
         }
 
@@ -295,13 +301,15 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
 
 
         // Draw performance backgrounds, labels, and borders.
-        foreach ($perfs as $key => $p) {
-            if (array_key_exists('count', $p)) {
-                if (!$is_thumbnail && $show_labels) {
-                    DrawPerfLabel($im, $key, $p, $font, $black);
+        if (isset($perfs) && is_array($perfs)) {
+            foreach ($perfs as $key => $p) {
+                if (array_key_exists('count', $p)) {
+                    if (!$is_thumbnail && $show_labels) {
+                        DrawPerfLabel($im, $key, $p, $font, $black);
+                    }
+                    DrawPerfBackground($im, $p, $data_x, $border_color,
+                                       $bg_colors['alt']);
                 }
-                DrawPerfBackground($im, $p, $data_x, $border_color,
-                                   $bg_colors['alt']);
             }
         }
 
@@ -322,11 +330,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                 $x = $x_scaler($ms);
                 imageline($im, $x, 1 + $row_height,
                           $x, $data_height - $row_height, $time_scale_color);
-                foreach ($perfs as $p) {
-                    if (array_key_exists('count', $p)) {
-                        // Add gridline to performance chart area.
-                        imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1,
-                                  $time_scale_color);
+                if (isset($perfs) && is_array($perfs)) {
+                    foreach ($perfs as $p) {
+                        if (array_key_exists('count', $p)) {
+                            // Add gridline to performance chart area.
+                            imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1,
+                                      $time_scale_color);
+                        }
                     }
                 }
                 // Draw the time label.
@@ -354,11 +364,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                 $endpoints = array(
                     array('y1' => 1 + $row_height,
                           'y2' => $data_height - $row_height));
-                foreach ($perfs as $p) {
-                    if (array_key_exists('count', $p)) {
-                        // Add event lines in performance chart area.
-                        $endpoints[] = array('y1' => $p['y1'] + 1,
-                                             'y2' => $p['y2'] - 1);
+                if (isset($perfs) && is_array($perfs)) {
+                    foreach ($perfs as $p) {
+                        if (array_key_exists('count', $p)) {
+                            // Add event lines in performance chart area.
+                            $endpoints[] = array('y1' => $p['y1'] + 1,
+                                                 'y2' => $p['y2'] - 1);
+                        }
                     }
                 }
                 foreach ($endpoints as $y1y2) {
@@ -391,32 +403,38 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
             }
 
             // Draw the performance data.
-            foreach ($perfs as $p) {
-                $x1 = null;
-                $y1 = null;
-                foreach ($p['data'] as $ms => $value) {
-                    $x2 = $x_scaler($ms);
-                    $y2 = ($p['y1'] + $p['height'] - 2 -
-                           (int)((double)($p['height'] - 3) *
-                                 (double)$value / $p['max']));
-                    if ($x2 <= $data_x) {
-                        $x2 = $data_x + 1;
-                    }
-                    if ($x2 >= $width - 1 && $x1 < $x2)  {
-                        // Point goes off the graph.
-                        // Interpolate the ending y-coordinate.
-                        $r = ($width - 2 - $x1) / ($x2 - $x1);
-                        $y2 = $y1 + (($y2 - $y1) * $r);
-                        $x2 = $width - 2;
-                    }
-                    if (isset($x1) && isset($y1)) {
-                        imageline($im, $x1, $y1, $x2, $y2, $p['color']);
-                    }
-                    if ($x2 >= ($width - 2)) {
-                        break;
-                    } else {
-                        $x1 = $x2;
-                        $y1 = $y2;
+            if (isset($perfs) && is_array($perfs)) {
+                foreach ($perfs as $p) {
+                    $x1 = null;
+                    $y1 = null;
+                    foreach ($p['data'] as $ms => $value) {
+                        $x2 = $x_scaler($ms);
+                        $pmax = 0;
+                        if (array_key_exists('max', $p) && $p['max'] != 0) {
+                            $pmax = $p['max'];
+                        }
+                        $y2 = ($p['y1'] + $p['height'] - 2 -
+                               (int)((double)($p['height'] - 3) *
+                                     (double)$value / $pmax));
+                        if ($x2 <= $data_x) {
+                            $x2 = $data_x + 1;
+                        }
+                        if ($x2 >= $width - 1 && $x1 < $x2)  {
+                            // Point goes off the graph.
+                            // Interpolate the ending y-coordinate.
+                            $r = ($width - 2 - $x1) / ($x2 - $x1);
+                            $y2 = $y1 + (($y2 - $y1) * $r);
+                            $x2 = $width - 2;
+                        }
+                        if (isset($x1) && isset($y1)) {
+                            imageline($im, $x1, $y1, $x2, $y2, $p['color']);
+                        }
+                        if ($x2 >= ($width - 2)) {
+                            break;
+                        } else {
+                            $x1 = $x2;
+                            $y1 = $y2;
+                        }
                     }
                 }
             }

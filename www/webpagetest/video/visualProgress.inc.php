@@ -3,6 +3,7 @@
 * Calculate the progress for all of the images in a given directory
 */
 function GetVisualProgress($testPath, $run, $cached) {
+    $frames = null;
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';
@@ -28,7 +29,7 @@ function GetVisualProgress($testPath, $run, $cached) {
             unlink($old_cache_file);
         }
     }
-    if (!isset($frames) || !count($frames)) {
+    if ((!isset($frames) || !count($frames)) && is_dir($video_directory)) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;

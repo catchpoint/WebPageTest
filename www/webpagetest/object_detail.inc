@@ -165,23 +165,25 @@ function LoadRequests($request_file_name) {
         70 => 'initiator_column'
         );
     $request_lines = gz_file($request_file_name);
-    foreach($request_lines as $linenum => &$line) {
-        $columns = explode("\t", str_replace("\t", "\t ", $line));
-        if (count($columns)) {
-            $request = array();
-            foreach ($columns as $i => $value) {
-                if (array_key_exists($i + 1, $needed_columns)) {
-                    $request[$needed_columns[$i + 1]] = trim($value);
+    if( isset($request_lines) && is_array($request_lines)) {
+        foreach($request_lines as $linenum => &$line) {
+            $columns = explode("\t", str_replace("\t", "\t ", $line));
+            if (count($columns)) {
+                $request = array();
+                foreach ($columns as $i => $value) {
+                    if (array_key_exists($i + 1, $needed_columns)) {
+                        $request[$needed_columns[$i + 1]] = trim($value);
+                    }
                 }
+                if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
+                    $url = 'http://';
+                    if (array_key_exists('is_secure', $request) && $request['is_secure'])
+                        $url = 'https://';
+                    $url .= $request['host'] . $request['url'];
+                    $request['full_url'] = $url;
+                }
+                $requests[] = $request;
             }
-            if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
-                $url = 'http://';
-                if (array_key_exists('is_secure', $request) && $request['is_secure'])
-                    $url = 'https://';
-                $url .= $request['host'] . $request['url'];
-                $request['full_url'] = $url;
-            }
-            $requests[] = $request;
         }
     }
     return $requests;

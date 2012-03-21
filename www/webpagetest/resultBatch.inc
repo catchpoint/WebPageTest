@@ -1504,8 +1504,7 @@ function CheckVideo($videoID, &$regenerate_video)
     if( is_dir("./$dir") )
     {
         $ini = parse_ini_file("./$dir/video.ini");
-        if( isset($ini['completed']) )
-        {
+        if (is_file("./$dir/video.mp4") || isset($ini['completed'])) {
             $done = true;
             GenerateVideoThumbnail("./$dir");
         } else {

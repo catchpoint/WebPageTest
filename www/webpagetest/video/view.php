@@ -35,11 +35,13 @@ $dir = GetVideoPath($id, true);
 if( is_dir("./$dir") )
 {
     $valid = true;
-    $ini = parse_ini_file("./$dir/video.ini");
-    if( isset($ini['completed']) )
-    {
-        $done = true;
-        GenerateVideoThumbnail("./$dir");
+    if (is_file("./$dir/video.mp4") || is_file("./$dir/video.ini")) {
+        $ini = parse_ini_file("./$dir/video.ini");
+        if( is_file("./$dir/video.mp4") || isset($ini['completed']) )
+        {
+            $done = true;
+            GenerateVideoThumbnail("./$dir");
+        }
     }
     
     // get the video time

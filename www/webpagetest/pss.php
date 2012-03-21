@@ -194,6 +194,13 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
+                            <label for="backend">Back-End</label>
+                            <select name="backend" id="backend">
+                                <option value="prod" selected>Production</option>
+                                <option value="staging">Staging</option>
+                            </select>
+                        </li>
+                        <li>
                             <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
@@ -202,6 +209,8 @@ $page_description = "Comparison Test$testLabel.";
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>
                         <?php
+                        } else {
+                            echo "<input type=\"hidden\" name=\"backend\" value=\"prod\">\n";
                         }
                         ?>
                     </ul>
@@ -288,14 +297,22 @@ $page_description = "Comparison Test$testLabel.";
                 else
                     echo 'var batch = "Original=" + url + " noscript\nOptimized=" + url;' . "\n";
                 ?>
-                
+
                 form.bulkurls.value=batch;
                 
                 var shard = form.shard.value;
+                var script = '';
                 if (shard != 1)
                 {
-                    var script = form.script.value;
+                    script = form.script.value;
                     script = "addHeader\tX-Expt-NumDomainShards: " + shard + "\n" + script;
+                    form.script.value = script;
+                }
+
+                var backend = form.backend.value;
+                if (backend == 'staging') {
+                    script = form.script.value;
+                    script = script.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
                     form.script.value = script;
                 }
                 

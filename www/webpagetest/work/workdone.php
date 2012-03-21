@@ -1,5 +1,6 @@
 <?php
 chdir('..');
+$debug = true;
 include('common.inc');
 require_once('./lib/pclzip.lib.php');
 header('Content-type: text/plain');
@@ -8,38 +9,57 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(60*5*10);
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
-$done = $_REQUEST['done'];
+$done = false;
+if (array_key_exists('done', $_REQUEST))
+    $done = $_REQUEST['done'];
 $id = $_REQUEST['id'];
-$har = $_REQUEST['har'];
-$pcap = $_REQUEST['pcap'];
+$har = false;
+if (array_key_exists('har', $_REQUEST))
+    $har = $_REQUEST['har'];
+$pcap = false;
+if (array_key_exists('pcap', $_REQUEST))
+    $pcap = $_REQUEST['pcap'];
 
 // When we upgrade the pcap to har converter, we need to test
 // each agent.  Agents can opt in to testing the latest
 // version by setting this POST param.
-$useLatestPCap2Har = $_REQUEST['useLatestPCap2Har'];
+$useLatestPCap2Har = false;
+if (array_key_exists('useLatestPCap2Har', $_REQUEST))
+    $useLatestPCap2Har = $_REQUEST['useLatestPCap2Har'];
 
 // Android client sends the run-state in post params.
-$runNumber = $_REQUEST['_runNumber'];
-$cacheWarmed = $_REQUEST['_cacheWarmed'];
-$docComplete = $_REQUEST['_docComplete'];
-$urlUnderTest = $_REQUEST['_urlUnderTest'];
+if (array_key_exists('_runNumber', $_REQUEST))
+    $runNumber = $_REQUEST['_runNumber'];
+if (array_key_exists('_cacheWarmed', $_REQUEST))
+    $cacheWarmed = $_REQUEST['_cacheWarmed'];
+if (array_key_exists('_docComplete', $_REQUEST))
+    $docComplete = $_REQUEST['_docComplete'];
+if (array_key_exists('_urlUnderTest', $_REQUEST))
+    $urlUnderTest = $_REQUEST['_urlUnderTest'];
 
 $testInfo_dirty = false;
 
 
-if( $_REQUEST['video'] )
+if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
 {
     logMsg("Video file $id received from $location");
     
     $dir = './' . GetVideoPath($id);
     if( isset($_FILES['file']) )
     {
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
         $dest = $dir . '/video.mp4';
         move_uploaded_file($_FILES['file']['tmp_name'], $dest);
 
         // update the ini file
         $iniFile = $dir . '/video.ini';
-        $ini = file_get_contents($iniFile);
+        if (is_file($iniFile)) {
+            $ini = file_get_contents($iniFile);
+        } else {
+            $ini = '';
+        }
         $ini .= 'completed=' . date('c') . "\r\n";
         file_put_contents($iniFile, $ini);
     }
@@ -252,7 +272,8 @@ else
             }
             
             // see if it is an industry benchmark test
-            if( strlen($ini['industry']) && strlen($ini['industry_page']) )
+            if( array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
+                strlen($ini['industry']) && strlen($ini['industry_page']) )
             {
                 // lock the industry list
                 // we will just lock it against ourselves to protect against  simultaneous updates
@@ -283,14 +304,14 @@ else
             }
             
             // delete all of the videos except for the median run?
-            if( $ini['median_video'] )
+            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
                 KeepVideoForRun($testPath, $medianRun);
             
             // do any other post-processing (e-mail notification for example)
             if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )
             {
                 $test = parse_ini_file("$testPath/testinfo.ini",true);
-                if( strlen($test['test']['notify']) )
+                if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
                     notify( $test['test']['notify'], $settings['notifyFrom'], $id, $testPath, $settings['host'] );
             }
             
@@ -324,12 +345,12 @@ else
                     $ctx = stream_context_create(array('http' => array('timeout' => 10))); 
 
                     // send the request (we don't care about the response)
-                    file_get_contents($url, 0, $ctx);
+                    @file_get_contents($url, 0, $ctx);
                 }
             }
             
             // send a beacon?
-            if( strlen($beaconUrl) )
+            if( isset($beaconUrl) && strlen($beaconUrl) )
             {
                 @include('./work/beacon.inc');
                 @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);

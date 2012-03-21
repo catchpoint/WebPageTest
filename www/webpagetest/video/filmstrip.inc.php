@@ -174,9 +174,9 @@ function LoadTestData()
         if( $test['cached'] )
             $videoPath .= '_cached';
             
+        $test['video'] = array();
         if( is_dir($videoPath) )
         {
-            $test['video'] = array();
             $test['video']['start'] = 20000;
             $test['video']['end'] = 0;
             $test['video']['frames'] = array();
