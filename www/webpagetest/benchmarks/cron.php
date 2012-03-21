@@ -10,7 +10,8 @@ require 'testStatus.inc';
 require 'breakdown.inc';
 $debug=true;
 
-$nonZero = array('TTFB', 'bytesIn', 'connections', 'requests', 'render', 'fullyLoaded');
+$nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
+                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex');
 
 // make sure we don't execute multiple cron jobs concurrently
 $lock = fopen("./tmp/benchmark_cron.lock", "w+");
@@ -454,7 +455,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
             // make sure all of the metrics that we expect to be non-zero are
             $ok = true;
             foreach($nonZero as $nzMetric) {
-                if (!array_key_exists($nzMetric, $record) || $record[$nzMetric] == 0) {
+                if ($nzMetric == $metric && $record[$metric] == 0) {
                     $ok = false;
                     break;
                 }
@@ -544,7 +545,7 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
             // make sure all of the metrics that we expect to be non-zero are
             $ok = true;
             foreach($nonZero as $nzMetric) {
-                if (!array_key_exists($nzMetric, $record) || $record[$nzMetric] == 0) {
+                if ($nzMetric == $metric && $record[$metric] == 0) {
                     $ok = false;
                     break;
                 }
