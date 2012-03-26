@@ -53,11 +53,15 @@ import android.widget.TextView;
 
 import com.google.wireless.speed.velodrome.Config.AgentType;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.apache.commons.io.FileUtils;
 
 public class Velodrome extends Activity implements UiMessageDisplay {
   private static final String TAG = "Velodrome";
@@ -92,6 +96,33 @@ public class Velodrome extends Activity implements UiMessageDisplay {
     updateNotification();
   }
 
+  private File createAppCacheDir() {
+    File appCacheRoot = getApplicationContext().getDir("appcache",
+                                                       Context.MODE_PRIVATE);
+
+    // If the directory is not empty, remove its contents.
+    if (appCacheRoot.listFiles().length != 0 || true) {
+      boolean success = FileUtils.deleteQuietly(appCacheRoot);
+      if (!success) {
+        Log.e(TAG, "Failed to remove old appcache data.");
+      }
+
+      // Recreate the app cache directory.
+      appCacheRoot = getApplicationContext().getDir("appcache",
+                                                    Context.MODE_PRIVATE);
+    }
+
+    // Mark the directory for removal on exit.  This is not a sure thing,
+    // because it will not be done if the app crashes or the battery dies.
+    try {
+      FileUtils.forceDeleteOnExit(appCacheRoot);
+    } catch (IOException ex) {
+      Log.e(TAG, "Failed to mark app cache for deletion on process exit.", ex);
+    }
+
+    return appCacheRoot;
+  }
+
   @Override
   protected void onStart() {
     Log.i(TAG, "onStart()");
@@ -101,6 +132,9 @@ public class Velodrome extends Activity implements UiMessageDisplay {
 
     // Load the saved preferences.
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+
+    // Create a directory to be used for the web view's app cache.
+    File appCacheRoot = createAppCacheDir();
 
     // What system are we an agent of?
     AgentType agentType = AgentType.valueOf(
@@ -116,7 +150,7 @@ public class Velodrome extends Activity implements UiMessageDisplay {
 
     PhoneUtils.getPhoneUtils().acquireWakeLock();
     mTaskManager = new TaskManager(mAgentBehaviorDelegate);
-    mBrowser = new Browser((WebView) findViewById(R.id.webView));
+    mBrowser = new Browser((WebView) findViewById(R.id.webView), appCacheRoot);
     mWorkerThread = new WorkerThread(this, mTaskManager, mBrowser,
                                      mAgentBehaviorDelegate);
 

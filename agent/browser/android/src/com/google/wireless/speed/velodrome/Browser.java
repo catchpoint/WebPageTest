@@ -39,6 +39,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,17 +49,23 @@ public class Browser implements VideoFrameSource {
   private static final long WPT_VIDEO_MS_PER_FRAME = 1000L;  // Capture one frame per second.
   private static final float WPT_VIDEO_FRAME_SCALE_FACTOR = 0.5f;  // Scale video frames for upload.
   private static final String TIMING_JS_INTERFACE_NAME = "velodromeJsTimingHelper";
+  private static final long BROWSER_SETTINGS_APP_CACHE_SIZE = 10 * 1024 * 1024;  // 10 MB
 
   private final WebView mWebView;
   private VideoFrameGrabber mVideoFrameGrabber = null;
   private ConditionVariable mCondition;
   private WebViewClientForTiming mWebViewClient;
 
-  public Browser(WebView webView) {
+  public Browser(WebView webView, File appCacheRoot) {
     mWebView = webView;
 
     WebSettings settings = webView.getSettings();
+
+    // Enabling the app cache without setting a path crashes webcore on
+    // gingerbread.  Explicitly setting the path seems to work.
     settings.setAppCacheEnabled(true);
+    settings.setAppCachePath(appCacheRoot.getAbsolutePath());
+    settings.setAppCacheMaxSize(BROWSER_SETTINGS_APP_CACHE_SIZE);
     settings.setCacheMode(WebSettings.LOAD_DEFAULT);
     settings.setDatabaseEnabled(true);
     settings.setDomStorageEnabled(true);
@@ -93,10 +100,12 @@ public class Browser implements VideoFrameSource {
     }
     if (shouldClearCache) {
       // Note that this clears the regular browser cache only. This does NOT
-      // clear localStorage, appcache or databases. There isn't an API to
+      // clear localStorage or databases. There isn't an API to
       // clear those storage. But those storage are not persisted (unless
-      // you set WebSetttings.setDatabasePath(xxx)), so, you can clear
+      // you set WebSettings.setDatabasePath(xxx)), so, you can clear
       // those HTML5 storages by restarting the process.
+      // TODO(skerner): We set the app cache path to work around a webcore bug.
+      // Clear it manually.
       mWebView.clearCache(true);
     }
 
