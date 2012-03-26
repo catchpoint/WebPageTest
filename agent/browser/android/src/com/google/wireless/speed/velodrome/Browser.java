@@ -85,13 +85,13 @@ public class Browser implements VideoFrameSource {
     return PhoneUtils.captureScreenshot(mWebView);
   }
 
-  public void loadPageAndMeasureLatency(final Task task, final boolean clearCache)
+  public void loadPageAndMeasureLatency(final Task task, final boolean shouldClearCache)
       throws InterruptedException {
     Log.d(TAG, "loadPageAndMeasureLatency()");
     if (task.shouldClearCookie()) {
       CookieManager.getInstance().removeAllCookie();
     }
-    if (clearCache) {
+    if (shouldClearCache) {
       // Note that this clears the regular browser cache only. This does NOT
       // clear localStorage, appcache or databases. There isn't an API to
       // clear those storage. But those storage are not persisted (unless

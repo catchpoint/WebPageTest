@@ -453,4 +453,34 @@ public class WebPageTestAgentBehaviorDelegate implements AgentBehaviorDelegate {
     // WebpageTest does not require authentication to its server.
     return true;  // We are always as logged in as we need to be.
   }
+
+  @Override
+  public ArrayList<MeasurementParameters> getAllMeasurementsForTask(Task task) {
+    int totalNumRuns = task.getRuns();
+    boolean firstViewOnly = !task.shouldRunRepeatView();
+
+    // If we only run "first view" (i.e. cold cache), then there is one
+    // measurement for each run.  If running in "repeat view" mode, we do two
+    // measurements:  One with a cleared cache, and then again without clearing
+    // it, so that the cache is warm.
+    int totalMeasurements = totalNumRuns * (firstViewOnly ? 1 : 2);
+
+    ArrayList<MeasurementParameters> measurements =
+        new ArrayList<MeasurementParameters>(totalMeasurements);
+
+    for (int runNum = 1; runNum <= totalNumRuns; ++runNum) {
+      // Always measure with a cold cache.
+      measurements.add(new MeasurementParameters(runNum, true));
+
+      if (!firstViewOnly) {
+        // This measurement will not clear the cache, and the last measurement
+        // was of the same URL.  This ensures the cache is warm.
+        measurements.add(new MeasurementParameters(runNum, false));
+      }
+    }
+
+    assert measurements.size() == totalMeasurements : "Unexpected number of measurents.";
+    return measurements;
+  }
+
 }

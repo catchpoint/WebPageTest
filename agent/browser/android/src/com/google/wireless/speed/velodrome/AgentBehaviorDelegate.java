@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.google.wireless.speed.velodrome;
 
 import java.io.IOException;
+import java.util.ArrayList;
+
 import org.json.JSONException;
 
 /**
@@ -39,6 +41,20 @@ import org.json.JSONException;
  * @author skerner
  */
 public interface AgentBehaviorDelegate {
+
+  // An immutable record of the settings for a single measurement.
+  public class MeasurementParameters {
+    private int mRunNumber;
+    private boolean mShouldClearCache;
+
+    public MeasurementParameters(int runNumber, boolean shouldClearCache) {
+      mRunNumber = runNumber;
+      mShouldClearCache = shouldClearCache;
+    }
+    public int runNumber() { return mRunNumber; }
+    public boolean shouldClearCache() { return mShouldClearCache; }
+  }
+
   // Check in with our server.  Any tasks to be done are added by calling methods
   // of |taskManager|.  Return true if at least one task was fetched.
   public boolean sendCheckinPing(TaskManager taskManager)
@@ -72,4 +88,10 @@ public interface AgentBehaviorDelegate {
   // Initiate authentication.  Block until authentication is done, or a timeout
   // is reached.  Return true if authentication succeeded.
   public boolean authenticateAndWait() throws InterruptedException;
+
+  // Build the list of measurements to do for a given task.  These measurements
+  // will be done in order.  This matters because a measurement that should be
+  // done with a warn cache can be done by loading a page, then load the same
+  // page again without clearing the cache.
+  public ArrayList<MeasurementParameters> getAllMeasurementsForTask(Task task);
 }

@@ -156,7 +156,7 @@ public class Velodrome extends Activity implements UiMessageDisplay {
 
   // Authentication is handled by mAgentBehaviorDelegate.
   // This method is called on authentication failures that require user
-  // action to fix.  For example, adding an accont to the phone.
+  // action to fix.  For example, adding an account to the phone.
   public void onAuthenticationFailure(String message) {
     mWorkerThread.requestStop();
     showMessage(message, UiMessageDisplay.TEXT_COLOR_RED);

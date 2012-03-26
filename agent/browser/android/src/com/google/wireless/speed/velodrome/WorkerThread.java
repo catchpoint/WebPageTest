@@ -36,6 +36,9 @@ import android.util.Log;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Iterator;
+
+import com.google.wireless.speed.velodrome.AgentBehaviorDelegate.MeasurementParameters;
 
 public class WorkerThread extends Thread {
   private static final String TAG = "Velodrome:WorkerThread";
@@ -169,23 +172,12 @@ public class WorkerThread extends Thread {
         mVelodrome.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
       }
 
-      int run = 1;
-      for (run = 1; run < task.getRuns(); run++) {
-        executeTask(task, run, false, false);
-        if (task.shouldRunRepeatView()) {
-          executeTask(task, run, true, false);
-        }
-      }
-      // Last-run is special, since we need to mark the test as done in the final run.
-      if (run <= task.getRuns()) {
-        if (!task.shouldRunRepeatView()) {
-          executeTask(task, run, false, true);
-        } else {
-          executeTask(task, run, false, false);
-        }
-        if (task.shouldRunRepeatView()) {
-          executeTask(task, run, true, true);
-        }
+      Iterator<MeasurementParameters> measurementIterator =
+          mAgentBehaviorDelegate.getAllMeasurementsForTask(task).iterator();
+      while(measurementIterator.hasNext()) {
+        MeasurementParameters currentMeasurement = measurementIterator.next();
+        boolean isFinalMeasurement = !measurementIterator.hasNext();
+        executeTask(task, currentMeasurement, isFinalMeasurement);
       }
  
     } finally {
@@ -202,10 +194,12 @@ public class WorkerThread extends Thread {
    * @throws InterruptedException
    * @throws IOException
    */
-  private void executeTask(Task task, int runNumber, boolean isCacheWarm, boolean isFinalMeasurement)
+  private void executeTask(Task task,
+                           MeasurementParameters measurement,
+                           boolean isFinalMeasurement)
       throws InterruptedException, IOException,
              RuntimeException, IllegalStateException {
-    String msg = "Measuring " + task.getUrl() + "...";
+    String msg = "Measuring " + task.getUrl() + " ...";
     mVelodrome.showMessage(msg, UiMessageDisplay.TEXT_COLOR_ORANGE);
     mVelodrome.setUrlEdit(false, msg);
 
@@ -239,12 +233,13 @@ public class WorkerThread extends Thread {
       // Make the UI thread run the first part of the task
       ConditionVariable cv = new ConditionVariable();
       mBrowser.setCondition(cv);
-      mVelodrome.runOnUiThread(new BrowserStart(task, !isCacheWarm));
+      mVelodrome.runOnUiThread(
+          new BrowserStart(task, measurement.shouldClearCache()));
       cv.block(Config.TOTAL_PAGE_LOAD_MS);
       cv.close();
 
-      // Need to let the page render, but this can't happen in the UI thread,
-      // because that is the thread the page renders in
+      // Need to let the page render.  The UI thread's run loop must be free to
+      // run, so we sleep on the worker thread.
       Thread.sleep(Config.PICTURE_RENDER_WAIT_TIME_MS);
       mBrowser.setCondition(cv);
       mVelodrome.runOnUiThread(new BrowserFinish(task));
@@ -269,7 +264,8 @@ public class WorkerThread extends Thread {
 
     // Submit results to the server.
     detailPageUrl = mTaskManager.submitTaskResult(
-        task, mVelodrome, runNumber, isCacheWarm, isFinalMeasurement);
+        task, mVelodrome, measurement.runNumber(), !measurement.shouldClearCache(),
+        isFinalMeasurement);
 
     String proxyMessage = (task.getProxy() != null && !task.getProxy().equals("")) ?
         ("With proxy " + task.getProxy() + "<br>") : "";
@@ -339,7 +335,8 @@ public class WorkerThread extends Thread {
     public void run() {
       try {
         mBrowser.loadPageAndMeasureLatency(task, clearCache);
-      } catch (InterruptedException unused) {
+      } catch (InterruptedException ex) {
+        Log.w(TAG, "Page load interrupted.", ex);
         // The worker thread will crash properly when it finds that task
         // results were not set.
       }
@@ -357,7 +354,8 @@ public class WorkerThread extends Thread {
     public void run() {
       try {
         mBrowser.finishExecutingTask(task);
-      } catch (Exception unused) {
+      } catch (Exception ex) {
+        Log.w(TAG, "finishExecutingTask interrupted.", ex);
         // The worker thread will crash properly when it finds that task
         // results were not set.
       }
