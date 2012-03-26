@@ -103,16 +103,36 @@ public class WebPageTestAgentBehaviorDelegate implements AgentBehaviorDelegate {
     updateSettingsFromPrefs();
   }
 
+  // Build a URL from the string in prefs.  Add protocol and trailing slash to
+  // a host name.
+  private String normalizeUrlFromPrefValue(String urlFromPref) {
+    StringBuilder urlBuilder = new StringBuilder();
+    if (!urlFromPref.startsWith("http://") &&
+        !urlFromPref.startsWith("https://")) {
+      urlBuilder.append("http://");
+    }
+
+    urlBuilder.append(urlFromPref);
+
+    if (!urlFromPref.endsWith("/"))
+      urlBuilder.append("/");
+
+    return urlBuilder.toString();
+  }
+
   // Read prefs.  Must run on UI thread.
   private void updateSettingsFromPrefs() {
-    mServerUrl = mPrefs.getString(mContext.getString(R.string.prefKeyWptServer),
-                                  "http://staging.webpagetest.org");
-    if (!mServerUrl.endsWith("/"))
-      mServerUrl += "/";
+    String serverUrlPrefValue = mPrefs.getString(
+        mContext.getString(R.string.prefKeyWptServer),
+        "http://staging.webpagetest.org");
+    mServerUrl = normalizeUrlFromPrefValue(serverUrlPrefValue);
 
-    mLocation = mPrefs.getString(mContext.getString(R.string.prefKeyWptLocation),
-                                 "default_mobile");
+    mLocation = mPrefs.getString(
+        mContext.getString(R.string.prefKeyWptLocation),
+        "default_mobile");
+
     mKey = mPrefs.getString(mContext.getString(R.string.prefKeyWptKey), "");
+
     mPc = mPrefs.getString(mContext.getString(R.string.prefKeyWptPc), "");
 
     // TODO(skerner): Better validation.  For example, an empty location should
