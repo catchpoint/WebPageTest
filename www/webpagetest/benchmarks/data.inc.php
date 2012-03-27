@@ -2,6 +2,7 @@
 
 require_once('common.inc');
 $raw_data = null;
+$trend_data = null;
 
 /**
 * Get a list of the series to display
@@ -53,7 +54,7 @@ function GetSeriesLabels($benchmark) {
 /*
     Helper functions to deal with aggregate benchmark data
 */
-function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc = null, &$annotations) {
+function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotations) {
     $tsv = null;
     $isbytes = false;
     $istime = false;
@@ -258,8 +259,11 @@ function GetBenchmarkInfo($benchmark) {
         $info['fvonly'] = false;
         $info['video'] = false;
         $info['expand'] = false;
+        $info['options'] = array();
         if (isset($expand) && $expand)
             $info['expand'] = true;
+        if (isset($options))
+            $info['options'] = $options;
         if (isset($configurations)) {
             $info['configurations'] = $configurations;
             $info['locations'] = array();
@@ -287,7 +291,7 @@ function GetBenchmarkInfo($benchmark) {
 * Load the raw data for the given test
 * 
 */
-function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc = null) {
+function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
     $tsv = null;
     $isbytes = false;
     $istime = false;
@@ -392,7 +396,7 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
         $date = date('Ymd_Hi', $test);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
         if (gz_is_file($data_file)) {
-            if (!is_array($raw_data)) {
+            if (!isset($raw_data)) {
                 $raw_data = json_decode(gz_file_get_contents($data_file), true);
             }
             if (count($raw_data)) {
@@ -456,4 +460,201 @@ function GetUrlIndex($url, &$meta) {
     }
     return $index;
 }
+
+/*
+    Helper functions to deal with aggregate benchmark data
+*/
+function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotations, &$meta) {
+    $tsv = null;
+    $isbytes = false;
+    $istime = false;
+    $annotations = array();
+    if (stripos($metric, 'bytes') !== false) {
+        $isbytes = true;
+    } elseif (stripos($metric, 'time') !== false || 
+            stripos($metric, 'render') !== false || 
+            stripos($metric, 'fullyloaded') !== false || 
+            stripos($metric, 'visualcomplete') !== false || 
+            stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'ttfb') !== false) {
+        $istime = true;
+    }
+    if (LoadTrendData($data, $configurations, $benchmark, $cached, $metric, $url, $loc)) {
+        $series = array();
+        $tsv = 'Date';
+        foreach($configurations as &$configuration) {
+            if (array_key_exists('title', $configuration) && strlen($configuration['title']))
+                $title = $configuration['title'];
+            else
+                $title = $configuration['name'];
+            if (count($configuration['locations']) > 1) {
+                $name = "$title ";
+                if (count($configurations) == 1)
+                    $name = '';
+                foreach ($configuration['locations'] as &$location) {
+                    if (is_numeric($location['label'])) {
+                        $tsv .= "\t$name{$location['location']}";
+                        $series[] = "$name{$location['location']}";
+                    } else {
+                        $tsv .= "\t$name{$location['label']}";
+                        $series[] = "$name{$location['label']}";
+                    }
+                }
+            } else {
+                $tsv .= "\t$title";
+                $series[] = $title;
+            }
+        }
+        $tsv .= "\n";
+        $dates = array();
+        foreach ($data as $time => &$row) {
+            $date_text = date('c', $time);
+            $tsv .= $date_text;
+            $dates[$date_text] = $time;
+            foreach($configurations as &$configuration) {
+                foreach ($configuration['locations'] as &$location) {
+                    $tsv .= "\t";
+                    if (array_key_exists($configuration['name'], $row) && 
+                        array_key_exists($location['location'], $row[$configuration['name']]) &&
+                        array_key_exists('value', $row[$configuration['name']][$location['location']]) ) {
+                        $value = $row[$configuration['name']][$location['location']]['value'];
+                        if ($isbytes)
+                            $value = number_format($value / 1024.0, 3);
+                        elseif ($istime)
+                            $value = number_format($value / 1000.0, 3);
+                        $tsv .= $value;
+                    }
+                }
+            }
+            $tsv .= "\n";
+        }
+        if (is_file("./settings/benchmarks/$benchmark.notes")) {
+            $notes = parse_ini_file("./settings/benchmarks/$benchmark.notes", true);
+            $i = 0;
+            asort($dates);
+            foreach($notes as $note_date => $note) {
+                // find the closest data point on or after the selected date
+                $note_date = str_replace('/', '-', $note_date);
+                if (!array_key_exists($note_date, $dates)) {
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date);
+                    if ($date !== false) {
+                        $time = $date->getTimestamp();
+                        unset($note_date);
+                        if ($time) {
+                            foreach($dates as $date_text => $date_time) {
+                                if ($date_time >= $time) {
+                                    $note_date = $date_text;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (isset($note_date) && array_key_exists('text', $note) && strlen($note['text'])) {
+                    $i++;
+                    foreach($series as $data_series) {
+                        $annotations[] = array('series' => $data_series, 'x' => $note_date, 'shortText' => "$i", 'text' => $note['text']);
+                    }
+                }
+            }
+        }
+    }
+    return $tsv;
+}
+
+/**
+* Load data for a single URL trended over time from all of the configurations
+* 
+*/
+function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $url, $loc, $options) {
+    global $trend_data;
+    $ok = false;
+    $data = array();
+    if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
+        if (!isset($trend_data)) {
+            // loop through all of the data files
+            $files = scandir("./results/benchmarks/$benchmark/data");
+            foreach( $files as $file ) {
+                if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
+                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                    $time = $date->getTimestamp();
+                    $tests = array();
+                    $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
+                    if (count($raw_data)) {
+                        foreach($raw_data as $row) {
+                            if (array_key_exists('docTime', $row) && 
+                                ($row['result'] == 0 || $row['result'] == 99999) &&
+                                ($row['label'] == $url || $row['url'] == $url)) {
+                                $location = $row['location'];
+                                $id = $row['id'];
+                                if (!array_key_exists($id, $tests)) {
+                                    $tests[$id] = array();
+                                }
+                                $row['time'] = $time;
+                                $tests["$id-{$row['cached']}"][] = $row;
+                            }
+                        }
+                        // grab the median run from each test
+                        if (count($tests)) {
+                            foreach($tests as &$test) {
+                                $times = array();
+                                foreach($test as $row) {
+                                    $times[] = $row['docTime'];
+                                }
+                                $median_run_index = 0;
+                                $count = count($times);
+                                if( $count > 1 ) {
+                                    asort($times);
+                                    $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+                                    $current = 0;
+                                    foreach( $times as $index => $time ) {
+                                        $current++;
+                                        if( $current == $medianIndex ) {
+                                            $median_run_index = $index;
+                                            break;
+                                        }
+                                    }
+                                }
+                                $trend_data[] = $test[$median_run_index];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (count($trend_data)) {
+            foreach( $trend_data as &$row ) {
+                if( $row['cached'] == $cached &&
+                    array_key_exists($metric, $row) && 
+                    strlen($row[$metric])) {
+                    $time = $row['time'];
+                    $config = $row['config'];
+                    $location = $row['location'];
+                    if (isset($loc_aliases) && count($loc_aliases)) {
+                        foreach($loc_aliases as $loc_name => &$aliases) {
+                            foreach($aliases as $alias) {
+                                if ($location == $alias) {
+                                    $location = $loc_name;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                    if (!isset($loc) || $loc == $location) {
+                        $ok = true;
+                        if (!array_key_exists($time, $data)) {
+                            $data[$time] = array();
+                        }
+                        if (!array_key_exists($config, $data[$time])) {
+                            $data[$time][$config] = array();
+                        }
+                        $data[$time][$config][$location] = array('value' => $row[$metric], 'test' => $row['id']);
+                    }
+                }
+            }
+        }
+    }
+    return $ok;
+}
+
 ?>
