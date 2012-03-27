@@ -1205,7 +1205,9 @@ function RestoreTest($id)
     $ret = false;
     if (ValidateTestId($id)) {
         $testPath = './' . GetTestPath($id);
-        if( isset($settings['archive_dir']) || isset($settings['archive_s3_url']) )
+        if( array_key_exists('archive_dir', $settings) || 
+            array_key_exists('archive_s3_url', $settings) ||
+            array_key_exists('archive_s3_server', $settings) )
         {
             $restore = false;
             if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
