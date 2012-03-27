@@ -488,6 +488,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $original = array();
     $optimized = array();
     $count = 0;
+    $started = 0;
     global $fvonly;
     $url = '';
     $host  = $_SERVER['HTTP_HOST'];
@@ -506,6 +507,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $path = substr($testPath, 1);
         if( $test['c'] )
         {
+            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+            if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
+                $started = $testInfo['started'];
             $pageData = loadAllPageData($testPath);
             $fvMedian = GetMedianRun($pageData, 0);
             $test['fvMedian'] = $fvMedian;
@@ -679,6 +683,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $json_response['data']['Test_ID'] = $id;
         $json_response['data']['URL'] = htmlspecialchars_decode($url);
         $json_response['data']['Location'] = $testInfo['location'];
+        $json_response['data']['Started'] = $started;
         $json_response['data']['Original_Test_ID'] = $tests['urls'][0]['id'];
         $json_response['data']['Optimized_Test_ID'] = $tests['urls'][1]['id'];
         $json_response['data']['Original_FV_Load_Time'] = $original[0]['loadTime'];
