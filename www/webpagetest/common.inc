@@ -8,7 +8,7 @@ umask(0);
 date_default_timezone_set('UTC');
 import_request_variables('PG', 'req_');
 
-if ($_SERVER['HTTP_MOD_REWRITE'] == 'On')
+if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')
     define('FRIENDLY_URLS', true);
 else
     define('FRIENDLY_URLS', false);

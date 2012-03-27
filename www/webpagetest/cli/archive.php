@@ -2,6 +2,7 @@
 chdir('..');
 include 'common.inc';
 require_once('archive.inc');
+ignore_user_abort(true);
 set_time_limit(0);
 
 $kept = 0;
@@ -17,40 +18,30 @@ CheckOldDir('./results/old');
 *   We will also keep track of all of the tests that are 
 *   known to have been archived separately so we don't thrash
 */  
-$endDate = (int)date('ymd');
 $years = scandir('./results');
-foreach( $years as $year )
-{
+foreach( $years as $year ) {
     mkdir('./logs/archived', 0777, true);
     $yearDir = "./results/$year";
-    if( is_dir($yearDir) && $year != '.' && $year != '..'  && $year != 'video' )
-    {
-        if( $year != 'old' )
-        {
-            $months = scandir($yearDir);
-            foreach( $months as $month )
-            {
-                $monthDir = "$yearDir/$month";
-                if( is_dir($monthDir) && $month != '.' && $month != '..' )
-                {
-                    $days = scandir($monthDir);
-                    foreach( $days as $day )
-                    {
-                        $dayDir = "$monthDir/$day";
-                        if( is_dir($dayDir) && $day != '.' && $day != '..' )
-                            CheckDay($dayDir, "$year$month$day");
-                    }
-                    rmdir($monthDir);
+    if( is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..' ) {
+        $months = scandir($yearDir);
+        foreach( $months as $month ) {
+            $monthDir = "$yearDir/$month";
+            if( is_dir($monthDir) && $month != '.' && $month != '..' ) {
+                $days = scandir($monthDir);
+                foreach( $days as $day ) {
+                    $dayDir = "$monthDir/$day";
+                    if( is_dir($dayDir) && $day != '.' && $day != '..' )
+                        CheckDay($dayDir, "$year$month$day");
                 }
+                rmdir($monthDir);
             }
-            rmdir($yearDir);
         }
+        rmdir($yearDir);
     }
 }
 echo "\nDone\n\n";
 
-if( $log )
-{
+if( $log ) {
     fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . date('r') . "\n");;
     fclose($log);
 }
@@ -60,13 +51,10 @@ if( $log )
 * 
 * @param mixed $path
 */
-function CheckOldDir($path)
-{
+function CheckOldDir($path) {
     $oldDirs = scandir($path);
-    foreach( $oldDirs as $oldDir )
-    {
-        if( $oldDir != '.' && $oldDir != '..' )
-        {
+    foreach( $oldDirs as $oldDir ) {
+        if( $oldDir != '.' && $oldDir != '..' ) {
             // see if it is a test or a higher-level directory
             if( is_file("$path/$oldDir/testinfo.ini") )
                 CheckTest("$path/$oldDir", $oldDir);
@@ -84,13 +72,10 @@ function CheckOldDir($path)
 * @param mixed $baseID
 * @param mixed $archived
 */
-function CheckDay($dir, $baseID)
-{
+function CheckDay($dir, $baseID) {
     $tests = scandir($dir);
-    foreach( $tests as $test )
-    {
-        if( $test != '.' && $test != '..' )
-        {
+    foreach( $tests as $test ) {
+        if( $test != '.' && $test != '..' ) {
             // see if it is a test or a higher-level directory
             if( is_file("$dir/$test/testinfo.ini") )
                 CheckTest("$dir/$test", "{$baseID}_$test");
@@ -107,16 +92,14 @@ function CheckDay($dir, $baseID)
 * @param mixed $logFile
 * @param mixed $match
 */
-function CheckTest($testPath, $id)
-{
+function CheckTest($testPath, $id) {
     global $archiveCount;
     global $deleted;
     global $kept;
     global $log;
     $logLine = "$id : ";
 
-    if( ArchiveTest($id) )
-    {
+    if( ArchiveTest($id) ) {
         $archiveCount++;
         $logLine .= "Archived";
 
@@ -126,8 +109,7 @@ function CheckTest($testPath, $id)
         if( $elapsed > 3 )
             $delete = true;
 
-        if( $delete )
-        {
+        if( $delete ) {
             if (VerifyArchive($id)) {
                 delTree("$testPath/");
                 $deleted++;
@@ -138,8 +120,7 @@ function CheckTest($testPath, $id)
             $kept++;
     }
         
-    if( $log )
-    {
+    if( $log ) {
         $logLine .= "\n";
         fwrite($log, $logLine);
     }
