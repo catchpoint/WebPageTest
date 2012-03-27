@@ -51,6 +51,15 @@ $series = GetSeriesLabels($benchmark);
             ?>
             
             <div class="translucent">
+            <div style="clear:both;">
+                <div style="float:left;">
+                    Click on a data point in the chart to see the full test data (waterfall, etc) for the given data point.<br>
+                    Highlight an area of the chart to zoom in on that area and double-click to zoom out.
+                </div>
+            </div>
+            <div style="clear:both;">
+            <br>
+            </div>
             <div style="text-align:center; clear:both;">
                 <script type="text/javascript">
                     var charts = new Array();

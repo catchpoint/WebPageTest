@@ -49,55 +49,56 @@ if ($lock !== false) {
 */
 function ProcessBenchmark($benchmark) {
     logMsg("Processing benchmark '$benchmark'", './benchmark.log', true);
-    if (!is_dir("./results/benchmarks/$benchmark"))
-        mkdir("./results/benchmarks/$benchmark", 0777, true);
-    if (is_file("./results/benchmarks/$benchmark/state.json")) {
-        $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
-    } else {
-        $state = array('running' => false, 'needs_aggregation' => true, 'runs' => array());
-        // build up a list of runs if we have data
-        if (is_dir("./results/benchmarks/$benchmark/data")) {
-            $files = scandir("./results/benchmarks/$benchmark/data");
-            $last_run = 0;
-            foreach( $files as $file ) {
-                if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
-                    $time = $date->getTimestamp();
-                    $state['runs'][] = $time;
-                    if ($time > $last_run)
-                        $last_run = $time;
+    $options = array();
+    if(include "./settings/benchmarks/$benchmark.php") {
+        if (!is_dir("./results/benchmarks/$benchmark"))
+            mkdir("./results/benchmarks/$benchmark", 0777, true);
+        if (is_file("./results/benchmarks/$benchmark/state.json")) {
+            $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+        } else {
+            $state = array('running' => false, 'needs_aggregation' => true, 'runs' => array());
+            // build up a list of runs if we have data
+            if (is_dir("./results/benchmarks/$benchmark/data")) {
+                $files = scandir("./results/benchmarks/$benchmark/data");
+                $last_run = 0;
+                foreach( $files as $file ) {
+                    if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
+                        $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                        $time = $date->getTimestamp();
+                        $state['runs'][] = $time;
+                        if ($time > $last_run)
+                            $last_run = $time;
+                    }
+                }
+                if ($last_run) {
+                    $state['last_run'] = $last_run;
                 }
             }
-            if ($last_run) {
-                $state['last_run'] = $last_run;
-            }
+            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
         }
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
-    }
-    if (!is_array($state)) {
-        $state = array('running' => false);
-    }
-    
-    if (array_key_exists('running', $state)) {
-        CheckBenchmarkStatus($state);
-        // update the state between steps
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
-        CollectResults($benchmark, $state);
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
-    } else {
-        $state['running'] = false;
-    }
-    
-    if (!$state['running'] && 
-        (array_key_exists('runs', $state) && count($state['runs'])) &&
-        (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation']) ){
-        AggregateResults($benchmark, $state);
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
-    }
-    
-    // see if we need to kick off a new benchmark run
-    if (!$state['running'] && !array_key_exists('tests', $state)) {
-        if(include "./settings/benchmarks/$benchmark.php") {
+        if (!is_array($state)) {
+            $state = array('running' => false);
+        }
+        
+        if (array_key_exists('running', $state)) {
+            CheckBenchmarkStatus($state);
+            // update the state between steps
+            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+            CollectResults($benchmark, $state);
+            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        } else {
+            $state['running'] = false;
+        }
+        
+        if (!$state['running'] && 
+            (array_key_exists('runs', $state) && count($state['runs'])) &&
+            (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation']) ){
+            AggregateResults($benchmark, $state, $options);
+            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        }
+        
+        // see if we need to kick off a new benchmark run
+        if (!$state['running'] && !array_key_exists('tests', $state)) {
             if (!array_key_exists('last_run', $state))
                 $state['last_run'] = 0;
             $now = time();
@@ -111,9 +112,8 @@ function ProcessBenchmark($benchmark) {
                 logMsg("Benchmark '$benchmark' does not need to be run", './benchmark.log', true);
             }
         }
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
-
-    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
 }
 
 /**
@@ -354,7 +354,7 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
 * @param mixed $benchmark
 * @param mixed $state
 */
-function AggregateResults($benchmark, &$state) {
+function AggregateResults($benchmark, &$state, $options) {
     if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
         mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
     if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
@@ -384,7 +384,8 @@ function AggregateResults($benchmark, &$state) {
             $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $run_time) . '.json';
             if (gz_is_file($file_name)) {
                 $data = json_decode(gz_file_get_contents($file_name), true);
-                CreateAggregates($info, $data, $benchmark, $run_time);
+                FilterRawData($data, $options);
+                CreateAggregates($info, $data, $benchmark, $run_time, $options);
                 unset($data);
                 $info['runs'][$run_time] = 1;
             }
@@ -402,7 +403,7 @@ function AggregateResults($benchmark, &$state) {
 * @param mixed $data
 * @param mixed $benchmark
 */
-function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
+function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
     foreach ($info['metrics'] as $metric) {
         $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
         if (gz_is_file($metric_file)) {
@@ -410,7 +411,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
         } else {
             $agg_data = array();
         }
-        AggregateMetric($metric, $info, $data, $run_time, $agg_data);
+        AggregateMetric($metric, $info, $data, $run_time, $agg_data, $options);
         gz_file_put_contents($metric_file, json_encode($agg_data));
         unset($agg_data);
         
@@ -421,7 +422,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
             } else {
                 $agg_data = array();
             }
-            AggregateMetricByLabel($metric, $info, $data, $run_time, $agg_data);
+            AggregateMetricByLabel($metric, $info, $data, $run_time, $agg_data, $options);
             gz_file_put_contents($metric_file, json_encode($agg_data));
             unset($agg_data);
         }
@@ -436,7 +437,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time) {
 * @param mixed $run_time
 * @param mixed $agg_data
 */
-function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
+function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options) {
     $configs = array();
     global $nonZero;
     
@@ -527,7 +528,7 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data) {
 * @param mixed $run_time
 * @param mixed $agg_data
 */
-function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data) {
+function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data, $options) {
     $labels = array();
     global $nonZero;
     // group the individual records
@@ -674,6 +675,62 @@ function PruneTestData($id) {
             unlink("$testPath/$file");
         } elseif (strpos($file, 'status.txt') !== false) {
             unlink("$testPath/$file");
+        }
+    }
+}
+
+/**
+* Do any necessary pre-processing on the data set (like reducing to the median run)
+* 
+* @param mixed $data
+* @param mixed $options
+*/
+function FilterRawData(&$data, $options) {
+    if (isset($options) && is_array($options) && array_key_exists('median_run', $options) && $options['median_run']) {
+        // first group the results for each test
+        $grouped = array();
+        foreach($data as $row) {
+            if (array_key_exists('id', $row) && 
+                array_key_exists('docTime', $row) && 
+                array_key_exists('cached', $row) && 
+                array_key_exists('result', $row) &&
+                ($row['result'] == 0 || $row['result'] == 99999)) {
+                $id = $row['id'];
+                $cached = $row['cached'];
+                if (!array_key_exists($id, $grouped)) {
+                    $grouped[$id] = array();
+                }
+                if (!array_key_exists($cached, $grouped[$id])) {
+                    $grouped[$id][$cached] = array();
+                }
+                $grouped[$id][$cached][] = $row;
+            }
+        }
+        // now select the median from each for the filtered data set
+        $data = array();
+        foreach($grouped as &$test) {
+            foreach($test as $test_data) {
+                // load the times into an array so we can sort them and extract the median
+                $times = array();
+                foreach($test_data as $row) {
+                    $times[] = $row['docTime'];
+                }
+                $median_run_index = 0;
+                $count = count($times);
+                if( $count > 1 ) {
+                    asort($times);
+                    $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+                    $current = 0;
+                    foreach( $times as $index => $time ) {
+                        $current++;
+                        if( $current == $medianIndex ) {
+                            $median_run_index = $index;
+                            break;
+                        }
+                    }
+                }
+                $data[] = $test_data[$median_run_index];
+            }
         }
     }
 }

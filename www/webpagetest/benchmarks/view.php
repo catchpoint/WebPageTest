@@ -4,7 +4,7 @@ include 'common.inc';
 include './benchmarks/data.inc.php';
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark details";
-$aggregate = 'avg';
+$aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
 $benchmark = '';
@@ -35,19 +35,27 @@ if (array_key_exists('benchmark', $_REQUEST))
             ?>
             
             <div class="translucent">
-            <div style="text-align:right; clear:both;">
-                <form name="aggregation" method="get" action="view.php">
-                    <?php
-                    echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
-                    ?>
-                    Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
-                        <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
-                        <option value="geo-mean" <?php if ($aggregate == 'geo-mean') echo "selected"; ?>>Geometric Mean</option>
-                        <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
-                        <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
-                        <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
-                    </select>
-                </form>
+            <div style="clear:both;">
+                <div style="float:left;">
+                    Click on a data point in the chart to see the scatter plot results for that specific test.<br>
+                    Highlight an area of the chart to zoom in on that area and double-click to zoom out.
+                </div>
+                <div style="float: right;">
+                    <form name="aggregation" method="get" action="view.php">
+                        <?php
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        ?>
+                        Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
+                            <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
+                            <option value="geo-mean" <?php if ($aggregate == 'geo-mean') echo "selected"; ?>>Geometric Mean</option>
+                            <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
+                            <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
+                            <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+            <div style="clear:both;">
             </div>
             <script type="text/javascript">
             function SelectedPoint(benchmark, metric, series, time, cached) {
