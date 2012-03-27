@@ -48,6 +48,8 @@ $series = GetSeriesLabels($benchmark);
             <?php
             $tab = 'Benchmarks';
             include 'header.inc';
+            echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+            $site_js_loaded = true;
             ?>
             
             <div class="translucent">

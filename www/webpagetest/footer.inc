@@ -125,7 +125,10 @@
     ?>
     <div class="cleared"></div>
     
-    <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/site.js?v=<?php echo VER_JS;?>"></script>
+    <?php
+    if (!isset($site_js_loaded) || !$site_js_loaded)
+        echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+    ?>
     <script type="text/javascript">
         function showFeeds(column)
         {
