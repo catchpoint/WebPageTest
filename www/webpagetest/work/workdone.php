@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-$debug = true;
+//$debug = true;
 include('common.inc');
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
