@@ -7,6 +7,14 @@ if( strpos($testPath, 'relay') && is_dir($testPath) )
 {
     // delete the test directory
     DelTree($testPath);
+    
+    // delete empty directories above this one
+    do {
+        $testPath = rtrim($testPath, "/\\");
+        $testPath = dirname($testPath);
+        rmdir($testPath);
+    } while( strpos($testPath, 'relay') );
+    
     $ok = true;
 }
 

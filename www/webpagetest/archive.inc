@@ -326,7 +326,9 @@ function GetArchiveFile($id, $create_directory = false)
             $file = $settings['archive_dir'] . $testPath . '.zip';
             if ($create_directory) {
                 $dir = dirname($file);
-                mkdir($dir, 0777, true);
+                if(!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
             }
         }
     }
