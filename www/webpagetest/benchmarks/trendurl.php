@@ -47,13 +47,23 @@ if (array_key_exists('url', $_REQUEST))
             <div style="clear:both;">
             </div>
             <script type="text/javascript">
-            function SelectedPoint(benchmark, metric, series, time, cached) {
-                alert('coming soon');
-                //time = parseInt(time / 1000, 10);
-                //var isCached = 0;
-                //if (cached)
-                //    isCached = 1;
-                //window.location.href = "viewtest.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&cached=" + isCached + "&time=" + time;
+            function SelectedPoint(meta, time) {
+                <?php
+                echo "var url = \"$url\";\n";
+                ?>
+                var menu = '<div><h4>View test for ' + url + '</h4>';
+                time = parseInt(time / 1000, 10);
+                var ok = false;
+                if (meta[time] != undefined) {
+                    for(i = 0; i < meta[time].length; i++) {
+                        ok = true;
+                        menu += '<a href="/result/' + meta[time][i]['test'] + '/" target="_blank">' + meta[time][i]['label'] + '</a><br>';
+                    }
+                }
+                menu += '</div>';
+                if (ok) {
+                    $.modal(menu, {overlayClose:true});
+                }
             }
             </script>
             <?php
@@ -132,6 +142,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
         echo "<script type=\"text/javascript\">
+                var {$id}meta = " . json_encode($meta) . ";
                 $id = new Dygraph(
                     document.getElementById(\"$id\"),
                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -140,7 +151,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     showRoller: true,
                     labelsSeparateLines: true,
                     labelsDiv: document.getElementById('{$id}_legend'),
-                    pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
+                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
                     $chart_title
                     legend: \"always\"}
                 );";
@@ -158,6 +169,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
             echo "<script type=\"text/javascript\">
+                    var {$id}meta = " . json_encode($meta) . ";
                     $id = new Dygraph(
                         document.getElementById(\"$id\"),
                         \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -166,7 +178,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         showRoller: true,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('{$id}_legend'),
-                        pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
+                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
                         $chart_title
                         legend: \"always\"}
                     );";

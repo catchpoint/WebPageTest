@@ -80,7 +80,7 @@ $series = GetSeriesLabels($benchmark);
                         <?php
                             echo "var benchmark=\"$benchmark\";\n";
                         ?>
-                        var menu = '<div><h4>View test for ' + escape(url) + '</h4>';
+                        var menu = '<div><h4>View test for ' + url + '</h4>';
                         for( i = 0; i < tests.length; i++ ) {
                             menu += '<a href="/result/' + tests[i] + '/" target="_blank">' + seriesData[i].name + '</a><br>';
                         }

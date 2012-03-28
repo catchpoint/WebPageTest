@@ -511,6 +511,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
             $date_text = date('c', $time);
             $tsv .= $date_text;
             $dates[$date_text] = $time;
+            $column=0;
             foreach($configurations as &$configuration) {
                 foreach ($configuration['locations'] as &$location) {
                     $tsv .= "\t";
@@ -523,7 +524,12 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
                         elseif ($istime)
                             $value = number_format($value / 1000.0, 3);
                         $tsv .= $value;
+                        if (!array_key_exists($time, $meta)) {
+                            $meta[$time] = array();
+                        }
+                        $meta[$time][] = array('label' => $series[$column], 'test' => $row[$configuration['name']][$location['location']]['test']);
                     }
+                    $column++;
                 }
             }
             $tsv .= "\n";
