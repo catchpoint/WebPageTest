@@ -293,6 +293,8 @@ function GetRelayStatus($id, $testPath, &$test)
                 {
                     if( $zip->extractTo($testPath) )
                     {
+                        require_once('archive.inc');
+                        ArchiveTest($id);
                         file_get_contents("{$server}delete.php?test=$id&rkey=$key");
                         $ret = $status['data'];
                     }

@@ -2,10 +2,12 @@
 chdir('..');
 $debug = true;
 include('common.inc');
+require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
 header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+ignore_user_abort(true);
 set_time_limit(60*5*10);
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
@@ -306,6 +308,9 @@ else
             // delete all of the videos except for the median run?
             if( array_key_exists('median_video', $ini) && $ini['median_video'] )
                 KeepVideoForRun($testPath, $medianRun);
+                
+            // archive the test
+            ArchiveTest($id);
             
             // do any other post-processing (e-mail notification for example)
             if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )
