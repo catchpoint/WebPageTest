@@ -87,7 +87,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                 }
             }
         }
-        echo "\r\n";
+        echo "Test ID\r\n";
         
         // and now the actual data
         foreach( $tests['urls'] as &$test )
@@ -164,7 +164,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     }
                 }                
             }
-            echo "\r\n";
+            echo "{$test['id']}\r\n";
         }
     }    
 }
