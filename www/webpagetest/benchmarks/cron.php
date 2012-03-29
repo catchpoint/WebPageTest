@@ -132,7 +132,7 @@ function CheckBenchmarkStatus(&$state) {
                 if ($status['statusCode'] >= 400) {
                     logMsg("Test {$test['id']} : Failed", './benchmark.log', true);
                     $test['completed'] = $now;
-                    PruneTestData($test['id']);
+                    //PruneTestData($test['id']);
                 } elseif( $status['statusCode'] == 200 ) {
                     logMsg("Test {$test['id']} : Completed", './benchmark.log', true);
                     if (array_key_exists('completeTime', $status) && $status['completeTime']) {
@@ -142,7 +142,7 @@ function CheckBenchmarkStatus(&$state) {
                     } else {
                         $test['completed'] = $now;
                     }
-                    PruneTestData($test['id']);
+                    //PruneTestData($test['id']);
                 } else {
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", './benchmark.log', true);
