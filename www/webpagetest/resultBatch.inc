@@ -59,8 +59,11 @@ $stats['rv'] = array();
 $fvonly = false;
 if( $test['test']['fvonly'] )
     $fvonly = true;
+$videoCaptured = false;
+if ($test['test']['video'])
+    $videoCaptured = true;
 $showSpeedIndex = false;
-if( $test['test']['video'] && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
+if( $videoCaptured && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
     $showSpeedIndex = true;
 
     
@@ -323,15 +326,21 @@ function DisplayTests(&$tests)
 {
     global $showSpeedIndex;
     global $fvonly;
-    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
-        <tr>
-            <th>Test</th>
-            <th>Median load time (First view)</th>';
-    if( !$fvonly )
-        echo '<th>Median load time (Repeat view)</th>';
-    if( $showSpeedIndex ) {
-        echo '<th>Median Speed Index (First View)</th>';
+    global $videoCaptured;
+
+    if ($videoCaptured) {
+        echo "<form name=\"compare\" method=\"get\" action=\"/video/compare.php\">";
     }
+    echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
+        <tr>';
+    if ($videoCaptured) {
+        echo    '<th><input style="font-size: 90%; padding: 2px;" id="CompareBtn" type="submit" value="Compare"></th>';
+    }
+    echo    '<th>Test</th>
+            <th>Median load time<br>(First view)</th>';
+    if( !$fvonly )
+        echo '<th>Median load time<br>(Repeat view)</th>';
+    echo '<th>Median Speed Index<br>(First View)</th>';
     echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -344,6 +353,9 @@ function DisplayTests(&$tests)
         DisplayTest($test['id'], $test['u'], $label, $test['c']);
     }
     echo '</table>';
+    if ($videoCaptured) {
+        echo '</form>';
+    }
 }
 
 /**
@@ -355,14 +367,22 @@ function DisplayTestsWithVariations(&$tests)
 {
     global $showSpeedIndex;
     global $fvonly;
+    global $videoCaptured;
+
+    if ($videoCaptured) {
+        echo "<form name=\"compare\" method=\"get\" action=\"/video/compare.php\">";
+    }
     echo '<br><table class="batchResults" border="1" cellpadding="10" cellspacing="0">
-        <tr>
-            <th>Test</th>
-            <th>Median load time (First view)</th>';
+        <tr>';
+    if ($videoCaptured) {
+        echo    '<th><input style="font-size: 90%; padding: 2px;" id="CompareBtn" type="submit" value="Compare"></th>';
+    }
+    echo    '<th>Test</th>
+            <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
-        echo '<th>Median load time (Repeat view)</th>';
+        echo '<th>Median load time<br>(Repeat view)</th>';
     if( $showSpeedIndex ) {
-        echo '<th>Median Speed Index (First View)</th>';
+        echo '<th>Median Speed Index<br>(First View)</th>';
     }
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
@@ -378,6 +398,9 @@ function DisplayTestsWithVariations(&$tests)
             DisplayTest($variationId, CreateUrlVariation($test['u'], $tests['variations'][$variationIndex]['q']), "$label - {$tests['variations'][$variationIndex]['l']}", $test['c']);
     }
     echo '</table>';
+    if ($videoCaptured) {
+        echo '</form>';
+    }
 }
 
 /**
@@ -392,11 +415,15 @@ function DisplayTest($id, $url, $label, $complete)
     global $showSpeedIndex;
     global $stats;
     global $fvonly;
+    global $videoCaptured;
     RestoreTest($id);
     $testPath = './' . GetTestPath($id);
     $fileUrl = GetFileUrl($url);
 
     echo '<tr>';
+    if ($videoCaptured) {
+        echo "<td><input type=\"checkbox\" name=\"t[]\" value=\"$id\"></td>";    
+    }
     $safeUrl = htmlspecialchars($url);
     $label = htmlspecialchars($label);
     if( FRIENDLY_URLS )
@@ -444,9 +471,9 @@ function DisplayTest($id, $url, $label, $complete)
     else
     {
         if( $fvonly )
-            echo '<td colspan="4">';
-        else
             echo '<td colspan="5">';
+        else
+            echo '<td colspan="6">';
         $status = GetTestStatus($id);
         echo $status['statusText'];
         if( $status['statusCode'] == 101 )
