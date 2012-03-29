@@ -1,7 +1,5 @@
 <?php
 
-include_once '../work/workdone.php';
-
 // Some date functions will complain loudly if a timezone is not set.
 date_default_timezone_set('UTC');
 

@@ -1180,8 +1180,8 @@ function GetDeltaMillisecondsFromISO6801Dates($before, $after) {
   // expression.  The second parameter is the time to use for a date that does
   // not have hours or minutes.  We assume that "1997" means the first instant
   // of 1997, which is midnight on new years eve.
-  $beforeTimeSeconds = strtotime($before, "00:00");
-  $afterTimeSeconds = strtotime($after, "00:00");
+  $beforeTimeSeconds = strtotime($before, "00");
+  $afterTimeSeconds = strtotime($after, "00");
   if ($beforeTimeSeconds === False ||
       $afterTimeSeconds  === False)
     return NULL;
@@ -1198,7 +1198,7 @@ function GetDeltaMillisecondsFromISO6801Dates($before, $after) {
  */
 function SplitISO6801DateIntoDateAndTime($ISO8601String,
                                          &$out_dateString, &$out_timeString) {
-  $timestamp = strtotime($ISO8601String, "00:00");
+  $timestamp = strtotime($ISO8601String, "00");
   if ($timestamp === False)
     return False;  // Invalid date/time.
 
@@ -1235,4 +1235,3 @@ function RemoveSensitiveHeaders($file) {
 }
 
 ?>
-
