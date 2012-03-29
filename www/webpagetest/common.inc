@@ -1635,10 +1635,10 @@ function xml_entities($text, $charset = 'UTF-8')
 }
 
 /**
-* Send a JSON response (including callback for JSONP)
-* 
-* @param mixed $response
-*/
+ * Send a JSON response (including callback for JSONP)
+ *
+ * @param mixed $response
+ */
 function json_response(&$response) {
     header ("Content-type: application/json");
     if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
@@ -1653,10 +1653,10 @@ function json_response(&$response) {
 }
 
 /**
-* Check to make sure a test ID is valid
-* 
-* @param mixed $id
-*/
+ * Check to make sure a test ID is valid
+ *
+ * @param mixed $id
+ */
 function ValidateTestId(&$id) {
     $valid = false;
     if (preg_match('/^[a-zA-Z0-9_]+$/', @$id)) {
