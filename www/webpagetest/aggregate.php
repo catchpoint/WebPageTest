@@ -164,7 +164,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     }
                 }                
             }
-            echo "{$test['id']}\r\n";
+            echo "\"{$test['id']}\"\r\n";
         }
     }    
 }
