@@ -970,6 +970,7 @@ void CURLBlaster::ConfigurePagetest(void)
       RegSetValueEx(hKey, _T("bodies"), 0, REG_DWORD, (const LPBYTE)&info.bodies, sizeof(info.bodies));
       RegSetValueEx(hKey, _T("keepua"), 0, REG_DWORD, (const LPBYTE)&info.keepua, sizeof(info.keepua));
       RegSetValueEx(hKey, _T("minimumDuration"), 0, REG_DWORD, (const LPBYTE)&info.minimumDuration, sizeof(info.minimumDuration));
+      RegSetValueEx(hKey, _T("customRules"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.customRules, (info.customRules.GetLength() + 1) * sizeof(TCHAR));
 
 		  // Add the blockads bit.
 		  RegSetValueEx(hKey, _T("blockads"), 0, REG_DWORD, (const LPBYTE)&info.blockads, sizeof(info.blockads));

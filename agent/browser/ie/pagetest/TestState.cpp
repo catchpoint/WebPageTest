@@ -130,7 +130,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			{
 				CString szEventName = szUrl;				// default this to the url for right now
 
-				TCHAR buff[1024];
+				TCHAR buff[10000];
 				ULONG len = sizeof(buff) / sizeof(TCHAR);
 
 				if( key.QueryStringValue(_T("EventName"), buff, &len) == ERROR_SUCCESS )
@@ -305,7 +305,39 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 						key.DeleteValue(_T("ignoreSSL"));
 						key.DeleteValue(_T("Host"));
 					}
-						
+
+				  len = sizeof(buff) / sizeof(TCHAR);
+          customRules.RemoveAll();
+				  if( key.QueryStringValue(_T("customRules"), buff, &len) == ERROR_SUCCESS && len > 1 ) {
+            CString rules = buff;
+            int pos = 0;
+            CString rule = rules.Tokenize(_T("\n"), pos);
+            while (pos >= 0) {
+              rule = rule.Trim();
+              if (rule.GetLength()) {
+                int separator = rule.Find(_T('='));
+                if (separator > 0) {
+                  CString name = rule.Left(separator).Trim();
+                  rule = rule.Mid(separator + 1).Trim();
+                  int separator = rule.Find(_T('\t'));
+                  if (separator > 0) {
+                    CString mime = rule.Left(separator).Trim();
+                    rule = rule.Mid(separator + 1).Trim();
+                    if (name.GetLength() && mime.GetLength() && rule.GetLength()) {
+                      CCustomRule newrule;
+                      newrule.name = name;
+                      newrule.mime = mime;
+                      newrule.regex = rule;
+                      customRules.AddTail(newrule);
+                    }
+                  }
+                }
+              }
+              rule = rules.Tokenize(_T("\n"), pos);
+            }
+				  }
+				  key.DeleteValue(_T("Basic Auth"));
+
 					// make sure the event name has changed
 					// this is to prevent a page with navigate script on it 
 					// from adding test entries to the log file

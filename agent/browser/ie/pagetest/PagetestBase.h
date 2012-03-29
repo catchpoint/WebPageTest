@@ -122,6 +122,25 @@ public:
 	__int64		tm;
 };
 
+// custom scan rules
+class CCustomRule {
+public:
+	CCustomRule(void){}
+	CCustomRule(const CCustomRule& src){ *this = src; }
+	~CCustomRule(void){}
+	const CCustomRule& operator =(const CCustomRule& src) {
+		name = src.name;
+		mime = src.mime;
+		regex = src.regex;
+		return src;
+	}
+
+  CString name;
+  CString mime;
+  CString regex;
+};
+
+
 class CPagetestBase
 {
 public:
@@ -182,6 +201,7 @@ public:
 	HWND		        hBrowserWnd;
 	CString						userAgent;		// custom user agent string
 	CAtlArray<struct in_addr>	dnsServers;		// DNS servers to use for lookups (if overriding the default)
+  CAtlList<CCustomRule> customRules;
 
 	// timing support
 	__int64						freq;			// timer frequency

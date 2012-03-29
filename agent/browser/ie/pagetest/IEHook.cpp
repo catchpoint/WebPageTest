@@ -63,7 +63,7 @@ LRESULT WINAPI DispatchMessageW_hook(__in CONST MSG *lpMsg)
 -----------------------------------------------------------------------------*/
 STDMETHODIMP CIEHook::SetSite(IUnknown *pUnkSite)
 {
-//	MessageBox(NULL, _T("Attach Debugger"), _T("Pagetest"), MB_OK);
+	//MessageBox(NULL, _T("Attach Debugger"), _T("Pagetest"), MB_OK);
 
 	OutputDebugString(_T("[Pagetest] ***** CIEHook::SetSite\n"));
 

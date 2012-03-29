@@ -397,6 +397,7 @@ void CPagetestReporting::FlushResults(void)
 						  SaveStatusUpdates(logFile+step+_T("_status.txt"));
 
             SaveBodies(logFile+step+_T("_bodies.zip"));
+            SaveCustomMatches(logFile+step+_T("_custom_rules.json"));
 
             if( aft )
               msAFT = CalculateAFT();
@@ -1513,6 +1514,7 @@ void CPagetestReporting::CheckOptimization(void)
 		CheckMinify();
 		CheckCookie();
 		CheckEtags();
+    CheckCustomRules();
 
 		// Run all Page Speed checks.
 		// This is the entry point that invokes the Page Speed engine.
@@ -3662,4 +3664,115 @@ bool CPagetestReporting::ImagesAreDifferent(CxImage * img1, CxImage* img2)
   }
 
   return different;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::CheckCustomRules() {
+  if (!customRules.IsEmpty()) {
+	  ATLTRACE(_T("[Pagetest] - CheckCustomRules\n"));
+  	
+	  POSITION pos = events.GetHeadPosition();
+	  while( pos ) {
+		  CTrackedEvent * e = events.GetNext(pos);
+		  if (e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore) {
+			  CWinInetRequest * w = (CWinInetRequest *)e;
+			  if (w->fromNet && w->body && w->bodyLen) {
+          POSITION rule_pos = customRules.GetHeadPosition();
+          while (rule_pos) {
+            CCustomRule rule = customRules.GetNext(rule_pos);
+            
+            // see if the mime type matches
+			      std::string mime = CT2A(w->response.contentType);
+            std::tr1::regex mime_regex(CT2A(rule.mime), std::tr1::regex_constants::icase | std::tr1::regex_constants::ECMAScript);
+            if (regex_search(mime.begin(), mime.end(), mime_regex)) {
+              CCustomMatch match;
+              match.name = rule.name;
+              ATLTRACE(_T("Looking for '%s'"), rule.regex);
+			        std::string body = (const char *)w->body;
+              std::tr1::regex match_regex(CT2A(rule.regex), std::tr1::regex_constants::icase | std::tr1::regex_constants::ECMAScript);
+              const std::tr1::sregex_token_iterator end;
+              std::tr1::sregex_token_iterator i(body.begin(), body.end(), match_regex);
+              while (i != end) {
+                match.count++;
+                if (match.value.IsEmpty()) {
+                  std::string match_string = *i;
+                  match.value = CA2T(match_string.c_str());
+                }
+                i++;
+              }
+
+              ATLTRACE(_T("%d matches, 1st match: '%s'"), match.count, (LPCTSTR)match.value);
+              w->customMatches.AddTail(match);
+            }
+          }
+			  }
+		  }
+	  }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveCustomMatches(CString file) {
+  if (!customRules.IsEmpty()) {
+	  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+	  if( hFile != INVALID_HANDLE_VALUE ) {
+      CStringA buff;
+      DWORD bytes;
+      WriteFile(hFile, "{", 1, &bytes, 0);
+	    DWORD count = 0;
+	    POSITION pos = events.GetHeadPosition();
+	    while(pos) {
+		    CTrackedEvent * event = events.GetNext(pos);
+		    if (event && event->type == CTrackedEvent::etWinInetRequest) {
+			    CWinInetRequest * w = (CWinInetRequest *)event;
+          if (w->valid && w->fromNet) {
+				    count++;
+            if (!w->customMatches.IsEmpty()) {
+              if (count > 1) {
+                WriteFile(hFile, ",", 1, &bytes, 0);
+              }
+              buff.Format("\"%d\"", count);
+              WriteFile(hFile, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+              WriteFile(hFile, ":[", 2, &bytes, 0);
+              POSITION match_pos = w->customMatches.GetHeadPosition();
+              DWORD match_count = 0;
+              while (match_pos) {
+                match_count++;
+                CCustomMatch match = w->customMatches.GetNext(match_pos);
+				        CT2A name((LPCTSTR)match.name, CP_UTF8);
+				        CT2A value((LPCTSTR)match.value, CP_UTF8);
+                CStringA entry = "";
+                if (match_count > 1)
+                  entry += ",";
+                entry += CStringA("{\"name\":\"") + JSONEscape((LPCSTR)name) + "\",";
+                entry += CStringA("\"value\":\"") + JSONEscape((LPCSTR)value) + "\",";
+                buff.Format("%d", match.count);
+                entry += CStringA("\"count\":") + buff + "}";
+                WriteFile(hFile, (LPCSTR)entry, entry.GetLength(), &bytes, 0);
+              }
+              WriteFile(hFile, "]", 1, &bytes, 0);
+            }
+          }
+		    }
+	    }
+      WriteFile(hFile, "}", 1, &bytes, 0);
+      CloseHandle(hFile);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA CPagetestReporting::JSONEscape(CStringA src) {
+  src.Replace("\\", "\\\\");
+  src.Replace("\"", "\\\"");
+  src.Replace("/", "\\/");
+  src.Replace("\b", "\\b");
+  src.Replace("\r", "\\r");
+  src.Replace("\n", "\\n");
+  src.Replace("\t", "\\t");
+  src.Replace("\f", "\\f");
+  return src;
 }

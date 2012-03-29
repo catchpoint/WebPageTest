@@ -96,6 +96,9 @@
             $test['benchmark'] = $req_benchmark;
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
+            if (is_file('./settings/customrules.txt')) {
+                $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            }
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -1594,7 +1597,17 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if( $test['clear_rv'] )
             $testFile .= "clearRV={$test['clear_rv']}\r\n";
         if( $test['keepua'] )
-            $testFile .= "\r\nkeepua=1";
+            $testFile .= "keepua=1\r\n";
+        
+        // see if we need to add custom scan rules
+        if (array_key_exists('custom_rules', $test)) {
+            foreach($test['custom_rules'] as &$rule) {
+                $rule = trim($rule);
+                if (strlen($rule)) {
+                    $testFile .= "customRule=$rule\r\n";
+                }
+            }
+        }
 
         // see if we need to generate a SNS authentication script
         if( strlen($test['login']) && strlen($test['password']) )

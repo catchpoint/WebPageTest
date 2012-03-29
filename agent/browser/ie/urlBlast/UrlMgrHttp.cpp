@@ -317,6 +317,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.clearShortTermCacheSecs = _ttol(value);
 							else if( !key.CompareNoCase(_T("keepua")) )
                 info.keepua = _ttol(value);
+              else if( !key.CompareNoCase(_T("customRule")) ) {
+                if (!info.customRules.IsEmpty())
+                  info.customRules += _T("\n");
+                info.customRules += value;
+              }
 						}
 					}
 

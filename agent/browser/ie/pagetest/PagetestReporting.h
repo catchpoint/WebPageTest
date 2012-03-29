@@ -182,6 +182,7 @@ protected:
 	void CheckEtags();
 	void CheckPageSpeed();
 	void ProtectedCheckPageSpeed();
+  void CheckCustomRules();
 	virtual void LogError(bool scriptError = false);
 	void SaveHTML(void);
 	void SaveCookies(void);
@@ -204,10 +205,12 @@ private:
 	void SaveProgressImage(CxImage &img, CString file, bool resize, DWORD quality);
 	void SaveStatusUpdates(CString file);
   void SaveBodies(CString file);
+  void SaveCustomMatches(CString file);
 	void SortEvents();
   DWORD CalculateAFT();
   void SaveVideo();
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   void SaveHistogram(CxImage& image, CString file);
+  CStringA JSONEscape(CStringA src);
 };
 

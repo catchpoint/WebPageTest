@@ -32,6 +32,26 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "HttpHeader.h"
 
 /*-----------------------------------------------------------------------------
+  Custom Regex matches
+-----------------------------------------------------------------------------*/
+class CCustomMatch {
+public:
+	CCustomMatch(void):count(0){}
+	CCustomMatch(const CCustomMatch& src){ *this = src; }
+	~CCustomMatch(void){}
+	const CCustomMatch& operator =(const CCustomMatch& src) {
+		name = src.name;
+		value = src.value;
+		count = src.count;
+		return src;
+	}
+
+  CString name;
+  CString value;
+  int count;
+};
+
+/*-----------------------------------------------------------------------------
 	base class for the list of events we are tracking 
 	(will be tracked by the sequence they happen in)
 -----------------------------------------------------------------------------*/
@@ -270,6 +290,9 @@ public:
 	bool			valid;			// is it a real request?
 	bool			basePage;		// is this the base page?
 	bool			fromNet;		// Was it a network request?
+
+  // custom checks
+  CAtlList<CCustomMatch>  customMatches;
 
 	// optimization checks
 	bool				warning;
