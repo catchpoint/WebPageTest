@@ -24,10 +24,9 @@ if (array_key_exists('pcap', $_REQUEST))
 
 // When we upgrade the pcap to har converter, we need to test
 // each agent.  Agents can opt in to testing the latest
-// version by setting this POST param.
-$useLatestPCap2Har = false;
-if (array_key_exists('useLatestPCap2Har', $_REQUEST))
-    $useLatestPCap2Har = $_REQUEST['useLatestPCap2Har'];
+// version by setting this POST param to '1'.
+$useLatestPCap2Har =
+   arrayLookupWithDefault('useLatestPCap2Har', $_REQUEST, false);
 
 // Android client sends the run-state in post params.
 if (array_key_exists('_runNumber', $_REQUEST))
@@ -74,7 +73,7 @@ else
     
     $settings = parse_ini_file('./settings/settings.ini');
 
-    $locKey = $locations[$location]['key'];
+    $locKey = arrayLookupWithDefault('key', $locations[$location], "");
 
     logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
 
@@ -510,6 +509,7 @@ function ProcessPCAP($testPath, $pcapFile)
 {
     global $runNumber;
     global $cacheWarmed;
+    global $useLatestPCap2Har;
 
     $pcapFilePath = "$testPath/$pcapFile";
     $harFilePath = $pcapFilePath . ".har";
@@ -798,7 +798,9 @@ function ProcessHARText($testPath)
             $respEnt = $entry['response'];
             $cacheEnt = $entry['cache'];
             $timingsEnt = $entry['timings'];
-            $reqIpAddr = $entry['serverIPAddress'];
+
+            // pcap2har doesn't set the server's IP address, so it may be unset:
+            $reqIpAddr = arrayLookupWithDefault('serverIPAddress', $entry, null);
 
             // The following HAR fields are in the HAR spec, but we do not
             // use them:

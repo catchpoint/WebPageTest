@@ -1666,4 +1666,12 @@ function ValidateTestId(&$id) {
     }
     return $valid;
 }
+
+function arrayLookupWithDefault($key, $searchArray, $default) {
+  if (!is_array($searchArray) || !array_key_exists($key, $searchArray))
+    return $default;
+
+  return $searchArray[$key];
+}
+
 ?>
