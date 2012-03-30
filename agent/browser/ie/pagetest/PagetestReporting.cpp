@@ -3735,7 +3735,7 @@ void CPagetestReporting::SaveCustomMatches(CString file) {
               }
               buff.Format("\"%d\"", count);
               WriteFile(hFile, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-              WriteFile(hFile, ":[", 2, &bytes, 0);
+              WriteFile(hFile, ":{", 2, &bytes, 0);
               POSITION match_pos = w->customMatches.GetHeadPosition();
               DWORD match_count = 0;
               while (match_pos) {
@@ -3746,13 +3746,13 @@ void CPagetestReporting::SaveCustomMatches(CString file) {
                 CStringA entry = "";
                 if (match_count > 1)
                   entry += ",";
-                entry += CStringA("{\"name\":\"") + JSONEscape((LPCSTR)name) + "\",";
+                entry += CStringA("\"") + JSONEscape((LPCSTR)name) + "\":{";
                 entry += CStringA("\"value\":\"") + JSONEscape((LPCSTR)value) + "\",";
                 buff.Format("%d", match.count);
                 entry += CStringA("\"count\":") + buff + "}";
                 WriteFile(hFile, (LPCSTR)entry, entry.GetLength(), &bytes, 0);
               }
-              WriteFile(hFile, "]", 1, &bytes, 0);
+              WriteFile(hFile, "}", 1, &bytes, 0);
             }
           }
 		    }

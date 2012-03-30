@@ -97,6 +97,9 @@ function BuildResult(&$pageData)
     $result['log']['pages'] = array();
     foreach ($pageData as $run => $pageRun) {
         foreach ($pageRun as $cached => $data) {
+            $cached_text = '';
+            if ($cached)
+                $cached_text = '_Cached';
             if (!array_key_exists('browser', $result['log'])) {
                 $result['log']['browser'] = array(
                     'name' => $data['browser_name'],
@@ -114,11 +117,13 @@ function BuildResult(&$pageData)
             $pd['id'] = "page_{$run}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1 );
             
+            $custom_rules = array();
+            if (gz_is_file("$testPath/{$run}{$cached_text}_custom_rules.json")) {
+                $custom_rules = json_decode(gz_file_get_contents("$testPath/{$run}{$cached_text}_custom_rules.json"), true);
+            }
+            
             // add the pagespeed score
-            if( $cached )
-                $score = GetPageSpeedScore("$testPath/{$run}_Cached_pagespeed.txt");
-            else
-                $score = GetPageSpeedScore("$testPath/{$run}_pagespeed.txt");
+            $score = GetPageSpeedScore("$testPath/{$run}{$cached_text}_pagespeed.txt");
             if( strlen($score) )
                 $pd['_pageSpeed'] = array( 'score' => $score );
             
@@ -267,6 +272,11 @@ function BuildResult(&$pageData)
                 $entry['time'] = (int)(
                     $r['dns_ms'] + $r['connect_ms'] + $r['ssl_ms'] +
                     $r['ttfb_ms'] + $timings['receive']);
+                
+                if (array_key_exists($r['number'], $custom_rules)) {
+                    $entry['_custom_rules'] = $custom_rules[$r['number']];
+                }
+                
                 // add it to the list of entries
                 $entries[] = $entry;
             }
