@@ -1,0 +1,339 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		8BF157070E5BAC8600D28B05 /* RunAllUnitTests */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 8BF157100E5BACBF00D28B05 /* Build configuration list for PBXAggregateTarget "RunAllUnitTests" */;
+			buildPhases = (
+				8BF157060E5BAC8600D28B05 /* ShellScript */,
+			);
+			dependencies = (
+				8BF1570B0E5BAC8C00D28B05 /* PBXTargetDependency */,
+			);
+			name = RunAllUnitTests;
+			productName = RunAllUnitTests;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		2C05A19C06CAA52B00D84F6F /* GetMetadataForFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 2C05A19B06CAA52B00D84F6F /* GetMetadataForFile.m */; };
+		8B1D48820E59F52A000EB8CA /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8B1D48810E59F52A000EB8CA /* main.c */; };
+		8B58F8700E5726D000A0E02E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B58F86F0E5726D000A0E02E /* Foundation.framework */; };
+		8BF155160E5B442A00D28B05 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BF155150E5B442A00D28B05 /* ApplicationServices.framework */; };
+		8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8D5B49A704867FD3000E48DA /* InfoPlist.strings */; };
+		F464A82B0E5DC72D006B02E8 /* schema.xml in Resources */ = {isa = PBXBuildFile; fileRef = F464A82A0E5DC72D006B02E8 /* schema.xml */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8BF1570A0E5BAC8C00D28B05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D57630D048677EA00EA77CD;
+			remoteInfo = XcodeProjectSpotlightPlugin;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		2C05A19B06CAA52B00D84F6F /* GetMetadataForFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GetMetadataForFile.m; sourceTree = "<group>"; };
+		8B1D48810E59F52A000EB8CA /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		8B1D48840E59F591000EB8CA /* PluginID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PluginID.h; sourceTree = "<group>"; };
+		8B58F75A0E56502600A0E02E /* ReadMe.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = ReadMe.rtf; sourceTree = "<group>"; };
+		8B58F86F0E5726D000A0E02E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		8B58F9110E579A1300A0E02E /* LoadableBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = LoadableBundle.xcconfig; sourceTree = "<group>"; };
+		8B58F9280E579A1300A0E02E /* DebugTigerOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = DebugTigerOrLater.xcconfig; sourceTree = "<group>"; };
+		8B58F92B0E579A1300A0E02E /* ReleaseTigerOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = ReleaseTigerOrLater.xcconfig; sourceTree = "<group>"; };
+		8BF155150E5B442A00D28B05 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
+		8D576316048677EA00EA77CD /* XcodeProject.mdimporter */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XcodeProject.mdimporter; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D576317048677EA00EA77CD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F464A82A0E5DC72D006B02E8 /* schema.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = schema.xml; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D576313048677EA00EA77CD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8B58F8700E5726D000A0E02E /* Foundation.framework in Frameworks */,
+				8BF155160E5B442A00D28B05 /* ApplicationServices.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		089C166AFE841209C02AAC07 /* XcodeProjectSpotlightPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				8B58F75A0E56502600A0E02E /* ReadMe.rtf */,
+				8B58F84D0E5697B500A0E02E /* XcodeConfig */,
+				8B1D48800E59F52A000EB8CA /* Common */,
+				08FB77AFFE84173DC02AAC07 /* Source */,
+				089C167CFE841241C02AAC07 /* Resources */,
+				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
+				19C28FB6FE9D52B211CA2CBB /* Products */,
+			);
+			comments = "//  Copyright 2008 Google Inc.\n//\n//  Licensed under the Apache License, Version 2.0 (the \"License\"); you may not\n//  use this file except in compliance with the License.  You may obtain a copy\n//  of the License at\n// \n//  http://www.apache.org/licenses/LICENSE-2.0\n// \n//  Unless required by applicable law or agreed to in writing, software\n//  distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT\n//  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the\n//  License for the specific language governing permissions and limitations under\n//  the License.";
+			name = XcodeProjectSpotlightPlugin;
+			sourceTree = "<group>";
+		};
+		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				8BF155150E5B442A00D28B05 /* ApplicationServices.framework */,
+				8B58F86F0E5726D000A0E02E /* Foundation.framework */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C167CFE841241C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F464A82A0E5DC72D006B02E8 /* schema.xml */,
+				8D576317048677EA00EA77CD /* Info.plist */,
+				8D5B49A704867FD3000E48DA /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77AFFE84173DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				2C05A19B06CAA52B00D84F6F /* GetMetadataForFile.m */,
+				8B1D48840E59F591000EB8CA /* PluginID.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		19C28FB6FE9D52B211CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D576316048677EA00EA77CD /* XcodeProject.mdimporter */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8B1D48800E59F52A000EB8CA /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				8B1D48810E59F52A000EB8CA /* main.c */,
+			);
+			name = Common;
+			path = ../Common;
+			sourceTree = SOURCE_ROOT;
+		};
+		8B58F84D0E5697B500A0E02E /* XcodeConfig */ = {
+			isa = PBXGroup;
+			children = (
+				8B58F90F0E579A1300A0E02E /* Target */,
+				8B58F9250E579A1300A0E02E /* Project */,
+			);
+			name = XcodeConfig;
+			path = ../../XcodeConfig;
+			sourceTree = SOURCE_ROOT;
+		};
+		8B58F90F0E579A1300A0E02E /* Target */ = {
+			isa = PBXGroup;
+			children = (
+				8B58F9110E579A1300A0E02E /* LoadableBundle.xcconfig */,
+			);
+			path = Target;
+			sourceTree = "<group>";
+		};
+		8B58F9250E579A1300A0E02E /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				8B58F9280E579A1300A0E02E /* DebugTigerOrLater.xcconfig */,
+				8B58F92B0E579A1300A0E02E /* ReleaseTigerOrLater.xcconfig */,
+			);
+			path = Project;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8D57630D048677EA00EA77CD /* XcodeProjectSpotlightPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 70138C840896BE9A00968C2F /* Build configuration list for PBXNativeTarget "XcodeProjectSpotlightPlugin" */;
+			buildPhases = (
+				8D57630F048677EA00EA77CD /* Resources */,
+				8D576311048677EA00EA77CD /* Sources */,
+				8D576313048677EA00EA77CD /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = XcodeProjectSpotlightPlugin;
+			productInstallPath = /Library/Spotlight;
+			productName = XcodeProjectSpotlightPlugin;
+			productReference = 8D576316048677EA00EA77CD /* XcodeProject.mdimporter */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		089C1669FE841209C02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 70138C880896BE9A00968C2F /* Build configuration list for PBXProject "XcodeProject" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 089C166AFE841209C02AAC07 /* XcodeProjectSpotlightPlugin */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8BF157070E5BAC8600D28B05 /* RunAllUnitTests */,
+				8D57630D048677EA00EA77CD /* XcodeProjectSpotlightPlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D57630F048677EA00EA77CD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D5B49A804867FD3000E48DA /* InfoPlist.strings in Resources */,
+				F464A82B0E5DC72D006B02E8 /* schema.xml in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8BF157060E5BAC8600D28B05 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /usr/bin/python;
+			shellScript = "# test of xcodeproj importer\n\nimport os\nimport subprocess\n\ncmd = \"/usr/bin/mdimport -d 2 -g \" + os.environ[\"BUILT_PRODUCTS_DIR\"] + \"/XcodeProject.mdimporter \" + os.environ[\"SOURCE_ROOT\"] + \"/TestData/test.xcodeproj\"\nimporter_out = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE).stderr.read()\n\nif importer_out.find(\"kMDItemDescription = \\\"test_Prefix.pch\\\\nFoundation.framework\\\\nmain.m\\\\nInfo.plist\\\\nCoreData.framework\\\\nCocoa.framework\\\\ntest\\\\nAppKit.framework\\\\nMainMenu.xib\\\\nInfoPlist.strings\\\\ntest.app\\\";\") == -1:\n\tprint \"error: Bad Description for test.xcodeproj\"\n\texit(1)\nif importer_out.find(\"kMDItemComment = \\\"test comment\\\";\") == -1:\n\tprint \"error: Bad comment for test. xcodeproj\"\n\texit(1)";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D576311048677EA00EA77CD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C05A19C06CAA52B00D84F6F /* GetMetadataForFile.m in Sources */,
+				8B1D48820E59F52A000EB8CA /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8BF1570B0E5BAC8C00D28B05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D57630D048677EA00EA77CD /* XcodeProjectSpotlightPlugin */;
+			targetProxy = 8BF1570A0E5BAC8C00D28B05 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		8D5B49A704867FD3000E48DA /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C167EFE841241C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		70138C850896BE9A00968C2F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B58F9110E579A1300A0E02E /* LoadableBundle.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = XcodeProject;
+				WRAPPER_EXTENSION = mdimporter;
+			};
+			name = Debug;
+		};
+		70138C860896BE9A00968C2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B58F9110E579A1300A0E02E /* LoadableBundle.xcconfig */;
+			buildSettings = {
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = XcodeProject;
+				WRAPPER_EXTENSION = mdimporter;
+			};
+			name = Release;
+		};
+		70138C890896BE9A00968C2F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B58F9280E579A1300A0E02E /* DebugTigerOrLater.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		70138C8A0896BE9A00968C2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8B58F92B0E579A1300A0E02E /* ReleaseTigerOrLater.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		8BF157080E5BAC8600D28B05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = RunAllUnitTests;
+			};
+			name = Debug;
+		};
+		8BF157090E5BAC8600D28B05 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = RunAllUnitTests;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		70138C840896BE9A00968C2F /* Build configuration list for PBXNativeTarget "XcodeProjectSpotlightPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				70138C850896BE9A00968C2F /* Debug */,
+				70138C860896BE9A00968C2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		70138C880896BE9A00968C2F /* Build configuration list for PBXProject "XcodeProject" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				70138C890896BE9A00968C2F /* Debug */,
+				70138C8A0896BE9A00968C2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8BF157100E5BACBF00D28B05 /* Build configuration list for PBXAggregateTarget "RunAllUnitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BF157080E5BAC8600D28B05 /* Debug */,
+				8BF157090E5BAC8600D28B05 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 089C1669FE841209C02AAC07 /* Project object */;
+}
