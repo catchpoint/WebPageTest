@@ -595,13 +595,14 @@ void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
             POSITION pos = hostOverride.GetHeadPosition();
             while(pos) {
               CHostOverride hostPair = hostOverride.GetNext(pos);
-              if( !value.CompareNoCase(CT2A(hostPair.originalHost)) ) {
+              if( !value.CompareNoCase(CT2A(hostPair.originalHost)) || !hostPair.originalHost.Compare(_T("*")) ) {
                 line = CStringA("Host: ") + CStringA(CT2A(hostPair.newHost));
                 if (!xhost_exists) {
                   line += CStringA("\r\nx-Host: ") + value;
                   xhost_exists = true;
                 }
                 modified = true;
+                break;
               } 
             }
           } else if (!token.CompareNoCase("x-Host")) {

@@ -683,7 +683,7 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
       while( pos && addHost.IsEmpty() )
       {
         CHostOverride target = overrideHostUrls.GetNext(pos);
-        if( !target.originalHost.CompareNoCase(host) )
+        if( !target.originalHost.CompareNoCase(host) || !target.originalHost.Compare(_T("*")) )
         {
           addHost = host;
           host = target.newHost;
@@ -955,7 +955,7 @@ void CWinInetEvents::BeforeInternetConnect(HINTERNET hInternet, CString &server)
   while( pos )
   {
     CHostOverride target = overrideHostUrls.GetNext(pos);
-    if( !target.originalHost.CompareNoCase(server) )
+    if( !target.originalHost.CompareNoCase(server) || !target.originalHost.Compare(_T("*")) )
       server = target.newHost;
   }
 }
@@ -1194,13 +1194,14 @@ void CWinInetEvents::OverrideHost(CWinInetRequest * r)
     while(pos)
     {
       CHostOverride hostPair = hostOverride.GetNext(pos);
-      if( !r->host.CompareNoCase(hostPair.originalHost) )
+      if( !r->host.CompareNoCase(hostPair.originalHost) || !hostPair.originalHost.Compare(_T("*")) )
       {
         ATLTRACE(_T("[Pagetest] - Overriding host %s to %s\n"), (LPCTSTR)r->host, (LPCTSTR)hostPair.newHost);
         CString header = CString("Host: ") + hostPair.newHost + _T("\r\n");
         HttpAddRequestHeaders( r->hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
         header = CString("x-Host: ") + r->host + _T("\r\n");
         HttpAddRequestHeaders( r->hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );
+        break;
       }
     }
   }
