@@ -26,3 +26,5 @@ www/webpagetest/logs/*.log
 www/webpagetest/work/jobs
 www/webpagetest/work/video
 www/webpagetest/nbproject
+.DS_store
+
