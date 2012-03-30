@@ -667,7 +667,7 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
     if ($debug || $force) {
         $file = fopen($logFile, 'a');
         if ($file) {
-            fwrite($file, date('Y/m/d H:i:s - ') . $msg . "\n");
+            fwrite($file, gmdate('Y/m/d H:i:s - ') . $msg . "\n");
             fclose($file);
         }
     }

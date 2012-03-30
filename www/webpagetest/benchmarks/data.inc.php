@@ -98,7 +98,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
         $tsv .= "\n";
         $dates = array();
         foreach ($data as $time => &$row) {
-            $date_text = date('c', $time);
+            $date_text = gmdate('c', $time);
             $tsv .= $date_text;
             $dates[$date_text] = $time;
             foreach($configurations as &$configuration) {
@@ -124,7 +124,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date);
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, DateTimeZone::UTC);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
@@ -393,7 +393,7 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
     $data = array();
     $meta = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
-        $date = date('Ymd_Hi', $test);
+        $date = gmdate('Ymd_Hi', $test);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
         if (gz_is_file($data_file)) {
             if (!isset($raw_data)) {
@@ -508,7 +508,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
         $tsv .= "\n";
         $dates = array();
         foreach ($data as $time => &$row) {
-            $date_text = date('c', $time);
+            $date_text = gmdate('c', $time);
             $tsv .= $date_text;
             $dates[$date_text] = $time;
             $column=0;
@@ -542,7 +542,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date);
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, DateTimeZone::UTC);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
@@ -582,7 +582,7 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
             $files = scandir("./results/benchmarks/$benchmark/data");
             foreach( $files as $file ) {
                 if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
                     $time = $date->getTimestamp();
                     $tests = array();
                     $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);

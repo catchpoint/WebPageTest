@@ -15,7 +15,7 @@ foreach( $regions as $region => &$amiData ) {
 
 // we only terminate instances at the top of the hour, but we can add instances at other times
 $addOnly = true;
-$minute = (int)date('i');
+$minute = (int)gmdate('i');
 if( $minute < 5 || $minute > 55 )
     $addOnly = false;
 

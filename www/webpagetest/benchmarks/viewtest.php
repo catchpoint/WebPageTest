@@ -16,7 +16,7 @@ else {
         $files = scandir("./results/benchmarks/$benchmark/data");
         foreach( $files as $file ) {
             if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
                 $time = $date->getTimestamp();
                 if ($time > $test_time)
                     $test_time = $time;

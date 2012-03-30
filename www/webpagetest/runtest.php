@@ -665,7 +665,7 @@ function ValidateKey(&$test, &$error, $key = null)
           {
             if( flock($lock, LOCK_EX) )
             {
-                $keyfile = './dat/keys_' . date('Ymd') . '.dat';
+                $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
                 $usage = null;
                 if( is_file($keyfile) )
                   $usage = json_decode(file_get_contents($keyfile), true);

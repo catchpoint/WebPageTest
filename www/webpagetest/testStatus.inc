@@ -88,7 +88,7 @@ function GetTestStatus($id, $includePosition = true)
                                     $testInfoJson['completed'] = $now;
                                     gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
                                     $test = file_get_contents("$testPath/testinfo.ini");
-                                    $date = date("m/d/y G:i:s", $now);
+                                    $date = gmdate("m/d/y G:i:s", $now);
 
                                     // update the completion time if it isn't already set
                                     if( !strpos($test, 'completeTime') )

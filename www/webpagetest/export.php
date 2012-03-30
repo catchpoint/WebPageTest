@@ -70,7 +70,7 @@ function msdate($mstimestamp)
     $timestamp = floor($mstimestamp);
     $milliseconds = round(($mstimestamp - $timestamp) * 1000);
     
-    $date = date('c', $timestamp);
+    $date = gmdate('c', $timestamp);
     $msDate = substr($date, 0, 19) . '.' . sprintf('%03d', $milliseconds) . substr($date, 19);
 
     return $msDate;

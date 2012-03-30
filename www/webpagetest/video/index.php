@@ -97,7 +97,7 @@ $page_description = "Visually compare the performance of multiple websites with 
                                             /*
                                             if( $date )
                                             {
-                                                $date = date('m/d/y', strtotime($date));
+                                                $date = gmdate('m/d/y', strtotime($date));
                                                 echo " ($date)";
                                             }
                                             */

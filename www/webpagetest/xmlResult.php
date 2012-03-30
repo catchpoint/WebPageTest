@@ -70,7 +70,7 @@ else
             if( @strlen($test['testinfo']['label']) )
                 echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";
             if( @strlen($test['testinfo']['completed']) )
-                echo "<completed>" . date("r",$test['testinfo']['completed']) . "</completed>\n";
+                echo "<completed>" . gmdate("r",$test['testinfo']['completed']) . "</completed>\n";
         }
         $runs = max(array_keys($pageData));
         echo "<runs>$runs</runs>\n";

@@ -75,7 +75,7 @@ $loc = ParseLocations($locations);
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
               $hashStr .= $owner;
               
-              $now = date('c');
+              $now = gmdate('c');
               echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
               $hashStr .= $now;
               

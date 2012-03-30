@@ -1,5 +1,16 @@
 <?php
 chdir('..');
+
+// bail if we are already running
+$lock = fopen('./tmp/archive.lock', 'w');
+if ($lock) {
+    if (flock($lock, LOCK_EX | LOCK_NB) == false) {
+        fclose($lock);
+        echo "Archive process is already running\n";
+        exit(0);
+    }
+}
+
 include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
@@ -42,8 +53,12 @@ foreach( $years as $year ) {
 echo "\nDone\n\n";
 
 if( $log ) {
-    fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . date('r') . "\n");;
+    fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . gmdate('r') . "\n");;
     fclose($log);
+}
+
+if ($lock) {
+    fclose($lock);
 }
 
 /**
@@ -103,10 +118,10 @@ function CheckTest($testPath, $id) {
         $archiveCount++;
         $logLine .= "Archived";
 
-        // Delete tests after 3 days of no access
+        // Delete tests after 2 days of no access
         $delete = false;
         $elapsed = TestLastAccessed($id);
-        if( $elapsed > 3 )
+        if( $elapsed >= 2 )
             $delete = true;
 
         if( $delete ) {

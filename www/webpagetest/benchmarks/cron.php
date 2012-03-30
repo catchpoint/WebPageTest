@@ -63,7 +63,7 @@ function ProcessBenchmark($benchmark) {
                 $last_run = 0;
                 foreach( $files as $file ) {
                     if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                        $date = DateTime::createFromFormat('Ymd_Hi', $matches[1]);
+                        $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
                         $time = $date->getTimestamp();
                         $state['runs'][] = $time;
                         if ($time > $last_run)
@@ -219,7 +219,7 @@ function CollectResults($benchmark, &$state) {
             logMsg("Collected data for " . count($data) . " individual runs", './benchmark.log', true);
             if (!is_dir("./results/benchmarks/$benchmark/data"))
                 mkdir("./results/benchmarks/$benchmark/data", 0777, true);
-            $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $start_time) . '.json';
+            $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
             gz_file_put_contents($file_name, json_encode($data));
             $state['runs'][] = $start_time;
         } else {
@@ -381,7 +381,7 @@ function AggregateResults($benchmark, &$state, $options) {
     // loop through all of the runs and see which ones we don't have aggregates for
     foreach ($state['runs'] as $run_time) {
         if (!array_key_exists($run_time, $info['runs'])) {
-            $file_name = "./results/benchmarks/$benchmark/data/" . date('Ymd_Hi', $run_time) . '.json';
+            $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $run_time) . '.json';
             if (gz_is_file($file_name)) {
                 $data = json_decode(gz_file_get_contents($file_name), true);
                 FilterRawData($data, $options);

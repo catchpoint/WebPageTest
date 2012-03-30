@@ -54,7 +54,7 @@ else
 
         if( $img )
         {
-            header('Last-Modified: ' . date('r'));
+            header('Last-Modified: ' . gmdate('r'));
             header('Expires: '.gmdate('r', time() + 31536000));
             GenerateThumbnail($img, $type);
             SendImage($img, $type);

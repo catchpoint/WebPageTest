@@ -225,7 +225,7 @@ function GetJob() {
                         // flag the test with the start time
                         $ini = file_get_contents("$testPath/testinfo.ini");
                         $time = time();
-                        $start = "[test]\r\nstartTime=" . date("m/d/y G:i:s", $time);
+                        $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
                         $out = str_replace('[test]', $start, $ini);
                         file_put_contents("$testPath/testinfo.ini", $out);
                         
@@ -453,7 +453,7 @@ function CheckCron() {
                     // if it has been over 20 minutes, run regardless of the wall-clock time
                     $should_run = true;
                 } else {
-                    $minute = date('i', $now) % 15;
+                    $minute = gmdate('i', $now) % 15;
                     if ($minute < 5)
                         $should_run = true;
                 }

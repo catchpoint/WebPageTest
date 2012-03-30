@@ -8,7 +8,7 @@ $embed = false;
 if( $_REQUEST['embed'] )
 {
     $embed = true;
-    header('Last-Modified: ' . date('r'));
+    header('Last-Modified: ' . gmdate('r'));
     header('Expires: '.gmdate('r', time() + 31536000));
 }
 $bgcolor = "black";
@@ -45,9 +45,9 @@ if( is_dir("./$dir") )
     }
     
     // get the video time
-    $date = date("M j, Y", filemtime("./$dir"));
+    $date = gmdate("M j, Y", filemtime("./$dir"));
     if( is_file("./$dir/video.mp4")  )
-        $date = date("M j, Y", filemtime("./$dir/video.mp4"));
+        $date = gmdate("M j, Y", filemtime("./$dir/video.mp4"));
     $title .= " - $date";
 
     $labels = json_decode(file_get_contents("./$dir/labels.txt"), true);

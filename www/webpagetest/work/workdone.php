@@ -61,7 +61,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         } else {
             $ini = '';
         }
-        $ini .= 'completed=' . date('c') . "\r\n";
+        $ini .= 'completed=' . gmdate('c') . "\r\n";
         file_put_contents($iniFile, $ini);
     }
 }
@@ -197,7 +197,7 @@ else
             }
 
             $test = file_get_contents("$testPath/testinfo.ini");
-            $now = date("m/d/y G:i:s", $time);
+            $now = gmdate("m/d/y G:i:s", $time);
 
             // update the completion time if it isn't already set
             if( !strpos($test, 'completeTime') )
@@ -261,7 +261,7 @@ else
             if (isset($testInfo) && array_key_exists('slow_test_time', $settings) && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
                 $elapsed = $time - $testInfo['started'];
                 if ($elapsed > $settings['slow_test_time']) {
-                    $log_entry = date("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
+                    $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
                     $log_file = fopen('./tmp/slow_tests.log', 'a+');
                     if ($log_file) {
                         if (flock($log_file, LOCK_EX)) {
