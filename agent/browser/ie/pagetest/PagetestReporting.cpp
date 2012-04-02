@@ -3722,6 +3722,7 @@ void CPagetestReporting::SaveCustomMatches(CString file) {
       DWORD bytes;
       WriteFile(hFile, "{", 1, &bytes, 0);
 	    DWORD count = 0;
+      bool firstMatch = true;
 	    POSITION pos = events.GetHeadPosition();
 	    while(pos) {
 		    CTrackedEvent * event = events.GetNext(pos);
@@ -3730,7 +3731,9 @@ void CPagetestReporting::SaveCustomMatches(CString file) {
           if (w->valid && w->fromNet) {
 				    count++;
             if (!w->customMatches.IsEmpty()) {
-              if (count > 1) {
+              if (firstMatch) {
+                firstMatch = false;
+              } else {
                 WriteFile(hFile, ",", 1, &bytes, 0);
               }
               buff.Format("\"%d\"", count);
