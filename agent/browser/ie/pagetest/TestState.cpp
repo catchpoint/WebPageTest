@@ -307,7 +307,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					}
 
 				  len = sizeof(buff) / sizeof(TCHAR);
-          customRules.RemoveAll();
 				  if( key.QueryStringValue(_T("customRules"), buff, &len) == ERROR_SUCCESS && len > 1 ) {
             CString rules = buff;
             int pos = 0;
