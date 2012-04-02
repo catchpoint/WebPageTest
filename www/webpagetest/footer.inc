@@ -115,7 +115,10 @@
 
                 $remaining--;
                 $style = "background-image: url({$sponsor['logo']}); background-position: 0px {$sponsor['offset']}px;";
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"{$sponsor['alt']}\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
+                $title = '';
+                if (array_key_exists('title', $sponsor))
+                    $title = $sponsor['title'];
+                echo "<td ><a href=\"{$sponsor['href']}\" title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
                 if( $remaining && $remaining < $rowCount - $i - 1 )
                     echo '<td></td>';
             }

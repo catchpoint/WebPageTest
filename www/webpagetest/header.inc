@@ -45,7 +45,7 @@
             
             if( isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
                 include("./custom/$testLoc/headerAd.inc");
-            elseif( is_file('./ads/header.inc') && $_SERVER['HTTP_SSL'] != 'On' )
+            elseif( is_file('./ads/header.inc') && (!array_key_exists('HTTP_SSL', $_SERVER) || $_SERVER['HTTP_SSL'] != 'On') )
                 include('./ads/header.inc');
         }
     ?>
