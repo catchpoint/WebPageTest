@@ -70,7 +70,7 @@ if (array_key_exists('aggregate', $_REQUEST))
                 else
                     $title = $benchmark['name'];
                 $bm = urlencode($benchmark['name']);
-                echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a></h2>\n";
+                echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a> <span class=\"small\">(<a name=\"{$benchmark['name']}\" href=\"#{$benchmark['name']}\">direct link</a>)</span></h2>\n";
                 if (array_key_exists('description', $benchmark))
                     echo "<p>{$benchmark['description']}</p>\n";
                 

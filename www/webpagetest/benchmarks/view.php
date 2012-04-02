@@ -103,7 +103,7 @@ if (array_key_exists('benchmark', $_REQUEST))
                 if (array_key_exists('description', $info))
                     echo "<p>{$info['description']}</p>\n";
                 foreach( $metrics as $metric => $label) {
-                    echo "<h2>$label</h2>\n";
+                    echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                     if ($info['expand'] && count($info['locations'] > 1)) {
                         foreach ($info['locations'] as $location => $label) {
                             if (is_numeric($label))
