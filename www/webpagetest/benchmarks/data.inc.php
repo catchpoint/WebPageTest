@@ -33,16 +33,13 @@ function GetSeriesLabels($benchmark) {
                         $name = '';
                     foreach ($configuration['locations'] as &$location) {
                         if (is_numeric($location['label'])) {
-                            $tsv .= "\t$name{$location['location']}";
                             $series[] = array('name' => "$name{$location['location']}", 'configuration' => $configuration['name'], 'location' => $location['location']);
                         } else {
-                            $tsv .= "\t$name{$location['label']}";
                             $series[] = array('name' => "$name{$location['label']}", 'configuration' => $configuration['name'], 'location' => $location['location']);
                         }
                     }
                 } else {
-                    $tsv .= "\t$title";
-                    $series[] = array('name' => $title, 'configuration' => $configuration['name'], 'location' => $locations[0]['location']);
+                    $series[] = array('name' => $title, 'configuration' => $configuration['name'], 'location' => '');
                 }
             }
         }
@@ -124,7 +121,8 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, DateTimeZone::UTC);
+                    $UTC = new DateTimeZone('UTC');
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, $UTC);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
@@ -401,7 +399,8 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
             }
             if (count($raw_data)) {
                 foreach($raw_data as &$row) {
-                    if ($row['cached'] == $cached &&
+                    if (array_key_exists('cached', $row) &&
+                        $row['cached'] == $cached &&
                         array_key_exists('url', $row) && 
                         array_key_exists('config', $row) && 
                         array_key_exists('location', $row) && 
@@ -542,7 +541,8 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
                 // find the closest data point on or after the selected date
                 $note_date = str_replace('/', '-', $note_date);
                 if (!array_key_exists($note_date, $dates)) {
-                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, DateTimeZone::UTC);
+                    $UTC = new DateTimeZone('UTC');
+                    $date = DateTime::createFromFormat('Y-m-d H:i', $note_date, $UTC);
                     if ($date !== false) {
                         $time = $date->getTimestamp();
                         unset($note_date);
@@ -582,7 +582,8 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
             $files = scandir("./results/benchmarks/$benchmark/data");
             foreach( $files as $file ) {
                 if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
+                    $UTC = new DateTimeZone('UTC');
+                    $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], $UTC);
                     $time = $date->getTimestamp();
                     $tests = array();
                     $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);

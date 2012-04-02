@@ -63,7 +63,8 @@ function ProcessBenchmark($benchmark) {
                 $last_run = 0;
                 foreach( $files as $file ) {
                     if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                        $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
+                        $UTC = new DateTimeZone('UTC');
+                        $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], $UTC);
                         $time = $date->getTimestamp();
                         $state['runs'][] = $time;
                         if ($time > $last_run)

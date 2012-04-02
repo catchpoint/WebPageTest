@@ -16,7 +16,8 @@ else {
         $files = scandir("./results/benchmarks/$benchmark/data");
         foreach( $files as $file ) {
             if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
-                $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], DateTimeZone::UTC);
+                $UTC = new DateTimeZone('UTC');
+                $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], $UTC);
                 $time = $date->getTimestamp();
                 if ($time > $test_time)
                     $test_time = $time;
@@ -166,6 +167,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
+    $annotations = null;
     $tsv = LoadTestDataTSV($benchmark['name'], 0, $metric, $test_time, $meta, $loc, $annotations);
     if (isset($tsv) && strlen($tsv)) {
         $count++;
