@@ -1029,6 +1029,7 @@ function ScriptParameterCount($command)
         !strcasecmp($command, 'setBrowserSize') ||
         !strcasecmp($command, 'setViewportSize') ||
         !strcasecmp($command, 'overrideHost') ||
+        !strcasecmp($command, 'addCustomRule') ||
         !strcasecmp($command, 'overrideHostUrl') )
     {
         $count = 3;
@@ -1135,6 +1136,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
             if( strlen($host) )
             {
                 $script = str_ireplace('%HOST%', $host, $script);
+                $script = str_ireplace('%HOST_REGEX%', str_replace('.', '\\.', $host), $script);
                 if( stripos($script, '%HOSTR%') !== false )
                 {
                     // do host substitution but also clone the command for a final redirected domain if there are redirects involved

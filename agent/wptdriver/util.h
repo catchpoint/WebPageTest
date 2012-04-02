@@ -61,3 +61,4 @@ CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);
 CString HashFileMD5(CString file);
 bool FileExists(CString file);
+bool  RegexMatch(CStringA str, CStringA regex);

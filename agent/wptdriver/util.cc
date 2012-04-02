@@ -31,6 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <TlHelp32.h>
 #include "dbghelp/dbghelp.h"
 #include <WinInet.h>
+#include <regex>
+#include <string>
+#include <sstream>
 
 #include "../wpthook/wpthook_dll.h"
 
@@ -480,4 +483,25 @@ bool FileExists(CString file) {
   if (GetFileAttributes(file) != INVALID_FILE_ATTRIBUTES)
     ret = true;
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool  RegexMatch(CStringA str, CStringA regex) {
+  bool matched = false;
+
+  if (str.GetLength()) {
+    if (!regex.GetLength() || 
+        !regex.Compare("*") || 
+        !str.CompareNoCase(regex)) {
+      matched = true;
+    } else if (regex.GetLength()) {
+        std::tr1::regex match_regex(regex, 
+                std::tr1::regex_constants::icase | 
+                std::tr1::regex_constants::ECMAScript);
+        matched = std::tr1::regex_match((LPCSTR)str, match_regex);
+    }
+  }
+
+  return matched;
 }

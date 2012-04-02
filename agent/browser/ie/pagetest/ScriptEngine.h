@@ -131,6 +131,25 @@ public:
   CString newHost;
 };
 
+class CAddHeader
+{
+public:
+  CAddHeader(){}
+  CAddHeader(CString newHeader, CString hostFilter):header(newHeader),filter(hostFilter){}
+  CAddHeader(const CHostOverride& src){*this = src;}
+  ~CAddHeader(void){}
+	const CAddHeader& operator =(const CAddHeader& src)
+	{
+		header = src.header;
+		filter = src.filter;
+
+		return src;
+	}
+
+  CString header;
+  CString filter;
+};
+
 class CScriptEngine:
 	public CPagetestBase
 {
@@ -164,7 +183,7 @@ public:
 	CString	script_basicAuth;
 	CAtlList<CDNSEntry>			dnsOverride;		// List of DNS addresses to override
 	CAtlList<CDNSName>			dnsNameOverride;	// List of DNS names to override
-  CAtlList<CString>       headersAdd;       // list of headers to add
+  CAtlList<CAddHeader>    headersAdd;       // list of headers to add
   CAtlList<CString>       headersSet;       // list of headers to set/override
   CAtlList<CHostOverride> hostOverride;     // host headers to override
   CAtlList<CHostOverride> overrideHostUrls; // override the given host, redirect it's DNS and add the header to the actual URL

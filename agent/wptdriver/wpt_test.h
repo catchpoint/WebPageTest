@@ -84,16 +84,19 @@ public:
 class HttpHeaderValue {
 public:
   HttpHeaderValue(){}
-  HttpHeaderValue(CStringA tag, CStringA value):_tag(tag),_value(value){}
+  HttpHeaderValue(CStringA tag, CStringA value, CStringA filter):
+    _tag(tag),_value(value),_filter(filter){}
   HttpHeaderValue(const HttpHeaderValue& src){*this = src;}
   ~HttpHeaderValue(void){}
   const HttpHeaderValue& operator =(const HttpHeaderValue& src){
     _tag = src._tag;
     _value = src._value;
+    _filter = src._filter;
     return src;
   }
   CStringA  _tag;
   CStringA  _value;
+  CStringA  _filter;
 };
 
 class WptTest {

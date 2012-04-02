@@ -645,7 +645,8 @@ void CScriptEngine::ContinueScript(bool reset)
 			}
 			else if( !item.command.CompareNoCase(_T("addHeader")) )
 			{
-        headersAdd.AddTail(item.target.Trim());
+        CAddHeader header(item.target.Trim(), item.value.Trim());
+        headersAdd.AddTail(header);
 				err = false;
 			}
 			else if( !item.command.CompareNoCase(_T("resetHeaders")) )
@@ -727,6 +728,19 @@ void CScriptEngine::ContinueScript(bool reset)
         }
         else
           overrideHostUrls.RemoveAll();
+        err = false;
+      }
+      else if(!item.command.CompareNoCase(_T("addCustomRule")))
+      {
+        int separator = item.target.Find(_T('='));
+        if (separator > 0) 
+        {
+          CCustomRule newrule;
+          newrule.name = item.target.Left(separator).Trim();
+          newrule.mime = item.target.Mid(separator + 1).Trim();
+          newrule.regex = item.value.Trim();
+          customRules.AddTail(newrule);
+        }
         err = false;
       }
      

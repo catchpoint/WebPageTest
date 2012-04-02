@@ -61,4 +61,5 @@ protected:
 	bool	forceDone;
 	void AddAuthHeader(HINTERNET hRequest, CWinInetRequest * r );
   void OverrideHost(CWinInetRequest * r);
+  bool RegexMatch(CString str, CString regex);
 };

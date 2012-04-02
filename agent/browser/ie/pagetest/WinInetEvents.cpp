@@ -31,6 +31,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "WinInetEvents.h"
 #include <atlenc.h>
+#include <regex>
+#include <string>
+#include <sstream>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -884,8 +887,9 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
     POSITION pos = headersAdd.GetHeadPosition();
     while(pos)
     {
-      CString h = headersAdd.GetNext(pos);
-      if( h.GetLength() )
+      CAddHeader header = headersAdd.GetNext(pos);
+      CString h = header.header;
+      if( h.GetLength() && RegexMatch(r->host, header.filter) )
       {
         h = h + _T("\r\n");
         HttpAddRequestHeaders( hRequest, h, h.GetLength(), HTTP_ADDREQ_FLAG_ADD );
@@ -1205,4 +1209,21 @@ void CWinInetEvents::OverrideHost(CWinInetRequest * r)
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CWinInetEvents::RegexMatch(CString str, CString regex) {
+  bool matched = false;
+
+  if (str.GetLength()) {
+    if (!regex.GetLength() || !regex.Compare(_T("*")) || !str.CompareNoCase(regex)) {
+      matched = true;
+    } else if (regex.GetLength()) {
+        std::tr1::regex match_regex(CT2A(regex), std::tr1::regex_constants::icase | std::tr1::regex_constants::ECMAScript);
+        matched = std::tr1::regex_match((LPCSTR)CT2A(str), match_regex);
+    }
+  }
+
+  return matched;
 }

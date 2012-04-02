@@ -490,7 +490,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     if (pos > 0) {
       CStringA tag = CT2A(command.target.Left(pos).Trim());
       CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
-      HttpHeaderValue header(tag, value);
+      HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
       _add_headers.AddTail(header);
     }
   } else if (cmd == _T("setheader")) {
@@ -498,7 +498,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     if (pos > 0) {
       CStringA tag = CT2A(command.target.Left(pos).Trim());
       CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
-      HttpHeaderValue header(tag, value);
+      HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
       _set_headers.AddTail(header);
     }
   } else if (cmd == _T("resetheaders")) {
@@ -508,7 +508,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       CStringA host = CT2A(command.target.Trim());
       CStringA new_host = CT2A(command.value.Trim());
       if (host.GetLength() && new_host.GetLength()) {
-        HttpHeaderValue host_override(host, new_host);
+        HttpHeaderValue host_override(host, new_host, "");
         _override_hosts.AddTail(host_override);
       }
   } else if (cmd == _T("block")) {
@@ -627,8 +627,10 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     POSITION pos = _add_headers.GetHeadPosition();
     while (pos) {
       HttpHeaderValue new_header = _add_headers.GetNext(pos);
-      new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                      new_header._value;
+      if (RegexMatch(value, new_header._filter)) {
+        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                        new_header._value;
+      }
     }
     // Override existing headers (they are added here and the original
     // version is removed below when it is processed)
