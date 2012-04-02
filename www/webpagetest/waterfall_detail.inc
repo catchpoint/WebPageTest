@@ -215,6 +215,11 @@ foreach($requests as $reqNum => $request)
                             if (array_key_exists('initiator', $request)) {
                                 echo '<b>Initiated By: </b>' . $request['initiator'] . "<br>\n";
                             }
+                            if (array_key_exists('custom_rules', $request)) {
+                                foreach($request['custom_rules'] as $rule_name => &$rule) {
+                                    echo "<b>Custom Rule - $rule_name: </b>({$rule['count']} matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
+                                }
+                            }
 						    echo '<b>Start Offset: </b>' . $request['load_start'] / 1000.0 . " s<br>\n";
 						    if( $request['dns_ms'] && (int)$request['dns_ms'] !== -1 )
 							    echo '<b>DNS Lookup: </b>' . $request['dns_ms'] . " ms<br>\n";

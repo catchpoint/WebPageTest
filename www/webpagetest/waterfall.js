@@ -84,6 +84,13 @@ function SelectRequest(request) {
             details += '<b>Bytes In (downloaded): </b>' + (r['bytesIn'] / 1024.0).toFixed(1) + ' KB<br>';
         if (r['bytesOut'] !== undefined)
             details += '<b>Bytes Out (uploaded): </b>' + (r['bytesOut'] / 1024.0).toFixed(1) + ' KB<br>';
+        if (r['custom_rules'] !== undefined) {
+            for (rule in r['custom_rules']) {
+                details += '<b>Custom Rule - ' + rule + ': </b>(';
+                details += r['custom_rules'][rule]['count'] + ' matches) - ';
+                details += r['custom_rules'][rule]['value'].replace(/>/g, '&gt;').replace(/</g, '&lt;') + '<br>';
+            }
+        }
         if (r['headers'] !== undefined){
             if (r.headers['request'] !== undefined){
                 for (i=0;i<r.headers.request.length;i++) {

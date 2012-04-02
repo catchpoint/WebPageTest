@@ -117,11 +117,6 @@ function BuildResult(&$pageData)
             $pd['id'] = "page_{$run}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1 );
             
-            $custom_rules = array();
-            if (gz_is_file("$testPath/{$run}{$cached_text}_custom_rules.json")) {
-                $custom_rules = json_decode(gz_file_get_contents("$testPath/{$run}{$cached_text}_custom_rules.json"), true);
-            }
-            
             // add the pagespeed score
             $score = GetPageSpeedScore("$testPath/{$run}{$cached_text}_pagespeed.txt");
             if( strlen($score) )
@@ -273,8 +268,8 @@ function BuildResult(&$pageData)
                     $r['dns_ms'] + $r['connect_ms'] + $r['ssl_ms'] +
                     $r['ttfb_ms'] + $timings['receive']);
                 
-                if (array_key_exists($r['number'], $custom_rules)) {
-                    $entry['_custom_rules'] = $custom_rules[$r['number']];
+                if (array_key_exists('custom_rules', $r)) {
+                    $entry['_custom_rules'] = $r['custom_rules'];
                 }
                 
                 // add it to the list of entries
