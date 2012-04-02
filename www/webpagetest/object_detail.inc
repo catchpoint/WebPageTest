@@ -19,6 +19,7 @@ function getRequests($id, $test_path, $run, $is_cached,
     $request_file_name =  $file_prefix . 'IEWTR.txt';
     $headers_file_name = $file_prefix . 'report.txt';
     $bodies_file_name = $file_prefix . 'bodies.zip';
+    $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
     $requests = LoadRequests($request_file_name);
     FixUpRequestTimes($requests);
@@ -34,16 +35,25 @@ function getRequests($id, $test_path, $run, $is_cached,
 
     AddResponseBodyFlags($requests, $bodies_file_name);
 
+    // load any custom checks if they are available
+    $custom_rules = array();
+    if (gz_is_file($custom_rules_file_name)) {
+        $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+    }
+    
     $has_secure_requests = false;
     foreach ($requests as $index => &$request) {
+        $request['index'] = $index;
+        $request['number'] = $index + 1;
         if (@$request['body']) {
             $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&request={$request['number']}";
         }
         if ($request['is_secure']) {
             $has_secure_requests = true;
         }
-        $request['index'] = $index;
-        $request['number'] = $index + 1;
+        if (array_key_exists($index + 1, $custom_rules)) {
+            $request['custom_rules'] = $custom_rules[$index + 1];
+        }
     }
     
     // this is disabled for right now - there were indications that it was
