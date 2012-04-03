@@ -595,7 +595,9 @@ void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
             POSITION pos = hostOverride.GetHeadPosition();
             while(pos) {
               CHostOverride hostPair = hostOverride.GetNext(pos);
-              if( !value.CompareNoCase(CT2A(hostPair.originalHost)) || !hostPair.originalHost.Compare(_T("*")) ) {
+              if( value.CompareNoCase(CT2A(hostPair.newHost)) && 
+                  (!value.CompareNoCase(CT2A(hostPair.originalHost)) || 
+                    !hostPair.originalHost.Compare(_T("*"))) ) {
                 line = CStringA("Host: ") + CStringA(CT2A(hostPair.newHost));
                 if (!xhost_exists) {
                   line += CStringA("\r\nx-Host: ") + value;
