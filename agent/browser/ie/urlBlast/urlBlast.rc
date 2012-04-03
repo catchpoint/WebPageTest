@@ -90,8 +90,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,2,0,316
- PRODUCTVERSION 2,2,0,316
+ FILEVERSION 2,2,0,318
+ PRODUCTVERSION 2,2,0,318
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -108,12 +108,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WebPagetest LLC"
             VALUE "FileDescription", "URL Blaster"
-            VALUE "FileVersion", "2.2.0.316"
+            VALUE "FileVersion", "2.2.0.318"
             VALUE "InternalName", "urlBlast.exe"
             VALUE "LegalCopyright", "(c) 2011 WebPagetest LLC.  All rights reserved."
             VALUE "OriginalFilename", "urlBlast.exe"
             VALUE "ProductName", "URL Blaster"
-            VALUE "ProductVersion", "2.2.0.316"
+            VALUE "ProductVersion", "2.2.0.318"
         END
     END
     BLOCK "VarFileInfo"
