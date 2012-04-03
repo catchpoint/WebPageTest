@@ -10,17 +10,14 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 ignore_user_abort(true);
 set_time_limit(60*5*10);
 $location = $_REQUEST['location'];
-$key = $_REQUEST['key'];
-$done = false;
-if (array_key_exists('done', $_REQUEST))
-    $done = $_REQUEST['done'];
-$id = $_REQUEST['id'];
-$har = false;
-if (array_key_exists('har', $_REQUEST))
-    $har = $_REQUEST['har'];
-$pcap = false;
-if (array_key_exists('pcap', $_REQUEST))
-    $pcap = $_REQUEST['pcap'];
+$key  = $_REQUEST['key'];
+$id   = $_REQUEST['id'];
+
+// The following params have a default value:
+$done = arrayLookupWithDefault('done', $_REQUEST, false);
+$har  = arrayLookupWithDefault('har',  $_REQUEST, false);
+$pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
+
 
 // When we upgrade the pcap to har converter, we need to test
 // each agent.  Agents can opt in to testing the latest
@@ -35,8 +32,8 @@ if (array_key_exists('_cacheWarmed', $_REQUEST))
     $cacheWarmed = $_REQUEST['_cacheWarmed'];
 if (array_key_exists('_docComplete', $_REQUEST))
     $docComplete = $_REQUEST['_docComplete'];
-if (array_key_exists('_urlUnderTest', $_REQUEST))
-    $urlUnderTest = $_REQUEST['_urlUnderTest'];
+
+$urlUnderTest = arrayLookupWithDefault('_urlUnderTest', $_REQUEST, NULL);
 
 $testInfo_dirty = false;
 
@@ -96,7 +93,7 @@ else
          
         if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
         {
-            ProcessHAR($testPath);
+            ProcessUploadedHAR($testPath);
         }
         elseif(isset($pcap) && $pcap &&
                isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
@@ -494,8 +491,10 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
 
   $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
 
+  $pcap2harArgs = ($useLatestPCap2Har ? "--no-pages" : "");
+
   $retLine = exec("/usr/bin/python ".
-                  "$pcap2harExe $pcapPath $harPath 2>&1",
+                  "$pcap2harExe $pcap2harArgs $pcapPath $harPath 2>&1",
                   $consoleOut,
                   $returnCode);
 
@@ -534,10 +533,12 @@ function ProcessPCAP($testPath, $pcapFile)
     // because we want to keep the har from each run.
     copy($harFilePath, $testPath . "/results.har");
 
-    ProcessHARText($testPath);
+    // The entire pacp file captured one single page loading.
+    $harIsFromSinglePageLoad = true;
+    ProcessHARText($testPath, $harIsFromSinglePageLoad);
 }
 
-function ProcessHAR($testPath)
+function ProcessUploadedHAR($testPath)
 {
     require_once('./lib/pcltar.lib.php3');
     require_once('./lib/pclerror.lib.php3');
@@ -559,10 +560,13 @@ function ProcessHAR($testPath)
         else
             move_uploaded_file($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
     }
-    ProcessHARText($testPath);
+
+    // The HAR may hold multiple page loads.
+    $harIsFromSinglePageLoad = false;
+    ProcessHARText($testPath, $harIsFromSinglePageLoad);
 }
 
-function ProcessHARText($testPath)
+function ProcessHARText($testPath, $harIsFromSinglePageLoad)
 {
     global $done;
     // TODO(skerner): Should be able to always do har processing if there is a
@@ -580,9 +584,91 @@ function ProcessHARText($testPath)
     if (!$parsedHar)
     {
         logMalformedInput("Failed to parse json file");
+        return;
     }
-    else
-    {
+    ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad);
+}
+
+/**
+ * We may get a HAR with no page records.  Add one that references all
+ * requests in the HAR.
+ *
+ * @global type $urlUnderTest Sent as a POST param.  What URL was loaded to
+ *                            make the HAR?
+ * @param array $parsedHar Parsed in-memory reprentation of the HAR.
+ * @param type $sortedEntries The requests from the har, soprted by start time.
+ */
+function CreatePageRecordInHar(&$parsedHar, &$sortedEntries) {
+  global $urlUnderTest;
+
+  // Find the time of the first request.
+  reset($sortedEntries);
+  $firstRequest = current($sortedEntries);
+  $firstStartedDateTime = $firstRequest['startedDateTime'];
+
+  // Pick a page id, to be added to all requests.
+  $generatedPageId = "generatedPageId";
+
+  $generatedPagesRecord = array(
+      "id" => $generatedPageId,
+      "pageTimings" => array(),
+
+      // The start time of the page is the start time of the first request.
+      "startedDateTime" => $firstStartedDateTime,
+      "title" => $urlUnderTest
+  );
+
+  $parsedHar['log']['pages'] = array( $generatedPagesRecord );
+
+  // Make sure all entries point to the generated page record.
+  foreach ($sortedEntries as $entind => &$entry) {
+    $entry['pageref'] = $generatedPageId;
+  }
+}
+
+function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
+        // Sort the entries by start time. This is done across runs, but
+        // since each of them references its own page it shouldn't matter
+        $sortedEntries;
+        foreach ($parsedHar['log']['entries'] as $entrycount => $entry)
+        {
+            // We use the textual start date as key, which should work fine
+            // for ISO dates.
+            $start = $entry['startedDateTime'];
+            $sortedEntries[$start . "-" . $entrycount] = $entry;
+        }
+        ksort($sortedEntries);
+
+        $numPageRecords = array_key_exists('pages', $parsedHar['log'])
+                ? count($parsedHar['log']['pages'])
+                : 0;
+
+        logMalformedInput("numPageRecords = $numPageRecords");
+
+        if ($harIsFromSinglePageLoad) {
+          if ($numPageRecords > 1) {
+            logMalformedInput("HAR has multiple pages, but it should be from " .
+                              "a single run.");
+            return;
+          }
+
+          if ($numPageRecords == 0) {
+            // pcap2har will not generate any pages records when using option
+            // --no-pages.  Build a fake one.  This simplfies the rest of the
+            // HAR proccessing code, because it does not need to check for the
+            // existance of the page record every time it tries to read page
+            // info.
+            CreatePageRecordInHar($parsedHar, $sortedEntries);
+            logMalformedInput("OUT  : pages = ".print_r($parsedHar['log']['pages'], true));
+          }
+
+        } else {  // ! if ($harIsFromSinglePageLoad)
+          if ($numPageRecords == 0) {
+            logMalformedInput("No page records in HAR.  Expect at least one.");
+            return;
+          }
+        }
+
         // Keep meta data about a page from iterating the entries
         $pageData;
 
@@ -773,18 +859,6 @@ function ProcessHARText($testPath)
             // Store the data for the next loops
             $pageData[$pageref] = $curPageData;
         }
-
-        // Sort the entries by start time. This is done across runs, but
-        // since each of them references its own page it shouldn't matter
-        $sortedEntries;
-        foreach ($parsedHar['log']['entries'] as $entrycount => $entry)
-        {
-            // We use the textual start date as key, which should work fine
-            // for ISO dates.
-            $start = $entry['startedDateTime'];
-            $sortedEntries[$start . "-" . $entrycount] = $entry;
-        }
-        ksort($sortedEntries);
 
         // Iterate the entries
         foreach ($sortedEntries as $entind => $entry)
@@ -1136,7 +1210,6 @@ function ProcessHARText($testPath)
                 "0\r\n", //"Optimization Checked\r\n"
             FILE_APPEND);
         }
-    }
 }
 
 /**
