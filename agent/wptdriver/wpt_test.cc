@@ -650,7 +650,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     while (pos) {
       HttpHeaderValue host_override = _override_hosts.GetNext(pos);
       if (!host_override._tag.CompareNoCase(value) ||
-          host_override._tag.Compare("*")) {
+          !host_override._tag.Compare("*")) {
         header = CStringA("Host: ") + host_override._value;
         new_headers += CStringA("\r\nx-Host: ") + value;
       }
