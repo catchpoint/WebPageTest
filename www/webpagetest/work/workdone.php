@@ -9,6 +9,9 @@ header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 ignore_user_abort(true);
 set_time_limit(60*5*10);
+require_once('harTiming.inc');
+
+
 $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
@@ -491,6 +494,10 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
 
   $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
 
+  // Use switch --no-pages to avoid splitting requests into multiple page
+  // loads.  WebpageTest agents start tcpdump for each page load, so we know
+  // all network traffic is part of the same page load.  The heuristics used
+  // to split requests into pages fail on some sites, such as m.yahoo.com.
   $pcap2harArgs = ($useLatestPCap2Har ? "--no-pages" : "");
 
   $retLine = exec("/usr/bin/python ".
@@ -523,8 +530,8 @@ function ProcessPCAP($testPath, $pcapFile)
     if ($returnCode != 0)
     {
        logMalformedInput("pcap to HAR converter returned $returnCode.  ".
-                        "Expected 0.  pcap file is $pcapFilePath .  ".
-                        "Console output is :\n". print_r($consoleOut, true));
+                         "Expected 0.  pcap file is $pcapFilePath .  ".
+                         "Console output is :\n". print_r($consoleOut, true));
        return;
     }
 
@@ -576,10 +583,10 @@ function ProcessHARText($testPath, $harIsFromSinglePageLoad)
                "Potential backward compatibility issues.");
     }
 
-    // Save the json HAR file
+    // Read the json HAR file
     $rawHar = file_get_contents("{$testPath}/results.har");
 
-    // Parsethe json file
+    // Parse the json file
     $parsedHar = json_decode($rawHar, true);
     if (!$parsedHar)
     {
@@ -639,12 +646,17 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         }
         ksort($sortedEntries);
 
+        // HAR files can hold multiple page loads.  Some sources of HAR files
+        // can only hold one page load, and don't know anything about the page.
+        // For example, HAR files generated from a .pcap file captured durring
+        // a single page load must have only one page, and many things in a HAR
+        // page record, such as the page title, can not be found.  Based on the
+        // number of page records, and the argument $harIsFromSinglePageLoad,
+        // check that the pages record is as expected, and generate a minimal
+        // page record if nessisary.
         $numPageRecords = array_key_exists('pages', $parsedHar['log'])
                 ? count($parsedHar['log']['pages'])
                 : 0;
-
-        logMalformedInput("numPageRecords = $numPageRecords");
-
         if ($harIsFromSinglePageLoad) {
           if ($numPageRecords > 1) {
             logMalformedInput("HAR has multiple pages, but it should be from " .
@@ -659,7 +671,6 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             // existance of the page record every time it tries to read page
             // info.
             CreatePageRecordInHar($parsedHar, $sortedEntries);
-            logMalformedInput("OUT  : pages = ".print_r($parsedHar['log']['pages'], true));
           }
 
         } else {  // ! if ($harIsFromSinglePageLoad)
@@ -672,7 +683,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         // Keep meta data about a page from iterating the entries
         $pageData;
 
-        // Iterate the pages
+        // Iterate over the page records.
         foreach ($parsedHar['log']['pages'] as $pagecount => $page)
         {
             $pageref = $page['id'];
@@ -698,7 +709,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
 
             if (array_key_exists('onRender', $page['pageTimings'])) {
               $curPageData["onRender"] = $page['pageTimings']['onRender'];
-            } else if (array_key_exists('_onRender',$page['pageTimings'])) {
+            } else if (array_key_exists('_onRender', $page['pageTimings'])) {
               $curPageData["onRender"] = $page['pageTimings']['_onRender'];
             } else {
               logMsg("onRender not set for page $pageref");
@@ -826,7 +837,8 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "Base Page Response: 200\r\n" . 
                 "Request details:\r\n\r\n");                    
 
-            // Start by stating the time-to-first-byte is the page load time, will be updated as we iterate requets
+            // Start by stating the time-to-first-byte is the page load time,
+            // will be updated as we iterate requets
             $curPageData["TTFB"] = $curPageData["docComplete"];
 
             // Reset counters for requests
@@ -920,13 +932,6 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             $reqRespCodeText = $respEnt['statusText'];
             $reqLoadTime = 0 + $entryTime;
 
-            // The specific times are currently unavailable, and set to
-            // arbitrary values.
-            $reqDnsTime = 0; // + $timingEnt['dns'];
-            $reqConnectTime = 0; // + $timingEnt['connect'];
-            $reqSslTime = 0;
-            $reqTTFB = 0; //$timingEnt['wait'] + $reqDnsTime + $reqConnectTime + $timingEnt['send'];
-
             // The list is sorted by time, so use the first resource as the real start time,
             // since the start time on the page isn't always reliable (likely a bug, but this will do for now)
             if ($curPageData["calcStarTime"] == 0) {
@@ -943,6 +948,11 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                   $curPageData["startFull"] . "\n".
                   "\$startedDateTime =          " . $startedDateTime."\n");
             }
+
+            $requestTimings = convertHarTimesToWebpageTestTimes($timingsEnt, $reqStartTime);
+            $reqDnsTime = $requestTimings['dns_ms'];
+            $reqSslTime = $requestTimings['ssl_ms'];
+            $reqConnectTime = $requestTimings['connect_ms'];
             $reqBytesOut = abs($reqEnt['headersSize']) + abs($reqEnt['bodySize']);
             $reqBytesIn = abs($respEnt['headersSize']) + abs($respEnt['bodySize']);
             $reqObjectSize = abs($respEnt['bodySize']);
@@ -977,10 +987,10 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "$reqHost\t" . 
                 "$reqUrl\t" . 
                 "$reqRespCode\t" . 
-                "$reqLoadTime\t" . 
-                "$reqTTFB\t" . 
-                "$reqStartTime\t" . 
-                "$reqBytesOut\t" . 
+                $requestTimings['load']  . "\t" . // Time to Load (ms)
+                $requestTimings['ttfb']  . "\t" . // Time to First Byte (ms)
+                $requestTimings['start'] . "\t" . // Start Time (ms)
+                "$reqBytesOut\t" .
                 "$reqBytesIn\t" . 
                 "$reqObjectSize\t" . 
                 "$reqCookieSize\t" . 
@@ -1016,9 +1026,9 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "\t" . //"ETag Score\t" . 
                 "\t" . //"Flagged\t" . 
                 "$reqSecure\t" . 
-                "$reqDnsTime\t" . 
-                "$reqConnectTime\t" . 
-                "$reqSslTime\t" . 
+                "-1\t" . // DNS Time (ms)            Set start and end instead.
+                "-1\t" . // Socket Connect time (ms) Set start and end instead.
+                "-1\t" . // SSL time (ms)            Set start and end instead.
                 "\t" . //"Gzip Total Bytes\t" . 
                 "\t" . //"Gzip Savings\t" . 
                 "\t" . //"Minify Total Bytes\t" . 
@@ -1028,8 +1038,17 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "\t" . //"Cache Time (sec)\t" . 
                 "\t" . //"Real Start Time (ms)\t" . 
                 "\t" . //"Full Time to Load (ms)\t" . 
-                "0\r\n", //"Optimization Checked\r\n
-            FILE_APPEND);
+                "0\t". //"Optimization Checked\r\n
+                "\t" . //CDN Provider
+                $requestTimings['dns_start']     . "\t" . // DNS start
+                $requestTimings['dns_end']       . "\t" . // DNS end
+                $requestTimings['connect_start'] . "\t" . // connect start
+                $requestTimings['connect_end']   . "\t" . // connect end
+                $requestTimings['ssl_start']     . "\t" . // ssl negotiation start
+                $requestTimings['ssl_end']       . "\t" . // ssl negotiation end
+                "\t" . //initiator
+                "\r\n",
+                FILE_APPEND);
 
             $reqNum = $curPageData["reqNum"] + 1;
             $curPageData["reqNum"] = $reqNum;
@@ -1042,7 +1061,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "      Host: {$reqHost}\r\n".
                 "      Result code: $reqRespCode\r\n".
                 "      Transaction time: $reqTime milliseconds\r\n".
-                "      Time to first byte: $reqTTFB milliseconds\r\n".
+                "      Time to first byte: " . $requestTimings['ttfb'] . " milliseconds\r\n".
                 "      Request size (out): $reqBytesOut Bytes\r\n".
                 "      Response size (in): $reqBytesIn Bytes\r\n".
                 "  Request Headers:\r\n".
