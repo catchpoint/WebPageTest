@@ -99,6 +99,23 @@ public:
   CStringA  _filter;
 };
 
+class CustomRule {
+public:
+  CustomRule(void){}
+  CustomRule(const CustomRule& src){ *this = src; }
+  ~CustomRule(void){}
+  const CustomRule& operator =(const CustomRule& src) {
+    _name = src._name;
+    _mime = src._mime;
+    _regex = src._regex;
+    return src;
+  }
+
+  CString _name;
+  CString _mime;
+  CString _regex;
+};
+
 class WptTest {
 public:
   WptTest(void);
@@ -150,7 +167,7 @@ public:
   DWORD   _browser_height;
   DWORD   _viewport_width;
   DWORD   _viewport_height;
-
+  CAtlList<CustomRule> _custom_rules;
   
   // current state
   int     _run;
@@ -165,7 +182,6 @@ public:
   bool    _dom_element_check;
 
 protected:
-  CStringA  JSONEscape(CString src);
   CStringA  EncodeTask(ScriptCommand& command);
   void      BuildScript();
   bool      NavigationCommand(CString& command);

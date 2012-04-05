@@ -53,6 +53,7 @@ static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
+static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -94,7 +95,7 @@ void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved && _test._log_data) {
     ProcessRequests();
-    OptimizationChecks checks(_requests, _test_state);
+    OptimizationChecks checks(_requests, _test_state, _test);
     checks.Check();
     if( _test._aft )
       CalculateAFT();
@@ -696,23 +697,69 @@ void Results::SaveRequests(OptimizationChecks& checks) {
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
+    DWORD bytes;
+    CStringA buff;
     SetFilePointer( file, 0, 0, FILE_END );
 
     HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
 
+    HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
+    if (!_test._custom_rules.IsEmpty()) {
+      custom_rules_file = CreateFile(_file_base +CUSTOM_RULES_DATA_FILE,
+                                    GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+      if (custom_rules_file != INVALID_HANDLE_VALUE) {
+        WriteFile(custom_rules_file, "{", 1, &bytes, 0);
+      }
+    }
+
     _requests.Lock();
     // now record the results
     POSITION pos = _requests._requests.GetHeadPosition();
     int i = 0;
+    bool first_custom_rule = true;
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
       if (request && request->_processed) {
         i++;
         SaveRequest(file, headers_file, request, i);
+        if (!request->_custom_rules_matches.IsEmpty() && 
+            custom_rules_file != INVALID_HANDLE_VALUE) {
+          if (first_custom_rule) {
+            first_custom_rule = false;
+          } else {
+            WriteFile(custom_rules_file, ",", 1, &bytes, 0);
+          }
+          buff.Format("\"%d\"", i);
+          WriteFile(custom_rules_file,(LPCSTR)buff,buff.GetLength(),&bytes,0);
+          WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
+          POSITION match_pos =request->_custom_rules_matches.GetHeadPosition();
+          DWORD match_count = 0;
+          while (match_pos) {
+            match_count++;
+            CustomRulesMatch match = 
+                request->_custom_rules_matches.GetNext(match_pos);
+            CT2A name((LPCTSTR)match._name, CP_UTF8);
+            CT2A value((LPCTSTR)match._value, CP_UTF8);
+            CStringA entry = "";
+            if (match_count > 1)
+              entry += ",";
+            entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
+            entry += CStringA("\"value\":\"")+JSONEscapeA((LPCSTR)value)+"\",";
+            buff.Format("%d", match._count);
+            entry += CStringA("\"count\":") + buff + "}";
+            WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 
+                      &bytes, 0);
+          }
+          WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+        }
       }
     }
     _requests.Unlock();
+    if (custom_rules_file != INVALID_HANDLE_VALUE) {
+      WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+      CloseHandle(custom_rules_file);
+    }
     if (headers_file != INVALID_HANDLE_VALUE)
       CloseHandle(headers_file);
     CloseHandle(file);

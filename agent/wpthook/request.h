@@ -194,6 +194,23 @@ public:
   CStringA _cdn_provider;
 };
 
+class CustomRulesMatch {
+public:
+  CustomRulesMatch(void):_count(0){}
+  CustomRulesMatch(const CustomRulesMatch& src){ *this = src; }
+  ~CustomRulesMatch(void){}
+  const CustomRulesMatch& operator =(const CustomRulesMatch& src) {
+    _name = src._name;
+    _value = src._value;
+    _count = src._count;
+    return src;
+  }
+
+  CString _name;
+  CString _value;
+  int _count;
+};
+
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id,
@@ -248,6 +265,7 @@ public:
   LARGE_INTEGER _end;
 
   OptimizationScores _scores;
+  CAtlList<CustomRulesMatch>  _custom_rules_matches;
 
 private:
   TestState&    _test_state;

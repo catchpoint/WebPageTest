@@ -33,9 +33,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "requests.h"
 #include "test_state.h"
 #include "track_sockets.h"
+#include "../wptdriver/wpt_test.h"
 
 #include "cximage/ximage.h"
 #include <zlib.h>
+#include <regex>
+#include <string>
+#include <sstream>
 
 // global_checks needs to be a global because we are passing the array index
 // for each thread into the start routine so we can't also pass the pointer to
@@ -47,9 +51,11 @@ OptimizationChecks * global_checks = NULL;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 OptimizationChecks::OptimizationChecks(Requests& requests,
-                                      TestState& test_state):
+                                      TestState& test_state,
+                                      WptTest& test):
   _requests(requests)
   , _test_state(test_state)
+  , _test(test)
   , _keep_alive_score(-1)
   , _gzip_score(-1)
   , _gzip_total(0)
@@ -82,6 +88,7 @@ void OptimizationChecks::Check(void) {
   CheckCacheStatic();
   CheckCombine();
   CheckCDN();
+  CheckCustomRules();
   _checked = true;
 
   WptTrace(loglevel::kFunction,
@@ -714,4 +721,49 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider)
     LeaveCriticalSection(&_cs_cdn);
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void OptimizationChecks::CheckCustomRules() {
+  if (!_test._custom_rules.IsEmpty()) {
+    _requests.Lock();
+    POSITION pos = _requests._requests.GetHeadPosition();
+    while( pos ) {
+      Request *request = _requests._requests.GetNext(pos);
+      DataChunk body = request->_response_data.GetBody(true);
+      const char * body_data = body.GetData();
+      DWORD body_len = body.GetLength();
+      if (body_len && body_data) {
+        POSITION rule_pos = _test._custom_rules.GetHeadPosition();
+        while (rule_pos) {
+          CustomRule rule = _test._custom_rules.GetNext(rule_pos);
+          std::string mime = (LPCSTR)request->GetMime();
+          std::tr1::regex mime_regex(CT2A(rule._mime), 
+                                      std::tr1::regex_constants::icase | 
+                                      std::tr1::regex_constants::ECMAScript);
+          if (regex_search(mime.begin(), mime.end(), mime_regex)) {
+            CustomRulesMatch match;
+            match._name = rule._name;
+            std::string body(body_data, body_len);
+            std::tr1::regex match_regex(CT2A(rule._regex), 
+                                      std::tr1::regex_constants::icase | 
+                                      std::tr1::regex_constants::ECMAScript);
+            const std::tr1::sregex_token_iterator end;
+            std::tr1::sregex_token_iterator i(body.begin(), body.end(), 
+                                              match_regex);
+            while (i != end) {
+              match._count++;
+              if (match._value.IsEmpty()) {
+                std::string match_string = *i;
+                match._value = CA2T(match_string.c_str());
+              }
+              i++;
+            }
+            request->_custom_rules_matches.AddTail(match);
+          }
+        }
+      }
+    }
+  }
 }

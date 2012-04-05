@@ -32,6 +32,7 @@ class Requests;
 class TestState;
 class Request;
 class TrackSockets;
+class WptTest;
 
 class CDNEntry
 {
@@ -55,7 +56,7 @@ public:
 
 class OptimizationChecks {
 public:
-  OptimizationChecks(Requests& requests, TestState& test_state);
+  OptimizationChecks(Requests& requests, TestState& test_state, WptTest& test);
   ~OptimizationChecks(void);
 
   void Check(void);
@@ -84,6 +85,7 @@ public:
     
   Requests&   _requests;
   TestState&   _test_state;
+  WptTest&    _test;
 
 
 private:
@@ -95,4 +97,5 @@ private:
   void StartCDNLookups();
   void CheckCDN();
   bool IsCDN(Request * request, CStringA &provider);
+  void CheckCustomRules();
 };

@@ -62,3 +62,5 @@ DWORD   HttpSaveFile(CString url, CString file);
 CString HashFileMD5(CString file);
 bool FileExists(CString file);
 bool  RegexMatch(CStringA str, CStringA regex);
+CStringA JSONEscape(CString src);
+CStringA JSONEscapeA(CStringA src);

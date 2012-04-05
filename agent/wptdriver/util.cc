@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "util.h"
 #include <Wincrypt.h>
 #include <TlHelp32.h>
 #include "dbghelp/dbghelp.h"
@@ -505,3 +506,25 @@ bool  RegexMatch(CStringA str, CStringA regex) {
 
   return matched;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA JSONEscapeA(CStringA src) {
+  src.Replace("\\", "\\\\");
+  src.Replace("\"", "\\\"");
+  src.Replace("/", "\\/");
+  src.Replace("\b", "\\b");
+  src.Replace("\r", "\\r");
+  src.Replace("\n", "\\n");
+  src.Replace("\t", "\\t");
+  src.Replace("\f", "\\f");
+  return src;
+}
+
+/*-----------------------------------------------------------------------------
+  Escape the supplied string for JSON
+-----------------------------------------------------------------------------*/
+CStringA JSONEscape(CString src) {
+  return JSONEscapeA((LPCSTR)CT2A(src, CP_UTF8));
+}
+

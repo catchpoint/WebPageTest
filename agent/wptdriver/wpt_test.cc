@@ -119,6 +119,7 @@ void WptTest::Reset(void) {
   _browser_height = BROWSER_HEIGHT;
   _viewport_width = 0;
   _viewport_height = 0;
+  _custom_rules.RemoveAll();
 }
 
 /*-----------------------------------------------------------------------------
@@ -192,6 +193,25 @@ bool WptTest::Load(CString& test) {
           _save_response_bodies = true;
         else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
           _preserve_user_agent = true;
+        else if (!key.CompareNoCase(_T("customRule"))) {
+          int separator = value.Find(_T('='));
+          if (separator > 0) {
+            CString name = value.Left(separator).Trim();
+            CString rule = value.Mid(separator + 1).Trim();
+            separator = rule.Find(_T('\t'));
+            if (separator > 0) {
+              CString mime = rule.Left(separator).Trim();
+              rule = rule.Mid(separator + 1).Trim();
+              if (name.GetLength() && mime.GetLength() && rule.GetLength()) {
+                CustomRule new_rule;
+                new_rule._name = name;
+                new_rule._mime = mime;
+                new_rule._regex = rule;
+                _custom_rules.AddTail(new_rule);
+              }
+            }
+          }
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -212,22 +232,6 @@ bool WptTest::Load(CString& test) {
     ret = true;
 
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Escape the supplied string for JSON
------------------------------------------------------------------------------*/
-CStringA WptTest::JSONEscape(CString src) {
-  CStringA dest = CT2A(src);
-  dest.Replace("\\", "\\\\");
-  dest.Replace("\"", "\\\"");
-  dest.Replace("/", "\\/");
-  dest.Replace("\b", "\\b");
-  dest.Replace("\r", "\\r");
-  dest.Replace("\n", "\\n");
-  dest.Replace("\t", "\\t");
-  dest.Replace("\f", "\\f");
-  return dest;
 }
 
 /*-----------------------------------------------------------------------------
@@ -515,6 +519,15 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
     consumed = false;
+  } else if(cmd == _T("addcustomrule")) {
+    int separator = command.target.Find(_T('='));
+    if (separator > 0)  {
+      CustomRule new_rule;
+      new_rule._name = command.target.Left(separator).Trim();
+      new_rule._mime = command.target.Mid(separator + 1).Trim();
+      new_rule._regex = command.value.Trim();
+      _custom_rules.AddTail(new_rule);
+    }
   } else {
     continue_processing = false;
     consumed = false;
