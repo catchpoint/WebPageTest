@@ -103,10 +103,12 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                     $tsv .= "\t";
                     if (array_key_exists($configuration['name'], $row) && array_key_exists($location['location'], $row[$configuration['name']])) {
                         $value = $row[$configuration['name']][$location['location']];
-                        if ($isbytes)
-                            $value = number_format($value / 1024.0, 3);
-                        elseif ($istime)
-                            $value = number_format($value / 1000.0, 3);
+                        if ($aggregate != 'count') {
+                            if ($isbytes)
+                                $value = number_format($value / 1024.0, 3);
+                            elseif ($istime)
+                                $value = number_format($value / 1000.0, 3);
+                        }
                         $tsv .= $value;
                     }
                 }
