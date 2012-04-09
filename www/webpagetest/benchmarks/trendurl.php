@@ -39,7 +39,7 @@ if (array_key_exists('url', $_REQUEST))
             
             <div class="translucent">
             <div style="clear:both;">
-                <div style="float:left;">
+                <div style="float:left;" class="notes">
                     Click on a data point in the chart to see the full test data (waterfall, etc) for the given data point.<br>
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.
                 </div>

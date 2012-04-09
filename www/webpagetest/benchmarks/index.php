@@ -42,7 +42,7 @@ if (array_key_exists('aggregate', $_REQUEST))
             </script>
             <div class="translucent">
             <div style="clear:both;">
-                <div style="float:left;">
+                <div style="float:left;" class="notes">
                     Click on a test heading to view all of the metrics for the given test.<br>
                     Click on a data point in the chart to see the scatter plot results for that specific test.<br>
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.

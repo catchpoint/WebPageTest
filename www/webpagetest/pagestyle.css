@@ -25,6 +25,7 @@ h2 .small {font-weight:normal; font-size: 12px;}
 .arrow {  border-style: dashed; border-color: transparent; border-width: 0.53em; display: -moz-inline-box; display: inline-block; height: 0; line-height: 0; position: relative; vertical-align: middle; width: 0; }
 .bullet_list {list-style:disc; padding-left: 2em;}
 .bold {font-weight: bold;}
+.notes {background-color: yellow;}
 
 .arrow-down {width: 0; height: 0; border-left: 3px solid transparent; border-right: 3px solid transparent; border-top: 8px solid #69009E;}
 .position-container {position: relative; left: 0; top: 0;}

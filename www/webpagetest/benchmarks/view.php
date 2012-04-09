@@ -8,8 +8,10 @@ $aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
 $benchmark = '';
-if (array_key_exists('benchmark', $_REQUEST))
+if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
+    $info = GetBenchmarkInfo($benchmark);
+}
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -35,10 +37,30 @@ if (array_key_exists('benchmark', $_REQUEST))
             ?>
             
             <div class="translucent">
+            <?php
+            if (isset($info) && array_key_exists('links', $info)) {
+                echo '<div style="clear:both; padding-bottom: 0.5em;">Benchmark Information: ';
+                $link_count = 0;
+                foreach ($info['links'] as $link_label => $link_url) {
+                    if ($link_count) {
+                        echo " - ";
+                    }
+                    echo "<a href=\"$link_url\">$link_label</a>";
+                    $link_count++;
+                }
+                echo '</div>';
+            }
+            ?>
             <div style="clear:both;">
-                <div style="float:left;">
+                <div style="float:left;" class="notes">
                     Click on a data point in the chart to see the scatter plot results for that specific test.<br>
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.
+                    <?php
+                    if (isset($info) && array_key_exists('notes', $info)) {
+                        echo '<br>';
+                        echo $info['notes'];
+                    }
+                    ?>
                 </div>
                 <div style="float: right;">
                     <form name="aggregation" method="get" action="view.php">
@@ -96,9 +118,7 @@ if (array_key_exists('benchmark', $_REQUEST))
                             'other_requests' => 'Other Requests',
                             'responses_404' => 'Not Found Responses (404)', 
                             'responses_other' => 'Non-404 Error Responses');
-            if (array_key_exists('benchmark', $_REQUEST)) {
-                $benchmark = $_REQUEST['benchmark'];
-                $info = GetBenchmarkInfo($benchmark);
+            if (isset($info)) {
                 if (!$info['video']) {
                     unset($metrics['SpeedIndex']);
                 }
