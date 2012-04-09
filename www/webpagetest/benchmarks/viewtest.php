@@ -151,9 +151,9 @@ $series = GetSeriesLabels($benchmark);
                             'text_bytes' => 'Text Bytes (KB)', 
                             'text_requests' => 'Text Requests',
                             'other_bytes' => 'Other Bytes (KB)', 
-                            'other_requests' => 'Other Requests',
-                            'responses_404' => 'Not Found Responses (404)', 
-                            'responses_other' => 'Non-404 Error Responses');
+                            'other_requests' => 'Other Requests');
+//                            'responses_404' => 'Not Found Responses (404)', 
+//                            'responses_other' => 'Non-404 Error Responses');
             if (isset($info)) {
                 if (!$info['video']) {
                     unset($metrics['SpeedIndex']);
