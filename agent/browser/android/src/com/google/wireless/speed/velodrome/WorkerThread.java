@@ -56,7 +56,7 @@ public class WorkerThread extends Thread {
   private String mTcpdumpInterface = null;
 
   // Where to capture tcpdump output, if it's installed
-  private File mPcapFile = null;
+  private File mCurrentPcapFile = null;
 
   // Manage the HTTP proxy configuration of the device.
   // Will be null if the system we work for does not support proxies.
@@ -75,10 +75,6 @@ public class WorkerThread extends Thread {
     mBrowser = browser;
     mProxySettings = agentBehaviorDelegate.getProxySettingsIfSupported();
     mAgentBehaviorDelegate = agentBehaviorDelegate;
-
-    // Where to capture tcpdump output
-    mPcapFile = new File(PhoneUtils.getGlobalContext().getFilesDir(),
-                        "tcpdump.pcap");
   }
 
   public synchronized void requestStop() {
@@ -225,7 +221,7 @@ public class WorkerThread extends Thread {
     boolean forceStop = false;
     try {
       if (task.shouldCapturePcap()) {
-        startTcpdump(task);
+        startTcpdump(task, measurement);
       }
       // Sleep for a tiny bit while the UI thread finishes showing the message
       Thread.sleep(Config.UI_TRANSITION_WAIT_MS);
@@ -299,25 +295,34 @@ public class WorkerThread extends Thread {
     }
   }
 
-  private void startTcpdump(Task task) throws IOException {
+  private void startTcpdump(Task task, MeasurementParameters measurement) throws IOException {
     initTcpdumpRunner();
 
     if (mTcpdumpRunner != null) {
       assert mTcpdumpInterface != null;
-      assert mPcapFile != null;
-      mTcpdumpRunner.launch(mTcpdumpInterface, mPcapFile);
+
+      assert mCurrentPcapFile == null
+          : "Can't start tcpdump without stopping the last one.";
+      mCurrentPcapFile = new File(
+          PhoneUtils.getGlobalContext().getFilesDir(),
+          "tcpdump_" + measurement.getUniqueMeasurementString() + ".pcap");
+
+      mTcpdumpRunner.launch(mTcpdumpInterface, mCurrentPcapFile);
       Log.i(TAG, "Tcpdump started.");
     }
   }
 
   private void stopTcpdump(Task task, boolean forceStop) throws IOException {
     Log.i(TAG, "Stopping tcpdump...");
+    if (mCurrentPcapFile == null) {
+      Log.e(TAG, "Stopping Tcpdump, but it was not running???");
+    }
 
     if (mTcpdumpRunner != null) {
       mTcpdumpRunner.stop();
       if (task != null) {
         assert task.getResult() != null;
-        task.setPcapFile(mPcapFile);
+        task.setPcapFile(mCurrentPcapFile);
       }
     }
   }

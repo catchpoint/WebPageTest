@@ -47,7 +47,10 @@ public class TcpdumpRunner {
   /** Default value of the tcpdump command. */
   private static final String DEFAULT_COMMAND = "/system/xbin/tcpdump";
 
-  /** The tcpdump command. Must be a full path for isInstalled() to work. */
+  /** The tcpdump command. Must be a full path for isInstalled() to work.
+   * TODO(skerner): Users report that tcpdump can not be used unless chmod +s
+   * is run on it on Android 2.2 .  Can we do this automatically?
+   */
   private String mCommand;
 
   /** If not null, captures tcpdump stdout -- when not writing to a file. */

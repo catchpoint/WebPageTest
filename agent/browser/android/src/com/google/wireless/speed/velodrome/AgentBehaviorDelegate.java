@@ -53,6 +53,14 @@ public interface AgentBehaviorDelegate {
     }
     public int runNumber() { return mRunNumber; }
     public boolean shouldClearCache() { return mShouldClearCache; }
+
+    // Return a string unique to a measurement.  It should include every member
+    // variable.
+    public String getUniqueMeasurementString() {
+      return String.format("%d%s",
+                           mRunNumber,
+                           (mShouldClearCache ? "" : "_Cached"));
+    }
   }
 
   // Check in with our server.  Any tasks to be done are added by calling methods
