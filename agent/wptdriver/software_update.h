@@ -20,7 +20,8 @@ public:
   SoftwareUpdate(void);
   ~SoftwareUpdate(void);
   void LoadSettings(CString settings_ini);
-  bool UpdateSoftware(void);
+  bool UpdateSoftware(bool force = false);
+  bool ReInstallBrowser(CString browser);
 
 protected:
   CAtlList<BrowserInfo> _browsers;

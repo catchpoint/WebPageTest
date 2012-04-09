@@ -197,27 +197,42 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
 -----------------------------------------------------------------------------*/
 bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   bool ret = false;
+  bool critical_error = false;
+  bool attempt = 0;
 
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
-  test.SetFileBase();
-  if (test._clear_cache) {
-    browser.ClearUserData();
-    FlushDNS();
-  }
-  if (test._tcpdump)
-    _winpcap.StartCapture( test._file_base + _T(".cap") );
+  do {
+    attempt++;
+    test.SetFileBase();
+    if (test._clear_cache) {
+      browser.ClearUserData();
+      FlushDNS();
+    }
+    if (test._tcpdump)
+      _winpcap.StartCapture( test._file_base + _T(".cap") );
 
-  ret = browser.RunAndWait();
+    ret = browser.RunAndWait(critical_error);
 
-  if (test._tcpdump)
-    _winpcap.StopCapture();
-  KillBrowsers();
-  if (test._upload_incremental_results) {
-    _webpagetest.UploadIncrementalResults(test);
-  } else {
-    _webpagetest.DeleteIncrementalResults(test);
-  }
+    if (test._tcpdump)
+      _winpcap.StopCapture();
+    KillBrowsers();
+
+    if (attempt < 2 && critical_error) {
+      WptTrace(loglevel::kWarning, 
+        _T("[wptdriver] Critical error, re-installing browser (attempt %d)\n"),
+        attempt);
+      _webpagetest.DeleteIncrementalResults(test);
+      _settings.ReInstallBrowser();
+    } else {
+      if (test._upload_incremental_results) {
+        _webpagetest.UploadIncrementalResults(test);
+      } else {
+        _webpagetest.DeleteIncrementalResults(test);
+      }
+    }
+  } while (attempt < 2 && critical_error);
+
   WptTrace(loglevel::kFunction, 
             _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
 

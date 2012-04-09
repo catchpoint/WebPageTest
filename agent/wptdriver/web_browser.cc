@@ -83,8 +83,9 @@ WebBrowser::~WebBrowser(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait() {
+bool WebBrowser::RunAndWait(bool &critical_error) {
   bool ret = false;
+  critical_error = false;
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
@@ -144,12 +145,14 @@ bool WebBrowser::RunAndWait() {
         ResumeThread(pi.hThread);
         if (WaitForInputIdle(pi.hProcess, 120000) != 0) {
           ok = false;
+          critical_error = true;
           _status.Set(_T("Error waiting for browser to launch\n"));
         }
         SuspendThread(pi.hThread);
 
         if (ok && hook && !InstallHook(pi.hProcess)) {
           ok = false;
+          critical_error = true;
           _status.Set(_T("Error instrumenting browser\n"));
         }
 
@@ -160,6 +163,7 @@ bool WebBrowser::RunAndWait() {
         CloseHandle(pi.hThread);
       } else {
         _status.Set(_T("Error Launching: %s\n"), cmdLine);
+        critical_error = true;
       }
       LeaveCriticalSection(&cs);
 

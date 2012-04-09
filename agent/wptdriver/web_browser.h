@@ -37,7 +37,7 @@ public:
               BrowserSettings& browser);
   ~WebBrowser(void);
 
-  bool RunAndWait();
+  bool RunAndWait(bool &critical_error);
   void ClearUserData();
 
 private:

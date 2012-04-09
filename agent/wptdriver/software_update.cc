@@ -62,9 +62,9 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool SoftwareUpdate::UpdateSoftware(void) {
+bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
-  if (TimeToCheck()) {
+  if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {
       CString info = HttpGetText(_software_url);
@@ -299,4 +299,17 @@ bool SoftwareUpdate::TimeToCheck(void) {
   }
 
   return should_check;
+}
+
+/*-----------------------------------------------------------------------------
+  Force a re-install of the given browser
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::ReInstallBrowser(CString browser) {
+  HKEY key;
+  if (RegCreateKeyEx(HKEY_CURRENT_USER, SOFTWARE_REG_ROOT, 0, 0, 0, 
+        KEY_READ | KEY_WRITE, 0, &key, 0) == ERROR_SUCCESS) {
+    RegDeleteValue(key, browser);
+    RegCloseKey(key);
+  }
+  return UpdateSoftware(true);
 }

@@ -215,6 +215,13 @@ bool WptSettings::UpdateSoftware() {
 }
 
 /*-----------------------------------------------------------------------------
+  Re-install the current browser
+-----------------------------------------------------------------------------*/
+bool WptSettings::ReInstallBrowser() {
+  return _software_update.ReInstallBrowser(_browser._browser);
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   bool ret = false;

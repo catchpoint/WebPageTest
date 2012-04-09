@@ -72,6 +72,7 @@ public:
   bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response);
   bool UpdateSoftware();
+  bool ReInstallBrowser();
 
   CString _server;
   CString _location;
