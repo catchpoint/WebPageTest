@@ -95,6 +95,11 @@ public class Browser implements VideoFrameSource {
   public void loadPageAndMeasureLatency(final Task task, final boolean shouldClearCache)
       throws InterruptedException {
     Log.d(TAG, "loadPageAndMeasureLatency()");
+
+    // Clear the screen by loading about:blank into the webview.
+    mWebView.loadUrl("about:blank");
+    Thread.sleep(Config.PRE_PAGE_LOAD_SLEEP_TIME_MS);
+
     if (task.shouldClearCookie()) {
       CookieManager.getInstance().removeAllCookie();
     }
