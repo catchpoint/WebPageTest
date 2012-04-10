@@ -1285,11 +1285,11 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($loc, &$count, &$avgTime)
 {
+    $total = 0;
     $locations = explode(',', $loc);
     foreach($locations as $location) {
         $parts = explode(':', $location);
         $location = $parts[0];
-        $total = 0;
         $count = 0;
         $avgTime = 0;
         $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
@@ -1367,7 +1367,11 @@ function GetJobFile($workDir)
         while( !isset($file) && $priority <= 9 )
         {
             $file = array_shift($queue[$priority]);
-            $priority++;
+            if (isset($file) && !is_file("$workDir/$file")) {
+                unset($file);
+            } else {
+                $priority++;
+            }
         }
 
         if( isset($file) )
