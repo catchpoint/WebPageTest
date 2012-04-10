@@ -153,10 +153,42 @@ else
                 $testInfo_dirty = true;
             }
         }
+        
+        // make sure the test result is valid, otherwise re-run it
+        if ($done && !$har && !$pcap && isset($testInfo) && array_key_exists('job_file', $testInfo)) {
+            $testfile = NULL;
+            $valid = false;
+            $files = scandir($testPath);
+            foreach ($files as $file) {
+                if (stripos($file, 'IEWPG')) {
+                    $valid = true;
+                }
+                if (preg_match('/.*\.test$/', $file)) {
+                    $testfile = "$testPath/$file";
+                }
+            }
+            if (!$valid && isset($testfile)) {
+                // re-submit the test (move the test file so we only try this once)
+                if (rename($testfile, $testInfo['job_file'])) {
+                    AddJobFile($testInfo['work_dir'], $testInfo['job'], $testInfo['priority'], 0);
+                    $done = false;
+                    unset($testInfo['started']);
+                    $testInfo_dirty = true;
+                }
+            }
+        }
             
         // see if the test is complete
         if( $done )
         {
+            // delete any .test files
+            $files = scandir($testPath);
+            foreach ($files as $file) {
+                if (preg_match('/.*\.test$/', $file)) {
+                    unlink("$testPath/$file");
+                }
+            }
+            
             $perTestTime = 0;
             $testCount = 0;
             $beaconUrl = null;
@@ -308,8 +340,13 @@ else
             if( array_key_exists('median_video', $ini) && $ini['median_video'] )
                 KeepVideoForRun($testPath, $medianRun);
                 
-            // archive the test
+            // archive the test (modifies the on-disk testinfo so we need to flush it and update
+            if( isset($testInfo) && $testInfo_dirty ) {
+                $testInfo_dirty = false;
+                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+            }
             ArchiveTest($id);
+            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             
             // do any other post-processing (e-mail notification for example)
             if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )

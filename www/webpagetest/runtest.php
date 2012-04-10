@@ -1204,6 +1204,11 @@ function WriteJob($location, &$test, &$job, $testId)
                 {
                     if( AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit']) )
                     {
+                        // store a copy of the job file with the original test in case the test fails and we need to resubmit it
+                        $test['work_dir'] = $workDir;
+                        $test['job_file'] = $file;
+                        $testPath = './' . GetTestPath($testId);
+                        file_put_contents("$testPath/$fileName.test", $job);
                         $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
                         if( !$tests )
                             $tests = array();
