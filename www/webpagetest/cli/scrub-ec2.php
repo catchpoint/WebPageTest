@@ -5,6 +5,7 @@ include './cli/ec2-keys.inc.php';
 include './ec2/sdk.class.php';
 set_time_limit(0);
 $minimum = true;
+ob_start();
 
 $counts = array();
 foreach( $regions as $region => &$amiData ) {
@@ -28,10 +29,15 @@ if( $ec2 )
         foreach( $amiData as $ami => &$regionData )
         {
             $location = $regionData['location'];
-            echo "\n$region:\n";
+            echo "\n$region ($location):\n";
             
             // load the valid testers in this location
-            $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+            $testers = array();
+            $locations = explode(',', $location);
+            foreach($locations as $loc) {
+                $loc_testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
+                $testers = array_merge($testers, $loc_testers);
+            }
 
             // get the list of current running ec2 instances        
             $terminate = array();
@@ -61,6 +67,7 @@ if( $ec2 )
                             }
                             else
                             {
+                                echo "$location - Unknown Tester: $id (state {$instance->instanceState->code})\n";
                                 $terminate[] = $id;
                                 $unknownCount++;
                             }
@@ -81,19 +88,21 @@ if( $ec2 )
             $targetCount = $activeCount;
             if( $idleCount )
                 $targetCount = (int)($activeCount + ($idleCount / 4));
-            elseif( $targetBacklog && $activeCount )
+            elseif( $targetBacklog )
             {
                 // get the current backlog
                 $backlog = GetPendingTests($location, $bk, $avgTime);
                 echo "Backlog: $backlog\n";
-                $ratio = $backlog / $activeCount;
-                if( $ratio > $targetBacklog )
+                if ($activeCount)
+                    $ratio = $backlog / $activeCount;
+                if( !$activeCount || $ratio > $targetBacklog )
                     $targetCount = (int)($backlog / $targetBacklog);
+                echo "Target from Backlog: $targetCount\n";
             }
             $targetCount = max(min($targetCount,$regionData['max']), $regionData['min']);
             if( $targetCount > $regionData['min'] )
                 $minimum = false;
-            echo "Target: $targetCount\n";
+            echo "Target: $targetCount (max = {$regionData['max']}, min = {$regionData['min']})\n";
             
             $needed = $targetCount - $counts["$region.$ami"];
             echo "Needed: $needed\n";
@@ -119,24 +128,35 @@ if( $ec2 )
             } elseif( $needed < 0 && !$addOnly ) {
                 // lock the location while we mark some free instances for decomm
                 $count = abs($needed);
-                if( $lock = LockLocation($location) )
-                {
-                    $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-                    if (count($testers))
+                $locations = explode(',', $location);
+                foreach($locations as $loc) {
+                    if( $lock = LockLocation($loc) )
                     {
-                        foreach($testers as &$tester)
+                        $testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
+                        if (count($testers))
                         {
-                            if( $count > 0 && !strlen($tester['test']) && strlen($tester['ec2']) && !$tester['offline'] )
+                            foreach($testers as &$tester)
                             {
-                                $tester['offline'] = true;
-                                $terminate[] = $tester['ec2'];
-                                $count--;
-                                $counts["$region.$ami"]--;
+                                if (array_key_exists('ec2', $tester) && strlen($tester['ec2']) && !$tester['offline']) {
+                                    if( $count > 0 && !strlen($tester['test']) )
+                                    {
+                                        $terminate[] = $tester['ec2'];
+                                        $count--;
+                                        $counts["$region.$ami"]--;
+                                    }
+                                    
+                                    // see if this tester is on the terminate list (for testers that support multiple locations)
+                                    foreach($terminate as $id) {
+                                        if ($tester['ec2'] == $id) {
+                                            $tester['offline'] = true;
+                                        }
+                                    }
+                                }
                             }
+                            file_put_contents("./tmp/$loc.tm", json_encode($testers));
                         }
-                        file_put_contents("./tmp/$location.tm", json_encode($testers));
+                        UnlockLocation($lock);
                     }
-                    UnlockLocation($lock);
                 }
             }
             
@@ -170,7 +190,9 @@ foreach( $counts as $region => $count )
 }
 echo $countsTxt;
 
+$detail = ob_get_flush();
+
 // send out a mail message if we are not running at the minimum levels
 if( !$addOnly && !$minimum )
-    mail('pmeenan@webpagetest.org', $summary, $countsTxt );
+    mail('pmeenan@webpagetest.org', $summary, $detail );
 ?>
