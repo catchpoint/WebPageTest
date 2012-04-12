@@ -178,7 +178,8 @@ BOOL CGDIHook::SetWindowTextA(HWND hWnd, LPCSTR text)
   if (!_test_state._exit && _test_state._active && 
         hWnd == _test_state._frame_window) {
     CString title((LPCTSTR)CA2T(text));
-    if( title.Left(11) != _T("about:blank") )
+    if( title.Left(11) != _T("about:blank") && 
+        title.Compare(_T("Blank")) )
       _test_state.TitleSet(title);
   }
 
