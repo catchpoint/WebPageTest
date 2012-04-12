@@ -266,11 +266,50 @@ function wptSendEvent(event_name, query_string) {
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (g_active && props.status == 'loading') {
-    g_start = new Date().getTime();
-    wptSendEvent('navigate', '');
+	if (g_active) {
+		if (props.status == 'loading') {
+			g_start = new Date().getTime();
+			wptSendEvent('navigate', '');
+		} else if (props.status == 'complete') {
+      wptSendEvent('complete', '');
+		}
   }
 });
+
+chrome.webRequest.onErrorOccurred.addListener(function(details) {
+	if (g_active) {
+		var error_code = 12999;
+		if (details.error == 'net::ERR_NAME_NOT_RESOLVED') {
+			error_code = 12007;
+		} else if (details.error == 'net::ERR_CONNECTION_ABORTED') {
+			error_code = 12030;
+		} else if (details.error == 'net::ERR_ADDRESS_UNREACHABLE') {
+			error_code = 12029;
+		} else if (details.error == 'net::ERR_CONNECTION_REFUSED') {
+			error_code = 12029;
+		} else if (details.error == 'net::ERR_CONNECTION_TIMED_OUT') {
+			error_code = 12029;
+		} else if (details.error == 'net::ERR_CONNECTION_RESET') {
+			error_code = 12031;
+		}
+		wpt.LOG.info(details.error + ' = ' + error_code);
+		g_active = false;
+		wptSendEvent('navigate_error?error=' + error_code + 
+							'&str=' + encodeURIComponent(details.error), '');
+	}
+}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+);
+
+chrome.webRequest.onCompleted.addListener(function(details) {
+	if (g_active) {
+		wpt.LOG.info('Completed, status = ' + details.statusCode);
+		if (details.statusCode >= 400) {
+			g_active = false;
+			wptSendEvent('navigate_error?error=' + details.statusCode, '');
+		}
+	}
+}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+);
 
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(

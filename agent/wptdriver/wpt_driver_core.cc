@@ -198,7 +198,7 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
 bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   bool ret = false;
   bool critical_error = false;
-  bool attempt = 0;
+  int attempt = 0;
 
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 

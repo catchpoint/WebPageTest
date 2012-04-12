@@ -342,7 +342,10 @@ bool TestState::IsDone() {
                test_ms, load_ms, inactive_ms, _test._measurement_timeout);
       bool is_loaded = (load_ms > ON_LOAD_GRACE_PERIOD &&
                         !_test._dom_element_check);
-      if (is_loaded && _test._doc_complete) {
+      if (_test_result) {
+        is_page_done = true;
+        done_reason = _T("Page Error");
+      } else if (is_loaded && _test._doc_complete) {
         is_page_done = true;
         done_reason = _T("Stop at document complete (i.e. onload).");
       } else if (is_loaded && inactive_ms > ACTIVITY_TIMEOUT) {
@@ -357,7 +360,7 @@ bool TestState::IsDone() {
       }
     }
     if (is_page_done) {
-      if (_capturing_aft) {
+      if (_capturing_aft && !_test_result) {
         // Continue AFT video capture by only marking the test as inactive.
         WptTrace(loglevel::kFrequentEvent,
                  _T("[wpthook] - TestState::IsDone() -> false (capturing AFT);")

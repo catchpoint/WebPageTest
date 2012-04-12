@@ -211,6 +211,30 @@ function onPageLoad(event) {
   wptExtension.loadStop(win);
 }
 
+const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;  
+const STATE_STOP = Components.interfaces.nsIWebProgressListener.STATE_STOP;  
+var progressListener =  
+{  
+  QueryInterface: function(aIID)  
+  {  
+   if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||  
+       aIID.equals(Components.interfaces.nsISupportsWeakReference) ||  
+       aIID.equals(Components.interfaces.nsISupports))  
+     return this;  
+   throw Components.results.NS_NOINTERFACE;  
+  },  
+  
+  onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {},  
+  onLocationChange: function(aProgress, aRequest, aURI) {
+		if (aRequest && !Components.isSuccessCode(aRequest.status)) {
+			wpt.moz.main.sendEventToDriver_('navigate_error?error=' + aRequest.status);
+		}
+	},
+  onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },  
+  onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },  
+  onSecurityChange: function(aWebProgress, aRequest, aState) { }  
+}  
+
 /**
  * Fired when gBrowser receives a pagehide event, this function
  * calls wptExtension.loadStart() to indicate that navigation is
@@ -234,11 +258,12 @@ var wptExtension = {
     // page gets the onload event.
     gBrowser.addEventListener('load', onPageLoad, true);
     gBrowser.addEventListener('pagehide', onPageHide, true);
+		gBrowser.addProgressListener(progressListener);
   },
   uninit: function() {
     gBrowser.removeEventListener('load', onPageLoad, true);
     gBrowser.removeEventListener('pagehide', onPageHide, true);
-
+		gBrowser.removeProgressListener(progressListener);
   },
   loadStart: function() {
 	wpt.moz.main.onNavigate();

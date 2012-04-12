@@ -163,6 +163,10 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/navigate_error") == 0) {
+      test_state_._test_result = GetDwordParam(request_info->query_string, 
+                                                "error");
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri,"/event/all_dom_elements_loaded")==0) {
       DWORD load_time = GetDwordParam(request_info->query_string, "load_time");
       hook_.OnAllDOMElementsLoaded(load_time);

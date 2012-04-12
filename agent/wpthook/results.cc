@@ -683,10 +683,23 @@ void Results::ProcessRequests(void) {
   // before recording the results so we can include any socket connections
   // or DNS lookups that are not associated with a request
   POSITION pos = _requests._requests.GetHeadPosition();
+  bool base_page = true;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
-    if (request)
+    if (request) {
       request->Process();
+      if (base_page && 
+          (!_test_state._test_result || 
+          _test_state._test_result == 99999) ) {
+        int result_code = request->GetResult();
+        if (result_code != 301 && result_code != 302) {
+          base_page = false;
+          if (result_code >= 400) {
+            _test_state._test_result = result_code;
+          }
+        }
+      }
+    }
   }
   _requests.Unlock();
 }
