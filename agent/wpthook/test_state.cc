@@ -129,6 +129,7 @@ void TestState::Reset(bool cascade) {
     _title_time.QuadPart = 0;
     _aft_time_ms = 0;
     _title.Empty();
+    _user_agent = _T("WebPagetest");
     _timeline_events.RemoveAll();
     _console_log_messages.RemoveAll();
     GetSystemTime(&_start_time);
@@ -817,16 +818,14 @@ CString TestState::GetTimelineJSON() {
   CString ret;
   EnterCriticalSection(&_data_cs);
   if (!_timeline_events.IsEmpty()) {
-    ret = _T("[");
-    bool first = true;
+    ret = _T("[\"");
+    ret += _user_agent + _T("\"");
     POSITION pos = _timeline_events.GetHeadPosition();
     while (pos) {
       CString entry = _timeline_events.GetNext(pos);
       if (entry.GetLength()) {
-        if (!first)
-          ret += _T(",");
+        ret += _T(",");
         ret += entry;
-        first = false;
       }
     }
     ret += _T("]");

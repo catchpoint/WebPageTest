@@ -135,6 +135,7 @@ public:
   CString _title;
   CString _browser_name;
   CString _browser_version;
+  CString _user_agent;
 
   bool  _active;
   bool _capturing_aft;

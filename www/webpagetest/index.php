@@ -272,6 +272,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
+                                        <label for="timeline" class="auto_width">
+                                            Capture Dev Tools Timeline (Chrome Only)
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
                                             Save response bodies<br>

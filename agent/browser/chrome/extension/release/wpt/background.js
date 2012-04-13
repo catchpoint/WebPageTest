@@ -13786,7 +13786,7 @@ goog.provide('wpt.chromeDebugger');
 
 ((function() {  // namespace
 
-var g_instance = {};
+var g_instance = {connected: false, timeline: false, timelineConnected: false};
 
 /**
  * Construct an object that connectes to the Chrome debugger.
@@ -13820,6 +13820,25 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
     wpt.LOG.warning('Error initializing debugger interfaces: ' + err);
   }
 };
+
+/**
+ * Capture the network timeline
+ */
+wpt.chromeDebugger.CaptureTimeline = function() {
+	g_instance.timeline = true;
+	if (g_instance.connected) {
+		try {
+			if (g_instance.chromeApi_['debugger']) {
+				g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+			} else if (g_instance.chromeApi_.experimental['debugger']) {
+				g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+			}
+			g_instance.timelineConnected = true;
+		} catch (err) {
+			wpt.LOG.warning('Error starting timeline capture (already connected): ' + err);
+		}
+	}
+}
 
 /**
  * Actual message callback
@@ -13865,6 +13884,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
  */
 wpt.chromeDebugger.OnAttachDebugger = function(){
 	wpt.LOG.info('attached to debugger extension interface');
+	g_instance.connected = true;
 	g_instance.requests = {};
 	
 	// attach the event listener
@@ -13873,8 +13893,10 @@ wpt.chromeDebugger.OnAttachDebugger = function(){
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
 	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
-	// the timeline is pretty resource intensive - TODO, make this optional
-	//g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+	if (g_instance.timeline && !g_instance.timelineConnected) {
+		g_instance.timelineConnected = true;
+		g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+	}
 }
 			
 /**
@@ -13882,6 +13904,7 @@ wpt.chromeDebugger.OnAttachDebugger = function(){
  */
 wpt.chromeDebugger.OnAttachOld = function(){
 	wpt.LOG.info('attached to debugger old experimental extension interface');
+	g_instance.connected = true;
 	g_instance.requests = {};
 	
 	// attach the event listener
@@ -13891,7 +13914,10 @@ wpt.chromeDebugger.OnAttachOld = function(){
 	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Network.enable");
 	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Console.enable");
 	// the timeline is pretty resource intensive - TODO, make this optional
-	//g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+	if (g_instance.timeline && !g_instance.timelineConnected) {
+		g_instance.timelineConnected = true;
+		g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+	}
 }
 
 /**
@@ -14063,7 +14089,6 @@ var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
-var g_chromeDebugger = null;	// global debugger instance
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14135,7 +14160,7 @@ wpt.main.startMeasurements = function() {
     var tab = focusedTabs[0];
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
-		g_chromeDebugger = new wpt.chromeDebugger.Init(tab.id, window.chrome);
+	wpt.chromeDebugger.Init(tab.id, window.chrome);
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
@@ -14383,6 +14408,9 @@ function wptExecuteTask(task) {
         break;
       case 'submitform':
         g_commandRunner.doSubmitForm(task.target);
+        break;
+      case 'capturetimeline':
+        wpt.chromeDebugger.CaptureTimeline();
         break;
 
       default:

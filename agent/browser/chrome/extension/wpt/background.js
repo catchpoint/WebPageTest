@@ -76,7 +76,6 @@ var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
-var g_chromeDebugger = null;	// global debugger instance
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -148,7 +147,7 @@ wpt.main.startMeasurements = function() {
     var tab = focusedTabs[0];
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
-		g_chromeDebugger = new wpt.chromeDebugger.Init(tab.id, window.chrome);
+	wpt.chromeDebugger.Init(tab.id, window.chrome);
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
@@ -396,6 +395,9 @@ function wptExecuteTask(task) {
         break;
       case 'submitform':
         g_commandRunner.doSubmitForm(task.target);
+        break;
+      case 'capturetimeline':
+        wpt.chromeDebugger.CaptureTimeline();
         break;
 
       default:

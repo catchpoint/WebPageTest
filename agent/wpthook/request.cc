@@ -480,6 +480,11 @@ bool Request::Process() {
         _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
     }
 
+    CStringA user_agent = GetRequestHeader("User-Agent");
+    if (user_agent.GetLength()) {
+      _test_state._user_agent = CA2T(user_agent);
+    }
+
     // see if we have a matching request with browser data
     CString url = _T("http://");
     if (_is_ssl)

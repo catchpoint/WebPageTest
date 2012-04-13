@@ -347,6 +347,9 @@ $page_description = "Website performance test result$testLabel.";
                             else
                                 echo "<br><br><a href=\"/getgzip.php?test=$id&file=$run.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                         }
+                        if( gz_is_file("$testPath/{$run}_timeline.json") ) {
+                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                        }
                     ?></td>
                     <td align="center" valign="middle"><a href="<?php echo FRIENDLY_URLS ? "/result/$id/$run/details/" : "/details.php?test=$id&run=$run"; ?>"><img class="progress" width=250 src="<?php echo FRIENDLY_URLS ? "/result/$id/{$run}_waterfall_thumb.png" : "/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png"; ?>"></a></td>
                     <?php
@@ -391,6 +394,9 @@ $page_description = "Website performance test result$testLabel.";
                                 echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
                             else
                                 echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                        }
+                        if( gz_is_file("$testPath/{$run}_Cached_timeline.json") ) {
+                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
                         }
                     echo '</td>';
                     if( FRIENDLY_URLS )
