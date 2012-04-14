@@ -156,7 +156,7 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
                         <?php if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) { ?>
-                        <th align="center" valign="middle">Speed Index</th>
+                        <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>

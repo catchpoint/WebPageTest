@@ -145,7 +145,7 @@ $page_description = "Website performance test details$testLabel";
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
                         <?php if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) { ?>
-                        <th align="center" valign="middle">Speed Index</th>
+                        <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
