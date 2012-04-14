@@ -249,7 +249,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
-                            <div id="advanced-settings" class="test_subbox">
+                            <div id="advanced-settings" class="test_subbox ui-tabs-hide">
                                 <ul class="input_fields">
                                     <li>
                                         <input type="checkbox" name="web10" id="stop_test_at_document_complete" class="checkbox before_label">
@@ -316,7 +316,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
-                            <div id="auth" class="test_subbox">
+                            <div id="auth" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="warning">
                                         PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
@@ -346,7 +346,7 @@ $loc = ParseLocations($locations);
                                 </ul>
                             </div>
 
-                            <div id="script" class="test_subbox">
+                            <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
@@ -364,7 +364,7 @@ $loc = ParseLocations($locations);
                                 </label>
                             </div>
 
-                            <div id="block" class="test_subbox">
+                            <div id="block" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <input type="checkbox" name="blockads" id="blockads" class="checkbox" style="float: left;width: auto;">
                                     <label for="blockads" class="auto_width">
@@ -382,7 +382,7 @@ $loc = ParseLocations($locations);
                             </div>
 
                             <?php if($settings['enableVideo']) { ?>
-                            <div id="video" class="test_subbox">
+                            <div id="video" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="message">
                                         Video will appear in the Screenshot page of your results
@@ -423,7 +423,7 @@ $loc = ParseLocations($locations);
                             <?php } ?>
 
                             <?php if (!$settings['noBulk']) { ?>
-                            <div id="bulk" class="test_subbox">
+                            <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
                                         List of urls to test (one URL per line)...

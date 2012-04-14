@@ -180,8 +180,7 @@ function LoadTestData()
             $test['video']['start'] = 20000;
             $test['video']['end'] = 0;
             $test['video']['frames'] = array();
-            if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
-                $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached']);
+            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached']);
             
             // get the path to each of the video files
             $dir = opendir($videoPath);

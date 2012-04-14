@@ -131,6 +131,14 @@
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded)
         echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+    
+    if (array_key_exists('slow', $_REQUEST) && $_REQUEST['slow'] == 'bottom') {
+        $delay = 10;
+        if (array_key_exists('delay', $_REQUEST)) {
+            $delay = $_REQUEST['delay'];
+        }
+        echo "<script type=\"text/javascript\" src=\"/slowtweet.php?delay=$delay\"></script>";
+    }
     ?>
     <script type="text/javascript">
         function showFeeds(column)

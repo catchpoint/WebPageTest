@@ -3,7 +3,7 @@ include 'common.inc';
 include 'object_detail.inc'; 
 require_once('page_data.inc');
 require_once('waterfall.inc');
-$data = loadPageRunData($testPath, $run, $cached);
+$data = loadPageRunData($testPath, $run, $cached, array('SpeedIndex' => true));
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -144,8 +144,8 @@ $page_description = "Website performance test details$testLabel";
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
-                        <?php if( (float)$data['visualComplete'] > 0.0 ) { ?>
-                        <th align="center" valign="middle">Visually Complete</th>
+                        <?php if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) { ?>
+                        <th align="center" valign="middle">Speed Index</th>
                         <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
@@ -174,8 +174,8 @@ $page_description = "Website performance test details$testLabel";
                                 $aft = 'N/A';
                             echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
                         }
-                        if( (float)$data['visualComplete'] > 0.0 )
-                            echo "<td id=\"visualComplate\" valign=\"middle\">" . number_format($data['visualComplete'] / 1000.0, 1) . "s</td>\n";
+                        if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 )
+                            echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . number_format($data['domTime'] / 1000.0, 3) . "s</td>\n";
                         if( $data['domElements'] > 0 )

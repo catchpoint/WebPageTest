@@ -137,7 +137,7 @@ $page_description = "Website performance test result$testLabel.";
                             $cols++;
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             $cols++;
-                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0)
+                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0)
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
@@ -155,8 +155,8 @@ $page_description = "Website performance test result$testLabel.";
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
-                        <?php if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0) { ?>
-                        <th align="center" valign="middle">Visually Complete</th>
+                        <?php if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) { ?>
+                        <th align="center" valign="middle">Speed Index</th>
                         <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>
@@ -187,8 +187,8 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
                         }
-                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0)
-                            echo "<td id=\"fvVisual\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['visualComplete'] / 1000.0, 1) . "s</td>\n";
+                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0)
+                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
@@ -218,10 +218,10 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"rvAFT\" class=\"even\" valign=\"middle\">$aft</th>";
                         }
-                        if((float)$pageData[$fvMedian][0]['visualComplete'] > 0.0) {
+                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
                             $disp = '-';
-                            if((float)$pageData[$rvMedian][1]['visualComplete'] > 0.0)
-                                $disp = number_format($pageData[$rvMedian][1]['visualComplete'] / 1000.0, 1) . 's';
+                            if(array_key_exists('SpeedIndex', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndex'] > 0)
+                                $disp = $pageData[$rvMedian][1]['SpeedIndex'];
                             echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
                         }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
