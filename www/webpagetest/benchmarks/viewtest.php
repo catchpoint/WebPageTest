@@ -1,4 +1,5 @@
 <?php
+set_time_limit(600);
 chdir('..');
 include 'common.inc';
 include './benchmarks/data.inc.php';
