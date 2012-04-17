@@ -90,11 +90,7 @@ foreach($requests as $reqNum => $request)
 		{
 			echo '<td class="reqSocket ' . $highlight . '">' . $request['connect_ms'] . ' ms</td>';
 			if( $request['is_secure'] && $request['is_secure'] == 1 ) {
-                $ssl_time = (int)$request['ssl_ms'];
-                if ((int)$request['ssl_end'] > 0) {
-                    $ssl_time = $request['ssl_end'] - $request['ssl_start'];
-                }
-				echo '<td class="reqSSL ' . $highlight . '">' . $ssl_time . ' ms</td>';
+				echo '<td class="reqSSL ' . $highlight . '">' . (int)$request['ssl_ms'] . ' ms</td>';
 			} elseif( $secure )
 				echo '<td class="reqSSL ' . $highlight . '">-</td>';
 		}

@@ -66,11 +66,7 @@ function SelectRequest(request) {
         if (r['connect_ms'] !== undefined && r['connect_ms'] != -1) {
             details += '<b>Initial Connection: </b>' + r['connect_ms'] + ' ms<br>';
             if (r['is_secure'] !== undefined && r['is_secure'] && r['ssl_ms'] !== undefined) {
-                var ssl_time = r['ssl_ms'];
-                if (r['ssl_end'] !== undefined && r['ssl_start'] !== undefined && r['ssl_end'] > 0) {
-                    ssl_time = r['ssl_end'] - r['ssl_start'];
-                }
-                details += '<b>SSL Negotiation: </b>' + ssl_time + ' ms<br>';
+                details += '<b>SSL Negotiation: </b>' + r['ssl_ms'] + ' ms<br>';
             }
         } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
             var connectTime = r['connect_end'] - r['connect_start'];
