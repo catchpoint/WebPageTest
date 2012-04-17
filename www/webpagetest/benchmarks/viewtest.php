@@ -161,7 +161,7 @@ $series = GetSeriesLabels($benchmark);
                 echo "<h1>{$info['title']}</h1>";
                 if (array_key_exists('description', $info))
                     echo "<p>{$info['description']}</p>\n";
-                foreach( $metrics as $metric => $label) {
+/*                foreach( $metrics as $metric => $label) {
                     echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                     if ($info['expand'] && count($info['locations'] > 1)) {
                         foreach ($info['locations'] as $location => $label) {
@@ -173,6 +173,40 @@ $series = GetSeriesLabels($benchmark);
                         DisplayBenchmarkData($info, $metric);
                     }
                 }
+*/            }
+            echo "<hr><h1>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h1>\n";
+            if (GetTestErrors(&$errors, $benchmark, $test_time)) {
+                foreach($errors as &$configuration) {
+                    if (count($configuration['locations'])) {
+                        echo "<h2>{$configuration['label']}</h2>\n";
+                        foreach($configuration['locations'] as &$location) {
+                            echo "<h3>{$location['label']}</h3>\n";
+                            if (count($location['urls'])) {
+                                echo "<ul>";
+                                foreach($location['urls'] as &$url) {
+                                    echo "<li>" . htmlspecialchars($url['url']) . " - ";
+                                    $first = true;
+                                    foreach( $url['errors'] as &$test ) {
+                                        if ($first)
+                                            $first = false;
+                                        else
+                                            echo ", ";
+                                        $cached = '';
+                                        if ($test['cached'])
+                                            $cached = 'cached/';
+                                        echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                    }
+                                    echo "</li>";
+                                }
+                                echo "</ul>";
+                            } else {
+                                echo "No Errors Detected";
+                            }
+                        }
+                    }
+                }
+            } else {
+                echo "No Errors Detected";
             }
             ?>
             </div>

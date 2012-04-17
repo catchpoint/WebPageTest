@@ -669,4 +669,76 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
     return $ok;
 }
 
+/**
+* Get a report of all of the test errors
+*/
+function GetTestErrors(&$errors, $benchmark, $test) {
+    global $raw_data;
+    $errors_detected = false;
+    $errors = array();
+    $loc = null;
+    $loc_aliases = null;
+    if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
+        foreach($configurations as &$configuration) {
+            if (array_key_exists('title', $configuration) && strlen($configuration['title']))
+                $title = $configuration['title'];
+            else
+                $title = $configuration['name'];
+            $errors[$configuration['name']] = array('label' => $title, 'locations' => array());
+            foreach($configuration['locations'] as &$location) {
+                $title = $location['label'];
+                if (is_numeric($title))
+                    $title = $location['location'];
+                $errors[$configuration['name']]['locations'][$location['location']] = array('label' => $title, 'urls' => array());
+            }
+        }
+        $date = gmdate('Ymd_Hi', $test);
+        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        if (gz_is_file($data_file)) {
+            if (!isset($raw_data)) {
+                $raw_data = json_decode(gz_file_get_contents($data_file), true);
+            }
+            if (count($raw_data)) {
+                foreach($raw_data as &$row) {
+                    if (array_key_exists('url', $row) && 
+                        array_key_exists('config', $row) && 
+                        array_key_exists('location', $row)) {
+                        $url = $row['url'];
+                        $config = $row['config'];
+                        $location = $row['location'];
+                        if (!array_key_exists('result', $row) ||
+                            ($row['result'] != 0 && $row['result'] != 99999)) {
+                            $errors_detected = true;
+                            $error = '-1';
+                            if (array_key_exists('result', $row))
+                                $error = $row['result'];
+                            if (isset($loc_aliases) && count($loc_aliases)) {
+                                foreach($loc_aliases as $loc_name => &$aliases) {
+                                    foreach($aliases as $alias) {
+                                        if ($location == $alias) {
+                                            $location = $loc_name;
+                                            break 2;
+                                        }
+                                    }
+                                }
+                            }
+                            if (!array_key_exists($config, $errors)) {
+                                $errors[$config] = array('label' => $config, 'locations' => array());
+                            }
+                            if (!array_key_exists($location, $errors[$config]['locations'])) {
+                                $errors[$config]['locations'][$location] = array('label' => $location, 'urls' => array());
+                            }
+                            if (!array_key_exists($url, $errors[$config]['locations'][$location]['urls'])) {
+                                $errors[$config]['locations'][$location]['urls'][$url] = array('url' => $url, 'errors' => array());
+                            }
+                            $errors[$config]['locations'][$location]['urls'][$url]['errors'][] = array('error' => $error, 'id' => $row['id'], 'run' => $row['run'], 'cached' => $row['cached']);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $errors_detected;
+}
+
 ?>
