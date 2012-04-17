@@ -1,7 +1,7 @@
 <?php 
 // shared initializiation/loading code
 set_time_limit(300);
-if (!isset($debug) || !$debug || !array_key_exists('debug', $_REQUEST)) {
+if (!array_key_exists('debug', $_REQUEST) && (!isset($debug) || !$debug)) {
     error_reporting(0);
 }
 umask(0);
