@@ -17,6 +17,10 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
     }
 }
 
+function logAlways($msg, $logFile = './log.txt') {
+  logMsg($msg, $logFile, true);  // true -> force logging.
+}
+
 /**
  * Message logging with the source location of the log message.
  * @param mixed $msg
