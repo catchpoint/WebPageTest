@@ -2,7 +2,7 @@
 set_time_limit(300);
 
 require_once('../lib/pclzip.lib.php');
-require_once('logging.inc');
+require_once('../logging.inc');
 
 // Debugging flags.  Set to false by default.
 define('FORCE_LOGGING_OF_PCAP2HAR_ERRORS', false);
