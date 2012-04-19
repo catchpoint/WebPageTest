@@ -1683,9 +1683,10 @@ function ParseBulkUrl($line)
     
     $equals = strpos($line, '=');
     $query = strpos($line, '?');
+    $slash = strpos($line, '/');
     $label = null;
     $url = null;
-    if( $equals === false || ($query !== false && $query < $equals) )
+    if( $equals === false || ($query !== false && $query < $equals) || ($slash !== false && $slash < $equals) )
         $url = $line;
     else
     {
