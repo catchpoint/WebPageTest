@@ -661,7 +661,10 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 			// look up the host name if it is available
 			CString host;
 			winInetConnections.Lookup(hConnect, host);
-			CString fullUrl = host + object;
+      CString fullUrl = _T("http://");
+			if( dwFlags & INTERNET_FLAG_SECURE )
+        fullUrl = _T("https://");
+			fullUrl += host + object;
 
 			// Block ads.
 			if( blockads && IsAdRequest(fullUrl) )
