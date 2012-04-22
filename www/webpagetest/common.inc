@@ -791,8 +791,10 @@ function FilterLocations(&$locations, $includeHidden = '',
         // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
         foreach ($locations as $name => &$locRef) {
             if (isset($locRef['browser'])) {
+                $parts = explode(':', $name);
+                $locname = $parts[0];
                 // now check the times
-                $file = "./tmp/$name.tm";
+                $file = "./tmp/$locname.tm";
                 if (is_file($file)) {
                     $updated = filemtime($file);
                     $now = time();
