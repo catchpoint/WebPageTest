@@ -24,6 +24,13 @@ $("#request-dialog-radio").change(function() {
 
 var wptBodyRequest;
 
+// test that a value is a is a valid duration.
+// Invalid durations include undefined and -1.
+function IsValidDuration(possibleDuration) {
+    return (typeof(possibleDuration) == 'number' &&
+            possibleDuration != -1);
+}
+
 function SelectRequest(request) {
     $('#request-dialog').css('top', $("#request-overlay-" + request).position().top + 20);
     $("#dialog-title").html('<a href="#request' + request + '">Request #' + request + '</a>');
@@ -57,15 +64,15 @@ function SelectRequest(request) {
             details += '<b>Error/Status Code: </b>' + r['responseCode'] + '<br>';
         if (r['load_start'] !== undefined)
             details += '<b>Start Offset: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
-        if (r['dns_ms'] !== undefined && r['dns_ms'] != -1) {
+        if (IsValidDuration(r['dns_ms'])) {
             details += '<b>DNS Lookup: </b>' + r['dns_ms'] + ' ms<br>';
         } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
             var dnsTime = r['dns_end'] - r['dns_start'];
             details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
         }
-        if (r['connect_ms'] !== undefined && r['connect_ms'] != -1) {
+        if (IsValidDuration(r['connect_ms'])) {
             details += '<b>Initial Connection: </b>' + r['connect_ms'] + ' ms<br>';
-            if (r['is_secure'] !== undefined && r['is_secure'] && r['ssl_ms'] !== undefined) {
+            if (r['is_secure'] !== undefined && r['is_secure'] && IsValidDuration(r['ssl_ms'])) {
                 details += '<b>SSL Negotiation: </b>' + r['ssl_ms'] + ' ms<br>';
             }
         } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
@@ -76,9 +83,9 @@ function SelectRequest(request) {
                 details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
             }
         }
-        if (r['ttfb_ms'] !== undefined)
+        if (IsValidDuration(r['ttfb_ms']))
             details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms<br>';
-        if (r['download_ms'] !== undefined && r['download_ms'] >= 0)
+        if (IsValidDuration(r['download_ms']))
             details += '<b>Content Download: </b>' + r['download_ms'] + ' ms<br>';
         if (r['bytesIn'] !== undefined)
             details += '<b>Bytes In (downloaded): </b>' + (r['bytesIn'] / 1024.0).toFixed(1) + ' KB<br>';
