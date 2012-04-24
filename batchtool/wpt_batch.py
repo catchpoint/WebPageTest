@@ -95,6 +95,8 @@ def RunBatch(options):
     test_params['tcpdump'] = options.tcpdump
   if options.script:
     test_params['script'] = open(options.script, 'rb').read()
+	if options.key:
+		test_params['k'] = options.key
 
   requested_urls = wpt_batch_lib.ImportUrls(options.urlfile)
   id_url_dict = wpt_batch_lib.SubmitBatch(requested_urls, test_params,
@@ -169,6 +171,8 @@ def main():
   help_txt += 'DSL, Dial, Fios and custom (case sensitive). '
   help_txt += 'When it is custom, you can set the customized connectivity '
   help_txt += 'using options -u/d/l/p.'
+  option_parser.add_option('-k', '--key', action='store', default='',
+                           help='API Key')
   option_parser.add_option('-y', '--connectivity', action='store',
                            default='DSL', help=help_txt)
   option_parser.add_option('-u', '--bwup', action='store', default=384,

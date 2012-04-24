@@ -50,7 +50,7 @@ def ImportUrls(url_filename):
   return url_list
 
 
-def SubmitBatch(url_list, test_params, server_url='http://latencylab/',
+def SubmitBatch(url_list, test_params, server_url='http://www.webpagetest.org/',
                 urlopen=urllib.urlopen):
   """Submit the tests to WebPageTest server.
 
@@ -80,7 +80,7 @@ def SubmitBatch(url_list, test_params, server_url='http://latencylab/',
   return id_url_dict
 
 
-def CheckBatchStatus(test_ids, server_url='http://latencylab/',
+def CheckBatchStatus(test_ids, server_url='http://www.webpagetest.org/',
                      urlopen=urllib.urlopen):
   """Check the status of tests.
 
@@ -104,7 +104,7 @@ def CheckBatchStatus(test_ids, server_url='http://latencylab/',
   return id_status_dict
 
 
-def GetXMLResult(test_ids, server_url='http://latencylab/',
+def GetXMLResult(test_ids, server_url='http://www.webpagetest.org/',
                  urlopen=urllib.urlopen):
   """Obtain the test result in XML format.
 
