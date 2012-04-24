@@ -59,9 +59,6 @@ bool JSMin::Minify(const char * inBuff, char * outBuff, unsigned long &outBuffLe
   	
 	  Run();
   	
-	  if( len < outLen )
-		  *out = 0;	// NULL terminate it for convenience
-  	
 	  outBuffLen = len;
     ret = true;
 	}__except(1)

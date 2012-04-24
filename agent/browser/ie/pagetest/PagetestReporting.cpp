@@ -2437,7 +2437,7 @@ void CPagetestReporting::CheckMinify()
 					DWORD len = origLen + 1;
 					char * minified = new char [len];
 					JSMin jsmin;
-					if( jsmin.Minify((const char *)body, minified, len) )
+					if( jsmin.Minify((const char *)body, minified, len) && len )
 					{
 						// if the original content was gzipped, gzip the minified result as well
 						CString enc = w->response.contentEncoding;
