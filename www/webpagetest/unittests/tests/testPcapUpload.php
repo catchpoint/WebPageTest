@@ -4,9 +4,16 @@
 date_default_timezone_set('UTC');
 
 // Create a temp dir where HAR files will be written.
-const TMP = 'unittests/tmp';
-rmdir('unittests/former_tmp');
-rename(TMP, 'unittests/former_tmp');
+const TMP        = 'unittests/tmp';
+const FORMER_TMP = 'unittests/former_tmp';
+if (file_exists(FORMER_TMP)) {
+  rmdir(FORMER_TMP);
+}
+
+if (file_exists(TMP)) {
+  rename(TMP, FORMER_TMP);
+}
+
 mkdir(TMP, 0755);
 
 // TODO(skerner): When we promote the latest pcap2har script
@@ -16,6 +23,9 @@ mkdir(TMP, 0755);
 // or calling of the stable version of the script.
 const USE_LATEST_PCAP2HAR = true;
 const USE_STABLE_PCAP2HAR = false;
+
+const SUPPRESS_PAGE_RECORDS = false;
+
 function GetPCapFilePath($filename) {
   return "mobile/latest/pcap2har/tests/".$filename;
 }
@@ -28,6 +38,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har(GetPCapFilePath("empty.pcap"),
                                $harFile,
                                USE_LATEST_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
     \Enhance\Assert::areIdentical(print_r(array(), true),
                                   print_r($consoleOut, true));
@@ -40,6 +51,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har(GetPCapFilePath("empty.pcap"),
                                $harFile,
                                USE_STABLE_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
 
     // The stable version throws an exception on an empty input.
@@ -57,6 +69,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har(GetPCapFilePath("http.pcap"),
                                $harFile,
                                USE_LATEST_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
 
     \Enhance\Assert::areIdentical(print_r(array(), true),
@@ -80,6 +93,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har(GetPCapFilePath("http.pcap"),
                                $harFile,
                                USE_STABLE_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
 
     \Enhance\Assert::areIdentical(
@@ -105,6 +119,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har("unittests/data/invalid.pcap",
                                $harFile,
                                USE_LATEST_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
     \Enhance\Assert::areIdentical(1, $returnCode);
   }
@@ -116,6 +131,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har("unittests/data/invalid.pcap",
                                $harFile,
                                USE_STABLE_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
     \Enhance\Assert::areIdentical(1, $returnCode);
   }
@@ -128,6 +144,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har("unittests/data/googleDotComFromDevice.pcap",
                                $harFile,
                                USE_LATEST_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
     \Enhance\Assert::areIdentical(print_r(array(), true),
                                   print_r($consoleOut, true));
@@ -157,6 +174,7 @@ class PCapUploadTests extends \Enhance\TestFixture
     $returnCode = ExecPcap2Har("unittests/data/googleDotComFromEmulator.pcap",
                                $harFile,
                                USE_LATEST_PCAP2HAR,
+                               SUPPRESS_PAGE_RECORDS,
                                $consoleOut);
 
     \Enhance\Assert::areIdentical(print_r(array(), true),

@@ -5,6 +5,7 @@ date_default_timezone_set('UTC');
 
 require_once('../lib/pclzip.lib.php');
 require_once('../logging.inc');
+require_once('../mobile/pcap2har.inc');
 
 // Debugging flags.  Set to false by default.
 define('FORCE_LOGGING_OF_PCAP2HAR_ERRORS', false);
@@ -52,19 +53,17 @@ if( isset($_FILES['file']) )
 	}
 
 	// Execute pcap2har
-	$outfile = $pcappath . $curId . ".har";
+	$harfile = $pcapfile . ".har";
+	$useLatestPCap2Har = ShouldUseLatestPcap2Har();
+	$suppressPageRecords = false;  // Mobitest agent needs page records.
 	$consoleOut = array();
 	$returnCode = 0;
-	putenv("PYTHONPATH=./dpkt-1.7:./simplejson");
-	// When converting dates to ms since the epoch, do not add an offset
-	// for time zones.
-	putenv("TZ=UTC");
-	$retLine = exec("/usr/bin/python ./pcap2har/main.py $pcapfile $outfile 2>&1", $consoleOut, $returnCode);
-
-  $harText = null;
-  if (file_exists($outfile)) {
-	  $harText = file_get_contents($outfile);
-  }
+	ExecPcap2Har($pcapfile, $harfile, $useLatestPCap2Har,
+                     $suppressPageRecords, $consoleOut);
+	$harText = null;
+	if (file_exists($harfile)) {
+		$harText = file_get_contents($harfile);
+	}
 
 	if ($returnCode == 0)
 	{
