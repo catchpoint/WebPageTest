@@ -6,6 +6,7 @@ define('RESTORE_DATA_ONLY', true);
 include 'common.inc';
 require_once('page_data.inc');
 require_once('testStatus.inc');
+require_once('video/visualProgress.inc.php');
 
 // stub-out requests from M4_SpeedTestService
 //if( strpos($_SERVER['HTTP_USER_AGENT'], 'M4_SpeedTestService') !== false )
@@ -103,6 +104,10 @@ else
                 if( strlen($score) )
                     echo "<PageSpeedScore>$score</PageSpeedScore>\n";
             }
+            $progress = GetVisualProgress($testPath, $fvMedian, 0);
+            if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
+            }
             if( FRIENDLY_URLS )
                 echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             else
@@ -123,6 +128,10 @@ else
                         $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+                    }
+                    $progress = GetVisualProgress($testPath, $rvMedian, 1);
+                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     if( FRIENDLY_URLS )
                         echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
@@ -154,6 +163,10 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+                    }
+                    $progress = GetVisualProgress($testPath, $i, 0);
+                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     echo "</results>\n";
 
@@ -214,6 +227,11 @@ else
                                 echo "<frame>\n";
                                 echo "<time>" . number_format((double)$time / 10.0, 1) . "</time>\n";
                                 echo "<image>http://$host$uri$path/video_{$i}/$frameFile</image>\n";
+                                $ms = $time * 100;
+                                if (isset($progress) && is_array($progress) && 
+                                    array_key_exists('frames', $progress) && array_key_exists($ms, $progress['frames'])) {
+                                    echo "<VisuallyComplete>{$progress['frames'][$ms]['progress']}</VisuallyComplete>\n";
+                                }
                                 echo "</frame>\n";
                             }
                             echo "</videoFrames>\n";
@@ -235,6 +253,10 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+                    }
+                    $progress = GetVisualProgress($testPath, $i, 1);
+                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     echo "</results>\n";
 
@@ -283,6 +305,11 @@ else
                                 echo "<frame>\n";
                                 echo "<time>" . number_format((double)$time / 10.0, 1) . "</time>\n";
                                 echo "<image>http://$host$uri$path/video_{$i}_cached/$frameFile</image>\n";
+                                $ms = $time * 100;
+                                if (isset($progress) && is_array($progress) && 
+                                    array_key_exists('frames', $progress) && array_key_exists($ms, $progress['frames'])) {
+                                    echo "<VisuallyComplete>{$progress['frames'][$ms]['progress']}</VisuallyComplete>\n";
+                                }
                                 echo "</frame>\n";
                             }
                             echo "</videoFrames>\n";
