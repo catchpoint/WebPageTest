@@ -1,6 +1,8 @@
 <?php
 set_time_limit(300);
 
+date_default_timezone_set('UTC');
+
 require_once('../lib/pclzip.lib.php');
 require_once('../logging.inc');
 
@@ -54,6 +56,9 @@ if( isset($_FILES['file']) )
 	$consoleOut = array();
 	$returnCode = 0;
 	putenv("PYTHONPATH=./dpkt-1.7:./simplejson");
+	// When converting dates to ms since the epoch, do not add an offset
+	// for time zones.
+	putenv("TZ=UTC");
 	$retLine = exec("/usr/bin/python ./pcap2har/main.py $pcapfile $outfile 2>&1", $consoleOut, $returnCode);
 
   $harText = null;

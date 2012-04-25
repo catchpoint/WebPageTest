@@ -528,6 +528,9 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
          "$pathContainingPCapToHar:".
          "./mobile/dpkt-1.7:".
          "./mobile/simplejson");
+  // When converting dates to ms since the epoch, do not add an offset
+  // for time zones.
+  putenv("TZ=UTC");
 
   $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
 
