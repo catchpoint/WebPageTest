@@ -61,9 +61,9 @@ CDN_PROVIDER cdnList[] = {
   {".googleusercontent.com", "Google"},
   {".internapcdn.net", "Internap"},
   {".cloudfront.net", "Amazon CloudFront"},
-  {".netdna-cdn.com", "MaxCDN"},
-  {".netdna-ssl.com", "MaxCDN"},
-  {".netdna.com", "MaxCDN"},
+  {".netdna-cdn.com", "NetDNA"},
+  {".netdna-ssl.com", "NetDNA"},
+  {".netdna.com", "NetDNA"},
   {".cotcdn.net", "Cotendo CDN"},
   {".cachefly.net", "Cachefly"},
   {"bo.lt", "BO.LT"},
@@ -82,6 +82,7 @@ CDN_PROVIDER cdnList[] = {
   {".mirror-image.net", "Mirror Image"},
   {".yottaa.net", "Yottaa"},
   {".cubecdn.net", "cubeCDN"},
+  {".r.cdn77.net", "CDN77"},
   {"END_MARKER", "END_MARKER"}
 };
 
