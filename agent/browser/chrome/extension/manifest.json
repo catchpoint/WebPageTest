@@ -24,9 +24,9 @@
     "webNavigation",
     "webRequest",
     "webRequestBlocking",
-		"browsingData",
+    "browsingData",
     "management",
-		"debugger",
+    "debugger",
     "http://*/*",
     "https://*/*"
   ]
