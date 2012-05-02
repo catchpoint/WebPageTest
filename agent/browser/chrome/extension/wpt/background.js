@@ -396,6 +396,9 @@ function wptExecuteTask(task) {
       case 'submitform':
         g_commandRunner.doSubmitForm(task.target);
         break;
+      case 'clearcache':
+        g_commandRunner.doClearCache(task.target);
+        break;
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;

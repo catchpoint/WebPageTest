@@ -276,4 +276,18 @@ wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
   });
 };
 
+/**
+ * Implement the setcookie command.
+ * @param {string} cookie_path
+ * @param {string} data
+ */
+wpt.commands.CommandRunner.prototype.doClearCache = function(target) {
+	if (this.chromeApi_['browsingData'] != undefined) {
+		this.chromeApi_.browsingData.removeCache({}, function(){});
+	} else if (this.chromeApi_.experimental['clear'] != undefined) {
+		this.chromeApi_.experimental.clear.cache(0, function(){});
+	}
+};
+
+
 })());  // namespace
