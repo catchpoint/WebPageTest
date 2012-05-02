@@ -460,8 +460,11 @@ bool WptTest::NavigationCommand(CString& command) {
 void  WptTest::FixURL(ScriptCommand& command) {
   if (!command.command.CompareNoCase(_T("navigate")) && 
       command.target.GetLength()) {
-    if (command.target.Left(4) != _T("http"))
+    if (!command.target.CompareNoCase(_T("about:blank"))) {
+      command.target = _T("http://127.0.0.1:8888/blank.html");
+    } else if (command.target.Left(4) != _T("http")) {
       command.target = CString(_T("http://")) + command.target;
+    }
   }
 }
 
