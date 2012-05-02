@@ -633,15 +633,18 @@ void TestState::CollectData() {
   Keep track of the page title and when it was first set (first title only)
 -----------------------------------------------------------------------------*/
 void TestState::TitleSet(CString title) {
-  if (_active && !_title_time.QuadPart) {
-    QueryPerformanceCounter(&_title_time);
-    _title = title.Trim();
+  if (_active) {
+    CString new_title = title.Trim();
     // trim the browser off of the title ( - Chrome, etc)
-    int pos = _title.ReverseFind(_T('-'));
+    int pos = new_title.ReverseFind(_T('-'));
     if (pos > 0)
-      _title = _title.Left(pos).Trim();
-    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
-              _title);
+      new_title = new_title.Left(pos).Trim();
+    if (!_title_time.QuadPart || new_title.Compare(_title)) {
+      QueryPerformanceCounter(&_title_time);
+      _title = new_title;
+      WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
+                _title);
+    }
   }
 }
 
