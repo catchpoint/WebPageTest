@@ -237,6 +237,7 @@ public:
   CString GetUrl();
 
   bool  _processed;
+  bool  _reported;
   DWORD _socket_id;
   ULONG _peer_address;
   bool  _is_ssl;
@@ -259,10 +260,18 @@ public:
   int _ms_ssl_start;
   int _ms_ssl_end;
 
+  bool _from_browser;
+
   // performance counter times
   LARGE_INTEGER _start;
   LARGE_INTEGER _first_byte;
   LARGE_INTEGER _end;
+  LARGE_INTEGER _connect_start;
+  LARGE_INTEGER _connect_end;
+  LARGE_INTEGER _dns_start;
+  LARGE_INTEGER _dns_end;
+  LARGE_INTEGER _ssl_start;
+  LARGE_INTEGER _ssl_end;
 
   OptimizationScores _scores;
   CAtlList<CustomRulesMatch>  _custom_rules_matches;

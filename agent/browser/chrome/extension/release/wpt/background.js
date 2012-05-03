@@ -13781,16 +13781,15 @@ wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
 };
 
 /**
- * Implement the setcookie command.
- * @param {string} cookie_path
- * @param {string} data
+ * Implement the clearcache command.
+ * @param {string} options
  */
-wpt.commands.CommandRunner.prototype.doClearCache = function(target) {
-	if (this.chromeApi_['browsingData'] != undefined) {
-		this.chromeApi_.browsingData.removeCache({}, function(){});
-	} else if (this.chromeApi_.experimental['clear'] != undefined) {
-		this.chromeApi_.experimental.clear.cache(0, function(){});
-	}
+wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
+  if (this.chromeApi_['browsingData'] != undefined) {
+    this.chromeApi_.browsingData.removeCache({}, function(){});
+  } else if (this.chromeApi_.experimental['clear'] != undefined) {
+    this.chromeApi_.experimental.clear.cache(0, function(){});
+  }
 };
 
 
@@ -13818,15 +13817,15 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 	try {
 		g_instance.tabId_ = tabId;
 		g_instance.chromeApi_ = chromeApi;
+    var version = "1.0";
 		if (g_instance.chromeApi_['debugger']) {
-				var version = "1.0";
 				g_instance.chromeApi_.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
 		} else if (g_instance.chromeApi_.experimental['debugger']) {
 			// deal with the different function signatures for different chrome versions
 			try {
 				g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
 			} catch (err) {
-				var version = "0.1";
+				version = "0.1";
 				g_instance.chromeApi_.experimental.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
 			}
 		}
@@ -13865,6 +13864,9 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 			detail.url = params.request.url;
 			detail.initiator = params.initiator;
 			detail.startTime = params.timestamp;
+      if (params['request'] !== undefined) {
+        detail.request = params.request;
+      }
 			g_instance.requests[params.requestId] = detail;
 		}
 	} else if (message === "Network.dataReceived") {
@@ -13875,11 +13877,40 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 	} else if (message === "Network.responseReceived") {
 		if (!params.response.fromDiskCache && 
 				g_instance.requests[params.requestId] !== undefined) {
+      g_instance.requests[params.requestId].fromNet = true;
+      if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
+        g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+      }
+      g_instance.requests[params.requestId].response = params.response;
+		}
+	} else if (message === "Network.loadingFinished") {
+		if (g_instance.requests[params.requestId] !== undefined &&
+        g_instance.requests[params.requestId]['fromNet']) {
 			request = g_instance.requests[params.requestId];
 			request.endTime = params.timestamp;
-			request.response = params.response;
 			wpt.chromeDebugger.sendRequestDetails(request);
-		}
+    }
+	} else if (message === "Network.loadingFailed") {
+		if (g_instance.requests[params.requestId] !== undefined) {
+			request = g_instance.requests[params.requestId];
+			request.endTime = params.timestamp;
+      request.error = params.errorText;
+      request.errorCode = 12999;
+      if (request.error == 'net::ERR_NAME_NOT_RESOLVED') {
+        request.errorCode = 12007;
+      } else if (request.error == 'net::ERR_CONNECTION_ABORTED') {
+        request.errorCode = 12030;
+      } else if (request.error == 'net::ERR_ADDRESS_UNREACHABLE') {
+        request.errorCode = 12029;
+      } else if (request.error == 'net::ERR_CONNECTION_REFUSED') {
+        request.errorCode = 12029;
+      } else if (request.error == 'net::ERR_CONNECTION_TIMED_OUT') {
+        request.errorCode = 12029;
+      } else if (request.error == 'net::ERR_CONNECTION_RESET') {
+        request.errorCode = 12031;
+      }
+			wpt.chromeDebugger.sendRequestDetails(request);
+    }
 	}
 	
 	// console events
@@ -13959,6 +13990,10 @@ wpt.chromeDebugger.OnAttachExperimental = function(){
 wpt.chromeDebugger.sendRequestDetails = function (request) {
 	var eventData = 'browser=chrome\n';
 	eventData += 'url=' + request.url + '\n';
+	if (request['errorCode'] !== undefined)
+		eventData += 'errorCode=' + request.errorCode + '\n';
+	if (request['error'] !== undefined)
+		eventData += 'errorText=' + request.error + '\n';
 	if (request['startTime'] !== undefined)
 		eventData += 'startTime=' + request.startTime + '\n';
 	if (request['firstByteTime'] !== undefined)
@@ -13987,6 +14022,8 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 		}
 	}
 	if (request['response'] !== undefined) {
+		if (request.response['status'] !== undefined)
+				eventData += 'status=' + request.response.status + '\n';
 		if (request.response['connectionId'] !== undefined)
 				eventData += 'connectionId=' + request.response.connectionId + '\n';
 		if (request.response['timing'] !== undefined) {
@@ -13996,15 +14033,61 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 			eventData += 'timing.connectEnd=' + request.response.timing.connectEnd + '\n';
 			eventData += 'timing.sslStart=' + request.response.timing.sslStart + '\n';
 			eventData += 'timing.sslEnd=' + request.response.timing.sslEnd + '\n';
+			eventData += 'timing.requestTime=' + request.response.timing.requestTime + '\n';
 		}
 		
 		// the end of the data is ini-file style for multi-line values
 		eventData += '\n';
-		if (request.response['requestHeadersText'] !== undefined)
+		if (request.response['requestHeadersText'] !== undefined) {
 			eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n'
+    } else if (request['request'] !== undefined) {
+      eventData += '[Request Headers]\n';
+      var method = 'GET';
+      if (request.request['method'] !== undefined) {
+        method = request.request['method'];
+      }
+      var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+      if (matches !== undefined && matches.length > 1) {
+        var host = matches[1];
+        var object = '/';
+        if (matches.length > 2) {
+          object = matches[2];
+        }
+        eventData += method + ' ' + object + ' HTTP/1.1\n';
+        eventData += 'Host: ' + host + '\n';
+        if (request.request['headers'] !== undefined) {
+          for (tag in request.request.headers) {
+            eventData += tag + ': ' + request.request.headers[tag] + '\n';
+          }
+        }
+      }
+      eventData += '\n';
+    }
 		if (request.response['headersText'] !== undefined)
 			eventData += '[Response Headers]\n' + request.response.headersText + '\n'
-	}
+	} else if (request['request'] !== undefined) {
+    eventData += '[Request Headers]\n';
+    var method = 'GET';
+    if (request.request['method'] !== undefined) {
+      method = request.request['method'];
+    }
+    var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+    if (matches !== undefined && matches.length > 1) {
+      var host = matches[1];
+      var object = '/';
+      if (matches.length > 2) {
+        object = matches[2];
+      }
+      eventData += method + ' ' + object + ' HTTP/1.1\n';
+      eventData += 'Host: ' + host + '\n';
+      if (request.request['headers'] !== undefined) {
+        for (tag in request.request.headers) {
+          eventData += tag + ': ' + request.request.headers[tag] + '\n';
+        }
+      }
+    }
+    eventData += '\n';
+  }
   wpt.chromeDebugger.sendEvent('request_data', eventData);
 }
 

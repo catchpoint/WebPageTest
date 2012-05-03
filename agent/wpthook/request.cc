@@ -330,12 +330,20 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _sockets(sockets)
   , _dns(dns)
   , _is_active(true)
+  , _reported(false)
   , _are_headers_complete(false)
   , _data_sent(false)
+  , _from_browser(false)
   , requests_(requests) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
+  _connect_start.QuadPart = 0;
+  _connect_end.QuadPart = 0;
+  _dns_start.QuadPart = 0;
+  _dns_end.QuadPart = 0;
+  _ssl_start.QuadPart = 0;
+  _ssl_end.QuadPart = 0;
   _peer_address = sockets.GetPeerAddress(socket_id);
   _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
@@ -442,37 +450,55 @@ bool Request::Process() {
       ret = true;
     }
 
-    // Find the matching socket connect and DNS lookup (if they exist).
-    LARGE_INTEGER before = _start;
-    LARGE_INTEGER start, end, ssl_start, ssl_end;
-    CString host = CA2T(GetRequestHeader("host"));
-    if (_dns.Claim(host, _peer_address, before, start, end)) {
-      _ms_dns_start = _test_state.ElapsedMsFromStart(start);
-      _ms_dns_end = _test_state.ElapsedMsFromStart(end);
-    }
-    if (_sockets.ClaimConnect(_socket_id, before, start, end,
-                              ssl_start, ssl_end)) {
-      _ms_connect_start = _test_state.ElapsedMsFromStart(start);
-      _ms_connect_end = _test_state.ElapsedMsFromStart(end);
-      _ms_ssl_start = _test_state.ElapsedMsFromStart(ssl_start);
-      _ms_ssl_end = _test_state.ElapsedMsFromStart(ssl_end);
+    if (_from_browser) {
+      if (_dns_start.QuadPart && _dns_end.QuadPart) {
+        _ms_dns_start = _test_state.ElapsedMsFromStart(_dns_start);
+        _ms_dns_end = _test_state.ElapsedMsFromStart(_dns_end);
+      }
+      if (_connect_start.QuadPart && _connect_end.QuadPart) {
+        _ms_connect_start = _test_state.ElapsedMsFromStart(_connect_start);
+        _ms_connect_end = _test_state.ElapsedMsFromStart(_connect_end);
+        if (_ssl_start.QuadPart && _ssl_end.QuadPart) {
+          _ms_ssl_start = _test_state.ElapsedMsFromStart(_ssl_start);
+          _ms_ssl_end = _test_state.ElapsedMsFromStart(_ssl_end);
+        }
+      }
+    } else {
+
+      // Find the matching socket connect and DNS lookup (if they exist).
+      LARGE_INTEGER before = _start;
+      LARGE_INTEGER start, end, ssl_start, ssl_end;
+      CString host = CA2T(GetRequestHeader("host"));
+      if (_dns.Claim(host, _peer_address, before, start, end)) {
+        _ms_dns_start = _test_state.ElapsedMsFromStart(start);
+        _ms_dns_end = _test_state.ElapsedMsFromStart(end);
+      }
+      if (_sockets.ClaimConnect(_socket_id, before, start, end,
+                                ssl_start, ssl_end)) {
+        _ms_connect_start = _test_state.ElapsedMsFromStart(start);
+        _ms_connect_end = _test_state.ElapsedMsFromStart(end);
+        _ms_ssl_start = _test_state.ElapsedMsFromStart(ssl_start);
+        _ms_ssl_end = _test_state.ElapsedMsFromStart(ssl_end);
+      }
+
+      // Update the overall stats.
+      _test_state._bytes_out += _request_data.GetDataSize();
+      _test_state._bytes_in += _response_data.GetDataSize();
+      if (_start.QuadPart <= _test_state._on_load.QuadPart) {
+        _test_state._doc_bytes_in += _response_data.GetDataSize();
+        _test_state._doc_bytes_out += _request_data.GetDataSize();
+      }
     }
 
-    // Update the overall stats.
+    _test_state._requests++;
+    if (_start.QuadPart <= _test_state._on_load.QuadPart) {
+      _test_state._doc_requests++;
+    }
     int result = GetResult();
     if (!_test_state._first_byte.QuadPart && result == 200 && 
         _first_byte.QuadPart ) {
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
     }
-    _test_state._bytes_out += _request_data.GetDataSize();
-    _test_state._bytes_in += _response_data.GetDataSize();
-    _test_state._requests++;
-    if (_start.QuadPart <= _test_state._on_load.QuadPart) {
-      _test_state._doc_bytes_in += _response_data.GetDataSize();
-      _test_state._doc_bytes_out += _request_data.GetDataSize();
-      _test_state._doc_requests++;
-    }
-
     if (result >= 400 || result < 0) {
       if (_test_state._test_result == TEST_RESULT_NO_ERROR)
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
@@ -491,11 +517,13 @@ bool Request::Process() {
       url = _T("https://");
     url += CA2T(GetHost());
     url += CA2T(_request_data.GetObject());
-    BrowserRequestData data(url);
-    if (requests_.GetBrowserRequest(data)) {
-      initiator_ = data.initiator_;
-      initiator_line_ = data.initiator_line_;
-      initiator_column_ = data.initiator_column_;
+    if (!_from_browser) {
+      BrowserRequestData data(url);
+      if (requests_.GetBrowserRequest(data)) {
+        initiator_ = data.initiator_;
+        initiator_line_ = data.initiator_line_;
+        initiator_column_ = data.initiator_column_;
+      }
     }
   }
   LeaveCriticalSection(&cs);

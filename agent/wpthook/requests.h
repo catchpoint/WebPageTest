@@ -51,6 +51,18 @@ public:
   CString  initiator_;
   CString  initiator_line_;
   CString  initiator_column_;
+  long   connection_;
+  LARGE_INTEGER end_timestamp_;
+  double  end_time_;
+  double  start_time_;
+  double  first_byte_;
+  long  dns_start_;
+  long  dns_end_;
+  long  connect_start_;
+  long  connect_end_;
+  long  ssl_start_;
+  long  ssl_end_;
+
 };
 
 class Requests {

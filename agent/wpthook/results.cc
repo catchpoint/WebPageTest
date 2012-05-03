@@ -728,46 +728,59 @@ void Results::SaveRequests(OptimizationChecks& checks) {
 
     _requests.Lock();
     // now record the results
-    POSITION pos = _requests._requests.GetHeadPosition();
+    // do a selection sort to pick out the requests in order of start time
     int i = 0;
     bool first_custom_rule = true;
-    while (pos) {
-      Request * request = _requests._requests.GetNext(pos);
-      if (request && request->_processed) {
-        i++;
-        SaveRequest(file, headers_file, request, i);
-        if (!request->_custom_rules_matches.IsEmpty() && 
-            custom_rules_file != INVALID_HANDLE_VALUE) {
-          if (first_custom_rule) {
-            first_custom_rule = false;
-          } else {
-            WriteFile(custom_rules_file, ",", 1, &bytes, 0);
-          }
-          buff.Format("\"%d\"", i);
-          WriteFile(custom_rules_file,(LPCSTR)buff,buff.GetLength(),&bytes,0);
-          WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
-          POSITION match_pos =request->_custom_rules_matches.GetHeadPosition();
-          DWORD match_count = 0;
-          while (match_pos) {
-            match_count++;
-            CustomRulesMatch match = 
-                request->_custom_rules_matches.GetNext(match_pos);
-            CT2A name((LPCTSTR)match._name, CP_UTF8);
-            CT2A value((LPCTSTR)match._value, CP_UTF8);
-            CStringA entry = "";
-            if (match_count > 1)
-              entry += ",";
-            entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
-            entry += CStringA("\"value\":\"")+JSONEscapeA((LPCSTR)value)+"\",";
-            buff.Format("%d", match._count);
-            entry += CStringA("\"count\":") + buff + "}";
-            WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 
-                      &bytes, 0);
-          }
-          WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+    Request * request = NULL;
+    do {
+      request = NULL;
+      POSITION pos = _requests._requests.GetHeadPosition();
+      while (pos) {
+        Request * candidate = _requests._requests.GetNext(pos);
+        if (!candidate->_reported && 
+            (!request || 
+            candidate->_start.QuadPart < request->_start.QuadPart)) {
+          request = candidate;
         }
       }
-    }
+      if (request) {
+        request->_reported = true;
+        if (request->_processed) {
+          i++;
+          SaveRequest(file, headers_file, request, i);
+          if (!request->_custom_rules_matches.IsEmpty() && 
+              custom_rules_file != INVALID_HANDLE_VALUE) {
+            if (first_custom_rule) {
+              first_custom_rule = false;
+            } else {
+              WriteFile(custom_rules_file, ",", 1, &bytes, 0);
+            }
+            buff.Format("\"%d\"", i);
+            WriteFile(custom_rules_file,(LPCSTR)buff,buff.GetLength(),&bytes,0);
+            WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
+            POSITION match_pos =request->_custom_rules_matches.GetHeadPosition();
+            DWORD match_count = 0;
+            while (match_pos) {
+              match_count++;
+              CustomRulesMatch match = 
+                  request->_custom_rules_matches.GetNext(match_pos);
+              CT2A name((LPCTSTR)match._name, CP_UTF8);
+              CT2A value((LPCTSTR)match._value, CP_UTF8);
+              CStringA entry = "";
+              if (match_count > 1)
+                entry += ",";
+              entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
+              entry += CStringA("\"value\":\"")+JSONEscapeA((LPCSTR)value)+"\",";
+              buff.Format("%d", match._count);
+              entry += CStringA("\"count\":") + buff + "}";
+              WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 
+                        &bytes, 0);
+            }
+            WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+          }
+        }
+      }
+    } while (request);
     _requests.Unlock();
     if (custom_rules_file != INVALID_HANDLE_VALUE) {
       WriteFile(custom_rules_file, "}", 1, &bytes, 0);
@@ -819,7 +832,11 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_ms_end - request->_ms_start);
   result += buff;
   // Time to First Byte (ms)
-  buff.Format("%d\t", request->_ms_first_byte - request->_ms_start);
+  if (request->_ms_first_byte >= request->_ms_start) {
+    buff.Format("%d\t", request->_ms_first_byte - request->_ms_start);
+  } else {
+    buff = "\t";
+  }
   result += buff;
   // Start Time (ms)
   buff.Format("%d\t", request->_ms_start);
