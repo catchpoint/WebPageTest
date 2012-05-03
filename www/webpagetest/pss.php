@@ -196,8 +196,8 @@ $page_description = "Comparison Test$testLabel.";
                         <li>
                             <label for="backend">Back-End</label>
                             <select name="backend" id="backend">
-                                <option value="prod" selected>Production</option>
-                                <option value="staging">Staging</option>
+                                <option value="prod" selected>Production - default rewriters</option>
+                                <option value="staging">Staging - aggressive rewriters</option>
                             </select>
                         </li>
                         <li>
