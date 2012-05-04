@@ -96,8 +96,8 @@ if (array_key_exists('benchmark', $_REQUEST)) {
             }
             </script>
             <?php
-            $metrics = array('SpeedIndex' => 'Speed Index',
-                            'docTime' => 'Load Time (onload)', 
+            $metrics = array('docTime' => 'Load Time (onload)', 
+                            'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte', 
                             'titleTime' => 'Time to Title', 
                             'render' => 'Time to Start Render', 
