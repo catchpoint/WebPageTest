@@ -37,7 +37,13 @@ if (array_key_exists('aggregate', $_REQUEST))
                 var isCached = 0;
                 if (cached)
                     isCached = 1;
-                window.location.href = "viewtest.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&cached=" + isCached + "&time=" + time;
+                var menu = '<div><h4>View details:</h4>';
+                var scatter = "viewtest.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&cached=" + isCached + "&time=" + time;
+                var delta = "delta.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&time=" + time;
+                menu += '<a href="' + scatter + '">Scatter Plot</a><br>';
+                menu += '<a href="' + delta + '">Comparison Distribution</a><br>';
+                menu += '</div>';
+                $.modal(menu, {overlayClose:true});
             }
             </script>
             <div class="translucent">

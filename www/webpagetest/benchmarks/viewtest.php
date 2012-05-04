@@ -176,7 +176,7 @@ $series = GetSeriesLabels($benchmark);
                 }
             }
             echo "<hr><h1>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h1>\n";
-            if (GetTestErrors(&$errors, $benchmark, $test_time)) {
+            if (GetTestErrors($errors, $benchmark, $test_time)) {
                 foreach($errors as &$configuration) {
                     if (count($configuration['locations'])) {
                         echo "<h2>{$configuration['label']}</h2>\n";

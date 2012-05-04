@@ -3,6 +3,7 @@
 require_once('common.inc');
 $raw_data = null;
 $trend_data = null;
+$median_data = null;
 
 /**
 * Get a list of the series to display
@@ -741,4 +742,151 @@ function GetTestErrors(&$errors, $benchmark, $test) {
     return $errors_detected;
 }
 
+function LoadDeltaTSV($benchmark, $ref, $config, $cached, $metric, $test_time, &$meta, $loc) {
+    $tsv = null;
+    $delta = LoadDelta($benchmark, $ref, $config, $cached, $metric, $test_time, $loc);
+    if (isset($delta) && count($delta) > 1) {
+        $count = count($delta) - 1;
+        $index = 0;
+        $tsv = "Delta,Percentile\n";
+        $meta = array();
+        foreach($delta as &$data) {
+            $percentile = number_format(($index / $count) * 100, 5);
+            $tsv .= "{$data['delta']},$percentile\n";
+            $meta[$percentile] = $data;
+            $index++;
+        }
+    }
+    return $tsv;
+}
+
+function LoadDelta($benchmark, $ref, $config, $cached, $metric, $test_time, $loc) {
+    $delta = null;
+    global $median_data;
+    LoadMedianData($benchmark, $test_time);
+    if (isset($median_data) && 
+        array_key_exists($config, $median_data) &&
+        array_key_exists($loc, $median_data[$config]) &&
+        array_key_exists($cached, $median_data[$config][$loc]) &&
+        array_key_exists($ref, $median_data) &&
+        array_key_exists($loc, $median_data[$ref]) &&
+        array_key_exists($cached, $median_data[$ref][$loc])) {
+        foreach ($median_data[$config][$loc][$cached] as $url => &$data) {
+            if (array_key_exists($url, $median_data[$ref][$loc][$cached])) {
+                $refData = &$median_data[$ref][$loc][$cached][$url];
+                if (array_key_exists($metric, $data) &&
+                    array_key_exists($metric, $refData)) {
+                    $value = $data[$metric];
+                    $refValue = $refData[$metric];
+                    $deltaV = 0;
+                    if ($refValue) {
+                        $deltaV = ($value - $refValue) / $refValue;
+                    }
+                    $delta[] = array('delta' => $deltaV, 'url' => $url, 'ref' => $refData['id'], 'cmp' => $data['id']);
+                }
+            }
+        }
+    }
+    if (count($delta)) {
+        usort($delta, "DeltaSortCompare");
+    }
+    return $delta;
+}
+
+function DeltaSortCompare(&$a, &$b) {
+    $ret = 0;
+    if (isset($a) && is_array($a) && 
+        isset($b) && is_array($b) && 
+        array_key_exists('delta', $a) &&
+        array_key_exists('delta', $b)) {
+        if ($a['delta'] > $b['delta']) {
+            $ret = 1;
+        } elseif ($a['delta'] < $b['delta']) {
+            $ret = -1;
+        }
+    }
+    return $ret;
+}
+
+/**
+* Load the test data and keep just the median run for each config
+*/
+function LoadMedianData($benchmark, $test_time) {
+    global $median_data;
+    if (!isset($median_data)) {
+        $date = gmdate('Ymd_Hi', $test_time);
+        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        if (gz_is_file($data_file)) {
+            $raw_data = json_decode(gz_file_get_contents($data_file), true);
+            if (count($raw_data)) {
+                $tests = array();
+                // group the results by test ID
+                foreach($raw_data as &$row) {
+                    if (array_key_exists('docTime', $row) && 
+                        ($row['result'] == 0 || $row['result'] == 99999)) {
+                        $id = $row['id'];
+                        $cached = $row['cached'];
+                        $key = "$id-$cached";
+                        if (!array_key_exists($key, $tests)) {
+                            $tests[$key] = array();
+                        }
+                        $tests[$key][] = $row;
+                    }
+                }
+                // extract just the median runs
+                $median_data = array();
+                foreach($tests as &$test) {
+                    $times = array();
+                    foreach($test as $row) {
+                        $times[] = $row['docTime'];
+                    }
+                    $median_run_index = 0;
+                    $count = count($times);
+                    if( $count > 1 ) {
+                        asort($times);
+                        $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+                        $current = 0;
+                        foreach( $times as $index => $time ) {
+                            $current++;
+                            if( $current == $medianIndex ) {
+                                $median_run_index = $index;
+                                break;
+                            }
+                        }
+                    }
+                    $row = $test[$median_run_index];
+                    if (array_key_exists('cached', $row) &&
+                        array_key_exists('url', $row) && 
+                        array_key_exists('config', $row) && 
+                        array_key_exists('location', $row) ) {
+                        $url = $row['url'];
+                        $config = $row['config'];
+                        $location = $row['location'];
+                        $cached = $row['cached'];
+                        if (isset($loc_aliases) && count($loc_aliases)) {
+                            foreach($loc_aliases as $loc_name => &$aliases) {
+                                foreach($aliases as $alias) {
+                                    if ($location == $alias) {
+                                        $location = $loc_name;
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+                        if (!array_key_exists($config, $median_data)) {
+                            $median_data[$config] = array();
+                        }
+                        if (!array_key_exists($location, $median_data[$config])) {
+                            $median_data[$config][$location] = array();
+                        }
+                        if (!array_key_exists($cached, $median_data[$config][$location])) {
+                            $median_data[$config][$location][$cached] = array();
+                        }
+                        $median_data[$config][$location][$cached][$url] = $row;
+                    }
+                }
+            }
+        }
+    }
+}
 ?>
