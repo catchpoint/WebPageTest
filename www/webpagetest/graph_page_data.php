@@ -1,8 +1,10 @@
 <?php 
 include 'common.inc';
+require_once('page_data.inc');
 $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Graph Page Data.";
 $chartData = array();
+$pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -23,11 +25,15 @@ $chartData = array();
             <h2>Test Result Data Plots</h2>
             <?php
             $metrics = array('loadTime' => 'Load Time (ms)',
+                            'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte (ms)',
                             'render' => 'Start Render Time (ms)',
                             'fullyLoaded' => 'Fully Loaded Time (ms)',
                             'bytesIn' => 'Bytes In',
                             'requests' => 'Requests');
+            if (!$test['video']) {
+                unset($metrics['SpeedIndex']);
+            }
             foreach($metrics as $metric => $label) {
                 InsertChart($metric, $label);
             }
