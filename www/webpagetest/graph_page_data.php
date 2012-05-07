@@ -31,7 +31,7 @@ $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
                             'fullyLoaded' => 'Fully Loaded Time (ms)',
                             'bytesIn' => 'Bytes In',
                             'requests' => 'Requests');
-            if (!$test['video']) {
+            if (array_key_exists('testinfo', $test) && !$test['testinfo']['video']) {
                 unset($metrics['SpeedIndex']);
             }
             foreach($metrics as $metric => $label) {
