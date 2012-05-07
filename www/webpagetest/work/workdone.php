@@ -26,17 +26,18 @@ $pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
 // each agent.  Agents can opt in to testing the latest
 // version by setting this POST param to '1'.
 $useLatestPCap2Har =
-   arrayLookupWithDefault('useLatestPCap2Har', $_REQUEST, false);
+    arrayLookupWithDefault('useLatestPCap2Har', $_REQUEST, false);
 
-// Android client sends the run-state in post params.
-if (array_key_exists('_runNumber', $_REQUEST))
-    $runNumber = $_REQUEST['_runNumber'];
-if (array_key_exists('_cacheWarmed', $_REQUEST))
-    $cacheWarmed = $_REQUEST['_cacheWarmed'];
-if (array_key_exists('_docComplete', $_REQUEST))
-    $docComplete = $_REQUEST['_docComplete'];
-
-$urlUnderTest = arrayLookupWithDefault('_urlUnderTest', $_REQUEST, NULL);
+// The following params are set by the android agents (blaze and WebpageTest).
+// TODO(skerner): POST params are not saved to disk directly, so it is hard to
+// see what the agent uploaded after the fact.  Consider writing them to a
+// file that gets uploaded.
+$runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, NULL);
+$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, NULL);
+$docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, NULL);
+$onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, NULL);
+$onRender      = arrayLookupWithDefault('_onRender',      $_REQUEST, NULL);
+$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, NULL);
 
 $testInfo_dirty = false;
 
@@ -101,8 +102,29 @@ else
         elseif(isset($pcap) && $pcap &&
                isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
         {
-            $pcapFileName = $_FILES['file']['name'];
-            move_uploaded_file($_FILES['file']['tmp_name'], "$testPath/$pcapFileName");
+            // Path to pcap file, relative to $testPath.
+            $pcapFileName = null;
+            if (preg_match("/\.zip$/",$_FILES['file']['name'])) {
+                $archive = new PclZip($_FILES['file']['tmp_name']);
+                $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
+                foreach ($list as &$file)
+                {
+                    if (!preg_match('/\.pcap$/', $file['stored_filename']))
+                        continue;
+                    if ($pcapFileName !== null)
+                        logMalformedInput ("zipped pcap upload should contain only one .pcap file.");
+
+                    $pcapFileName = $file['stored_filename'];
+                }
+                if ($pcapFileName === null)
+                    logMalformedInput (".pcap.zip file contains no .pcap file.");
+
+            } else {
+                $pcapFileName = $_FILES['file']['name'];
+                move_uploaded_file(
+                    $_FILES['file']['tmp_name'],
+                    "$testPath/$pcapFileName");
+            }
             ProcessPCAP($testPath, $pcapFileName);
         }
         elseif( isset($_FILES['file']) )
@@ -192,12 +214,14 @@ else
             $perTestTime = 0;
             $testCount = 0;
             $beaconUrl = null;
-            if( strlen($settings['showslow'])  )
+            if (strlen($settings['showslow']))
             {
                 $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
-                if( strlen($settings['showslow_key'])  )
+                if (array_key_exists('showslow_key', $settings) &&
+                    strlen($settings['showslow_key']))
                     $beaconUrl .= '?key=' . trim($settings['showslow_key']);
-                if( $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
+                if (array_key_exists('beaconRate', $settings) &&
+                    $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
                     unset($beaconUrl);
                 else {
                     $testInfo['showslow'] = 1;
@@ -615,14 +639,6 @@ function ProcessUploadedHAR($testPath)
 
 function ProcessHARText($testPath, $harIsFromSinglePageLoad)
 {
-    global $done;
-    // TODO(skerner): Should be able to always do har processing if there is a
-    // HAR file.  Will need to test mobile agents.
-    if (!$done) {
-        logMsg("Processing har, but not done.  ".
-               "Potential backward compatibility issues.");
-    }
-
     // Read the json HAR file
     $rawHar = file_get_contents("{$testPath}/results.har");
 
@@ -787,6 +803,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             global $runNumber;
             global $cacheWarmed;
             global $docComplete;
+            global $onFullyLoaded;
             if (array_key_exists('_runNumber', $page)) {
               $curPageData["run"] = $page['_runNumber'];
               $curPageData["cached"] = $page['_cacheWarmed'];
@@ -797,6 +814,10 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
 
               if (isset($docComplete) && $curPageData["docComplete"] <= 0) {
                 $curPageData["docComplete"] = $docComplete;
+              }
+              
+              if (isset($onFullyLoaded) && $curPageData['fullyLoaded'] <=0) {
+                $curPageData['fullyLoaded'] = $onFullyLoaded;
               }
 
             } else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches)) {
