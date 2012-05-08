@@ -14181,11 +14181,15 @@ var UNWANTED_EXTENSIONS = [
   'amppcaoflpjiofjedecfhmmlekknkpdl'
 ];
 
+// regex to extract a host name from a URL
+var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
+
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
+var g_overrideHosts = {};
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14420,6 +14424,43 @@ chrome.webRequest.onCompleted.addListener(function(details) {
 }, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
 );
 
+chrome.webRequest.onBeforeRequest.addListener(function(details) {
+	var action = {};
+	if (g_active) {
+		var urlParts = details.url.match(URL_REGEX);
+		var scheme = urlParts[1].toString();
+		var host = urlParts[2].toString();
+		var object = urlParts[3].toString();
+		wpt.LOG.info('Checking host override for "' + host + '" in URL ' + details.url);
+		if (g_overrideHosts[host] != undefined) {
+			var newHost = g_overrideHosts[host];
+			wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
+			action.redirectUrl = scheme + newHost + object;
+		}
+	}
+	return action;
+  }, {urls: ["https://*/*"]}, 
+  ["blocking"]
+);
+
+chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
+	var response = {};
+	if (g_active) {
+		var host = details.url.match(URL_REGEX)[2].toString();
+		for (originalHost in g_overrideHosts) {
+			if (g_overrideHosts[originalHost] == host) {
+				details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+				response = {requestHeaders: details.requestHeaders}
+				break;
+			}
+		}
+	}
+    return response;
+  },
+  {urls: ["https://*/*"]},
+  ["blocking", "requestHeaders"]
+);
+  
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
@@ -14512,6 +14553,9 @@ function wptExecuteTask(task) {
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;
+	  case 'overridehost':
+		g_overrideHosts[task.target] = task.value;
+		break;
 
       default:
         wpt.LOG.error('Unimplemented command: ', task);

@@ -524,12 +524,16 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     _add_headers.RemoveAll();
     _set_headers.RemoveAll();
   } else if (cmd == _T("overridehost")) {
-      CStringA host = CT2A(command.target.Trim());
-      CStringA new_host = CT2A(command.value.Trim());
-      if (host.GetLength() && new_host.GetLength()) {
-        HttpHeaderValue host_override(host, new_host, "");
-        _override_hosts.AddTail(host_override);
-      }
+    CStringA host = CT2A(command.target.Trim());
+    CStringA new_host = CT2A(command.value.Trim());
+    if (host.GetLength() && new_host.GetLength()) {
+      HttpHeaderValue host_override(host, new_host, "");
+      _override_hosts.AddTail(host_override);
+    }
+    // pass the host override command on to the browser extension as well
+    // (needed for SSL override on Chrome)
+    continue_processing = false;
+    consumed = false;
   } else if (cmd == _T("block")) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
