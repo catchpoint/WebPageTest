@@ -10,6 +10,11 @@ import_request_variables('PG', 'req_');
 
 require_once('./logging.inc');
 
+$headers = apache_request_headers();
+if (array_key_exists('X-Forwarded-For', $headers)){
+    $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
+}
+
 if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')
     define('FRIENDLY_URLS', true);
 else
@@ -1323,6 +1328,7 @@ function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 function GetJobFile($workDir)
 {
     $file = null;
+    $modified = false;
     
     if( LoadJobQueue($workDir, $queue) )
     {
@@ -1330,6 +1336,9 @@ function GetJobFile($workDir)
         while( !isset($file) && $priority <= 9 )
         {
             $file = array_shift($queue[$priority]);
+            if (isset($file)) {
+                $modified = true;
+            }
             if (isset($file) && !is_file("$workDir/$file")) {
                 unset($file);
             } else {
@@ -1337,10 +1346,12 @@ function GetJobFile($workDir)
             }
         }
 
-        if( isset($file) )
-        {
+        if( isset($file) ) {
             $file = "$workDir/$file";
-            $ret = SaveJobQueue($workDir, $queue);
+        }
+        
+        if ($modified) {
+            SaveJobQueue($workDir, $queue);
         }
     }
 
@@ -1607,7 +1618,7 @@ function xml_entities($text, $charset = 'UTF-8')
  * @param mixed $response
  */
 function json_response(&$response) {
-    header ("Content-type: application/json");
+    header ("Content-type: application/json; charset=utf-8");
     if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
 
