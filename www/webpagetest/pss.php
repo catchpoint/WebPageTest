@@ -168,7 +168,8 @@ $page_description = "Comparison Test$testLabel.";
                             </table>
                         </li>
                         <?php
-                        if( !strlen($_GET['origin']) )
+                        //if( !strlen($_GET['origin']) )
+                        if (false)
                         {
                         ?>
                         <li>
@@ -183,6 +184,10 @@ $page_description = "Comparison Test$testLabel.";
                         <?php
                         }
                         ?>
+                        <li>
+                            <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
+                            <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
+                        </li>
                     </ul>
                     <ul class="input_fields">
                         <li>
@@ -201,11 +206,7 @@ $page_description = "Comparison Test$testLabel.";
                             </select>
                         </li>
                         <li>
-                            <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
-                            <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
-                        </li>
-                        <li>
-                            <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-Expt-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
+                            <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>
                         <?php
@@ -305,7 +306,7 @@ $page_description = "Comparison Test$testLabel.";
                 if (shard != 1)
                 {
                     script = form.script.value;
-                    script = "addHeader\tX-Expt-NumDomainShards: " + shard + "\n" + script;
+                    script = "addHeader\tX-NumDomainShards: " + shard + "\n" + script;
                     form.script.value = script;
                 }
 
