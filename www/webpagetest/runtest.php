@@ -95,6 +95,7 @@
             $test['clear_rv'] = (int)$req_clearRV;
             $test['keepua'] = 0;
             $test['benchmark'] = $req_benchmark;
+            $test['max_retries'] = min((int)$req_retry, 10);
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
             if (is_file('./settings/customrules.txt')) {

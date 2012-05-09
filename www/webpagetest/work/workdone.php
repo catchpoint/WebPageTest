@@ -189,9 +189,26 @@ else
                     $testfile = "$testPath/$file";
                 }
             }
-            if (!$valid && isset($testfile)) {
+            if (!array_key_exists('retries', $testInfo)) {
+                $testInfo['retries'] = 0;
+            }
+            if (array_key_exists('max_retries', $testInfo)) {
+                $testInfo['max_retries'] = min($testInfo['max_retries'], 10);
+                if ($valid) {
+                    require_once 'page_data.inc';
+                    $pageData = loadAllPageData($testPath);
+                    $count = CountSuccessfulTests($pageData, 0);
+                    if ($count < 1) {
+                        $valid = false;
+                    }
+                }
+            } else {
+                $testInfo['max_retries'] = 1;
+            }
+            if (!$valid && $testInfo['retries'] < $testInfo['max_retries'] && isset($testfile)) {
                 // re-submit the test (move the test file so we only try this once)
-                if (rename($testfile, $testInfo['job_file'])) {
+                if (copy($testfile, $testInfo['job_file'])) {
+                    $testInfo['retries']++;
                     AddJobFile($testInfo['work_dir'], $testInfo['job'], $testInfo['priority'], 0);
                     $done = false;
                     unset($testInfo['started']);
@@ -209,6 +226,9 @@ else
                 if (preg_match('/.*\.test$/', $file)) {
                     unlink("$testPath/$file");
                 }
+            }
+            if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file'])) {
+                unlink($testInfo['job_file']);
             }
             
             $perTestTime = 0;
@@ -236,7 +256,9 @@ else
             BuildVideoScripts($testPath);
             
             require_once 'page_data.inc';
-            $pageData = loadAllPageData($testPath);
+            if (!isset($pageData)) {
+                $pageData = loadAllPageData($testPath);
+            }
             $medianRun = GetMedianRun($pageData, 0);
             
             // calculate and cache the content breakdown and visual progress information
