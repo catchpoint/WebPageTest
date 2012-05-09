@@ -149,12 +149,12 @@
             document.getElementById("more_feeds_" + column).className = "";
             return false;
         }
-        <?php
-        if (!$privateInstall) {
-            echo '(function(a,b,c){function d(){var a=b.createElement(c),d=b.getElementsByTagName(c)[0];a.async=a.src="http://s2.cdnplanet.com/static/rum/rum.js",d.parentNode.insertBefore(a,d)}if(a.location.protocol=="https:")return;a.addEventListener&&a.addEventListener("load",d,!1)})(window,document,"script")';
-        }
-        ?>
     </script>
+    <?php
+    if (is_file('./settings/customfooter.inc.php')) {
+        include('./settings/customfooter.inc.php');
+    }
+    ?>
     <?php
     if(extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_footer();

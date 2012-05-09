@@ -15,6 +15,9 @@ if( strlen($page_description) )
 <?php 
     if(extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_header();
+    if (is_file('./settings/customhead.inc.php')) {
+        include('./settings/customhead.inc.php');
+    }
         
     echo "<style type=\"text/css\">\n";
     
