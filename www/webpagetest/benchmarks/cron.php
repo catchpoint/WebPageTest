@@ -284,6 +284,7 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $id = false;
     global $key;
     $priority = 8;  // default to a really low priority
+    $retry = 3;
     
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
@@ -291,6 +292,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     foreach ($settings as $setting => $value) {
         if ($setting == 'priority') {
             $priority = $value;
+        } else if ($setting == 'retry') {
+            $retry = $value;
         } else {
             $data .= "Content-Disposition: form-data; name=\"$setting\"\r\n\r\n$value";
             $data .= "\r\n--$boundary\r\n"; 
@@ -320,6 +323,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $data .= "Content-Disposition: form-data; name=\"f\"\r\n\r\njson";
     $data .= "\r\n--$boundary\r\n"; 
     $data .= "Content-Disposition: form-data; name=\"priority\"\r\n\r\n$priority"; 
+    $data .= "\r\n--$boundary--\r\n";
+    $data .= "Content-Disposition: form-data; name=\"retry\"\r\n\r\n$retry"; 
     $data .= "\r\n--$boundary--\r\n";
 
     $params = array('http' => array(
