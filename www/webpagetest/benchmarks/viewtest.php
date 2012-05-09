@@ -29,6 +29,41 @@ else {
     }
 }
 $series = GetSeriesLabels($benchmark);
+$metrics = array('docTime' => 'Load Time (onload)', 
+                'SpeedIndex' => 'Speed Index',
+                'TTFB' => 'Time to First Byte', 
+                'titleTime' => 'Time to Title', 
+                'render' => 'Time to Start Render', 
+                'fullyLoaded' => 'Load Time (Fully Loaded)', 
+                'domElements' => 'Number of DOM Elements', 
+                'connections' => 'Connections', 
+                'requests' => 'Requests (Fully Loaded)', 
+                'requestsDoc' => 'Requests (onload)', 
+                'bytesInDoc' => 'Bytes In (KB - onload)', 
+                'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
+                'js_bytes' => 'Javascript Bytes (KB)', 
+                'js_requests' => 'Javascript Requests', 
+                'css_bytes' => 'CSS Bytes (KB)', 
+                'css_requests' => 'CSS Requests', 
+                'image_bytes' => 'Image Bytes (KB)', 
+                'image_requests' => 'Image Requests',
+                'flash_bytes' => 'Flash Bytes (KB)', 
+                'flash_requests' => 'Flash Requests', 
+                'html_bytes' => 'HTML Bytes (KB)', 
+                'html_requests' => 'HTML Requests', 
+                'text_bytes' => 'Text Bytes (KB)', 
+                'text_requests' => 'Text Requests',
+                'other_bytes' => 'Other Bytes (KB)', 
+                'other_requests' => 'Other Requests'
+                );
+$metric = 'SpeedIndex';
+if (!$info['video']) {
+    unset($metrics['SpeedIndex']);
+    $metric = 'docTime';
+}
+if (array_key_exists('metric', $_REQUEST)) {
+    $metric = $_REQUEST['metric'];
+}
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -82,6 +117,25 @@ $series = GetSeriesLabels($benchmark);
                     }
                     ?>
                 </div>
+                <div style="float: right;">
+                    <form name="metric" method="get" action="viewtest.php">
+                        <?php
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        echo "<input type=\"hidden\" name=\"time\" value=\"$test_time\">";
+                        ?>
+                        Metric <select name="metric" size="1" onchange="this.form.submit();">
+                        <?php
+                        foreach( $metrics as $m => $metricLabel) {
+                            $selected = '';
+                            if ($m == $metric) {
+                                $selected = ' selected';
+                            }
+                            echo "<option value=\"$m\"$selected>$metricLabel</option>\n";
+                        }
+                        ?>
+                        </select>
+                    </form>
+                </div>
             </div>
             <div style="clear:both;">
             <br>
@@ -127,52 +181,20 @@ $series = GetSeriesLabels($benchmark);
                 </form>
             </div>
             <?php
-            $metrics = array('docTime' => 'Load Time (onload)', 
-                            'SpeedIndex' => 'Speed Index',
-                            'TTFB' => 'Time to First Byte', 
-                            'titleTime' => 'Time to Title', 
-                            'render' => 'Time to Start Render', 
-                            'fullyLoaded' => 'Load Time (Fully Loaded)', 
-                            'domElements' => 'Number of DOM Elements', 
-                            'connections' => 'Connections', 
-                            'requests' => 'Requests (Fully Loaded)', 
-                            'requestsDoc' => 'Requests (onload)', 
-                            'bytesInDoc' => 'Bytes In (KB - onload)', 
-                            'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
-                            'js_bytes' => 'Javascript Bytes (KB)', 
-                            'js_requests' => 'Javascript Requests', 
-                            'css_bytes' => 'CSS Bytes (KB)', 
-                            'css_requests' => 'CSS Requests', 
-                            'image_bytes' => 'Image Bytes (KB)', 
-                            'image_requests' => 'Image Requests',
-                            'flash_bytes' => 'Flash Bytes (KB)', 
-                            'flash_requests' => 'Flash Requests', 
-                            'html_bytes' => 'HTML Bytes (KB)', 
-                            'html_requests' => 'HTML Requests', 
-                            'text_bytes' => 'Text Bytes (KB)', 
-                            'text_requests' => 'Text Requests',
-                            'other_bytes' => 'Other Bytes (KB)', 
-                            'other_requests' => 'Other Requests');
-//                            'responses_404' => 'Not Found Responses (404)', 
-//                            'responses_other' => 'Non-404 Error Responses');
             if (isset($info)) {
-                if (!$info['video']) {
-                    unset($metrics['SpeedIndex']);
-                }
                 echo "<h1>{$info['title']}</h1>";
-                if (array_key_exists('description', $info))
+                if (array_key_exists('description', $info)) {
                     echo "<p>{$info['description']}</p>\n";
-                foreach( $metrics as $metric => $label) {
-                    echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
-                    if ($info['expand'] && count($info['locations'] > 1)) {
-                        foreach ($info['locations'] as $location => $label) {
-                            if (is_numeric($label))
-                                $label = $location;
-                            DisplayBenchmarkData($info, $metric, $location, $label);
-                        }
-                    } else {
-                        DisplayBenchmarkData($info, $metric);
+                }
+                echo "<h2>{$metrics[$metric]} <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                if ($info['expand'] && count($info['locations'] > 1)) {
+                    foreach ($info['locations'] as $location => $label) {
+                        if (is_numeric($label))
+                            $label = $location;
+                        DisplayBenchmarkData($info, $metric, $location, $label);
                     }
+                } else {
+                    DisplayBenchmarkData($info, $metric);
                 }
             }
             echo "<hr><h1>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h1>\n";

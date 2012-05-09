@@ -10,11 +10,12 @@ import_request_variables('PG', 'req_');
 
 require_once('./logging.inc');
 
-$headers = apache_request_headers();
-if (array_key_exists('X-Forwarded-For', $headers)){
-    $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
+if (function_exists('apache_request_headers')) {
+    $headers = apache_request_headers();
+    if (array_key_exists('X-Forwarded-For', $headers)){
+        $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
+    }
 }
-
 if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')
     define('FRIENDLY_URLS', true);
 else
