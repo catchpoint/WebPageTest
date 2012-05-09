@@ -197,7 +197,7 @@ if (array_key_exists('metric', $_REQUEST)) {
                     DisplayBenchmarkData($info, $metric);
                 }
             }
-            echo "<hr><h1>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h1>\n";
+            echo "<hr><h2>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h2>\n";
             if (GetTestErrors($errors, $benchmark, $test_time)) {
                 foreach($errors as &$configuration) {
                     if (count($configuration['locations'])) {
