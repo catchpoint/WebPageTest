@@ -82,6 +82,12 @@ $loc = ParseLocations($locations);
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
+            if (array_key_exists('iq', $_REQUEST)) {
+              echo "<input type=\"hidden\" name=\"iq\" value=\"{$_REQUEST['iq']}\">\n";
+            }
+            if (array_key_exists('pngss', $_REQUEST)) {
+              echo "<input type=\"hidden\" name=\"pngss\" value=\"{$_REQUEST['pngss']}\">\n";
+            }
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
