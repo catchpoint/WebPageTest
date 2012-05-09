@@ -312,7 +312,7 @@ $page_description = "Comparison Test$testLabel.";
                             'setDnsName\t%HOSTR%\t' . $_GET['origin'] . '\n'.
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
-                            'navigate\tabout:blank\n' .
+                            'navigate\thttp://www.webpagetest.org/blank.html\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -355,7 +355,7 @@ $page_description = "Comparison Test$testLabel.";
                             '{script}\n' .
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
-                            'navigate\tabout:blank\n' .
+                            'navigate\thttp://www.webpagetest.org/blank.html\n' .
                             'logdata\t1\n' .
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
@@ -378,23 +378,25 @@ $page_description = "Comparison Test$testLabel.";
                 }
                 ?>
                 
-                var backend = form.backend.value;
-                if (backend == 'staging') {
-                    batch = batch.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
-                } else if (backend == 'rahul') {
-                    batch = batch.replace(/psa\.pssdemos\.com/g, 'rahulbansal-wpt.pssplayground.com' + 
-                        '\nsetDnsName\tproxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
-                        '\nsetDnsName\t1-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
-                        '\nsetDnsName\t2-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
-                        '\nsetDnsName\t3-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
-                        '\nsetDnsName\t4-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com');
+                  <?php
+                if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
+                {
+                ?>
+                  var backend = form.backend.value;
+                    if (backend == 'staging') {
+                        batch = batch.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
+                    } else if (backend == 'rahul') {
+                        batch = batch.replace(/psa\.pssdemos\.com/g, 'rahulbansal-wpt.pssplayground.com' + 
+                            '\nsetDnsName\tproxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t1-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t2-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t3-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t4-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com');
+                    }
+                <?php
                 }
-
-                if (form.blank.checked) {
-                    batch = batch.replace(/about2/g, '%HOSTR%/pss/wpt_blank');
-                } else {
-                    batch = batch.replace(/about2/g, 'about:blank');
-                }
+                ?>
+                batch = batch.replace(/about2/g, 'http://www.webpagetest.org/blank.html');
 
                 form.bulkurls.value=batch;
                 
