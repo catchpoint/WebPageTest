@@ -164,7 +164,7 @@ if( $ec2 )
             if( !$addOnly )
             {
                 $termCount = count($terminate);
-                echo "Terminating $termCount out of {$counts["$region.$ami"]} instances running in $region...";
+                echo "Terminating $termCount instances running in $region...";
                 if( $termCount )
                 {
                     $response = $ec2->terminate_instances($terminate);
