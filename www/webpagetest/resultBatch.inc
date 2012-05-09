@@ -1179,9 +1179,11 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             if( $videoComplete ) {
                 echo '<h2>First View Visual Comparison*</h2>';
                 VideoHtml($videoInfo['vID']);
+                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vID']}\" target=\"_blank\">view stand-alone video</a>";
                 echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Page']['Original']['id']},{$testData['Page']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
                 echo '<br><br><h2>Site Navigation Visual Comparison*</h2>';
                 VideoHtml($videoInfo['vPathID']);
+                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vPathID']}\" target=\"_blank\">view stand-alone video</a>";
                 echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Path']['Original']['id']},{$testData['Path']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
             } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
