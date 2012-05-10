@@ -9,9 +9,11 @@ require 'object_detail.inc';
 function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
 {
     // get all of the requests
-    $secure = false;
-    $haveLocations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+    if (!isset($requests) || !count($requests)) {
+        $secure = false;
+        $haveLocations = false;
+        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+    }
     
     $breakdown = array();
     
