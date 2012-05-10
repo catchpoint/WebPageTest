@@ -7,7 +7,8 @@ $video = false;
 if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['video'] )
     $video = true;
 $testComplete = true;
-if( !$test['test']['completeTime'] ) 
+$status = GetTestStatus($id, false);
+if( $status['statusCode'] < 200 ) 
     $testComplete = false;
 
 $page_keywords = array('Results','Webpagetest','Website Speed Test','Page Speed');

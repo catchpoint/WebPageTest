@@ -80,8 +80,8 @@ function GetTestStatus($id, $includePosition = true)
                           if( $elapsed > 10 )
                           {
                               $elapsedUpdate = 100;
-                              if( isset($testInfoJson['last_update']) )
-                                $elapsedUpdate = ($testInfoJson['last_update'] - $start) / 60;
+                              if( isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
+                                $elapsedUpdate = ($now - $testInfoJson['last_updated']) / 60;
                               if( $elapsedUpdate > 10 )
                               {
                                     // force the test to end
