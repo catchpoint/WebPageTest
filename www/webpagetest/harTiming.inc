@@ -109,6 +109,11 @@ function convertHarTimesToStartEndDuration($harTimingsRec, $entryTime) {
 /**
  * Given the timings field and start time of a HAR request, construct and
  * return an array with the times WebpageTest uses for storage.
+ *
+ * TODO(skerner): object_detail.inc:FixUpRequestTimes() defines an object
+ * with request timing that is almost the same, but slightly different.
+ * For example, we use 'ttfb' for the value they call 'ttfb_ms'.  Pick
+ * a convention and stick to it.
  */
 function convertHarTimesToWebpageTestTimes($harTimingsRec, $entryTime) {
   $harTimes = convertHarTimesToStartEndDuration($harTimingsRec, $entryTime);

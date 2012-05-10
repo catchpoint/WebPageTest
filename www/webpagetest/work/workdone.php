@@ -782,10 +782,13 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                   "a time part.  Value of key is '$startFull'.");
             }
 
+            global $onRender;
             if (array_key_exists('onRender', $page['pageTimings'])) {
               $curPageData["onRender"] = $page['pageTimings']['onRender'];
             } else if (array_key_exists('_onRender', $page['pageTimings'])) {
               $curPageData["onRender"] = $page['pageTimings']['_onRender'];
+            } else if ($onRender !== null) {
+              $curPageData["onRender"] = $onRender;
             } else {
               logMsg("onRender not set for page $pageref");
               $curPageData["onRender"] = UNKNOWN_TIME;
@@ -1211,10 +1214,10 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 }
             }
 
-            // If this request started earlier than the current TTFB, make it the page's TTFB
-            if ($curPageData["TTFB"] > $reqStartTime)
-            {
-                $curPageData["TTFB"] = $reqStartTime;
+            // The page's time to first byte is the earliest time to first byte
+            // of any request.
+            if ($curPageData["TTFB"] > $requestTimings['ttfb']) {
+                $curPageData["TTFB"] = $requestTimings['ttfb'];
             }
 
             // Update the page data variable back into the array
