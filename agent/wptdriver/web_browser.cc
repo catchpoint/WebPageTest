@@ -47,7 +47,9 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--process-per-tab"),
     _T("--new-window"),
     _T("--disable-translate"),
-    _T("--disable-desktop-notifications")
+    _T("--disable-desktop-notifications"),
+    _T("--allow-running-insecure-content"),
+    _T("--use-spdy=npn")
 };
 
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
