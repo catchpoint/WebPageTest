@@ -10,6 +10,8 @@ require 'testStatus.inc';
 require 'breakdown.inc';
 $debug=true;
 
+header ("Content-type: text/plain");
+
 $nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
                 'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex');
 
@@ -37,7 +39,7 @@ if ($lock !== false) {
         }
         logMsg("Done", './benchmark.log', true);
     } else {
-        echo "Benchmark cron job is already running<br>\n";
+        echo "Benchmark cron job is already running\n";
     }
     fclose($lock);
 }
@@ -82,7 +84,7 @@ function ProcessBenchmark($benchmark) {
         }
         
         if (array_key_exists('running', $state)) {
-            CheckBenchmarkStatus($state);
+            CheckBenchmarkStatus($benchmark, $state);
             // update the state between steps
             file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
             CollectResults($benchmark, $state);
@@ -122,7 +124,7 @@ function ProcessBenchmark($benchmark) {
 * 
 * @param mixed $state
 */
-function CheckBenchmarkStatus(&$state) {
+function CheckBenchmarkStatus($benchmark, &$state) {
     if ($state['running']) {
         $done = true;
         foreach ($state['tests'] as &$test) {
@@ -132,18 +134,24 @@ function CheckBenchmarkStatus(&$state) {
                 $now = time();
                 if ($status['statusCode'] >= 400) {
                     logMsg("Test {$test['id']} : Failed", './benchmark.log', true);
-                    $test['completed'] = $now;
-                    //PruneTestData($test['id']);
-                } elseif( $status['statusCode'] == 200 ) {
-                    logMsg("Test {$test['id']} : Completed", './benchmark.log', true);
-                    if (array_key_exists('completeTime', $status) && $status['completeTime']) {
-                        $test['completed'] = $status['completeTime'];
-                    } elseif (array_key_exists('startTime', $status) && $status['startTime']) {
-                        $test['completed'] = $status['startTime'];
+                    if (ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
+                        $done = false;
                     } else {
                         $test['completed'] = $now;
                     }
-                    //PruneTestData($test['id']);
+                } elseif( $status['statusCode'] == 200 ) {
+                    logMsg("Test {$test['id']} : Completed", './benchmark.log', true);
+                    if (!IsTestValid($test['id']) && ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
+                        $done = false;
+                    } else {
+                        if (array_key_exists('completeTime', $status) && $status['completeTime']) {
+                            $test['completed'] = $status['completeTime'];
+                        } elseif (array_key_exists('startTime', $status) && $status['startTime']) {
+                            $test['completed'] = $status['startTime'];
+                        } else {
+                            $test['completed'] = $now;
+                        }
+                    }
                 } else {
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", './benchmark.log', true);
@@ -273,6 +281,51 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     return $submitted;
 }
 
+// see if the given test has valid results
+function IsTestValid($id) {
+    $valid = false;
+    $testPath = './' . GetTestPath($id);
+    $page_data = loadAllPageData($testPath);
+    if (CountSuccessfulTests($page_data, 0) > 0) {
+        $valid = true;
+    }
+    return $valid;
+}
+
+// re-submit the given benchmark test
+function ResubmitBenchmarkTest($benchmark, $id, &$state) {
+    $resubmitted = false;
+    $MAX_RETRIES = 5;
+    
+    echo "Resubmitting test $id from $benchmark\n";
+    
+    // find the ID and remove them from the list
+    if(include "./settings/benchmarks/$benchmark.php") {
+        if (isset($configurations) && array_key_exists('tests', $state)) {
+            foreach ($state['tests'] as $index => &$testData) {
+                if ($testData['id'] == $id) {
+                    if (!array_key_exists('retry', $testData) || $testData['retry'] < $MAX_RETRIES) {
+                        $new_id = SubmitBenchmarkTest($testData['url'], $testData['location'], $configurations[$testData['config']]['settings'], $benchmark);
+                        if ($new_id !== false ) {
+                            $testData['id'] = $new_id;
+                            $testData['submitted'] = time();
+                            $testData['completed'] = 0;
+                            if (!array_key_exists('retry', $testData)) {
+                                $testData['retry'] = 0;
+                            }
+                            $testData['retry']++;
+                            $resubmitted = true;
+                            echo "Test $id from $benchmark resubmitted, new ID = $new_id";
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }    
+    return $resubmitted;
+}
+
 /**
 * Submit a single test and return the test ID (or false in the case of failure)
 * 
@@ -284,7 +337,6 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $id = false;
     global $key;
     $priority = 8;  // default to a really low priority
-    $retry = 3;
     
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
@@ -292,8 +344,6 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     foreach ($settings as $setting => $value) {
         if ($setting == 'priority') {
             $priority = $value;
-        } else if ($setting == 'retry') {
-            $retry = $value;
         } else {
             $data .= "Content-Disposition: form-data; name=\"$setting\"\r\n\r\n$value";
             $data .= "\r\n--$boundary\r\n"; 
@@ -323,8 +373,6 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $data .= "Content-Disposition: form-data; name=\"f\"\r\n\r\njson";
     $data .= "\r\n--$boundary\r\n"; 
     $data .= "Content-Disposition: form-data; name=\"priority\"\r\n\r\n$priority"; 
-    $data .= "\r\n--$boundary--\r\n";
-    $data .= "Content-Disposition: form-data; name=\"retry\"\r\n\r\n$retry"; 
     $data .= "\r\n--$boundary--\r\n";
 
     $params = array('http' => array(

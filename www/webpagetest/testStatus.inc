@@ -280,19 +280,14 @@ function GetRelayStatus($id, $testPath, &$test)
     $key = $locations[$location]['relayKey'];
     
     $status = json_decode(file_get_contents("{$server}testStatus.php?test=$id&rkey=$key&pos=1"), true);
-    if( is_array($status) )
-    {
-        if( $status['statusCode'] == 200 )
-        {
+    if( is_array($status) ) {
+        if( $status['statusCode'] == 200 ) {
             // download the test result and delete it from the relay server
             $tmp = tempnam(realpath('./tmp'), 'relay');
-            if( file_put_contents($tmp, file_get_contents("{$server}download.php?test=$id&rkey=$key")) )
-            {
+            if (file_put_contents($tmp, file_get_contents("{$server}download.php?test=$id&rkey=$key"))) {
                 $zip = new ZipArchive();
-                if ($zip->open($tmp) === true)
-                {
-                    if( $zip->extractTo($testPath) )
-                    {
+                if ($zip->open($tmp) === true) {
+                    if ($zip->extractTo($testPath)) {
                         require_once('archive.inc');
                         ArchiveTest($id);
                         file_get_contents("{$server}delete.php?test=$id&rkey=$key");
@@ -308,8 +303,10 @@ function GetRelayStatus($id, $testPath, &$test)
             $ret = $status['data'];
     }
     
-    if( !isset($ret) )
-        $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
+    if( !isset($ret) ) {
+        // if we got no response from the server, put it into an unkown state in case the server is down
+        $ret = array('statusCode' => 102, 'statusText' => 'Server Unreachable');
+    }
     
     return $ret;
 }
