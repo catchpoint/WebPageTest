@@ -382,10 +382,10 @@ function xmlDomains($id, $testPath, $run, $cached) {
         $breakdown = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
         foreach ($breakdown as $domain => &$values) {
             $domain = strrev($domain);
-            echo "<domain>\n";
-            echo "<host>" .  xml_entities($domain) . "</host>\n";
+            echo "<domain host=\"" . xml_entities($domain) . "\">\n";
             echo "<requests>{$values['requests']}</requests>\n";
             echo "<bytes>{$values['bytes']}</bytes>\n";
+            echo "<connections>{$values['connections']}</connections>\n";
             echo "</domain>\n";
         }
         echo "</domains>\n";
