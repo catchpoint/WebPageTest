@@ -32,12 +32,12 @@ $useLatestPCap2Har =
 // TODO(skerner): POST params are not saved to disk directly, so it is hard to
 // see what the agent uploaded after the fact.  Consider writing them to a
 // file that gets uploaded.
-$runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, NULL);
-$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, NULL);
-$docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, NULL);
-$onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, NULL);
-$onRender      = arrayLookupWithDefault('_onRender',      $_REQUEST, NULL);
-$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, NULL);
+$runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, null);
+$cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, null);
+$docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, null);
+$onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, null);
+$onRender      = arrayLookupWithDefault('_onRender',      $_REQUEST, null);
+$urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
 
 $testInfo_dirty = false;
 
@@ -94,31 +94,29 @@ else
         // figure out the path to the results
         $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
-         
-        if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
-        {
+
+        if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
             ProcessUploadedHAR($testPath);
         }
         elseif(isset($pcap) && $pcap &&
-               isset($_FILES['file']) && isset($_FILES['file']['tmp_name']))
-        {
+               isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
             // Path to pcap file, relative to $testPath.
             $pcapFileName = null;
-            if (preg_match("/\.zip$/",$_FILES['file']['name'])) {
+            if (preg_match("/\.zip$/", $_FILES['file']['name'])) {
                 $archive = new PclZip($_FILES['file']['tmp_name']);
                 $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
-                foreach ($list as &$file)
-                {
-                    if (!preg_match('/\.pcap$/', $file['stored_filename']))
-                        continue;
-                    if ($pcapFileName !== null)
-                        logMalformedInput ("zipped pcap upload should contain only one .pcap file.");
-
-                    $pcapFileName = $file['stored_filename'];
+                foreach ($list as $file) {
+                    if (preg_match('/\.pcap$/', $file['stored_filename'])) {
+                        if ($pcapFileName !== null) {
+                            logMalformedInput("zipped pcap upload should ".
+                                              "contain only one .pcap file.");
+                        }
+                        $pcapFileName = $file['stored_filename'];
+                    }
                 }
-                if ($pcapFileName === null)
-                    logMalformedInput (".pcap.zip file contains no .pcap file.");
-
+                if ($pcapFileName === null) {
+                    logMalformedInput(".pcap.zip file contains no .pcap file.");
+                }
             } else {
                 $pcapFileName = $_FILES['file']['name'];
                 move_uploaded_file(
@@ -127,8 +125,7 @@ else
             }
             ProcessPCAP($testPath, $pcapFileName);
         }
-        elseif( isset($_FILES['file']) )
-        {
+        elseif( isset($_FILES['file']) ) {
             // extract the zip file
             logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
             $archive = new PclZip($_FILES['file']['tmp_name']);
@@ -178,7 +175,7 @@ else
         
         // make sure the test result is valid, otherwise re-run it
         if ($done && !$har && !$pcap && isset($testInfo) && array_key_exists('job_file', $testInfo)) {
-            $testfile = NULL;
+            $testfile = null;
             $valid = false;
             $files = scandir($testPath);
             foreach ($files as $file) {
@@ -1361,7 +1358,7 @@ function GetDeltaMillisecondsFromISO6801Dates($before, $after) {
   $afterTimeSeconds = strtotime($after, "00");
   if ($beforeTimeSeconds === False ||
       $afterTimeSeconds  === False)
-    return NULL;
+    return null;
 
   return 1000.0 * (double)($afterTimeSeconds - $beforeTimeSeconds)
          + GetMillisecondsFromValidISO8601String($after)
