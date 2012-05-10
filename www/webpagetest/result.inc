@@ -1,6 +1,7 @@
 <?php
 require_once('optimization_detail.inc.php');
 require_once('breakdown.inc');
+require_once('testStatus.inc');
 
 $breakdown = array();
 $video = false;
