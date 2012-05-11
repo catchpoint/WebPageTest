@@ -50,6 +50,7 @@ if ($lock !== false) {
 * @param mixed $benchmark
 */
 function ProcessBenchmark($benchmark) {
+    echo "Processing benchmark '$benchmark'\n";
     logMsg("Processing benchmark '$benchmark'", './benchmark.log', true);
     $options = array();
     if(include "./settings/benchmarks/$benchmark.php") {
@@ -315,7 +316,7 @@ function ResubmitBenchmarkTest($benchmark, $id, &$state) {
                             }
                             $testData['retry']++;
                             $resubmitted = true;
-                            echo "Test $id from $benchmark resubmitted, new ID = $new_id";
+                            echo "Test $id from $benchmark resubmitted, new ID = $new_id\n";
                         }
                     }
                     break;
