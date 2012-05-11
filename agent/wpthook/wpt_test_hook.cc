@@ -31,6 +31,7 @@ void WptTestHook::LoadFromFile() {
           CString test_data(buff);
           if (Load(test_data)) {
             _clear_cache = shared_cleared_cache;
+            _run = shared_current_run;
             BuildScript();
           }
         }
@@ -39,7 +40,5 @@ void WptTestHook::LoadFromFile() {
     }
     CloseHandle(file);
   }
-
-  _run = shared_current_run;
 }
 

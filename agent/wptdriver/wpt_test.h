@@ -181,6 +181,7 @@ public:
   int     _version;
   // Whether we need to wait for DOM element.
   bool    _dom_element_check;
+  int     _no_run;  // conditional block support - if/else/endif
 
 protected:
   CStringA  EncodeTask(ScriptCommand& command);
@@ -189,6 +190,7 @@ protected:
   void      FixURL(ScriptCommand& command);
   bool      ProcessCommand(ScriptCommand& command, bool &consumed);
   bool      PreProcessScriptCommand(ScriptCommand& command);
+  bool      ConditionMatches(ScriptCommand& command);
 
   CAtlList<ScriptCommand> _script_commands;
 

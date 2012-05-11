@@ -120,6 +120,7 @@ void WptTest::Reset(void) {
   _browser_height = BROWSER_HEIGHT;
   _viewport_width = 0;
   _viewport_height = 0;
+  _no_run = 0;
   _custom_rules.RemoveAll();
 }
 
@@ -346,15 +347,16 @@ void WptTest::BuildScript() {
             script_command.record = NavigationCommand(command);
             script_command.command = command;
             script_command.target = line.Tokenize(_T("\t"),command_pos).Trim();
-            if (command_pos > 0 && script_command.target.GetLength()) {
+            if (!_no_run && 
+                command_pos > 0 && 
+                script_command.target.GetLength()) {
               // If command is "block" then parse all the space separated patterns
               // in target into separate "block" commands.
               if (script_command.command == _T("setdomelement")) {
                 _dom_element_check = true;
                 WptTrace(loglevel::kFrequentEvent, 
                   _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
-              }
-              else if (script_command.command == _T("block")) {
+              } else if (script_command.command == _T("block")) {
                 CString patterns = script_command.target;
                 int pattern_pos = 0;
                 while (pattern_pos < patterns.GetLength()) {
@@ -565,29 +567,48 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
   CString cmd = command.command;
   cmd.MakeLower();
 
-  if (cmd == _T("setdns")) {
-    CDNSEntry entry(command.target, command.value);
-    _dns_override.AddTail(entry);
-  } else if (cmd == _T("setdnsname")) {
-    CDNSName entry(command.target, command.value);
-    if (entry.name.GetLength() && entry.realName.GetLength())
-      _dns_name_override.AddTail(entry);
-  } else if (cmd == _T("setbrowsersize")) {
-    int width = _ttoi(command.target);
-    int height = _ttoi(command.value);
-    if (width > 0 && height > 0) {
-      _browser_width = (DWORD)width;
-      _browser_height = (DWORD)height;
-    }
-  } else if (cmd == _T("setviewportsize")) {
-    int width = _ttoi(command.target);
-    int height = _ttoi(command.value);
-    if (width > 0 && height > 0) {
-      _viewport_width = (DWORD)width;
-      _viewport_height = (DWORD)height;
+  if (_no_run > 0) {
+    if (cmd == _T("if")) {
+      _no_run++;
+    } else if (cmd == _T("else")) {
+      if (_no_run == 1) {
+        _no_run = 0;
+      }
+    } else if (cmd == _T("endif")) {
+      _no_run = max(0, _no_run - 1);
     }
   } else {
-    processed = false;
+    if (cmd == _T("if")) {
+      if (!ConditionMatches(command)) {
+        _no_run = 1;
+      }
+    } else if (cmd == _T("else")) {
+      _no_run = 1;
+    } else if (cmd == _T("endif")) {
+    } else if (cmd == _T("setdns")) {
+      CDNSEntry entry(command.target, command.value);
+      _dns_override.AddTail(entry);
+    } else if (cmd == _T("setdnsname")) {
+      CDNSName entry(command.target, command.value);
+      if (entry.name.GetLength() && entry.realName.GetLength())
+        _dns_name_override.AddTail(entry);
+    } else if (cmd == _T("setbrowsersize")) {
+      int width = _ttoi(command.target);
+      int height = _ttoi(command.value);
+      if (width > 0 && height > 0) {
+        _browser_width = (DWORD)width;
+        _browser_height = (DWORD)height;
+      }
+    } else if (cmd == _T("setviewportsize")) {
+      int width = _ttoi(command.target);
+      int height = _ttoi(command.value);
+      if (width > 0 && height > 0) {
+        _viewport_width = (DWORD)width;
+        _viewport_height = (DWORD)height;
+      }
+    } else {
+      processed = false;
+    }
   }
 
   return processed;
@@ -721,4 +742,26 @@ bool WptTest::BlockRequest(CString host, CString object) {
       block = true;
   }
   return block;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the specified condition is a match
+-----------------------------------------------------------------------------*/
+bool WptTest::ConditionMatches(ScriptCommand& command) {
+  bool match = false;
+  int cached = 1;
+  if (_clear_cache) {
+    cached = 0;
+  }
+
+  if (!command.target.CompareNoCase(_T("run"))) {
+    if (_run == _ttoi(command.value)) {
+      match = true;
+    }
+  } else if (!command.target.CompareNoCase(_T("cached"))) {
+    if (cached == _ttoi(command.value)) {
+      match = true;
+    }
+  }
+  return match;
 }
