@@ -334,6 +334,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 					ret = true;
 					info.context = context;
 					context->currentRun = 1;
+          info.currentRun = 1;
           context->discard = __min(context->discard, context->runs - 1);
 					
           if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
@@ -500,8 +501,10 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
           context->discard--;
           context->runs--;
         }
-        else
+        else {
 				  context->currentRun++;
+          info.currentRun = context->currentRun;
+        }
 				CString runText;
 				runText.Format(_T("%d"), context->currentRun);
 				context->fileRunBase = context->fileBase + CString(_T("-")) + runText;

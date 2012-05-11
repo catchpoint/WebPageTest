@@ -202,6 +202,7 @@ protected:
 	CString	fileToLoad;
 	HWND	hDlg;
 	HANDLE	hIntervalMutex;
+  int no_run; // 0 if commands should be executed, increased with each if block that fails (used for conditional execution)
 	
 	bool LoadFile(CString file, CString variable);
 	bool LoadVariables(CString file);
@@ -212,4 +213,5 @@ protected:
 	void SendMouseCommand(const OLECHAR * command, CScriptItem & item, bool & err, bool & done);
 	void SendCommand(CScriptItem & item, bool & err, bool & done);
 	bool ExecuteScript(_bstr_t script);
+  bool ConditionMatches(CString condition, CString value);
 };

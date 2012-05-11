@@ -63,6 +63,7 @@ CPagetestBase::CPagetestBase(void):
   , hGDINotifyWindow(NULL)
   , aft(0)
   , titleTime(0)
+  , currentRun(0)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 	msFreq = freq / (__int64)1000;
@@ -107,6 +108,13 @@ CPagetestBase::CPagetestBase(void):
       _SetGDIWindowUpdated = (SETGDIWINDOWUPDATED)GetProcAddress(hHookDll, "_SetGDIWindowUpdated@4");
       _GDIWindowUpdated = (GDIWINDOWUPDATED)GetProcAddress(hHookDll, "_GDIWindowUpdated@0");
     }
+  }
+
+  // load some settings that we need before starting
+  if( key.Open(HKEY_CURRENT_USER, _T("Software\\America Online\\SOM"), KEY_READ | KEY_WRITE) == ERROR_SUCCESS ) {
+    key.QueryDWORDValue(_T("Run"), currentRun);
+		key.QueryDWORDValue(_T("Cached"), cached);
+    key.Close();
   }
 
   // Instantiate the DOM interface that we're going to attach to the DOM for script to interact

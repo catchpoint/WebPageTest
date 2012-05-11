@@ -50,6 +50,7 @@ public:
     keepua = 0;
     minimumDuration=0;
     clearShortTermCacheSecs=0;
+    currentRun = 0;
     customRules.Empty();
 	}
 	
@@ -89,6 +90,7 @@ public:
   DWORD clearShortTermCacheSecs;  // in repeat view, delete objects with a expires of less than X seconds
   DWORD keepua;             // preserve the original User Agent string
   CString customRules;      // custom rule set (newline delimited)
+  DWORD currentRun;
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

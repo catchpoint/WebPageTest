@@ -937,6 +937,7 @@ void CURLBlaster::ConfigurePagetest(void)
 			RegSetValueEx(hKey, _T("Check Optimizations"), 0, REG_DWORD, (const LPBYTE)&info.checkOpt, sizeof(info.checkOpt));
       RegSetValueEx(hKey, _T("No Headers"), 0, REG_DWORD, (const LPBYTE)&info.noHeaders, sizeof(info.noHeaders));
       RegSetValueEx(hKey, _T("No Images"), 0, REG_DWORD, (const LPBYTE)&info.noImages, sizeof(info.noImages));
+      RegSetValueEx(hKey, _T("Run"), 0, REG_DWORD, (const LPBYTE)&info.currentRun, sizeof(info.currentRun));
 			
 			RegSetValueEx(hKey, _T("Include Object Data"), 0, REG_DWORD, (const LPBYTE)&info.includeObjectData, sizeof(info.includeObjectData));
 

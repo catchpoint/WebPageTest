@@ -202,6 +202,7 @@ public:
 	CString						userAgent;		// custom user agent string
 	CAtlArray<struct in_addr>	dnsServers;		// DNS servers to use for lookups (if overriding the default)
   CAtlList<CCustomRule> customRules;
+  DWORD           currentRun;
 
 	// timing support
 	__int64						freq;			// timer frequency

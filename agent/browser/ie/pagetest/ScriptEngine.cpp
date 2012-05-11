@@ -44,6 +44,7 @@ CScriptEngine::CScriptEngine(void):
 	, script_modifyUserAgent(true)
   , script_waitForJSDone(false)
   , script_combineSteps(0)
+  , no_run(0)
 {
 }
 
@@ -92,6 +93,7 @@ void CScriptEngine::ScriptComplete(void)
   overrideHostUrls.RemoveAll();
 	runningScript = false;
   script_combineSteps = 0;
+  no_run = 0;
 	
 	if( hIntervalMutex )
 	{
@@ -285,480 +287,509 @@ void CScriptEngine::ContinueScript(bool reset)
 			script_lastCommand.Format(_T("%s %s %s"), (LPCTSTR)item.command, (LPCTSTR)item.target, (LPCTSTR)item.value);
 			
 			CString buff;
-			buff.Format(_T("[Pagetest] - Executing - %s\n"), (LPCTSTR)script_lastCommand);
+			buff.Format(_T("[Pagetest] - Parsing - %s\n"), (LPCTSTR)script_lastCommand);
 			OutputDebugString(buff);
 			
 			// do any string substitution that is necessary
 			VarReplace(item.target);
 			VarReplace(item.value);
 			
-			if( !item.command.CompareNoCase(_T("setEventName")) )
-			{
-				// set the script event name for the next event to happen
-				newEventName = item.target;
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("startMeasurement")) )
-			{
-				IncrementStep();
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setDOMElement")) )
-			{
-				script_domElement = item.target;
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setDOMRequest")) )
-			{
-				script_domRequest = item.target;
-				script_domRequestType = END;
-				if( !item.value.CompareNoCase(_T("TTFB")) )
-					script_domRequestType = TTFB;
-				else if( !item.value.CompareNoCase(_T("START")) )
-					script_domRequestType = START;
-					
-				err = false;
-			}
-			else if(!item.command.CompareNoCase(_T("requireRequest")) || !item.command.CompareNoCase(_T("requiredRequest")))
-			{
-				requiredRequests.AddTail(item.target);
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setEndRequest")) )
-			{
-				script_endRequest = item.target;
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setABM")) )
-			{
-				// set the ABM mode
-				script_ABM = _ttol(item.target);
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setTimeout")) )
-			{
-				// set the timeout for a given step (in seconds)
-				script_timeout = _ttol(item.target);
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("fvOnly")) )
-			{
-				err = false;
-				// if we are running a cached test, exit now
-				if( cached == 1 )
-				{
-					done = false;
-					script.RemoveAll();
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("waitforComplete")) )
-			{
-				// wait for measurement to finish
-				done = IncrementStep();
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("navigate")) )
-			{
-				done = IncrementStep();	// implicit wait with any navigations
+      if (no_run > 0) {
+        if( !item.command.CompareNoCase(_T("if")) ) {
+          no_run++;
+        } else if( !item.command.CompareNoCase(_T("else")) ) {
+          if (no_run == 1) {
+            // else clause for the top-level condition
+            no_run = 0;
+          }
+        } else if( !item.command.CompareNoCase(_T("endif")) ) {
+          no_run = max(0, no_run - 1);
+        }
+        ATLTRACE(_T("[Pagetest] - no_run is now %d"), no_run);
+			  err = false;
+      } else {
+			  buff.Format(_T("[Pagetest] - Executing - %s\n"), (LPCTSTR)script_lastCommand);
+			  OutputDebugString(buff);
 
-				// navigate to the given url
-				if( !browsers.IsEmpty() )
-				{
-					CBrowserTracker tracker = browsers.GetHead();
-					if( tracker.browser && tracker.threadId == GetCurrentThreadId() )
-					{
-						if( script_url.IsEmpty() )
-							script_url = item.target;
-							
-						_bstr_t url = item.target;
-						if( SUCCEEDED(tracker.browser->Navigate(url, 0, 0, 0, 0)) )
-							err = false;
-					}
-				}
+        if( !item.command.CompareNoCase(_T("if")) ) {
+          if (!ConditionMatches(item.target, item.value)) {
+            no_run = 1;
+          }
+				  err = false;
+        } else if( !item.command.CompareNoCase(_T("else")) ) {
+          // we just hit an else clause while we were in a block we were executing
+          no_run = 1;
+				  err = false;
+        } else if( !item.command.CompareNoCase(_T("endif")) ) {
+				  err = false;
+        } else if( !item.command.CompareNoCase(_T("setEventName")) )
+			  {
+				  // set the script event name for the next event to happen
+				  newEventName = item.target;
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("startMeasurement")) )
+			  {
+				  IncrementStep();
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setDOMElement")) )
+			  {
+				  script_domElement = item.target;
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setDOMRequest")) )
+			  {
+				  script_domRequest = item.target;
+				  script_domRequestType = END;
+				  if( !item.value.CompareNoCase(_T("TTFB")) )
+					  script_domRequestType = TTFB;
+				  else if( !item.value.CompareNoCase(_T("START")) )
+					  script_domRequestType = START;
+  					
+				  err = false;
+			  }
+			  else if(!item.command.CompareNoCase(_T("requireRequest")) || !item.command.CompareNoCase(_T("requiredRequest")))
+			  {
+				  requiredRequests.AddTail(item.target);
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setEndRequest")) )
+			  {
+				  script_endRequest = item.target;
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setABM")) )
+			  {
+				  // set the ABM mode
+				  script_ABM = _ttol(item.target);
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setTimeout")) )
+			  {
+				  // set the timeout for a given step (in seconds)
+				  script_timeout = _ttol(item.target);
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("fvOnly")) )
+			  {
+				  err = false;
+				  // if we are running a cached test, exit now
+				  if( cached == 1 )
+				  {
+					  done = false;
+					  script.RemoveAll();
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("waitforComplete")) )
+			  {
+				  // wait for measurement to finish
+				  done = IncrementStep();
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("navigate")) )
+			  {
+				  done = IncrementStep();	// implicit wait with any navigations
 
-				if( err )
-				{
-					done = false;
-					Reset();
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("setValue")) )
-			{
-        IncrementStep();
-				// set the value of a given HTML element
-				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
-				
-				if( element )
-				{
-					// Try it as an input field (most common)
-					CComQIPtr<IHTMLInputElement> input = element;
-					if( input )
-					{
-						_bstr_t val = item.value;
-						if( SUCCEEDED(input->put_value(val)) )
-							err = false;
-					}
-					else
-					{
-						// try it as a textArea
-						CComQIPtr<IHTMLTextAreaElement> textArea = element;
-						if( textArea )
-						{
-							_bstr_t val = item.value;
-							if( SUCCEEDED(textArea->put_value(val)) )
-								err = false;
-						}
-					}
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("setInnerText")) )
-			{
-        IncrementStep();
-				// set the innerText of a given HTML element
-				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
-				if( element )
-				{
-					_bstr_t val = item.value;
-					if( SUCCEEDED(element->put_innerText(val)) )
-						err = false;
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("setInnerHTML")) )
-			{
-        IncrementStep();
-				// set the innerText of a given HTML element
-				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
-				if( element )
-				{
-					_bstr_t val = item.value;
-					if( SUCCEEDED(element->put_innerHTML(val)) )
-						err = false;
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("selectValue")) )
-			{
-        IncrementStep();
-				// Set the value of a drop-down list
-				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
-				if( element )
-				{
-					CComQIPtr<IHTMLSelectElement> select = element;
-					if( select )
-					{
-						_bstr_t val = item.value;
-						if( SUCCEEDED(select->put_value(val)) )
-							err = false;
-					}
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("submitForm")) )
-			{
-				done = IncrementStep();	// implicit wait with any navigations
+				  // navigate to the given url
+				  if( !browsers.IsEmpty() )
+				  {
+					  CBrowserTracker tracker = browsers.GetHead();
+					  if( tracker.browser && tracker.threadId == GetCurrentThreadId() )
+					  {
+						  if( script_url.IsEmpty() )
+							  script_url = item.target;
+  							
+						  _bstr_t url = item.target;
+						  if( SUCCEEDED(tracker.browser->Navigate(url, 0, 0, 0, 0)) )
+							  err = false;
+					  }
+				  }
 
-				// submit the given form
-				CComQIPtr<IHTMLFormElement> form = FindDomElementByAttribute( item.target );
-				if( form )
-					if( SUCCEEDED(form->submit()) )
-						err = false;
-				
-				if( err )
-				{
-					done = false;
-					Reset();
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("click")) || !item.command.CompareNoCase(_T("clickAndWait")) )
-			{
-				if( !item.command.CompareNoCase(_T("clickAndWait")) )
-					done = IncrementStep();
-        else
+				  if( err )
+				  {
+					  done = false;
+					  Reset();
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("setValue")) )
+			  {
           IncrementStep();
-
-				// Click on the element
-				CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
-				if( element )
-				{
-					bool disabled = false;
-					
-					_bstr_t attrib = _T("disabled");
-					_variant_t varVal;
-					if( SUCCEEDED(element->getAttribute(attrib, 0, &varVal)) )
-					{
-						if( varVal.vt == VT_BOOL && varVal.boolVal == VARIANT_TRUE )
-						{
-							disabled = true;
-							OutputDebugString(_T("[Pagetest] - Element is disabled\n"));
-						}
-					}
-
-					if( !disabled && SUCCEEDED(element->click()) )
-						err = false;
-				}
-				
-				if( err )
-				{
-					done = false;
-					Reset();
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("sleep")) )
-			{
-				long delay = _ttol(item.target);
-				if( delay < 1 )
-					delay = 1;
-				else if( delay > 60 )
-					delay = 60;
-				StartTimer(TIMER_SCRIPT, delay * 1000);
-				done = true;
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("loadFile")) )
-			{
-				if( LoadFile(item.target, item.value) )
-					err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("loadVariables")) )
-			{
-				if( LoadVariables(item.target) )
-					err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("fileDialog")) )
-			{
-				if( FileDialog(item.target, item.value) )
-					err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("ignoreErrors")) )
-			{
-				err = false;
-				if( _ttol(item.target) )
-					script_ignoreErrors = true;
-				else
-					script_ignoreErrors = false;
-			}
-			else if( !item.command.CompareNoCase(_T("logData")) )
-			{
-				err = false;
-				if( _ttol(item.target) )
-					script_logData = true;
-				else
-					script_logData = false;
-			}
-			else if( !item.command.CompareNoCase(_T("logErrors")) )
-			{
-				err = false;
-				if( _ttol(item.target) )
-					script_logErrors = true;
-				else
-					script_logErrors = false;
-			}
-			else if( !item.command.CompareNoCase(_T("modifyUserAgent")) )
-			{
-				err = false;
-				if( _ttol(item.target) )
-					script_modifyUserAgent = true;
-				else
-					script_modifyUserAgent = false;
-			}
-			else if( !item.command.CompareNoCase(_T("minInterval")) )
-			{
-				err = false;
-				if( !MinInterval(item.target, _ttol(item.value) ) )
-				{
-					bool ended = false;
-					while( !ended && !script.IsEmpty() )
-					{
-						CScriptItem newItem = script.RemoveHead();
-						if( !newItem.command.CompareNoCase(_T("endInterval")) )
-							ended = true;
-					}
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("endInterval")) )
-			{
-				err = false;
-				if( hIntervalMutex )
-				{
-					ReleaseMutex(hIntervalMutex);
-					CloseHandle(hIntervalMutex);
-					hIntervalMutex = NULL;
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("sendKeyPress")) || !item.command.CompareNoCase(_T("sendKeyPressAndWait")))
-				SendKeyCommand(L"OnKeyPress", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendKeyDown")) || !item.command.CompareNoCase(_T("sendKeyDownAndWait")))
-				SendKeyCommand(L"OnKeyDown", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendKeyUp")) || !item.command.CompareNoCase(_T("sendKeyUpAndWait")))
-				SendKeyCommand(L"OnKeyUp", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendClick")) || !item.command.CompareNoCase(_T("sendClickAndWait")))
-				SendMouseCommand(L"OnClick", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendMouseDown")) || !item.command.CompareNoCase(_T("sendMouseDownAndWait")))
-				SendMouseCommand(L"OnMouseDown", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendMouseUp")) || !item.command.CompareNoCase(_T("sendMouseUpAndWait")))
-				SendMouseCommand(L"OnMouseUp", item, err, done);
-			else if( !item.command.CompareNoCase(_T("sendCommand")) || !item.command.CompareNoCase(_T("sendCommandAndWait")))
-				SendCommand(item, err, done);
-			else if( !item.command.CompareNoCase(_T("exec")) || !item.command.CompareNoCase(_T("execAndWait")) )
-			{
-				if( !item.command.CompareNoCase(_T("execAndWait")) )
-					done = IncrementStep();
-        else
+				  // set the value of a given HTML element
+				  CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
+  				
+				  if( element )
+				  {
+					  // Try it as an input field (most common)
+					  CComQIPtr<IHTMLInputElement> input = element;
+					  if( input )
+					  {
+						  _bstr_t val = item.value;
+						  if( SUCCEEDED(input->put_value(val)) )
+							  err = false;
+					  }
+					  else
+					  {
+						  // try it as a textArea
+						  CComQIPtr<IHTMLTextAreaElement> textArea = element;
+						  if( textArea )
+						  {
+							  _bstr_t val = item.value;
+							  if( SUCCEEDED(textArea->put_value(val)) )
+								  err = false;
+						  }
+					  }
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("setInnerText")) )
+			  {
           IncrementStep();
-					
-				// replace all of the line feeds with spaces
-				item.target.Replace(_T("\r"), _T(" "));
-				item.target.Replace(_T("\n"), _T(" "));
-//				item.target.Replace(_T("'"), _T(" "));
-				if( ExecuteScript((LPCTSTR)item.target) )
-					err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("block")) )
-			{
-				blockRequests.RemoveAll();
-				CString block = item.target;
-				int pos = 0;
-				CString token = block.Tokenize(_T(" "), pos);
-				while( pos >= 0 )
-				{
-					token.Trim();
-					blockRequests.AddTail(token);
-					token = block.Tokenize(_T(" "), pos);
-				}
-				
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("basicAuth")) )
-			{
-				script_basicAuth.Empty();
-				if( item.target.GetLength() )
-					script_basicAuth = item.target;
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setCookie")) )
-			{
-				if( InternetSetCookieEx(item.target.Trim(), NULL, item.value, INTERNET_COOKIE_EVALUATE_P3P | INTERNET_COOKIE_THIRD_PARTY,(DWORD_PTR)_T("CP=NOI CUR OUR NOR") ) )
-					err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setHeader")) )
-			{
-        headersSet.AddTail(item.target.Trim());
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("addHeader")) )
-			{
-        CAddHeader header(item.target.Trim(), item.value.Trim());
-        headersAdd.AddTail(header);
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("resetHeaders")) )
-			{
-        headersAdd.RemoveAll();
-        headersSet.RemoveAll();
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setDNS")) )
-			{
-				CDNSEntry entry(item.target.Trim(), item.value.Trim());
-				if( entry.addr.S_un.S_addr )
-				{
-					dnsOverride.AddTail(entry);
-					err = false;
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("setDnsName")) )
-			{
-				CDNSName entry(item.target.Trim(), item.value.Trim());
-				if( entry.name.GetLength() && entry.realName.GetLength() )
-				{
-					dnsNameOverride.AddTail(entry);
-					err = false;
-				}
-			}
-			else if( !item.command.CompareNoCase(_T("setUserAgent")) )
-			{
-				userAgent = item.target.Trim();
-				err = false;
-			}
-			else if( !item.command.CompareNoCase(_T("setDNSServers")) )
-			{
-				// comma-separated list of DNS servers
-				dnsServers.RemoveAll();
-				CString servers = item.target.Trim();
-				int pos = 0;
-				CString token = servers.Tokenize(_T(","), pos);
-				while( pos >= 0 )
-				{
-					CString server = token.Trim();
-					struct in_addr addr;
-					addr.S_un.S_addr = inet_addr(CT2A(server));
-					if( addr.S_un.S_addr )
-						dnsServers.Add(addr);
-					token = servers.Tokenize(_T(" "), pos);
-				}
-				err = false;
-			}
-      else if(!item.command.CompareNoCase(_T("waitForJSDone")))
-      {
-        script_waitForJSDone = true;
-        err = false;
-      }
-      else if(!item.command.CompareNoCase(_T("combineSteps")) || !item.command.CompareNoCase(_T("mergeSteps")))
-      {
-        script_combineSteps = _ttol(item.target);
-        if( !script_combineSteps )
-          script_combineSteps = -1; // default to combining ALL steps
-        err = false;
-      }
-      else if(!item.command.CompareNoCase(_T("overrideHost")))
-      {
-        if( item.target.GetLength() && item.value.GetLength() )
-        {
-          CHostOverride host(item.target, item.value);
-          hostOverride.AddTail(host);
-        }
-        else
-          hostOverride.RemoveAll();
-        err = false;
-      }
-      else if(!item.command.CompareNoCase(_T("overrideHostUrl")))
-      {
-        if( item.target.GetLength() && item.value.GetLength() )
-        {
-          CHostOverride host(item.target, item.value);
-          overrideHostUrls.AddTail(host);
-        }
-        else
-          overrideHostUrls.RemoveAll();
-        err = false;
-      }
-      else if(!item.command.CompareNoCase(_T("addCustomRule")))
-      {
-        int separator = item.target.Find(_T('='));
-        if (separator > 0) 
-        {
-          CCustomRule newrule;
-          newrule.name = item.target.Left(separator).Trim();
-          newrule.mime = item.target.Mid(separator + 1).Trim();
-          newrule.regex = item.value.Trim();
-          customRules.AddTail(newrule);
-        }
-        err = false;
-      }
-     
-			
-			if( err && script_logErrors )
-			{
-				script_error = true;
-				OutputDebugString(_T("[Pagetest] - Script error\n"));
-				LogError(true);
-			}
+				  // set the innerText of a given HTML element
+				  CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
+				  if( element )
+				  {
+					  _bstr_t val = item.value;
+					  if( SUCCEEDED(element->put_innerText(val)) )
+						  err = false;
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("setInnerHTML")) )
+			  {
+          IncrementStep();
+				  // set the innerText of a given HTML element
+				  CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
+				  if( element )
+				  {
+					  _bstr_t val = item.value;
+					  if( SUCCEEDED(element->put_innerHTML(val)) )
+						  err = false;
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("selectValue")) )
+			  {
+          IncrementStep();
+				  // Set the value of a drop-down list
+				  CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
+				  if( element )
+				  {
+					  CComQIPtr<IHTMLSelectElement> select = element;
+					  if( select )
+					  {
+						  _bstr_t val = item.value;
+						  if( SUCCEEDED(select->put_value(val)) )
+							  err = false;
+					  }
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("submitForm")) )
+			  {
+				  done = IncrementStep();	// implicit wait with any navigations
 
-			if( err && !script_ignoreErrors && interactive )
-			{
-				CString buff;
-				buff.Format(_T("Script error - failed: '%s' '%s' '%s'"), 
-					(LPCTSTR)item.command, (LPCTSTR)item.target, (LPCTSTR)item.value);
-				MessageBox(NULL, buff, _T("AOL Pagetest"), MB_OK | MB_SYSTEMMODAL);
-			}
+				  // submit the given form
+				  CComQIPtr<IHTMLFormElement> form = FindDomElementByAttribute( item.target );
+				  if( form )
+					  if( SUCCEEDED(form->submit()) )
+						  err = false;
+  				
+				  if( err )
+				  {
+					  done = false;
+					  Reset();
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("click")) || !item.command.CompareNoCase(_T("clickAndWait")) )
+			  {
+				  if( !item.command.CompareNoCase(_T("clickAndWait")) )
+					  done = IncrementStep();
+          else
+            IncrementStep();
+
+				  // Click on the element
+				  CComPtr<IHTMLElement> element = FindDomElementByAttribute( item.target );
+				  if( element )
+				  {
+					  bool disabled = false;
+  					
+					  _bstr_t attrib = _T("disabled");
+					  _variant_t varVal;
+					  if( SUCCEEDED(element->getAttribute(attrib, 0, &varVal)) )
+					  {
+						  if( varVal.vt == VT_BOOL && varVal.boolVal == VARIANT_TRUE )
+						  {
+							  disabled = true;
+							  OutputDebugString(_T("[Pagetest] - Element is disabled\n"));
+						  }
+					  }
+
+					  if( !disabled && SUCCEEDED(element->click()) )
+						  err = false;
+				  }
+  				
+				  if( err )
+				  {
+					  done = false;
+					  Reset();
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("sleep")) )
+			  {
+				  long delay = _ttol(item.target);
+				  if( delay < 1 )
+					  delay = 1;
+				  else if( delay > 60 )
+					  delay = 60;
+				  StartTimer(TIMER_SCRIPT, delay * 1000);
+				  done = true;
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("loadFile")) )
+			  {
+				  if( LoadFile(item.target, item.value) )
+					  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("loadVariables")) )
+			  {
+				  if( LoadVariables(item.target) )
+					  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("fileDialog")) )
+			  {
+				  if( FileDialog(item.target, item.value) )
+					  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("ignoreErrors")) )
+			  {
+				  err = false;
+				  if( _ttol(item.target) )
+					  script_ignoreErrors = true;
+				  else
+					  script_ignoreErrors = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("logData")) )
+			  {
+				  err = false;
+				  if( _ttol(item.target) )
+					  script_logData = true;
+				  else
+					  script_logData = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("logErrors")) )
+			  {
+				  err = false;
+				  if( _ttol(item.target) )
+					  script_logErrors = true;
+				  else
+					  script_logErrors = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("modifyUserAgent")) )
+			  {
+				  err = false;
+				  if( _ttol(item.target) )
+					  script_modifyUserAgent = true;
+				  else
+					  script_modifyUserAgent = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("minInterval")) )
+			  {
+				  err = false;
+				  if( !MinInterval(item.target, _ttol(item.value) ) )
+				  {
+					  bool ended = false;
+					  while( !ended && !script.IsEmpty() )
+					  {
+						  CScriptItem newItem = script.RemoveHead();
+						  if( !newItem.command.CompareNoCase(_T("endInterval")) )
+							  ended = true;
+					  }
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("endInterval")) )
+			  {
+				  err = false;
+				  if( hIntervalMutex )
+				  {
+					  ReleaseMutex(hIntervalMutex);
+					  CloseHandle(hIntervalMutex);
+					  hIntervalMutex = NULL;
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("sendKeyPress")) || !item.command.CompareNoCase(_T("sendKeyPressAndWait")))
+				  SendKeyCommand(L"OnKeyPress", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendKeyDown")) || !item.command.CompareNoCase(_T("sendKeyDownAndWait")))
+				  SendKeyCommand(L"OnKeyDown", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendKeyUp")) || !item.command.CompareNoCase(_T("sendKeyUpAndWait")))
+				  SendKeyCommand(L"OnKeyUp", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendClick")) || !item.command.CompareNoCase(_T("sendClickAndWait")))
+				  SendMouseCommand(L"OnClick", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendMouseDown")) || !item.command.CompareNoCase(_T("sendMouseDownAndWait")))
+				  SendMouseCommand(L"OnMouseDown", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendMouseUp")) || !item.command.CompareNoCase(_T("sendMouseUpAndWait")))
+				  SendMouseCommand(L"OnMouseUp", item, err, done);
+			  else if( !item.command.CompareNoCase(_T("sendCommand")) || !item.command.CompareNoCase(_T("sendCommandAndWait")))
+				  SendCommand(item, err, done);
+			  else if( !item.command.CompareNoCase(_T("exec")) || !item.command.CompareNoCase(_T("execAndWait")) )
+			  {
+				  if( !item.command.CompareNoCase(_T("execAndWait")) )
+					  done = IncrementStep();
+          else
+            IncrementStep();
+  					
+				  // replace all of the line feeds with spaces
+				  item.target.Replace(_T("\r"), _T(" "));
+				  item.target.Replace(_T("\n"), _T(" "));
+  //				item.target.Replace(_T("'"), _T(" "));
+				  if( ExecuteScript((LPCTSTR)item.target) )
+					  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("block")) )
+			  {
+				  blockRequests.RemoveAll();
+				  CString block = item.target;
+				  int pos = 0;
+				  CString token = block.Tokenize(_T(" "), pos);
+				  while( pos >= 0 )
+				  {
+					  token.Trim();
+					  blockRequests.AddTail(token);
+					  token = block.Tokenize(_T(" "), pos);
+				  }
+  				
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("basicAuth")) )
+			  {
+				  script_basicAuth.Empty();
+				  if( item.target.GetLength() )
+					  script_basicAuth = item.target;
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setCookie")) )
+			  {
+				  if( InternetSetCookieEx(item.target.Trim(), NULL, item.value, INTERNET_COOKIE_EVALUATE_P3P | INTERNET_COOKIE_THIRD_PARTY,(DWORD_PTR)_T("CP=NOI CUR OUR NOR") ) )
+					  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setHeader")) )
+			  {
+          headersSet.AddTail(item.target.Trim());
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("addHeader")) )
+			  {
+          CAddHeader header(item.target.Trim(), item.value.Trim());
+          headersAdd.AddTail(header);
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("resetHeaders")) )
+			  {
+          headersAdd.RemoveAll();
+          headersSet.RemoveAll();
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setDNS")) )
+			  {
+				  CDNSEntry entry(item.target.Trim(), item.value.Trim());
+				  if( entry.addr.S_un.S_addr )
+				  {
+					  dnsOverride.AddTail(entry);
+					  err = false;
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("setDnsName")) )
+			  {
+				  CDNSName entry(item.target.Trim(), item.value.Trim());
+				  if( entry.name.GetLength() && entry.realName.GetLength() )
+				  {
+					  dnsNameOverride.AddTail(entry);
+					  err = false;
+				  }
+			  }
+			  else if( !item.command.CompareNoCase(_T("setUserAgent")) )
+			  {
+				  userAgent = item.target.Trim();
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setDNSServers")) )
+			  {
+				  // comma-separated list of DNS servers
+				  dnsServers.RemoveAll();
+				  CString servers = item.target.Trim();
+				  int pos = 0;
+				  CString token = servers.Tokenize(_T(","), pos);
+				  while( pos >= 0 )
+				  {
+					  CString server = token.Trim();
+					  struct in_addr addr;
+					  addr.S_un.S_addr = inet_addr(CT2A(server));
+					  if( addr.S_un.S_addr )
+						  dnsServers.Add(addr);
+					  token = servers.Tokenize(_T(" "), pos);
+				  }
+				  err = false;
+			  }
+        else if(!item.command.CompareNoCase(_T("waitForJSDone")))
+        {
+          script_waitForJSDone = true;
+          err = false;
+        }
+        else if(!item.command.CompareNoCase(_T("combineSteps")) || !item.command.CompareNoCase(_T("mergeSteps")))
+        {
+          script_combineSteps = _ttol(item.target);
+          if( !script_combineSteps )
+            script_combineSteps = -1; // default to combining ALL steps
+          err = false;
+        }
+        else if(!item.command.CompareNoCase(_T("overrideHost")))
+        {
+          if( item.target.GetLength() && item.value.GetLength() )
+          {
+            CHostOverride host(item.target, item.value);
+            hostOverride.AddTail(host);
+          }
+          else
+            hostOverride.RemoveAll();
+          err = false;
+        }
+        else if(!item.command.CompareNoCase(_T("overrideHostUrl")))
+        {
+          if( item.target.GetLength() && item.value.GetLength() )
+          {
+            CHostOverride host(item.target, item.value);
+            overrideHostUrls.AddTail(host);
+          }
+          else
+            overrideHostUrls.RemoveAll();
+          err = false;
+        }
+        else if(!item.command.CompareNoCase(_T("addCustomRule")))
+        {
+          int separator = item.target.Find(_T('='));
+          if (separator > 0) 
+          {
+            CCustomRule newrule;
+            newrule.name = item.target.Left(separator).Trim();
+            newrule.mime = item.target.Mid(separator + 1).Trim();
+            newrule.regex = item.value.Trim();
+            customRules.AddTail(newrule);
+          }
+          err = false;
+        }
+       
+  			
+			  if( err && script_logErrors )
+			  {
+				  script_error = true;
+				  OutputDebugString(_T("[Pagetest] - Script error\n"));
+				  LogError(true);
+			  }
+
+			  if( err && !script_ignoreErrors && interactive )
+			  {
+				  CString buff;
+				  buff.Format(_T("Script error - failed: '%s' '%s' '%s'"), 
+					  (LPCTSTR)item.command, (LPCTSTR)item.target, (LPCTSTR)item.value);
+				  MessageBox(NULL, buff, _T("AOL Pagetest"), MB_OK | MB_SYSTEMMODAL);
+			  }
+      }
 		}
 		
 		if( err && !script_ignoreErrors )
@@ -1532,4 +1563,29 @@ bool CScriptEngine::ExecuteScript(_bstr_t script)
 	}
 	
 	return ret;
+}
+
+/*-----------------------------------------------------------------------------
+	See if the specified condition is a match
+-----------------------------------------------------------------------------*/
+bool CScriptEngine::ConditionMatches(CString condition, CString value) {
+  bool match = false;
+
+  if (!condition.CompareNoCase(_T("run"))) {
+    if (currentRun == _ttoi(value)) {
+      match = true;
+    }
+  } else if (!condition.CompareNoCase(_T("cached"))) {
+    if (cached == _ttoi(value)) {
+      match = true;
+    }
+  }
+
+  if (match) {
+    ATLTRACE(_T("[pagetest] - Condition %s = %s MATCHED (current run = %d, cached = %d)"), (LPCTSTR)condition, (LPCTSTR)value, currentRun, cached);
+  } else {
+    ATLTRACE(_T("[pagetest] - Condition %s = %s Did NOT Match (current run = %d, cached = %d)"), (LPCTSTR)condition, (LPCTSTR)value, currentRun, cached);
+  }
+
+  return match;
 }
