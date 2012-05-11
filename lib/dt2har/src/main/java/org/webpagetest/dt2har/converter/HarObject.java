@@ -79,7 +79,7 @@ public class HarObject {
 
   HashMap<String, HarResource> resources;
   private final Queue<String> requestIdsForContentToFetch;
-  //TODO(bengr): consider using AtomicInteger
+  //TODO: consider using AtomicInteger
   private int requestCnt;
   private int responseCnt;
   private int dataCnt;
@@ -511,7 +511,7 @@ public class HarObject {
     //                  "comment": ""
     //              }
     //          ]
-    //TODO(bengr): generalize to support multiple pages in a single HAR.
+    //TODO: generalize to support multiple pages in a single HAR.
     pages.add(createHarPage());
     return pages;
   }

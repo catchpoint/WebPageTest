@@ -97,6 +97,7 @@ public class HarResource {
   static final String HAR_RESPONSE_HEADERS_VALUE = "value";
 
   static final String HAR_CONTENT_SIZE = "size";
+  static final String HAR_CONTENT_COMPRESSION = "compression";
   static final String HAR_CONTENT_TEXT = "text";
   static final String HAR_CONTENT_MIME_TYPE = "mimeType";
 
@@ -203,7 +204,7 @@ public class HarResource {
     // We require information from a resource request message to construct the message to get
     // the resource content. Occasionally, this isn't available.
     if (request == null) {
-      //TODO(bengr): Create a HarResourceException class and throw it here.
+      //TODO: Create a HarResourceException class and throw it here.
       return null;
     }
     return request.getRequestId();
@@ -236,7 +237,7 @@ public class HarResource {
     harEntry.put(HAR_ENTRY_CACHE, createHarCache());
     harEntry.put(HAR_ENTRY_TIMINGS, timings);
 
-    // TODO(bengr): get this information
+    // TODO: get this information
     // harEntry.put(HAR_ENTRY_SERVER_IP_ADDRESS, ip); // Optional
     // harEntry.put(HAR_ENTRY_CONNECTION, connection); //Optional
 
@@ -316,7 +317,7 @@ public class HarResource {
     harResponse.put(HAR_RESPONSE_COOKIES, createHarCookies());
     harResponse.put(HAR_RESPONSE_HEADERS, createHarResponseHeaders());
     harResponse.put(HAR_RESPONSE_CONTENT, createHarContent());
-    // TODO(bengr): get redirectURL
+    // TODO: get redirectURL
     harResponse.put(HAR_RESPONSE_REDIRECT_URL, HAR_EMPTY_STRING);
     harResponse.put(HAR_RESPONSE_HEADERS_SIZE, headersSize);
     harResponse.put(HAR_RESPONSE_BODY_SIZE, bodySize);
@@ -339,7 +340,7 @@ public class HarResource {
     //            ]
 
     JSONArray harCookies = new JSONArray();
-    // TODO(bengr): get cookie info
+    // TODO: get cookie info
     return harCookies;
   }
 
@@ -400,7 +401,7 @@ public class HarResource {
   }
 
   private JSONArray createHarQueryString() {
-    // TODO(bengr): need to fetch with a query string to construct this.
+    // TODO: need to fetch with a query string to construct this.
 
     //    "queryString": [
     //                    {
@@ -419,7 +420,7 @@ public class HarResource {
   }
 
   private JSONObject createHarPostData() {
-    // TODO(bengr): need to post data to construct this.
+    // TODO: need to post data to construct this.
 
     //    "postData": {
     //      "mimeType": "multipart/form-data",
@@ -443,21 +444,39 @@ public class HarResource {
     //    }
 
     JSONObject harContent = new JSONObject();
+    Long dataSize = 0L;
+    Long encodedSize = 0L;
+    Long compression = 0L;
+    String text = "";
+    String mimeType = response.getResponse().getMimeType();
+    StringBuilder comment = new StringBuilder("");
+
+    for (NetworkDataReceivedMessage dataMsg : data) {
+      dataSize += dataMsg.getDataLength();
+      encodedSize += dataMsg.getEncodedDataLength();
+    }
     if (content != null) {
-      String text = content.getBody();
-      harContent.put(HAR_CONTENT_SIZE, text.length());
-      harContent.put(HAR_CONTENT_TEXT, text);
+      text = content.getBody();
     } else {
-      harContent.put(HAR_CONTENT_SIZE, 0);
-      harContent.put(HAR_CONTENT_TEXT, "");
-      harContent.put(HAR_COMMENT,
-          "Devtools messages provided no response content for this resource.");
+      comment.append("Devtools messages provided no response content for this resource. ");
       logger.log(Level.WARNING,
           "no content available for resource {0}", request.getRequest().getUrl());
-
     }
-    String mimeType = response.getResponse().getMimeType();
+    if (dataSize >= encodedSize) {
+      compression = dataSize - encodedSize;
+    } else {
+      comment.append("Encoded size is greater than inflated data size. ");
+    }
+
+    // Remove a trailing space if there is one.
+    if (comment.length() > 0 && comment.lastIndexOf(" ") == comment.length() - 1) {
+      comment.deleteCharAt(comment.length() - 1);
+    }
+    harContent.put(HAR_CONTENT_SIZE, dataSize);
+    harContent.put(HAR_CONTENT_COMPRESSION, compression);
+    harContent.put(HAR_CONTENT_TEXT, text);
     harContent.put(HAR_CONTENT_MIME_TYPE, mimeType);
+    harContent.put(HAR_COMMENT, comment.toString());
 
     return harContent;
   }
@@ -471,7 +490,7 @@ public class HarResource {
     //    }
 
     JSONObject harCache = new JSONObject();
-    /* TODO(bengr): use cache info if available and
+    /* TODO: use cache info if available and
      * call jsonBeforeRequest and jsonAfterRequest
      */
     // if cached info is in the messages, do something like this:
@@ -651,7 +670,7 @@ public class HarResource {
   private Long getResponseBodySize() {
     Long responseBodySize = 0L;
     for (NetworkDataReceivedMessage b : data) {
-      responseBodySize += b.getDataLength();
+      responseBodySize += b.getEncodedDataLength();
     }
     return responseBodySize;
   }

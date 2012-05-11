@@ -69,8 +69,8 @@ public class HarObjectTest {
       throws MalformedDevtoolsMessageException {
     String responseString =
         "{\"id\":4,\"result\":{\"body\":\"<HTML>\\n<BODY>\\n<P>Hello World<\\/P>\\n" +
-        "<IMG SRC=\\\"http:\\/\\/184.73.115.184\\/bengr\\/foo.png\\\">\\n" +
-        "<IMG SRC=\\\"http:\\/\\/184.73.115.184\\/bengr\\/foo2.png\\\">\\n<\\/BODY>\\n" +
+        "<IMG SRC=\\\"http:\\/\\/184.73.115.184\\/gaga\\/foo.png\\\">\\n" +
+        "<IMG SRC=\\\"http:\\/\\/184.73.115.184\\/gaga\\/foo2.png\\\">\\n<\\/BODY>\\n" +
         "<\\/HTML>\\n\",\"base64Encoded\":false}}";
     JSONObject json = (JSONObject) JSONValue.parse(responseString);
     return (NetworkGetResponseBodyResponseMessage)
@@ -111,6 +111,10 @@ public class HarObjectTest {
 
     JSONObject harObj = har.getHar();
     JSONObject harlog = (JSONObject) harObj.get("log");
+    JSONArray entries = (JSONArray) harlog.get("entries");
+    JSONObject entry = (JSONObject) entries.get(1);
+    JSONObject response = (JSONObject) entry.get("response");
+    JSONObject content = (JSONObject) response.get("content");
     JSONArray pages = (JSONArray) harlog.get("pages");
     JSONObject page = (JSONObject) pages.get(0);
     JSONObject charlog = (JSONObject) harComparison.get("log");
@@ -129,6 +133,10 @@ public class HarObjectTest {
         devtoolsMessageCount++;
       }
     }
+    // invariant: bodySize + compression == size
+    assertEquals(2900L, response.get("bodySize"));
+    assertEquals(6929L, content.get("size"));
+    assertEquals(4029L, content.get("compression"));
 
     assertEquals(har.getFirstRequest().getDocumentUrl(), ctitle);
     assertEquals(1314123547541L, har.getPageTimings().get("navigationStartTime"));
