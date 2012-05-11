@@ -100,30 +100,17 @@ else
         }
         elseif(isset($pcap) && $pcap &&
                isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
-            // Path to pcap file, relative to $testPath.
-            $pcapFileName = null;
-            if (preg_match("/\.zip$/", $_FILES['file']['name'])) {
-                $archive = new PclZip($_FILES['file']['tmp_name']);
-                $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
-                foreach ($list as $file) {
-                    if (preg_match('/\.pcap$/', $file['stored_filename'])) {
-                        if ($pcapFileName !== null) {
-                            logMalformedInput("zipped pcap upload should ".
-                                              "contain only one .pcap file.");
-                        }
-                        $pcapFileName = $file['stored_filename'];
-                    }
-                }
-                if ($pcapFileName === null) {
-                    logMalformedInput(".pcap.zip file contains no .pcap file.");
-                }
-            } else {
-                $pcapFileName = $_FILES['file']['name'];
-                move_uploaded_file(
-                    $_FILES['file']['tmp_name'],
-                    "$testPath/$pcapFileName");
-            }
-            ProcessPCAP($testPath, $pcapFileName);
+            // The results page allows a user to download a pcap file.  It
+            // expects the file to be at a specific path, which encodes the
+            // run number and cache state.
+            $finalPcapFileName =
+                $runNumber . ($cacheWarmed ? "_Cached" : "") . ".cap";
+
+            MovePcapIntoPlace($_FILES['file']['name'],
+                              $_FILES['file']['tmp_name'],
+                              $testPath, $finalPcapFileName);
+
+            ProcessPCAP($testPath, $finalPcapFileName);
         }
         elseif( isset($_FILES['file']) ) {
             // extract the zip file
@@ -589,6 +576,48 @@ function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
                   $returnCode);
 
   return $returnCode;
+}
+
+/**
+ * Move an uploaded pcap file into the right place, unzipping if nessisary.
+ *
+ * @param String $clientFileName     File name set by the client.
+ * @param String $uploadTmpFileName  Absolute path to the uploaded file.
+ * @param String $testPath           Root of the results subdirectory of our test.
+ * @param String $finalPcapFileName  The final file name the pcap should have.
+ */
+function MovePcapIntoPlace($clientFileName, $uploadTmpFileName,
+                           $testPath, $finalPcapFileName) {
+    // Is the upload a zip archive?  If so, unpack it.
+    if (preg_match("/\.zip$/", $clientFileName)) {
+        $archive = new PclZip($uploadTmpFileName);
+        $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
+
+        // Find the path to the uploaded pcap file, relative to
+        // $testPath.
+        $pcapFileName = null;
+        foreach ($list as $file) {
+            if (preg_match('/\.pcap$/', $file['stored_filename'])) {
+                if ($pcapFileName !== null) {
+                    logMalformedInput("zipped pcap upload should ".
+                                      "contain only one .pcap file.");
+                }
+                // The zip library starts all paths with a "/".
+                $pcapFileName = ltrim($file['stored_filename'], "/");
+            }
+        }
+        if ($pcapFileName === null) {
+            logMalformedInput(".pcap.zip file contains no .pcap file.");
+        } else if (!rename("$testPath/$pcapFileName",
+                           "$testPath/$finalPcapFileName")) {
+            logMalformedInput("Failed to rename( $testPath/$pcapFileName , ".
+                              "$testPath/$finalPcapFileName )");
+        }
+    } else {
+        move_uploaded_file(
+            $_FILES['file']['tmp_name'],
+            "$testPath/$finalPcapFileName");
+    }
 }
 
 /**
