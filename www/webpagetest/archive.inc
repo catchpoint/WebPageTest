@@ -256,6 +256,7 @@ function VerifyArchive($id) {
         $testPath = realpath('./' . GetTestPath($id));
         $archive = GetArchiveFile($id);
         if (is_dir($testPath) && is_file($archive)) {
+            chmod($archive, 0777);
             $zip = new ZipArchive;
             if ($zip->open($archive) === TRUE) {
                 // check for some basic files

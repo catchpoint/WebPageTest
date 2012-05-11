@@ -1,5 +1,6 @@
 <?php
 chdir('..');
+$MIN_DAYS = 2;
 
 // bail if we are already running
 $lock = fopen('./tmp/archive.lock', 'w');
@@ -23,12 +24,14 @@ $log = fopen('./cli/archive.log', 'w');
 
 // check the old tests first
 CheckOldDir('./results/old');
+$now = time();
 
 /*
 *   Archive any tests that have not already been archived
 *   We will also keep track of all of the tests that are 
 *   known to have been archived separately so we don't thrash
 */  
+$UTC = new DateTimeZone('UTC');
 $years = scandir('./results');
 foreach( $years as $year ) {
     mkdir('./logs/archived', 0777, true);
@@ -41,8 +44,14 @@ foreach( $years as $year ) {
                 $days = scandir($monthDir);
                 foreach( $days as $day ) {
                     $dayDir = "$monthDir/$day";
-                    if( is_dir($dayDir) && $day != '.' && $day != '..' )
-                        CheckDay($dayDir, "$year$month$day");
+                    if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
+                        $date = DateTime::createFromFormat('ymd', "$year$month$day", $UTC);
+                        $daytime = $date->getTimestamp();
+                        $elapsed = max($now - $daytime, 0) / 86400;
+                        if ($elapsed >= $MIN_DAYS) {
+                            CheckDay($dayDir, "$year$month$day");
+                        }
+                    }
                 }
                 rmdir($monthDir);
             }
@@ -112,28 +121,21 @@ function CheckTest($testPath, $id) {
     global $deleted;
     global $kept;
     global $log;
+    global $MIN_DAYS;
     $logLine = "$id : ";
 
-    if( ArchiveTest($id) ) {
+    $elapsed = TestLastAccessed($id);
+    if( $elapsed >= $MIN_DAYS && ArchiveTest($id) ) {
         $archiveCount++;
         $logLine .= "Archived";
 
-        // Delete tests after 2 days of no access
-        $delete = false;
-        $elapsed = TestLastAccessed($id);
-        if( $elapsed >= 2 )
-            $delete = true;
-
-        if( $delete ) {
-            if (VerifyArchive($id)) {
-                delTree("$testPath/");
-                $deleted++;
-                $logLine .= " Deleted";
-            }
+        if (VerifyArchive($id)) {
+            delTree("$testPath/");
+            $deleted++;
+            $logLine .= " Deleted";
         }
-        else
-            $kept++;
-    }
+    } else
+        $kept++;
         
     if( $log ) {
         $logLine .= "\n";
