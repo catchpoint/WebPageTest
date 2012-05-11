@@ -336,7 +336,7 @@ function ResubmitBenchmarkTest($benchmark, $id, &$state) {
 function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $id = false;
     global $key;
-    $priority = 8;  // default to a really low priority
+    $priority = 7;  // default to a really low priority
     
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
