@@ -1,6 +1,5 @@
 <?php
     require_once('common.inc');
-    require_once('unique.inc');
     set_time_limit(300);
      
     $error = NULL;
@@ -1440,26 +1439,32 @@ function CheckUrl($url)
 * Generate a shard key to better spread out the test results
 * 
 */
-function ShardKey()
-{
+function ShardKey($test_num) {
     global $settings;
     $key = '';
 
-    // default to a 2-digit shard (1024-way shard)
-    $size = 2;
-    if( array_key_exists('shard', $settings) )
-        $size = (int)$settings['shard'];
-    
-    if( $size > 0 && $size < 20 )
-    {
-        $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        $digitCount = strlen($digits) - 1;
-        while( $size )
+    if( array_key_exists('bucket_size', $settings) && $settings['bucket_size'] > 0 ) {
+        // group the tests sequentially
+        $bucket_size = (int)$settings['bucket_size'];
+        $bucket = $test_num / $bucket_size;
+        $key = NumToString($bucket) . '_';
+    } else {
+        // default to a 2-digit shard (1024-way shard)
+        $size = 2;
+        if( array_key_exists('shard', $settings) )
+            $size = (int)$settings['shard'];
+        
+        if( $size > 0 && $size < 20 )
         {
-            $key .= substr($digits, rand(0, $digitCount), 1);
-            $size--;
+            $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+            $digitCount = strlen($digits) - 1;
+            while( $size )
+            {
+                $key .= substr($digits, rand(0, $digitCount), 1);
+                $size--;
+            }
+            $key .= '_';
         }
-        $key .= '_';
     }
     
     return $key;
@@ -1477,11 +1482,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     $testId = null;
     
     // generate the test ID
-    $id = null;
+    $test_num;
+    $id = uniqueId($test_num);
     if( $test['private'] )
-        $id = ShardKey() . md5(uniqid(rand(), true));
+        $id = ShardKey($test_num) . md5(uniqid(rand(), true));
     else
-        $id = ShardKey() . uniqueId();
+        $id = ShardKey($test_num) . $id;
     $today = new DateTime("now", new DateTimeZone('UTC'));
     $testId = $today->format('ymd_') . $id;
     $test['path'] = './' . GetTestPath($testId);
@@ -1490,7 +1496,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     while( is_dir($test['path']) )
     {
         // fall back to random ID's
-        $id = ShardKey() . md5(uniqid(rand(), true));
+        $id = ShardKey($test_num) . md5(uniqid(rand(), true));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
     }
@@ -1876,5 +1882,79 @@ function GetClosestLocation($url) {
         }
     }
     return $location;
+}
+
+/**
+*   Generate a unique Id
+*/
+function uniqueId(&$test_num) {
+    $id = NULL;
+    $test_num = 0;
+    
+    if( !is_dir('./work/jobs') )
+        mkdir('./work/jobs', 0777, true);
+    
+    // try locking the context file
+    $filename = './work/jobs/uniqueId.dat';
+    $file = fopen( $filename, "a+b",  false);
+    if( $file ) {
+        if( flock($file, LOCK_EX) ) {
+            fseek($file, 0, SEEK_SET);
+            $json = fread($file, 300);
+            $num = 0;
+            $day = (int)date('z');
+            $testData = array('day' => $day, 'num' => 0);
+            if ($json !== false) {
+                $newData = json_decode($json, true);
+                if (isset($newData) && is_array($newData) && 
+                    array_key_exists('day', $newData) && 
+                    array_key_exists('num', $newData) &&
+                    $newData['day'] == $day) {
+                    $testData['num'] = $newData['num'];
+                }
+            }
+            
+            $testData['num']++;
+            $test_num = $testData['num'];
+            
+            // convert the number to a base-32 string for shorter text
+            $id = NumToString($testData['num']);
+
+            // go back to the beginning of the file and write out the new value
+            fseek($file, 0, SEEK_SET);
+            ftruncate($file, 0);
+            fwrite($file, json_encode($testData));
+        }
+
+        fclose($file);
+    }
+    
+    if (!isset($id)) {
+        $test_num = rand();
+        $id = md5(uniqid($test_num, true));
+    }
+    
+    return $id;
+} 
+
+/**
+* Convert a number to a base-32 string
+* 
+* @param mixed $num
+*/
+function NumToString($num) {
+    if ($num > 0) {
+        $str = '';
+        $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+        while($num > 0) {
+            $digitValue = $num % 32;
+            $num = (int)($num / 32);
+            $str .= $digits[$digitValue];
+        }
+        $str = strrev($str);
+    } else {
+        $str = '0';
+    }
+    return $str;
 }
 ?>
