@@ -163,7 +163,10 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         }
         
         if ($done) {
+            echo "Benchmark '$benchmark' is finished\n";
             $state['running'] = false;
+        } else {
+            echo "Benchmark '$benchmark' is still running\n";
         }
         
         logMsg("Done checking status", './benchmark.log', true);
@@ -176,8 +179,9 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 * @param mixed $state
 */
 function CollectResults($benchmark, &$state) {
-    logMsg("Collecting results for '$benchmark'", './benchmark.log', true);
     if (!$state['running'] && array_key_exists('tests', $state)) {
+        logMsg("Collecting results for '$benchmark'", './benchmark.log', true);
+        echo "Collecting results for '$benchmark'\n";
         $start_time = time();
         $data = array();
         foreach ($state['tests'] as &$test) {
