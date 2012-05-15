@@ -192,6 +192,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
       if (test_state_._active) {
+        test_state_.ActivityDetected();
         CString body = GetPostBody(conn, request_info);
         requests_.ProcessBrowserRequest(body);
       }

@@ -88,7 +88,6 @@ void Requests::SocketClosed(DWORD socket_id) {
   EnterCriticalSection(&cs);
   Request * request = NULL;
   if (_active_requests.Lookup(socket_id, request) && request) {
-    _test_state.ActivityDetected();
     request->SocketClosed();
     _active_requests.RemoveKey(socket_id);
   }
@@ -99,11 +98,11 @@ void Requests::SocketClosed(DWORD socket_id) {
 -----------------------------------------------------------------------------*/
 void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
   if (_test_state._active) {
-    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     // See if socket maps to a known request.
     Request * request = NULL;
     if (_active_requests.Lookup(socket_id, request) && request) {
+      _test_state.ActivityDetected();
       _test_state._bytes_in_bandwidth += chunk.GetLength();
       request->DataIn(chunk);
       WptTrace(loglevel::kFunction, 
@@ -125,10 +124,10 @@ void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
 bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
   bool is_modified = false;
   if (_test_state._active) {
-    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     Request * request = GetOrCreateRequest(socket_id, chunk);
     if (request) {
+      _test_state.ActivityDetected();
       is_modified = request->ModifyDataOut(chunk);
     } else {
       is_modified = chunk.ModifyDataOut(_test);
@@ -145,10 +144,10 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
 -----------------------------------------------------------------------------*/
 void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
   if (_test_state._active) {
-    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     Request * request = GetOrCreateRequest(socket_id, chunk);
     if (request) {
+      _test_state.ActivityDetected();
       request->DataOut(chunk);
       WptTrace(loglevel::kFunction, 
                _T("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)"),

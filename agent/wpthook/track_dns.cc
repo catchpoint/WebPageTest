@@ -60,7 +60,6 @@ void * TrackDns::LookupStart(CString& name) {
   info->_override_addr.S_un.S_addr = _test.OverrideDNSAddress(name);
 
   if (_test_state._active) {
-    _test_state.ActivityDetected();
     EnterCriticalSection(&cs);
     info->_tracked = true;
     _dns_lookups.SetAt(info, info);
@@ -103,7 +102,6 @@ void TrackDns::LookupDone(void * context, int result) {
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
     if (info->_tracked && _test_state._active) {
-      _test_state.ActivityDetected();
       EnterCriticalSection(&cs);
       DnsInfo * dns_info = NULL;
       if (_dns_lookups.Lookup(context, dns_info) && dns_info) {

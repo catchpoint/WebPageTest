@@ -253,6 +253,7 @@ void TestState::OnNavigate() {
     }
     if (!_first_navigate.QuadPart)
       QueryPerformanceCounter(&_first_navigate);
+    ActivityDetected();
   }
 }
 
@@ -305,6 +306,7 @@ void TestState::SetLoadEvent(DWORD start, DWORD end) {
 void TestState::OnLoad() {
   if (_active) {
     QueryPerformanceCounter(&_on_load);
+    ActivityDetected();
     _screen_capture.Capture(_document_window,
                             CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
