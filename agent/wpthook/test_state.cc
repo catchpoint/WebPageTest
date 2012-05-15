@@ -173,41 +173,6 @@ void TestState::Start() {
   _next_document++;
   UpdateBrowserWindow();  // the document window may not be available yet
 
-  // position the browser window
-  if (_frame_window) {
-    DWORD browser_width = _test._browser_width;
-    DWORD browser_height = _test._browser_height;
-    ::ShowWindow(_frame_window, SW_RESTORE);
-    if (_test._viewport_width && _test._viewport_height) {
-      ::UpdateWindow(_frame_window);
-      FindViewport();
-      RECT browser;
-      GetWindowRect(_frame_window, &browser);
-      RECT viewport = {0,0,0,0};
-      if (_screen_capture.IsViewportSet()) {
-        memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-      } else {
-        if (_document_window) {
-          GetWindowRect(_document_window, &viewport);
-        }
-      }
-      int vp_width = abs(viewport.right - viewport.left);
-      int vp_height = abs(viewport.top - viewport.bottom);
-      int br_width = abs(browser.right - browser.left);
-      int br_height = abs(browser.top - browser.bottom);
-      if (vp_width && vp_height && br_width && br_height && 
-        br_width >= vp_width && br_height >= vp_height) {
-        browser_width = _test._viewport_width + (br_width - vp_width);
-        browser_height = _test._viewport_height + (br_height - vp_height);
-      }
-      _screen_capture.ClearViewport();
-    }
-    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                    browser_width, browser_height, SWP_NOACTIVATE);
-    ::UpdateWindow(_frame_window);
-    FindViewport();
-  }
-
   if (!_render_check_thread) {
     _exit = false;
     ResetEvent(_check_render_event);
@@ -418,10 +383,28 @@ void TestState::Done(bool force) {
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
+  TCHAR class_name[1024];
+  if (IsWindowVisible(hwnd) && 
+    GetClassName(hwnd, class_name, _countof(class_name))) {
+    _tcslwr(class_name);
+    if (_tcsstr(class_name, _T("chrome")) || 
+        _tcsstr(class_name, _T("mozilla"))) {
+      ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, 
+          SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE);
+      ::UpdateWindow(hwnd);
+    }
+  }
+  return TRUE;
+}
+
+/*-----------------------------------------------------------------------------
     Find the browser window that we are going to capture
 -----------------------------------------------------------------------------*/
 void TestState::UpdateBrowserWindow() {
   DWORD browser_process_id = GetCurrentProcessId();
+  HWND old_frame = _frame_window;
   if (::FindBrowserWindow(browser_process_id, _frame_window, 
                           _document_window)) {
     WptTrace(loglevel::kFunction, 
@@ -429,6 +412,41 @@ void TestState::UpdateBrowserWindow() {
               _frame_window, _document_window);
     if (!_document_window)
       _document_window = _frame_window;
+  }
+  // position the browser window
+  if (_frame_window && old_frame != _frame_window) {
+    DWORD browser_width = _test._browser_width;
+    DWORD browser_height = _test._browser_height;
+    ::ShowWindow(_frame_window, SW_RESTORE);
+    if (_test._viewport_width && _test._viewport_height) {
+      ::UpdateWindow(_frame_window);
+      FindViewport();
+      RECT browser;
+      GetWindowRect(_frame_window, &browser);
+      RECT viewport = {0,0,0,0};
+      if (_screen_capture.IsViewportSet()) {
+        memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
+      } else {
+        if (_document_window) {
+          GetWindowRect(_document_window, &viewport);
+        }
+      }
+      int vp_width = abs(viewport.right - viewport.left);
+      int vp_height = abs(viewport.top - viewport.bottom);
+      int br_width = abs(browser.right - browser.left);
+      int br_height = abs(browser.top - browser.bottom);
+      if (vp_width && vp_height && br_width && br_height && 
+        br_width >= vp_width && br_height >= vp_height) {
+        browser_width = _test._viewport_width + (br_width - vp_width);
+        browser_height = _test._viewport_height + (br_height - vp_height);
+      }
+      _screen_capture.ClearViewport();
+    }
+    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                    browser_width, browser_height, SWP_NOACTIVATE);
+    ::UpdateWindow(_frame_window);
+    EnumWindows(::MakeTopmost, (LPARAM)this);
+    FindViewport();
   }
 }
 
