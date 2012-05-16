@@ -107,6 +107,7 @@ protected:
 	CString tempFiles;
   CString tempDir;
 	CString silverlight;
+	CString recovery;
 	CString flash;
   CString domStorage;
 	CString desktopPath;

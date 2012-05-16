@@ -168,6 +168,7 @@ bool CURLBlaster::Start(int userIndex)
 	  tempDir = profile + _T("\\Local Settings\\Temp");
 	  desktopPath = profile + _T("\\Local Settings\\Desktop");
 	  silverlight = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Silverlight");
+	  recovery = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Internet Explorer\\Recovery\\Active");
 	  flash = profile + _T("\\Application Data\\Macromedia\\Flash Player\\#SharedObjects");
     domStorage = profile + _T("\\Local Settings\\Application Data\\Microsoft\\Internet Explorer\\DOMStore");
   }
@@ -414,6 +415,7 @@ bool CURLBlaster::DoUserLogon(void)
 					  if( SUCCEEDED(RegQueryValueEx(hKey, _T("Local AppData"), 0, 0, (LPBYTE)path, &len)) )
 					  {
 						  silverlight = path;
+              recovery = silverlight + _T("\\Microsoft\\Internet Explorer\\Recovery\\Active");
 						  silverlight += _T("\\Microsoft\\Silverlight");
 					  }
 
@@ -458,6 +460,7 @@ bool CURLBlaster::DoUserLogon(void)
 				  tempDir.Replace(_T("%USERPROFILE%"), profile);
 				  desktopPath.Replace(_T("%USERPROFILE%"), profile);
 				  silverlight.Replace(_T("%USERPROFILE%"), profile);
+				  recovery.Replace(_T("%USERPROFILE%"), profile);
 				  flash.Replace(_T("%USERPROFILE%"), profile);
 				  domStorage.Replace(_T("%USERPROFILE%"), profile);
         }
@@ -500,6 +503,7 @@ void CURLBlaster::ClearCache(void)
 	buff.Format(_T("%d files found in cache\n"), cacheCount);
 	OutputDebugString(buff);
 	DeleteDirectory( silverlight, false );
+	DeleteDirectory( recovery, false );
 	DeleteDirectory( flash, false );
   DeleteFile(desktopPath + _T("\\debug.log"));  // delete the desktop debug log from page speed - argh!
   DeleteDirectory( windir + _T("\\temp"), false );  // delete the global windows temp directory
