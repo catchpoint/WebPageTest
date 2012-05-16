@@ -38,6 +38,7 @@ static const TCHAR * FLASH_CACHE_DIR =
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
+static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--ignore-certificate-errors"),
@@ -109,6 +110,11 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             lstrcat(cmdLine, _T(" "));
             lstrcat(cmdLine, CHROME_REQUIRED_OPTIONS[i]);
           }
+        }
+        if (_test._netlog) {
+          CString netlog;
+          netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
+          lstrcat(cmdLine, netlog);
         }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {

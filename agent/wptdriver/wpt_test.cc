@@ -83,6 +83,7 @@ void WptTest::Reset(void) {
   _ignore_ssl = false;
   _tcpdump = false;
   _timeline = false;
+  _netlog = false;
   _video = false;
   _aft = false;
   _aft_early_cutoff = AFT_EARLY_CUTOFF_SECS;
@@ -160,6 +161,8 @@ bool WptTest::Load(CString& test) {
           _tcpdump = true;
         else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
           _timeline = true;
+        else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
+          _netlog = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {

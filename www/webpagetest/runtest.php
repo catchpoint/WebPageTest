@@ -78,6 +78,7 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
+            $test['netlog'] = $req_netlog;
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
             $test['type'] = trim($req_type);
@@ -751,7 +752,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $test['location'] = GetClosestLocation($destination_url);
             }
 
-            // make sure the test runs are between 1 and 200
+            // make sure the test runs are between 1 and the max
             if( $test['runs'] > $maxruns )
                 $test['runs'] = $maxruns;
             elseif( $test['runs'] < 1 )
@@ -761,47 +762,18 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( $test['fvonly'] > 0 )
                 $test['fvonly'] = 1;
 
-            // make sure private is explicitly 1 or 0
-            if( $test['private'] )
-                $test['private'] = 1;
-            else
-                $test['private'] = 0;
+            // make sure on/off options are explicitly 1 or 0
+            $test['private'] = $test['private'] ? 1 : 0;
+            $test['web10'] = $test['web10'] ? 1 : 0;
+            $test['ignoreSSL'] = $test['ignoreSSL'] ? 1 : 0;
+            $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
+            $test['timeline'] = $test['timeline'] ? 1 : 0;
+            $test['netlog'] = $test['netlog'] ? 1 : 0;
+            $test['blockads'] = $test['blockads'] ? 1 : 0;
+            $test['sensitive'] = $test['sensitive'] ? 1 : 0;
+            $test['pngss'] = $test['pngss'] ? 1 : 0;
+            $test['bodies'] = $test['bodies'] ? 1 : 0;
                 
-            // make sure web10 is explicitly 1 or 0
-            if( $test['web10'] )
-                $test['web10'] = 1;
-            else
-                $test['web10'] = 0;
-
-            // make sure ignoreSSL is explicitly 1 or 0
-            if( $test['ignoreSSL'] )
-                $test['ignoreSSL'] = 1;
-            else
-                $test['ignoreSSL'] = 0;
-                
-            // make sure tcpdump is explicitly 1 or 0
-            if( $test['tcpdump'] )
-                $test['tcpdump'] = 1;
-            else
-                $test['tcpdump'] = 0;
-            
-            if ($test['timeline'])
-                $test['timeline'] = 1;
-            else
-                $test['timeline'] = 0;
-                
-            // make sure blockads is explicitly 1 or 0
-            if( $test['blockads'] )
-                $test['blockads'] = 1;
-            else
-                $test['blockads'] = 0;
-
-            // make sure sensitive is explicitly 1 or 0
-            if( $test['sensitive'] )
-                $test['sensitive'] = 1;
-            else
-                $test['sensitive'] = 0;
-
             if( $test['aft'] )
             {
                 $test['aft'] = 1;
@@ -810,16 +782,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             else
                 $test['aft'] = 0;
 
-            if( $test['pngss'] )
-                $test['pngss'] = 1;
-            else
-                $test['pngss'] = 0;
-
-            if( $test['bodies'] )
-                $test['bodies'] = 1;
-            else
-                $test['bodies'] = 0;
-            
             if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
                 $test['aftMinChanges'] = $settings['aftMinChanges'];
 
@@ -1570,6 +1532,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "\r\ntcpdump=1";
         if( $test['timeline'] )
             $testFile .= "\r\ntimeline=1";
+        if( $test['netlog'] )
+            $testFile .= "\r\nnetlog=1";
         if( $test['blockads'] )
             $testFile .= "\r\nblockads=1";
         if( $test['video'] )

@@ -142,6 +142,7 @@ public:
   bool    _ignore_ssl;
   bool    _tcpdump;
   bool    _timeline;
+  bool    _netlog;
   bool    _video;
   bool    _aft;
   DWORD   _aft_early_cutoff;

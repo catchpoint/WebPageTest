@@ -284,6 +284,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
+                                        <label for="netlog" class="auto_width">
+                                            Capture Network Log (Chrome Only)
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
                                             Save response bodies<br>
