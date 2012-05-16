@@ -4,6 +4,7 @@ import chunk as tcp
 from operator import itemgetter
 from pcap2har import settings
 import packet
+import seq
 
 class Direction:
     '''
@@ -58,9 +59,26 @@ class Direction:
             if overlapped:
                 # check if this packet bridged the gap between two chunks
                 if back and i < (len(self.chunks)-1):
-                    overlapped2, result2 = chunk.merge(self.chunks[i+1])
+                    overlapped2, (front2, back2) = chunk.merge(self.chunks[i+1])
                     if overlapped2:
-                        assert( (not result2[0]) and (result2[1]))
+                        # Used to be assert( (not front2) and back2), meaning
+                        # the merge was at the back of chunk.  However, that
+                        # check seems incorrect if pkt completely
+                        # overlaps self.chunks[i+1].  In that case, pkt will
+                        # merge into the back of chunk, and chunk will
+                        # completely overlap self.chunks[i+1].  In that case, we
+                        # have (not front2) and (not back2).
+                        assert( (not front2) and (
+                            back2 or
+                            (seq.lte(pkt.seq_start, self.chunks[i+1].seq_start)
+                             and seq.lte(self.chunks[i+1].seq_end, pkt.seq_end))
+                            ))
+                        if not back2:
+                          logging.info('Overlapping chunk(%d-%d) consumed next '
+                                       'chunk(%d-%d) in violation of old assert.'
+                                       , chunk.seq_start, chunk.seq_end,
+                                       self.chunks[i+1].seq_start,
+                                       self.chunks[i+1].seq_end)
                         del self.chunks[i+1]
                 # if this is the main data chunk, calc final arrival
                 if self.seq_start and chunk.seq_start == self.seq_start:
@@ -106,8 +124,8 @@ class Direction:
             if self.chunks:
                 return self.chunks[0].seq_start
             else:
-                log.warning('getting seq_start from finished tcp.Direction '
-                            'with no handshake and no data')
+                logging.warning('getting seq_start from finished tcp.Direction '
+                                'with no handshake and no data')
                 return None
         else:
             return None

@@ -55,7 +55,7 @@ class Flow:
         except LookupError:
             # there were no responses after the first request
             # there's nothing we can do
-            logging.warning("Request has no reponse.")
+            logging.warning("Request has no response.")
 
 class MessagePair:
     '''

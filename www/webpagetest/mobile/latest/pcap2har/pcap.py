@@ -66,6 +66,5 @@ def ParsePcap(dispatcher, filename=None, reader=None):
     except (dpkt.dpkt.NeedData,):
         error = sys.exc_info()[1]
         log.warning(error)
-        log.warning('A packet in the pcap file was too short, '
-                    'debug_pkt_count=%d' % debug_pkt_count)
+        log.warning('A packet in the pcap file was too short.')
         errors.append((None, error))

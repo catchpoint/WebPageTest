@@ -7,6 +7,7 @@ fix the bug where a body is parsed for a request that shouldn't have a body."""
 
 import cStringIO
 import dpkt
+import logging
 import settings
 
 def parse_headers(f):
@@ -54,9 +55,16 @@ def parse_body(f, headers):
             raise dpkt.NeedData('premature end of chunked body')
         body = ''.join(l)
     elif 'content-length' in headers:
-        n = int(headers['content-length'])
+        # Have observed malformed 0,0 content lengths
+        if headers['content-length'] == '0,0':
+          n = 0
+        else:
+          n = int(headers['content-length'])
         body = f.read(n)
-        if settings.strict_http_parse_body and len(body) != n:
+        if len(body) != n:
+          logging.warn('HTTP content-length mismatch: expected %d, got %d', n,
+                       len(body))
+          if settings.strict_http_parse_body:
             raise dpkt.NeedData('short body (missing %d bytes)' % (n - len(body)))
     else:
         # XXX - need to handle HTTP/0.9
@@ -150,7 +158,7 @@ class Response(Message):
         f = cStringIO.StringIO(buf)
         line = f.readline()
         l = line.strip().split(None, 2)
-        if len(l) < 2 or not l[0].startswith(self.__proto) or not l[1].isdigit():
+        if len(l) < 3 or not l[0].startswith(self.__proto) or not l[1].isdigit():
             raise dpkt.UnpackError('invalid response: %r' % line)
         self.version = l[0][len(self.__proto)+1:]
         self.status = l[1]
