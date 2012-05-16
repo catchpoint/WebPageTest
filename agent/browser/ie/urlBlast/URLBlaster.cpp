@@ -1028,6 +1028,20 @@ bool CURLBlaster::ConfigureIE(void)
 			RegCloseKey(hKey);
 		}
 		
+	  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_DOWNLOAD_INITIATOR_HTTP_HEADER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+	  {
+		  DWORD val = 1;
+		  RegSetValueEx(hKey, _T("*"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+		  RegCloseKey(hKey);
+	  }
+
+	  if( RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Wow6432Node\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_DOWNLOAD_INITIATOR_HTTP_HEADER"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+	  {
+		  DWORD val = 1;
+		  RegSetValueEx(hKey, _T("*"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+		  RegCloseKey(hKey);
+	  }
+
 		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\InformationBar"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
 		{
 			DWORD val = 0;
