@@ -43,6 +43,7 @@ CDN_PROVIDER cdnList[] = {
   {".cubecdn.net", _T("cubeCDN")},
   {".yottaa.net", _T("Yottaa")},
   {".r.cdn77.net", _T("CDN77")},
+  {".incapdns.net", _T("Incapsula")},
 	{NULL, NULL}
 };
 

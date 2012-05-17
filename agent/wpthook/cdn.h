@@ -83,6 +83,7 @@ CDN_PROVIDER cdnList[] = {
   {".yottaa.net", "Yottaa"},
   {".cubecdn.net", "cubeCDN"},
   {".r.cdn77.net", "CDN77"},
+  {".incapdns.net", "Incapsula"},
   {"END_MARKER", "END_MARKER"}
 };
 
