@@ -114,6 +114,7 @@ else
             else
                 echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             xmlDomains($id, $testPath, $fvMedian, 0);
+            xmlRequests($id, $testPath, $fvMedian, 0);
             echo "</firstView>\n";
             
             if( isset($rv) )
@@ -140,6 +141,7 @@ else
                     else
                         echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     xmlDomains($id, $testPath, $fvMedian, 1);
+                    xmlRequests($id, $testPath, $fvMedian, 1);
                     echo "</repeatView>\n";
                 }
             }
@@ -242,6 +244,7 @@ else
                     }
                     
                     xmlDomains($id, $testPath, $i, 0);
+                    xmlRequests($id, $testPath, $i, 0);
                     echo "</firstView>\n";
                 }
 
@@ -321,6 +324,7 @@ else
                     }
                     
                     xmlDomains($id, $testPath, $i, 1);
+                    xmlRequests($id, $testPath, $i, 1);
                     echo "</repeatView>\n";
                 }
             }
@@ -389,6 +393,27 @@ function xmlDomains($id, $testPath, $run, $cached) {
             echo "</domain>\n";
         }
         echo "</domains>\n";
+    }
+}
+
+/**
+* Dump information about all of the requests
+*/
+function xmlRequests($id, $testPath, $run, $cached) {
+    if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests']) {
+        echo "<requests>\n";
+        $secure = false;
+        $haveLocations = false;
+        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        foreach ($requests as &$request) {
+            $domain = strrev($domain);
+            echo "<request number=\"{$request['number']}\">\n";
+            foreach ($request as $field => $value) {
+                echo "<$field>" . xml_entities($value) . "</$field>\n";
+            }
+            echo "</request>\n";
+        }
+        echo "</requests>\n";
     }
 }
 
