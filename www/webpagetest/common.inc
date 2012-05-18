@@ -200,6 +200,14 @@ if (strlen($id)) {
         if( isset($testDate) && strlen($testDate) )
             $testLabel .= " - $testDate";
     }
+    
+    if (!isset($test)) {
+        $test = array();
+    }
+    
+    if (!array_key_exists('testinfo', $test)) {
+        $test['testinfo'] = array();
+    }
 }
 
 /**
