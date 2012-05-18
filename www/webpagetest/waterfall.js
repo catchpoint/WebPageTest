@@ -24,11 +24,32 @@ $("#request-dialog-radio").change(function() {
 
 var wptBodyRequest;
 
-// test that a value is a is a valid duration.
+// Test that a value is a valid duration.
 // Invalid durations include undefined and -1.
-function IsValidDuration(possibleDuration) {
-    return (typeof(possibleDuration) == 'number' &&
-            possibleDuration != -1);
+function IsValidDuration(value) {
+    // Explicitly check the type.  Would you have guessed that Number(['9'])
+    // is 9?  We need to support strings because php makes it too easy to
+    // send a number as a string.  We need to support numbers like "123.4".
+    if (typeof value != 'number' && typeof value != 'string')
+        return false;
+
+    // Number('') is 0, but the empty string is not a valid duration.
+    if (value === '')
+        return false;
+
+    var num = Number(value);
+    return (!isNaN(num) && num !== -1);
+}
+
+function NumBytesAsDisplayString(numBytes) {
+    var numKb = numBytes / 1024.0;
+
+    // We display kilobytes with one decimal point.  If the value with that
+    // precision would be zero, display bytes instead.
+    if (numKb >= 0.1) {
+        return numKb.toFixed(1) + ' KB';
+    }
+    return numBytes + ' B';
 }
 
 function SelectRequest(request) {
@@ -56,7 +77,7 @@ function SelectRequest(request) {
         }
         if (r['host'] !== undefined)
             details += '<b>Host: </b>' + r['host'] + '<br>';
-        if (r['ip_addr'] !== undefined)
+        if (r['ip_addr'])
             details += '<b>IP: </b>' + r['ip_addr'] + '<br>';
         if (r['location'] !== undefined && r['location'].length)
             details += '<b>Location: </b>' + r['location'] + '<br>';
@@ -83,14 +104,15 @@ function SelectRequest(request) {
                 details += '<b>SSL Negotiation: </b>' + sslTime + ' ms<br>';
             }
         }
-        if (IsValidDuration(r['ttfb_ms']))
+        if (IsValidDuration(r['ttfb_ms'])) {
             details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms<br>';
+        }
         if (IsValidDuration(r['download_ms']))
             details += '<b>Content Download: </b>' + r['download_ms'] + ' ms<br>';
         if (r['bytesIn'] !== undefined)
-            details += '<b>Bytes In (downloaded): </b>' + (r['bytesIn'] / 1024.0).toFixed(1) + ' KB<br>';
+            details += '<b>Bytes In (downloaded): </b>' + NumBytesAsDisplayString(r['bytesIn']) + '<br>';
         if (r['bytesOut'] !== undefined)
-            details += '<b>Bytes Out (uploaded): </b>' + (r['bytesOut'] / 1024.0).toFixed(1) + ' KB<br>';
+            details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
         if (r['custom_rules'] !== undefined) {
             for (rule in r['custom_rules']) {
                 details += '<b>Custom Rule - ' + rule + ': </b>(';
