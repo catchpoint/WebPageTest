@@ -303,21 +303,27 @@ function FixUpRequestTimes(&$requests) {
         $all_ms = $req['load_ms'];
 
         foreach (array('ssl', 'connect', 'dns') as $key) {
-            $start = &$req[$key . '_start'];
-            $end = &$req[$key . '_end'];
-            $ms = &$req[$key . '_ms'];
+            // Create local variables for start, end, and duration of this
+            // request.  These values will be copied back into $req at the
+            // end of the foreach loop.
+            $start = $req[$key . '_start'];
+            $end = $req[$key . '_end'];
+            $ms = $req[$key . '_ms'];
             if ($end > 0) {
-                $ms = max(0, $end - $start + 1);
+                $ms = max(0, $end - $start);
             }
             if ($ms > 0) {
                 if ($start == 0) {
                     // Compute start for old-style timing.
                     $start = $all_start - $ms;
-                    $end = $start + $ms - 1;
+                    $end = $start + $ms;
                 }
                 $all_start = $start;
                 $all_ms += $ms;
             }
+            $req[$key . '_start'] = $start;
+            $req[$key . '_end'] = $end;
+            $req[$key . '_ms'] = $ms;
         }
         $req['load_end'] = $req['load_start'] + $req['load_ms'];
 
