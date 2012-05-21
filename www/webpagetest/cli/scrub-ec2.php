@@ -34,9 +34,20 @@ if( $ec2 )
             // load the valid testers in this location
             $testers = array();
             $locations = explode(',', $location);
+            $first = true;
             foreach($locations as $loc) {
                 $loc_testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
-                $testers = array_merge($testers, $loc_testers);
+                if ($first) {
+                    $first = false;
+                    $testers = array_merge($testers, $loc_testers);
+                } else {
+                    // make sure ALL of the locations know about all of the testers
+                    foreach ($testers as $id => &$tester) {
+                        if (!array_key_exists($id, $loc_testers)) {
+                            unset($testers[$id]);
+                        }
+                    }
+                }
             }
 
             // get the list of current running ec2 instances        
@@ -47,26 +58,19 @@ if( $ec2 )
             $activeCount = 0;
             $idleCount = 0;
             $offlineCount = 0;
-            if( $response->isOK() )
-            {
-                foreach( $response->body->reservationSet->item as $item )
-                {
-                    foreach( $item->instancesSet->item as $instance )
-                    {
-                        if( $instance->imageId == $ami && $instance->instanceState->code <= 16 )
-                        {
+            if( $response->isOK() ) {
+                foreach( $response->body->reservationSet->item as $item ) {
+                    foreach( $item->instancesSet->item as $instance ) {
+                        if( $instance->imageId == $ami && $instance->instanceState->code <= 16 ) {
                             $id = (string)$instance->instanceId;
-                            if( array_key_exists($id, $testers) || $addOnly )
-                            {
+                            if( array_key_exists($id, $testers) || $addOnly ) {
                                 if( $testers[$id]['offline'] )
                                     $offlineCount++;
                                 elseif( strlen($testers[$id]['test']) || $addOnly )
                                     $activeCount++;
                                 else
                                     $idleCount++;
-                            }
-                            else
-                            {
+                            } else {
                                 echo "$location - Unknown Tester: $id (state {$instance->instanceState->code})\n";
                                 $terminate[] = $id;
                                 $unknownCount++;
