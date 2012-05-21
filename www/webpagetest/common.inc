@@ -1407,12 +1407,31 @@ function LoadJobQueue($workDir, &$queue)
 {
     $ret = true;
     
+    $queue = null;
     $queueName = sha1($workDir);
     $queueFile = "./tmp/$queueName.queue";
-    if( is_file($queueFile) )
+    if( is_file($queueFile) ) {
         $queue = json_decode(file_get_contents($queueFile), true);
-    else
-    {
+        // re-scan the directory if the queue is empty
+        if (isset($queue)) {
+            if (is_array($queue)) {
+                $empty = true;
+                foreach ($queue as &$p) {
+                    if (count($p)) {
+                        $empty = false;
+                        break;
+                    }
+                }
+                if ($empty) {
+                    unset($queue);
+                }
+            } else {
+                unset($queue);
+            }
+        }
+    }
+
+    if (!isset($queue)) {
         // build the queue from disk
         $files = array();
         $f = scandir($workDir);
