@@ -812,24 +812,19 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             }
 
             global $onRender;
-            if (array_key_exists('onRender', $page['pageTimings'])) {
-              $curPageData["onRender"] = $page['pageTimings']['onRender'];
-            } else if (array_key_exists('_onRender', $page['pageTimings'])) {
-              $curPageData["onRender"] = $page['pageTimings']['_onRender'];
-            } else if ($onRender !== null) {
-              $curPageData["onRender"] = $onRender;
-            } else {
-              logMsg("onRender not set for page $pageref");
-              $curPageData["onRender"] = UNKNOWN_TIME;
-            }
+            $curPageData["onRender"] =
+                arrayLookupWithDefault($page['pageTimings'], 'onRender',
+                    arrayLookupWithDefault($page['pageTimings'], '_onRender',
+                        ($onRender !== null ? $onRender : UNKNOWN_TIME)));
 
-            $curPageData["docComplete"] = arrayLookupWithDefault($page['pageTimings'], 'onContentLoad', -1);
-            $curPageData["fullyLoaded"] = arrayLookupWithDefault($page['pageTimings'], 'onLoad', -1);
-            // TODO: Remove this patch for files missing the data
+            $curPageData["docComplete"] =
+                arrayLookupWithDefault($page['pageTimings'], 'onContentLoad', UNKNOWN_TIME);
+            $curPageData["fullyLoaded"] =
+                arrayLookupWithDefault($page['pageTimings'], 'onLoad', UNKNOWN_TIME);
+
+            // TODO: Remove this patch for files missing the data.
             if ($curPageData["docComplete"] <= 0)
               $curPageData["docComplete"] = $curPageData["fullyLoaded"];
-            if ($curPageData["onRender"] <= 0)
-              $curPageData["onRender"] = 0;
 
             // Agents that upload .pcap files must tell us the URL being tested,
             // because the URL is not always in the .pcap file.  If POST

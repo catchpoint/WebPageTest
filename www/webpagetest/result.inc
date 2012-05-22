@@ -2,6 +2,7 @@
 require_once('optimization_detail.inc.php');
 require_once('breakdown.inc');
 require_once('testStatus.inc');
+require_once('common.inc');
 
 $breakdown = array();
 $video = false;
@@ -180,9 +181,9 @@ $page_description = "Website performance test result$testLabel.";
                         <?php
                         if( count($pageData) > 1) 
                             echo " (<a href=\"#run$fvMedian\">Run $fvMedian</a>)";
-                        echo "</td><td id=\"fvLoadTime\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"fvTTFB\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['TTFB'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"fvStartRender\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['render'] / 1000.0, 3) . "s</td>\n";
+                        echo "</td><td id=\"fvLoadTime\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['loadTime'], 3) . "</td>\n";
+                        echo "<td id=\"fvTTFB\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['TTFB'], 3) . "</td>\n";
+                        echo "<td id=\"fvStartRender\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['render'], 3) . "</td>\n";
                         if( $test['test']['aft'] ) {
                             $aft = number_format($pageData[$fvMedian][0]['aft'] / 1000.0, 1) . 's';
                             if( !$pageData[$fvMedian][0]['aft'] )
@@ -196,11 +197,11 @@ $page_description = "Website performance test result$testLabel.";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             echo "<td id=\"fvDomElements\" valign=\"middle\">{$pageData[$fvMedian][0]['domElements']}</td>\n";
 
-                        echo "<td id=\"fvDocComplete\" class=\"border\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['docTime'] / 1000.0, 3) . "s</td>\n";
+                        echo "<td id=\"fvDocComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['docTime'], 3) . "</td>\n";
                         echo "<td id=\"fvRequestsDoc\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requestsDoc'],0) . "</td>\n";
                         echo "<td id=\"fvBytesDoc\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesInDoc'] / 1024, 0) . " KB</td>\n";
 
-                        echo "<td id=\"fvFullyLoaded\" class=\"border\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['fullyLoaded'] / 1000.0, 3) . "s</td>\n";
+                        echo "<td id=\"fvFullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"fvRequests\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requests'],0) . "</td>\n";
                         echo "<td id=\"fvBytes\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesIn'] / 1024, 0) . " KB</td>\n";
                         ?>
@@ -211,9 +212,9 @@ $page_description = "Website performance test result$testLabel.";
                         <?php
                         if( count($pageData) > 1) 
                             echo " (<a href=\"#run$rvMedian\">Run $rvMedian</a>)";
-                        echo "</td><td id=\"rvLoadTime\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"rvTTFB\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['TTFB'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"rvStartRender\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['render'] / 1000.0, 3) . "s</td>\n";
+                        echo "</td><td id=\"rvLoadTime\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['loadTime'], 3) . "</td>\n";
+                        echo "<td id=\"rvTTFB\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['TTFB'], 3) . "</td>\n";
+                        echo "<td id=\"rvStartRender\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['render'], 3) . "</td>\n";
                         if( $test['test']['aft'] ) {
                             $aft = number_format($pageData[$rvMedian][1]['aft'] / 1000.0, 1);
                             if( !$pageData[$rvMedian][1]['aft'] )
@@ -231,11 +232,11 @@ $page_description = "Website performance test result$testLabel.";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             echo "<td id=\"rvDomElements\" class=\"even\" valign=\"middle\">{$pageData[$rvMedian][1]['domElements']}</td>\n";
 
-                        echo "<td id=\"rvDocComplete\" class=\"even border\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['docTime'] / 1000.0, 3) . "s</td>\n";
+                        echo "<td id=\"rvDocComplete\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['docTime'], 3) . "</td>\n";
                         echo "<td id=\"rvRequestsDoc\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requestsDoc'],0) . "</td>\n";
                         echo "<td id=\"rvBytesDoc\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesInDoc'] / 1024, 0) . " KB</td>\n";
 
-                        echo "<td id=\"rvFullyLoaded\" class=\"even border\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['fullyLoaded'] / 1000.0, 3) . "s</td>\n";
+                        echo "<td id=\"rvFullyLoaded\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"rvRequests\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requests'],0) . "</td>\n";
                         echo "<td id=\"rvBytes\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesIn'] / 1024, 0) . " KB</td>\n";
                         ?>

@@ -23,14 +23,14 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 58);          // version of the sitewide css file
+define('VER_CSS', 58);           // version of the sitewide css file
 define('VER_JS', 19);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
-define('VER_JS_RUNNING', 1);    // version of the javascript specific to the test running status page
-define('UNKNOWN_TIME', -1);  // Value used as a flag for an unknown time.
-                             // To find code that fails to check that a time
-                             // is unknown, change this constant to a large
-                             // negative number.
+define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
+define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
+                                 // To find code that fails to check that a time
+                                 // is unknown, change this constant to a large
+                                 // negative number.
 
 // SEO stuff
 $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
@@ -1678,6 +1678,13 @@ function arrayLookupWithDefault($key, $searchArray, $default) {
     return $default;
 
   return $searchArray[$key];
+}
+
+function formatMsInterval($val, $digits) {
+  if ($val == UNKNOWN_TIME)
+    return '-';
+
+  return number_format($val / 1000.0, $digits) . 's';
 }
 
 ?>
