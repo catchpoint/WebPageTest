@@ -823,8 +823,8 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
               $curPageData["onRender"] = UNKNOWN_TIME;
             }
 
-            $curPageData["docComplete"] = $page['pageTimings']['onContentLoad'];
-            $curPageData["fullyLoaded"] = $page['pageTimings']['onLoad'];
+            $curPageData["docComplete"] = arrayLookupWithDefault($page['pageTimings'], 'onContentLoad', -1);
+            $curPageData["fullyLoaded"] = arrayLookupWithDefault($page['pageTimings'], 'onLoad', -1);
             // TODO: Remove this patch for files missing the data
             if ($curPageData["docComplete"] <= 0)
               $curPageData["docComplete"] = $curPageData["fullyLoaded"];
