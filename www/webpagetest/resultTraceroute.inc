@@ -52,6 +52,19 @@ function DisplayTraceroute( &$testPath, $run )
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
     if( count($rows) > 2 )
     {
+        $addr = '';
+        foreach($rows as &$row) {
+            $parseLine = str_replace(",", ", ", $row);
+            $fields = explode(",", $parseLine);
+            $data = array('hop' => trim($fields[0]),
+                            'addr' => trim($fields[1]),
+                            'time' => trim($fields[2]),
+                            'name' => trim($fields[3]));
+            if (array_key_exists('addr', $data) && strlen($data['addr'])) {
+                $addr = $data['addr'];
+            }
+        }
+        
         $index = 0;
         foreach($rows as &$row)
         {
@@ -67,7 +80,7 @@ function DisplayTraceroute( &$testPath, $run )
                 $index++;
                 if( $index == 1 )
                 {
-                    echo "<caption>Traceroute #$run to {$data['addr']}</caption>\n";
+                    echo "<caption>Traceroute #$run to $addr</caption>\n";
                     ?>
                     <thead>
                     <tr>
