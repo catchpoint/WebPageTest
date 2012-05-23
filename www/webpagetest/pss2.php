@@ -460,25 +460,33 @@ function LoadLocations()
     {
         if( isset($loc['browser']) )
         {
-            GetPendingTests($index, $count, $avgTime);
-            if( !$avgTime )
-                $avgTime = 30;  // default to 30 seconds if we don't have any history
-            $loc['backlog'] = $count;
-            $loc['avgTime'] = $avgTime;
-            $loc['testers'] = GetTesterCount($index);
-            $loc['wait'] = -1;
-            if( $loc['testers'] )
-            {
-                $testCount = 26;
-                if( $loc['testers'] > 1 )
-                    $testCount = 16;
-                $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
+            $testCount = 26;
+            if (array_key_exists('relayServer', $loc)) {
+                $loc['backlog'] = 0;
+                $loc['avgTime'] = 30;
+                $loc['testers'] = 1;
+                $loc['wait'] = ceil(($testCount * 30) / 60);
+            } else {
+                GetPendingTests($index, $count, $avgTime);
+                if( !$avgTime )
+                    $avgTime = 30;  // default to 30 seconds if we don't have any history
+                $loc['backlog'] = $count;
+                $loc['avgTime'] = $avgTime;
+                $loc['testers'] = GetTesterCount($index);
+                $loc['wait'] = -1;
+                if( $loc['testers'] )
+                {
+                    if( $loc['testers'] > 1 )
+                        $testCount = 16;
+                    $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
+                }
             }
         }
         
         unset( $loc['localDir'] );
         unset( $loc['key'] );
         unset( $loc['remoteDir'] );
+        unset( $loc['relayKey'] );
     }
     
     return $locations;
