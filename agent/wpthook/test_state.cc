@@ -584,8 +584,11 @@ void TestState::RenderCheckThread() {
 void TestState::CollectSystemStats(LARGE_INTEGER &now) {
   ProgressData data;
   data._time.QuadPart = now.QuadPart;
-  DWORD msElapsed = (DWORD)((now.QuadPart - _last_data.QuadPart) / 
+  DWORD msElapsed = 0;
+  if (_last_data.QuadPart) {
+    msElapsed = (DWORD)((now.QuadPart - _last_data.QuadPart) / 
                             _ms_frequency.QuadPart);
+  }
 
   // figure out the bandwidth
   if (msElapsed) {
@@ -605,7 +608,7 @@ void TestState::CollectSystemStats(LARGE_INTEGER &now) {
     u.HighPart = user_time.dwHighDateTime;
     i.LowPart = idle_time.dwLowDateTime;
     i.HighPart = idle_time.dwHighDateTime;
-    if(_last_cpu_idle.QuadPart && _last_cpu_kernel.QuadPart && 
+    if(_last_cpu_idle.QuadPart || _last_cpu_kernel.QuadPart || 
       _last_cpu_user.QuadPart) {
       __int64 idle = i.QuadPart - _last_cpu_idle.QuadPart;
       __int64 kernel = k.QuadPart - _last_cpu_kernel.QuadPart;
@@ -622,12 +625,14 @@ void TestState::CollectSystemStats(LARGE_INTEGER &now) {
   }
 
   // get the memory use (working set - task-manager style)
-  PROCESS_MEMORY_COUNTERS mem;
-  mem.cb = sizeof(mem);
-  if( GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem)) )
-    data._mem = mem.WorkingSetSize / 1024;
+  if (msElapsed) {
+    PROCESS_MEMORY_COUNTERS mem;
+    mem.cb = sizeof(mem);
+    if( GetProcessMemoryInfo(GetCurrentProcess(), &mem, sizeof(mem)) )
+      data._mem = mem.WorkingSetSize / 1024;
 
-  _progress_data.AddTail(data);
+    _progress_data.AddTail(data);
+  }
 }
 
 /*-----------------------------------------------------------------------------

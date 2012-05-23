@@ -1038,8 +1038,10 @@ void CTestState::BackgroundTimer(void)
 			lastRealTime = now;
 
 			// figure out the bandwidth
-      double bits = (bwBytesIn - lastBytes) * 8;
-      data.bpsIn = (DWORD)(bits / elapsed);
+      if (elapsed > 0) {
+        double bits = (bwBytesIn - lastBytes) * 8;
+        data.bpsIn = (DWORD)(bits / elapsed);
+      }
 
 			// calculate CPU utilization
 			FILETIME idle, kernel, user;

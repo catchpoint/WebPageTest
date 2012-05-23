@@ -160,6 +160,9 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
+    if (_test_state._active) {
+      _test_state._bytes_in_bandwidth += chunk.GetLength();
+    }
     if (is_unencrypted || !info->_is_ssl) {
       _requests.DataIn(socket_id, chunk);
     } else {
