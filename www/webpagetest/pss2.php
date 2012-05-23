@@ -85,7 +85,7 @@ $page_description = "Comparison Test$testLabel.";
                         ?>
                         <li><input type="text" name="testurl_landing" id="testurl_landing" value="Landing Page" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
-                            <label for="location">Test From<br><small id="locinfo">(Using IE 8 on DSL)</small></label>
+                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on DSL)</small></label>
                             <select name="pssloc" id="pssloc">
                                 <option value="US_East" selected>US East (Virginia)</option>
                                 <option value="US_West">US West (California)</option>
@@ -178,6 +178,7 @@ $page_description = "Comparison Test$testLabel.";
                                 <option value="prod" selected>Production</option>
                                 <option value="staging">Staging</option>
                                 <option value="rahul">Rahul Playground</option>
+                                <option value="ashish">Ashish Playground</option>
                             </select>
                         </li>
                         <li>
@@ -392,6 +393,13 @@ $page_description = "Comparison Test$testLabel.";
                             '\nsetDnsName\t2-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
                             '\nsetDnsName\t3-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com' + 
                             '\nsetDnsName\t4-proxy-rahulbansal-wpt.pssplayground.com\tghs.google.com');
+                    } else if (backend == 'ashish') {
+                        batch = batch.replace(/psa\.pssdemos\.com/g, 'guptaa-wpt.pssplayground.com' + 
+                            '\nsetDnsName\tproxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t1-proxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t2-proxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t3-proxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t4-proxy-guptaa-wpt.pssplayground.com\tghs.google.com');
                     }
                 <?php
                 }

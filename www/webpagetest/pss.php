@@ -90,7 +90,7 @@ $page_description = "Comparison Test$testLabel.";
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
                         <li>
-                            <label for="location">Test From<br><small id="locinfo">(Using IE 8 on DSL)</small></label>
+                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on DSL)</small></label>
                             <select name="pssloc" id="pssloc">
                                 <option value="US_East" selected>US East (Virginia)</option>
                                 <option value="US_West">US West (California)</option>
@@ -182,6 +182,8 @@ $page_description = "Comparison Test$testLabel.";
                             </select>
                         </li>
                         <?php
+                        } else {
+                            echo "<input type=\"hidden\" name=\"shard\" value=\"1\">\n";
                         }
                         ?>
                         <li>
@@ -315,6 +317,7 @@ $page_description = "Comparison Test$testLabel.";
                     script = form.script.value;
                     script = script.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
                     form.script.value = script;
+                    form.web10.value = 0;
                 }
                 
                 return true;
