@@ -126,6 +126,11 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 	else if (message === "Timeline.eventRecorded") {
 		wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
 	}
+  
+  // Page events
+	else if (message === "Page.loadEventFired") {
+		wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
+	}
 }
 
 /**
@@ -142,6 +147,7 @@ wpt.chromeDebugger.OnAttachDebugger = function(){
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
 	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
+	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Page.enable");
 	if (g_instance.timeline && !g_instance.timelineConnected) {
 		g_instance.timelineConnected = true;
 		g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
@@ -162,7 +168,7 @@ wpt.chromeDebugger.OnAttachOld = function(){
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Network.enable");
 	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Console.enable");
-	// the timeline is pretty resource intensive - TODO, make this optional
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Page.enable");
 	if (g_instance.timeline && !g_instance.timelineConnected) {
 		g_instance.timelineConnected = true;
 		g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
@@ -182,8 +188,12 @@ wpt.chromeDebugger.OnAttachExperimental = function(){
 	// start the different interfaces we are interested in monitoring
 	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
 	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
-	// the timeline is pretty resource intensive - TODO, make this optional
-	//g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Page.enable");
+	// the timeline is pretty resource intensive so it is optional
+	if (g_instance.timeline && !g_instance.timelineConnected) {
+		g_instance.timelineConnected = true;
+    g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+  }
 }
 			
 /**

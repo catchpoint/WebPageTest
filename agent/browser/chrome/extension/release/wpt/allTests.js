@@ -5361,7 +5361,6 @@ wpt.contentScript.reportTiming_ = function() {
 // since the navigation timing times are sometimes questionable.
 window.addEventListener('load', function() {
   window.setTimeout(wpt.contentScript.reportTiming_, 0);
-  chrome.extension.sendRequest({message: 'wptLoad'}, function(response) {});
 }, false);
 
 
