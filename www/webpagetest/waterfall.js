@@ -4,6 +4,8 @@ var CloseRequestDialog = function(hash) {
         $("#request-overlay-" + i).removeClass("selected");
         $("#request-overlay-" + i).addClass("transparent");
     }
+    $('#radio1').attr('checked', 'checked');
+    $("#request-dialog-radio").buttonset('refresh');
 }
 
 // initialize the pop-up dialog        
@@ -60,6 +62,8 @@ function SelectRequest(request) {
     var responseHeaders='';
     $("#response-body").html('');
     $('#response-body-button').hide();
+    $("#response-image").html('');
+    $('#response-image-button').hide();
     try {
         if (wptBodyRequest !== undefined)
             wptBodyRequest.abort();
@@ -68,7 +72,7 @@ function SelectRequest(request) {
     if (wptRequestData[request - 1] !== undefined) {
         var r = wptRequestData[request - 1];
         if (r['full_url'] !== undefined)
-            details += '<b>URL:</b> ' + r['full_url'] + '<br>';
+            details += '<b>URL:</b> <a href="' + r['full_url'] + '">' + r['full_url'] + '</a><br>';
         if (r['initiator'] !== undefined && r['initiator'].length > 0) {
             details += '<b>Loaded By:</b> ' + r['initiator'];
             if (r['initiator_line'] !== undefined)
@@ -150,6 +154,9 @@ function SelectRequest(request) {
               wptBodyRequest.send();
             } catch (err) {
             }
+        } else if (r['contentType'] !== undefined && r['contentType'].indexOf('image') >= 0) {
+            $('#response-body-button').show();
+            $("#response-body").html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
         }
     }
     $("#request-details").html(details);
