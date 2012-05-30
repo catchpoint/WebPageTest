@@ -95,8 +95,8 @@ def RunBatch(options):
     test_params['tcpdump'] = options.tcpdump
   if options.script:
     test_params['script'] = open(options.script, 'rb').read()
-	if options.key:
-		test_params['k'] = options.key
+  if options.key:
+    test_params['k'] = options.key
 
   requested_urls = wpt_batch_lib.ImportUrls(options.urlfile)
   id_url_dict = wpt_batch_lib.SubmitBatch(requested_urls, test_params,
