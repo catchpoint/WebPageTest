@@ -813,14 +813,14 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
 
             global $onRender;
             $curPageData["onRender"] =
-                arrayLookupWithDefault($page['pageTimings'], 'onRender',
-                    arrayLookupWithDefault($page['pageTimings'], '_onRender',
+                arrayLookupWithDefault('onRender', $page['pageTimings'],
+                    arrayLookupWithDefault('_onRender', $page['pageTimings'],
                         ($onRender !== null ? $onRender : UNKNOWN_TIME)));
 
             $curPageData["docComplete"] =
-                arrayLookupWithDefault($page['pageTimings'], 'onContentLoad', UNKNOWN_TIME);
+                arrayLookupWithDefault('onContentLoad', $page['pageTimings'], UNKNOWN_TIME);
             $curPageData["fullyLoaded"] =
-                arrayLookupWithDefault($page['pageTimings'], 'onLoad', UNKNOWN_TIME);
+                arrayLookupWithDefault('onLoad', $page['pageTimings'], UNKNOWN_TIME);
 
             // TODO: Remove this patch for files missing the data.
             if ($curPageData["docComplete"] <= 0)
@@ -945,7 +945,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 "Request details:\r\n\r\n");                    
 
             // Start by stating the time-to-first-byte is the page load time,
-            // will be updated as we iterate requets
+            // will be updated as we iterate requests.
             $curPageData["TTFB"] = $curPageData["docComplete"];
 
             // Reset counters for requests
@@ -1238,15 +1238,15 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
                 }
             }
 
-            // The page's time to first byte is the earliest time to first byte
-            // of any request.
-            if ($curPageData["TTFB"] > $requestTimings['ttfb']) {
-                $curPageData["TTFB"] = $requestTimings['ttfb'];
-            }
+            // Find the page's time-to-first-byte which is minimum first-byte
+            // time of all the requests. The request's time-to-first-byte can
+            // not be used because it is relative to the start of the request,
+            // not the start of the page.
+            $curPageData["TTFB"] = min(
+                $curPageData["TTFB"], $requestTimings['receive_start']);
 
             // Update the page data variable back into the array
             $pageData[$pageref] = $curPageData;
-
         }
 
         // Create the page files

@@ -138,8 +138,8 @@ function convertHarTimesToWebpageTestTimes($harTimingsRec, $entryTime) {
   //                   |       |   |       |                 |           |
   //                dns start  |   |       |<-- ttfb ------->|           |
   //                           | conn end  |<-- load ------------------->|
-  //                           |           |
-  //                        dns end      start
+  //                           |           |                 |
+  //                        dns end      start          receive_start
   //                       conn start
 
 
@@ -181,6 +181,10 @@ function convertHarTimesToWebpageTestTimes($harTimingsRec, $entryTime) {
   }
   $wptTimes['ssl_ms'] = $wptTimes['ssl_end'] -
                         $wptTimes['ssl_start'];
+
+  // The time bytes are first received is used to compute the time to first byte
+  // of the page.
+  $wptTimes['receive_start'] = $harTimes['receive']['start'];
 
   // Debug: See what this function does for each request:
   /*
