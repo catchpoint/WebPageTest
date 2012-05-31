@@ -12,6 +12,9 @@ if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
     $info = GetBenchmarkInfo($benchmark);
 }
+if (array_key_exists('f', $_REQUEST)) {
+    $out_data = array();
+} else {
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -96,6 +99,7 @@ if (array_key_exists('benchmark', $_REQUEST)) {
             }
             </script>
             <?php
+}
             $metrics = array('docTime' => 'Load Time (onload)', 
                             'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte', 
@@ -128,11 +132,15 @@ if (array_key_exists('benchmark', $_REQUEST)) {
                 if (!$info['video']) {
                     unset($metrics['SpeedIndex']);
                 }
-                echo "<h1>{$info['title']}</h1>";
-                if (array_key_exists('description', $info))
-                    echo "<p>{$info['description']}</p>\n";
+                if (!isset($out_data)) {
+                    echo "<h1>{$info['title']}</h1>";
+                    if (array_key_exists('description', $info))
+                        echo "<p>{$info['description']}</p>\n";
+                }
                 foreach( $metrics as $metric => $label) {
-                    echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                    if (!isset($out_data)) {
+                        echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                    }
                     if ($info['expand'] && count($info['locations'] > 1)) {
                         foreach ($info['locations'] as $location => $label) {
                             if (is_numeric($label))
@@ -144,6 +152,7 @@ if (array_key_exists('benchmark', $_REQUEST)) {
                     }
                 }
             }
+if (!isset($out_data)) {
             ?>
             </div>
             
@@ -152,6 +161,12 @@ if (array_key_exists('benchmark', $_REQUEST)) {
     </body>
 </html>
 <?php
+} else {
+    // spit out the raw data
+    header ("Content-type: application/json; charset=utf-8");
+    echo json_encode($out_data);
+}
+
 /**
 * Display the charts for the given benchmark/metric
 * 
@@ -160,11 +175,19 @@ if (array_key_exists('benchmark', $_REQUEST)) {
 function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) {
     global $count;
     global $aggregate;
+    global $out_data;
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
     $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc, $annotations);
-    if (isset($tsv) && strlen($tsv)) {
+    if (isset($out_data)) {
+        if (!array_key_exists($benchmark['name'], $out_data)) {
+            $out_data[$benchmark['name']] = array();
+        }
+        $out_data[$benchmark['name']][$metric] = array();
+        $out_data[$benchmark['name']][$metric]['FV'] = TSVEncode($tsv);
+    }
+    if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
@@ -190,7 +213,10 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
         $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc, $annotations);
-        if (isset($tsv) && strlen($tsv)) {
+        if (isset($out_data)) {
+            $out_data[$benchmark['name']][$metric]['RV'] = TSVEncode($tsv);
+        }
+        if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";

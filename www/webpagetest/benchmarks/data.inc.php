@@ -889,4 +889,30 @@ function LoadMedianData($benchmark, $test_time) {
         }
     }
 }
+
+/**
+* Convert a TSV back into an array
+* 
+* @param mixed $tsv
+*/
+function TSVEncode(&$tsv) {
+    $out = array();
+    $rows = explode("\n", $tsv);
+    foreach($rows as &$row) {
+        $row = trim($row);
+        if (strlen($row)) {
+            $pieces = explode("\t", trim(str_replace("\t", "\t ", $row)));
+            if (!isset($columns)) {
+                $columns = $pieces;
+            } else {
+                $out_row = array();
+                foreach($pieces as $column => $value) {
+                    $out_row[trim($columns[$column])] = trim($value);
+                }
+                $out[] = $out_row;
+            }
+        }
+    }
+    return $out;
+}
 ?>

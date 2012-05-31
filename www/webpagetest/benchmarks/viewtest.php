@@ -64,6 +64,9 @@ if (!$info['video']) {
 if (array_key_exists('metric', $_REQUEST)) {
     $metric = $_REQUEST['metric'];
 }
+if (array_key_exists('f', $_REQUEST)) {
+    $out_data = array();
+} else {
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -181,12 +184,15 @@ if (array_key_exists('metric', $_REQUEST)) {
                 </form>
             </div>
             <?php
+}
             if (isset($info)) {
-                echo "<h1>{$info['title']}</h1>";
-                if (array_key_exists('description', $info)) {
-                    echo "<p>{$info['description']}</p>\n";
+                if (!isset($out_data)) {
+                    echo "<h1>{$info['title']}</h1>";
+                    if (array_key_exists('description', $info)) {
+                        echo "<p>{$info['description']}</p>\n";
+                    }
+                    echo "<h2>{$metrics[$metric]} <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                 }
-                echo "<h2>{$metrics[$metric]} <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                 if ($info['expand'] && count($info['locations'] > 1)) {
                     foreach ($info['locations'] as $location => $label) {
                         if (is_numeric($label))
@@ -197,40 +203,43 @@ if (array_key_exists('metric', $_REQUEST)) {
                     DisplayBenchmarkData($info, $metric);
                 }
             }
-            echo "<hr><h2>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h2>\n";
-            if (GetTestErrors($errors, $benchmark, $test_time)) {
-                foreach($errors as &$configuration) {
-                    if (count($configuration['locations'])) {
-                        echo "<h2>{$configuration['label']}</h2>\n";
-                        foreach($configuration['locations'] as &$location) {
-                            echo "<h3>{$location['label']}</h3>\n";
-                            if (count($location['urls'])) {
-                                echo "<ul>";
-                                foreach($location['urls'] as &$url) {
-                                    echo "<li>" . htmlspecialchars($url['url']) . " - ";
-                                    $first = true;
-                                    foreach( $url['errors'] as &$test ) {
-                                        if ($first)
-                                            $first = false;
-                                        else
-                                            echo ", ";
-                                        $cached = '';
-                                        if ($test['cached'])
-                                            $cached = 'cached/';
-                                        echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+            if (!isset($out_data)) {
+                echo "<hr><h2>Test Errors <span class=\"small\">(<a name=\"errors\" href=\"#errors\">direct link</a>)</span></h2>\n";
+                if (GetTestErrors($errors, $benchmark, $test_time)) {
+                    foreach($errors as &$configuration) {
+                        if (count($configuration['locations'])) {
+                            echo "<h2>{$configuration['label']}</h2>\n";
+                            foreach($configuration['locations'] as &$location) {
+                                echo "<h3>{$location['label']}</h3>\n";
+                                if (count($location['urls'])) {
+                                    echo "<ul>";
+                                    foreach($location['urls'] as &$url) {
+                                        echo "<li>" . htmlspecialchars($url['url']) . " - ";
+                                        $first = true;
+                                        foreach( $url['errors'] as &$test ) {
+                                            if ($first)
+                                                $first = false;
+                                            else
+                                                echo ", ";
+                                            $cached = '';
+                                            if ($test['cached'])
+                                                $cached = 'cached/';
+                                            echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                        }
+                                        echo "</li>";
                                     }
-                                    echo "</li>";
+                                    echo "</ul>";
+                                } else {
+                                    echo "No Errors Detected";
                                 }
-                                echo "</ul>";
-                            } else {
-                                echo "No Errors Detected";
                             }
                         }
                     }
+                } else {
+                    echo "No Errors Detected";
                 }
-            } else {
-                echo "No Errors Detected";
             }
+if (!isset($out_data)) {
             ?>
             </div>
             
@@ -239,16 +248,30 @@ if (array_key_exists('metric', $_REQUEST)) {
     </body>
 </html>
 <?php
+} else {
+    // spit out the raw data
+    header ("Content-type: application/json; charset=utf-8");
+    echo json_encode($out_data);
+}
+
 function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) {
     global $count;
     global $aggregate;
     global $test_time;
+    global $out_data;
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
     $annotations = null;
     $tsv = LoadTestDataTSV($benchmark['name'], 0, $metric, $test_time, $meta, $loc, $annotations);
-    if (isset($tsv) && strlen($tsv)) {
+    if (isset($out_data)) {
+        if (!array_key_exists($benchmark['name'], $out_data)) {
+            $out_data[$benchmark['name']] = array();
+        }
+        $out_data[$benchmark['name']][$metric] = array();
+        $out_data[$benchmark['name']][$metric]['FV'] = TSVEncode($tsv);
+    }
+    if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
@@ -276,7 +299,10 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         if (isset($title))
             $chart_title = "title: \"$title (Repeat View)\",";
         $tsv = LoadTestDataTSV($benchmark['name'], 1, $metric, $test_time, $meta, $loc, $annotations);
-        if (isset($tsv) && strlen($tsv)) {
+        if (isset($out_data)) {
+            $out_data[$benchmark['name']][$metric]['RV'] = TSVEncode($tsv);
+        }
+        if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";

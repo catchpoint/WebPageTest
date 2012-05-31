@@ -7,6 +7,10 @@ $page_description = "WebPagetest benchmarks";
 $aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
+
+if (array_key_exists('f', $_REQUEST)) {
+    $out_data = array();
+} else {
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -69,6 +73,7 @@ if (array_key_exists('aggregate', $_REQUEST))
             <div style="clear:both;">
             </div>
             <?php
+}
             $benchmarks = GetBenchmarks();
             $count = 0;
             foreach ($benchmarks as &$benchmark) {
@@ -77,9 +82,11 @@ if (array_key_exists('aggregate', $_REQUEST))
                 else
                     $title = $benchmark['name'];
                 $bm = urlencode($benchmark['name']);
-                echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a> <span class=\"small\">(<a name=\"{$benchmark['name']}\" href=\"#{$benchmark['name']}\">direct link</a>)</span></h2>\n";
-                if (array_key_exists('description', $benchmark))
-                    echo "<p>{$benchmark['description']}</p>\n";
+                if (!isset($out_data)) {
+                    echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a> <span class=\"small\">(<a name=\"{$benchmark['name']}\" href=\"#{$benchmark['name']}\">direct link</a>)</span></h2>\n";
+                    if (array_key_exists('description', $benchmark))
+                        echo "<p>{$benchmark['description']}</p>\n";
+                }
                 
                 if ($benchmark['expand'] && count($benchmark['locations'] > 1)) {
                     foreach ($benchmark['locations'] as $location => $label) {
@@ -91,6 +98,7 @@ if (array_key_exists('aggregate', $_REQUEST))
                     DisplayBenchmarkData($benchmark);
                 }
             }
+if (!isset($out_data)) {
             ?>
             </div>
             
@@ -98,8 +106,13 @@ if (array_key_exists('aggregate', $_REQUEST))
         </div>
     </body>
 </html>
-
 <?php
+} else {
+    // spit out the raw data
+    header ("Content-type: application/json; charset=utf-8");
+    echo json_encode($out_data);
+}
+
 /**
 * Display the charts for the given benchmark
 * 
@@ -108,6 +121,7 @@ if (array_key_exists('aggregate', $_REQUEST))
 function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     global $count;
     global $aggregate;
+    global $out_data;
     $label = 'Speed Index (First View)';
     $chart_title = '';
     if (isset($title))
@@ -119,7 +133,12 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
         $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', $aggregate, $loc, $annotations);
         $metric = 'docTime';
     }
-    if (isset($tsv) && strlen($tsv)) {
+    if (isset($out_data)) {
+        $out_data[$benchmark['name']] = array();
+        $out_data[$benchmark['name']][$metric] = array();
+        $out_data[$benchmark['name']][$metric]['FV'] = TSVEncode($tsv);
+    }
+    if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
@@ -154,7 +173,10 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
             $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', $aggregate, $loc, $annotations);
             $metric = 'docTime';
         }
-        if (isset($tsv) && strlen($tsv)) {
+        if (isset($out_data)) {
+            $out_data[$benchmark['name']][$metric]['RV'] = TSVEncode($tsv);
+        }
+        if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;
             $id = "g$count";
             echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
