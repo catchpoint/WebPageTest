@@ -149,16 +149,20 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     global $aggregate;
     global $url;
     global $out_data;
+    $bmname = $benchmark['name'];
+    if (isset($loc)) {
+        $bmname .= ".$loc";
+    }
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
     $tsv = LoadTrendDataTSV($benchmark['name'], 0, $metric, $url, $loc, $annotations, $meta);
     if (isset($out_data)) {
-        if (!array_key_exists($benchmark['name'], $out_data)) {
-            $out_data[$benchmark['name']] = array();
+        if (!array_key_exists($bmname, $out_data)) {
+            $out_data[$bmname] = array();
         }
-        $out_data[$benchmark['name']][$metric] = array();
-        $out_data[$benchmark['name']][$metric]['FV'] = TSVEncode($tsv);
+        $out_data[$bmname][$metric] = array();
+        $out_data[$bmname][$metric]['FV'] = TSVEncode($tsv);
     }
     if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
@@ -188,7 +192,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
             $chart_title = "title: \"$title (Repeat View)\",";
         $tsv = LoadTrendDataTSV($benchmark['name'], 1, $metric, $url, $loc, $annotations, $meta);
         if (isset($out_data)) {
-            $out_data[$benchmark['name']][$metric]['RV'] = TSVEncode($tsv);
+            $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
         }
         if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;

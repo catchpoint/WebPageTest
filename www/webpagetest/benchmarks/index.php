@@ -126,6 +126,10 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
+    $bmname = $benchmark['name'];
+    if (isset($loc)) {
+        $bmname .= ".$loc";
+    }
     $tsv = LoadDataTSV($benchmark['name'], 0, 'SpeedIndex', $aggregate, $loc, $annotations);
     $metric = 'SpeedIndex';
     if (!isset($tsv) || !strlen($tsv)) {
@@ -134,9 +138,9 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
         $metric = 'docTime';
     }
     if (isset($out_data)) {
-        $out_data[$benchmark['name']] = array();
-        $out_data[$benchmark['name']][$metric] = array();
-        $out_data[$benchmark['name']][$metric]['FV'] = TSVEncode($tsv);
+        $out_data[$bmname] = array();
+        $out_data[$bmname][$metric] = array();
+        $out_data[$bmname][$metric]['FV'] = TSVEncode($tsv);
     }
     if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
@@ -174,7 +178,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
             $metric = 'docTime';
         }
         if (isset($out_data)) {
-            $out_data[$benchmark['name']][$metric]['RV'] = TSVEncode($tsv);
+            $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
         }
         if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;
