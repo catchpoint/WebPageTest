@@ -139,7 +139,7 @@ def RunBatch(options):
 
     for test_id, dom in test_results.iteritems():
       SaveTestResult(options.outputdir, id_url_dict[test_id], test_id,
-                     dom.toxml())
+                     dom.toxml('utf-8'))
     if pending_test_ids:
       time.sleep(int(options.runs) * 10)
 
