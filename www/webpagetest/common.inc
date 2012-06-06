@@ -6,7 +6,8 @@ if (!array_key_exists('debug', $_REQUEST) && (!isset($debug) || !$debug)) {
 }
 umask(0);
 date_default_timezone_set('UTC');
-import_request_variables('PG', 'req_');
+extract($_POST, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
+extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 
 require_once('./logging.inc');
 
