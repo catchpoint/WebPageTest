@@ -291,7 +291,7 @@ function IsTestValid($id) {
     $valid = false;
     $testPath = './' . GetTestPath($id);
     $page_data = loadAllPageData($testPath);
-    if (CountSuccessfulTests($page_data, 0) > 0) {
+    if (CountSuccessfulTests($page_data, 0) >= 3) {
         $valid = true;
     }
     return $valid;
