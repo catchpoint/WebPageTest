@@ -44,6 +44,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="mv" value="1">
             <input type="hidden" name="web10" value="1">
+            <input type="hidden" name="sensitive" value="1">
             <?php
             if( strlen($_GET['origin']) )
             {
@@ -312,14 +313,23 @@ $page_description = "Comparison Test$testLabel.";
                     form.script.value = script;
                 }
 
+                <?php
+                if (!array_key_exists('origin', $_GET) || !strlen($_GET['origin'])) {
+                ?>
                 var backend = form.backend.value;
                 if (backend == 'staging') {
                     script = form.script.value;
                     script = script.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
+                    script = "if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_staging\t%HOST_REGEX%\nendif\nendif\n" + script;
                     form.script.value = script;
                     form.web10.value = 0;
+                    form.runs.value = 10;
+                    form.discard.value = 1;
                 }
-                
+                <?php
+                }   // origin
+                ?>
+                                
                 return true;
             }
             

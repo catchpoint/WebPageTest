@@ -179,6 +179,7 @@ $page_description = "Comparison Test$testLabel.";
                                 <option value="staging">Staging</option>
                                 <option value="rahul">Rahul Playground</option>
                                 <option value="ashish">Ashish Playground</option>
+                                <option value="snagori">snagori@ Playground</option>
                             </select>
                         </li>
                         <li>
@@ -400,6 +401,13 @@ $page_description = "Comparison Test$testLabel.";
                             '\nsetDnsName\t2-proxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
                             '\nsetDnsName\t3-proxy-guptaa-wpt.pssplayground.com\tghs.google.com' + 
                             '\nsetDnsName\t4-proxy-guptaa-wpt.pssplayground.com\tghs.google.com');
+                    } else if (backend == 'snagori') {
+                        batch = batch.replace(/psa\.pssdemos\.com/g, 'snagori-wpt.pssplayground.com' + 
+                            '\nsetDnsName\tproxy-snagori-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t1-proxy-snagori-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t2-proxy-snagori-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t3-proxy-snagori-wpt.pssplayground.com\tghs.google.com' + 
+                            '\nsetDnsName\t4-proxy-snagori-wpt.pssplayground.com\tghs.google.com');
                     }
                 <?php
                 }
