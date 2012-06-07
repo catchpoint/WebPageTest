@@ -1754,7 +1754,7 @@ function RelayTest()
     $location = trim($_POST['location']);
     $test['workdir'] = $locations[$location]['localDir'];
     
-    ValidateKey($testinfo, $error, $rkey);
+    ValidateKey($test, $error, $rkey);
     if( !isset($error) )
     {
         $id = $rkey . '.' . $test['id'];
