@@ -21,7 +21,7 @@ bool WptTestDriver::Start() {
   bool ret = false;
 
   if (!_test_type.CompareNoCase(_T("traceroute"))) {
-    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _index);
     ret = true;
   } else {
     // build up a new script
@@ -67,7 +67,7 @@ bool WptTestDriver::SetFileBase() {
   bool ret = false;
   if (_directory.GetLength() ) {
       // set up the base file name for results files for this run
-    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _run);
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _index);
     if (!_clear_cache)
       _file_base += _T("_Cached");
     SetResultsFileBase(_file_base);

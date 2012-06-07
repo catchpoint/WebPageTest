@@ -143,12 +143,18 @@ void WptDriverCore::WorkThread(void) {
         WebBrowser browser(_settings, test, _status, _settings._browser);
         if (SetupWebPageReplay(test, browser) &&
             !TracerouteTest(test)) {
+          test._index = 1;
           for (test._run = 1; test._run <= test._runs; test._run++) {
             test._clear_cache = true;
             BrowserTest(test, browser);
             if (!test._fv_only) {
               test._clear_cache = false;
               BrowserTest(test, browser);
+            }
+            if (test._discard > 0) {
+              test._discard--;
+            } else {
+              test._index++;
             }
           }
         }
@@ -218,6 +224,9 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       _winpcap.StopCapture();
     KillBrowsers();
 
+    if (test._discard) {
+      _webpagetest.DeleteIncrementalResults(test);
+    }
     if (attempt < 2 && critical_error) {
       WptTrace(loglevel::kWarning, 
         _T("[wptdriver] Critical error, re-installing browser (attempt %d)\n"),
@@ -225,7 +234,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       _webpagetest.DeleteIncrementalResults(test);
       _settings.ReInstallBrowser();
     } else {
-      if (test._upload_incremental_results) {
+      if (test._upload_incremental_results && !test._discard) {
         _webpagetest.UploadIncrementalResults(test);
       } else {
         _webpagetest.DeleteIncrementalResults(test);

@@ -137,6 +137,7 @@ public:
   CString _directory;
   CString _url;
   int     _runs;
+  int     _discard;
   bool    _fv_only;
   bool    _doc_complete;
   bool    _ignore_ssl;
@@ -173,6 +174,7 @@ public:
   
   // current state
   int     _run;
+  int     _index;
   bool    _clear_cache;
   bool    _upload_incremental_results;
   bool    _active;

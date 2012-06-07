@@ -78,6 +78,7 @@ void WptTest::Reset(void) {
   _id.Empty();
   _url.Empty();
   _runs = 1;
+  _discard = 0;
   _fv_only = false;
   _doc_complete = false;
   _ignore_ssl = false;
@@ -98,6 +99,7 @@ void WptTest::Reset(void) {
   _basic_auth.Empty();
   _script.Empty();
   _run = 0;
+  _index = 0;
   _clear_cache = true;
   _active = false;
   _dom_element_check = false;
@@ -153,6 +155,8 @@ bool WptTest::Load(CString& test) {
           _fv_only = true;
         else if (!key.CompareNoCase(_T("runs")))
           _runs = _ttoi(value.Trim());
+        else if (!key.CompareNoCase(_T("discard")))
+          _discard = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim()))
           _doc_complete = true;
         else if (!key.CompareNoCase(_T("ignoreSSL")) && _ttoi(value.Trim()))
@@ -355,11 +359,7 @@ void WptTest::BuildScript() {
                 script_command.target.GetLength()) {
               // If command is "block" then parse all the space separated patterns
               // in target into separate "block" commands.
-              if (script_command.command == _T("setdomelement")) {
-                _dom_element_check = true;
-                WptTrace(loglevel::kFrequentEvent, 
-                  _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
-              } else if (script_command.command == _T("block")) {
+              if (script_command.command == _T("block")) {
                 CString patterns = script_command.target;
                 int pattern_pos = 0;
                 while (pattern_pos < patterns.GetLength()) {
@@ -542,6 +542,13 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if (cmd == _T("block")) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
+    consumed = false;
+  } else if (cmd == _T("setdomelement")) {
+    if (command.target.Trim().GetLength()) {
+      _dom_element_check = true;
+      WptTrace(loglevel::kFrequentEvent, 
+        _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
+    }
     consumed = false;
   } else if(cmd == _T("addcustomrule")) {
     int separator = command.target.Find(_T('='));
