@@ -308,8 +308,8 @@ bool TestState::IsDone() {
                _T("[wpthook] - TestState::IsDone()? ")
                _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d\n"),
                test_ms, load_ms, inactive_ms, _test._measurement_timeout);
-      bool is_loaded = ((!_navigated || load_ms > ON_LOAD_GRACE_PERIOD) &&
-                        !_test._dom_element_check);
+      bool is_loaded = (load_ms > ON_LOAD_GRACE_PERIOD && 
+                      !_test._dom_element_check);
       if (_test_result) {
         is_page_done = true;
         done_reason = _T("Page Error");
