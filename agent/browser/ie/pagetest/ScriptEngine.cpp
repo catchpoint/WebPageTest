@@ -637,9 +637,8 @@ void CScriptEngine::ContinueScript(bool reset)
 				  // replace all of the line feeds with spaces
 				  item.target.Replace(_T("\r"), _T(" "));
 				  item.target.Replace(_T("\n"), _T(" "));
-  //				item.target.Replace(_T("'"), _T(" "));
-				  if( ExecuteScript((LPCTSTR)item.target) )
-					  err = false;
+				  ExecuteScript((LPCTSTR)item.target);
+				  err = false;
 			  }
 			  else if( !item.command.CompareNoCase(_T("block")) )
 			  {
@@ -775,7 +774,7 @@ void CScriptEngine::ContinueScript(bool reset)
         }
        
   			
-			  if( err && script_logErrors )
+			  if( err && script_logErrors && !script_ignoreErrors )
 			  {
 				  script_error = true;
 				  OutputDebugString(_T("[Pagetest] - Script error\n"));
@@ -1553,8 +1552,8 @@ bool CScriptEngine::ExecuteScript(_bstr_t script)
 					VARIANT var;
 					VariantInit(&var);
 					BSTR lang = SysAllocString(L"Javascript");
-					if( SUCCEEDED(window->execScript(script, lang, &var)) )
-						ret = true;
+					window->execScript(script, lang, &var);
+					ret = true;
 						
 					SysFreeString(lang);
 				}
