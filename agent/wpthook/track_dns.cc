@@ -90,6 +90,7 @@ void TrackDns::LookupAddress(void * context, ULONG &addr) {
       ,address.S_un.S_un_b.s_b2
       ,address.S_un.S_un_b.s_b3
       ,address.S_un.S_un_b.s_b4);
+    _test_state.ActivityDetected();
   }
 }
 
@@ -113,6 +114,7 @@ void TrackDns::LookupDone(void * context, int result) {
     }
     if (!info->_tracked)
       delete info;
+    _test_state.ActivityDetected();
   }
 }
 

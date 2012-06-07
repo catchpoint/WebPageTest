@@ -99,6 +99,9 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     SocketInfo* info = GetSocketInfo(s, false);
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
     QueryPerformanceCounter(&info->_connect_start);
+    if (!info->IsLocalhost()) {
+      _test_state.ActivityDetected();
+    }
     LeaveCriticalSection(&cs);
   }
 }
@@ -111,6 +114,9 @@ void TrackSockets::Connected(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   QueryPerformanceCounter(&info->_connect_end);
+  if (!info->IsLocalhost()) {
+    _test_state.ActivityDetected();
+  }
   LeaveCriticalSection(&cs);
 }
 
