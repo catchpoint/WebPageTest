@@ -141,6 +141,7 @@ public:
   bool _capturing_aft;
   int   _current_document;
   bool  _exit;
+  bool  _navigated;
 
   HWND  _frame_window;
   HWND  _document_window;

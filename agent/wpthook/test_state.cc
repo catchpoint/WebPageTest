@@ -132,6 +132,7 @@ void TestState::Reset(bool cascade) {
     _user_agent = _T("WebPagetest");
     _timeline_events.RemoveAll();
     _console_log_messages.RemoveAll();
+    _navigated = false;
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -169,8 +170,6 @@ void TestState::Start() {
   _active = true;
   if( _test._aft )
     _capturing_aft = true;
-  _current_document = _next_document;
-  _next_document++;
   UpdateBrowserWindow();  // the document window may not be available yet
 
   if (!_render_check_thread) {
@@ -212,6 +211,7 @@ void TestState::OnNavigate() {
     _load_event_end = 0;
     _dom_elements_time.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _navigated = true;
     if (!_current_document) {
       _current_document = _next_document;
       _next_document++;
@@ -308,7 +308,7 @@ bool TestState::IsDone() {
                _T("[wpthook] - TestState::IsDone()? ")
                _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d\n"),
                test_ms, load_ms, inactive_ms, _test._measurement_timeout);
-      bool is_loaded = (load_ms > ON_LOAD_GRACE_PERIOD &&
+      bool is_loaded = ((!_navigated || load_ms > ON_LOAD_GRACE_PERIOD) &&
                         !_test._dom_element_check);
       if (_test_result) {
         is_page_done = true;
