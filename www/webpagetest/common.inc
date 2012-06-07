@@ -1125,7 +1125,15 @@ function GetTestInfoHtml($includeScript = true)
     }
     if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
     {
-        if ($includeScript && ($settings['show_script_in_results'] || $isOwner || $admin) && !$test['testinfo']['sensitive'])
+        $show = false;
+        if ($includeScript) {
+            if ($admin || $settings['show_script_in_results']) {
+                $show = true;
+            } elseif ($isOwner && !$test['testinfo']['sensitive']) {
+                $show = true;
+            }
+        }
+        if ($show)
         {
             $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
             $html .= '<div id="script_in_results-container" class="hidden">';
