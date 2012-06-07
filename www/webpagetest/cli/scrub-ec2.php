@@ -14,6 +14,11 @@ foreach( $regions as $region => &$amiData ) {
     }
 }
 
+$instanceType = 'm1.small';
+if (isset($instanceSize)) {
+    $instanceType = $instanceSize;
+}
+
 // we only terminate instances at the top of the hour, but we can add instances at other times
 $addOnly = true;
 $minute = (int)gmdate('i');
@@ -113,12 +118,16 @@ if( $ec2 )
             if( $needed > 0 )
             {
                 echo "Adding $needed spot instances in $region...";
+                $size = $instanceType;
+                if (array_key_exists('size', $regionData)) {
+                    $size = $regionData['size'];
+                }
                 $response = $ec2->request_spot_instances($regionData['price'], array(
                     'InstanceCount' => (int)$needed,
                     'Type' => 'one-time',
                     'LaunchSpecification' => array(
                         'ImageId' => $ami,
-                        'InstanceType' => 'm1.small',
+                        'InstanceType' => $size,
                         'UserData' => base64_encode($regionData['userdata'])
                     ),
                 ));
