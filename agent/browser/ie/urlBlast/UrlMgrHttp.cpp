@@ -503,8 +503,8 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
         }
         else {
 				  context->currentRun++;
-          info.currentRun = context->currentRun;
         }
+        info.currentRun++;  // increment the actual run count regardless of discard state
 				CString runText;
 				runText.Format(_T("%d"), context->currentRun);
 				context->fileRunBase = context->fileBase + CString(_T("-")) + runText;
