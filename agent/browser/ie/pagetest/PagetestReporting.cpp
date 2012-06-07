@@ -3568,6 +3568,7 @@ DWORD CPagetestReporting::CalculateAFT()
 void CPagetestReporting::SaveVideo()
 {
   screenCapture.Lock();
+  DWORD width, height;
   CxImage * last_image = NULL;
   CString file_name;
   POSITION pos = screenCapture._captured_images.GetHeadPosition();
@@ -3584,13 +3585,20 @@ void CPagetestReporting::SaveVideo()
     if (image.Get(*img)) 
     {
       // shrink it down to 400xX which is the size for a 2-video comparison
-      int width = img->GetWidth();
-      int height = img->GetHeight();
-      int newWidth = min(400, width / 2);
-      int newHeight = (int)((double)height * ((double)newWidth / (double)width));
+      int newWidth = min(400, img->GetWidth() / 2);
+      int newHeight = (int)((double)img->GetHeight() * ((double)newWidth / (double)img->GetWidth()));
       img->Resample2(newWidth, newHeight);
       if (last_image) 
       {
+        RGBQUAD black = {0,0,0,0};
+        if (img->GetWidth() > width)
+          img->Crop(0, 0, img->GetWidth() - width, 0);
+        if (img->GetHeight() > height)
+          img->Crop(0, 0, 0, img->GetHeight() - height);
+        if (img->GetWidth() < width)
+          img->Expand(0, 0, width - img->GetWidth(), 0, black);
+        if (img->GetHeight() < height)
+          img->Expand(0, 0, 0, height - img->GetHeight(), black);
         if (ImagesAreDifferent(last_image, img)) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
           SaveProgressImage(*img, file_name, false, imageQuality);
@@ -3601,6 +3609,8 @@ void CPagetestReporting::SaveVideo()
       } 
       else 
       {
+        width = img->GetWidth();
+        height = img->GetHeight();
         // always save the first image at time zero
         file_name = logFile + _T("_progress_0000.jpg");
         SaveProgressImage(*img, file_name, false, imageQuality);
