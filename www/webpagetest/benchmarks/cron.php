@@ -254,27 +254,49 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     $submitted = false;
     
     $state['tests'] = array();
-
-    foreach ($configurations as $config_label => &$config) {
+    
+    // group all of the tests by URL so that any given URL is tested in all configurations before going to the next URL
+    $tests = array();
+    foreach ($configurations as $config_label => $config) {
         $urls = file("./settings/benchmarks/{$config['url_file']}", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($urls as $url) {
+            $url = trim($url);
             $label = '';
             $separator = strpos($url, "\t");
             if ($separator !== false) {
-                $label = substr($url, 0, $separator);
-                $url = substr($url, $separator + 1);
+                $label = trim(substr($url, 0, $separator));
+                $url = trim(substr($url, $separator + 1));
+            }
+            $key = md5($url);
+            if (strlen($label)) {
+                $key = md5($label);
+            }
+            if (!array_key_exists($key, $tests)) {
+                $tests[$key] = array();
             }
             foreach ($config['locations'] as $location) {
-                $id = SubmitBenchmarkTest($url, $location, $config['settings'], $benchmark);
-                if ($id !== false ) {
-                    $state['tests'][] = array(  'id' => $id, 
-                                                'label' => $label,
-                                                'url' => $url, 
-                                                'location' => $location, 
-                                                'config' => $config_label,
-                                                'submitted' => time(), 
-                                                'completed' => 0);
-                }
+                $tests[$key][] = array('url' => $url,
+                                        'location' => $location,
+                                        'settings' => $config['settings'],
+                                        'benchmark' => $benchmark,
+                                        'label' => $label,
+                                        'config' => $config_label);
+            }
+        }
+    }
+
+    // now submit the actual tests    
+    foreach($tests as &$testGroup) {
+        foreach($testGroup as &$test) {
+            $id = SubmitBenchmarkTest($test['url'], $test['location'], $test['settings'], $test['benchmark']);
+            if ($id !== false ) {
+                $state['tests'][] = array(  'id' => $id, 
+                                            'label' => $test['label'],
+                                            'url' => $test['url'], 
+                                            'location' => $test['location'], 
+                                            'config' => $test['config'],
+                                            'submitted' => time(), 
+                                            'completed' => 0);
             }
         }
     }
@@ -342,6 +364,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
     $id = false;
     global $key;
     $priority = 7;  // default to a really low priority
+    
+    echo "Submitting $benchmark Test for $url from $location, settings: " . json_encode($settings) . "\n";
     
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
