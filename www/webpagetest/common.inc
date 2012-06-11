@@ -524,9 +524,10 @@ function gz_file_get_contents($file)
     if( $zip === false )
         $zip = gzopen($file, 'rb');
     
-    if( $zip !== false )
-    {
-        $data = gzread($zip, 10000000);
+    if( $zip !== false ) {
+        while (!gzeof($zip)) {
+            $data .= gzread($zip, 4096);
+        }
         gzclose($zip);
     }
     else 
@@ -541,7 +542,7 @@ function gz_file_get_contents($file)
 * @param mixed $filename
 * @param mixed $data
 */
-function gz_file_put_contents($filename, &$data)
+function gz_file_put_contents($filename, $data)
 {
     global $settings;
     $ret = false;
