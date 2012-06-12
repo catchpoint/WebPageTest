@@ -444,6 +444,10 @@ else
 */
 function notify( $mailto, $from,  $id, $testPath, $host )
 {
+    global $test;
+    
+    // calculate the results
+    require_once 'page_data.inc';
     $headers  = "MIME-Version: 1.0\r\n";
     $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
     $headers .= "From: $from\r\n";
@@ -460,24 +464,23 @@ function notify( $mailto, $from,  $id, $testPath, $host )
     if( !isset($host) )
         $host  = $_SERVER['HTTP_HOST'];
 
-    // calculate the results
-    require_once 'page_data.inc';
-    $pageData = loadAllPageData($testPath);
-    $fv = null;
-    $rv = null;
-    $pageStats = calculatePageStats($pageData, $fv, $rv);
-    if( isset($fv) )
+    $fv = GetMedianRun($pageData, 0);
+    if( isset($fv) && $fv )
     {
-        $load = number_format($fv['loadTime'] / 1000.0, 3);
-        $render = number_format($fv['render'] / 1000.0, 3);
-        $requests = number_format($fv['requests'],0);
-        $bytes = number_format($fv['bytesIn'] / 1024, 0);
+        $load = number_format($pageData[$fv][0]['loadTime'] / 1000.0, 3);
+        $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
+        $numRequests = number_format($pageData[$fv][0]['requests'],0);
+        $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
         $result = "http://$host/result/$id";
         
         // capture the optimization report
-        require_once '../optimization.inc';
+        require_once 'optimization.inc';
+        require_once('object_detail.inc');
+        $secure = false;
+        $haveLocations = false;
+        $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
         ob_start();
-        dumpOptimizationReport($testPath, 1, 0);
+        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
         $optimization = ob_get_contents();
         ob_end_clean();
         
@@ -494,8 +497,8 @@ function notify( $mailto, $from,  $id, $testPath, $host )
             <body>
             <p>The full test results for <a href=\"$url\">$url</a> are now <a href=\"$result/\">available</a>.</p>
             <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download 
-            the page required <b>$requests requests</b> and <b>$bytes KB</b>.</p>
-            <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/1/screen_shot/\"><img src=\"$result/1_screen_thumb.jpg\"></a></p>
+            the page required <b>$numRequests requests</b> and <b>$bytes KB</b>.</p>
+            <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/$fv/screen_shot/\"><img src=\"$result/{$fv}_screen_thumb.jpg\"></a></p>
             <h3>Here are the things on the page that could use improving:</h3>
             $optimization
             </body>

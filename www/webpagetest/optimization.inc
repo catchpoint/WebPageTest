@@ -30,7 +30,7 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
 */
 function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
-    require_once('optimization.inc');
+    require_once('optimization_detail.inc.php');
     $score = gradeTTFB($pageData, $test, $id, $run, $cached, $target);
     if( isset($score) )
     {
