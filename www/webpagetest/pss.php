@@ -209,7 +209,7 @@ $page_description = "Comparison Test$testLabel.";
                             </select>
                         </li>
                         <li>
-                            <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>X-NumDomainShards: 2<br>X-MyOtherHeader: yes</small></label>
+                            <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>ModPagespeedDomainShardCount: 2<br>X-MyOtherHeader: yes</small></label>
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>
                         <?php
@@ -309,7 +309,7 @@ $page_description = "Comparison Test$testLabel.";
                 if (shard != 1)
                 {
                     script = form.script.value;
-                    script = "addHeader\tX-NumDomainShards: " + shard + "\n" + script;
+                    script = "addHeader\tModPagespeedDomainShardCount: " + shard + "\n" + script;
                     form.script.value = script;
                 }
 
