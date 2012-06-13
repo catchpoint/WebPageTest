@@ -468,7 +468,7 @@ bool Request::Process() {
       // Find the matching socket connect and DNS lookup (if they exist).
       LARGE_INTEGER before = _start;
       LARGE_INTEGER start, end, ssl_start, ssl_end;
-      CString host = CA2T(GetRequestHeader("host"));
+      CString host = CA2T(GetHost());
       if (_dns.Claim(host, _peer_address, before, start, end)) {
         _ms_dns_start = _test_state.ElapsedMsFromStart(start);
         _ms_dns_end = _test_state.ElapsedMsFromStart(end);
