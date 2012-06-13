@@ -184,6 +184,7 @@ void TestState::Start() {
     CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
         DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
   }
+  GrabVideoFrame(true);
   CollectData();
 }
 
@@ -204,7 +205,6 @@ void TestState::OnNavigate() {
   if (_active) {
     WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
     UpdateBrowserWindow();
-    GrabVideoFrame(true);
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
