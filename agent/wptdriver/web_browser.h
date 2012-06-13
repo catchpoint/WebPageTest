@@ -45,6 +45,7 @@ private:
   bool ConfigureIpfw(WptTestDriver& test);
   void ResetIpfw(void);
   bool FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi);
+  void ConfigureFirefoxPrefs();
 
   WptSettings&    _settings;
   WptTestDriver&  _test;

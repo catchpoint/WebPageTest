@@ -123,6 +123,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             lstrcat(cmdLine, FIREFOX_REQUIRED_OPTIONS[i]);
           }
         }
+        ConfigureFirefoxPrefs();
       }
       if (exe.Find(_T("iexplore.exe")) >= 0) {
         hook = false;
@@ -383,4 +384,40 @@ bool WebBrowser::FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi) {
     }
   }
   return found;
+}
+
+/*-----------------------------------------------------------------------------
+  See if there are any custom prefs in script that need to be set
+-----------------------------------------------------------------------------*/
+void WebBrowser::ConfigureFirefoxPrefs() {
+  if (_browser._profile_directory.GetLength() && 
+      _browser._template.GetLength() &&
+      _test._script.GetLength()) {
+    CStringA user_prefs;
+    _test.BuildScript();
+    if (!_test._script_commands.IsEmpty()) {
+      POSITION pos = _test._script_commands.GetHeadPosition();
+      while (pos) {
+        ScriptCommand cmd = _test._script_commands.GetNext(pos);
+        if (!cmd.command.CompareNoCase(_T("firefoxPref")) && 
+            cmd.target.GetLength() && cmd.value.GetLength()) {
+          CStringA pref;
+          pref.Format("user_pref(\"%S\", %S);\r\n", 
+                      (LPCTSTR)cmd.target, (LPCTSTR)cmd.value);
+          user_prefs += pref;
+        }
+      }
+    }
+    if (!user_prefs.IsEmpty()) {
+      CString prefs_file = _browser._profile_directory + _T("\\prefs.js");
+      HANDLE file = CreateFile(prefs_file, GENERIC_WRITE, 0, 0, 
+                                OPEN_EXISTING, 0, 0);
+      if (file != INVALID_HANDLE_VALUE) {
+        SetFilePointer(file, 0, 0, FILE_END);
+        DWORD bytes;
+        WriteFile(file, (LPCSTR)user_prefs, user_prefs.GetLength(), &bytes, 0);
+        CloseHandle(file);
+      }
+    }
+  }
 }
