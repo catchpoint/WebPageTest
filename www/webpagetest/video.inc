@@ -104,6 +104,31 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
         closedir($dir);
     }
     
+    // make sure all of the images are the same size - if not, fix it
+    $width = 0;
+    $height = 0;
+    if( count($frames) >= 1 ) {
+        foreach( $frames as $index => $file ) {
+            $image_file = $videoDir  . "/$file";
+            list($w, $h) = getimagesize($image_file);
+            if (!$width && !$height) {
+                $width = $w;
+                $height = $h;
+            } else {
+                if ($w !== $width || $h !== $height) {
+                    $src = imagecreatefromjpeg($image_file);
+                    $dest = imagecreatetruecolor($width, $height);
+                    $white = imagecolorallocate($dest, 255,255,255);
+                    imagefilledrectangle($dest, 0, 0, $width, $height, $white);
+                    imagecopy($dest, $src, 0, 0, 0, 0, min($w,$width), min($h,$height));
+                    imagedestroy($src);
+                    imagejpeg($dest, $image_file);
+                    imagedestroy($dest);
+                }
+            }
+        }
+    }
+    
     // build the actual script
     if( count($frames) >= 1 )
     {
@@ -142,13 +167,6 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
         
         // write out the script file
         file_put_contents("$videoDir/video.avs", $script);
-        
-        // create a readme
-        $readme = "To play the video (Windows Only):\r\n";
-        $readme .= "\r\n- Install Avisynth (Download here: http://sourceforge.net/projects/avisynth2/)\r\n";
-        $readme .= "- Extract this ZIP file to a local folder\r\n";
-        $readme .= "- Double-click on the \"video.avs\" file\r\n";
-        file_put_contents("$videoDir/readme.txt", $readme);
     }
     
     // create the summary stats script
