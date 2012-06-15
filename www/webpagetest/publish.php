@@ -53,7 +53,8 @@ function PublishResult()
     
     // build the list of files to zip
     $files;
-    $dir = opendir("$testPath");
+    $testPath = realpath($testPath);
+    $dir = opendir($testPath);
     while($file = readdir($dir))
         if( $file != '.' && $file != '..' )
             $files[] = $testPath . "/$file";
@@ -64,7 +65,7 @@ function PublishResult()
         // zip up the results
         $zipFile = $testPath . '/publish.zip';
         $zip = new PclZip($zipFile);
-        if( $zip->create($files, PCLZIP_OPT_REMOVE_ALL_PATH) != 0 )
+        if( $zip->create($files, PCLZIP_OPT_REMOVE_PATH, $testPath) != 0 )
         {
             // upload the actual file
             $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
