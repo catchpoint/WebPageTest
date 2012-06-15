@@ -305,39 +305,38 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 * @param mixed $pageData
 * @param mixed $cached
 */
-function GetMedianRun(&$pageData, $cached)
-{
-    if( !$cached )
-        $cached = 0;
-        
+function GetMedianRun(&$pageData, $cached, $metric = 'loadTime') {
     $run = 0;
-    
+    $cached = $cached ? 1:0;
     $times = array();
     
     // try successful-only runs first
-    foreach( $pageData as $index => &$pageRun )
-        if( isset( $pageRun[$cached] ) && isset($pageRun[$cached]['result']) && ($pageRun[$cached]['result'] == 0 || $pageRun[$cached]['result'] == 99999) )
-            $times[$index] = $pageRun[$cached]['loadTime'];
+    foreach( $pageData as $index => &$pageRun ) {
+        if( array_key_exists($cached, $pageRun) && 
+            array_key_exists('result', $pageRun[$cached]) && 
+            array_key_exists($metric, $pageRun[$cached]) &&
+            ($pageRun[$cached]['result'] == 0 || $pageRun[$cached]['result'] == 99999) ) {
+            $times[$index] = $pageRun[$cached][$metric];
+        }
+    }
             
-    if( !count($times) )
-    {
+    if (!count($times)) {
         // include error runs
-        foreach( $pageData as $index => &$pageRun )
-            if( isset( $pageRun[$cached] ) )
-                $times[$index] = $pageRun[$cached]['loadTime'];
+        foreach( $pageData as $index => &$pageRun ) {
+            if( array_key_exists($cached, $pageRun) && array_key_exists($metric, $pageRun[$cached])) {
+                $times[$index] = $pageRun[$cached][$metric];
+            }
+        }
     }
     
     $count = count($times);
-    if( $count > 1 )
-    {
+    if( $count > 1 ) {
         asort($times);
         $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
         $current = 0;
-        foreach( $times as $index => $time )
-        {
+        foreach( $times as $index => $time ) {
             $current++;
-            if( $current == $medianIndex )
-            {
+            if( $current == $medianIndex ) {
                 $run = $index;
                 break;
             }
@@ -348,6 +347,11 @@ function GetMedianRun(&$pageData, $cached)
             $run = $index;
             break;
         }
+    }
+    
+    // fall back to loadTime if we failed to get a run with the specified metric
+    if (!$run && $metric != 'loadTime') {
+        $run = GetMedianRun($pageData, $cached);
     }
     
     return $run;

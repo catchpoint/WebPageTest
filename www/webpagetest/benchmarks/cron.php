@@ -769,12 +769,16 @@ function PruneTestData($id) {
 * @param mixed $options
 */
 function FilterRawData(&$data, $options) {
-    if (isset($options) && is_array($options) && array_key_exists('median_run', $options) && $options['median_run']) {
+    if (isset($options) && is_array($options) && array_key_exists('median_run', $options)) {
+        $metric = $options['median_run'];
+        if (is_numeric($metric) || is_bool($metric)) {
+            $metric = 'docTime';
+        }
         // first group the results for each test
         $grouped = array();
         foreach($data as $row) {
             if (array_key_exists('id', $row) && 
-                array_key_exists('docTime', $row) && 
+                array_key_exists($metric, $row) && 
                 array_key_exists('cached', $row) && 
                 array_key_exists('result', $row) &&
                 ($row['result'] == 0 || $row['result'] == 99999)) {
@@ -796,7 +800,7 @@ function FilterRawData(&$data, $options) {
                 // load the times into an array so we can sort them and extract the median
                 $times = array();
                 foreach($test_data as $row) {
-                    $times[] = $row['docTime'];
+                    $times[] = $row[$metric];
                 }
                 $median_run_index = 0;
                 $count = count($times);
