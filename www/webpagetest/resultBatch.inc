@@ -882,7 +882,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
         // regenerate a video if it was created a while ago and still isn't available
         if( strlen($videoInfo['vID']) ) {
             if (!CheckVideo($videoInfo['vID'], $regenerate_video) && $regenerate_video) {
-                $videoInfo['vID'] = null;
+                if (array_key_exists('regenerated', $videoInfo) && $videoInfo['regenerated']) {
+                    $videoComplete = true;
+                    $videoInfo['vReady'] = true;
+                } else {
+                    $videoInfo['regenerated'] = true;
+                    $videoInfo['vID'] = null;
+                }
                 $videoDirty = true;
             }
         }
@@ -1535,7 +1541,7 @@ function CheckVideo($videoID, &$regenerate_video)
     $elapsed = 0;
 
     $dir = GetVideoPath($videoID, true);
-    if( is_dir("./$dir") )
+    if( is_dir("./$dir") && is_file("./$dir/video.ini") )
     {
         $ini = parse_ini_file("./$dir/video.ini");
         if (is_file("./$dir/video.mp4") || isset($ini['completed'])) {
@@ -1545,7 +1551,7 @@ function CheckVideo($videoID, &$regenerate_video)
             $created = filemtime("./$dir");
             if ($created !== false) {
                 $elapsed = time() - $created;
-                if ($elapsed > 3600)
+                if ($elapsed > 600)
                     $regenerate_video = true;
             }
         }
