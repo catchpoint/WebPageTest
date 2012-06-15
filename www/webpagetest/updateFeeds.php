@@ -39,7 +39,7 @@ function UpdateFeeds()
                                     )
                                 )
                             );
-                            $rawFeed = file_get_contents($feedUrl,0 , $ctx);
+                            $rawFeed = trim(file_get_contents($feedUrl,0 , $ctx));
                             $feed->set_raw_data($rawFeed);
                             $feed->enable_cache(false);
                             $feed->init();
