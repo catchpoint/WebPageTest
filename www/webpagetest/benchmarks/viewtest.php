@@ -9,6 +9,9 @@ $benchmark = '';
 if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
     $info = GetBenchmarkInfo($benchmark);
+    if (array_key_exists('options', $info) && array_key_exists('median_run', $info['options'])) {
+        $median_metric = $info['options']['median_run'];
+    }
 }
 $test_time = 0;
 if (array_key_exists('time', $_REQUEST))
@@ -160,10 +163,11 @@ if (array_key_exists('f', $_REQUEST)) {
                     function SelectedPoint(url, tests, series, index, cached) {
                         <?php
                             echo "var benchmark=\"$benchmark\";\n";
+                            echo "var medianMetric=\"$median_metric\";\n";
                         ?>
                         var menu = '<div><h4>View test for ' + url + '</h4>';
                         for( i = 0; i < tests.length; i++ ) {
-                            menu += '<a href="/result/' + tests[i] + '/" target="_blank">' + seriesData[i].name + '</a><br>';
+                            menu += '<a href="/result/' + tests[i] + '/?medianMetric=' + medianMetric + '" target="_blank">' + seriesData[i].name + '</a><br>';
                         }
                         menu += '<br><a href="trendurl.php?benchmark=' + encodeURIComponent(benchmark) + '&url=' + encodeURIComponent(url) + '">Trend over time</a>';
                         menu += '</div>';

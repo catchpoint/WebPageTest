@@ -54,7 +54,7 @@ foreach($compTests as $t)
                     $test['done'] = true;
 
                     if( !$test['run'] )
-                        $test['run'] = GetMedianRun($test['pageData'],$test['cached']);
+                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $median_metric);
                     $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
 
                     $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];

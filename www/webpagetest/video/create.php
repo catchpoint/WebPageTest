@@ -120,7 +120,7 @@ else
                 $test['pageData'] = loadAllPageData($test['path']);
                 
                 if( !$test['run'] )
-                    $test['run'] = GetMedianRun($test['pageData'], 0);
+                    $test['run'] = GetMedianRun($test['pageData'], 0, $median_metric);
                     
                 // figure out the real end time (in ms)
                 if( isset($test['end']) )

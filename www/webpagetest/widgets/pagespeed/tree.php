@@ -38,7 +38,7 @@ if (strlen($testPath) && strlen($div)) {
     if( !isset($pageData) )
         $pageData = loadAllPageData($testPath);
     if( !$run ) {
-        $run = GetMedianRun($pageData, $cached);
+        $run = GetMedianRun($pageData, $cached, $median_metric);
         if (!$run)
             $run = 1;
     }

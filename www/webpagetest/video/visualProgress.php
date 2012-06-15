@@ -9,7 +9,7 @@ $title = "WebPagetest - Visual Progress";
 $run = (int)(@$req_run);
 if (!$run) {
     $pageData = loadAllPageData($testPath);
-    $run = GetMedianRun($pageData, $cached);
+    $run = GetMedianRun($pageData, $cached, $median_metric);
 }
 if ($run) {
     $videoPath = "$testPath/video_{$run}";

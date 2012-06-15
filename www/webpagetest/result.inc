@@ -122,8 +122,8 @@ $page_description = "Website performance test result$testLabel.";
             <div class="cleared"></div>
             <div id="average">
                 <?php 
-                $fvMedian = GetMedianRun($pageData, 0);
-                $rvMedian = GetMedianRun($pageData, 1);
+                $fvMedian = GetMedianRun($pageData, 0, $median_metric);
+                $rvMedian = GetMedianRun($pageData, 1, $median_metric);
                 
                 if( $fvMedian )
                 {
@@ -245,7 +245,7 @@ $page_description = "Website performance test result$testLabel.";
                     </table>
                     <?php
                     if (count($pageData) > 1) {
-                        echo "<a href=\"/graph_page_data.php?test=$id\">Plot Full Results</a>";
+                        echo "<a href=\"/graph_page_data.php?test=$id&medianMetric=$median_metric\">Plot Full Results</a>";
                     }
                     ?>
                     <br>

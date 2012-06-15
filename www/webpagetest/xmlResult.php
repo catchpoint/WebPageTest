@@ -91,7 +91,7 @@ else
         echo "</average>\n";
 
         // output the median run data
-        $fvMedian = GetMedianRun($pageData, 0);
+        $fvMedian = GetMedianRun($pageData, 0, $median_metric);
         if( $fvMedian )
         {
             echo "<median>\n";
@@ -119,7 +119,7 @@ else
             
             if( isset($rv) )
             {
-                $rvMedian = GetMedianRun($pageData, 1);
+                $rvMedian = GetMedianRun($pageData, 1, $median_metric);
                 if($rvMedian)
                 {
                     echo "<repeatView>\n";

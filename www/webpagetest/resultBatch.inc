@@ -416,6 +416,7 @@ function DisplayTest($id, $url, $label, $complete)
     global $stats;
     global $fvonly;
     global $videoCaptured;
+    global $median_metric;
     RestoreTest($id);
     $testPath = './' . GetTestPath($id);
     $fileUrl = GetFileUrl($url);
@@ -436,8 +437,8 @@ function DisplayTest($id, $url, $label, $complete)
         if ($showSpeedIndex)
             $options = array('SpeedIndex' => true);
         $pageData = loadAllPageData($testPath, $options);
-        $fvMedian = GetMedianRun($pageData, 0);
-        $rvMedian = GetMedianRun($pageData, 1);
+        $fvMedian = GetMedianRun($pageData, 0, $median_metric);
+        $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         $rvMedian_column = '';
         if ($rvMedian)
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
@@ -501,6 +502,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $videoInfo;
     global $videoDirty;
     global $admin;
+    global $median_metric;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -538,7 +540,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
                 $started = $testInfo['started'];
             $pageData = loadAllPageData($testPath);
-            $fvMedian = GetMedianRun($pageData, 0);
+            $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
@@ -594,7 +596,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             }
             if( !strlen($url) )
                 $url = $pageData[$fvMedian][0]['URL'];
-            $rvMedian = GetMedianRun($pageData, 1);
+            $rvMedian = GetMedianRun($pageData, 1, $median_metric);
             $test['rvMedian'] = $rvMedian;
             $rvLoadTime = $pageData[$rvMedian][1]['loadTime'];
             $rvRenderTime = $pageData[$rvMedian][1]['render'];
@@ -953,6 +955,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     global $testInfo;
     global $videoInfo;
     global $videoDirty;
+    global $median_metric;
     require_once('./google/google_lib.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -998,7 +1001,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $entry['path'] = $test['path'];
             $testPath = './' . $test['path'];
             $entry['pageData'] = loadAllPageData($testPath);
-            $entry['median_run'] = GetMedianRun($entry['pageData'], 0);
+            $entry['median_run'] = GetMedianRun($entry['pageData'], 0, $median_metric);
             $entry['median'] = $entry['pageData'][$entry['median_run']][0];
             $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
             $entry['median']['csi'] = ParseCsiInfo($test['id'], $testPath, $entry['median_run'], 0, true);
@@ -1315,6 +1318,7 @@ function DisplayBlink(&$tests, $video, &$dirty)
 function DisplayBlinkTable($tests, $tableLabel)
 {
     global $complete;
+    global $median_metric;
 
     echo '<table class="batchResults" border="1" cellpadding="15" cellspacing="0"><tr>';
     echo '<th class="empty" style="border-right: 1px solid white;"></th>';
@@ -1339,7 +1343,7 @@ function DisplayBlinkTable($tests, $tableLabel)
         if( $test['c'] )
         {
             $pageData = loadAllPageData($testPath);
-            $fvMedian = GetMedianRun($pageData, 0);
+            $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $metrics['Full Page Loaded'][$count] = $pageData[$fvMedian][0]['loadTime'];
             $csi = ParseCsiInfo($id, $testPath, $fvMedian, 0, false);

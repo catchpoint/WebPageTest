@@ -108,7 +108,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     $count = CountSuccessfulTests($pageData, $cacheVal);
                     echo "\"$count\",";
                     if ($use_median_run) {
-                        $median_run = GetMedianRun($pageData, $cacheVal);
+                        $median_run = GetMedianRun($pageData, $cacheVal, $median_metric);
                         echo "\"$median_run\",";
                     }
                     foreach( $metrics as $metric => $metricLabel )
@@ -136,7 +136,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                             $count = CountSuccessfulTests($pageData, $cacheVal);
                             echo "\"$count\",";
                             if ($use_median_run) {
-                                $median_run = GetMedianRun($pageData, $cacheVal);
+                                $median_run = GetMedianRun($pageData, $cacheVal, $median_metric);
                                 echo "\"$median_run\",";
                             }
                             foreach( $metrics as $metric => $metricLabel )

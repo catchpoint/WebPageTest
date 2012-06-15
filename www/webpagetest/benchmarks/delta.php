@@ -8,6 +8,9 @@ $benchmark = '';
 if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
     $info = GetBenchmarkInfo($benchmark);
+    if (array_key_exists('options', $info) && array_key_exists('median_run', $info['options'])) {
+        $median_metric = $info['options']['median_run'];
+    }
 }
 $test_time = 0;
 if (array_key_exists('time', $_REQUEST))
@@ -144,11 +147,12 @@ if (array_key_exists('metric', $_REQUEST)) {
                     function SelectedPoint(p, data, ref, cmp, cached) {
                         <?php
                             echo "var benchmark=\"$benchmark\";\n";
+                            echo "var medianMetric=\"$median_metric\";\n";
                         ?>
                         var index = p.yval.toFixed(5);
                         var menu = '<div><h4>View test for ' + data[index].url + '</h4>';
-                        menu += '<a href="/result/' + data[index].ref + '/" target="_blank">' + ref + '</a><br>';
-                        menu += '<a href="/result/' + data[index].cmp + '/" target="_blank">' + cmp + '</a><br>';
+                        menu += '<a href="/result/' + data[index].ref + '/?medianMetric=' + medianMetric + '" target="_blank">' + ref + '</a><br>';
+                        menu += '<a href="/result/' + data[index].cmp + '/?medianMetric=' + medianMetric + '" target="_blank">' + cmp + '</a><br>';
                         menu += '</div>';
                         $.modal(menu, {overlayClose:true});
                     }

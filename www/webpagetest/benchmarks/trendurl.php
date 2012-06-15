@@ -8,8 +8,13 @@ $aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
 $benchmark = '';
-if (array_key_exists('benchmark', $_REQUEST))
+if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
+    $info = GetBenchmarkInfo($benchmark);
+    if (array_key_exists('options', $info) && array_key_exists('median_run', $info['options'])) {
+        $median_metric = $info['options']['median_run'];
+    }
+}
 $url = '';
 if (array_key_exists('url', $_REQUEST))
     $url = $_REQUEST['url'];
@@ -53,6 +58,7 @@ if (array_key_exists('f', $_REQUEST)) {
             function SelectedPoint(meta, time) {
                 <?php
                 echo "var url = \"$url\";\n";
+                echo "var medianMetric=\"$median_metric\";\n";
                 ?>
                 var menu = '<div><h4>View test for ' + url + '</h4>';
                 time = parseInt(time / 1000, 10);
@@ -60,7 +66,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 if (meta[time] != undefined) {
                     for(i = 0; i < meta[time].length; i++) {
                         ok = true;
-                        menu += '<a href="/result/' + meta[time][i]['test'] + '/" target="_blank">' + meta[time][i]['label'] + '</a><br>';
+                        menu += '<a href="/result/' + meta[time][i]['test'] + '/?medianMetric=' + medianMetric + '" target="_blank">' + meta[time][i]['label'] + '</a><br>';
                     }
                 }
                 menu += '</div>';
@@ -97,31 +103,27 @@ if (array_key_exists('f', $_REQUEST)) {
                             'text_requests' => 'Text Requests',
                             'other_bytes' => 'Other Bytes (KB)', 
                             'other_requests' => 'Other Requests');
-            if (array_key_exists('benchmark', $_REQUEST)) {
-                $benchmark = $_REQUEST['benchmark'];
-                $info = GetBenchmarkInfo($benchmark);
-                if (!$info['video']) {
-                    unset($metrics['SpeedIndex']);
-                }
+            if (!$info['video']) {
+                unset($metrics['SpeedIndex']);
+            }
+            if (!isset($out_data)) {
+                echo "<h1>{$info['title']} - $url</h1>";
+                if (array_key_exists('description', $info))
+                    echo "<p>{$info['description']}</p>\n";
+                echo "<p>Displaying the median run for $url trended over time</p>";
+            }
+            foreach( $metrics as $metric => $label) {
                 if (!isset($out_data)) {
-                    echo "<h1>{$info['title']} - $url</h1>";
-                    if (array_key_exists('description', $info))
-                        echo "<p>{$info['description']}</p>\n";
-                    echo "<p>Displaying the median run for $url trended over time</p>";
+                    echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                 }
-                foreach( $metrics as $metric => $label) {
-                    if (!isset($out_data)) {
-                        echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                if ($info['expand'] && count($info['locations'] > 1)) {
+                    foreach ($info['locations'] as $location => $label) {
+                        if (is_numeric($label))
+                            $label = $location;
+                        DisplayBenchmarkData($info, $metric, $location, $label);
                     }
-                    if ($info['expand'] && count($info['locations'] > 1)) {
-                        foreach ($info['locations'] as $location => $label) {
-                            if (is_numeric($label))
-                                $label = $location;
-                            DisplayBenchmarkData($info, $metric, $location, $label);
-                        }
-                    } else {
-                        DisplayBenchmarkData($info, $metric);
-                    }
+                } else {
+                    DisplayBenchmarkData($info, $metric);
                 }
             }
 if (!isset($out_data)) {

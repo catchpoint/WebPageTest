@@ -10,8 +10,8 @@ $refPath = GetTestPath($_REQUEST['ref']);
 $refData = loadAllPageData($refPath);
 $cmpPath = GetTestPath($_REQUEST['cmp']);
 $cmpData = loadAllPageData($cmpPath);
-$refRun = GetMedianRun($refData, 0);
-$cmpRun = GetMedianRun($cmpData, 0);
+$refRun = GetMedianRun($refData, 0, $median_metric);
+$cmpRun = GetMedianRun($cmpData, 0, $median_metric);
 if( $refRun && $cmpRun )
 {
     $refFile = "$refPath/{$refRun}_screen.png";

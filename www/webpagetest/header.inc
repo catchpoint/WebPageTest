@@ -167,7 +167,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
             $gradeRun = $run;
         else
         {
-            $medianRun = GetMedianRun($pageData, 0);
+            $medianRun = GetMedianRun($pageData, 0, $median_metric);
             if( $medianRun )
                 $gradeRun = $medianRun;
         }

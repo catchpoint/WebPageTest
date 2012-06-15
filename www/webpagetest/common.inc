@@ -68,6 +68,10 @@ $GLOBALS['ptotocol'] = 'http';
 if ($is_ssl) {
     $GLOBALS['ptotocol'] = 'https';
 }
+$median_metric = 'loadTime';
+if (array_key_exists('medianMetric', $_REQUEST)) {
+    $median_metric = $_REQUEST['medianMetric'];
+}
 
 $tz_offset = null;
 if (isset($_COOKIE['tzo'])) {
