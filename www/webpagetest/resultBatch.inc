@@ -539,7 +539,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
                 $started = $testInfo['started'];
-            $pageData = loadAllPageData($testPath);
+            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
@@ -719,6 +719,10 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $json_response['data']['Optimized_FV_Load_Time'] = $optimized[0]['loadTime'];
         $json_response['data']['Original_RV_Load_Time'] = $original[1]['loadTime'];
         $json_response['data']['Optimized_RV_Load_Time'] = $optimized[1]['loadTime'];
+        $json_response['data']['Original_FV_Speed_Index'] = $original[0]['SpeedIndex'];
+        $json_response['data']['Optimized_FV_Speed_Index'] = $optimized[0]['SpeedIndex'];
+        $json_response['data']['Original_RV_Speed_Index'] = $original[1]['SpeedIndex'];
+        $json_response['data']['Optimized_RV_Speed_Index'] = $optimized[1]['SpeedIndex'];
         $json_response['data']['Base_Domain_Test_Issues'] = $testIssues;
         $json_response['data']['Original_FV_TTFB'] = $original[0]['TTFB'];
         $json_response['data']['Optimized_FV_TTFB'] = $optimized[0]['TTFB'];
@@ -1000,7 +1004,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $test['path'] = GetTestPath($test['id']);
             $entry['path'] = $test['path'];
             $testPath = './' . $test['path'];
-            $entry['pageData'] = loadAllPageData($testPath);
+            $entry['pageData'] = loadAllPageData($testPath, array('SpeedIndex' => true));
             $entry['median_run'] = GetMedianRun($entry['pageData'], 0, $median_metric);
             $entry['median'] = $entry['pageData'][$entry['median_run']][0];
             $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
@@ -1342,7 +1346,7 @@ function DisplayBlinkTable($tests, $tableLabel)
         $testPath = './' . $test['path'];
         if( $test['c'] )
         {
-            $pageData = loadAllPageData($testPath);
+            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $metrics['Full Page Loaded'][$count] = $pageData[$fvMedian][0]['loadTime'];
