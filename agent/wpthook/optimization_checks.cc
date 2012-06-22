@@ -207,7 +207,9 @@ void OptimizationChecks::CheckGzip()
               free(buff);
             }
           }
-          if( targetRequestBytes >= origSize ) {
+          // allow a pass if we don't get 10% savings or less than 1400 bytes
+          if( targetRequestBytes >= (origSize * 0.9) || 
+              origSize - targetRequestBytes < 1400 ) {
             targetRequestBytes = origSize;
             request->_scores._gzip_score = 100;
           }

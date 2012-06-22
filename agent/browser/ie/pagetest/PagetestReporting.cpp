@@ -1875,7 +1875,7 @@ void CPagetestReporting::CheckGzip()
 							}
 						}
 						
-						if( target < origSize )
+						if( target < (origSize * 0.9) && origSize - target > 1400 )
 							w->warning = true;
 						else
 						{
