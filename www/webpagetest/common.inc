@@ -529,8 +529,8 @@ function gz_file_get_contents($file)
         $zip = gzopen($file, 'rb');
     
     if( $zip !== false ) {
-        while (!gzeof($zip)) {
-            $data .= gzread($zip, 4096);
+        while ($string = gzread($zip, 4096)) {
+            $data .= $string;
         }
         gzclose($zip);
     }

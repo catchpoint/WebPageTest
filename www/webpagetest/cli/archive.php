@@ -124,11 +124,13 @@ function CheckTest($testPath, $id) {
     global $MIN_DAYS;
     $logLine = "$id : ";
 
+    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
+
     $elapsed = TestLastAccessed($id);
     if( $elapsed >= $MIN_DAYS && ArchiveTest($id) ) {
         $archiveCount++;
         $logLine .= "Archived";
-
+                                                                                      
         if (VerifyArchive($id)) {
             delTree("$testPath/");
             $deleted++;
@@ -141,8 +143,6 @@ function CheckTest($testPath, $id) {
         $logLine .= "\n";
         fwrite($log, $logLine);
     }
-
-    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 }
 
 ?>
