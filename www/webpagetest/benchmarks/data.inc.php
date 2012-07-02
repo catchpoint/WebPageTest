@@ -609,10 +609,17 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                         }
                         // grab the median run from each test
                         if (count($tests)) {
+                            $info = GetBenchmarkInfo($benchmark);
+                            $median_metric = 'docTime';
+                            if (isset($info) && is_array($info) && 
+                                array_key_exists('options', $info) && 
+                                array_key_exists('median_run', $info['options'])) {
+                                $median_metric = $info['options']['median_run'];
+                            }
                             foreach($tests as &$test) {
                                 $times = array();
                                 foreach($test as $row) {
-                                    $times[] = $row['docTime'];
+                                    $times[] = $row[$median_metric];
                                 }
                                 $median_run_index = 0;
                                 $count = count($times);
@@ -814,6 +821,14 @@ function DeltaSortCompare(&$a, &$b) {
 function LoadMedianData($benchmark, $test_time) {
     global $median_data;
     if (!isset($median_data)) {
+        // see if we have a custom metric to use to calculate the median for the given benchmark
+        $info = GetBenchmarkInfo($benchmark);
+        $median_metric = 'docTime';
+        if (isset($info) && is_array($info) && 
+            array_key_exists('options', $info) && 
+            array_key_exists('median_run', $info['options'])) {
+            $median_metric = $info['options']['median_run'];
+        }
         $date = gmdate('Ymd_Hi', $test_time);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
         if (gz_is_file($data_file)) {
@@ -822,7 +837,7 @@ function LoadMedianData($benchmark, $test_time) {
                 $tests = array();
                 // group the results by test ID
                 foreach($raw_data as &$row) {
-                    if (array_key_exists('docTime', $row) && 
+                    if (array_key_exists($median_metric, $row) && 
                         ($row['result'] == 0 || $row['result'] == 99999)) {
                         $id = $row['id'];
                         $cached = $row['cached'];
@@ -838,7 +853,7 @@ function LoadMedianData($benchmark, $test_time) {
                 foreach($tests as &$test) {
                     $times = array();
                     foreach($test as $row) {
-                        $times[] = $row['docTime'];
+                        $times[] = $row[$median_metric];
                     }
                     $median_run_index = 0;
                     $count = count($times);
