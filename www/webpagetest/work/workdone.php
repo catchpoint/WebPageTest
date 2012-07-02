@@ -91,7 +91,7 @@ else
         if( !isset($_FILES['file']) )
             logMsg(" No uploaded file attached\n");
         
-        // Figure out the path to the results.
+        // figure out the path to the results
         $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
 
@@ -593,9 +593,6 @@ function MovePcapIntoPlace($clientFileName, $uploadTmpFileName,
                            $testPath, $finalPcapFileName) {
     // Is the upload a zip archive?  If so, unpack it.
     if (preg_match("/\.zip$/", $clientFileName)) {
-        // Directory structure is not flattened, because the android
-        // agent puts needed files at paths that encode their run
-        // number and cache state.
         $archive = new PclZip($uploadTmpFileName);
         $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
 
@@ -679,15 +676,8 @@ function ProcessUploadedHAR($testPath)
             $list = PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
         else if (preg_match("/\.zip$/",$_FILES['file']['name']))
         {
-            // PCLZIP_OPT_REMOVE_ALL_PATH causes any directory structure
-            // within the zip to be flattened.  Different agents have slightly
-            // different directory layout, but all file names are guaranteed to
-            // be unique.  Flattening allows us to avoid directory traversal.
-            // TODO(skerner): Find out why the blaze agents have different
-            // directory structure and make it consistent, then get rid of this.
             $archive = new PclZip($_FILES['file']['tmp_name']);
-            $archive->extract(PCLZIP_OPT_PATH, "$testPath/",
-                              PCLZIP_OPT_REMOVE_ALL_PATH);
+            $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
         }
         else
             move_uploaded_file($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
