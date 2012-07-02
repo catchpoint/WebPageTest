@@ -43,39 +43,24 @@ function ArchiveTest($id) {
                         $files = scandir($testPath);
                         foreach ($files as $file) {
                             $filePath = "$testPath/$file";
-                            if (is_file($filePath) && 
-                                strpos($file, '_doc.jpg') === false &&
-                                strpos($file, '_render.jpg') === false ) {
-                                $count++;
-                                $zip->addFile($filePath, $file);
-                            }
-                        }
-                        
-                        // if it is a video test, save the median first view video
-                        if ($count && $testInfo['video']) {
-                            $run = $testInfo['medianRun'];
-                            if (!$run) {
-                                require_once('page_data.inc');
-                                $pageData = loadAllPageData($testPath);
-                                if( $pageData )
-                                    $run = GetMedianRun($pageData, 0);
-                            }
-
-                            if ($run) {
-                                $relativeDir = "video_$run";
-                                $videoDir = "$testPath/$relativeDir";
-                                $files = scandir($videoDir);
-                                if ($files) {
-                                    $zip->addEmptyDir($relativeDir);
-                                    foreach ($files as $file) {
-                                        $filePath = "$videoDir/$file";
-                                        if( is_file($filePath) )
-                                            $zip->addFile($filePath, "$relativeDir/$file");
+                            if (is_file($filePath)) {
+                                if (is_file($filePath) && 
+                                    strpos($file, '_doc.jpg') === false &&
+                                    strpos($file, '_render.jpg') === false ) {
+                                    $count++;
+                                    $zip->addFile($filePath, $file);
+                                }
+                            } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                                $subFiles = scandir($filePath);
+                                if ($subFiles) {
+                                    $zip->addEmptyDir($file);
+                                    foreach ($subFiles as $subFile) {
+                                        if( is_file("$filePath/$subFile") )
+                                            $zip->addFile("$filePath/$subFile", "$file/$subFile");
                                     }
                                 }
                             }
                         }
-                        
                         $zip->close();
                         
                         // move the archive to it's final destination
