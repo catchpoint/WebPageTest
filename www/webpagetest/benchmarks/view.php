@@ -125,7 +125,8 @@ if (array_key_exists('f', $_REQUEST)) {
                             'text_bytes' => 'Text Bytes (KB)', 
                             'text_requests' => 'Text Requests',
                             'other_bytes' => 'Other Bytes (KB)', 
-                            'other_requests' => 'Other Requests');
+                            'other_requests' => 'Other Requests',
+                            'browser_version' => 'Browser Version');
 //                            'responses_404' => 'Not Found Responses (404)', 
 //                            'responses_other' => 'Non-404 Error Responses');
             if (isset($info)) {

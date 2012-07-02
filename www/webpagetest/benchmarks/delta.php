@@ -55,7 +55,8 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 'text_bytes' => 'Text Bytes (KB)', 
                 'text_requests' => 'Text Requests',
                 'other_bytes' => 'Other Bytes (KB)', 
-                'other_requests' => 'Other Requests'
+                'other_requests' => 'Other Requests',
+                'browser_version' => 'Browser Version'
                 );
 $metric = 'SpeedIndex';
 if (!$info['video']) {
