@@ -13,7 +13,7 @@
     this.drawer = new WebInspector.Drawer();
 
     this.timelinePanel = new WebInspector.TimelinePanel();
-    //FIXME: use non-private method (timelinePanel.show() doesn't work because it makes all children including the memory panel visible too)
+    //this.timelinePanel.show(); 
     this.timelinePanel._isShowing = true;
     this.timelinePanel._overviewPane._frameOverview = new WebInspector.TimelineFrameOverview(this.timelinePanel._model);
 
@@ -29,7 +29,7 @@ WebInspector.TimelineEmbedded = function() { }
 WebInspector.TimelineEmbedded.prototype =  {
     show: function() 
     {
-        //insert the Timeline in the DOM
+    //insert the Timeline in the DOM
         var mainDiv = document.getElementById("main-no-status-bar");
         var mainPanelsDiv = document.createElement("div");
         mainPanelsDiv.id = "main-panels"
@@ -75,6 +75,8 @@ WebInspector.TimelineEmbedded.prototype =  {
         setTimeout(this._reloadPanels, delay);
     },
 
+    
+
     _reloadPanels: function()
     {
         //An annoying hack required because the timeline needs to re-switch to the Events view but
@@ -84,12 +86,22 @@ WebInspector.TimelineEmbedded.prototype =  {
     }
 }
 
-
 var pageLoaded = function() {
     WebInspector.initializeEmbeddedTimeline();
     WebInspector.timelineEmbedded = new WebInspector.TimelineEmbedded();
     WebInspector.timelineEmbedded.show();
-    WebInspector.timelineEmbedded.loadFromUrl("Logs/timeline_data")
+    WebInspector.timelineEmbedded.loadFromUrl(getJSONUrl());
 }
 
 window.addEventListener("DOMContentLoaded", pageLoaded, false);
+
+function getJSONUrl()
+{
+  var name = "url".replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+  var results = regex.exec(window.location.search);
+  if(results == null)
+    return "";
+  else
+    return decodeURIComponent(results[1].replace(/\+/g, " "));
+}

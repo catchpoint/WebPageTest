@@ -352,6 +352,7 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         if( gz_is_file("$testPath/{$run}_timeline.json") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "/timeline.html?url=%2Fgetgzip.php%3Ftest%3D{$id}%26file%3D{$run}_timeline.json\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
                         }
                         if( gz_is_file("$testPath/{$run}_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
@@ -403,6 +404,7 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached_timeline.json") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "/timeline.html?url=%2Fgetgzip.php%3Ftest%3D{$id}%26file%3D{$run}_Cached_timeline.json\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";

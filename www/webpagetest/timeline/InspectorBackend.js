@@ -262,7 +262,7 @@ InspectorBackendClass.prototype = {
             return;
 
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "../Inspector.json", false);
+        xhr.open("GET", "Inspector.json", false);
         xhr.send(null);
     
         var schema = JSON.parse(xhr.responseText);

@@ -28,6 +28,7 @@ define('VER_CSS', 58);           // version of the sitewide css file
 define('VER_JS', 20);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
+define('VER_TIMELINE', 1);       // version of the timeline javascript
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
                                  // is unknown, change this constant to a large
