@@ -1,8 +1,10 @@
 {
   "name": "WPT Chrome Extension",
-  "version": "1.0",
+  "version": "1.1",
   "description": "WebPagetest Chrome Extension.",
-  "background_page": "wpt/background.html",
+  "background": {
+    "scripts": ["wpt/background.js"]
+	},
   "browser_action": {
     "default_popup": "wpt/browserActionPopup.html",
     "default_title": "WPT Chrome Extension",
@@ -29,5 +31,6 @@
     "debugger",
     "http://*/*",
     "https://*/*"
-  ]
+  ],
+  "manifest_version": 2
 }
