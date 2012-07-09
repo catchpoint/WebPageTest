@@ -21,6 +21,16 @@ $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $har  = arrayLookupWithDefault('har',  $_REQUEST, false);
 $pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
 
+// Sometimes we need to make changes to the way the client and server
+// communicate, without updating both at the same time.  The following
+// params can be set by a client to declare that they support a new
+// behavior.  Once all clients are updated, they should be removed.
+
+// Should zipped har uploads be flattened?  The main user is the mobitest iOS
+// agent.  The agent will be updated to always set this, but until we can
+// re-image all agents we need to support the old behavior for a while.
+$flattenUploadedZippedHar =
+    arrayLookupWithDefault('flattenZippedHar', $_REQUEST, false);
 
 // When we upgrade the pcap to har converter, we need to test
 // each agent.  Agents can opt in to testing the latest
@@ -91,7 +101,7 @@ else
         if( !isset($_FILES['file']) )
             logMsg(" No uploaded file attached\n");
         
-        // figure out the path to the results
+        // Figure out the path to the results.
         $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
 
@@ -593,6 +603,9 @@ function MovePcapIntoPlace($clientFileName, $uploadTmpFileName,
                            $testPath, $finalPcapFileName) {
     // Is the upload a zip archive?  If so, unpack it.
     if (preg_match("/\.zip$/", $clientFileName)) {
+        // Directory structure is not flattened, because the android
+        // agent puts needed files at paths that encode their run
+        // number and cache state.
         $archive = new PclZip($uploadTmpFileName);
         $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
 
@@ -666,6 +679,7 @@ function ProcessUploadedHAR($testPath)
     require_once('./lib/pclerror.lib.php3');
     require_once('./lib/pcltrace.lib.php3');
     global $done;
+    global $flattenUploadedZippedHar;
 
     // From the mobile agents we get the zip file with sub-folders
     if( isset($_FILES['file']) )
@@ -673,14 +687,37 @@ function ProcessUploadedHAR($testPath)
         //var_dump($_FILES['file']);
         logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
         if ($_FILES['file']['type'] == "application/tar" || preg_match("/\.tar$/",$_FILES['file']['name']))
-            $list = PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
+        {
+            PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
+        }
         else if (preg_match("/\.zip$/",$_FILES['file']['name']))
         {
             $archive = new PclZip($_FILES['file']['tmp_name']);
-            $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
+            if ($flattenUploadedZippedHar)
+            {
+                // PCLZIP_OPT_REMOVE_ALL_PATH causes any directory structure
+                // within the zip to be flattened.  Different agents have
+                // slightly different directory layout, but all file names
+                // are guaranteed to be unique.  Flattening allows us to avoid
+                // directory traversal.
+                // TODO(skerner): Find out why the blaze agents have different
+                // directory structure and make it consistent, and remove
+                // $flattenUploadedZippedHar as an option.
+                $archive->extract(PCLZIP_OPT_PATH, "$testPath/",
+                                  PCLZIP_OPT_REMOVE_ALL_PATH);
+            }
+            else
+            {
+                logMalformedInput("Depricated har upload path.  Agents should ".
+                                  "set flattenZippedHar=1.");
+                $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
+            }
         }
         else
-            move_uploaded_file($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
+        {
+            move_uploaded_file($_FILES['file']['tmp_name'],
+                               $testPath . "/" . $_FILES['file']['name']);
+        }
     }
 
     // The HAR may hold multiple page loads.
