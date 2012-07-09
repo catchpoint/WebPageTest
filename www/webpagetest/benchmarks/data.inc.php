@@ -388,6 +388,20 @@ function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
 }
 
 /**
+* Comparison function for sorting the raw test data by URL
+* 
+*/
+function RawDataCompare($a, $b) {
+    $ret = 0;
+    if (is_array($a) && is_array($b) &&
+        array_key_exists('url', $a) &&
+        array_key_exists('url', $b)) {
+        $ret = $a['url'] < $b['url'] ? -1 : 1;
+    }
+    return $ret;
+}
+
+/**
 * Load the raw data for a given test
 * 
 */
@@ -402,6 +416,7 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
         if (gz_is_file($data_file)) {
             if (!isset($raw_data)) {
                 $raw_data = json_decode(gz_file_get_contents($data_file), true);
+                usort($raw_data, 'RawDataCompare');
             }
             if (count($raw_data)) {
                 foreach($raw_data as &$row) {
