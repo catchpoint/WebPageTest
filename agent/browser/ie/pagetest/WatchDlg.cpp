@@ -650,6 +650,23 @@ LRESULT APIENTRY wndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 } 
 
 /*-----------------------------------------------------------------------------
+  Make sure any IE window is set to be topmost and the correct size
+-----------------------------------------------------------------------------*/
+BOOL CALLBACK PositionBrowser(HWND hwnd, LPARAM lParam) {
+  TCHAR class_name[1024];
+  if (lParam && IsWindowVisible(hwnd) && 
+    GetClassName(hwnd, class_name, _countof(class_name))) {
+    _tcslwr(class_name);
+    if (dlg && _tcsstr(class_name, _T("ieframe"))) {
+      RECT * rect = (RECT *)lParam;
+      ::SetWindowPos(hwnd, HWND_TOPMOST, rect->left, rect->top, rect->right, rect->bottom, SWP_NOACTIVATE);
+      ::UpdateWindow(hwnd);
+    }
+  }
+  return TRUE;
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWatchDlg::ResizeWindow(void)
 {
@@ -671,8 +688,13 @@ void CWatchDlg::ResizeWindow(void)
 		  key.Close();
 	    if( height && width && hMainWindow && ::IsWindow(hMainWindow) )
 			{
-				targetWidth = width;
-				targetHeight = height;
+        RECT rect;
+        rect.left = left;
+        rect.top = top;
+        rect.right = width;
+        rect.bottom = height;
+
+        EnumWindows(::PositionBrowser, (LPARAM)&rect);
 
 				// take over the wndproc
 				//if( !originalWndProc )
@@ -680,6 +702,7 @@ void CWatchDlg::ResizeWindow(void)
 
 				::ShowWindow(hMainWindow, SW_RESTORE);	// make sure it is not maximized
 				::SetWindowPos(hMainWindow, HWND_TOPMOST, left, top, width, height, SWP_NOACTIVATE);
+        ::UpdateWindow(hMainWindow);
 			}
 	}
 }

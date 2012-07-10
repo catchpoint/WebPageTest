@@ -479,7 +479,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			QueryPerformanceCounter((LARGE_INTEGER *)&lastRequest);
 			lastActivity = lastRequest;
 
-			startTime = CTime::GetCurrentTime();
+      startTime = CTime::GetCurrentTime();
 			url = szUrl;
 			
 			LeaveCriticalSection(&cs);
