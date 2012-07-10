@@ -467,7 +467,10 @@ function CheckCron() {
     
     // send the crone requests
     if ($should_run) {
-        SendCronRequest('/benchmarks/cron.php');
+        if (is_file('./settings/benchmarks/benchmarks.txt') && 
+            is_file('./benchmarks/cron.php')) {
+            SendCronRequest('/benchmarks/cron.php');
+        }
     }
 }
 

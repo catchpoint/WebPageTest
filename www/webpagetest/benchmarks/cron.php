@@ -15,33 +15,37 @@ header ("Content-type: text/plain");
 $nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
                 'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex');
 
-// make sure we don't execute multiple cron jobs concurrently
-$lock = fopen("./tmp/benchmark_cron.lock", "w+");
-if ($lock !== false) {
-    if (flock($lock, LOCK_EX | LOCK_NB)) {
-        unlink('./benchmark.log');
-        logMsg("Running benchmarks cron processing", './benchmark.log', true);
+if (is_file('./settings/benchmarks/benchmarks.txt')) {
+    // make sure we don't execute multiple cron jobs concurrently
+    $lock = fopen("./tmp/benchmark_cron.lock", "w+");
+    if ($lock !== false) {
+        if (flock($lock, LOCK_EX | LOCK_NB)) {
+            if (is_file('./benchmark.log')) {
+                unlink('./benchmark.log');
+            }
+            logMsg("Running benchmarks cron processing", './benchmark.log', true);
 
-        // see if we are using API keys
-        $key = null;
-        if (is_file('./settings/keys.ini')) {
-            $keys = parse_ini_file('./settings/keys.ini', true);
-            if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
-                $key = $keys['server']['key'];
-        }
+            // see if we are using API keys
+            $key = null;
+            if (is_file('./settings/keys.ini')) {
+                $keys = parse_ini_file('./settings/keys.ini', true);
+                if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
+                    $key = $keys['server']['key'];
+            }
 
-        // load the list of benchmarks
-        $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if (!count($bm_list))
-            $bm_list = glob('./settings/benchmarks/*.php');
-        foreach ($bm_list as $benchmark) {
-            ProcessBenchmark(basename($benchmark, '.php'));
+            // load the list of benchmarks
+            $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if (!count($bm_list))
+                $bm_list = glob('./settings/benchmarks/*.php');
+            foreach ($bm_list as $benchmark) {
+                ProcessBenchmark(basename($benchmark, '.php'));
+            }
+            logMsg("Done", './benchmark.log', true);
+        } else {
+            echo "Benchmark cron job is already running\n";
         }
-        logMsg("Done", './benchmark.log', true);
-    } else {
-        echo "Benchmark cron job is already running\n";
+        fclose($lock);
     }
-    fclose($lock);
 }
 
 /**
