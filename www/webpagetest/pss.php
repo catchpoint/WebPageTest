@@ -53,9 +53,9 @@ $page_description = "Comparison Test$testLabel.";
             }
             else
             {
-                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
-                echo "<input type=\"hidden\" name=\"discard\" value=\"3\">\n";
+                echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
             }
             ?>
             <input type="hidden" name="bulkurls" value="">
@@ -320,7 +320,7 @@ $page_description = "Comparison Test$testLabel.";
                 if (backend == 'staging') {
                     script = form.script.value;
                     script = script.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
-                    script = "if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_staging\t%HOST_REGEX%\nendif\nendif\n" + script;
+                    script = script.replace(/pss_blocking_rewrite/g, 'pss_staging');
                     form.script.value = script;
                     form.web10.value = 0;
                     form.runs.value = 10;
