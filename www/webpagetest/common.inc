@@ -1,4 +1,12 @@
 <?php
+// if any query parameter includes a .., exit right away - likely a hack attempt
+foreach($_REQUEST as $val) {
+    if (strpos($val, '/../') !== false) {
+        header('HTTP/1.1 403 Forbidden');
+        exit(0);
+    }
+}
+
 // shared initializiation/loading code
 set_time_limit(300);
 if (!array_key_exists('debug', $_REQUEST) && (!isset($debug) || !$debug)) {
