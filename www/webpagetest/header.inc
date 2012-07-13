@@ -40,10 +40,9 @@
                 $testLoc = $adLoc;
             elseif( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
                 $testLoc = $test['test']['loc'];
-            elseif(isset($_COOKIE["cfg"]))
-                $testLoc = $_COOKIE["cfg"];
             
-            if( isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
+            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
+                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
                 include("./custom/$testLoc/headerAd.inc");
             elseif( is_file('./ads/header.inc') && (!array_key_exists('HTTP_SSL', $_SERVER) || $_SERVER['HTTP_SSL'] != 'On') )
                 include('./ads/header.inc');

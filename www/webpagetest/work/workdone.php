@@ -56,28 +56,29 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
 {
     logMsg("Video file $id received from $location");
     
-    $dir = './' . GetVideoPath($id);
-    if( isset($_FILES['file']) )
-    {
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-        $dest = $dir . '/video.mp4';
-        move_uploaded_file($_FILES['file']['tmp_name'], $dest);
+    if (ValidateTestId($id)) {
+        $dir = './' . GetVideoPath($id);
+        if( isset($_FILES['file']) )
+        {
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+            $dest = $dir . '/video.mp4';
+            move_uploaded_file($_FILES['file']['tmp_name'], $dest);
+            @chmod($dest, 0666);
 
-        // update the ini file
-        $iniFile = $dir . '/video.ini';
-        if (is_file($iniFile)) {
-            $ini = file_get_contents($iniFile);
-        } else {
-            $ini = '';
+            // update the ini file
+            $iniFile = $dir . '/video.ini';
+            if (is_file($iniFile)) {
+                $ini = file_get_contents($iniFile);
+            } else {
+                $ini = '';
+            }
+            $ini .= 'completed=' . gmdate('c') . "\r\n";
+            file_put_contents($iniFile, $ini);
         }
-        $ini .= 'completed=' . gmdate('c') . "\r\n";
-        file_put_contents($iniFile, $ini);
     }
-}
-else
-{
+} elseif (ValidateTestId($id)) {
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
     BuildLocations($locations);
@@ -440,6 +441,8 @@ else
         
         if( isset($testInfo) && $testInfo_dirty )
             gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+
+        SecureDir($testPath);
     }
     else
         logMsg("location key incorrect\n");

@@ -27,7 +27,10 @@ if( isset($_FILES['file']) )
     $list = $archive->extract(PCLZIP_OPT_PATH, "$path/");
     if( !$list )
         unset($id);
-    
+        
+    // make sure there are no risky files and that nothing is allowed execute permission
+    SecureDir($path);
+        
     echo $id;
 }
 

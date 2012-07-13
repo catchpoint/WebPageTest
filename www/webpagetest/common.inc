@@ -1680,7 +1680,16 @@ function json_response(&$response) {
  */
 function ValidateTestId(&$id) {
     $valid = false;
-    if (preg_match('/^[a-zA-Z0-9_]+$/', @$id)) {
+    $testId = $id;
+    // see if it is a relay test (includes the key)
+    if( strpos($id, '.') !== false ) {
+        $parts = explode('.', $id);
+        if( count($parts) == 2 ) {
+            $testId = trim($parts[1]);
+        }
+    }
+
+    if (preg_match('/^[a-zA-Z0-9_]+$/', @$testId)) {
         $valid = true;
     } else {
         $id = '';
@@ -1700,6 +1709,38 @@ function formatMsInterval($val, $digits) {
     return '-';
 
   return number_format($val / 1000.0, $digits) . 's';
+}
+
+/**
+* Make sure there are no risky files in the given directory and make everything no-execute
+* 
+* @param mixed $path
+*/
+function SecureDir($path) {
+    $files = scandir($path);
+    foreach ($files as $file) {
+        $filepath = "$path/$file";
+        if (is_file($filepath)) {
+            $parts = pathinfo($file);
+            $ext = strtolower($parts['extension']);
+            if (strpos($ext, 'php') === false &&
+                strpos($ext, 'pl') === false &&
+                strpos($ext, 'py') === false &&
+                strpos($ext, 'cgi') === false &&
+                strpos($ext, 'asp') === false &&
+                strpos($ext, 'js') === false &&
+                strpos($ext, 'rb') === false &&
+                strpos($ext, 'htaccess') === false &&
+                strpos($ext, 'jar') === false) {
+                @chmod($filepath, 0666);
+            } else {
+                @chmod($filepath, 0666);    // just in case the unlink fails for some reason
+                unlink($filepath);
+            }
+        } elseif ($file != '.' && $file != '..' && is_dir($filepath)) {
+            SecureDir($filepath);
+        }
+    }
 }
 
 ?>

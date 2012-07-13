@@ -3,7 +3,7 @@ chdir('..');
 include 'common.inc';
 $id = $_REQUEST['id'];
 $file = './' . GetVideoPath($id) . '/video.mp4';
-if( is_file($file) )
+if( ValidateTestId($id) && is_file($file) )
 {
     header('Content-disposition: attachment; filename=video.mp4');
     header('Content-type: video/mp4');

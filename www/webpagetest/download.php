@@ -3,7 +3,10 @@ include 'common.inc';
 
 // only allow download of relay tests
 $ok = false;
-if( strpos($testPath, 'relay') && is_dir($testPath) )
+if( strpos($testPath, 'relay') !== false
+    && strpos($testPath, 'results') !== false
+    && strpos($testPath, '..') === false
+    && is_dir($testPath) )
 {
     // zip the test up and download it
     $zipFile = "$testPath.zip";
