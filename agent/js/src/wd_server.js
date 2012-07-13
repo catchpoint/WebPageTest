@@ -31,8 +31,8 @@ var child_process = require('child_process');
 var devtools = require('devtools');
 var devtools_network = require('devtools_network');
 var devtools_page = require('devtools_page');
+var devtools_timeline = require('devtools_timeline');
 var events = require('events');
-var fs = require('fs');
 var util = require('util');
 var wd_sandbox = require('wd_sandbox');
 var webdriver = require('webdriver');
@@ -42,7 +42,6 @@ var defaultServerJar_;
 var defaultChromeDriver_;
 
 var DEFAULT_WD_CONNECT_TIMEOUT_MS_ = 10000;  // TODO(klm): Make configurable?
-var DEVTOOLS_EVENTS_FILE_ = './devtools_events.json';
 
 
 exports.setJavaCommand = function(command) {
@@ -86,10 +85,12 @@ var WebDriverServer = function(options) {
   this.chromeDriver_ = defaultChromeDriver_;
   this.options_ = options || {};
   this.serverProcess_ = undefined;
+  this.serverPgid_ = undefined;
   this.serverUrl_ = undefined;
   this.driver_ = undefined;
   this.devToolsPort_ = 1234;
   this.devToolsMessages_ = [];
+  this.devToolsTimelineMessages_ = [];
 
   this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
 };
@@ -121,11 +122,19 @@ WebDriverServer.prototype.startServer_ = function() {
   ];
   console.log('Starting WD server: %s %s',
       this.javaCommand_, javaArgs.join(' '));
-  var serverProcess = child_process.spawn(this.javaCommand_, javaArgs);
+  var serverProcess = child_process.spawn(this.javaCommand_, javaArgs,
+      {setsid: true});  // setsid: create new process group with java's PID
+  this.serverPgid_ = serverProcess.pid;
+  console.info('WD server PGID=%s', this.serverPgid_);
   serverProcess.on('exit', function(code, signal) {
     console.log('WD EXIT code %s, signal %s', code, signal);
     self.serverProcess_ = undefined;
     self.serverUrl_ = undefined;
+    if (self.serverPgid_) {  // Kill the process group, with Chrome if running
+      var pgid = self.serverPgid_;
+      self.serverPgid_ = undefined;
+      // process.kill(-pgid);  // kill with a negative PID == killpg
+    }
     self.emit('exit', code, signal);
   });
   serverProcess.stdout.on('data', function(data) {
@@ -177,16 +186,20 @@ WebDriverServer.prototype.connectDevTools_ = function(wdNamespace) {
     devTools.on('connect', function() {
       var networkTools = new devtools_network.Network(devTools);
       var pageTools = new devtools_page.Page(devTools);
+      var timelineTools = new devtools_timeline.Timeline(devTools);
       networkTools.enable(function() {
         console.log('DevTools Network events enabled');
       });
       pageTools.enable(function() {
         console.log('DevTools Page events enabled');
       });
+      timelineTools.enable(function() {
+        console.log('DevTools Timeline events enabled');
+      });
       isDevtoolsConnected.resolve(true);
     });
     devTools.on('message', function(message) {
-      self.onDevToolsMessage_(message);
+       self.onDevToolsMessage_(message);
     });
     devTools.connect();
     return isDevtoolsConnected.promise;
@@ -235,13 +248,8 @@ WebDriverServer.prototype.connect = function() {
   }).then(function() {
     console.log('Sandboxed session succeeded');
     self.stop();
-    self.writeDevToolsMessages_();
     mainWdApp.schedule('Emit done', function() {
-      if (self.devToolsMessages_) {
-        self.emit('done', DEVTOOLS_EVENTS_FILE_);
-      } else {
-        self.emit('done');  // No devtools message log file
-      }
+      self.emit('done', self.devToolsMessages_, self.devToolsTimelineMessages_);
     });
   }, function(e) {
     console.log('Sandboxed session failed, calling server stop(): %s', e.stack);
@@ -259,20 +267,16 @@ WebDriverServer.prototype.connect = function() {
 
 WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   'use strict';
-  console.log('DevTools message: %s', message.method);
-  this.devToolsMessages_.push(message);
-};
-
-WebDriverServer.prototype.writeDevToolsMessages_ = function() {
-  'use strict';
-  try {
-    fs.unlinkSync(DEVTOOLS_EVENTS_FILE_);
-  } catch (e) {
-    // Ignore -- exception occurs if the file does not exist
-  }
-  if (this.devToolsMessages_) {
-    fs.writeFileSync(
-        DEVTOOLS_EVENTS_FILE_, JSON.stringify(this.devToolsMessages_), 'UTF-8');
+  console.log('DevTools message: %s', JSON.stringify(message));
+  if ('method' in message) {
+    if (message.method.slice(0, devtools_network.METHOD_PREFIX.length) ===
+        devtools_network.METHOD_PREFIX
+        || message.method.slice(0, devtools_page.METHOD_PREFIX.length) ===
+        devtools_page.METHOD_PREFIX) {
+      this.devToolsMessages_.push(message);
+    } else {
+      this.devToolsTimelineMessages_.push(message)
+    }
   }
 };
 
@@ -282,14 +286,15 @@ WebDriverServer.prototype.stop = function() {
   process.removeListener('uncaughtException', this.uncaughtExceptionHandler_);
   var driver = this.driver_;  // For closure -- self.driver_ would be reset
   if (driver) {
-    driver.quit();
+    console.info('stop(): driver.quit()');
+    //KLM DO NOT SUBMIT driver.quit();
   } else {
     console.error('stop(): driver is already unset');
   }
-  var serverProcess = this.serverProcess_;
-  if (serverProcess) {
+  if (this.serverProcess_) {
     try {
-      serverProcess.kill();
+      // process.kill(-this.serverPgid_);
+      this.serverProcess_.kill();
     } catch (killException) {
       console.error('WebDriver server kill failed: %s', killException);
     }

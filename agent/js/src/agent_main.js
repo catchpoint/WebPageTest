@@ -47,6 +47,7 @@ var flagDefs = {
 };
 
 var HAR_FILE_ = './results.har';
+var DEVTOOLS_EVENTS_FILE_ = './devtools_events.json';
 
 
 /**
@@ -71,10 +72,26 @@ function createSandbox(seeds) {
 }
 
 
-function convertDevToolsToHar(devToolsLogFilePath, harCallback) {
+function deleteHarTempFiles() {
   'use strict';
-  devtools2har.devToolsToHar(devToolsLogFilePath, HAR_FILE_, function() {
-    harCallback(fs.readFileSync(HAR_FILE_, 'UTF-8'));
+  for (var path in [DEVTOOLS_EVENTS_FILE_, HAR_FILE_]) {
+    try {
+      fs.unlinkSync(path);
+    } catch (e) {
+      // Ignore exception if the file does not exist
+    }
+  }
+}
+
+function convertDevToolsToHar(devToolsMessages, harCallback) {
+  'use strict';
+  deleteHarTempFiles();
+  fs.writeFileSync(
+      DEVTOOLS_EVENTS_FILE_, JSON.stringify(devToolsMessages), 'UTF-8');
+  devtools2har.devToolsToHar(DEVTOOLS_EVENTS_FILE_, HAR_FILE_, function() {
+    var harContent = fs.readFileSync(HAR_FILE_, 'UTF-8');
+    deleteHarTempFiles();
+    harCallback(harContent);
   });
 }
 
@@ -99,14 +116,22 @@ function run(client) {
         // communicate job events via the fork() communication channel.
         vm.runInNewContext(job.task.script, sandbox, 'WPT Job Script');
       });
-      wdServer.on('done', function(devToolsLogFilePath) {
-        if (devToolsLogFilePath) {
-          convertDevToolsToHar(devToolsLogFilePath, function(har) {
+      wdServer.on('done', function(devToolsMessages, devToolsTimelineMessages) {
+        if (devToolsTimelineMessages) {
+          var timelineResult = new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.TIMELINE,
+              'timeline.json',
+              'application/json',
+              JSON.stringify(devToolsTimelineMessages));
+          job.resultFiles.push(timelineResult);
+        }
+        if (devToolsMessages) {
+          convertDevToolsToHar(devToolsMessages, function(harContent) {
             var harResult = new wpt_client.ResultFile(
                 wpt_client.ResultFile.ResultType.HAR,
                 'results.har',
                 'application/json',
-                har);
+                harContent);
             job.resultFiles.push(harResult);
             job.done();
           });

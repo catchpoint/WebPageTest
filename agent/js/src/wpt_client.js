@@ -104,7 +104,8 @@ exports.ResultFile = ResultFile;
  */
 ResultFile.ResultType = Object.freeze({
   // PCAP: 'pcap',
-  HAR: 'har'
+  HAR: 'har',
+  TIMELINE: 'timeline'
 });
 
 
