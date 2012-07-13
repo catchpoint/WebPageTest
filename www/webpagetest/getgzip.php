@@ -2,7 +2,12 @@
 include('common.inc');
 $file = "$testPath/{$_GET['file']}";
 
-if( isset($_GET['file']) && strlen($_GET['file']) && gz_is_file($file) )
+if( isset($_GET['file']) && 
+    strlen($_GET['file']) && 
+    strpos($_GET['file'], '/') === false && 
+    strpos($_GET['file'], '\\') === false &&
+    strpos($_GET['file'], '..') === false &&
+    gz_is_file($file) )
 {
     header("Content-disposition: attachment; filename={$_GET['file']}");
     if( strpos($_GET['file'], 'pagespeed') !== false || 
