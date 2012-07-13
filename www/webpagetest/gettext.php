@@ -2,13 +2,16 @@
 include('common.inc');
 $ok = false;
 
-if( isset($_GET['file']) && strlen($_GET['file']) )
-{
-    $data = gz_file_get_contents("$testPath/{$_GET['file']}");
-    if( $data !== false )
-    {
-        $ok = true;
-        echo $data;
+if( isset($_GET['file']) && strlen($_GET['file']) ) {
+    $file = $_GET['file'];
+    if (strpos($file, '/') === false && 
+        strpos($file, '\\') === false &&
+        strpos($file, '..') === false) {
+        $data = gz_file_get_contents("$testPath/{$_GET['file']}");
+        if( $data !== false ) {
+            $ok = true;
+            echo $data;
+        }
     }
 }
 
