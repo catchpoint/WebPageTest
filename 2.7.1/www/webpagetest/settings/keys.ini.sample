@@ -1,0 +1,13 @@
+;[server]
+;secret=AnyRandomSecretKeyOrHash
+;key=KeyToBeUsedByTheWebUI
+
+;[KeyToBeUsedByTheWebUI]
+;description=Web UI
+;contact=me@me.com
+;limit=0
+
+;[AnotherKey]
+;description=API Key
+;contact=me@me.com
+;limit=500

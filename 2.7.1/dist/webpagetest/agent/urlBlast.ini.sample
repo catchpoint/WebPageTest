@@ -1,0 +1,10 @@
+[Configuration]
+Startup Delay=30
+Log File=c:\webpagetest\agent\urlblast
+Timeout=120
+use current account=1
+
+; Where to get work from
+Url Files Url=http://127.0.0.1/work/
+Location=IE
+;Location Key=TestKey123

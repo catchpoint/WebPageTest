@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SchemeUserState</key>
+	<dict>
+		<key>All UnitTests All SDKs All Platforms.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>25</integer>
+		</dict>
+		<key>All UnitTests All SDKs.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>9</integer>
+		</dict>
+		<key>All UnitTests.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>26</integer>
+		</dict>
+		<key>Build GTM All SDKs.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>23</integer>
+		</dict>
+		<key>GTM.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>5</integer>
+		</dict>
+		<key>GTMServiceManagementTestingHarness.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>7</integer>
+		</dict>
+		<key>UIUnitTestingHarness.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>15</integer>
+		</dict>
+		<key>UnitTest - Foundation.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>16</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>8B4514A011BEC29100A9EE64</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>8B45A0270DA4696C001148C5</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>8B45A2890DA49B99001148C5</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>8BC85130127A18AE0046E0FB</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>8BFE13BC0FB0F2D8001BE894</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F41A6EE00E02DB4F00788A6C</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F41A6EF80E02DCFC00788A6C</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F42E08110D19987200D5DDE0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F42E086C0D199A5B00D5DDE0</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F472042B0D33BEAF00E9F378</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>F48FE2630D198C1E009257D2</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+	</dict>
+</dict>
+</plist>
