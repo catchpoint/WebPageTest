@@ -39,17 +39,13 @@ function ArchiveTest($id) {
                     $count = 0;
                     $zip = new ZipArchive();
                     if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
-                        // add the files (skip the ones we don't want to archive long-term)
+                        // add the files
                         $files = scandir($testPath);
                         foreach ($files as $file) {
                             $filePath = "$testPath/$file";
                             if (is_file($filePath)) {
-                                if (is_file($filePath) && 
-                                    strpos($file, '_doc.jpg') === false &&
-                                    strpos($file, '_render.jpg') === false ) {
-                                    $count++;
-                                    $zip->addFile($filePath, $file);
-                                }
+                                $count++;
+                                $zip->addFile($filePath, $file);
                             } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
                                 $subFiles = scandir($filePath);
                                 if ($subFiles) {
