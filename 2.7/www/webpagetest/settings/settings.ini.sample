@@ -1,0 +1,45 @@
+[settings]
+product=WebPagetest
+contact=admin@my.email.com
+optLinks=0
+maxruns=10
+countTests=1
+allowPrivate=0
+
+; Comment out the publishTo if you do not want to be able to upload your
+; results to the public instance (this is useful for sharing internal tests
+; with external users)
+publishTo=www.webpagetest.org
+
+;Uncomment map=1 if you want to enable the map-based picker
+;map=1
+
+; test options available
+enableSNS=0
+enableVideo=1
+
+; disable gzip compressing the result text files
+;nogzip=1
+
+;directory to archive test files (must include trailing slash)
+;archive_dir=/data/archive/
+
+;showslow beacon
+;showslow=http://www.showslow.com
+;beaconRate=100
+showslow_key=<your showslow API key>
+
+; image quality (defaults to 30)
+iq=75
+;save png full-resolution screen shots
+;pngss=1
+
+;Log tests that take longer than X seconds
+;slow_test_time=240
+
+; archiving to s3 (using the s3 protocol, not necessarily just s3)
+;archive_s3_server=s3.amazonaws.com
+;archive_s3_key=<access key>
+;archive_s3_secret=<secret>
+;archive_s3_bucket=<bucket>
+;archive_s3_url=http://s3.amazonaws.com/<bucket>/

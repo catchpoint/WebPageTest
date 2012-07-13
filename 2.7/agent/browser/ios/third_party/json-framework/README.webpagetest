@@ -1,0 +1,20 @@
+URL: http://code.google.com/p/json-framework/
+Version: 2.1.1
+License File: Source/JSON.h
+
+Description:
+A json parser for Mac and iPhone.
+
+Local Modifications:
+
+Fixed up issues with errors pointer not being checked before assigned.
+Added some parens to get rid of assignment used as a truth value warning.
++[NSDecimalNumber decimalNumberWithString:] honors user's locale, force the
+  en_US locale so parsing always handles ".".
+Make kEscapeChars a non mutable character set just to be safe if more then one
+  SBJSON object is used at a time.
+
+* Added i386 as a valid architecture.
+
+Made Objects allow their keys to not be explicitly wrapped in quotes.
+For example {g:501} is now acceptable instead of forcing {"g":501}.

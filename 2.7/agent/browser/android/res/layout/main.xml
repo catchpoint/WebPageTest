@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:orientation="vertical">
+     <!-- Dummy item to prevent the URL EditText box from receiving focus and popping up the
+          annoying soft-keyboard. -->
+    <LinearLayout
+       android:focusable="true" android:focusableInTouchMode="true"
+       android:layout_width="0px" android:layout_height="0px"/>
+
+    <EditText android:text="" android:layout_height="wrap_content" android:id="@+id/editTextUrl" android:layout_width="fill_parent" android:singleLine="true" android:inputType="text" android:imeOptions="actionGo"></EditText>
+    <WebView android:id="@+id/webView" android:layout_height="fill_parent" android:layout_width="fill_parent"></WebView>
+</LinearLayout>
