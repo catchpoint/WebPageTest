@@ -1,8 +1,10 @@
 <?php
 // if any query parameter includes a .., exit right away - likely a hack attempt
-foreach($_REQUEST as $val) {
-    if (strpos($val, '/../') !== false) {
+foreach($_REQUEST as $key => $val) {
+    if (strlen($val) && strpos($val, '/../') !== false) {
         header('HTTP/1.1 403 Forbidden');
+        echo "<html><body>Sorry, the request was blocked, please contact us for details";
+        echo "<br>" . htmlspecialchars($key) . " - " . htmlspecialchars($val) . "</body></html>";
         exit(0);
     }
 }
