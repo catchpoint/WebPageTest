@@ -163,6 +163,7 @@
 				OutputFile="..\$(ConfigurationName)\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
+				UACExecutionLevel="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -429,11 +430,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File

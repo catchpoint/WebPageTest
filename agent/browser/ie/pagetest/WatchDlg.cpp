@@ -657,7 +657,7 @@ BOOL CALLBACK PositionBrowser(HWND hwnd, LPARAM lParam) {
   if (lParam && IsWindowVisible(hwnd) && 
     GetClassName(hwnd, class_name, _countof(class_name))) {
     _tcslwr(class_name);
-    if (dlg && _tcsstr(class_name, _T("ieframe"))) {
+    if (_tcsstr(class_name, _T("ieframe"))) {
       RECT * rect = (RECT *)lParam;
       ::SetWindowPos(hwnd, HWND_TOPMOST, rect->left, rect->top, rect->right, rect->bottom, SWP_NOACTIVATE);
       ::UpdateWindow(hwnd);

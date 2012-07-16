@@ -315,4 +315,8 @@ public:
 
 protected:
   bool windowUpdated;
+  bool HasVisibleChildDocument(HWND parent, const TCHAR * class_name, TCHAR * buff, DWORD buff_len);
+  bool IsBrowserDocument(HWND wnd);
+  HWND FindDocumentWindow(DWORD process_id, HWND parent);
+  bool FindBrowserWindows(DWORD process_id, HWND& frame_window, HWND& document_window);
 };

@@ -112,12 +112,12 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
   _capture_time.QuadPart = 0;
   if (wnd) {
     wpt_capturing_screen = true;
-    HDC src = GetDC(wnd);
+    HDC src = GetDC(NULL);
     if (src) {
       HDC dc = CreateCompatibleDC(src);
       if (dc) {
         RECT rect;
-        GetClientRect(wnd, &rect);
+        GetWindowRect(wnd, &rect);
         int width = abs(rect.right - rect.left);
         int height = abs(rect.top - rect.bottom);
         if (width && height) {
@@ -127,7 +127,7 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type):
             _type = type;
 
             HBITMAP hOriginal = (HBITMAP)SelectObject(dc, _bitmap_handle);
-            BitBlt(dc, 0, 0, width, height, src, 0, 0, SRCCOPY | CAPTUREBLT);
+            BitBlt(dc, 0, 0, width, height, src, rect.left, rect.top, SRCCOPY | CAPTUREBLT);
 
             SelectObject(dc, hOriginal);
           }

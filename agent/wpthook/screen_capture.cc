@@ -157,19 +157,19 @@ CapturedImage::CapturedImage(HWND wnd, TYPE type, RECT * rect):
   _capture_time.QuadPart = 0;
   if (wnd) {
     wpt_capturing_screen = true;
-    HDC src = GetDC(wnd);
+    HDC src = GetDC(NULL);
     if (src) {
       HDC dc = CreateCompatibleDC(src);
       if (dc) {
         RECT window_rect;
-        GetClientRect(wnd, &window_rect);
-        int left = 0;
-        int top = 0;
+        GetWindowRect(wnd, &window_rect);
+        int left = window_rect.left;
+        int top = window_rect.top;
         int width = abs(window_rect.right - window_rect.left);
         int height = abs(window_rect.top - window_rect.bottom);
         if (rect) {
-          left = rect->left;
-          top = rect->top;
+          left = window_rect.left + rect->left;
+          top = window_rect.top + rect->top;
           width = rect->right - rect->left;
           height = rect->bottom - rect->top;
         }

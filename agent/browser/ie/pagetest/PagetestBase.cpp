@@ -818,11 +818,8 @@ bool CPagetestBase::FindBrowserWindow()
   bool found = false;
   hBrowserWnd = NULL;
 
-  if (hMainWindow) 
-    hBrowserWnd = FindBrowserDocument(hMainWindow);
-
-  if (hBrowserWnd)
-  {
+  if (FindBrowserWindows(GetCurrentProcessId(), hMainWindow, hBrowserWnd) &&
+      hBrowserWnd) {
     found = true;
     if( _SetGDIWindow )
       _SetGDIWindow(hBrowserWnd, hGDINotifyWindow, UWM_CHECK_PAINT);
@@ -830,6 +827,85 @@ bool CPagetestBase::FindBrowserWindow()
 
   return found;
 }
+
+/*-----------------------------------------------------------------------------
+  Recursively check to see if the given window has a child of the same class
+  A buffer is passed so we don't have to keep re-allocating it on the stack
+-----------------------------------------------------------------------------*/
+bool CPagetestBase::HasVisibleChildDocument(HWND parent, const TCHAR * class_name, 
+                            TCHAR * buff, DWORD buff_len) {
+  bool has_child_document = false;
+  HWND wnd = ::GetWindow(parent, GW_CHILD);
+  while (wnd && !has_child_document) {
+    if (IsWindowVisible(wnd)) {
+      if (GetClassName(wnd, buff, buff_len) && !lstrcmp(buff, class_name)) {
+        has_child_document = true;
+      } else {
+        has_child_document = HasVisibleChildDocument(wnd, class_name, 
+                                                      buff, buff_len);
+      }
+    }
+    wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
+  }
+  return has_child_document;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the given window is a browser document window.
+  A browser document window is detected as:
+  - Having a window class of a known type
+  - Not having any visible child windows of the same type
+-----------------------------------------------------------------------------*/
+bool CPagetestBase::IsBrowserDocument(HWND wnd) {
+  bool is_document = false;
+  TCHAR class_name[100];
+  if (GetClassName(wnd, class_name, _countof(class_name))) {
+    if (!lstrcmp(class_name, _T("Internet Explorer_Server"))) {
+      if (!HasVisibleChildDocument(wnd, _T("Internet Explorer_Server"), 
+          class_name, _countof(class_name))) {
+        is_document = true;
+      }
+    }
+  }
+  return is_document;
+}
+
+/*-----------------------------------------------------------------------------
+  Recursively find the highest visible window for the fiven process
+-----------------------------------------------------------------------------*/
+HWND CPagetestBase::FindDocumentWindow(DWORD process_id, HWND parent) {
+  HWND document_window = NULL;
+  HWND wnd = ::GetWindow(parent, GW_CHILD);
+  while (wnd && !document_window) {
+    if (IsWindowVisible(wnd)) {
+      DWORD pid;
+      GetWindowThreadProcessId(wnd, &pid);
+      if (pid == process_id && IsBrowserDocument(wnd)) {
+        document_window = wnd;
+      } else {
+        document_window = FindDocumentWindow(process_id, wnd);
+      }
+    }
+    wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
+  }
+  return document_window;
+}
+
+/*-----------------------------------------------------------------------------
+  Find the top-level and document windows for the browser
+-----------------------------------------------------------------------------*/
+bool CPagetestBase::FindBrowserWindows(DWORD process_id, HWND& frame_window, 
+                          HWND& document_window) {
+  bool found = false;
+  // find a known document window that belongs to this process
+  document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
+  if (document_window) {
+    found = true;
+    frame_window = GetAncestor(document_window, GA_ROOTOWNER);
+  }
+  return found;
+}
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
