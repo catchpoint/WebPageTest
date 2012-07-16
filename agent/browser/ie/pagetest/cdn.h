@@ -44,7 +44,8 @@ CDN_PROVIDER cdnList[] = {
   {".yottaa.net", _T("Yottaa")},
   {".r.cdn77.net", _T("CDN77")},
   {".incapdns.net", _T("Incapsula")},
-	{NULL, NULL}
+  {".bitgravity.com", _T("BitGravity")},
+  {NULL, NULL}
 };
 
 typedef struct {
