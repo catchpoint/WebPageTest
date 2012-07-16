@@ -11,14 +11,17 @@
   Main entry point that is called when IE starts up
 -----------------------------------------------------------------------------*/
 STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
+  AtlTrace(_T("[WptBHO] SetSite\n"));
   if (pUnkSite) {
     _web_browser = pUnkSite;
+    _wpt.InstallHook();
     DispEventAdvise(pUnkSite, &DIID_DWebBrowserEvents2);
   } else {
     DispEventUnadvise(_web_browser, &DIID_DWebBrowserEvents2);
     _wpt.Stop();
     _web_browser.Release();
   }
+  AtlTrace(_T("[WptBHO] SetSite complete\n"));
   return IObjectWithSiteImpl<WptBHO>::SetSite(pUnkSite);
 }
 
@@ -31,6 +34,7 @@ STDMETHODIMP_(void) WptBHO::OnBeforeNavigate2(IDispatch *pDisp, VARIANT * vUrl,
   if (vUrl)
     url = *vUrl;
 
+  AtlTrace(CString(_T("[WptBHO] OnBeforeNavigate2 - ")) + url);
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
@@ -49,7 +53,7 @@ STDMETHODIMP_(void) WptBHO::OnDocumentComplete(IDispatch *pDisp,
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
-    if (!url.CompareNoCase(_T("about:blank")))
+    if (!url.CompareNoCase(_T("http://127.0.0.1:8888/blank.html")))
       _wpt.Start(_web_browser);
     _wpt.OnLoad();
   }

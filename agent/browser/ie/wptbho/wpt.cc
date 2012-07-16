@@ -79,20 +79,30 @@ void Wpt::Stop(void) {
 bool Wpt::InstallHook() {
   AtlTrace(_T("[wptbho] - InstallHook"));
   bool ok = false;
-  if (!_hook_dll) {
-    TCHAR path[MAX_PATH];
-    if (GetModuleFileName((HMODULE)dll_hinstance, path, _countof(path))) {
-      lstrcpy(PathFindFileName(path), HOOK_DLL);
-      _hook_dll = LoadLibrary(path);
-      if (_hook_dll) {
-        PFN_INSTALL_HOOK InstallHook = 
-          (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@4");
-        if (InstallHook && InstallHook(GetCurrentProcess()) ) {
-          ok = true;
+  if (_hook_dll) {
+    ok = true;
+  } else {
+    HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
+    if (active_mutex) {
+      TCHAR path[MAX_PATH];
+      if (GetModuleFileName((HMODULE)dll_hinstance, path, _countof(path))) {
+        lstrcpy(PathFindFileName(path), HOOK_DLL);
+        _hook_dll = LoadLibrary(path);
+        if (_hook_dll) {
+          PFN_INSTALL_HOOK InstallHook = 
+            (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@4");
+          if (InstallHook && InstallHook(GetCurrentProcess()) ) {
+            ok = true;
+          } else {
+            FreeLibrary(_hook_dll);
+            _hook_dll = NULL;
+          }
         }
       }
+      CloseHandle(active_mutex);
     }
   }
+  AtlTrace(_T("[wptbho] - InstallHook complete"));
   return ok;
 }
 
