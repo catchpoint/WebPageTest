@@ -61,6 +61,8 @@ else
                 echo "<testUrl>" . xml_entities($test['testinfo']['url']) . "</testUrl>\n";
             if( @strlen($test['testinfo']['location']) )
                 echo "<location>{$test['testinfo']['location']}</location>\n";
+            if( @strlen($test['testinfo']['browser']) )
+                echo "<browser>{$test['testinfo']['browser']}</browser>\n";
             if( @strlen($test['testinfo']['connectivity']) )
             {
                 echo "<connectivity>{$test['testinfo']['connectivity']}</connectivity>\n";
