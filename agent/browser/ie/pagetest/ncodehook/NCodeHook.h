@@ -123,6 +123,7 @@ private:
 	uintptr_t getFreeTrampoline();
 	bool removeHook(NCodeHookItem item);
 	int getMinOffset(const unsigned char* codePtr, unsigned int jumpPatchSize);
+	bool isBranch(const char* instr);
 	std::set<uintptr_t> freeTrampolines_;
 	std::map<uintptr_t, NCodeHookItem> hookedFunctions_;
 	void* trampolineBuffer_;

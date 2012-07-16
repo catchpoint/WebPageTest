@@ -9,8 +9,8 @@ const unsigned int MaxInstructions = 20;
 static const unsigned int TrampolineBufferSize = 4096;
 
 template <typename ArchT>
-NCodeHook<ArchT>::NCodeHook(bool cleanOnDestruct)
-	: MaxTotalTrampolineSize(ArchT::NearJumpPatchSize + ArchT::MaxTrampolineSize),
+NCodeHook<ArchT>::NCodeHook(bool cleanOnDestruct) :
+	MaxTotalTrampolineSize(ArchT::AbsJumpPatchSize + ArchT::MaxTrampolineSize),
 	cleanOnDestruct_(cleanOnDestruct),
 	forceAbsJmp_(false)
 {
@@ -26,9 +26,17 @@ NCodeHook<ArchT>::~NCodeHook()
 	if (cleanOnDestruct_)
 	{
 		// restore all hooks and free memory
-		while (hookedFunctions_.size()) removeHook(hookedFunctions_.begin()->second);
+		for (size_t i = hookedFunctions_.size(); i > 0; --i) removeHook(hookedFunctions_[i - 1]);
 		VirtualFree(trampolineBuffer_, 0, MEM_RELEASE);
 	}
+}
+
+template <typename ArchT>
+bool NCodeHook<ArchT>::isBranch(const char* instr)
+{
+	if (instr[0] == 'J' || strstr(instr, "CALL"))
+		return true;
+	else return false;
 }
 
 template <typename ArchT>
@@ -43,7 +51,10 @@ int NCodeHook<ArchT>::getMinOffset(const unsigned char* codePtr, unsigned int ju
 
 	unsigned int offset = 0;
 	for (unsigned int i = 0; offset < jumpPatchSize && i < instructionCount; ++i)
+	{
+		if (isBranch((const char*)instructions[i].mnemonic.p)) return -1;
 		offset += instructions[i].size;
+	}
 	// if we were unable to disassemble enough instructions we fail
 	if (offset < jumpPatchSize) return -1;
 
