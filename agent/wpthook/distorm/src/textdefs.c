@@ -4,7 +4,7 @@ textdefs.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "textdefs.h"
+
+#ifndef DISTORM_LIGHT
 
 static uint8_t Nibble2ChrTable[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 #define NIBBLE_TO_CHR Nibble2ChrTable[t]
@@ -177,4 +179,6 @@ void _FASTCALL_ str_off64(_WString* s, OFFSET_INTEGER x)
 	s->length += i + 2;
 	buf[i] = '\0';
 }
-#endif
+#endif /* SUPPORT_64BIT_OFFSET */
+
+#endif /* DISTORM_LIGHT */

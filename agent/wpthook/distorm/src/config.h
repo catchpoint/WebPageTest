@@ -4,7 +4,7 @@ config.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define CONFIG_H
 
 /* diStorm version number. */
-#define __DISTORMV__ 0x030000
+#define __DISTORMV__ 0x030200
 
 #include <string.h> /* memset, memcpy - can be easily self implemented for libc independency. */
 
 #include "../include/distorm.h"
+
 
 /*
  * 64 bit offsets support:
@@ -39,11 +40,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 /* #define SUPPORT_64BIT_OFFSET */
 
 /*
- * If you compile diStorm as a .DLL file, make sure you uncomment the next line.
- * So the interface functions will be exported, otherwise they are useable only as a library.
- * For example, this macro is being set for the Python extension module.
+ * If you compile diStorm as a dynamic library (.dll or .so) file, make sure you uncomment the next line.
+ * So the interface functions will be exported, otherwise they are useable only for static library.
+ * For example, this macro is being set for compiling diStorm as a .dll for Python with CTypes.
  */
-/* #define _DLL */
+/* #define DISTORM_DYNAMIC */
+
+/*
+ * If DISTORM_LIGHT is defined, everything involved in formatting the instructions
+ * as text will be excluded from compilation.
+ * distorm_decode(..) and distorm_format(..) will not be available.
+ * This will decrease the size of the executable and leave you with decomposition functionality only.
+ *
+ * Note: it should be either set in the preprocessor definitions manually or in command line -D switch.
+ * #define DISTORM_LIGHT
+ */
 
 /*
  * diStorm now supports little/big endian CPU's.
@@ -60,7 +71,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define _FASTCALL_
 #define _INLINE_ static
 /* GCC ignores this directive... */
-//#define _FASTCALL_ __attribute__((__fastcall__))
+/*#define _FASTCALL_ __attribute__((__fastcall__))*/
 
 /* Set endianity (supposed to be LE though): */
 #ifdef __BIG_ENDIAN__
@@ -114,8 +125,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #endif /* #elif _MSC_VER */
 
-/* If the library isn't compiled as a .DLL don't export functions. */
-#ifndef _DLL
+/* If the library isn't compiled as a dynamic library don't export any functions. */
+#ifndef DISTORM_DYNAMIC
 #undef _DLLEXPORT_
 #define _DLLEXPORT_
 #endif

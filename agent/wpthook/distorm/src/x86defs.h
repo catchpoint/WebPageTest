@@ -4,7 +4,7 @@ x86defs.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define X86DEFS_H
 
 #include "config.h"
-
 #include "instructions.h"
+
 
 #define SEG_REGS_MAX (6)
 #define CREGS_MAX (9)
@@ -35,8 +35,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 /* Maximum instruction size, including prefixes */
 #define INST_MAXIMUM_SIZE (15)
 
-/* Maximum range of imm8 (comparison type) of special SSE instructions. */
+/* Maximum range of imm8 (comparison type) of special SSE CMP instructions. */
 #define INST_CMP_MAX_RANGE (8)
+
+/* Maximum range of imm8 (comparison type) of special AVX VCMP instructions. */
+#define INST_VCMP_MAX_RANGE (32)
 
 /* Wait instruction byte code. */
 #define INST_WAIT_INDEX (0x9b)
@@ -91,7 +94,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 #define INST_ARPL_INDEX (0x63)
 extern _InstInfo II_arpl;
-extern _InstInfoEx II_movsxd;
+extern _InstInfo II_movsxd;
 
 /*
  * The NOP instruction can be prefixed by REX in 64bits, therefore we have to decide in runtime whether it's an XCHG or NOP instruction.
@@ -101,5 +104,12 @@ extern _InstInfoEx II_movsxd;
 #define INST_NOP_INDEX (0x90)
 extern _InstInfo II_nop;
 extern _InstInfo II_pause;
+
+/*
+ * Used for letting the extract operand know the type of operands without knowing the
+ * instruction itself yet, because of the way those instructions work.
+ * See function instructions.c!inst_lookup_3dnow.
+ */
+extern _InstInfo II_3dnow;
 
 #endif /* X86DEFS_H */

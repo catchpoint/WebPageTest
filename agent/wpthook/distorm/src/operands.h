@@ -4,7 +4,7 @@ operands.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,16 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define OPERANDS_H
 
 #include "config.h"
-
 #include "decoder.h"
 #include "prefix.h"
 #include "instructions.h"
 
-uint16_t _REGISTERTORCLASS[];
+
+extern uint16_t _REGISTERTORCLASS[];
 
 int operands_extract(_CodeInfo* ci, _DInst* di, _InstInfo* ii,
-					 _OpType type, _OperandNumberType opNum,
-					 unsigned int modrm, _PrefixState* ps, _DecodeType effOpSz,
+                     _OpType type, _OperandNumberType opNum,
+                     unsigned int modrm, _PrefixState* ps, _DecodeType effOpSz,
                      _DecodeType effAdrSz, int* lockableInstruction);
 
 #endif /* OPERANDS_H */

@@ -4,7 +4,7 @@ textdefs.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,8 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define TEXTDEFS_H
 
 #include "config.h"
-
 #include "wstring.h"
+
+#ifndef DISTORM_LIGHT
 
 #define PLUS_DISP_CHR '+'
 #define MINUS_DISP_CHR '-'
@@ -64,5 +65,7 @@ void _FASTCALL_ str_code_hqw(_WString* s, uint8_t src[8]);
 #ifdef SUPPORT_64BIT_OFFSET
 void _FASTCALL_ str_off64(_WString* s, OFFSET_INTEGER x);
 #endif
+
+#endif /* DISTORM_LIGHT */
 
 #endif /* TEXTDEFS_H */

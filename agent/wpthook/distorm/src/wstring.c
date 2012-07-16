@@ -4,7 +4,7 @@ wstring.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "wstring.h"
+
+#ifndef DISTORM_LIGHT
 
 void strclear_WS(_WString* s)
 {
@@ -53,3 +55,5 @@ void strcat_WS(_WString* s, const _WString* s2)
 	memcpy((int8_t*)&s->p[s->length], s2->p, s2->length + 1);
 	s->length += s2->length;
 }
+
+#endif /* DISTORM_LIGHT */

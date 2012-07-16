@@ -4,7 +4,7 @@ operands.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,10 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "config.h"
-
 #include "operands.h"
 #include "x86defs.h"
+#include "insts.h"
 #include "../include/mnemonics.h"
+
 
 /* Maps a register to its register-class mask. */
 uint16_t _REGISTERTORCLASS[] = /* Based on _RegisterType enumeration! */
@@ -250,7 +251,7 @@ static int operands_extract_modrm(_CodeInfo* ci,
 						if (type == OT_RFULL_M16) ps->usedPrefixes |= INST_PRE_REX;
 						/* CALL NEAR/PUSH/POP defaults to 64 bits. --> INST_64BITS, REX isn't required, thus ignored anyways. */
 						if (instFlags & INST_PRE_REX) ps->usedPrefixes |= INST_PRE_REX;
-						/* Include REX is used for REX.B. */
+						/* Include REX if used for REX.B. */
 						if (vrex & PREFIX_EX_B) {
 							ps->usedPrefixes |= INST_PRE_REX;
 							rm += EX_GPR_BASE;
@@ -500,14 +501,14 @@ static int operands_extract_modrm(_CodeInfo* ci,
  */
 
 int operands_extract(_CodeInfo* ci, _DInst* di, _InstInfo* ii,
-					 _OpType type, _OperandNumberType opNum,
-					 unsigned int modrm, _PrefixState* ps, _DecodeType effOpSz,
+                     _OpType type, _OperandNumberType opNum,
+                     unsigned int modrm, _PrefixState* ps, _DecodeType effOpSz,
                      _DecodeType effAdrSz, int* lockableInstruction)
 {
 	int ret = 0;
 	unsigned int mod = 0, reg = 0, rm = 0, vexV = ps->vexV;
 	unsigned int vrex = ps->vrex, typeHandled = TRUE;
-	_iflags instFlags = ii->flags;
+	_iflags instFlags = INST_INFO_FLAGS(ii);
 	_Operand* op = &di->ops[opNum];
 
 	/* Used to indicate the size of the MEMORY INDIRECTION only. */
@@ -729,7 +730,7 @@ int operands_extract(_CodeInfo* ci, _DInst* di, _InstInfo* ii,
 			op->type = O_IMM;
 			if (ci->dt == Decode64Bits) {
 				/* Imm32 is sign extended to 64 bits! */
-				op->size = 32;
+				op->size = 64;
 				di->flags |= FLAG_IMM_SIGNED;
 				if (!read_stream_safe_sint(ci, &di->imm.sqword, sizeof(int32_t))) return FALSE;
 			} else {
@@ -771,7 +772,6 @@ int operands_extract(_CodeInfo* ci, _DInst* di, _InstInfo* ii,
 			if (!read_stream_safe_uint(ci, &di->imm.ex.i1, sizeof(int8_t))) return FALSE;
 		break;
 		case OT_IMM8_2:
-
 			operands_set_ts(op, O_IMM2, 8);
 			if (!read_stream_safe_uint(ci, &di->imm.ex.i2, sizeof(int8_t))) return FALSE;
 		break;
