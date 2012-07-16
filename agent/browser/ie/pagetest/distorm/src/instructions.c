@@ -4,7 +4,7 @@ instructions.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,8 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #include "insts.h"
 #include "prefix.h"
 #include "x86defs.h"
-#include "../mnemonics.h"
+#include "../include/mnemonics.h"
 
+
+/* Helper macros to extract the type or index from an inst-node value. */
+#define INST_NODE_INDEX(n) ((n) & 0x1fff)
+#define INST_NODE_TYPE(n) ((n) >> 13)
 
 /*
 I use the trie data structure as I found it most fitting to a disassembler mechanism.
@@ -86,7 +90,24 @@ for non-used defined instructions, but I think that it still rocks.
 */
 
 /*
- * This function is reponsible to return the instruction information of the first found in code.
+ * A helper function to look up the correct inst-info structure.
+ * It does one fetch from the index-table, and then another to get the inst-info.
+ * Note that it takes care about basic inst-info or inst-info-ex.
+ * The caller should worry about boundary checks and whether it accesses a last-level table.
+ */
+static _InstInfo* inst_get_info(_InstNode in, int index)
+{
+	int instIndex = 0;
+
+	in = InstructionsTree[INST_NODE_INDEX(in) + index];
+	if (in == INT_NOTEXISTS) return NULL;
+
+	instIndex = INST_NODE_INDEX(in);
+	return INST_NODE_TYPE(in) == INT_INFO ? &InstInfos[instIndex] : (_InstInfo*)&InstInfosEx[instIndex];
+}
+
+/*
+ * This function is responsible to return the instruction information of the first found in code.
  * It returns the _InstInfo of the found instruction, otherwise NULL.
  * code should point to the ModR/M byte upon exit (if used), or after the instruction binary code itself.
  * This function is NOT decoding-type dependant, it is up to the caller to see whether the instruction is valid.
@@ -117,32 +138,34 @@ for non-used defined instructions, but I think that it still rocks.
  * Although this instruction doesn't require a REX.W, it just shows, that even if it did - it doesn't matter.
  * REX.W is dropped because it's not requried, but the decode function disabled the operand size even so.
  */
-
-static _InstInfo* inst_lookup_prefixed(_InstNode* in, _PrefixState* ps)
+static _InstInfo* inst_lookup_prefixed(_InstNode in, _PrefixState* ps)
 {
+	int checkOpSize = FALSE;
+	int index = 0;
 	_InstInfo* ii = NULL;
+
 	/* Check prefixes of current decoded instruction (None, 0x66, 0xf3, 0xf2). */
 	switch (ps->decodedPrefixes & (INST_PRE_OP_SIZE | INST_PRE_REPS))
 	{
 		case 0:
 			/* Non-prefixed, index = 0. */
-			ii = in->list[in->ids[0]];
+			index = 0;
 		break;
 		case INST_PRE_OP_SIZE:
 			/* 0x66, index = 1. */
-			ii = in->list[in->ids[1]];
+			index = 1;
 			/* Mark that we used it as a mandatory prefix. */
-			ps->isOpSizeMandatory = 1;
+			ps->isOpSizeMandatory = TRUE;
 			ps->decodedPrefixes &= ~INST_PRE_OP_SIZE;
 		break;
 		case INST_PRE_REP:
 			/* 0xf3, index = 2. */
-			ii = in->list[in->ids[2]];
+			index = 2;
 			ps->decodedPrefixes &= ~INST_PRE_REP;
 		break;
 		case INST_PRE_REPNZ:
 			/* 0xf2, index = 3. */
-			ii = in->list[in->ids[3]];
+			index = 3;
 			ps->decodedPrefixes &= ~INST_PRE_REPNZ;
 		break;
 		default:
@@ -159,27 +182,60 @@ static _InstInfo* inst_lookup_prefixed(_InstNode* in, _PrefixState* ps)
 
 			/* Now we know it's either REPNZ+OPSIZE or REP+OPSIZE, so examine the instruction. */
 			if (ps->decodedPrefixes & INST_PRE_REPNZ) {
-				ii = in->list[in->ids[3]];
+				index = 3;
 				ps->decodedPrefixes &= ~INST_PRE_REPNZ;
 			} else if (ps->decodedPrefixes & INST_PRE_REP) {
-				ii = in->list[in->ids[2]];
+				index = 2;
 				ps->decodedPrefixes &= ~INST_PRE_REP;
 			}
-			/* If the instruction doesn't support operand size prefix, then it's illegal. */
-			if ((ii == NULL) || (~ii->flags & INST_PRE_OP_SIZE)) return NULL;
+			/* Mark to verify the operand-size prefix of the fetched instruction below. */
+			checkOpSize = TRUE;
 		break;
 	}
-	/* If there was a prefix, but the instruction wasn't found. Try to fold back to use the normal instruction. */
-	if (ii == NULL) ii = in->list[in->ids[0]];
+
+	/* Fetch the inst-info from the index. */
+	ii = inst_get_info(in, index);
+
+	if (checkOpSize) {
+		/* If the instruction doesn't support operand size prefix, then it's illegal. */
+		if ((ii == NULL) || (~INST_INFO_FLAGS(ii) & INST_PRE_OP_SIZE)) return NULL;
+	}
+
+	/* If there was a prefix, but the instruction wasn't found. Try to fall back to use the normal instruction. */
+	if (ii == NULL) ii = inst_get_info(in, 0);
+	return ii;
+}
+
+/* A helper function to look up special VEX instructions.
+ * See if it's a MOD based instruction and fix index if required.
+ * Only after a first lookup (that was done by caller), we can tell if we need to fix the index.
+ * Because these are coupled instructions
+ * (which means that the base instruction hints about the other instruction).
+ * Note that caller should check if it's a MOD dependent instruction before getting in here.
+ */
+static _InstInfo* inst_vex_mod_lookup(_CodeInfo* ci, _InstNode in, _InstInfo* ii, unsigned int index)
+{
+	/* Advance to read the MOD from ModRM byte. */
+	ci->code += 1;
+	ci->codeLen -= 1;
+	if (ci->codeLen < 0) return NULL;
+	if (*ci->code < INST_DIVIDED_MODRM) {
+		/* MOD is not 11, therefore change the index to 8 - 12 range in the prefixed table. */
+		index += 4;
+		/* Make a second lookup for this special instruction. */
+		return inst_get_info(in, index);
+	}
+	/* Return the original one, in case we didn't find a stuited instruction. */
 	return ii;
 }
 
 static _InstInfo* inst_vex_lookup(_CodeInfo* ci, _PrefixState* ps)
 {
-	_InstNode* in = NULL;
+	_InstNode in = 0;
 	unsigned int pp = 0, start = 0;
 	unsigned int index = 4; /* VEX instructions start at index 4 in the Prefixed table. */
 	uint8_t vex = *ps->vexPos, vex2 = 0, v = 0;
+	int instType = 0, instIndex = 0;
 
 	/* The VEX instruction will #ud if any of 66, f0, f2, f3, REX prefixes precede. */
 	_iflags illegal = (INST_PRE_OP_SIZE | INST_PRE_LOCK | INST_PRE_REP | INST_PRE_REPNZ | INST_PRE_REX);
@@ -201,14 +257,11 @@ static _InstInfo* inst_vex_lookup(_CodeInfo* ci, _PrefixState* ps)
 	/* start can be either 1 (0x0f), 2 (0x0f, 0x038) or 3 (0x0f, 0x3a), otherwise it's illegal. */
 	switch (start)
 	{
-		case 1: in = &Table_0F; break;
-		case 2: in = &Table_0F_38; break;
-		case 3: in = &Table_0F_3A; break;
+		case 1: in = Table_0F; break;
+		case 2: in = Table_0F_38; break;
+		case 3: in = Table_0F_3A; break;
 		default: return NULL;
 	}
-
-	/* If the instruction is encoded using the vvvv field, fix the index into the Prefixed table. */
-	if (v == 0) index += 4;
 
 	/* pp is actually the implied mandatory prefix, apply it to the index. */
 	index += pp; /* (None, 0x66, 0xf3, 0xf2) */
@@ -217,8 +270,11 @@ static _InstInfo* inst_vex_lookup(_CodeInfo* ci, _PrefixState* ps)
 	ci->codeLen -= 1;
 	if (ci->codeLen < 0) return NULL;
 
-	in = (_InstNode*)in->list[in->ids[*ci->code]];
-	if (in == NULL) return NULL;
+	in = InstructionsTree[INST_NODE_INDEX(in) + *ci->code];
+	if (in == INT_NOTEXISTS) return NULL;
+
+	instType = INST_NODE_TYPE(in);
+	instIndex = INST_NODE_INDEX(in);
 
 	/*
 	 * If we started with 0f38 or 0f3a so it's a prefixed table,
@@ -226,27 +282,43 @@ static _InstInfo* inst_vex_lookup(_CodeInfo* ci, _PrefixState* ps)
 	 * However, starting with 0f, could also lead immediately to a prefixed table for some bytes.
 	 * it might return NULL, if the index is invalid.
 	 */
-	if (in->type == INT_LIST_PREFIXED) return in->list[in->ids[index]];
+	if (instType == INT_LIST_PREFIXED) {
+		_InstInfo* ii = inst_get_info(in, index);
+		/* See if the instruction is dependent on MOD. */
+		if ((ii != NULL) && (((_InstInfoEx*)ii)->flagsEx & INST_MODRR_BASED)) {
+			ii = inst_vex_mod_lookup(ci, in, ii, index);
+		}
+		return ii;
+	}
 
 	/*
 	 * If we reached here, obviously we started with 0f. VEXed instructions must be nodes of a prefixed table.
 	 * But since we found an instruction (or divided one), just return NULL.
 	 * They cannot lead to a VEXed instruction.
 	 */
-	if (in->type == INT_INFO || in->type == INT_LIST_DIVIDED) return NULL;
+	if ((instType == INT_INFO) || (instType == INT_INFOEX) || (instType == INT_LIST_DIVIDED)) return NULL;
 
 	/* Now we are left with handling either GROUP or FULL tables, therefore we will read another byte from the stream. */
 	ci->code += 1;
 	ci->codeLen -= 1;
 	if (ci->codeLen < 0) return NULL;
-	if (in->type == INT_LIST_GROUP) {
-		in = (_InstNode*)in->list[in->ids[(*ci->code >> 3) & 7]];
-		if (in == NULL) return NULL;
-		if (in->type == INT_LIST_PREFIXED) return in->list[in->ids[index]];
-	} else if (in->type == INT_LIST_FULL) {
-		in = (_InstNode*)in->list[in->ids[*ci->code]];
-		if (in == NULL) return NULL;
-		if (in->type == INT_LIST_PREFIXED) return in->list[in->ids[index]];
+
+	if (instType == INT_LIST_GROUP) {
+		in = InstructionsTree[instIndex + ((*ci->code >> 3) & 7)];
+		/* Continue below to check prefixed table. */
+	} else if (instType == INT_LIST_FULL) {
+		in = InstructionsTree[instIndex + *ci->code];
+		/* Continue below to check prefixed table. */
+	}
+
+	/* Now that we got to the last table in the trie, check for a prefixed table. */
+	if (INST_NODE_TYPE(in) == INT_LIST_PREFIXED) {
+		_InstInfo* ii = inst_get_info(in, index);
+		/* See if the instruction is dependent on MOD. */
+		if ((ii != NULL) && (((_InstInfoEx*)ii)->flagsEx & INST_MODRR_BASED)) {
+			ii = inst_vex_mod_lookup(ci, in, ii, index);
+		}
+		return ii;
 	}
 
 	/* No VEXed instruction was found. */
@@ -256,15 +328,20 @@ static _InstInfo* inst_vex_lookup(_CodeInfo* ci, _PrefixState* ps)
 _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 {
 	unsigned int tmpIndex0 = 0, tmpIndex1 = 0, tmpIndex2 = 0, rex = ps->vrex;
-	_InstNode* in = NULL;
+	int instType = 0;
+	_InstNode in = 0;
 	_InstInfo* ii = NULL;
 	int isWaitIncluded = FALSE;
 
 	/* See whether we have to handle a VEX prefixed instruction. */
 	if (ps->decodedPrefixes & INST_PRE_VEX) {
 		ii = inst_vex_lookup(ci, ps);
-		/* Make sure that VEX.L exists when forced. */
-		if (ii && (((_InstInfoEx*)ii)->flagsEx & INST_FORCE_VEXL) && (~ps->vrex & PREFIX_EX_L)) return NULL;
+		if (ii != NULL) {
+			/* Make sure that VEX.L exists when forced. */
+			if ((((_InstInfoEx*)ii)->flagsEx & INST_FORCE_VEXL) && (~ps->vrex & PREFIX_EX_L)) return NULL;
+			/* If the instruction doesn't use VEX.vvvv it must be zero. */
+			if ((((_InstInfoEx*)ii)->flagsEx & INST_VEX_V_UNUSED) && ps->vexV) return NULL;
+		}
 		return ii;
 	}
 
@@ -285,15 +362,17 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 		ci->code += 1;
 		ci->codeLen -= 1;
 		if (ci->codeLen < 0) return NULL; /* Faster to return NULL, it will be detected as WAIT later anyway. */
+		/* Since we got a WAIT prefix, we re-read the first byte. */
 		tmpIndex0 = *ci->code;
 	}
 
-	/* Check for NULL node for index 0. */
-	in = (_InstNode*)Instructions.list[Instructions.ids[tmpIndex0]];
-	if (in == NULL) return NULL;
+	/* Walk first byte in InstructionsTree root. */
+	in = InstructionsTree[tmpIndex0];
+	if (in == INT_NOTEXISTS) return NULL;
+	instType = INST_NODE_TYPE(in);
 
 	/* Single byte instruction (OCST_1BYTE). */
-	if ((in->type == INT_INFO) && (!isWaitIncluded)) {
+	if ((instType < INT_INFOS) && (!isWaitIncluded)) {
 		/* Some single byte instructions need extra treatment. */
 		switch (tmpIndex0)
 		{
@@ -304,7 +383,7 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 				 * And since the DB can't be patched dynamically, because the DB has to be multi-threaded compliant,
 				 * I have no choice but to check for ARPL/MOVSXD right here - "right about now, the funk soul brother, check it out now, the funk soul brother...", fatboy slim
 				 */
-			return ci->dt == Decode64Bits ? (_InstInfo*)&II_movsxd : &II_arpl;
+			return ci->dt == Decode64Bits ? &II_movsxd : &II_arpl;
 
 			case INST_NOP_INDEX: /* Nopnopnop */
 				/* Check for Pause, since it's prefixed with 0xf3, which is not a real mandatory prefix. */
@@ -324,7 +403,7 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 				 */
 				if (rex & PREFIX_EX_W) ps->usedPrefixes |= INST_PRE_REX;
 				if ((ci->dt != Decode64Bits) || (~rex & PREFIX_EX_B)) return &II_nop;
-			return (_InstInfo*)in;
+			break;
 			
 			case INST_LEA_INDEX:
 				/* Ignore segment override prefixes for LEA instruction. */
@@ -333,20 +412,22 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 				prefixes_ignore(ps, PFXIDX_SEG);
 			break;
 		}
-		return (_InstInfo*)in;
+
+		/* Return the 1 byte instruction we found. */
+		return instType == INT_INFO ? &InstInfos[INST_NODE_INDEX(in)] : (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in)];
 	}
 
-	/* Read first byte, still doens't mean all of its bits are used (I.E: ModRM). */
+	/* Read second byte, still doens't mean all of its bits are used (I.E: ModRM). */
 	ci->code += 1;
 	ci->codeLen -= 1;
 	if (ci->codeLen < 0) return NULL;
 	tmpIndex1 = *ci->code;
 	
 	/* Try single byte instruction + reg bits (OCST_13BYTES). */
-	if ((in->type == INT_LIST_GROUP) && (!isWaitIncluded)) return (_InstInfo*)in->list[in->ids[(tmpIndex1 >> 3) & 7]];
+	if ((instType == INT_LIST_GROUP) && (!isWaitIncluded)) return inst_get_info(in, (tmpIndex1 >> 3) & 7);
 
 	/* Try single byte instruction + reg byte OR one whole byte (OCST_1dBYTES). */
-	if (in->type == INT_LIST_DIVIDED) {
+	if (instType == INT_LIST_DIVIDED) {
 		/* OCST_1dBYTES is relatively simple to OCST_2dBYTES, since it's really divided at 0xc0. */
 		if (tmpIndex1 < INST_DIVIDED_MODRM) {
 			/* An instruction which requires a ModR/M byte. Thus it's 1.3 bytes long instruction. */
@@ -361,14 +442,15 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 			tmpIndex1 -= INST_DIVIDED_MODRM - 8;
 		}
 
-		in = (_InstNode*)in->list[in->ids[tmpIndex1]];
+		in = InstructionsTree[INST_NODE_INDEX(in) + tmpIndex1];
+		if (in == INT_NOTEXISTS) return NULL;
+		instType = INST_NODE_TYPE(in);
 
-		/* Return any instruction or NULL. */
-		if (in == NULL) return NULL;
-		if (in->type == INT_INFO) {
+		if (instType < INT_INFOS) {
 			/* If the instruction doesn't support the wait (marked as opsize) as part of the opcode, it's illegal. */
-			if ((~((_InstInfo*)in)->flags & INST_PRE_OP_SIZE) && (isWaitIncluded)) return NULL;
-			return (_InstInfo*)in;
+			ii = instType == INT_INFO ? &InstInfos[INST_NODE_INDEX(in)] : (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in)];
+			if ((~INST_INFO_FLAGS(ii) & INST_PRE_OP_SIZE) && (isWaitIncluded)) return NULL;
+			return ii;
 		}
 		/*
 		 * If we got here the instruction can support the wait prefix, so see if it was part of the stream.
@@ -376,30 +458,31 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 		 * No Wait: index = 0.
 		 * Wait Exists, index = 1.
 		 */
-		return (_InstInfo*)in->list[in->ids[isWaitIncluded]];
+		return inst_get_info(in, isWaitIncluded);
 	}
 
 	/* Don't allow to continue if WAIT is part of the opcode, because there are no instructions that include it. */
 	if (isWaitIncluded) return NULL;
 
 	/* Try 2 bytes long instruction (doesn't include ModRM byte). */
-	if (in->type == INT_LIST_FULL) {
-		in = (_InstNode*)in->list[in->ids[tmpIndex1]];
-		/* Check for NULL node for index 1. */
-		if (in == NULL) return NULL;
+	if (instType == INT_LIST_FULL) {
+		in = InstructionsTree[INST_NODE_INDEX(in) + tmpIndex1];
+		if (in == INT_NOTEXISTS) return NULL;
+		instType = INST_NODE_TYPE(in);
 
 		/* This is where we check if we just read two escape bytes in a row, which means it is a 3DNow! instruction. */
 		if ((tmpIndex0 == _3DNOW_ESCAPE_BYTE) && (tmpIndex1 == _3DNOW_ESCAPE_BYTE)) return &II_3dnow;
 
 		/* 2 bytes instruction (OCST_2BYTES). */
-		if (in->type == INT_INFO) return (_InstInfo*)in;
+		if (instType < INT_INFOS)
+			return instType == INT_INFO ? &InstInfos[INST_NODE_INDEX(in)] : (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in)];
 
 		/*
 		 * 2 bytes + mandatory perfix.
 		 * Mandatory prefixes can be anywhere in the prefixes.
 		 * There cannot be more than one mandatory prefix, unless it's a normal operand size prefix.
 		 */
-		if (in->type == INT_LIST_PREFIXED) return inst_lookup_prefixed(in, ps);
+		if (instType == INT_LIST_PREFIXED) return inst_lookup_prefixed(in, ps);
 	}
 
 	/* Read third byte, still doens't mean all of its bits are used (I.E: ModRM). */
@@ -408,19 +491,31 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 	if (ci->codeLen < 0) return NULL;
 	tmpIndex2 = *ci->code;
 
-	/* Assume it's a ModRM byte. */
-	ii = (_InstInfo*)in->list[in->ids[(tmpIndex2 >> 3) & 7]];
-
 	/* Try 2 bytes + reg instruction (OCST_23BYTES). */
-	if (in->type == INT_LIST_GROUP) {
-		if (ii == NULL) return NULL;
-		if (ii->type == INT_INFO) return ii;
-		/* It has to be a prefixed table. */
-		return inst_lookup_prefixed((_InstNode*)ii, ps);
+	if (instType == INT_LIST_GROUP) {
+		in = InstructionsTree[INST_NODE_INDEX(in) + ((tmpIndex2 >> 3) & 7)];
+		if (in == INT_NOTEXISTS) return NULL;
+		instType = INST_NODE_TYPE(in);
+
+		if (instType < INT_INFOS)
+			return instType == INT_INFO ? &InstInfos[INST_NODE_INDEX(in)] : (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in)];
+
+		/* It has to be a prefixed table then. */
+		return inst_lookup_prefixed(in, ps);
 	}
 
 	/* Try 2 bytes + divided range (OCST_2dBYTES). */
-	if (in->type == INT_LIST_DIVIDED) {
+	if (instType == INT_LIST_DIVIDED) {
+		_InstNode in2 = InstructionsTree[INST_NODE_INDEX(in) + ((tmpIndex2 >> 3) & 7)];
+		/*
+		 * Do NOT check for NULL here, since we do a bit of a guess work,
+		 * hence we don't override 'in', cause we might still need it.
+		 */
+		instType = INST_NODE_TYPE(in2);
+		
+		if (instType == INT_INFO) ii = &InstInfos[INST_NODE_INDEX(in2)];
+		else if (instType == INT_INFOEX) ii = (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in2)];
+
 		/*
 		 * OCST_2dBYTES is complex, because there are a few instructions which are not divided in some special cases.
 		 * If the instruction wasn't divided (but still it must be a 2.3 because we are in divided category)
@@ -428,21 +523,25 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 		 * Then it means the instruction should be using the REG bits, otherwise give a chance to range 0xc0-0xff.
 		 */
 		/* If we found an instruction only by its REG bits, AND it is not divided, then return it. */
-		if ((ii != NULL) && (ii->flags & INST_NOT_DIVIDED)) return ii;
+		if ((ii != NULL) && (INST_INFO_FLAGS(ii) & INST_NOT_DIVIDED)) return ii;
 		/* Otherwise, if the range is above 0xc0, try the special divided range (range 0x8-0xc0 is omitted). */
-		if (tmpIndex2 >= INST_DIVIDED_MODRM) ii = (_InstInfo*)in->list[in->ids[tmpIndex2 - INST_DIVIDED_MODRM + 8]];
+		if (tmpIndex2 >= INST_DIVIDED_MODRM) return inst_get_info(in, tmpIndex2 - INST_DIVIDED_MODRM + 8);
+
 		/* It might be that we got here without touching ii in the above if statements, then it becomes an invalid instruction prolly. */
 		return ii;
 	}
 
 	/* Try 3 full bytes (OCST_3BYTES - no ModRM byte). */
-	if (in->type == INT_LIST_FULL) {
+	if (instType == INT_LIST_FULL) {
 		/* OCST_3BYTES. */
-		in = (_InstNode*)in->list[in->ids[tmpIndex2]];
-		/* Check for NULL node for index 2. */
-		if (in == NULL) return NULL;
-		if (in->type == INT_INFO) return (_InstInfo*)in;
-		if (in->type == INT_LIST_PREFIXED) return inst_lookup_prefixed(in, ps);
+		in = InstructionsTree[INST_NODE_INDEX(in) + tmpIndex2];
+		if (in == INT_NOTEXISTS) return NULL;
+		instType = INST_NODE_TYPE(in);
+
+		if (instType < INT_INFOS)
+			return instType == INT_INFO ? &InstInfos[INST_NODE_INDEX(in)] : (_InstInfo*)&InstInfosEx[INST_NODE_INDEX(in)];
+
+		if (instType == INT_LIST_PREFIXED) return inst_lookup_prefixed(in, ps);
 	}
 
 	/* Kahtchinggg, damn. */
@@ -467,24 +566,19 @@ _InstInfo* inst_lookup(_CodeInfo* ci, _PrefixState* ps)
 *
 * The id of this opcode should not be used, the following function should change it anyway.
 */
-_InstInfo II_3dnow = {INT_INFO, ISC_3DNOW, OT_MM64, OT_MM, I_UNDEFINED, INST_32BITS | INST_MODRM_REQUIRED | INST_3DNOW_FETCH};
-
 _InstInfo* inst_lookup_3dnow(_CodeInfo* ci)
 {
 	/* Start off from the two escape bytes gates... which is 3DNow! table.*/
-	_InstNode* in = &Table_0F_0F;
+	_InstNode in = Table_0F_0F;
 
-	/* Make sure we can read a byte off the strem. */
+	int index;
+
+	/* Make sure we can read a byte off the stream. */
 	if (ci->codeLen < 1) return NULL;
 
-	in = (_InstNode*)in->list[in->ids[*ci->code]];
+	index = *ci->code;
 
-	if ((in != NULL) && (in->type == INT_INFO)) {
-		ci->codeLen -= 1;
-		ci->code += 1;
-
-		return (_InstInfo*)in;
-	}
-
-	return NULL;
+	ci->codeLen -= 1;
+	ci->code += 1;
+	return inst_get_info(in, index);
 }

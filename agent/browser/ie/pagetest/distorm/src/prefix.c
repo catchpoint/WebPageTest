@@ -4,7 +4,7 @@ prefix.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #include "x86defs.h"
 #include "instructions.h"
-#include "../mnemonics.h"
+#include "../include/mnemonics.h"
 
 
 /*

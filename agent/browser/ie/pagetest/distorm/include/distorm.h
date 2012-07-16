@@ -1,4 +1,4 @@
-/* diStorm3 1.0.0 */
+/* diStorm3 3.2 */
 
 /*
 distorm.h
@@ -6,7 +6,7 @@ distorm.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,14 +32,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
  * make sure you compile your own code with the following macro set:
  * SUPPORT_64BIT_OFFSET
  * Otherwise comment it out, or you will get a linker error of an unresolved symbol...
+ * Turned on by default!
  */
 
-/* TINYC has a problem with some 64bits library functions, so pass. */
-#ifndef __TINYC__
-	#ifndef _LIB /* Used only for library. */
-		/* Comment out the following line to disable 64 bits support */
-		#define SUPPORT_64BIT_OFFSET
-	#endif
+#if !(defined(DISTORM_STATIC) || defined(DISTORM_DYNAMIC))
+	/* Define this macro for outer projects by default. */
+  #ifndef SUPPORT_64BIT_OFFSET
+	  #define SUPPORT_64BIT_OFFSET
+  #endif
+#endif
+
+/* TINYC has a problem with some 64bits library functions, so ignore 64 bit offsets. */
+#ifdef __TINYC__
+	#undef SUPPORT_64BIT_OFFSET
 #endif
 
 /* If your compiler doesn't support stdint.h, define your own 64 bits type. */
@@ -72,13 +77,52 @@ typedef unsigned __int8		uint8_t;
  extern "C" {
 #endif
 
+
+/* ***  Helper Macros  *** */
+
+/* Get the ISC of the instruction, used with the definitions below. */
+#define META_GET_ISC(meta) (((meta) >> 3) & 0x1f)
+#define META_SET_ISC(di, isc) (((di)->meta) |= ((isc) << 3))
+/* Get the flow control flags of the instruction, see 'features for decompose' below. */
+#define META_GET_FC(meta) ((meta) & 0x7)
+
+/* Get the target address of a branching instruction. O_PC operand type. */
+#define INSTRUCTION_GET_TARGET(di) ((_OffsetType)(((di)->addr + (di)->imm.addr + (di)->size)))
+/* Get the target address of a RIP-relative memory indirection. */
+#define INSTRUCTION_GET_RIP_TARGET(di) ((_OffsetType)(((di)->addr + (di)->disp + (di)->size)))
+
+/*
+ * Operand Size or Adderss size are stored inside the flags:
+ * 0 - 16 bits
+ * 1 - 32 bits
+ * 2 - 64 bits
+ * 3 - reserved
+ *
+ * If you call these set-macros more than once, you will have to clean the bits before doing so.
+ */
+#define FLAG_SET_OPSIZE(di, size) ((di->flags) |= (((size) & 3) << 8))
+#define FLAG_SET_ADDRSIZE(di, size) ((di->flags) |= (((size) & 3) << 10))
+#define FLAG_GET_OPSIZE(flags) (((flags) >> 8) & 3)
+#define FLAG_GET_ADDRSIZE(flags) (((flags) >> 10) & 3)
+/* To get the LOCK/REPNZ/REP prefixes. */
+#define FLAG_GET_PREFIX(flags) ((flags) & 7)
+
+/*
+ * Macros to extract segment registers from 'segment':
+ */
+#define SEGMENT_DEFAULT 0x80
+#define SEGMENT_SET(di, seg) ((di->segment) |= seg)
+#define SEGMENT_GET(segment) (((segment) == R_NONE) ? R_NONE : ((segment) & 0x7f))
+#define SEGMENT_IS_DEFAULT(segment) (((segment) & SEGMENT_DEFAULT) == SEGMENT_DEFAULT)
+
+
 /* Decodes modes of the disassembler, 16 bits or 32 bits or 64 bits for AMD64, x86-64. */
-typedef enum {Decode16Bits = 0, Decode32Bits = 1, Decode64Bits = 2} _DecodeType;
+typedef enum { Decode16Bits = 0, Decode32Bits = 1, Decode64Bits = 2 } _DecodeType;
 
 typedef OFFSET_INTEGER _OffsetType;
 
 typedef struct {
-	_OffsetType codeOffset;
+	_OffsetType codeOffset, nextOffset; /* nextOffset is OUT only. */
 	const uint8_t* code;
 	int codeLen; /* Using signed integer makes it easier to detect an underflow. */
 	_DecodeType dt;
@@ -95,11 +139,11 @@ typedef union {
 	uint16_t word;
 	int32_t sdword;
 	uint32_t dword;
-	int64_t sqword;
+	int64_t sqword; /* All immediates are SIGN-EXTENDED to 64 bits! */
 	uint64_t qword;
 
-	/* Used by O_PC: */
-	_OffsetType addr;
+	/* Used by O_PC: (Use GET_TARGET_ADDR).*/
+	_OffsetType addr; /* It's a relative offset as for now. */
 
 	/* Used by O_PTR: */
 	struct {
@@ -107,7 +151,8 @@ typedef union {
 		/* Can be 16 or 32 bits, size is in ops[n].size. */
 		uint32_t off;
 	} ptr;
-	/* Used by O_IMM1 (i1) and O_IMM2 (i2). */
+
+	/* Used by O_IMM1 (i1) and O_IMM2 (i2). ENTER instruction only. */
 	struct {
 		uint32_t i1;
 		uint32_t i2;
@@ -163,6 +208,12 @@ typedef struct {
 #define FLAG_HINT_TAKEN (1 << 3)
 /* Indicates there is a hint non-taken for Jcc instructions only. */
 #define FLAG_HINT_NOT_TAKEN (1 << 4)
+/* The Imm value is signed extended. */
+#define FLAG_IMM_SIGNED (1 << 5)
+/* The destination operand is writable. */
+#define FLAG_DST_WR (1 << 6)
+/* The instruction uses RIP-relative indirection. */
+#define FLAG_RIP_RELATIVE (1 << 7)
 
 /* No register was defined. */
 #define R_NONE ((uint8_t)-1)
@@ -181,60 +232,40 @@ typedef struct {
 #define CREGS_BASE (123)
 #define DREGS_BASE (132)
 
-/*
- * Operand Size or Adderss size are stored inside the flags:
- * 0 - 16 bits
- * 1 - 32 bits
- * 2 - 64 bits
- * 3 - reserved
- *
- * If you call these macros more than once, you will have to clean the bits before doing so.
- */
-#define FLAG_SET_OPSIZE(di, size) ((di->flags) |= (((size) & 3) << 5))
-#define FLAG_SET_ADDRSIZE(di, size) ((di->flags) |= (((size) & 3) << 7))
-#define FLAG_GET_OPSIZE(flags) (((flags) >> 5) & 3)
-#define FLAG_GET_ADDRSIZE(flags) (((flags) >> 7) & 3)
-/* To get the LOCK/REPNZ/REP prefixes. */
-#define FLAG_GET_PREFIX(flags) ((flags) & 7)
-
-/*
- * Macros to extract segment registers from segmentInfo:
- */
-#define SEGMENT_DEFAULT 0x80
-#define SEGMENT_SET(di, seg) ((di->segment) |= seg)
-#define SEGMENT_GET(segment) (((segment) == R_NONE) ? R_NONE : ((segment) & 0x7f))
-#define SEGMENT_IS_DEFAULT(segment) (((segment) & SEGMENT_DEFAULT) == SEGMENT_DEFAULT)
-
 #define OPERANDS_NO (4)
 
 typedef struct {
+	/* Used by ops[n].type == O_IMM/O_IMM1&O_IMM2/O_PTR/O_PC. Its size is ops[n].size. */
+	_Value imm;
+	/* Used by ops[n].type == O_SMEM/O_MEM/O_DISP. Its size is dispSize. */
+	uint64_t disp;
 	/* Virtual address of first byte of instruction. */
 	_OffsetType addr;
-	/* Size of the whole instruction. */
-	uint8_t size;
 	/* General flags of instruction, holds prefixes and more, if FLAG_NOT_DECODABLE, instruction is invalid. */
 	uint16_t flags;
-	/* Segment information of memory indirection, default segment, or overriden one, can be -1. */
-	uint8_t segment;
-	/* Used by ops[n].type == O_MEM. Base global register index (might be R_NONE), scale size (2/4/8), ignored for 0 or 1. */
-	uint8_t base, scale;
-	uint8_t dispSize;
+	/* Unused prefixes mask, for each bit that is set that prefix is not used (LSB is byte [addr + 0]). */
+	uint16_t unusedPrefixesMask;
+	/* Mask of registers that were used in the operands, only used for quick look up, in order to know *some* operand uses that register class. */
+	uint16_t usedRegistersMask;
 	/* ID of opcode in the global opcode table. Use for mnemonic look up. */
 	uint16_t opcode;
 	/* Up to four operands per instruction, ignored if ops[n].type == O_NONE. */
 	_Operand ops[OPERANDS_NO];
-	/* Used by ops[n].type == O_SMEM/O_MEM/O_DISP. Its size is dispSize. */
-	uint64_t disp;
-	/* Used by ops[n].type == O_IMM/O_IMM1&O_IMM2/O_PTR/O_PC. Its size is ops[n].size. */
-	_Value imm;
-	/* Unused prefixes mask, for each bit that is set that prefix is not used (LSB is byte [addr + 0]). */
-	uint16_t unusedPrefixesMask;
+	/* Size of the whole instruction. */
+	uint8_t size;
+	/* Segment information of memory indirection, default segment, or overriden one, can be -1. Use SEGMENT macros. */
+	uint8_t segment;
+	/* Used by ops[n].type == O_MEM. Base global register index (might be R_NONE), scale size (2/4/8), ignored for 0 or 1. */
+	uint8_t base, scale;
+	uint8_t dispSize;
 	/* Meta defines the instruction set class, and the flow control flags. Use META macros. */
 	uint8_t meta;
 } _DInst;
 
-/* Static size of strings. Do not change this value. */
-#define MAX_TEXT_SIZE (32)
+#ifndef DISTORM_LIGHT
+
+/* Static size of strings. Do not change this value. Keep Python wrapper in sync. */
+#define MAX_TEXT_SIZE (48)
 typedef struct {
 	unsigned int length;
 	unsigned char p[MAX_TEXT_SIZE]; /* p is a null terminated string. */
@@ -253,10 +284,27 @@ typedef struct {
 	_OffsetType offset; /* Start offset of the decoded instruction. */
 } _DecodedInst;
 
-/* Get the ISC of the instruction, used with the definitions below. */
-#define META_GET_ISC(meta) (((meta) >> 3) & 0x1f)
-/* Get the flow control flags of the instruction, see 'features for decompose' below. */
-#define META_GET_FC(meta) ((meta) & 0x7)
+#endif /* DISTORM_LIGHT */
+
+/* Register masks for quick look up, each mask indicates one of a register-class that is being used in some operand. */
+#define RM_AX 1     /* AL, AH, AX, EAX, RAX */
+#define RM_CX 2     /* CL, CH, CX, ECX, RCX */
+#define RM_DX 4     /* DL, DH, DX, EDX, RDX */
+#define RM_BX 8     /* BL, BH, BX, EBX, RBX */
+#define RM_SP 0x10  /* SPL, SP, ESP, RSP */ 
+#define RM_BP 0x20  /* BPL, BP, EBP, RBP */
+#define RM_SI 0x40  /* SIL, SI, ESI, RSI */
+#define RM_DI 0x80  /* DIL, DI, EDI, RDI */
+#define RM_FPU 0x100 /* ST(0) - ST(7) */
+#define RM_MMX 0x200 /* MM0 - MM7 */
+#define RM_SSE 0x400 /* XMM0 - XMM15 */
+#define RM_AVX 0x800 /* YMM0 - YMM15 */
+#define RM_CR 0x1000 /* CR0, CR2, CR3, CR4, CR8 */
+#define RM_DR 0x2000 /* DR0, DR1, DR2, DR3, DR6, DR7 */
+/* RIP should be checked using the 'flags' field and FLAG_RIP_RELATIVE.
+ * Segments should be checked using the segment macros.
+ * For now R8 - R15 are not supported and non general purpose registers map into same RM.
+ */
 
 /*
  * Instructions Set classes:
@@ -316,13 +364,15 @@ typedef struct {
 /* The decoder will stop and return to the caller when the instruction system-call/ret was decoded. */
 #define DF_STOP_ON_SYS 0x20
 /* The decoder will stop and return to the caller when any of the branch 'JMP', (near and far) instructions were decoded. */
-#define DF_STOP_ON_BRANCH 0x40
+#define DF_STOP_ON_UNC_BRANCH 0x40
 /* The decoder will stop and return to the caller when any of the conditional branch instruction were decoded. */
-#define DF_STOP_ON_COND_BRANCH 0x80
+#define DF_STOP_ON_CND_BRANCH 0x80
 /* The decoder will stop and return to the caller when the instruction 'INT' (INT, INT1, INTO, INT 3) was decoded. */
 #define DF_STOP_ON_INT 0x100
+/* The decoder will stop and return to the caller when any of the 'CMOVxx' instruction was decoded. */
+#define DF_STOP_ON_CMOV 0x200
 /* The decoder will stop and return to the caller when any flow control instruction was decoded. */
-#define DF_STOP_ON_FLOW_CONTROL (DF_STOP_ON_CALL | DF_STOP_ON_RET | DF_STOP_ON_SYS | DF_STOP_ON_BRANCH | DF_STOP_ON_COND_BRANCH | DF_STOP_ON_INT)
+#define DF_STOP_ON_FLOW_CONTROL (DF_STOP_ON_CALL | DF_STOP_ON_RET | DF_STOP_ON_SYS | DF_STOP_ON_UNC_BRANCH | DF_STOP_ON_CND_BRANCH | DF_STOP_ON_INT | DF_STOP_ON_CMOV)
 
 /* Indicates the instruction is not a flow-control instruction. */
 #define FC_NONE 0
@@ -333,19 +383,22 @@ typedef struct {
 /* Indicates the instruction is one of: SYSCALL, SYSRET, SYSENTER, SYSEXIT. */
 #define FC_SYS 3
 /* Indicates the instruction is one of: JMP, JMP FAR. */
-#define FC_BRANCH 4
+#define FC_UNC_BRANCH 4
 /*
  * Indicates the instruction is one of:
  * JCXZ, JO, JNO, JB, JAE, JZ, JNZ, JBE, JA, JS, JNS, JP, JNP, JL, JGE, JLE, JG, LOOP, LOOPZ, LOOPNZ.
  */
-#define FC_COND_BRANCH 5
+#define FC_CND_BRANCH 5
 /* Indiciates the instruction is one of: INT, INT1, INT 3, INTO, UD2. */
 #define FC_INT 6
+/* Indicates the instruction is one of: CMOVxx. */
+#define FC_CMOV 7
 
 /* Return code of the decoding function. */
-typedef enum {DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, DECRES_FILTERED} _DecodeResult;
+typedef enum { DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, DECRES_FILTERED } _DecodeResult;
 
-#ifndef _LIB /* Don't redefine those exports when compiling the library itself, only for library-user project. */
+/* Define the following interface functions only for outer projects. */
+#if !(defined(DISTORM_STATIC) || defined(DISTORM_DYNAMIC))
 
 /* distorm_decode
  * Input:
@@ -366,19 +419,31 @@ typedef enum {DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, DE
  *         2)You will have to synchronize the offset,code and length by yourself if you pass code fragments and not a complete code block!
  */
 #ifdef SUPPORT_64BIT_OFFSET
-	_DecodeResult distorm_decompose64(const _CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
+
+	_DecodeResult distorm_decompose64(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
+	#define distorm_decompose distorm_decompose64
+
+#ifndef DISTORM_LIGHT
+	/* If distorm-light is defined, we won't export these text-formatting functionality. */
 	_DecodeResult distorm_decode64(_OffsetType codeOffset, const unsigned char* code, int codeLen, _DecodeType dt, _DecodedInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
 	void distorm_format64(const _CodeInfo* ci, const _DInst* di, _DecodedInst* result);
-	#define distorm_decompose distorm_decompose64
 	#define distorm_decode distorm_decode64
 	#define distorm_format distorm_format64
-#else
-	_DecodeResult distorm_decompose32(const _CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
+#endif /*DISTORM_LIGHT*/
+
+#else /*SUPPORT_64BIT_OFFSET*/
+
+	_DecodeResult distorm_decompose32(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
+	#define distorm_decompose distorm_decompose32
+
+#ifndef DISTORM_LIGHT
+	/* If distorm-light is defined, we won't export these text-formatting functionality. */
 	_DecodeResult distorm_decode32(_OffsetType codeOffset, const unsigned char* code, int codeLen, _DecodeType dt, _DecodedInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
 	void distorm_format32(const _CodeInfo* ci, const _DInst* di, _DecodedInst* result);
-	#define distorm_decompose distorm_decompose32
 	#define distorm_decode distorm_decode32
 	#define distorm_format distorm_format32
+#endif /*DISTORM_LIGHT*/
+
 #endif
 
 /*
@@ -388,9 +453,9 @@ typedef enum {DECRES_NONE, DECRES_SUCCESS, DECRES_MEMORYERR, DECRES_INPUTERR, DE
  *
  * Output: unsigned int - version of compiled library.
  */
-extern unsigned int distorm_version();
+unsigned int distorm_version();
 
-#endif /* _LIB */
+#endif /* DISTORM_STATIC */
 
 #ifdef __cplusplus
 } /* End Of Extern */

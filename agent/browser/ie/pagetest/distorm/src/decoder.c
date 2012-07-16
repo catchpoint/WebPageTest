@@ -4,7 +4,7 @@ decoder.c
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,11 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 
 #include "decoder.h"
-
+#include "instructions.h"
+#include "insts.h"
 #include "prefix.h"
 #include "x86defs.h"
 #include "operands.h"
-#include "../mnemonics.h"
+#include "../include/mnemonics.h"
 
 
 /* Instruction Prefixes - Opcode - ModR/M - SIB - Displacement - Immediate */
@@ -70,7 +71,7 @@ static _DecodeType decode_get_effective_op_size(_DecodeType dt, _iflags decodedP
 		/* Automatically promoted instructions have only INST_64BITS SET! */
 		if (((instFlags & (INST_64BITS | INST_PRE_REX)) == INST_64BITS) ||
 		/* Other instructions in 64 bits can be promoted only with a REX prefix. */
-		    ((decodedPrefixes & INST_PRE_REX) && (rex & PREFIX_EX_W))) dt = Decode64Bits;
+			((decodedPrefixes & INST_PRE_REX) && (rex & PREFIX_EX_W))) dt = Decode64Bits;
 		else dt = Decode32Bits; /* Default. */
 	}
 	return dt;
@@ -105,9 +106,11 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 
 	/* Calcualte (and cache) effective-operand-size and effective-address-size only once. */
 	_DecodeType effOpSz, effAdrSz;
+	_iflags instFlags;
 
 	ii = inst_lookup(ci, ps);
 	if (ii == NULL) goto _Undecodable;
+	instFlags = INST_INFO_FLAGS(ii);
 
 	/*
 	 * If both REX and OpSize are available we will have to disable the OpSize, because REX has precedence.
@@ -138,32 +141,32 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 	 */
 
 	/* ! ! ! DISABLED UNTIL FURTHER NOTICE ! ! ! Decode16Bits CAN NOW DECODE 32 BITS INSTRUCTIONS ! ! !*/
-	/* if (ii && (dt == Decode16Bits) && (ii->flags & INST_32BITS) && (~ii->flags & INST_16BITS)) ii = NULL; */
+	/* if (ii && (dt == Decode16Bits) && (instFlags & INST_32BITS) && (~instFlags & INST_16BITS)) ii = NULL; */
 
 	/* Drop instructions which are invalid in 64 bits. */
-	if ((ci->dt == Decode64Bits) && (ii->flags & INST_INVALID_64BITS)) goto _Undecodable;
+	if ((ci->dt == Decode64Bits) && (instFlags & INST_INVALID_64BITS)) goto _Undecodable;
 
 	/* If it's only a 64 bits instruction drop it in other decoding modes. */
-	if ((ci->dt != Decode64Bits) && (ii->flags & INST_64BITS_FETCH)) goto _Undecodable;
+	if ((ci->dt != Decode64Bits) && (instFlags & INST_64BITS_FETCH)) goto _Undecodable;
 
-	if (ii->flags & INST_MODRM_REQUIRED) {
+	if (instFlags & INST_MODRM_REQUIRED) {
 		/* If the ModRM byte is not part of the opcode, skip the last byte code, so code points now to ModRM. */
-		if (~ii->flags & INST_MODRM_INCLUDED) {
+		if (~instFlags & INST_MODRM_INCLUDED) {
 			ci->code++;
 			if (--ci->codeLen < 0) goto _Undecodable;
 		}
 		modrm = *ci->code;
 
 		/* Some instructions enforce that reg=000, so validate that. (Specifically EXTRQ). */
-		if ((ii->flags & INST_FORCE_REG0) && (((modrm >> 3) & 7) != 0)) goto _Undecodable;
+		if ((instFlags & INST_FORCE_REG0) && (((modrm >> 3) & 7) != 0)) goto _Undecodable;
 		/* Some instructions enforce that mod=11, so validate that. */
-		if ((ii->flags & INST_MODRR) && (modrm < INST_DIVIDED_MODRM)) goto _Undecodable;
+		if ((instFlags & INST_MODRR_REQUIRED) && (modrm < INST_DIVIDED_MODRM)) goto _Undecodable;
 	}
 
 	ci->code++; /* Skip the last byte we just read (either last opcode's byte code or a ModRM). */
 
 	/* Cache the effective operand-size and address-size. */
-	effOpSz = decode_get_effective_op_size(ci->dt, ps->decodedPrefixes, vrex, ii->flags);
+	effOpSz = decode_get_effective_op_size(ci->dt, ps->decodedPrefixes, vrex, instFlags);
 	effAdrSz = decode_get_effective_addr_size(ci->dt, ps->decodedPrefixes);
 
 	memset(di, 0, sizeof(_DInst));
@@ -185,30 +188,36 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 		} else break;
 
 		/* Use third operand, only if the flags says this InstInfo requires it. */
-		if (ii->flags & INST_USE_OP3) {
+		if (instFlags & INST_USE_OP3) {
 			if (!operands_extract(ci, di, ii, (_OpType)((_InstInfoEx*)ii)->op3, ONT_3, modrm, ps, effOpSz, effAdrSz, NULL)) goto _Undecodable;
 		} else break;
 		
 		/* Support for a fourth operand is added for (i.e:) INSERTQ instruction. */
-		if (ii->flags & INST_USE_OP4) {
+		if (instFlags & INST_USE_OP4) {
 			if (!operands_extract(ci, di, ii, (_OpType)((_InstInfoEx*)ii)->op4, ONT_4, modrm, ps, effOpSz, effAdrSz, NULL)) goto _Undecodable;
 		}
 		break;
 	} /* Continue here after all operands were extracted. */
 
 	/* If it were a 3DNow! instruction, we will have to find the instruction itself now that we got its operands extracted. */
-	if (ii->flags & INST_3DNOW_FETCH) {
+	if (instFlags & INST_3DNOW_FETCH) {
 		ii = inst_lookup_3dnow(ci);
 		if (ii == NULL) goto _Undecodable;
+		instFlags = INST_INFO_FLAGS(ii);
 	}
 
 	/* Check whether pseudo opcode is needed, only for CMP instructions: */
-	if (ii->flags & INST_PSEUDO_OPCODE) {
+	if (instFlags & INST_PSEUDO_OPCODE) {
 		if (--ci->codeLen < 0) goto _Undecodable;
 		cmpType = *ci->code;
 		ci->code++;
-		/* Comparison type must be between 0 to 8, otherwise Reserved. */
-		if (cmpType >= INST_CMP_MAX_RANGE) goto _Undecodable;
+		if (instFlags & INST_PRE_VEX) {
+			/* AVX Comparison type must be between 0 to 32, otherwise Reserved. */
+			if (cmpType >= INST_VCMP_MAX_RANGE) goto _Undecodable;
+		} else {
+			/* SSE Comparison type must be between 0 to 8, otherwise Reserved. */
+			if (cmpType >= INST_CMP_MAX_RANGE) goto _Undecodable;
+		}
 	}
 
 	/*
@@ -226,19 +235,19 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 	 */
 
 	/* Start with prefix LOCK. */
-	if ((lockable == TRUE) && (ii->flags & INST_PRE_LOCK)) {
+	if ((lockable == TRUE) && (instFlags & INST_PRE_LOCK)) {
 		ps->usedPrefixes |= INST_PRE_LOCK;
 		di->flags |= FLAG_LOCK;
-	} else if ((ii->flags & INST_PRE_REPNZ) && (ps->decodedPrefixes & INST_PRE_REPNZ)) {
+	} else if ((instFlags & INST_PRE_REPNZ) && (ps->decodedPrefixes & INST_PRE_REPNZ)) {
 		ps->usedPrefixes |= INST_PRE_REPNZ;
 		di->flags |= FLAG_REPNZ;
-	} else if ((ii->flags & INST_PRE_REP) && (ps->decodedPrefixes & INST_PRE_REP)) {
+	} else if ((instFlags & INST_PRE_REP) && (ps->decodedPrefixes & INST_PRE_REP)) {
 		ps->usedPrefixes |= INST_PRE_REP;
 		di->flags |= FLAG_REP;
 	}
 
 	/* If it's JeCXZ the ADDR_SIZE prefix affects them. */
-	if ((ii->flags & (INST_PRE_ADDR_SIZE | INST_USE_EXMNEMONIC)) == (INST_PRE_ADDR_SIZE | INST_USE_EXMNEMONIC)) {
+	if ((instFlags & (INST_PRE_ADDR_SIZE | INST_USE_EXMNEMONIC)) == (INST_PRE_ADDR_SIZE | INST_USE_EXMNEMONIC)) {
 		ps->usedPrefixes |= INST_PRE_ADDR_SIZE;
 		if (effAdrSz == Decode16Bits) di->opcode = ii->opcodeId;
 		else if (effAdrSz == Decode32Bits) di->opcode = ((_InstInfoEx*)ii)->opcodeId2;
@@ -247,7 +256,7 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 	}
 
 	/* LOOPxx instructions are also native instruction, but they are special case ones, ADDR_SIZE prefix affects them. */
-	else if ((ii->flags & (INST_PRE_ADDR_SIZE | INST_NATIVE)) == (INST_PRE_ADDR_SIZE | INST_NATIVE)) {
+	else if ((instFlags & (INST_PRE_ADDR_SIZE | INST_NATIVE)) == (INST_PRE_ADDR_SIZE | INST_NATIVE)) {
 		di->opcode = ii->opcodeId;
 
 		/* If LOOPxx gets here from 64bits, it must be Decode32Bits because Address Size perfix is set. */
@@ -268,7 +277,7 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 		 * If it's a special instruction which has two mnemonics, then use the 16 bits one + update usedPrefixes.
 		 * Note: use 16 bits mnemonic if that instruction supports 32 bit or 64 bit explicitly.
 		 */
-		if ((ii->flags & INST_USE_EXMNEMONIC) && ((ii->flags & (INST_32BITS | INST_64BITS)) == 0)) ps->usedPrefixes |= INST_PRE_OP_SIZE;
+		if ((instFlags & INST_USE_EXMNEMONIC) && ((instFlags & (INST_32BITS | INST_64BITS)) == 0)) ps->usedPrefixes |= INST_PRE_OP_SIZE;
 		di->opcode = ii->opcodeId;
 	} else if (effOpSz == Decode32Bits) { /* Decode32Bits */
 
@@ -276,20 +285,12 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 		FLAG_SET_OPSIZE(di, Decode32Bits);
 
 		/* Give a chance for special mnemonic instruction in 32 bits decoding. */
-		if (ii->flags & INST_USE_EXMNEMONIC) {
+		if (instFlags & INST_USE_EXMNEMONIC) {
 			ps->usedPrefixes |= INST_PRE_OP_SIZE;
 			/* Is it a special instruction which has another mnemonic for mod=11 ? */
-			if (ii->flags & INST_MNEMONIC_MODRM_BASED) {
+			if (instFlags & INST_MNEMONIC_MODRM_BASED) {
 				if (modrm >= INST_DIVIDED_MODRM) di->opcode = ii->opcodeId;
 				else di->opcode = ((_InstInfoEx*)ii)->opcodeId2;
-			}
-			/* Or is it a special CMP instruction which needs a pseudo opcode suffix ? */
-			else if (ii->flags & INST_PSEUDO_OPCODE) {
-				/*
-				 * The opcodeId is the base id of the pseudo compare mnemonics,
-				 * thus we can access the next ones from 0 to 7 safely, because they are already allocated.
-				 */
-				di->opcode = ii->opcodeId + cmpType;
 			} else di->opcode = ((_InstInfoEx*)ii)->opcodeId2;
 		} else di->opcode = ii->opcodeId;
 	} else { /* Decode64Bits, note that some instructions might be decoded in Decode32Bits above. */
@@ -297,9 +298,16 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 		/* Set operand size. */
 		FLAG_SET_OPSIZE(di, Decode64Bits);
 
-		if (ii->flags & (INST_USE_EXMNEMONIC | INST_USE_EXMNEMONIC2)) {
+		if (instFlags & (INST_USE_EXMNEMONIC | INST_USE_EXMNEMONIC2)) {
+			/*
+			 * We shouldn't be here for MODRM based mnemonics with a MOD=11,
+			 * because they must not use REX (otherwise it will get to the wrong instruction which share same opcode).
+			 * See XRSTOR and XSAVEOPT.
+			 */
+			if ((instFlags & INST_MNEMONIC_MODRM_BASED) && (modrm >= INST_DIVIDED_MODRM)) goto _Undecodable;
+
 			/* Use third mnemonic, for 64 bits. */
-			if ((ii->flags & INST_USE_EXMNEMONIC2) && (vrex & PREFIX_EX_W)) {
+			if ((instFlags & INST_USE_EXMNEMONIC2) && (vrex & PREFIX_EX_W)) {
 				ps->usedPrefixes |= INST_PRE_REX;
 				di->opcode = ((_InstInfoEx*)ii)->opcodeId3;
 			} else di->opcode = ((_InstInfoEx*)ii)->opcodeId2; /* Use second mnemonic. */
@@ -307,20 +315,39 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 	}
 
 	/* If it's a native instruction use OpSize Prefix. */
-	if ((ii->flags & INST_NATIVE) && (ps->decodedPrefixes & INST_PRE_OP_SIZE)) ps->usedPrefixes |= INST_PRE_OP_SIZE;
+	if ((instFlags & INST_NATIVE) && (ps->decodedPrefixes & INST_PRE_OP_SIZE)) ps->usedPrefixes |= INST_PRE_OP_SIZE;
 
 	/* Check VEX mnemonics: */
-	if ((ii->flags & INST_PRE_VEX) &&
+	if ((instFlags & INST_PRE_VEX) &&
 		(((((_InstInfoEx*)ii)->flagsEx & INST_MNEMONIC_VEXW_BASED) && (vrex & PREFIX_EX_W)) ||
 		 ((((_InstInfoEx*)ii)->flagsEx & INST_MNEMONIC_VEXL_BASED) && (vrex & PREFIX_EX_L)))) {
 		di->opcode = ((_InstInfoEx*)ii)->opcodeId2;
 	}
 
+	/* Or is it a special CMP instruction which needs a pseudo opcode suffix ? */
+	if (instFlags & INST_PSEUDO_OPCODE) {
+		/*
+		 * The opcodeId is the offset to the FIRST pseudo compare mnemonic,
+		 * we will have to fix it so it offsets into the corrected mnemonic.
+		 * Therefore, we use another table to fix the offset.
+		 */
+		if (instFlags & INST_PRE_VEX) {
+			/* Use the AVX pesudo compare mnemonics table. */
+			di->opcode = ii->opcodeId + VCmpMnemonicOffsets[cmpType];
+		} else {
+			/* Use the SSE psuedo compare mnemonics table. */
+			di->opcode = ii->opcodeId + CmpMnemonicOffsets[cmpType];
+		}
+	}
+	 
 	/*
 	 * Store the address size inside the flags.
 	 * This is necessary for the caller to know the size of rSP when using PUSHA for example.
 	 */
 	FLAG_SET_ADDRSIZE(di, effAdrSz);
+
+	/* Copy DST_WR flag. */
+	if (instFlags & INST_DST_WR) di->flags |= FLAG_DST_WR;
 
 	/* Set the unused prefixes mask. */
 	di->unusedPrefixesMask = prefixes_set_unused_mask(ps);
@@ -329,35 +356,29 @@ static _DecodeResult decode_inst(_CodeInfo* ci, _PrefixState* ps, _DInst* di)
 	di->meta = ii->meta;
 	if (di->segment == 0) di->segment = R_NONE;
 
+	/* Take into account the O_MEM base register for the mask. */
+	if (di->base != R_NONE) di->usedRegistersMask |= _REGISTERTORCLASS[di->base];
+
 	/* Calculate the size of the instruction we've just decoded. */
 	di->size = (uint8_t)((ci->code - startCode) & 0xff);
 	return DECRES_SUCCESS;
 
 _Undecodable: /* If the instruction couldn't be decoded for some reason, drop the first byte. */
 	memset(di, 0, sizeof(_DInst));
+	di->base = R_NONE;
 
 	di->size = 1;
-	/* Clean operands just in case... */
+	/* Clean prefixes just in case... */
 	ps->usedPrefixes = 0;
 
 	/* Special case for WAIT instruction: If it's dropped, you have to return a valid instruction! */
 	if (*startCode == INST_WAIT_INDEX) {
-		di->flags = 0;
 		di->opcode = I_WAIT;
+		META_SET_ISC(di, ISC_INTEGER);
 		return DECRES_SUCCESS;
 	}
 
-	/*
-	 * Exclude the first byte, couldn't decode that instruction.
-	 * So just DB(define byte) it and skip it.
-	 * Render instruction as undefined.
-	 */
-	di->flags = FLAG_NOT_DECODABLE;
-	di->opcode = I_UNDEFINED;
-	/* Set its byte. */
-	di->imm.byte = *startCode;
-
-	/* Mark that we didn't manage to decode the instruction well. */
+	/* Mark that we didn't manage to decode the instruction well, caller will drop it. */
 	return DECRES_INPUTERR;
 }
 
@@ -369,7 +390,7 @@ _Undecodable: /* If the instruction couldn't be decoded for some reason, drop th
  *                  This is in order to save memory allocation for conversion between the new and the old structures.
  *                  It really means we can do the conversion in-place now.
  */
-_DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst result[], unsigned int maxResultCount, unsigned int* usedInstructionsCount)
+_DecodeResult decode_internal(_CodeInfo* _ci, int supportOldIntr, _DInst result[], unsigned int maxResultCount, unsigned int* usedInstructionsCount)
 {
 	_PrefixState ps;
 	unsigned int prefixSize;
@@ -392,11 +413,21 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 	unsigned int nextPos = 0;
 	_DInst *pdi = NULL;
 
+	_OffsetType addrMask = (_OffsetType)-1;
+
 	_DecodeResult decodeResult;
+
+#ifdef DISTORM_LIGHT
+	supportOldIntr; /* Unreferenced. */
+#endif
+
+	if (_ci->features & DF_MAXIMUM_ADDR32) addrMask = 0xffffffff;
+	else if (_ci->features & DF_MAXIMUM_ADDR16) addrMask = 0xffff;
 
 	/* No entries are used yet. */
 	*usedInstructionsCount = 0;
 	ci.dt = _ci->dt;
+	_ci->nextOffset = codeOffset;
 
 	/* Decode instructions as long as we have what to decode/enough room in entries. */
 	while (codeLen > 0) {
@@ -420,30 +451,39 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 			 * Also take into consideration of flow control instruction filter.
 			 */
 			codeLen -= prefixSize;
-			if (((codeLen == 0) || (prefixSize == INST_MAXIMUM_SIZE)) && (~_ci->features & DF_RETURN_FC_ONLY)) {
-				/* Make sure there is enough room. */
-				if (nextPos + (ps.last - code) > maxResultCount) return DECRES_MEMORYERR;
+			if ((codeLen == 0) || (prefixSize == INST_MAXIMUM_SIZE)) {
+				if (~_ci->features & DF_RETURN_FC_ONLY) {
+					/* Make sure there is enough room. */
+					if (nextPos + (ps.last - code) > maxResultCount) return DECRES_MEMORYERR;
 
-				for (p = code; p < ps.last; p++, startInstOffset++) {
-					/* Use next entry. */
-					if (supportOldIntr) pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
-					else pdi = &result[nextPos];
-					nextPos++;
-					memset(pdi, 0, sizeof(_DInst));
+					for (p = code; p < ps.last; p++, startInstOffset++) {
+						/* Use next entry. */
+#ifndef DISTORM_LIGHT
+						if (supportOldIntr) {
+							pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
+						}
+						else
+#endif /* DISTORM_LIGHT */
+						{
+							pdi = &result[nextPos];
+						}
+						nextPos++;
+						memset(pdi, 0, sizeof(_DInst));
 
-					pdi->flags = FLAG_NOT_DECODABLE;
-					pdi->imm.byte = *p;
-					pdi->size = 1;
-					pdi->addr = startInstOffset;
+						pdi->flags = FLAG_NOT_DECODABLE;
+						pdi->imm.byte = *p;
+						pdi->size = 1;
+						pdi->addr = startInstOffset & addrMask;
+					}
+					*usedInstructionsCount = nextPos; /* Include them all. */
 				}
-				*usedInstructionsCount = nextPos; /* Include them all. */
 				if (codeLen == 0) break; /* Bye bye, out of bytes. */
 			}
 			code += prefixSize;
 			codeOffset += prefixSize;
 
-			/* If we got only prefixes or we want only flow control instructions, continue to next instruction. */
-			if ((prefixSize == INST_MAXIMUM_SIZE) || (_ci->features & DF_RETURN_FC_ONLY)) continue;
+			/* If we got only prefixes continue to next instruction. */
+			if (prefixSize == INST_MAXIMUM_SIZE) continue;
 		}
 
 		/*
@@ -455,7 +495,7 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 		 * so prefixSize includes that, and the returned size in pdi is simply the size of the real(=without prefixes) instruction.
 		 */
 		if (ci.dt == Decode64Bits) {
-			if (ps.decodedPrefixes & INST_PRE_REX) { 
+			if (ps.decodedPrefixes & INST_PRE_REX) {
 				/* REX prefix must precede first byte of instruction. */
 				if (ps.rexPos != (code - 1)) {
 					ps.decodedPrefixes &= ~INST_PRE_REX;
@@ -477,8 +517,15 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 
 		/* Make sure there is at least one more entry to use, for the upcoming instruction. */
 		if (nextPos + 1 > maxResultCount) return DECRES_MEMORYERR;
-		if (supportOldIntr) pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
-		else pdi = &result[nextPos];
+#ifndef DISTORM_LIGHT
+		if (supportOldIntr) {
+			pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
+		}
+		else
+#endif /* DISTORM_LIGHT */
+		{
+			pdi = &result[nextPos];
+		}
 		nextPos++;
 
 		/*
@@ -498,7 +545,8 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 		if ((_ci->features & DF_RETURN_FC_ONLY) && (META_GET_FC(pdi->meta) == FC_NONE)) decodeResult = DECRES_FILTERED;
 
 		/* Set address to the beginning of the instruction. */
-		pdi->addr = startInstOffset;
+		pdi->addr = startInstOffset & addrMask;
+		/* pdi->disp &= addrMask; */
 
 		/* Advance to next instruction. */
 		codeLen -= pdi->size;
@@ -516,30 +564,40 @@ _DecodeResult decode_internal(const _CodeInfo* _ci, int supportOldIntr, _DInst r
 
 				for (p = ps.start; p < ps.last + 1; p++, startInstOffset++) {
 					/* Use next entry. */
-					if (supportOldIntr) pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
-					else pdi = &result[nextPos];
+#ifndef DISTORM_LIGHT
+					if (supportOldIntr) {
+						pdi = (_DInst*)((char*)result + nextPos * sizeof(_DecodedInst));
+					}
+					else
+#endif /* DISTORM_LIGHT */
+					{
+						pdi = &result[nextPos];
+					}
 					nextPos++;
 
 					memset(pdi, 0, sizeof(_DInst));
 					pdi->flags = FLAG_NOT_DECODABLE;
 					pdi->imm.byte = *p;
 					pdi->size = 1;
-					pdi->addr = startInstOffset;
+					pdi->addr = startInstOffset & addrMask;
 				}
 			}
 		} else if (decodeResult == DECRES_FILTERED) nextPos--; /* Return it to pool, since it was filtered. */
 
 		/* Alright, the caller can read, at least, up to this one. */
 		*usedInstructionsCount = nextPos;
+		/* Fix next offset. */
+		_ci->nextOffset = codeOffset;
 
 		/* Check whether we need to stop on any flow control instruction. */
 		if ((decodeResult == DECRES_SUCCESS) && (_ci->features & DF_STOP_ON_FLOW_CONTROL)) {
 			if (((_ci->features & DF_STOP_ON_CALL) && (META_GET_FC(pdi->meta) == FC_CALL)) ||
 				((_ci->features & DF_STOP_ON_RET) && (META_GET_FC(pdi->meta) == FC_RET)) ||
 				((_ci->features & DF_STOP_ON_SYS) && (META_GET_FC(pdi->meta) == FC_SYS)) ||
-				((_ci->features & DF_STOP_ON_BRANCH) && (META_GET_FC(pdi->meta) == FC_BRANCH)) ||
-				((_ci->features & DF_STOP_ON_COND_BRANCH) && (META_GET_FC(pdi->meta) == FC_COND_BRANCH)) ||
-				((_ci->features & DF_STOP_ON_INT) && (META_GET_FC(pdi->meta) == FC_INT)))
+				((_ci->features & DF_STOP_ON_UNC_BRANCH) && (META_GET_FC(pdi->meta) == FC_UNC_BRANCH)) ||
+				((_ci->features & DF_STOP_ON_CND_BRANCH) && (META_GET_FC(pdi->meta) == FC_CND_BRANCH)) ||
+				((_ci->features & DF_STOP_ON_INT) && (META_GET_FC(pdi->meta) == FC_INT)) ||
+				((_ci->features & DF_STOP_ON_CMOV) && (META_GET_FC(pdi->meta) == FC_CMOV)))
 				return DECRES_SUCCESS;
 		}
 	}

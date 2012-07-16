@@ -5,7 +5,7 @@ diStorm3 C Library Interface
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,20 +22,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
 
-#include "../distorm.h"
-#include "../config.h"
+#include "../include/distorm.h"
+#include "config.h"
 #include "decoder.h"
 #include "x86defs.h"
 #include "textdefs.h"
 #include "wstring.h"
-#include "../mnemonics.h"
+#include "../include/mnemonics.h"
 
-
-/* C LIBRARY EXPORTS */
+/* C DLL EXPORTS */
 #ifdef SUPPORT_64BIT_OFFSET
-	_DecodeResult distorm_decompose64(const _CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount)
+	_DLLEXPORT_ _DecodeResult distorm_decompose64(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount)
 #else
-	_DecodeResult distorm_decompose32(const _CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount)
+	_DLLEXPORT_ _DecodeResult distorm_decompose32(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount)
 #endif
 {
 	if (usedInstructionsCount == NULL) {
@@ -63,6 +62,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 	return decode_internal(ci, FALSE, result, maxInstructions, usedInstructionsCount);
 }
 
+#ifndef DISTORM_LIGHT
+
 /* Helper function to concat an explicit size when it's unknown from the operands. */
 static void distorm_format_size(_WString* str, const _DInst* di, int opNum)
 {
@@ -74,7 +75,9 @@ static void distorm_format_size(_WString* str, const _DInst* di, int opNum)
 	 *
 	 * If given operand number is higher than 2, then output the size anyways.
 	 */
-	if ((opNum >= 2) || ((di->ops[0].type != O_REG) && (di->ops[1].type != O_REG))) {
+	if (((opNum >= 2) || ((di->ops[0].type != O_REG) && (di->ops[1].type != O_REG))) ||
+		/* INS/OUTS are exception, because DX is a port specifier and not a real src/dst register. */
+		((di->opcode == I_INS) || (di->opcode == I_OUTS))) {
 		switch (di->ops[opNum].size)
 		{
 			case 0: break; /* OT_MEM's unknown size. */
@@ -114,6 +117,7 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 	int64_t tmpDisp64;
 	uint64_t addrMask = (uint64_t)-1;
 	uint8_t segment;
+	const _WMnemonic* mnemonic;
 
 	/* Set address mask, when default is for 64bits addresses. */
 	if (ci->features & DF_MAXIMUM_ADDR32) addrMask = 0xffffffff;
@@ -156,7 +160,9 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 		break;
 	}
 
-	strcat_WS(str, (const _WString*)&_MNEMONICS[di->opcode]);
+	mnemonic = (const _WMnemonic*)&_MNEMONICS[di->opcode];
+	memcpy((int8_t*)&str->p[str->length], mnemonic->p, mnemonic->length + 1);
+	str->length += mnemonic->length;
 
 	/* Format operands: */
 	str = &result->operands;
@@ -175,8 +181,7 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 		 * and no segment is overridden, so add the suffix letter,
 		 * to indicate size of operation and continue to next instruction.
 		 */
-		if ((FLAG_GET_ADDRSIZE(di->flags) == ci->dt) && (SEGMENT_IS_DEFAULT(di->segment)))
-		{
+		if ((FLAG_GET_ADDRSIZE(di->flags) == ci->dt) && (SEGMENT_IS_DEFAULT(di->segment))) {
 			str = &result->mnemonic;
 			switch (di->ops[0].size)
 			{
@@ -199,6 +204,14 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 			case O_IMM:
 				/* If the instruction is 'push', show explicit size (except byte imm). */
 				if (di->opcode == I_PUSH && di->ops[i].size != 8) distorm_format_size(str, di, i);
+				/* Special fix for negative sign extended immediates. */
+				if ((di->flags & FLAG_IMM_SIGNED) && (di->ops[i].size == 8)) {
+					if (di->imm.sbyte < 0) {
+						chrcat_WS(str, MINUS_DISP_CHR);
+						str_code_hb(str, -di->imm.sbyte);
+						break;
+					}
+				}
 				if (di->ops[i].size == 64) str_code_hqw(str, (uint8_t*)&di->imm.qword);
 				else str_code_hdw(str, di->imm.dword);
 			break;
@@ -343,6 +356,8 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 	ci.codeLen = codeLen;
 	ci.dt = dt;
 	ci.features = DF_NONE;
+	if (dt == Decode16Bits) ci.features = DF_MAXIMUM_ADDR16;
+	else if (dt == Decode32Bits) ci.features = DF_MAXIMUM_ADDR32;
 
 	res = decode_internal(&ci, TRUE, (_DInst*)result, maxInstructions, &instsCount);
 	for (i = 0; i < instsCount; i++) {
@@ -360,6 +375,8 @@ static void distorm_format_signed_disp(_WString* str, const _DInst* di, uint64_t
 	*usedInstructionsCount = instsCount;
 	return res;
 }
+
+#endif /* DISTORM_LIGHT */
 
 _DLLEXPORT_ unsigned int distorm_version()
 {

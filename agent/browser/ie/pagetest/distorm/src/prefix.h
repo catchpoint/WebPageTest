@@ -4,7 +4,7 @@ prefix.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2010  Gil Dabah
+Copyright (C) 2003-2012 Gil Dabah
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #ifndef PREFIX_H
 #define PREFIX_H
 
-#include "../config.h"
-
+#include "config.h"
 #include "decoder.h"
+
 
 /* Specifies the type of the extension prefix, such as: REX, 2 bytes VEX, 3 bytes VEX. */
 typedef enum {PET_NONE = 0, PET_REX, PET_VEX2BYTES, PET_VEX3BYTES} _PrefixExtType;
