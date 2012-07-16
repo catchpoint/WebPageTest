@@ -37,7 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #if !(defined(DISTORM_STATIC) || defined(DISTORM_DYNAMIC))
 	/* Define this macro for outer projects by default. */
-	#define SUPPORT_64BIT_OFFSET
+  #ifndef SUPPORT_64BIT_OFFSET
+	  #define SUPPORT_64BIT_OFFSET
+  #endif
 #endif
 
 /* TINYC has a problem with some 64bits library functions, so ignore 64 bit offsets. */

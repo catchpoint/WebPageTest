@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="cdistorm"
 	ProjectGUID="{15051CE1-AB10-4239-973D-01B84F2AD0A9}"
+	RootNamespace="cdistorm"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -87,7 +88,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y ..\..\distorm.h ..\..\..\ncodehook\distorm.h"
+				CommandLine="copy /Y ..\..\include\distorm.h ..\..\..\ncodehook\distorm.h"
 			/>
 		</Configuration>
 		<Configuration
@@ -162,7 +163,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y ..\..\distorm.h ..\..\..\ncodehook\distorm.h"
+				CommandLine="copy /Y ..\..\include\distorm.h ..\..\..\ncodehook\distorm.h"
 			/>
 		</Configuration>
 	</Configurations>
@@ -190,7 +191,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\mnemonics.c"
+				RelativePath="..\..\include\mnemonics.c"
 				>
 			</File>
 			<File
