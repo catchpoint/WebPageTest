@@ -67,6 +67,7 @@ private:
   SchannelHook  _schannel_hook;
   WinInetHook _wininet_hook;
   HANDLE    _background_thread;
+  HANDLE    _background_thread_started;
   HWND      _message_window;
   CString   _file_base;
   bool      _done;

@@ -39,11 +39,13 @@ extern HINSTANCE global_dll_handle;
 
 static const UINT_PTR TIMER_DONE = 1;
 static const DWORD TIMER_DONE_INTERVAL = 100;
+static const DWORD INIT_TIMEOUT = 30000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
   _background_thread(NULL)
+  ,_background_thread_started(NULL)
   ,_message_window(NULL)
   ,_test_state(_results, _screen_capture, _test)
   ,_winsock_hook(_dns, _sockets, _test_state)
@@ -59,6 +61,7 @@ WptHook::WptHook(void):
   ,_test_server(*this, _test, _test_state, _requests)
   ,_test(shared_test_timeout) {
   _file_base = shared_results_file_base;
+  _background_thread_started = CreateEvent(NULL, TRUE, FALSE, NULL);
   // grab the version number of the dll
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(global_dll_handle, file, _countof(file))) {
@@ -85,6 +88,9 @@ WptHook::WptHook(void):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::~WptHook(void) {
+  if (_background_thread_started) {
+    CloseHandle(_background_thread_started);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -100,7 +106,7 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Init(){
-  WptTrace(loglevel::kProcess, _T("[wpthook] Init()\n"));
+  WptTrace(loglevel::kFunction, _T("[wpthook] Init()\n"));
 #ifdef DEBUG
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
@@ -111,7 +117,15 @@ void WptHook::Init(){
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
+  ResetEvent(_background_thread_started);
   _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+  if (_background_thread_started &&
+    WaitForSingleObject(_background_thread_started, INIT_TIMEOUT) 
+    == WAIT_OBJECT_0) {
+    WptTrace(loglevel::kFunction, _T("[wpthook] Init() Completed\n"));
+  } else {
+    WptTrace(loglevel::kFunction, _T("[wpthook] Init() Timed out\n"));
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -216,6 +230,7 @@ void WptHook::BackgroundThread() {
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, global_dll_handle, NULL);
     if (_message_window) {
+      SetEvent(_background_thread_started);
       MSG msg;
       BOOL bRet;
       while (!_done && (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
@@ -228,4 +243,5 @@ void WptHook::BackgroundThread() {
   }
 
   _test_server.Stop();
+  WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread() Stopped\n"));
 }
