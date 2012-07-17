@@ -59,6 +59,8 @@ LRESULT WINAPI DispatchMessageW_hook(__in CONST MSG *lpMsg)
 }
 #endif //DEBUG
 
+static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 STDMETHODIMP CIEHook::SetSite(IUnknown *pUnkSite)
@@ -67,43 +69,50 @@ STDMETHODIMP CIEHook::SetSite(IUnknown *pUnkSite)
 
 	OutputDebugString(_T("[Pagetest] ***** CIEHook::SetSite\n"));
 
-	if (!pUnkSite)
-	{
-		ATLTRACE(_T("[Pagetest] - SetSite(): pUnkSite is NULL\n"));
-	}
-	else
-	{
-		CComQIPtr<IWebBrowser2, &IID_IWebBrowser2> browser = pUnkSite;
+  // do nothing if wptdriver is running a test
+  // this makes sure that we aren't double-hooking the browser
+  HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
+  if (!active_mutex) {
+	  if (!pUnkSite)
+	  {
+		  ATLTRACE(_T("[Pagetest] - SetSite(): pUnkSite is NULL\n"));
+	  }
+	  else
+	  {
+		  CComQIPtr<IWebBrowser2, &IID_IWebBrowser2> browser = pUnkSite;
 
-		if( loaded && BlockPopups() )
-		{
-			OutputDebugString(_T("[Pagetest] CIEHook::SetSite - popup detected, killing browser window\n"));
-			browser->Quit();
-		}
-		else
-		{
-			loaded = true;
-			CWatchDlg::CreateDlg();
-		
-			// sink events for the new browser window
-			DispEventAdvise(pUnkSite, &DIID_DWebBrowserEvents2);
-			
-			if( !m_spWebBrowser2 )
-				m_spWebBrowser2 = pUnkSite;
+		  if( loaded && BlockPopups() )
+		  {
+			  OutputDebugString(_T("[Pagetest] CIEHook::SetSite - popup detected, killing browser window\n"));
+			  browser->Quit();
+		  }
+		  else
+		  {
+			  loaded = true;
+			  CWatchDlg::CreateDlg();
+  		
+			  // sink events for the new browser window
+			  DispEventAdvise(pUnkSite, &DIID_DWebBrowserEvents2);
+  			
+			  if( !m_spWebBrowser2 )
+				  m_spWebBrowser2 = pUnkSite;
 
-			if( dlg && browser)
-				dlg->AddBrowser(browser);
+			  if( dlg && browser)
+				  dlg->AddBrowser(browser);
 
-			if (m_spWebBrowser2 )
-			{
-				InstallHooks();
-			}
-			else
-			{
-				ATLTRACE(_T("[Pagetest] - QI for IWebBrowser2 failed\n"));
-			}
-		}
-	}
+			  if (m_spWebBrowser2 )
+			  {
+				  InstallHooks();
+			  }
+			  else
+			  {
+				  ATLTRACE(_T("[Pagetest] - QI for IWebBrowser2 failed\n"));
+			  }
+		  }
+	  }
+  } else {
+	  ATLTRACE(_T("[Pagetest] - Not hooking, wptdriver test is active\n"));
+  }
 	
 	return S_OK;
 }
