@@ -1215,7 +1215,9 @@ function RestoreTest($id)
             if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
             {
                 $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                if( $testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY') )
+                if( !is_array($testInfo) || 
+                    !count($testInfo) || 
+                    ($testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY')) )
                     $restore = true;
             }
             else
