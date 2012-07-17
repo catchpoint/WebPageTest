@@ -130,7 +130,7 @@
     RewriteRule ^docs$ http://www.webperformancecentral.com/wiki/WebPagetest [R]
 
     # versioned path to timeline
-    RewriteRule ^/timeline/[0-9]+/(.*)$ /timeline/$1
+    RewriteRule ^timeline/[0-9]+/(.*)$ /timeline/$1
 </IfModule>
 
 #
