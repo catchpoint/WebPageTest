@@ -12,41 +12,33 @@ static WinInetHook* g_hook = NULL;
 HINTERNET __stdcall InternetOpenW_Hook(LPCWSTR lpszAgent,DWORD dwAccessType,
   LPCWSTR lpszProxy,LPCWSTR lpszProxyBypass,DWORD dwFlags) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetOpenW(lpszAgent, dwAccessType, lpszProxy, 
-                                  lpszProxyBypass, dwFlags);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetOpenW(lpszAgent, dwAccessType, lpszProxy, 
+                                lpszProxyBypass, dwFlags);
   return ret;
 }
 
 HINTERNET __stdcall InternetOpenA_Hook(LPCSTR lpszAgent,DWORD dwAccessType,
   LPCSTR lpszProxy,LPCSTR lpszProxyBypass,DWORD dwFlags) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetOpenA(lpszAgent, dwAccessType, lpszProxy, 
-                                    lpszProxyBypass, dwFlags);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetOpenA(lpszAgent, dwAccessType, lpszProxy, 
+                                  lpszProxyBypass, dwFlags);
   return ret;
 }
 
 BOOL __stdcall InternetCloseHandle_Hook(HINTERNET hInternet) {
   BOOL ret = FALSE;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetCloseHandle(hInternet);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetCloseHandle(hInternet);
   return ret;
 }
 
 INTERNET_STATUS_CALLBACK __stdcall InternetSetStatusCallback_Hook(
   HINTERNET hInternet, INTERNET_STATUS_CALLBACK lpfnInternetCallback) {
   INTERNET_STATUS_CALLBACK ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetSetStatusCallback(hInternet, lpfnInternetCallback);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetSetStatusCallback(hInternet, lpfnInternetCallback);
   return ret;
 }
 
@@ -54,11 +46,9 @@ HINTERNET __stdcall InternetConnectW_Hook(HINTERNET hInternet,
   LPCWSTR lpszServerName, INTERNET_PORT nServerPort, LPCWSTR lpszUserName, 
   LPCWSTR lpszPassword, DWORD dwService, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetConnectW(hInternet, lpszServerName, nServerPort, 
-                  lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetConnectW(hInternet, lpszServerName, nServerPort, 
+                lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
   return ret;
 }
 
@@ -66,11 +56,9 @@ HINTERNET __stdcall InternetConnectA_Hook(HINTERNET hInternet,
   LPCSTR lpszServerName, INTERNET_PORT nServerPort, LPCSTR lpszUserName, 
   LPCSTR lpszPassword, DWORD dwService, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->InternetConnectA(hInternet, lpszServerName, nServerPort, 
-                    lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->InternetConnectA(hInternet, lpszServerName, nServerPort, 
+                  lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
   return ret;
 }
 
@@ -78,11 +66,9 @@ HINTERNET __stdcall HttpOpenRequestW_Hook(HINTERNET hConnect, LPCWSTR lpszVerb,
   LPCWSTR lpszObjectName, LPCWSTR lpszVersion, LPCWSTR lpszReferrer, 
   LPCWSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpOpenRequestW(hConnect, lpszVerb, lpszObjectName, 
-            lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpOpenRequestW(hConnect, lpszVerb, lpszObjectName, 
+          lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
   return ret;
 }
 
@@ -90,77 +76,63 @@ HINTERNET __stdcall HttpOpenRequestA_Hook(HINTERNET hConnect, LPCSTR lpszVerb,
     LPCSTR lpszObjectName, LPCSTR lpszVersion, LPCSTR lpszReferrer, 
     LPCSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpOpenRequestA(hConnect, lpszVerb, lpszObjectName, 
-            lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpOpenRequestA(hConnect, lpszVerb, lpszObjectName, 
+          lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
   return ret;
 }
 
 BOOL __stdcall HttpSendRequestW_Hook(HINTERNET hRequest, LPCWSTR lpszHeaders, 
   DWORD dwHeadersLength, LPVOID lpOptional, DWORD dwOptionalLength) {
   BOOL ret = FALSE;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpSendRequestW(hRequest, lpszHeaders, dwHeadersLength, 
-                                    lpOptional, dwOptionalLength);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpSendRequestW(hRequest, lpszHeaders, dwHeadersLength, 
+                                  lpOptional, dwOptionalLength);
   return ret;
 }
 
 BOOL __stdcall HttpSendRequestA_Hook(HINTERNET hRequest, LPCSTR lpszHeaders, 
   DWORD dwHeadersLength, LPVOID lpOptional, DWORD dwOptionalLength) {
   BOOL ret = FALSE;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpSendRequestA(hRequest, lpszHeaders, dwHeadersLength, 
-                                      lpOptional, dwOptionalLength);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpSendRequestA(hRequest, lpszHeaders, dwHeadersLength, 
+                                    lpOptional, dwOptionalLength);
   return ret;
 }
 
 HINTERNET __stdcall FtpOpenFileW_Hook(HINTERNET hConnect, LPCWSTR lpszFileName,
   DWORD dwAccess, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->FtpOpenFileW(hConnect, lpszFileName, dwAccess, dwFlags, 
-                                  dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->FtpOpenFileW(hConnect, lpszFileName, dwAccess, dwFlags, 
+                                dwContext);
   return ret;
 }
 
 HINTERNET __stdcall FtpOpenFileA_Hook(HINTERNET hConnect, LPCSTR lpszFileName,
   DWORD dwAccess, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
-  __try{
-    if(g_hook)
-      ret = g_hook->FtpOpenFileA(hConnect, lpszFileName, dwAccess, dwFlags, 
-                                  dwContext);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->FtpOpenFileA(hConnect, lpszFileName, dwAccess, dwFlags, 
+                                dwContext);
   return ret;
 }
 
 BOOL __stdcall HttpAddRequestHeadersW_Hook(HINTERNET hRequest, 
   LPCWSTR lpszHeaders, DWORD dwHeadersLength, DWORD dwModifiers) {
   BOOL ret = FALSE;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpAddRequestHeadersW(hRequest, lpszHeaders, 
-                                            dwHeadersLength, dwModifiers);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpAddRequestHeadersW(hRequest, lpszHeaders, 
+                                          dwHeadersLength, dwModifiers);
   return ret;
 }
 
 BOOL __stdcall HttpAddRequestHeadersA_Hook(HINTERNET hRequest, 
   LPCSTR lpszHeaders, DWORD dwHeadersLength, DWORD dwModifiers) {
   BOOL ret = FALSE;
-  __try{
-    if(g_hook)
-      ret = g_hook->HttpAddRequestHeadersA(hRequest, lpszHeaders, 
-                                            dwHeadersLength, dwModifiers);
-  }__except(1){}
+  if(g_hook)
+    ret = g_hook->HttpAddRequestHeadersA(hRequest, lpszHeaders, 
+                                          dwHeadersLength, dwModifiers);
   return ret;
 }
 
@@ -199,6 +171,15 @@ void WinInetHook::Init() {
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] WinInetHook::Init()\n"));
 
+/*
+  _InternetConnectW = _hook->createHookByName("wininet.dll", 
+                  "InternetConnectW", InternetConnectW_Hook);
+  _InternetConnectA = _hook->createHookByName("wininet.dll", 
+                  "InternetConnectA", InternetConnectA_Hook);
+  _HttpOpenRequestA = _hook->createHookByName("wininet.dll", 
+                  "HttpOpenRequestA", HttpOpenRequestA_Hook);
+  _HttpOpenRequestW = _hook->createHookByName("wininet.dll", 
+                  "HttpOpenRequestW", HttpOpenRequestW_Hook);
   _InternetOpenW = _hook->createHookByName("wininet.dll", "InternetOpenW", 
                     InternetOpenW_Hook);
   _InternetOpenA = _hook->createHookByName("wininet.dll", "InternetOpenA", 
@@ -207,14 +188,6 @@ void WinInetHook::Init() {
                   "InternetCloseHandle", InternetCloseHandle_Hook);
   _InternetSetStatusCallback = _hook->createHookByName("wininet.dll", 
                   "InternetSetStatusCallback", InternetSetStatusCallback_Hook);
-  _InternetConnectW = _hook->createHookByName("wininet.dll", 
-                  "InternetConnectW", InternetConnectW_Hook);
-  _InternetConnectA = _hook->createHookByName("wininet.dll", 
-                  "InternetConnectA", InternetConnectA_Hook);
-  _HttpOpenRequestW = _hook->createHookByName("wininet.dll", 
-                  "HttpOpenRequestW", HttpOpenRequestW_Hook);
-  _HttpOpenRequestA = _hook->createHookByName("wininet.dll", 
-                  "HttpOpenRequestA", HttpOpenRequestA_Hook);
   _HttpSendRequestW = _hook->createHookByName("wininet.dll", 
                   "HttpSendRequestW", HttpSendRequestW_Hook);
   _HttpSendRequestA = _hook->createHookByName("wininet.dll", 
@@ -227,6 +200,7 @@ void WinInetHook::Init() {
                   "HttpAddRequestHeadersW", HttpAddRequestHeadersW_Hook);
   _HttpAddRequestHeadersA = _hook->createHookByName("wininet.dll", 
                   "HttpAddRequestHeadersA", HttpAddRequestHeadersA_Hook);
+*/
 }
 
 /*-----------------------------------------------------------------------------
