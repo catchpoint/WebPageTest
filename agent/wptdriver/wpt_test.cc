@@ -84,6 +84,7 @@ void WptTest::Reset(void) {
   _ignore_ssl = false;
   _tcpdump = false;
   _timeline = false;
+  _trace = false;
   _netlog = false;
   _video = false;
   _aft = false;
@@ -167,6 +168,8 @@ bool WptTest::Load(CString& test) {
           _timeline = true;
         else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
           _netlog = true;
+        else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
+          _trace = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {
@@ -532,8 +535,18 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     CStringA host = CT2A(command.target.Trim());
     CStringA new_host = CT2A(command.value.Trim());
     if (host.GetLength() && new_host.GetLength()) {
-      HttpHeaderValue host_override(host, new_host, "");
-      _override_hosts.AddTail(host_override);
+      POSITION pos = _override_hosts.GetHeadPosition();
+      bool duplicate = false;
+      while (pos && !duplicate) {
+        HttpHeaderValue &existing = _override_hosts.GetNext(pos);
+        if (!existing._tag.CompareNoCase(host)) {
+          duplicate = true;
+        }
+      }
+      if (!duplicate) {
+        HttpHeaderValue host_override(host, new_host, "");
+        _override_hosts.AddTail(host_override);
+      }
     }
     // pass the host override command on to the browser extension as well
     // (needed for SSL override on Chrome)
@@ -716,6 +729,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
           !host_override._tag.Compare("*")) {
         header = CStringA("Host: ") + host_override._value;
         new_headers += CStringA("\r\nx-Host: ") + value;
+        break;
       }
     }
     if (new_headers.GetLength()) {

@@ -144,6 +144,7 @@ public:
   bool    _tcpdump;
   bool    _timeline;
   bool    _netlog;
+  bool    _trace;
   bool    _video;
   bool    _aft;
   DWORD   _aft_early_cutoff;
