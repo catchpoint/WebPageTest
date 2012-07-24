@@ -130,7 +130,7 @@ function BuildResult(&$pageData)
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
             $pd['id'] = "page_{$run}_{$cached}";
-            $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1 );
+            $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
             // add the pagespeed score
             $score = GetPageSpeedScore("$testPath/{$run}{$cached_text}_pagespeed.txt");
