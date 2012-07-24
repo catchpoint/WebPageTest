@@ -357,6 +357,9 @@ $page_description = "Website performance test result$testLabel.";
                         if( gz_is_file("$testPath/{$run}_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
                         }
+                        if( gz_is_file("$testPath/{$run}_trace.json") ) {
+                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Trace\">Trace</a>";
+                        }
                     ?></td>
                     <td align="center" valign="middle"><a href="<?php echo FRIENDLY_URLS ? "/result/$id/$run/details/" : "/details.php?test=$id&run=$run"; ?>"><img class="progress" width=250 src="<?php echo FRIENDLY_URLS ? "/result/$id/{$run}_waterfall_thumb.png" : "/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png"; ?>"></a></td>
                     <?php
@@ -408,6 +411,9 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
+                        }
+                        if( gz_is_file("$testPath/{$run}_Cached_trace.json") ) {
+                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Trace\">Trace</a>";
                         }
                     echo '</td>';
                     if( FRIENDLY_URLS )

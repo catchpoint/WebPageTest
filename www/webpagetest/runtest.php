@@ -78,6 +78,7 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
+            $test['trace'] = $req_trace;
             $test['netlog'] = $req_netlog;
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
@@ -768,6 +769,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['ignoreSSL'] = $test['ignoreSSL'] ? 1 : 0;
             $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
             $test['timeline'] = $test['timeline'] ? 1 : 0;
+            $test['trace'] = $test['trace'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
             $test['blockads'] = $test['blockads'] ? 1 : 0;
             $test['sensitive'] = $test['sensitive'] ? 1 : 0;
@@ -1387,7 +1389,7 @@ function CheckUrl($url)
     foreach( $blockUrls as $block )
     {
         $block = trim($block);
-        if( strlen($block) && ereg($block, $url) )
+        if( strlen($block) && preg_match("/$block/i", $url) )
         {
             $ok = false;
             break;
@@ -1532,6 +1534,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testFile .= "\r\ntcpdump=1";
         if( $test['timeline'] )
             $testFile .= "\r\ntimeline=1";
+        if( $test['trace'] )
+            $testFile .= "\r\ntrace=1";
         if( $test['netlog'] )
             $testFile .= "\r\nnetlog=1";
         if( $test['blockads'] )

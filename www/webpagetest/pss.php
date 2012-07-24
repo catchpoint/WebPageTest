@@ -202,6 +202,10 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
+                            <label for="timeline">Record Timeline<br><small>(Chrome Only)</small></label>
+                            <input type="checkbox" name="timeline" id="timeline" class="checkbox">
+                        </li>
+                        <li>
                             <label for="backend">Back-End</label>
                             <select name="backend" id="backend">
                                 <option value="prod" selected>Production - default rewriters</option>
