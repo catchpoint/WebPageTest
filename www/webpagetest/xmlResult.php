@@ -228,7 +228,7 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    if( $test['test']['video'])
+                    if( $test['test']['video'] || $test['testinfo']['video'] )
                     {
                         $frames = loadVideo("$testPath/video_{$i}");
                         if( $frames && count($frames) )
@@ -311,7 +311,7 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    if( $test['test']['video'] )
+                    if( $test['test']['video'] || $test['testinfo']['video']  )
                     {
                         $frames = loadVideo("$testPath/video_{$i}_cached");
                         if( $frames && count($frames) )
