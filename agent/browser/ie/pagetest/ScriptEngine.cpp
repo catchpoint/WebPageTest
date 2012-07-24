@@ -741,8 +741,18 @@ void CScriptEngine::ContinueScript(bool reset)
         {
           if( item.target.GetLength() && item.value.GetLength() )
           {
-            CHostOverride host(item.target, item.value);
-            hostOverride.AddTail(host);
+            bool duplicate = false;
+            POSITION pos = hostOverride.GetHeadPosition();
+            while (pos && !duplicate) {
+              CHostOverride &existing = hostOverride.GetNext(pos);
+              if (!existing.originalHost.CompareNoCase(item.target)) {
+                duplicate = true;
+              }
+            }
+            if (!duplicate) {
+              CHostOverride host(item.target, item.value);
+              hostOverride.AddTail(host);
+            }
           }
           else
             hostOverride.RemoveAll();
