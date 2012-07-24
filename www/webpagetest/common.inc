@@ -1701,7 +1701,7 @@ function ValidateTestId(&$id) {
         }
     }
 
-    if (preg_match('/^[a-zA-Z0-9_]+$/', @$testId)) {
+    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
         $valid = true;
     } else {
         $id = '';
