@@ -897,7 +897,7 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_option
     foreach($map as $entry) {
         if (isset($entry['request'])) {
             $index = $entry['request'] + 1;
-            $title = $index . ': ' . $entry['url'];
+            $title = $index . ': ' . htmlspecialchars($entry['url']);
             echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (isset($entry['url'])) {
             echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
