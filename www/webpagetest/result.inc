@@ -190,8 +190,13 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
                         }
-                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0)
-                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
+                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
+                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}";
+                            if (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) {
+                                echo "({$pageData[$fvMedian][0]['SpeedIndexExp']})";
+                            }
+                            echo "</td>\n";
+                        }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
@@ -225,6 +230,9 @@ $page_description = "Website performance test result$testLabel.";
                             $disp = '-';
                             if(array_key_exists('SpeedIndex', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndex'] > 0)
                                 $disp = $pageData[$rvMedian][1]['SpeedIndex'];
+                            if (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) {
+                                $disp .= "({$pageData[$rvMedian][1]['SpeedIndexExp']})";
+                            }
                             echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
                         }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)

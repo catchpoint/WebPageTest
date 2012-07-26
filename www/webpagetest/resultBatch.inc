@@ -455,6 +455,8 @@ function DisplayTest($id, $url, $label, $complete)
             echo '<td>';
             if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
                 echo $pageData[$fvMedian][0]['SpeedIndex'];
+            if (array_key_exists('SpeedIndexExp', $pageData[$fvMedian][0]))
+                echo "({$pageData[$fvMedian][0]['SpeedIndexExp']})";
             echo '</td>';
         }
         if( FRIENDLY_URLS )

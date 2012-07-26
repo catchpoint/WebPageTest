@@ -416,8 +416,12 @@ function ScreenShotTable()
                 $ms = $frame * 100;
                 if (array_key_exists('progress', $test['video']) 
                     && array_key_exists('frames', $test['video']['progress'])
-                    && array_key_exists($ms, $test['video']['progress']['frames']))
+                    && array_key_exists($ms, $test['video']['progress']['frames'])) {
                     $progress = $test['video']['progress']['frames'][$ms]['progress'];
+                    if (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) {
+                        $progress .= "({$test['video']['progress']['frames'][$ms]['cumulative_progress']})";
+                    }
+                }
 
                 if( !$lastThumb )
                     $lastThumb = $path;
