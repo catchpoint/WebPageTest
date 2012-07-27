@@ -9,7 +9,7 @@ function GetVisualProgress($testPath, $run, $cached) {
         $video_directory .= '_cached';
     $cache_file = "$testPath/$run.$cached.visual.dat";
     $dirty = false;
-    $current_version = 4;
+    $current_version = 3;
     if (gz_is_file($cache_file)) {
         $frames = json_decode(gz_file_get_contents($cache_file), true);
         if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
@@ -59,34 +59,18 @@ function GetVisualProgress($testPath, $run, $cached) {
                     isset($last_file) && strlen($last_file) && count($frames['frames'])) {
             $start_histogram = GetImageHistogram("$video_directory/$first_file");
             $final_histogram = GetImageHistogram("$video_directory/$last_file");
-            $previous = $start_histogram;
-            $total_diff = 0;
             foreach($frames['frames'] as $time => &$frame) {
                 $histogram = GetImageHistogram("$video_directory/{$frame['file']}");
                 $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram);
                 if ($frame['progress'] == 100 && !array_key_exists('complete', $frames)) {
                     $frames['complete'] = $time;
                 }
-                $frame['change'] = CountHistogramDifferences($previous, $histogram);
-                $total_diff += $frame['change'];
-                $previous = $histogram;
-            }
-            if ($total_diff) {
-                $cumulative_diff = 0;
-                foreach($frames['frames'] as $time => &$frame) {
-                    $cumulative_diff += $frame['change'];
-                    $frame['cumulative_progress'] = round(($cumulative_diff / $total_diff) * 100);
-                }
             }
         }
     }
     if (isset($frames) && !array_key_exists('FLI', $frames)) {
         $dirty = true;
-        $frames['FLI'] = CalculateSpeedIndex($frames);
-    }
-    if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
-        $dirty = true;
-        $frames['SpeedIndex'] = CalculateSpeedIndex($frames, 'cumulative_progress');
+        $frames['FLI'] = CalculateFeelsLikeIndex($frames);
     }
     if ($dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
@@ -176,7 +160,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
 /**
 * Boil the frame loading progress down to a single number
 */
-function CalculateSpeedIndex(&$frames, $metric = 'progress') {
+function CalculateFeelsLikeIndex(&$frames) {
     $index = null;
     if (array_key_exists('frames', $frames)) {
         $last_ms = 0;
@@ -186,33 +170,11 @@ function CalculateSpeedIndex(&$frames, $metric = 'progress') {
             $elapsed = $time - $last_ms;
             $index += $elapsed * (1.0 - $last_progress);
             $last_ms = $time;
-            $last_progress = $frame[$metric] / 100.0;
+            $last_progress = $frame['progress'] / 100.0;
         }
     }
     $index = (int)($index);
     
     return $index;
-}
-
-/**
-* Count the differences between 2 histograms
-* 
-* @param mixed $previous
-* @param mixed $current
-*/
-function CountHistogramDifferences(&$previous, &$current) {
-    $changes = 0;
-    $channels = array('r', 'g', 'b');
-    foreach ($channels as $channel) {
-        if (array_key_exists($channel, $current) && 
-            array_key_exists($channel, $previous) &&
-            count($current[$channel]) == 256 &&
-            count($previous[$channel]) == 256) {
-            for ($i = 0; $i < 256; $i++) {
-                $changes += abs($current[$channel][$i] - $previous[$channel][$i]);
-            }
-        }
-    }
-    return $changes;
 }
 ?>

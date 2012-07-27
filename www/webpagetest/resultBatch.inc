@@ -455,8 +455,6 @@ function DisplayTest($id, $url, $label, $complete)
             echo '<td>';
             if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
                 echo $pageData[$fvMedian][0]['SpeedIndex'];
-            if (array_key_exists('SpeedIndexExp', $pageData[$fvMedian][0]))
-                echo "({$pageData[$fvMedian][0]['SpeedIndexExp']})";
             echo '</td>';
         }
         if( FRIENDLY_URLS )
@@ -515,7 +513,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $rvLoadTimes = array();
     $rvRenderTimes = array();
     $fvFLI = array();
-    $fvSpeedIndexExp = array();
     $rvFLI = array();
     $original = array();
     $optimized = array();
@@ -533,7 +530,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $rvLoadTime = null;
         $rvRenderTime = null;
         $fvFLIvalue = null;
-        $fvSpeedIndexExpValue = null;
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
         $testPath = './' . $test['path'];
@@ -548,11 +544,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
-            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
-                $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndex'];
-            }
-            if (array_key_exists('SpeedIndexExp', $pageData[$fvMedian][0])) {
-                $fvSpeedIndexExpValue = $pageData[$fvMedian][0]['SpeedIndexExp'];
+            $visual = GetVisualProgress($testPath, $fvMedian, 0);
+            if (array_key_exists('FLI', $visual)) {
+                $fvFLIvalue = $visual['FLI'];
             }
             if( $count )
             {
@@ -658,7 +652,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $fvLoadTimes[$count] = $fvLoadTime;
         $fvRenderTimes[$count] = $fvRenderTime;
         $fvFLI[$count] = $fvFLIvalue;
-        $fvSpeedIndexExp[$count] = $fvSpeedIndexExpValue;
         if( !$fvonly )
         {
             $rvLoadTimes[$count] = $rvLoadTime;
@@ -846,7 +839,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 DisplayMetric('Start Render Time', $fvRenderTimes, $count);
             if( $admin || strpos($_COOKIE['google_email'], '@google.com') !== false ) {
                 DisplayMetric('Speed Index (lower is better)', $fvFLI, $count, false, false);
-                DisplayMetric('Speed Index (Experimental)', $fvSpeedIndexExp, $count, false, false);
             }
             if( !$fvonly )
             {

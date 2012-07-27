@@ -157,9 +157,6 @@ function loadPageData($file, $options = null)
             if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
                 $ret['SpeedIndex'] = $progress['FLI'];
             }
-            if (isset($progress) && is_array($progress) && array_key_exists('SpeedIndex', $progress)) {
-                $ret['SpeedIndexExp'] = $progress['SpeedIndex'];
-            }
         }
     }
     
