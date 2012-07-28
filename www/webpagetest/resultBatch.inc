@@ -115,6 +115,7 @@ else
         <?php
         if( !$complete )
         {
+            $autoRefresh = true;
             ?>
             <noscript>
             <meta http-equiv="refresh" content="30" />

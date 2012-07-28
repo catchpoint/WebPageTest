@@ -28,7 +28,9 @@ $page_description = "Website performance test result$testLabel.";
             if( window.location.host.length && wpt_host.length && window.location.host != wpt_host )
                 window.location = document.location.protocol + '//' + wpt_host + window.location.pathname;
         </script>
-        <?php if( !$testComplete ) { ?>
+        <?php if( !$testComplete ) { 
+                $autoRefresh = true;
+        ?>
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>

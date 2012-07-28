@@ -9,6 +9,7 @@
         setTimeout( "window.location.reload(true)", 15000 );
         </script>
         <?php 
+            $autoRefresh = true;
             $noanalytics = true;
             $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
             $page_description = "Running website performance test.";
