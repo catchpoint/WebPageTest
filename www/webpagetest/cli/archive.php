@@ -17,6 +17,11 @@ require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(0);
 
+if (array_key_exists('archive_days', $settings)) {
+    $MIN_DAYS = $settings['archive_days'];
+}
+$MIN_DAYS = max($MIN_DAYS,1);
+
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
@@ -48,7 +53,7 @@ foreach( $years as $year ) {
                         $date = DateTime::createFromFormat('ymd', "$year$month$day", $UTC);
                         $daytime = $date->getTimestamp();
                         $elapsed = max($now - $daytime, 0) / 86400;
-                        if ($elapsed >= $MIN_DAYS) {
+                        if ($elapsed >= ($MIN_DAYS - 1)) {
                             CheckDay($dayDir, "$year$month$day");
                         }
                     }
