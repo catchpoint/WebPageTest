@@ -15,7 +15,7 @@ if ($lock) {
 include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
-set_time_limit(0);
+set_time_limit(3300);   // only allow it to run for 55 minutes
 
 if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
