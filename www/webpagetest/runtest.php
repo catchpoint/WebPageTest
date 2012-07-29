@@ -1445,192 +1445,197 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     global $settings;
     $testId = null;
     
-    // generate the test ID
-    $test_num;
-    $id = uniqueId($test_num);
-    if( $test['private'] )
-        $id = ShardKey($test_num) . md5(uniqid(rand(), true));
-    else
-        $id = ShardKey($test_num) . $id;
-    $today = new DateTime("now", new DateTimeZone('UTC'));
-    $testId = $today->format('ymd_') . $id;
-    $test['path'] = './' . GetTestPath($testId);
-    
-    // make absolutely CERTAIN that this test ID doesn't already exist
-    while( is_dir($test['path']) )
-    {
-        // fall back to random ID's
-        $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+    if (CheckUrl($url)) {
+        // generate the test ID
+        $test_num;
+        $id = uniqueId($test_num);
+        if( $test['private'] )
+            $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+        else
+            $id = ShardKey($test_num) . $id;
+        $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
-    }
-
-    // create the folder for the test results
-    if( !is_dir($test['path']) )
-        mkdir($test['path'], 0777, true);
-    
-    // write out the ini file
-    $testInfo = "[test]\r\n";
-    $testInfo .= "fvonly={$test['fvonly']}\r\n";
-    $resultRuns = $test['runs'] - $test['discard'];
-    $testInfo .= "runs=$resultRuns\r\n";
-    $testInfo .= "location=\"{$test['locationText']}\"\r\n";
-    $testInfo .= "loc={$test['location']}\r\n";
-    $testInfo .= "id=$testId\r\n";
-    $testInfo .= "batch=$batch\r\n";
-    $testInfo .= "batch_locations=$batch_locations\r\n";
-    $testInfo .= "aft={$test['aft']}\r\n";
-    $testInfo .= "sensitive={$test['sensitive']}\r\n";
-    if( strlen($test['login']) )
-        $testInfo .= "authenticated=1\r\n";
-    $testInfo .= "connections={$test['connections']}\r\n";
-    if( strlen($test['script']) )
-        $testInfo .= "script=1\r\n";
-    if( strlen($test['notify']) )
-        $testInfo .= "notify={$test['notify']}\r\n";
-    if( strlen($test['video']) )
-        $testInfo .= "video=1\r\n";
-    if( strlen($test['uid']) )
-        $testInfo .= "uid={$test['uid']}\r\n";
-    if( strlen($test['owner']) )
-        $testInfo .= "owner={$test['owner']}\r\n";
-    if( strlen($test['type']) )
-        $testInfo .= "type={$test['type']}\r\n";
-    if( strlen($test['industry']) && strlen($test['industry_page']) )
-    {
-        $testInfo .= "industry=\"{$test['industry']}\"\r\n";
-        $testInfo .= "industry_page=\"{$test['industry_page']}\"\r\n";
-    }
-
-    if( isset($test['connectivity']) )
-    {
-        $testInfo .= "connectivity={$test['connectivity']}\r\n";
-        $testInfo .= "bwIn={$test['bwIn']}\r\n";
-        $testInfo .= "bwOut={$test['bwOut']}\r\n";
-        $testInfo .= "latency={$test['latency']}\r\n";
-        $testInfo .= "plr={$test['plr']}\r\n";
-    }
-    
-    $testInfo .= "\r\n[runs]\r\n";
-    if( $test['median_video'] )
-        $testInfo .= "median_video=1\r\n";
-
-    file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
-
-    // for "batch" tests (the master) we don't need to submit an actual test request
-    if( !$batch && !$batch_locations)
-    {
-        // build up the actual test commands
-        $testFile = '';
-        if( strlen($test['domElement']) )
-            $testFile .= "\r\nDOMElement={$test['domElement']}";
-        if( $test['fvonly'] )
-            $testFile .= "\r\nfvonly=1";
-        if( $test['web10'] )
-            $testFile .= "\r\nweb10=1";
-        if( $test['ignoreSSL'] )
-            $testFile .= "\r\nignoreSSL=1";
-        if( $test['tcpdump'] )
-            $testFile .= "\r\ntcpdump=1";
-        if( $test['timeline'] )
-            $testFile .= "\r\ntimeline=1";
-        if( $test['trace'] )
-            $testFile .= "\r\ntrace=1";
-        if( $test['netlog'] )
-            $testFile .= "\r\nnetlog=1";
-        if( $test['blockads'] )
-            $testFile .= "\r\nblockads=1";
-        if( $test['video'] )
-            $testFile .= "\r\nCapture Video=1";
-        if( $test['aft'] )
-        {
-            $testFile .= "\r\naft=1";
-            $testFile .= "\r\naftMinChanges={$test['aftMinChanges']}";
-            $testFile .= "\r\naftEarlyCutoff={$test['aftEarlyCutoff']}";
-        }
-        if( strlen($test['type']) )
-            $testFile .= "\r\ntype={$test['type']}";
-        if( $test['block'] )
-            $testFile .= "\r\nblock={$test['block']}";
-        if( $test['noopt'] )
-            $testFile .= "\r\nnoopt=1";
-        if( $test['noimages'] )
-            $testFile .= "\r\nnoimages=1";
-        if( $test['noheaders'] )
-            $testFile .= "\r\nnoheaders=1";
-        if( $test['discard'] )
-            $testFile .= "\r\ndiscard={$test['discard']}";
-        $testFile .= "\r\nruns={$test['runs']}\r\n";
         
+        // make absolutely CERTAIN that this test ID doesn't already exist
+        while( is_dir($test['path']) )
+        {
+            // fall back to random ID's
+            $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+            $testId = $today->format('ymd_') . $id;
+            $test['path'] = './' . GetTestPath($testId);
+        }
+
+        // create the folder for the test results
+        if( !is_dir($test['path']) )
+            mkdir($test['path'], 0777, true);
+        
+        // write out the ini file
+        $testInfo = "[test]\r\n";
+        $testInfo .= "fvonly={$test['fvonly']}\r\n";
+        $resultRuns = $test['runs'] - $test['discard'];
+        $testInfo .= "runs=$resultRuns\r\n";
+        $testInfo .= "location=\"{$test['locationText']}\"\r\n";
+        $testInfo .= "loc={$test['location']}\r\n";
+        $testInfo .= "id=$testId\r\n";
+        $testInfo .= "batch=$batch\r\n";
+        $testInfo .= "batch_locations=$batch_locations\r\n";
+        $testInfo .= "aft={$test['aft']}\r\n";
+        $testInfo .= "sensitive={$test['sensitive']}\r\n";
+        if( strlen($test['login']) )
+            $testInfo .= "authenticated=1\r\n";
+        $testInfo .= "connections={$test['connections']}\r\n";
+        if( strlen($test['script']) )
+            $testInfo .= "script=1\r\n";
+        if( strlen($test['notify']) )
+            $testInfo .= "notify={$test['notify']}\r\n";
+        if( strlen($test['video']) )
+            $testInfo .= "video=1\r\n";
+        if( strlen($test['uid']) )
+            $testInfo .= "uid={$test['uid']}\r\n";
+        if( strlen($test['owner']) )
+            $testInfo .= "owner={$test['owner']}\r\n";
+        if( strlen($test['type']) )
+            $testInfo .= "type={$test['type']}\r\n";
+        if( strlen($test['industry']) && strlen($test['industry_page']) )
+        {
+            $testInfo .= "industry=\"{$test['industry']}\"\r\n";
+            $testInfo .= "industry_page=\"{$test['industry_page']}\"\r\n";
+        }
+
         if( isset($test['connectivity']) )
         {
-            $testFile .= "bwIn={$test['bwIn']}\r\n";
-            $testFile .= "bwOut={$test['bwOut']}\r\n";
-            $testFile .= "latency={$test['testLatency']}\r\n";
-            $testFile .= "plr={$test['plr']}\r\n";
+            $testInfo .= "connectivity={$test['connectivity']}\r\n";
+            $testInfo .= "bwIn={$test['bwIn']}\r\n";
+            $testInfo .= "bwOut={$test['bwOut']}\r\n";
+            $testInfo .= "latency={$test['latency']}\r\n";
+            $testInfo .= "plr={$test['plr']}\r\n";
         }
-
-        if( isset($test['browserExe']) && strlen($test['browserExe']) )
-            $testFile .= "browser={$test['browserExe']}\r\n";
-        if( isset($test['browser']) && strlen($test['browser']) )
-            $testFile .= "browser={$test['browser']}\r\n";
-        if( $test['pngss'] || $settings['pngss'] )
-            $testFile .= "pngScreenShot=1\r\n";
-        if( $test['iq'] )
-            $testFile .= "imageQuality={$test['iq']}\r\n";
-        elseif( $settings['iq'] )
-            $testFile .= "imageQuality={$settings['iq']}\r\n";
-        if( $test['bodies'] )
-            $testFile .= "bodies=1\r\n";
-        if( $test['time'] )
-            $testFile .= "time={$test['time']}\r\n";
-        if( $test['clear_rv'] )
-            $testFile .= "clearRV={$test['clear_rv']}\r\n";
-        if( $test['keepua'] )
-            $testFile .= "keepua=1\r\n";
         
-        // see if we need to add custom scan rules
-        if (array_key_exists('custom_rules', $test)) {
-            foreach($test['custom_rules'] as &$rule) {
-                $rule = trim($rule);
-                if (strlen($rule)) {
-                    $testFile .= "customRule=$rule\r\n";
+        $testInfo .= "\r\n[runs]\r\n";
+        if( $test['median_video'] )
+            $testInfo .= "median_video=1\r\n";
+
+        file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
+
+        // for "batch" tests (the master) we don't need to submit an actual test request
+        if( !$batch && !$batch_locations)
+        {
+            // build up the actual test commands
+            $testFile = '';
+            if( strlen($test['domElement']) )
+                $testFile .= "\r\nDOMElement={$test['domElement']}";
+            if( $test['fvonly'] )
+                $testFile .= "\r\nfvonly=1";
+            if( $test['web10'] )
+                $testFile .= "\r\nweb10=1";
+            if( $test['ignoreSSL'] )
+                $testFile .= "\r\nignoreSSL=1";
+            if( $test['tcpdump'] )
+                $testFile .= "\r\ntcpdump=1";
+            if( $test['timeline'] )
+                $testFile .= "\r\ntimeline=1";
+            if( $test['trace'] )
+                $testFile .= "\r\ntrace=1";
+            if( $test['netlog'] )
+                $testFile .= "\r\nnetlog=1";
+            if( $test['blockads'] )
+                $testFile .= "\r\nblockads=1";
+            if( $test['video'] )
+                $testFile .= "\r\nCapture Video=1";
+            if( $test['aft'] )
+            {
+                $testFile .= "\r\naft=1";
+                $testFile .= "\r\naftMinChanges={$test['aftMinChanges']}";
+                $testFile .= "\r\naftEarlyCutoff={$test['aftEarlyCutoff']}";
+            }
+            if( strlen($test['type']) )
+                $testFile .= "\r\ntype={$test['type']}";
+            if( $test['block'] )
+                $testFile .= "\r\nblock={$test['block']}";
+            if( $test['noopt'] )
+                $testFile .= "\r\nnoopt=1";
+            if( $test['noimages'] )
+                $testFile .= "\r\nnoimages=1";
+            if( $test['noheaders'] )
+                $testFile .= "\r\nnoheaders=1";
+            if( $test['discard'] )
+                $testFile .= "\r\ndiscard={$test['discard']}";
+            $testFile .= "\r\nruns={$test['runs']}\r\n";
+            
+            if( isset($test['connectivity']) )
+            {
+                $testFile .= "bwIn={$test['bwIn']}\r\n";
+                $testFile .= "bwOut={$test['bwOut']}\r\n";
+                $testFile .= "latency={$test['testLatency']}\r\n";
+                $testFile .= "plr={$test['plr']}\r\n";
+            }
+
+            if( isset($test['browserExe']) && strlen($test['browserExe']) )
+                $testFile .= "browser={$test['browserExe']}\r\n";
+            if( isset($test['browser']) && strlen($test['browser']) )
+                $testFile .= "browser={$test['browser']}\r\n";
+            if( $test['pngss'] || $settings['pngss'] )
+                $testFile .= "pngScreenShot=1\r\n";
+            if( $test['iq'] )
+                $testFile .= "imageQuality={$test['iq']}\r\n";
+            elseif( $settings['iq'] )
+                $testFile .= "imageQuality={$settings['iq']}\r\n";
+            if( $test['bodies'] )
+                $testFile .= "bodies=1\r\n";
+            if( $test['time'] )
+                $testFile .= "time={$test['time']}\r\n";
+            if( $test['clear_rv'] )
+                $testFile .= "clearRV={$test['clear_rv']}\r\n";
+            if( $test['keepua'] )
+                $testFile .= "keepua=1\r\n";
+            
+            // see if we need to add custom scan rules
+            if (array_key_exists('custom_rules', $test)) {
+                foreach($test['custom_rules'] as &$rule) {
+                    $rule = trim($rule);
+                    if (strlen($rule)) {
+                        $testFile .= "customRule=$rule\r\n";
+                    }
                 }
             }
+
+            // see if we need to generate a SNS authentication script
+            if( strlen($test['login']) && strlen($test['password']) )
+            {
+                if( $test['authType'] == 1 )
+                    $test['script'] = GenerateSNSScript($test);
+                else
+                    $testFile .= "\r\nBasic Auth={$test['login']}:{$test['password']}\r\n";
+            }
+                
+            if( !SubmitUrl($testId, $testFile, $test, $url) )
+                $testId = null;
         }
 
-        // see if we need to generate a SNS authentication script
-        if( strlen($test['login']) && strlen($test['password']) )
+        // store the entire test data structure JSON encoded (instead of a bunch of individual files)
+        gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
+        
+        // log the test
+        if( isset($testId) )
         {
-            if( $test['authType'] == 1 )
-                $test['script'] = GenerateSNSScript($test);
+            if ( $batch_locations )
+                LogTest($test, $testId, 'Multiple Locations test');
+            else if( $batch )
+                LogTest($test, $testId, 'Bulk Test');
             else
-                $testFile .= "\r\nBasic Auth={$test['login']}:{$test['password']}\r\n";
+                LogTest($test, $testId, $url);
         }
-            
-        if( !SubmitUrl($testId, $testFile, $test, $url) )
-            $testId = null;
-    }
-
-    // store the entire test data structure JSON encoded (instead of a bunch of individual files)
-    gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
-    
-    // log the test
-    if( isset($testId) )
-    {
-        if ( $batch_locations )
-            LogTest($test, $testId, 'Multiple Locations test');
-        else if( $batch )
-            LogTest($test, $testId, 'Bulk Test');
         else
-            LogTest($test, $testId, $url);
+        {
+            // delete the test if we didn't really submit it
+            delTree("{$test['path']}/");
+        }
+    } else {
+        global $error;
+        $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
     }
-    else
-    {
-        // delete the test if we didn't really submit it
-        delTree("{$test['path']}/");
-    }
-
+    
     return $testId;
 }
 
