@@ -788,23 +788,32 @@ function LoadDelta($benchmark, $ref, $config, $cached, $metric, $test_time, $loc
     LoadMedianData($benchmark, $test_time);
     if (isset($median_data) && 
         array_key_exists($config, $median_data) &&
-        array_key_exists($loc, $median_data[$config]) &&
-        array_key_exists($cached, $median_data[$config][$loc]) &&
-        array_key_exists($ref, $median_data) &&
-        array_key_exists($loc, $median_data[$ref]) &&
-        array_key_exists($cached, $median_data[$ref][$loc])) {
-        foreach ($median_data[$config][$loc][$cached] as $url => &$data) {
-            if (array_key_exists($url, $median_data[$ref][$loc][$cached])) {
-                $refData = &$median_data[$ref][$loc][$cached][$url];
-                if (array_key_exists($metric, $data) &&
-                    array_key_exists($metric, $refData)) {
-                    $value = $data[$metric];
-                    $refValue = $refData[$metric];
-                    $deltaV = 0;
-                    if ($refValue) {
-                        $deltaV = ($value - $refValue) / $refValue;
+        array_key_exists($ref, $median_data)) {
+        if (isset($loc)) {
+            $refLoc = $loc;
+        } else {
+            reset($median_data[$config]);
+            $loc = key($median_data[$config]);
+            reset($median_data[$ref]);
+            $refLoc = key($median_data[$ref]);
+        }
+        if (array_key_exists($loc, $median_data[$config]) &&
+            array_key_exists($cached, $median_data[$config][$loc]) &&
+            array_key_exists($refLoc, $median_data[$ref]) &&
+            array_key_exists($cached, $median_data[$ref][$refLoc])) {
+            foreach ($median_data[$config][$loc][$cached] as $url => &$data) {
+                if (array_key_exists($url, $median_data[$ref][$refLoc][$cached])) {
+                    $refData = &$median_data[$ref][$refLoc][$cached][$url];
+                    if (array_key_exists($metric, $data) &&
+                        array_key_exists($metric, $refData)) {
+                        $value = $data[$metric];
+                        $refValue = $refData[$metric];
+                        $deltaV = 0;
+                        if ($refValue) {
+                            $deltaV = ($value - $refValue) / $refValue;
+                        }
+                        $delta[] = array('delta' => $deltaV, 'url' => $url, 'ref' => $refData['id'], 'cmp' => $data['id']);
                     }
-                    $delta[] = array('delta' => $deltaV, 'url' => $url, 'ref' => $refData['id'], 'cmp' => $data['id']);
                 }
             }
         }
