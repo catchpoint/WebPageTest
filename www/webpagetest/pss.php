@@ -191,6 +191,10 @@ $page_description = "Comparison Test$testLabel.";
                             <label for="bodies">Save Response Bodies<br><small>Text resources only</small></label>
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
+                        <li>
+                            <label for="aggressive">Apply Aggressive Optimizations</label>
+                            <input type="checkbox" name="aggressive" id="aggressive" class="checkbox">
+                        </li>
                     </ul>
                     <ul class="input_fields">
                         <li>
@@ -314,6 +318,13 @@ $page_description = "Comparison Test$testLabel.";
                 {
                     script = form.script.value;
                     script = "addHeader\tModPagespeedDomainShardCount: " + shard + "\n" + script;
+                    form.script.value = script;
+                }
+                
+                if (form.aggressive.checked) {
+                    form.web10.value = 0;
+                    script = form.script.value;
+                    script = "addHeader\tModPagespeedFilters:+prioritize_visible_content\t%HOST_REGEX%\n" + script;
                     form.script.value = script;
                 }
 
