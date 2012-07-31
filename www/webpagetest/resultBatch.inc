@@ -815,71 +815,73 @@ function DisplayPSS(&$tests, $video, &$dirty)
             echo '</div>';
         }
         
-        echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
-                <tr>
-                <th class="empty"></th>';
-        // second pass, generate the header
-        $count = 0;
-        foreach( $tests['urls'] as &$test )
-        {
-            $label = htmlspecialchars($test['l']);
-            if( !strlen($label) )
-                $label = htmlspecialchars(ShortenUrl($test['u']));
-            echo "<th>$label</th>";
-            if( $count && $complete )
-                echo "<th>Difference</a></th>";
-            $count++;
-        }
-        echo '</tr>';
-        
-        // FV Page load time
-        if( $complete )
-        {
-            DisplayMetric('Page Load Time', $fvLoadTimes, $count);
-            if( $includeRender )
-                DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-            if( $admin || strpos($_COOKIE['google_email'], '@google.com') !== false ) {
-                DisplayMetric('Speed Index (lower is better)', $fvFLI, $count, false, false);
-            }
-            if( !$fvonly )
-            {
-                DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
-                if( $includeRender )
-                    DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
-            }
-
-            // links to the test results
-            echo '<tr><td class="right">Full Test Result</td>';
+        if ($testInfo['web10']) {
+            echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
+                    <tr>
+                    <th class="empty"></th>';
+            // second pass, generate the header
             $count = 0;
             foreach( $tests['urls'] as &$test )
             {
-                $testurl = "/results.php?test={$test['id']}";
-                if( FRIENDLY_URLS )
-                    $testurl = "/result/{$test['id']}/";
-                $path = $test['path'];
-                $run = $test['fvMedian'];
-                echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
-                if( $count )
-                    echo "<td></td>";
+                $label = htmlspecialchars($test['l']);
+                if( !strlen($label) )
+                    $label = htmlspecialchars(ShortenUrl($test['u']));
+                echo "<th>$label</th>";
+                if( $count && $complete )
+                    echo "<th>Difference</a></th>";
                 $count++;
             }
-            echo "</tr>";
-        }
-        else
-        {
-            echo "<tr><td>Test Status</td>";
-            foreach( $tests['urls'] as &$test )
-            {
-                echo '<td>';
-                if( $test['c'] )
-                    echo 'Complete';
-                else
-                    echo $test['status'];
-                echo '</td>';
-            }
             echo '</tr>';
+            
+            // FV Page load time
+            if( $complete )
+            {
+                DisplayMetric('Page Load Time', $fvLoadTimes, $count);
+                if( $includeRender )
+                    DisplayMetric('Start Render Time', $fvRenderTimes, $count);
+                if( $admin || strpos($_COOKIE['google_email'], '@google.com') !== false ) {
+                    DisplayMetric('Speed Index (lower is better)', $fvFLI, $count, false, false);
+                }
+                if( !$fvonly )
+                {
+                    DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
+                    if( $includeRender )
+                        DisplayMetric('Repeat View Start Render Time', $rvRenderTimes, $count);
+                }
+
+                // links to the test results
+                echo '<tr><td class="right">Full Test Result</td>';
+                $count = 0;
+                foreach( $tests['urls'] as &$test )
+                {
+                    $testurl = "/results.php?test={$test['id']}";
+                    if( FRIENDLY_URLS )
+                        $testurl = "/result/{$test['id']}/";
+                    $path = $test['path'];
+                    $run = $test['fvMedian'];
+                    echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+                    if( $count )
+                        echo "<td></td>";
+                    $count++;
+                }
+                echo "</tr>";
+            }
+            else
+            {
+                echo "<tr><td>Test Status</td>";
+                foreach( $tests['urls'] as &$test )
+                {
+                    echo '<td>';
+                    if( $test['c'] )
+                        echo 'Complete';
+                    else
+                        echo $test['status'];
+                    echo '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</table><br>';
         }
-        echo '</table><br>';
     }
 
     // video

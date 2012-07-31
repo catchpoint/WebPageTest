@@ -192,8 +192,14 @@ $page_description = "Comparison Test$testLabel.";
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
                         <li>
-                            <label for="aggressive">Apply Aggressive Optimizations</label>
-                            <input type="checkbox" name="aggressive" id="aggressive" class="checkbox">
+                            <label for="aggressive"><a style="color:#fff;" href="https://developers.google.com/speed/docs/pss/PrioritizeAboveTheFold">Advanced Rewriters</a></label>
+                            <?php
+                            $checked = '';
+                            if (array_key_exists('option', $_GET) && $_GET['option'] == 'prioritize_visible_content') {
+                                $checked = ' checked="checked"';
+                            }
+                            echo "<input type=\"checkbox\" name=\"aggressive\" id=\"aggressive\" class=\"checkbox\"$checked>\n";
+                            ?>
                         </li>
                     </ul>
                     <ul class="input_fields">
