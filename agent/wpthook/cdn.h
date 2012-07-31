@@ -85,6 +85,8 @@ CDN_PROVIDER cdnList[] = {
   {".r.cdn77.net", "CDN77"},
   {".incapdns.net", "Incapsula"},
   {".bitgravity.com", "BitGravity"},
+  {".r.worldcdn.net", "OnApp"},
+  {".r.worldssl.net", "OnApp"},
   {"END_MARKER", "END_MARKER"}
 };
 

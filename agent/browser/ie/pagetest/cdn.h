@@ -45,6 +45,8 @@ CDN_PROVIDER cdnList[] = {
   {".r.cdn77.net", _T("CDN77")},
   {".incapdns.net", _T("Incapsula")},
   {".bitgravity.com", _T("BitGravity")},
+  {".r.worldcdn.net", _T("OnApp")},
+  {".r.worldssl.net", _T("OnApp")},
   {NULL, NULL}
 };
 
