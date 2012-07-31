@@ -167,7 +167,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             echo "var medianMetric=\"$median_metric\";\n";
                         ?>
                         var menu = '<div><h4>View test for ' + url + '</h4>';
-                        var compare = "/video/compare.php?medianMetric=" + medianMetric + "&tests=";
+                        var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
                         for( i = 0; i < tests.length; i++ ) {
                             menu += '<a href="/result/' + tests[i] + '/?medianMetric=' + medianMetric + '" target="_blank">' + seriesData[i].name + '</a><br>';
                             if (i) {

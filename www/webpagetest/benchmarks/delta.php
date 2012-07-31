@@ -154,7 +154,7 @@ if (array_key_exists('metric', $_REQUEST)) {
                         var menu = '<div><h4>View test for ' + data[index].url + '</h4>';
                         menu += '<a href="/result/' + data[index].ref + '/?medianMetric=' + medianMetric + '" target="_blank">' + ref + '</a><br>';
                         menu += '<a href="/result/' + data[index].cmp + '/?medianMetric=' + medianMetric + '" target="_blank">' + cmp + '</a><br>';
-                        var compare = "/video/compare.php?medianMetric=" + medianMetric + "&tests=";
+                        var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
                         compare += encodeURIComponent(data[index].ref + "-l:" + ref.replace("-","").replace(":",""));
                         compare += "," + encodeURIComponent(data[index].cmp + "-l:" + cmp.replace("-","").replace(":",""));
                         menu += '<br><a href="' + compare + '">Filmstrip Comparison</a>';
