@@ -1,6 +1,12 @@
 <?php
     require_once('common.inc');
     set_time_limit(300);
+
+    if(extension_loaded('newrelic')) { 
+        newrelic_add_custom_tracer('WriteJob');
+        newrelic_add_custom_tracer('AddJobFile');
+        newrelic_add_custom_tracer('LogTest');
+    }
      
     $error = NULL;
     $xml = false;
@@ -102,6 +108,7 @@
             if (is_file('./settings/customrules.txt')) {
                 $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             }
+            $test['pss_advanced'] = $req_pss_advanced;
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -775,6 +782,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['sensitive'] = $test['sensitive'] ? 1 : 0;
             $test['pngss'] = $test['pngss'] ? 1 : 0;
             $test['bodies'] = $test['bodies'] ? 1 : 0;
+            $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
                 
             if( $test['aft'] )
             {
@@ -1177,8 +1185,14 @@ function WriteJob($location, &$test, &$job, $testId)
                         // store a copy of the job file with the original test in case the test fails and we need to resubmit it
                         $test['work_dir'] = $workDir;
                         $test['job_file'] = $file;
-                        $testPath = './' . GetTestPath($testId);
-                        file_put_contents("$testPath/$fileName.test", $job);
+                        $testPath = GetTestPath($testId);
+                        if (strlen($testPath)) {
+                            $testPath = './' . $testPath;
+                            if (!is_dir($testPath)) {
+                                mkdir($testPath, 0777, true);
+                                file_put_contents("$testPath/$fileName.test", $job);
+                            }
+                        }
                         $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
                         if( !$tests )
                             $tests = array();
