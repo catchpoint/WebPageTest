@@ -1186,7 +1186,7 @@ function WriteJob($location, &$test, &$job, $testId)
                         $test['work_dir'] = $workDir;
                         $test['job_file'] = $file;
                         $testPath = GetTestPath($testId);
-                        if (strlen($testPath)) {
+                        if (ValidateTestId($testId) && strlen($testPath)) {
                             $testPath = './' . $testPath;
                             if (!is_dir($testPath)) {
                                 mkdir($testPath, 0777, true);
