@@ -222,6 +222,19 @@ else
                 }
                 <?php
                 include "waterfall.css";
+                if (defined('EMBED')) {
+                ?>
+                #location {display: none;}
+                #bottom {display: none;}
+                #layout {display: none;}
+                #export {display: none;}
+                div.content {padding: 0; background-color: #fff;}
+                div.page {width: 100%;}
+                #videoContainer {background-color: #000; border-spacing: 0; width: 100%; margin: 0;}
+                #videoDiv {padding-bottom: 0;}
+                body {background-color: #fff; margin: 0; padding: 0;}
+                <?php
+                }
                 ?>
                 div.waterfall-container {top: -8em;}
             </style>
@@ -323,8 +336,11 @@ function ScreenShotTable()
         foreach( $tests as &$test )
             if( $test['video']['end'] > $end )
                 $end = $test['video']['end'];
-                
-        echo '<br><form id="createForm" name="create" method="get" action="/video/create.php" onsubmit="return ValidateInput(this)">';
+        
+        if (!defined('EMBED')) {
+            echo '<br>';
+        }
+        echo '<form id="createForm" name="create" method="get" action="/video/create.php" onsubmit="return ValidateInput(this)">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
         echo '<table id="videoContainer"><tr>';
 
@@ -353,16 +369,21 @@ function ScreenShotTable()
                 $testEnd = (int)(($test['end'] + 99) / 100);
                 $testEnd = (float)$testEnd / 10.0;
             }
-            echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
-            $cached = '';
-            if( $test['cached'] )
-                $cached = 'cached/';
-            if( FRIENDLY_URLS )
-                echo "<a class=\"pagelink\" href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">";
-            else
-                echo "<a class=\"pagelink\" href=\"/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}\">";
+            if (!defined('EMBED')) {
+                echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
+                $cached = '';
+                if( $test['cached'] )
+                    $cached = 'cached/';
+                if( FRIENDLY_URLS )
+                    echo "<a class=\"pagelink\" href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">";
+                else
+                    echo "<a class=\"pagelink\" href=\"/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}\">";
+            }
             echo WrapableString($test['name']);
-            echo "</a></td></tr>\n";
+            if (!defined('EMBED')) {
+                echo "</a>";
+            }
+            echo "</td></tr>\n";
         }
         echo '</table></td>';
         
@@ -477,13 +498,13 @@ function ScreenShotTable()
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
         $ival = $interval * 100;
-        echo "<a class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime\">Export filmstrip as an image...</a>";
+        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
         echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
         echo "</div></form>";
-        
+        if (!defined('EMBED')) {
         ?>
         <div id="layout">
             <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
@@ -558,16 +579,6 @@ function ScreenShotTable()
             </form>
         </div>
         <?php
-        
-        // scroll the table to show the first thumbnail change
-        $scrollPos = $firstFrame * ($thumbSize + 8);
-        ?>
-        <script language="javascript">
-            var scrollPos = <?php echo "$scrollPos;"; ?>
-            document.getElementById("videoDiv").scrollLeft = scrollPos;
-        </script>
-        <?php
-        
         // display the waterfall if there is only one test
         if( count($tests) == 1 )
         {
@@ -602,6 +613,15 @@ function ScreenShotTable()
         </div>
         <?php
         echo '<br><br>';
+        } // EMBED
+        // scroll the table to show the first thumbnail change
+        $scrollPos = $firstFrame * ($thumbSize + 8);
+        ?>
+        <script language="javascript">
+            var scrollPos = <?php echo "$scrollPos;"; ?>
+            document.getElementById("videoDiv").scrollLeft = scrollPos;
+        </script>
+        <?php
     }
 }
 

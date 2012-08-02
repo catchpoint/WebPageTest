@@ -1,31 +1,33 @@
 <?php
-    require_once('page_data.inc');
+require_once('page_data.inc');
 
-    if( $supportsAuth )
+if( $supportsAuth && !defined('EMBED') )
+{
+    echo '<div id="wptAuthBar">';
+    if( isset($user) )
     {
-        echo '<div id="wptAuthBar">';
-        if( isset($user) )
-        {
-            $logoutUrl = '/forums/member.php?action=logout';
-            if( isset($mybb) && strlen($mybb->user['logoutkey']) )
-                $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-            echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-        }
-        else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-	    {
-            $logoutUrl = 'javascript:ClearOAuthCookies();';
-            $google_email = $_COOKIE['google_email'];
-            echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
-        }
-        else
-        {
-            echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-            echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
-            $currentPath = $_SERVER['SCRIPT_NAME'];
-            echo '<a href="/oauth/login.php">Login with Google</a> ';
-        }
-        echo '</div>';
+        $logoutUrl = '/forums/member.php?action=logout';
+        if( isset($mybb) && strlen($mybb->user['logoutkey']) )
+            $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
+        echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
+    else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
+	{
+        $logoutUrl = 'javascript:ClearOAuthCookies();';
+        $google_email = $_COOKIE['google_email'];
+        echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+    }
+    else
+    {
+        echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+        echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+        $currentPath = $_SERVER['SCRIPT_NAME'];
+        echo '<a href="/oauth/login.php">Login with Google</a> ';
+    }
+    echo '</div>';
+}
+
+if (!defined('EMBED')) {
 ?>
 
 <div id="header">
@@ -143,6 +145,7 @@ if (isset($settings['alert']) && strlen($settings['alert'])) {
     echo $settings['alert'];
     echo '</div>';
 }
+} // EMBED
 ?>
     
 <div id="main">
@@ -153,7 +156,7 @@ if (isset($settings['alert']) && strlen($settings['alert'])) {
             
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
-if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
+if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
 {
     // make sure the test is actually complete
     if( (isset($test['test']) && isset($test['test']['completeTime'])) )
@@ -286,6 +289,15 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader )
     <?php
     }
 }
+
+// include the comparison UI pop-up dialog
+/*
+if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) && strlen($_COOKIE['compare']))) {
+    echo '<div id="compare-dlg">';
+    echo 'Compare';
+    echo '</div>';
+}
+*/
 
 /**
 * Calculate the grades for the given test

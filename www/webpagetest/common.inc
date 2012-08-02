@@ -54,7 +54,10 @@ if (!is_dir($tempDir))
 $tempDir .= '/';
 define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
-if (isset($req_bare)) {
+if (isset($req_embed)) {
+    define('EMBED', true);
+    define('BARE_UI', true);
+} elseif (isset($req_bare)) {
     define('BARE_UI', true);
 }
 // load the install-specific settings
@@ -280,24 +283,20 @@ function GetTestPath($id)
 {
     global $settings;
     $base = 'results';
-    $testPath = "$base/$id";
     // see if it is a relay test (includes the key)
-    if( strpos($id, '.') !== false )
-    {
+    if( strpos($id, '.') !== false ) {
         $parts = explode('.', $id);
-        if( count($parts) == 2 )
-        {
+        if( count($parts) == 2 ) {
             $key = trim($parts[0]);
-            if( strlen($key) )
-            {
+            if( strlen($key) ) {
                 $base .= "/relay/$key";
                 $id = trim($parts[1]);
             }
         }
     }
     
-    if( strpos($id, '_') == 6 )
-    {
+    $testPath = "$base/$id";
+    if( strpos($id, '_') == 6 ) {
         $parts = explode('_', $id);
         
         // see if we have an extra level of hashing
@@ -306,9 +305,7 @@ function GetTestPath($id)
             $dir .= '/' . $parts[2];
         
         $testPath = "$base/" . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
-    }
-    elseif( strlen($settings['olddir']) )
-    {
+    } elseif( strlen($settings['olddir']) ) {
         if( $settings['oldsubdir'] )
             $testPath = "$base/{$settings['olddir']}/_" . strtoupper(substr($id, 0, 1)) . "/$id";
         else

@@ -139,6 +139,10 @@ else
                 display: none;
                 position: absolute;
             }
+            #filmstrip {
+                width: 100%;
+                height: 400px;
+            }
         </style>
         </style>
         <script type="text/javascript" src="/video/player/flowplayer-3.2.6.min.js"></script>
@@ -815,7 +819,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             echo '</div>';
         }
         
-        if ($testInfo['web10']) {
+        if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
             echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
                     <tr>
                     <th class="empty"></th>';
@@ -936,7 +940,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
         } else {
             if( $videoComplete )
             {
-                echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
+                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                }
                 VideoHtml($videoInfo['vID']);
             }
             else
@@ -945,6 +951,12 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
             }
         }
+    }
+    
+    if ($videoComplete && array_key_exists('pss_advanced', $testInfo) && $testInfo['pss_advanced']) {
+        echo "<br><br>";
+        echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">open in new window</a>)</h2>";
+        echo "<iframe frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\"></iframe>";
     }
 }
 

@@ -192,13 +192,13 @@ $page_description = "Comparison Test$testLabel.";
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
                         <li>
-                            <label for="aggressive"><a style="color:#fff;" href="https://developers.google.com/speed/docs/pss/PrioritizeAboveTheFold">Advanced Rewriters</a></label>
+                            <label for="pss_advanced"><a style="color:#fff;" href="https://developers.google.com/speed/docs/pss/PrioritizeAboveTheFold">Advanced Rewriters</a></label>
                             <?php
                             $checked = '';
                             if (array_key_exists('option', $_GET) && $_GET['option'] == 'prioritize_visible_content') {
                                 $checked = ' checked="checked"';
                             }
-                            echo "<input type=\"checkbox\" name=\"aggressive\" id=\"aggressive\" class=\"checkbox\"$checked>\n";
+                            echo "<input type=\"checkbox\" name=\"pss_advanced\" id=\"pss_advanced\" class=\"checkbox\"$checked>\n";
                             ?>
                         </li>
                     </ul>
@@ -327,7 +327,7 @@ $page_description = "Comparison Test$testLabel.";
                     form.script.value = script;
                 }
                 
-                if (form.aggressive.checked) {
+                if (form.pss_advanced.checked) {
                     form.web10.value = 0;
                     script = form.script.value;
                     script = "addHeader\tModPagespeedFilters:+prioritize_visible_content\t%HOST_REGEX%\n" + script;
