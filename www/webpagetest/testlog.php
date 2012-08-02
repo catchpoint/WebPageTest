@@ -188,7 +188,10 @@ else
 							            $token = strtok("\t");
 						            }
 						            
-						            if( $date && $location && $url && $guid)
+                                    if (!$location) {
+                                        $location = '';
+                                    }
+						            if( isset($date) && isset($location) && isset($url) && isset($guid))
 						            {
                                         // see if it is supposed to be filtered out
                                         if ($private) {
