@@ -282,9 +282,9 @@ wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
  */
 wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
   if (this.chromeApi_['browsingData'] != undefined) {
-    this.chromeApi_.browsingData.removeCache({}, function(){});
+    this.chromeApi_.browsingData.removeCache({}, function() {});
   } else if (this.chromeApi_.experimental['clear'] != undefined) {
-    this.chromeApi_.experimental.clear.cache(0, function(){});
+    this.chromeApi_.experimental.clear.cache(0, function() {});
   }
 };
 

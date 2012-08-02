@@ -29,8 +29,8 @@
 
  ******************************************************************************/
 
-goog.require('wpt.commands');
 goog.require('wpt.chromeDebugger');
+goog.require('wpt.commands');
 goog.require('wpt.logging');
 
 goog.provide('wpt.main');
@@ -297,10 +297,10 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
 		}
 		wpt.LOG.info(details.error + ' = ' + error_code);
 		g_active = false;
-		wptSendEvent('navigate_error?error=' + error_code + 
+		wptSendEvent('navigate_error?error=' + error_code +
 							'&str=' + encodeURIComponent(details.error), '');
 	}
-}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onCompleted.addListener(function(details) {
@@ -311,7 +311,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
 			wptSendEvent('navigate_error?error=' + details.statusCode, '');
 		}
 	}
-}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
@@ -329,8 +329,8 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
 		}
 	}
 	return action;
-  }, {urls: ["https://*/*"]}, 
-  ["blocking"]
+  }, {urls: ['https://*/*']},
+  ['blocking']
 );
 
 chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
@@ -340,17 +340,17 @@ chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
 		for (originalHost in g_overrideHosts) {
 			if (g_overrideHosts[originalHost] == host) {
 				details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-				response = {requestHeaders: details.requestHeaders}
+				response = {requestHeaders: details.requestHeaders};
 				break;
 			}
 		}
 	}
     return response;
   },
-  {urls: ["https://*/*"]},
-  ["blocking", "requestHeaders"]
+  {urls: ['https://*/*']},
+  ['blocking', 'requestHeaders']
 );
-  
+
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {

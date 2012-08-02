@@ -13786,9 +13786,9 @@ wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
  */
 wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
   if (this.chromeApi_['browsingData'] != undefined) {
-    this.chromeApi_.browsingData.removeCache({}, function(){});
+    this.chromeApi_.browsingData.removeCache({}, function() {});
   } else if (this.chromeApi_.experimental['clear'] != undefined) {
-    this.chromeApi_.experimental.clear.cache(0, function(){});
+    this.chromeApi_.experimental.clear.cache(0, function() {});
   }
 };
 
@@ -13817,16 +13817,16 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi) {
 	try {
 		g_instance.tabId_ = tabId;
 		g_instance.chromeApi_ = chromeApi;
-    var version = "1.0";
+    var version = '1.0';
 		if (g_instance.chromeApi_['debugger']) {
-				g_instance.chromeApi_.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
+				g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
 		} else if (g_instance.chromeApi_.experimental['debugger']) {
 			// deal with the different function signatures for different chrome versions
 			try {
 				g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
 			} catch (err) {
-				version = "0.1";
-				g_instance.chromeApi_.experimental.debugger.attach({tabId:g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
+				version = '0.1';
+				g_instance.chromeApi_.experimental.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
 			}
 		}
   } catch (err) {
@@ -13842,9 +13842,9 @@ wpt.chromeDebugger.CaptureTimeline = function() {
 	if (g_instance.connected) {
 		try {
 			if (g_instance.chromeApi_['debugger']) {
-				g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+				g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
 			} else if (g_instance.chromeApi_.experimental['debugger']) {
-				g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+				g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
 			}
 			g_instance.timelineConnected = true;
 		} catch (err) {
@@ -13858,7 +13858,7 @@ wpt.chromeDebugger.CaptureTimeline = function() {
  */
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 	// Network events
-	if (message === "Network.requestWillBeSent") {
+	if (message === 'Network.requestWillBeSent') {
 		if (params.request.url.indexOf('http') == 0) {
 			var detail = {};
 			detail.url = params.request.url;
@@ -13869,13 +13869,13 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
 			g_instance.requests[params.requestId] = detail;
 		}
-	} else if (message === "Network.dataReceived") {
-		if (g_instance.requests[params.requestId] !== undefined && 
+	} else if (message === 'Network.dataReceived') {
+		if (g_instance.requests[params.requestId] !== undefined &&
 				g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
 			g_instance.requests[params.requestId].firstByteTime = params.timestamp;
 		}
-	} else if (message === "Network.responseReceived") {
-		if (!params.response.fromDiskCache && 
+	} else if (message === 'Network.responseReceived') {
+		if (!params.response.fromDiskCache &&
 				g_instance.requests[params.requestId] !== undefined) {
       g_instance.requests[params.requestId].fromNet = true;
       if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
@@ -13883,14 +13883,14 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
       g_instance.requests[params.requestId].response = params.response;
 		}
-	} else if (message === "Network.loadingFinished") {
+	} else if (message === 'Network.loadingFinished') {
 		if (g_instance.requests[params.requestId] !== undefined &&
         g_instance.requests[params.requestId]['fromNet']) {
 			request = g_instance.requests[params.requestId];
 			request.endTime = params.timestamp;
 			wpt.chromeDebugger.sendRequestDetails(request);
     }
-	} else if (message === "Network.loadingFailed") {
+	} else if (message === 'Network.loadingFailed') {
 		if (g_instance.requests[params.requestId] !== undefined) {
 			request = g_instance.requests[params.requestId];
 			request.endTime = params.timestamp;
@@ -13912,19 +13912,19 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 			wpt.chromeDebugger.sendRequestDetails(request);
     }
 	}
-	
+
 	// console events
-	else if (message === "Console.messageAdded") {
+	else if (message === 'Console.messageAdded') {
 		wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
 	}
-	
+
 	// Timeline
-	else if (message === "Timeline.eventRecorded") {
+	else if (message === 'Timeline.eventRecorded') {
 		wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
 	}
-  
+
   // Page events
-	else if (message === "Page.loadEventFired") {
+	else if (message === 'Page.loadEventFired') {
 		wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
 	}
 }
@@ -13932,72 +13932,72 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 /**
  * Attached using the 1.0 released interface
  */
-wpt.chromeDebugger.OnAttachDebugger = function(){
+wpt.chromeDebugger.OnAttachDebugger = function() {
 	wpt.LOG.info('attached to debugger extension interface');
 	g_instance.connected = true;
 	g_instance.requests = {};
-	
+
 	// attach the event listener
 	g_instance.chromeApi_.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-	
+
 	// start the different interfaces we are interested in monitoring
-	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
-	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
-	g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Page.enable");
+	g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
+	g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
+	g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
 	if (g_instance.timeline && !g_instance.timelineConnected) {
 		g_instance.timelineConnected = true;
-		g_instance.chromeApi_.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+		g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
 	}
 }
-			
+
 /**
  * Attached using the old experimental interface
  */
-wpt.chromeDebugger.OnAttachOld = function(){
+wpt.chromeDebugger.OnAttachOld = function() {
 	wpt.LOG.info('attached to debugger old experimental extension interface');
 	g_instance.connected = true;
 	g_instance.requests = {};
-	
+
 	// attach the event listener
 	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-	
+
 	// start the different interfaces we are interested in monitoring
-	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Network.enable");
-	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Console.enable");
-	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Page.enable");
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Network.enable');
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Console.enable');
+	g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Page.enable');
 	if (g_instance.timeline && !g_instance.timelineConnected) {
 		g_instance.timelineConnected = true;
-		g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, "Timeline.start");
+		g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
 	}
 }
 
 /**
  * Attached using the new experimental interface
  */
-wpt.chromeDebugger.OnAttachExperimental = function(){
+wpt.chromeDebugger.OnAttachExperimental = function() {
 	wpt.LOG.info('attached to debugger experimental extension interface');
 	g_instance.requests = {};
-	
+
 	// attach the event listener
 	g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-	
+
 	// start the different interfaces we are interested in monitoring
-	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Network.enable");
-	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Console.enable");
-	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Page.enable");
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
+	g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
 	// the timeline is pretty resource intensive so it is optional
 	if (g_instance.timeline && !g_instance.timelineConnected) {
 		g_instance.timelineConnected = true;
-    g_instance.chromeApi_.experimental.debugger.sendCommand({tabId:g_instance.tabId_}, "Timeline.start");
+    g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
   }
 }
-			
+
 /**
  * Process and send the data for a single request
  * to the hook for processing
- * @param {object} request Request data
+ * @param {object} request Request data.
  */
-wpt.chromeDebugger.sendRequestDetails = function (request) {
+wpt.chromeDebugger.sendRequestDetails = function(request) {
 	var eventData = 'browser=chrome\n';
 	eventData += 'url=' + request.url + '\n';
 	if (request['errorCode'] !== undefined)
@@ -14010,7 +14010,7 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 		eventData += 'firstByteTime=' + request.firstByteTime + '\n';
 	if (request['endTime'] !== undefined)
 		eventData += 'endTime=' + request.endTime + '\n';
-	if (request['initiator'] !== undefined 
+	if (request['initiator'] !== undefined
 			&& request.initiator['type'] !== undefined) {
 		eventData += 'initiatorType=' + request.initiator.type + '\n';
 		if (request.initiator.type == 'parser') {
@@ -14018,8 +14018,8 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 				eventData += 'initiatorUrl=' + request.initiator.url + '\n';
 			if (request.initiator['lineNumber'] !== undefined)
 				eventData += 'initiatorLineNumber=' + request.initiator.lineNumber + '\n';
-		} else if (request.initiator.type == 'script' && 
-							request.initiator['stackTrace'] && 
+		} else if (request.initiator.type == 'script' &&
+							request.initiator['stackTrace'] &&
 							request.initiator.stackTrace[0]) {
 			if (request.initiator.stackTrace[0]['url'] !== undefined)
 				eventData += 'initiatorUrl=' + request.initiator.stackTrace[0].url + '\n';
@@ -14045,11 +14045,11 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 			eventData += 'timing.sslEnd=' + request.response.timing.sslEnd + '\n';
 			eventData += 'timing.requestTime=' + request.response.timing.requestTime + '\n';
 		}
-		
+
 		// the end of the data is ini-file style for multi-line values
 		eventData += '\n';
 		if (request.response['requestHeadersText'] !== undefined) {
-			eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n'
+			eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n';
     } else if (request['request'] !== undefined) {
       eventData += '[Request Headers]\n';
       var method = 'GET';
@@ -14074,7 +14074,7 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
       eventData += '\n';
     }
 		if (request.response['headersText'] !== undefined)
-			eventData += '[Response Headers]\n' + request.response.headersText + '\n'
+			eventData += '[Response Headers]\n' + request.response.headersText + '\n';
 	} else if (request['request'] !== undefined) {
     eventData += '[Request Headers]\n';
     var method = 'GET';
@@ -14104,10 +14104,10 @@ wpt.chromeDebugger.sendRequestDetails = function (request) {
 
 /**
  * Send an event to the c++ code
- * @param {string} event event string
- * @param {string} data event data (post body)
+ * @param {string} event event string.
+ * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function (event, data) {
+wpt.chromeDebugger.sendEvent = function(event, data) {
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
@@ -14149,8 +14149,8 @@ wpt.chromeDebugger.sendEvent = function (event, data) {
 
  ******************************************************************************/
 
-goog.require('wpt.commands');
 goog.require('wpt.chromeDebugger');
+goog.require('wpt.commands');
 goog.require('wpt.logging');
 
 goog.provide('wpt.main');
@@ -14417,10 +14417,10 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
 		}
 		wpt.LOG.info(details.error + ' = ' + error_code);
 		g_active = false;
-		wptSendEvent('navigate_error?error=' + error_code + 
+		wptSendEvent('navigate_error?error=' + error_code +
 							'&str=' + encodeURIComponent(details.error), '');
 	}
-}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onCompleted.addListener(function(details) {
@@ -14431,7 +14431,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
 			wptSendEvent('navigate_error?error=' + details.statusCode, '');
 		}
 	}
-}, {urls: ["http://*/*","https://*/*"], types: ["main_frame"]}
+}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
@@ -14449,8 +14449,8 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
 		}
 	}
 	return action;
-  }, {urls: ["https://*/*"]}, 
-  ["blocking"]
+  }, {urls: ['https://*/*']},
+  ['blocking']
 );
 
 chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
@@ -14460,17 +14460,17 @@ chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
 		for (originalHost in g_overrideHosts) {
 			if (g_overrideHosts[originalHost] == host) {
 				details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-				response = {requestHeaders: details.requestHeaders}
+				response = {requestHeaders: details.requestHeaders};
 				break;
 			}
 		}
 	}
     return response;
   },
-  {urls: ["https://*/*"]},
-  ["blocking", "requestHeaders"]
+  {urls: ['https://*/*']},
+  ['blocking', 'requestHeaders']
 );
-  
+
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {

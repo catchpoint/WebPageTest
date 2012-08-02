@@ -144,15 +144,15 @@ function testFindDomElements() {
   assertEquals("Two items matching \"bbb'two\"",
                2, actual.length);
 
-  assertEquals("Items should be in tree-order: First item is a span",
-               "First span", actual[0].innerText);
+  assertEquals('Items should be in tree-order: First item is a span',
+               'First span', actual[0].innerText);
 
-  assertEquals("Items should be in tree-order: Second item is a div",
-               "First div", actual[1].innerText);
+  assertEquals('Items should be in tree-order: Second item is a div',
+               'First div', actual[1].innerText);
 
   actual = wpt.contentScript.findDomElements_(root, "bbb'three");
   assertEquals("One item matching \"bbb'three\"", 1, actual.length);
-  assertEquals("Second div", actual[0].innerText);
+  assertEquals('Second div', actual[0].innerText);
 }
 
 function testFindDomElementWithGetElementById() {
@@ -160,17 +160,17 @@ function testFindDomElementWithGetElementById() {
   var root = document.getElementById('testFindDomElements');
 
   // Get nothing for an id that does not exist.
-  assertArrayEquals("No elements with id thisIdDoesNotExist",
+  assertArrayEquals('No elements with id thisIdDoesNotExist',
                     [], wpt.contentScript.findDomElements_(
                         root, "id'thisIdDoesNotExist"));
 
   // Get the element whose id we search for:
   var actual = wpt.contentScript.findDomElements_(
       root, "id'thisIdExists");
-  assertEquals("One elements with id thisIdDoesNotExist",
+  assertEquals('One elements with id thisIdDoesNotExist',
                1, actual.length);
-  assertEquals("Should be an anchor tag.",
-               "Anchor with id", actual[0].innerText);
+  assertEquals('Should be an anchor tag.',
+               'Anchor with id', actual[0].innerText);
 }
 
 function testFindDomElementWithGetElementByName() {
@@ -178,27 +178,27 @@ function testFindDomElementWithGetElementByName() {
   var root = document.getElementById('testFindDomElements');
 
   // Get nothing for a name that does not exist.
-  assertArrayEquals("No elements with name thisNmaeDoesNotExist",
+  assertArrayEquals('No elements with name thisNmaeDoesNotExist',
                     [], wpt.contentScript.findDomElements_(
                         root, "name'thisIdDoesNotExist"));
 
   // Find the one element whose name matches.
   var actual = wpt.contentScript.findDomElements_(
-      root, "name=thisNameExists");
-  assertEquals("One element with name thisNameExists",
+      root, 'name=thisNameExists');
+  assertEquals('One element with name thisNameExists',
                1, actual.length);
-  assertEquals("Should be an anchor tag.",
-               "Anchor with name", actual[0].innerText);
+  assertEquals('Should be an anchor tag.',
+               'Anchor with name', actual[0].innerText);
 
   // If more than one name matches, the elemnts should be returned in DOM order.
   actual = wpt.contentScript.findDomElements_(
       root, "name'thitNameHasMultipleMatches");
-  assertEquals("Two elements with name thisNameHasMultipleMatches",
+  assertEquals('Two elements with name thisNameHasMultipleMatches',
                2, actual.length);
-  assertEquals("Should be an anchor tag.",
-               "First named anchor", actual[0].innerText);
-  assertEquals("Should be an anchor tag.",
-               "Second named anchor", actual[1].innerText);
+  assertEquals('Should be an anchor tag.',
+               'First named anchor', actual[0].innerText);
+  assertEquals('Should be an anchor tag.',
+               'Second named anchor', actual[1].innerText);
 }
 
 function testFindDomElementMultipleDelimiters() {
@@ -214,8 +214,8 @@ function testFindDomElementMultipleDelimiters() {
 
   // First = is a delimiter, second = is part of the value.
   actual = wpt.contentScript.findDomElements_(
-      root, "aaa=bbb=ccc");  // Should parse as target="aaa", value="bbb=ccc".
-  assertEquals("First = is the delimiter.",
+      root, 'aaa=bbb=ccc');  // Should parse as target="aaa", value="bbb=ccc".
+  assertEquals('First = is the delimiter.',
                1, actual.length);
   assertEquals(actual[0].innerText, 'Equals in value');
 
@@ -239,21 +239,21 @@ function testFindDomElementMalformedTarget() {
   // For testing, we search under a div in allTests.html:
   var root = document.getElementById('testFindDomElements');
 
-  var ex = assertThrows("No delimiter",
+  var ex = assertThrows('No delimiter',
                         function() {
                           wpt.contentScript.findDomElements_(
                               root,
-                              "no Delimiter in this string");
+                              'no Delimiter in this string');
                         });
   assertEquals(
       ex,
       'Invalid target "no Delimiter in this string": no delimiter found.');
 
-  ex = assertThrows("Empty attribute",
+  ex = assertThrows('Empty attribute',
                     function() {
                       wpt.contentScript.findDomElements_(
                           root,
-                          "=foo");
+                          '=foo');
                     });
   assertEquals(
       ex,
@@ -281,7 +281,7 @@ function testClickCommandInPage() {
   // Set up onclick event handlers, so that we can detect clicks done by
   // the test.
   var clicks = [];
-  var inputs = document.getElementsByClassName("testClickCommand");
+  var inputs = document.getElementsByClassName('testClickCommand');
   for (var i = 0, ie = inputs.length; i < ie; ++i) {
     /** @this {Element} */
     inputs[i].onclick = function() {
@@ -298,53 +298,53 @@ function testClickCommandInPage() {
     warnings = [];
     clicks = [];
     inPageCommandRunner.doClick_({'command': 'click (test)', 'target': target});
-    assertEquals("Each click should cause a success call.",
+    assertEquals('Each click should cause a success call.',
                  clicks.length,
                  successCalls);
   };
 
   // Click on a button with a unique target.
   doTestClick("aaaa'one");
-  assertArrayEquals("Should have seen a click on input 1.", ['1'], clicks);
-  assertArrayEquals("No warnings", [], warnings);
-  assertArrayEquals("No errors", [], errors);
+  assertArrayEquals('Should have seen a click on input 1.', ['1'], clicks);
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('No errors', [], errors);
 
   // Click on a button that does not exist.  Expect an error.
   doTestClick("aaaa'doesNotExist");
-  assertArrayEquals("No clicks", [], clicks);
-  assertArrayEquals("No warnings", [], warnings);
+  assertArrayEquals('No clicks', [], clicks);
+  assertArrayEquals('No warnings', [], warnings);
   assertArrayEquals(
-      "Expect an error: Nothing to click.",
-      ["Command click (test) failed: Could not find DOM element matching " +
+      'Expect an error: Nothing to click.',
+      ['Command click (test) failed: Could not find DOM element matching ' +
        "target aaaa'doesNotExist"],
       errors);
 
   // Click on a button with multiple targets.  Expect that only the first one
   // is clicked, and a warning is given.
-  doTestClick("bbbb=value");
-  assertArrayEquals("Should have seen a click on input 2, and not input 3.",
+  doTestClick('bbbb=value');
+  assertArrayEquals('Should have seen a click on input 2, and not input 3.',
                     ['2'], clicks);
-  assertArrayEquals("There are multiple matches.",
+  assertArrayEquals('There are multiple matches.',
                     ['Command click (test): 2 matches for target ' +
                      '"bbbb=value".  Using first match.'],
                     warnings);
-  assertArrayEquals("Having multiple matches is not an error.",
+  assertArrayEquals('Having multiple matches is not an error.',
                     [], errors);
 
   // Invalid target: Empty attribute.
   doTestClick("'foo");
-  assertArrayEquals("Should have seen no clicks.", [], clicks);
+  assertArrayEquals('Should have seen no clicks.', [], clicks);
   assertArrayEquals(
-      "Expect an error: empty attribute.",
+      'Expect an error: empty attribute.',
       ["Command click (test) failed: Invalid target \"'foo\": The attribute " +
-       "to search for can not be empty."],
+       'to search for can not be empty.'],
       errors);
 
   // Multiple instances of the separator.
   doTestClick("foo'bar'thud");
-  assertArrayEquals("Should see a click on input 4.", ['4'], clicks);
-  assertArrayEquals("No warnings", [], warnings);
-  assertArrayEquals("No errors", [], errors);
+  assertArrayEquals('Should see a click on input 4.', ['4'], clicks);
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('No errors', [], errors);
 }
 
 function testSetInnerText() {
@@ -464,8 +464,8 @@ function testSetInnerHtml() {
                    'testSetInnerHtmlCommandInitialDiv').innerText);
   doSetInnerHtml('ggg=ggg', '<div id="insertedHtmlDiv">newnewnew</div>');
   assertEquals('Should succeed.', 1, successCalls);
-  assertArrayEquals("No warnings", [], warnings);
-  assertArrayEquals("No errors", [], errors);
+  assertArrayEquals('No warnings', [], warnings);
+  assertArrayEquals('No errors', [], errors);
 
   assertEquals('newnewnew',
                document.getElementById('insertedHtmlDiv').innerText);
@@ -525,7 +525,7 @@ function testSetValueCommand() {
       'value': 'Should fail'
   });
 
-  assertArrayEquals("No warnings", [], ipcr.warnings);
+  assertArrayEquals('No warnings', [], ipcr.warnings);
   assertArrayEquals(
       ['Target to setValue must match an INPUT or TEXTAREA tag.  Matched tag ' +
        'is of type DIV'],
@@ -540,8 +540,8 @@ function testSetValueCommand() {
       'value': 'new input value'
   });
 
-  assertArrayEquals("No warnings", [], ipcr.warnings);
-  assertArrayEquals("No errors", [], ipcr.errors);
+  assertArrayEquals('No warnings', [], ipcr.warnings);
+  assertArrayEquals('No errors', [], ipcr.errors);
   assertEquals('Should work.', 1, ipcr.successCalls);
 }
 
@@ -556,7 +556,7 @@ function testSubmitFormCommand() {
       'target': 'testKey=cantSubmitADiv'
   });
 
-  assertArrayEquals("No warnings", [], ipcr.warnings);
+  assertArrayEquals('No warnings', [], ipcr.warnings);
   assertArrayEquals(
       ['Target to submitForm must match a FORM tag.  Matched tag is of ' +
        'type DIV'],
