@@ -550,8 +550,12 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     }
     // pass the host override command on to the browser extension as well
     // (needed for SSL override on Chrome)
-    continue_processing = false;
-    consumed = false;
+    // include a bail-out if we have more than 3 hosts in the list
+    // because we were causing aborts to Chrome's navigations with long lists
+    if (_override_hosts.GetCount() <= 3) {
+      continue_processing = false;
+      consumed = false;
+    }
   } else if (cmd == _T("block")) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
