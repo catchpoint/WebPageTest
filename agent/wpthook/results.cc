@@ -367,42 +367,35 @@ void Results::SaveHistogram(CxImage& image, CString file) {
         }
       }
     }
+    CStringA red = "\"r\":[";
+    CStringA green = "\"g\":[";
+    CStringA blue = "\"b\":[";
+    CStringA buff;
+    for (int i = 0; i < 256; i++) {
+      if (i) {
+        red += ",";
+        green += ",";
+        blue += ",";
+      }
+      buff.Format(",%d", r[i]);
+      red += buff;
+      buff.Format(",%d", g[i]);
+      green += buff;
+      buff.Format(",%d", b[i]);
+      blue += buff;
+    }
+    red += "]";
+    green += "]";
+    blue += "]";
+    CStringA histogram = CStringA("{") + red + 
+                         CStringA(",") + green + 
+                         CStringA(",") + blue + CStringA("}");
+
     HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
                                     CREATE_ALWAYS, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE) {
       DWORD bytes;
-      CStringA buff = "{\"r\":[";
-      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      for (int i = 0; i < 256; i++) {
-        if (i) {
-          buff.Format(",%d", r[i]);
-        } else {
-          buff.Format("%d", r[i]);
-        }
-        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      }
-      buff = "],\"g\":[";
-      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      for (int i = 0; i < 256; i++) {
-        if (i) {
-          buff.Format(",%d", g[i]);
-        } else {
-          buff.Format("%d", g[i]);
-        }
-        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      }
-      buff = "],\"b\":[";
-      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      for (int i = 0; i < 256; i++) {
-        if (i) {
-          buff.Format(",%d", b[i]);
-        } else {
-          buff.Format("%d", b[i]);
-        }
-        WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
-      }
-      buff = "]}";
-      WriteFile(file_handle, (LPCSTR)buff, buff.GetLength(), &bytes, 0);
+      WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
       CloseHandle(file_handle);
     }
   }
