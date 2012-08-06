@@ -47,6 +47,8 @@ CDN_PROVIDER cdnList[] = {
   {".bitgravity.com", _T("BitGravity")},
   {".r.worldcdn.net", _T("OnApp")},
   {".r.worldssl.net", _T("OnApp")},
+  {"tbcdn.cn", _T("Taobao")},
+  {".taobaocdn.com", _T("Taobao")},
   {NULL, NULL}
 };
 
