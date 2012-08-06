@@ -8,6 +8,7 @@ require_once('page_data.inc');
 require_once('testStatus.inc');
 require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
+require_once('breakdown.inc');
 
 // stub-out requests from M4_SpeedTestService
 //if( strpos($_SERVER['HTTP_USER_AGENT'], 'M4_SpeedTestService') !== false )
@@ -118,6 +119,7 @@ else
             else
                 echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             xmlDomains($id, $testPath, $fvMedian, 0);
+            xmlBreakdown($id, $testPath, $fvMedian, 0);
             xmlRequests($id, $testPath, $fvMedian, 0);
             echo "</firstView>\n";
             
@@ -145,6 +147,7 @@ else
                     else
                         echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     xmlDomains($id, $testPath, $fvMedian, 1);
+                    xmlBreakdown($id, $testPath, $fvMedian, 1);
                     xmlRequests($id, $testPath, $fvMedian, 1);
                     echo "</repeatView>\n";
                 }
@@ -251,6 +254,7 @@ else
                     }
                     
                     xmlDomains($id, $testPath, $i, 0);
+                    xmlBreakdown($id, $testPath, $i, 0);
                     xmlRequests($id, $testPath, $i, 0);
                     echo "</firstView>\n";
                 }
@@ -334,6 +338,7 @@ else
                     }
                     
                     xmlDomains($id, $testPath, $i, 1);
+                    xmlBreakdown($id, $testPath, $i, 1);
                     xmlRequests($id, $testPath, $i, 1);
                     echo "</repeatView>\n";
                 }
@@ -405,6 +410,26 @@ function xmlDomains($id, $testPath, $run, $cached) {
         echo "</domains>\n";
     }
 }
+
+/**
+* Dump a breakdown of the requests and bytes by mime type
+*/
+function xmlBreakdown($id, $testPath, $run, $cached) {
+    if (array_key_exists('breakdown', $_REQUEST) && $_REQUEST['breakdown']) {
+        echo "<breakdown>\n";
+        $requests;
+        $breakdown = getBreakdown($id, $testPath, $run, $cached, $requests);
+        foreach ($breakdown as $mime => &$values) {
+            $domain = strrev($domain);
+            echo "<$mime>\n";
+            echo "<requests>{$values['requests']}</requests>\n";
+            echo "<bytes>{$values['bytes']}</bytes>\n";
+            echo "</$mime>\n";
+        }
+        echo "</breakdown>\n";
+    }
+}
+
 
 /**
 * Dump information about all of the requests
