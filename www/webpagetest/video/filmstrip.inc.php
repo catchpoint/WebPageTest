@@ -43,8 +43,8 @@ foreach($compTests as $t) {
             
             $info = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
             if (isset($info) && is_array($info)) {
-                if (array_key_exists('view', $info) && 
-                    $info['view'] == 'pss' && 
+                if (array_key_exists('discard', $info) && 
+                    $info['discard'] >= 1 && 
                     array_key_exists('priority', $info) &&
                     $info['priority'] >= 1) {
                     $defaultInterval = 100;
