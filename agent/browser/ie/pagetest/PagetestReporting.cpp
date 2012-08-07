@@ -3243,11 +3243,11 @@ void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
         green += ",";
         blue += ",";
       }
-      buff.Format(",%d", r[i]);
+      buff.Format("%d", r[i]);
       red += buff;
-      buff.Format(",%d", g[i]);
+      buff.Format("%d", g[i]);
       green += buff;
-      buff.Format(",%d", b[i]);
+      buff.Format("%d", b[i]);
       blue += buff;
     }
     red += "]";
