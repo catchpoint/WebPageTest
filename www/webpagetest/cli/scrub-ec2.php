@@ -39,18 +39,13 @@ if( $ec2 )
             // load the valid testers in this location
             $testers = array();
             $locations = explode(',', $location);
-            $first = true;
             foreach($locations as $loc) {
                 $loc_testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
-                if ($first) {
-                    $first = false;
-                    $testers = array_merge($testers, $loc_testers);
-                } else {
-                    // make sure ALL of the locations know about all of the testers
-                    foreach ($testers as $id => &$tester) {
-                        if (!array_key_exists($id, $loc_testers)) {
-                            unset($testers[$id]);
-                        }
+                foreach ($loc_testers as $id => $info) {
+                    if (!array_key_exists($id, $testers)) {
+                        $testers[$id] = $info;
+                    } elseif (array_key_exists('test', $info) && strlen($info['test'])) {
+                        $testers[$id] = $info;
                     }
                 }
             }
@@ -95,10 +90,9 @@ if( $ec2 )
             echo "Idle: $idleCount\n";
             echo "Offline: $offlineCount\n";
             $targetCount = $activeCount;
-            if( $idleCount )
+            if( $idleCount ) {
                 $targetCount = (int)($activeCount + ($idleCount / 4));
-            elseif( $targetBacklog )
-            {
+            } elseif( $targetBacklog ) {
                 // get the current backlog
                 $backlog = GetPendingTests($location, $bk, $avgTime);
                 echo "Backlog: $backlog\n";
@@ -115,8 +109,7 @@ if( $ec2 )
             
             $needed = $targetCount - $counts["$region.$ami"];
             echo "Needed: $needed\n";
-            if( $needed > 0 )
-            {
+            if( $needed > 0 ) {
                 echo "Adding $needed spot instances in $region...";
                 $size = $instanceType;
                 if (array_key_exists('size', $regionData)) {
@@ -143,16 +136,12 @@ if( $ec2 )
                 $count = abs($needed);
                 $locations = explode(',', $location);
                 foreach($locations as $loc) {
-                    if( $lock = LockLocation($loc) )
-                    {
+                    if( $lock = LockLocation($loc) ) {
                         $testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
-                        if (count($testers))
-                        {
-                            foreach($testers as &$tester)
-                            {
+                        if (count($testers)) {
+                            foreach($testers as &$tester) {
                                 if (array_key_exists('ec2', $tester) && strlen($tester['ec2']) && !$tester['offline']) {
-                                    if( $count > 0 && !strlen($tester['test']) )
-                                    {
+                                    if( $count > 0 && !strlen($tester['test']) ) {
                                         $terminate[] = $tester['ec2'];
                                         $count--;
                                         $counts["$region.$ami"]--;
@@ -174,12 +163,10 @@ if( $ec2 )
             }
             
             // final step, terminate the instances we don't need
-            if( !$addOnly )
-            {
+            if (!$addOnly) {
                 $termCount = count($terminate);
                 echo "Terminating $termCount instances running in $region...";
-                if( $termCount )
-                {
+                if( $termCount ) {
                     $response = $ec2->terminate_instances($terminate);
                     if( $response->isOK() )
                         echo "ok\n";
