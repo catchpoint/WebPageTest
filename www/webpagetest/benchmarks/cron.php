@@ -162,7 +162,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                     logMsg("Test {$test['id']} : {$status['statusText']}", './benchmark.log', true);
                 }
             } else {
-                logMsg("Test {$test['id']} : Already complete", './benchmark.log', true);
+                //logMsg("Test {$test['id']} : Already complete", './benchmark.log', true);
             }
         }
         
@@ -326,7 +326,7 @@ function IsTestValid($id) {
 // re-submit the given benchmark test
 function ResubmitBenchmarkTest($benchmark, $id, &$state) {
     $resubmitted = false;
-    $MAX_RETRIES = 5;
+    $MAX_RETRIES = 2;
     
     echo "Resubmitting test $id from $benchmark\n";
     
