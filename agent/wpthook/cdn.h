@@ -89,6 +89,7 @@ CDN_PROVIDER cdnList[] = {
   {".r.worldssl.net", "OnApp"},
   {"tbcdn.cn", "Taobao"},
   {".taobaocdn.com", "Taobao"},
+  {".ngenix.net", "NGENIX"},
   {"END_MARKER", "END_MARKER"}
 };
 
