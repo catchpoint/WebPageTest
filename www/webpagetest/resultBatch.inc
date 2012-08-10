@@ -529,10 +529,23 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $fvonly;
     $url = '';
     $host  = $_SERVER['HTTP_HOST'];
+    $videoCustom = '';
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
+        $test['end'] = 'docvisual';
+        if (!$count) {
+            if (array_key_exists('endOriginal', $_GET)) {
+                $test['end'] = urlencode(trim($_GET['endOriginal']));
+                $videoCustom .= md5('o' . $test['end']);
+            }
+        } else {
+            if (array_key_exists('endOptimized', $_GET)) {
+                $test['end'] = urlencode(trim($_GET['endOptimized']));
+                $videoCustom .= md5('x' . $test['end']);
+            }
+        }
         $fvLoadTime = null;
         $fvRenderTime = null;
         $rvLoadTime = null;
@@ -823,8 +836,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         
         if (array_key_exists('pss_advanced', $testInfo) && $testInfo['pss_advanced']) {
-            echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">open in new window</a>)</h2>";
-            echo "<iframe scrolling=\"no\" frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\"></iframe>";
+            echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=docvisual\" target=\"_blank\">open in new window</a>)</h2>";
+            echo "<iframe scrolling=\"no\" frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}\"></iframe>";
         } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
             echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
                     <tr>
@@ -899,46 +912,46 @@ function DisplayPSS(&$tests, $video, &$dirty)
     {
         $videoComplete = true;
         // regenerate a video if it was created a while ago and still isn't available
-        if( strlen($videoInfo['vID']) ) {
-            if (!CheckVideo($videoInfo['vID'], $regenerate_video) && $regenerate_video) {
-                if (array_key_exists('regenerated', $videoInfo) && $videoInfo['regenerated']) {
+        if( strlen($videoInfo['vID' . $videoCustom]) ) {
+            if (!CheckVideo($videoInfo['vID' . $videoCustom], $regenerate_video) && $regenerate_video) {
+                if (array_key_exists('regenerated' . $videoCustom, $videoInfo) && $videoInfo['regenerated'] . $videoCustom) {
                     $videoComplete = true;
-                    $videoInfo['vReady'] = true;
+                    $videoInfo['vReady' . $videoCustom] = true;
                 } else {
-                    $videoInfo['regenerated'] = true;
-                    $videoInfo['vID'] = null;
+                    $videoInfo['regenerated' . $videoCustom] = true;
+                    $videoInfo['vID' . $videoCustom] = null;
                 }
                 $videoDirty = true;
             }
         }
-        if( !strlen($videoInfo['vID']) )
+        if( !strlen($videoInfo['vID' . $videoCustom]) )
         {
-            $videoInfo['vID'] = CreateVideo($tests['urls']);
+            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls']);
             $videoDirty = true;
             $videoComplete = false;
-            if( !strlen($videoInfo['vID']) )
+            if( !strlen($videoInfo['vID' . $videoCustom]) )
             {
                 // bail on the video if it couldn't be created
                 $videoComplete = true;
-                $videoInfo['vReady'] = true;
+                $videoInfo['vReady' . $videoCustom] = true;
             }
         }
-        elseif( !$videoInfo['vReady'] )
+        elseif( !$videoInfo['vReady' . $videoCustom] )
         {
-            $videoInfo['vReady'] = CheckVideo($videoInfo['vID'], $regenerate_video);
-            if( $videoInfo['vReady'] )
+            $videoInfo['vReady' . $videoCustom] = CheckVideo($videoInfo['vID' . $videoCustom], $regenerate_video);
+            if( $videoInfo['vReady' . $videoCustom] )
                 $videoDirty = true;
             else
                 $videoComplete = false;
         }
         
         if ($json) {
-            $json_response['data']['VideoID'] = $videoInfo['vID'];
+            $json_response['data']['VideoID'] = $videoInfo['vID' . $videoCustom];
             if ($videoComplete) {
                 $json_response['statusCode'] = 200;
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id={$videoInfo['vID']}";
+                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
             } else {
                 $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
@@ -947,11 +960,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $videoComplete )
             {
                 if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
-                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=docvisual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {
                     echo "<h2>Visual Comparison*</h2>";
                 }
-                VideoHtml($videoInfo['vID']);
+                VideoHtml($videoInfo['vID' . $videoCustom]);
             }
             else
             {
@@ -1543,6 +1556,9 @@ function CreateVideo(&$tests, $end = null)
         if( !strlen($label) )
             $label = htmlspecialchars(ShortenUrl($test['u']));
         $request .= urlencode($label);
+        if (array_key_exists('end', $test)) {
+            $request .= '-e:' . $test['end'];
+        }
         $count++;
     }
     
