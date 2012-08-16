@@ -3,7 +3,7 @@
     This is called every 15 minutes as long as agents are polling for work
 */
 ignore_user_abort(true);
-set_time_limit(0);
+set_time_limit(36000);
 chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
