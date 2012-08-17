@@ -1562,7 +1562,7 @@ function CreateVideo(&$tests, $end = null)
         $count++;
     }
     
-    $ctx = stream_context_create(array('http' => array('timeout' => 10)));
+    $ctx = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10)));
     $response = json_decode(file_get_contents($request, 0, $ctx), true);
     if( $response['statusCode'] == 200 )
         $id = $response['data']['videoId'];

@@ -78,7 +78,7 @@ function PublishResult()
 
             $params = array('http' => array(
                                'method' => 'POST',
-                               'header' => 'Content-Type: multipart/form-data; boundary='.$boundary,
+                               'header' => "Connection: close\r\nContent-Type: multipart/form-data; boundary=$boundary",
                                'content' => $data
                             ));
 

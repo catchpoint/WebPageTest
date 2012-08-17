@@ -424,7 +424,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                     $url .= "id=$testId";
                     
                     // set a 10 second timeout on the request
-                    $ctx = stream_context_create(array('http' => array('timeout' => 10))); 
+                    $ctx = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10))); 
 
                     // send the request (we don't care about the response)
                     @file_get_contents($url, 0, $ctx);

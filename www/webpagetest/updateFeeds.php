@@ -35,6 +35,7 @@ function UpdateFeeds()
                         {
                             $ctx = stream_context_create(array(
                                 'http' => array(
+                                    'header' => 'Connection: close',
                                     'timeout' => 10
                                     )
                                 )
