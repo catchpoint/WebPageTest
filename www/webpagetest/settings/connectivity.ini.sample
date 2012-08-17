@@ -22,6 +22,14 @@ latency=4
 plr=0
 aftCutoff=25
 
+[3G]
+label="Mobile 3G (USA) (2/1 Mbps 150ms RTT)"
+bwIn=2048000
+bwOut=1024000
+latency=150
+plr=0
+aftCutoff=120
+
 [Dial]
 label="56K Dial-Up (49/30 Kbps 120ms RTT)"
 bwIn=49000
@@ -29,3 +37,10 @@ bwOut=30000
 latency=120
 plr=0
 aftCutoff=120
+
+[Native]
+label="Native Connection (No Traffic Shaping)"
+bwIn=0
+bwOut=0
+latency=0
+plr=0
