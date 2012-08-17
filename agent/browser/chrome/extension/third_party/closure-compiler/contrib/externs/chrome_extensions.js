@@ -356,6 +356,14 @@ chrome.browserAction.setTitle = function(details) {};
 /** @type {ChromeEvent} */
 chrome.browserAction.onClicked;
 
+/** @see http://code.google.com/chrome/extensions/browsingData.html */
+chrome.browsingData = {};
+
+/**
+ * @param {!Object} options
+ * @param {function()=} opt_callback
+ */
+chrome.browsingData.removeCache = function(options, opt_callback) {};
 
 /** @see http://code.google.com/chrome/extensions/bookmarks.html */
 chrome.bookmarks = {};
@@ -517,6 +525,14 @@ CookieChangeInfo.prototype.cookie;
 /** @see http://code.google.com/chrome/extensions/experimental.html */
 chrome.experimental = {};
 
+/** @see http://code.google.com/chrome/extensions/experimental.clear.html */
+chrome.experimental.clear = {};
+
+/**
+ * @param {number} duration
+ * @param {function()=} opt_callback
+ */
+chrome.experimental.clear.cache = function(duration, opt_callback) {};
 
 /** @see http://code.google.com/chrome/extensions/experimental.clipboard.html */
 chrome.experimental.clipboard = {};
