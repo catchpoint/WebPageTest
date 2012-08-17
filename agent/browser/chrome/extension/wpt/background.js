@@ -151,7 +151,7 @@ wpt.main.startMeasurements = function() {
     var tab = focusedTabs[0];
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
-	wpt.chromeDebugger.Init(tab.id, window.chrome);
+    wpt.chromeDebugger.Init(tab.id, window.chrome);
 
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
@@ -261,7 +261,7 @@ function wptSendEvent(event_name, query_string) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string,
              true);
-		xhr.send();
+    xhr.send();
   } catch (err) {
     wpt.LOG.warning('Error sending page load XHR: ' + err);
   }
@@ -269,83 +269,84 @@ function wptSendEvent(event_name, query_string) {
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-	if (g_active) {
-		if (props.status == 'loading') {
-			g_start = new Date().getTime();
-			wptSendEvent('navigate', '');
-		} else if (props.status == 'complete') {
+  if (g_active) {
+    if (props.status == 'loading') {
+      g_start = new Date().getTime();
+      wptSendEvent('navigate', '');
+    } else if (props.status == 'complete') {
       wptSendEvent('complete', '');
-		}
+    }
   }
 });
 
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
-	if (g_active) {
-		var error_code = 12999;
-		if (details.error == 'net::ERR_NAME_NOT_RESOLVED') {
-			error_code = 12007;
-		} else if (details.error == 'net::ERR_CONNECTION_ABORTED') {
-			error_code = 12030;
-		} else if (details.error == 'net::ERR_ADDRESS_UNREACHABLE') {
-			error_code = 12029;
-		} else if (details.error == 'net::ERR_CONNECTION_REFUSED') {
-			error_code = 12029;
-		} else if (details.error == 'net::ERR_CONNECTION_TIMED_OUT') {
-			error_code = 12029;
-		} else if (details.error == 'net::ERR_CONNECTION_RESET') {
-			error_code = 12031;
-		}
-		wpt.LOG.info(details.error + ' = ' + error_code);
-		g_active = false;
-		wptSendEvent('navigate_error?error=' + error_code +
-							'&str=' + encodeURIComponent(details.error), '');
-	}
+  if (g_active) {
+    var error_code = 12999;
+    if (details.error == 'net::ERR_NAME_NOT_RESOLVED') {
+      error_code = 12007;
+    } else if (details.error == 'net::ERR_CONNECTION_ABORTED') {
+      error_code = 12030;
+    } else if (details.error == 'net::ERR_ADDRESS_UNREACHABLE') {
+      error_code = 12029;
+    } else if (details.error == 'net::ERR_CONNECTION_REFUSED') {
+      error_code = 12029;
+    } else if (details.error == 'net::ERR_CONNECTION_TIMED_OUT') {
+      error_code = 12029;
+    } else if (details.error == 'net::ERR_CONNECTION_RESET') {
+      error_code = 12031;
+    }
+    wpt.LOG.info(details.error + ' = ' + error_code);
+    g_active = false;
+    wptSendEvent('navigate_error?error=' + error_code +
+              '&str=' + encodeURIComponent(details.error), '');
+  }
 }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onCompleted.addListener(function(details) {
-	if (g_active) {
-		wpt.LOG.info('Completed, status = ' + details.statusCode);
-		if (details.statusCode >= 400) {
-			g_active = false;
-			wptSendEvent('navigate_error?error=' + details.statusCode, '');
-		}
-	}
+  if (g_active) {
+    wpt.LOG.info('Completed, status = ' + details.statusCode);
+    if (details.statusCode >= 400) {
+      g_active = false;
+      wptSendEvent('navigate_error?error=' + details.statusCode, '');
+    }
+  }
 }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
-	var action = {};
-	if (g_active) {
-		var urlParts = details.url.match(URL_REGEX);
-		var scheme = urlParts[1].toString();
-		var host = urlParts[2].toString();
-		var object = urlParts[3].toString();
-		wpt.LOG.info('Checking host override for "' + host + '" in URL ' + details.url);
-		if (g_overrideHosts[host] != undefined) {
-			var newHost = g_overrideHosts[host];
-			wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
-			action.redirectUrl = scheme + newHost + object;
-		}
-	}
-	return action;
-  }, {urls: ['https://*/*']},
+    var action = {};
+    if (g_active) {
+      var urlParts = details.url.match(URL_REGEX);
+      var scheme = urlParts[1].toString();
+      var host = urlParts[2].toString();
+      var object = urlParts[3].toString();
+      wpt.LOG.info('Checking host override for "' + host + '" in URL ' + details.url);
+      if (g_overrideHosts[host] != undefined) {
+        var newHost = g_overrideHosts[host];
+        wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
+        action.redirectUrl = scheme + newHost + object;
+      }
+    }
+    return action;
+  },
+  {urls: ['https://*/*']},
   ['blocking']
 );
 
 chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
-	var response = {};
-	if (g_active) {
-		var host = details.url.match(URL_REGEX)[2].toString();
-		for (originalHost in g_overrideHosts) {
-			if (g_overrideHosts[originalHost] == host) {
-				details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-				response = {requestHeaders: details.requestHeaders};
-				break;
-			}
-		}
-	}
-    return response;
+    var response = {};
+    if (g_active) {
+      var host = details.url.match(URL_REGEX)[2].toString();
+      for (originalHost in g_overrideHosts) {
+        if (g_overrideHosts[originalHost] == host) {
+          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+          response = {requestHeaders: details.requestHeaders};
+          break;
+        }
+      }
+    }
+      return response;
   },
   {urls: ['https://*/*']},
   ['blocking', 'requestHeaders']
@@ -443,9 +444,9 @@ function wptExecuteTask(task) {
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;
-	  case 'overridehost':
-		g_overrideHosts[task.target] = task.value;
-		break;
+      case 'overridehost':
+        g_overrideHosts[task.target] = task.value;
+        break;
 
       default:
         wpt.LOG.error('Unimplemented command: ', task);
