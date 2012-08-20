@@ -34,10 +34,6 @@ import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.webpagetest.dt2har.protocol.DevtoolsMessage;
-import org.webpagetest.dt2har.protocol.DevtoolsMessageFactory;
-import org.webpagetest.dt2har.protocol.MalformedDevtoolsMessageException;
-import org.webpagetest.dt2har.protocol.NetworkGetResponseBodyResponseMessage;
 
 import org.easymock.EasyMock;
 import org.json.simple.JSONArray;
@@ -46,6 +42,10 @@ import org.json.simple.JSONValue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.webpagetest.dt2har.protocol.DevtoolsMessage;
+import org.webpagetest.dt2har.protocol.DevtoolsMessageFactory;
+import org.webpagetest.dt2har.protocol.MalformedDevtoolsMessageException;
+import org.webpagetest.dt2har.protocol.NetworkGetResponseBodyResponseMessage;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -60,6 +60,8 @@ public class HarObjectTest {
 
   private static final String DEVTOOLS_MESSAGES_JSON =
       "org/webpagetest/dt2har/converter/testdata/chrome-trace.json";
+  private static final String DEVTOOLS_MESSAGES_WITH_REDIRECTS_JSON =
+      "org/webpagetest/dt2har/converter/testdata/chrome-trace-redirects.json";
   private static final String GOLDEN_HAR =
       "org/webpagetest/dt2har/converter/testdata/chrome.har";
 
@@ -112,7 +114,7 @@ public class HarObjectTest {
     JSONObject harObj = har.getHar();
     JSONObject harlog = (JSONObject) harObj.get("log");
     JSONArray entries = (JSONArray) harlog.get("entries");
-    JSONObject entry = (JSONObject) entries.get(1);
+    JSONObject entry = (JSONObject) entries.get(3);
     JSONObject response = (JSONObject) entry.get("response");
     JSONObject content = (JSONObject) response.get("content");
     JSONArray pages = (JSONArray) harlog.get("pages");
@@ -343,4 +345,55 @@ public class HarObjectTest {
     assertEquals(24L, timings.get("wait"));
     assertEquals(loadTimeSec * 1000 - (requestTimeSec * 1000 + 148), timings.get("receive"));
   }
+
+  /** Tests that a netlog is gzipped and base64 encoded and placed correctly in a HAR. */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testAddNetLogToHar() throws Exception {
+    JSONObject har = new JSONObject();
+    har.put("log", new JSONObject());
+    String netlog = "net log test";
+    HarObject harObject = new HarObject();
+    harObject.embedNetLogInHar(netlog.getBytes(), har);
+    String targetHar =
+        "{\"log\":{\"_chrome_net_log\":\"H4sIAAAAAAAAAMtLLVHIyU9XKEktLgEATNzXMQwAAAA=\"}}";
+    assertEquals(targetHar, har.toString());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  public void testDoubleRedirect() throws Exception {
+    // Tests that a doubly-redirected URL is represented correctly in the HAR
+    // and also test that a redirected subresource is represented correctly.
+    // Redirect responses should appear in the HAR as entries.
+
+    HarObject har = new HarObject();
+    TestUtils.populateTestHar(devtoolsMessageFactory, har, DEVTOOLS_MESSAGES_WITH_REDIRECTS_JSON);
+    har.createHarFromMessages();
+
+    // In the devtools trace, http://ms3... redirects to http://ms2... which in turn
+    // redirects to http://ms... Also, http://ms...org/rss.png redirects to
+    // http://www.critical...images/rss.png.
+    String urls[] = {
+        "http://ms3.aaaaaaaa.org/",
+        "http://ms2.aaaaaaaa.org/",
+        "http://ms.aaaaaaaa.org/",
+        "http://ms.aaaaaaaa.org/FileEBMotherboard.jpeg",
+        "http://ms.aaaaaaaa.org/rss.png",
+        "http://www.criticalexponent.org/blog/wp-includes/images/rss.png"
+    };
+
+    JSONObject harObj = har.getHar();
+    JSONObject harlog = (JSONObject) harObj.get("log");
+    JSONArray entries = (JSONArray) harlog.get("entries");
+    assertEquals(6, entries.size());
+
+    for (int i = 0; i < 6; i++) {
+      JSONObject entry = (JSONObject) entries.get(i);
+      JSONObject request = (JSONObject) entry.get("request");
+      String url = (String) request.get("url");
+      assertEquals(urls[i], url);
+    }
+  }
+
 }

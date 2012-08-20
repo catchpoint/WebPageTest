@@ -28,9 +28,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package org.webpagetest.dt2har.converter;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import org.apache.commons.codec.binary.Base64;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.webpagetest.dt2har.protocol.DevtoolsMessage;
 import org.webpagetest.dt2har.protocol.DevtoolsNetworkEventMessage;
 import org.webpagetest.dt2har.protocol.NetworkDataReceivedMessage;
@@ -42,13 +48,11 @@ import org.webpagetest.dt2har.protocol.NetworkResponseReceivedMessage;
 import org.webpagetest.dt2har.protocol.OptionalInformationUnavailableException;
 import org.webpagetest.dt2har.protocol.PageDomContentEventFiredMessage;
 import org.webpagetest.dt2har.protocol.PageLoadEventFiredMessage;
+import org.webpagetest.dt2har.protocol.Response;
 import org.webpagetest.dt2har.protocol.RuntimeResponseMessage;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -60,6 +64,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * A class to construct and maintain a HAR object from Chrome Developer Tools messages.
@@ -348,11 +353,26 @@ public class HarObject {
         resources.put(id, r);
       }
       if (netmsg instanceof NetworkRequestWillBeSentMessage) {
+        NetworkRequestWillBeSentMessage request = (NetworkRequestWillBeSentMessage) netmsg;
         incrementRequestCnt();
         if (firstRequest == null) {
-          firstRequest = (NetworkRequestWillBeSentMessage) netmsg;
+          firstRequest = request;
         }
-        r.setNetworkRequestWillBeSentMessage((NetworkRequestWillBeSentMessage) netmsg);
+        // If the request has a redirect response, then create a new HAR resource
+        // containing the redirect information. The new resource will have the
+        // same request ID, so add its unique timestamp to the resource name to
+        // avoid conflicting with the actual response.
+        Response redirectResponse = request.getRedirectResponse();
+        if (redirectResponse != null) {
+          HarResource redirected = new HarResource();
+          String redirectedId = id + "__" +
+              r.getNetworkRequestWillBeSentMessage().getTimestamp().toString();
+          resources.put(redirectedId, redirected);
+          redirected.setNetworkRequestWillBeSentMessage(
+              r.getNetworkRequestWillBeSentMessage());
+          redirected.setRedirectResponseMessage(redirectResponse);
+        }
+        r.setNetworkRequestWillBeSentMessage(request);
       } else if (netmsg instanceof NetworkResponseReceivedMessage) {
         incrementResponseCnt();
         r.setNetworkResponseReceivedMessage((NetworkResponseReceivedMessage) msg);
@@ -383,6 +403,38 @@ public class HarObject {
   /** Sets the log of Devtools messages. */
   public void addDevtoolsLog(JSONArray devtoolsLog) {
     this.devtoolsLog = devtoolsLog;
+  }
+
+  /**
+   * Embeds the Chrome network events log in a HAR in the following location: { log {
+   * _chrome_net_log : LOG }, ...}. The log is gzipped and then converted to base64.
+   *
+   * @param netlog The network events log data.
+   * @param harJson The HAR in which to embed the log.
+   */
+  @VisibleForTesting
+  @SuppressWarnings("unchecked")
+  void embedNetLogInHar(byte[] netlog, JSONObject harJson) throws IOException {
+    Preconditions.checkState(harJson != null);
+    ByteArrayOutputStream baos = null;
+    GZIPOutputStream gzip = null;
+    try {
+      baos = new ByteArrayOutputStream();
+      gzip = new GZIPOutputStream(baos);
+      gzip.write(netlog);
+      gzip.finish();
+      String base64Log = Base64.encodeBase64String(baos.toByteArray());
+      JSONObject harlog = (JSONObject) harJson.get("log");
+      harlog.put("_chrome_net_log", base64Log);
+    } finally {
+      baos.close();
+      gzip.close();
+    }
+  }
+
+  /** Sets the Chrome network events log. */
+  public void addChromeNetLog(byte[] chromeNetLog) throws IOException {
+    embedNetLogInHar(chromeNetLog, har);
   }
 
   /** Returns a HarResource for a given Request ID. */

@@ -68,7 +68,7 @@ public class NetworkRequestWillBeSentMessage extends DevtoolsNetworkEventMessage
   protected JSONArray stackTrace;
 
   /** Optional redirect response data. */
-  protected JSONObject redirectResponse;
+  protected Response redirectResponse;
 
   /** Constructs a message indicating that a request will be sent. */
   NetworkRequestWillBeSentMessage(JSONObject json) {
@@ -81,7 +81,7 @@ public class NetworkRequestWillBeSentMessage extends DevtoolsNetworkEventMessage
       stackTrace = (JSONArray) params.get("stackTrace");
     }
     if (params.containsKey("redirectResponse")) {
-      redirectResponse = (JSONObject) params.get("redirectResponse");
+      redirectResponse = new Response((JSONObject) params.get("redirectResponse"));
     }
   }
 
@@ -111,7 +111,7 @@ public class NetworkRequestWillBeSentMessage extends DevtoolsNetworkEventMessage
   }
 
   /** Returns the optional redirect response, or null if one is not provided. */
-  public JSONObject getRedirectResponse() {
+  public Response getRedirectResponse() {
     return redirectResponse;
   }
 }

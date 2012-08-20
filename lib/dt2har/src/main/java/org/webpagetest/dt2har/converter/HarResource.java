@@ -29,6 +29,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.webpagetest.dt2har.converter;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.webpagetest.dt2har.protocol.NetworkDataReceivedMessage;
 import org.webpagetest.dt2har.protocol.NetworkGetResponseBodyResponseMessage;
 import org.webpagetest.dt2har.protocol.NetworkLoadingFinishedMessage;
@@ -36,9 +40,7 @@ import org.webpagetest.dt2har.protocol.NetworkRequestServedFromCacheMessage;
 import org.webpagetest.dt2har.protocol.NetworkRequestWillBeSentMessage;
 import org.webpagetest.dt2har.protocol.NetworkResponseReceivedMessage;
 import org.webpagetest.dt2har.protocol.OptionalInformationUnavailableException;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import org.webpagetest.dt2har.protocol.Response;
 
 import java.math.BigDecimal;
 import java.text.Format;
@@ -120,6 +122,7 @@ public class HarResource {
 
   NetworkRequestWillBeSentMessage request;        // Network.requestWillBeSent
   NetworkResponseReceivedMessage response;        // Network.responseReceived
+  Response redirectResponse;                      // Embedded in Network.requestWillBeSent
   List<NetworkDataReceivedMessage> data;          // Network.dataReceived
   NetworkLoadingFinishedMessage loaded;           // Network.loadingFinished
   NetworkRequestServedFromCacheMessage cached;    // Network.resourcedMarkedAsCached
@@ -136,7 +139,13 @@ public class HarResource {
 
   @VisibleForTesting
   public void setNetworkResponseReceivedMessage(NetworkResponseReceivedMessage msg) {
+    Preconditions.checkState(redirectResponse == null);
     response = msg;
+  }
+
+  public void setRedirectResponseMessage(Response msg) {
+    Preconditions.checkState(response == null);
+    redirectResponse = msg;
   }
 
   void addNetworkDataReceivedMessage(NetworkDataReceivedMessage msg) {
@@ -163,6 +172,22 @@ public class HarResource {
     return response;
   }
 
+  Response getRedirectResponseMessage() {
+    return redirectResponse;
+  }
+
+  /**
+   * Returns the Response, which is either in redirectResponse or
+   * response.getResponse(), and never both.
+   */
+  Response getResponse() {
+    if (redirectResponse != null) {
+      return redirectResponse;
+    } else {
+      return response.getResponse();
+    }
+  }
+
   List<NetworkDataReceivedMessage> getNetworkDataReceivedMessages() {
     return data;
   }
@@ -185,13 +210,17 @@ public class HarResource {
       logger.warning("No NetworkRequestWillBeSentMessage available for resource.");
       return false;
     }
-    if (response == null) {
-      logger.warning("No NetworkResponseReceivedMessage available for resource.");
-      return false;
-    }
-    if (loaded == null) {
-      logger.warning("No NetworkLoadingFinishedMessage available for resource.");
-      return false;
+    // To be considered complete, a resource must either have a response and be loaded,
+    // or have a redirect response.
+    if (redirectResponse == null) {
+      if (response == null) {
+        logger.warning("No NetworkResponseReceivedMessage available for resource.");
+        return false;
+      }
+      if (loaded == null) {
+        logger.warning("No NetworkLoadingFinishedMessage available for resource.");
+        return false;
+      }
     }
     return true;
   }
@@ -305,8 +334,8 @@ public class HarResource {
     //    },
 
     JSONObject harResponse = new JSONObject();
-    Long status = response.getResponse().getStatus();
-    String statusText = response.getResponse().getStatusText();
+    Long status = getResponse().getStatus();
+    String statusText = getResponse().getStatusText();
     String httpVersion = getHttpVersion();
     Long headersSize = getResponseHeadersSize();
     Long bodySize = getResponseBodySize();
@@ -389,7 +418,7 @@ public class HarResource {
     //            ]
 
     JSONArray harResponseHeaders = new JSONArray();
-    JSONObject responseHeaders = response.getResponse().getHeaders();
+    JSONObject responseHeaders = getResponse().getHeaders();
     for (Object key : responseHeaders.keySet()) {
       String value = (String) responseHeaders.get(key);
       JSONObject harResponseHeader = new JSONObject();
@@ -448,7 +477,7 @@ public class HarResource {
     Long encodedSize = 0L;
     Long compression = 0L;
     String text = "";
-    String mimeType = response.getResponse().getMimeType();
+    String mimeType = getResponse().getMimeType();
     StringBuilder comment = new StringBuilder("");
 
     for (NetworkDataReceivedMessage dataMsg : data) {
@@ -527,7 +556,7 @@ public class HarResource {
     // source on how these messages should be interpreted is the WebKit Inspector code in Chromium.
     // See third_party/javascript/webkit_inspector for a Google3 dump of this code.
 
-    if (response.getResponse().isConnectionReused()) {
+    if (getResponse().isConnectionReused()) {
       // If the connection was reused, 'connect' is really the blocked time, and there is no
       // connect time.
       if (connect != null) {
@@ -601,7 +630,7 @@ public class HarResource {
     Long size = null;
 
     try {
-      size = (long) response.getResponse().getRequestHeadersText().length();
+      size = (long) getResponse().getRequestHeadersText().length();
     } catch (OptionalInformationUnavailableException e) {
       /*
        * We don't have the actual request headers text, so we estimate its size using what
@@ -625,16 +654,16 @@ public class HarResource {
   private Long getResponseHeadersSize() {
     Long size;
     try {
-      size = (long) response.getResponse().getHeadersText().length();
+      size = (long) getResponse().getHeadersText().length();
     } catch (OptionalInformationUnavailableException e) {
       /*
        * We don't have the actual response headers text, so we estimate its size using what
        * we do have. Note this is only an estimate.
        */
-      JSONObject responseHeaders = response.getResponse().getHeaders();
+      JSONObject responseHeaders = getResponse().getHeaders();
       size = 0L;
-      size += response.getResponse().getStatus().toString().length()
-          + response.getResponse().getStatusText().length() + 14L; // "HTTP / 1.1 ", " " and CRLF;
+      size += getResponse().getStatus().toString().length()
+          + getResponse().getStatusText().length() + 14L; // "HTTP / 1.1 ", " " and CRLF;
       for (Object key : responseHeaders.keySet()) {
         size += ((String) key).length()
             + ((String) responseHeaders.get(key)).length() + 4L; // ": " and CRLF
@@ -650,7 +679,7 @@ public class HarResource {
 
     String version;
     try {
-      String headersText = response.getResponse().getHeadersText();
+      String headersText = getResponse().getHeadersText();
       Pattern p = Pattern.compile(VERSION_REGEX);
       Matcher m = p.matcher(headersText);
       if (m.find()) {
@@ -661,7 +690,7 @@ public class HarResource {
       }
     } catch (OptionalInformationUnavailableException e) {
       logger.log(Level.WARNING,
-          "No Http Version field in response message: {0}", response.getJson());
+          "No Http Version field in response message: {0}", getResponse().getJson());
         version = ""; // Har needs a version and one wasn't provided
     }
     return version;
@@ -679,66 +708,66 @@ public class HarResource {
   BigDecimal getRequestTime() {
     BigDecimal requestTime;
     try {
-      return response.getResponse().getTiming().getRequestTime();
+        return getResponse().getTiming().getRequestTime();
     } catch (OptionalInformationUnavailableException e) {
       logger.log(Level.WARNING,
           "Timing information unavailable, falling back to request timestamp. {0}",
-          response.getJson());
+          getResponse().getJson());
       return request.getTimestamp();
     }
   }
 
   private Long getTimingDns() {
     try {
-      Long end = response.getResponse().getTiming().getDnsEnd();
-      Long start = response.getResponse().getTiming().getDnsStart();
+      Long end = getResponse().getTiming().getDnsEnd();
+      Long start = getResponse().getTiming().getDnsStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", response.getJson());
+      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
       return null;
     }
   }
 
   private Long getTimingConnect() {
     try {
-      Long end = response.getResponse().getTiming().getConnectEnd();
-      Long start = response.getResponse().getTiming().getConnectStart();
+      Long end = getResponse().getTiming().getConnectEnd();
+      Long start = getResponse().getTiming().getConnectStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", response.getJson());
+      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
       return null;
     }
   }
 
   private Long getTimingSend() {
     try {
-      Long end = response.getResponse().getTiming().getSendEnd();
-      Long start = response.getResponse().getTiming().getSendStart();
+      Long end = getResponse().getTiming().getSendEnd();
+      Long start = getResponse().getTiming().getSendStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", response.getJson());
+      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
       return null;
     }
   }
 
   private Long getTimingSSL() {
     try {
-      Long end = response.getResponse().getTiming().getSslEnd();
-      Long start = response.getResponse().getTiming().getSslStart();
+      Long end = getResponse().getTiming().getSslEnd();
+      Long start = getResponse().getTiming().getSslStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", response.getJson());
+      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
       return null;
     }
   }
 
   private Long getTimingWait() {
     try {
-      Long end = response.getResponse().getTiming().getReceiveHeadersEnd();
-      Long start = response.getResponse().getTiming().getSendEnd();
+      Long end = getResponse().getTiming().getReceiveHeadersEnd();
+      Long start = getResponse().getTiming().getSendEnd();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable: {0}", response.getJson());
+      logger.log(Level.WARNING, "Timing information unavailable: {0}", getResponse().getJson());
       return null;
     }
   }
@@ -748,17 +777,22 @@ public class HarResource {
    * event for the resource.
    */
   private Long getTimingReceive() {
-    try {
-      // Convert to milliseconds
-      BigDecimal requestTime = getRequestTime().multiply(new BigDecimal(1000));
-      BigDecimal loadedTime = loaded.getTimestamp().multiply(new BigDecimal(1000));
-      BigDecimal headersEnd = requestTime.add(
-          new BigDecimal(response.getResponse().getTiming().getReceiveHeadersEnd()));
-      BigDecimal diff = loadedTime.subtract(headersEnd);
-      return diff.longValue();
-    } catch (OptionalInformationUnavailableException e) {
-      logger.warning("Could not get receive time.");
+    // A redirect response has no payload to receive.
+    if (redirectResponse != null) {
       return null;
+    } else {
+      try {
+        // Convert to milliseconds
+        BigDecimal requestTime = getRequestTime().multiply(new BigDecimal(1000));
+        BigDecimal loadedTime = loaded.getTimestamp().multiply(new BigDecimal(1000));
+        BigDecimal headersEnd = requestTime.add(
+            new BigDecimal(getResponse().getTiming().getReceiveHeadersEnd()));
+        BigDecimal diff = loadedTime.subtract(headersEnd);
+        return diff.longValue();
+      } catch (OptionalInformationUnavailableException e) {
+        logger.warning("Could not get receive time.");
+        return null;
+      }
     }
   }
 }
