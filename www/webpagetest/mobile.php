@@ -64,7 +64,7 @@ $page_description = "Run a free website speed test from around the globe using r
                         </ul>
                     </div>
                     <div id="mobile_logo">
-                        <img src="<?php echo $GLOBALS['cdnPath']; ?>/images/mobitestlogo2.png">
+                        <img src="<?php echo $GLOBALS['cdnPath']; ?>/images/mobitestlogo3.png">
                     </div>
                     <div class="cleared"></div>
                 </div>
