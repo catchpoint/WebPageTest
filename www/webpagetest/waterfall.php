@@ -25,6 +25,13 @@ if (@$_REQUEST['type'] == 'connection') {
     $rows = GetRequestRows($requests, $use_dots, $show_labels);
 }
 $page_events = GetPageEvents($page_data);
+$bwIn=0;
+if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
+    $bwIn = $test['testinfo']['bwIn'];
+} else if(isset($test) && array_key_exists('test', $test) && array_key_exists('bwIn', $test['test'])) {
+    $bwIn = $test['test']['bwIn'];
+}
+
 $options = array(
     'id' => $id,
     'path' => $testPath,
@@ -33,6 +40,7 @@ $options = array(
     'use_cpu' =>     (!isset($_REQUEST['cpu'])    || $_REQUEST['cpu'] != 0),
     'use_bw' =>      (!isset($_REQUEST['bw'])     || $_REQUEST['bw'] != 0),
     'show_labels' => $show_labels,
+    'max_bw' => $bwIn,
     'is_mime' => $is_mime,
     'is_state' => $is_state
     );

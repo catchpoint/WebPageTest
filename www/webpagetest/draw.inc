@@ -141,7 +141,7 @@ function GetColor(&$im, $r, $g, $b)
 /**
 * Load the performance data (CPU, Memory and Bandwidth)
 */
-function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false) {
+function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw = 0) {
     $perfs = array(
         'cpu' => array('data' => array()),
         'bw' => array('data' => array()),
@@ -165,6 +165,40 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false) {
                     }
                 }
             }
+        }
+    }
+    // fix any spikiness in the bandwidth data
+    if ($max_bw && $use_bw && count($perfs['bw']['data'])) {
+        $max_bw *= 1024;
+        // figure out the real max
+        $measured_max = max($perfs['bw']['data']);
+        if ($measured_max > $max_bw) {
+            $extra = 0;
+            $last_time = 0;
+            $last_value = 0;
+            krsort($perfs['bw']['data'], SORT_NUMERIC);
+            foreach($perfs['bw']['data'] as $time => $value) {
+                if ($last_time > $time) {
+                    $elapsed = $last_time - $time;
+                    if ($last_value > $max_bw) {
+                        $perfs['bw']['data'][$last_time] = $max_bw;
+                        $extra += ($last_value - $max_bw) * $elapsed;
+                    } elseif ($extra) {
+                        $available = ($max_bw - $last_value) * $elapsed;
+                        if ($extra > $available) {
+                            $extra -= $available;
+                            $perfs['bw']['data'][$last_time] = $max_bw;
+                        } else {
+                            $extra = 0;
+                            $bw = $extra / $elapsed;
+                            $perfs['bw']['data'][$last_time] += $bw;
+                        }
+                    }
+                }
+                $last_time = $time;
+                $last_value = $value;
+            }
+            ksort($perfs['bw']['data'], SORT_NUMERIC);
         }
     }
     if ($use_cpu) {

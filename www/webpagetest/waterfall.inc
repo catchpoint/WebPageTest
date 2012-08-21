@@ -162,7 +162,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         $cached = ((bool)@$options['is_cached']) ? '_Cached' : '';
         $perf_file = ("{$options['path']}/" .
                       "{$options['run_id']}{$cached}_progress.csv");
-        $perfs = LoadPerfData($perf_file, $use_cpu, $use_bw);
+        $max_bw = 0;
+        if (isset($options) && array_key_exists('max_bw', $options)) {
+            $max_bw = $options['max_bw'];
+        }
+        $perfs = LoadPerfData($perf_file, $use_cpu, $use_bw, false, $max_bw);
         if ($is_thumbnail) {
             $perf_height = 16;
         } else {
