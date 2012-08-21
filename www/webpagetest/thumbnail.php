@@ -79,6 +79,7 @@ function tbnDrawWaterfall(&$img)
     global $cached;
     global $url;
     global $newWidth;
+    global $test;
 
     include('waterfall.inc');
     $is_secure = false;
@@ -89,6 +90,12 @@ function tbnDrawWaterfall(&$img)
     $rows = GetRequestRows($requests, $use_dots);
     $page_data = loadPageRunData($testPath, $run, $cached);
     $page_events = GetPageEvents($page_data);
+    $bwIn=0;
+    if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
+        $bwIn = $test['testinfo']['bwIn'];
+    } else if(isset($test) && array_key_exists('test', $test) && array_key_exists('bwIn', $test['test'])) {
+        $bwIn = $test['test']['bwIn'];
+    }
     $options = array(
         'id' => $id,
         'path' => $testPath,
@@ -96,6 +103,7 @@ function tbnDrawWaterfall(&$img)
         'is_cached' => $cached,
         'use_cpu' => true,
         'use_bw' => true,
+        'max_bw' => $bwIn,
         'is_thumbnail' => true,
         'width' => $newWidth
         );
