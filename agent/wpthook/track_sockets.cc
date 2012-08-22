@@ -161,7 +161,8 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   Look up the socket ID (or create one if it doesn't already exist)
   and pass the data on to the request tracker
 -----------------------------------------------------------------------------*/
-void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
+void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted, 
+                        DWORD delayed_ms) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
@@ -170,7 +171,7 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
       _test_state._bytes_in_bandwidth += chunk.GetLength();
     }
     if (is_unencrypted || !info->_is_ssl) {
-      _requests.DataIn(socket_id, chunk);
+      _requests.DataIn(socket_id, chunk, delayed_ms);
     } else {
       SslDataIn(info, chunk);
     }

@@ -170,6 +170,15 @@ int WSAAPI WSAEnumNetworkEvents_Hook(SOCKET s, WSAEVENT hEventObject,
   return ret;
 }
 
+BOOL WINAPI RegisterWaitForSingleObject_Hook(PHANDLE phNewWaitObject, 
+          HANDLE hObject, WAITORTIMERCALLBACK Callback, PVOID Context, 
+          ULONG dwMilliseconds, ULONG dwFlags) {
+  BOOL ret = FALSE;
+  if (pHook)
+    ret = pHook->RegisterWaitForSingleObject( phNewWaitObject, hObject, 
+            Callback, Context, dwMilliseconds, dwFlags);
+  return ret;
+}
 
 /******************************************************************************
 *******************************************************************************
@@ -192,6 +201,11 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _send_buffers.InitHashTable(257);
   _send_buffer_original_length.InitHashTable(257);
   _connecting.InitHashTable(257);
+  _callback_info.InitHashTable(257);
+  _socket_events.InitHashTable(257);
+  _async_data_events.InitHashTable(257);
+  QueryPerformanceFrequency(&_ms_freq);
+  _ms_freq.QuadPart = _ms_freq.QuadPart / 1000;
   InitializeCriticalSection(&cs);
 }
 
@@ -224,6 +238,8 @@ void CWsHook::Init() {
                         "WSAEventSelect", WSAEventSelect_Hook);
   _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll", 
                         "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
+  _RegisterWaitForSingleObject = hook.createHookByName("kernel32.dll", 
+              "RegisterWaitForSingleObject", RegisterWaitForSingleObject_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if (!_GetAddrInfoW)
@@ -285,8 +301,9 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name,
     _sockets.Connect(s, name, namelen);
   if (_connect)
     ret = _connect(s, name, namelen);
-  if (!ret)
+  if (!ret) {
     _sockets.Connected(s);
+  }
   else if(ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
     EnterCriticalSection(&cs);
     _connecting.SetAt(s,s);
@@ -307,7 +324,7 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
       _sockets.SetSslSocket(s);
     } else if (ret > 0 && !flags && buf && len) {
       DataChunk chunk(buf, ret);
-      _sockets.DataIn(s, chunk, false);
+      _sockets.DataIn(s, chunk, false, 0);
     }
   }
   return ret;
@@ -332,12 +349,15 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         if (buffer_size) {
           if (lpBuffers[i].buf) {
             DataChunk chunk(lpBuffers[i].buf, buffer_size);
-            _sockets.DataIn(s, chunk, false);
+            _sockets.DataIn(s, chunk, false, 0);
           }
           num_bytes -= buffer_size;
         }
       }
     } else if (ret == SOCKET_ERROR && lpOverlapped) {
+      if (!lpCompletionRoutine && lpOverlapped->hEvent) {
+        _socket_events.SetAt(lpOverlapped->hEvent, s);
+      }
       WsaBuffTracker buff(lpBuffers, dwBufferCount);
       _recv_buffers.SetAt(lpOverlapped, buff);
     }
@@ -382,6 +402,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
       }
       // Concatenate all the buffers together.
       LPSTR data = chunk.AllocateLength(original_len);
+      LPSTR data_front = data;
       for (DWORD i = 0; i < dwBufferCount; i++) {
         DWORD buffer_len = lpBuffers[i].len;
         if (buffer_len && lpBuffers[i].buf) {
@@ -426,12 +447,18 @@ int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
   _sockets.ResetSslFd();
   if (_select)
     ret = _select(nfds, readfds, writefds, exceptfds, timeout);
+  if (ret > 0 && readfds && readfds->fd_count) {
+    for (u_int i = 0; i < readfds->fd_count; i++) {
+      SOCKET s = readfds->fd_array[i];
+    }
+  }
   if (ret > 0 && writefds && writefds->fd_count && !_connecting.IsEmpty()) {
     EnterCriticalSection(&cs);
     for (u_int i = 0; i < writefds->fd_count; i++) {
       SOCKET s = writefds->fd_array[i];
-      if (_connecting.RemoveKey(s))
+      if (_connecting.RemoveKey(s)) {
         _sockets.Connected(s);
+      }
     }
     LeaveCriticalSection(&cs);
   }
@@ -581,12 +608,22 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
     WsaBuffTracker buff;
     // handle a receive
     if (_recv_buffers.Lookup(lpOverlapped, buff)) {
+      DWORD delayed = 0;
+      LONGLONG fired = 0;
+      if (_async_data_events.Lookup(s, fired) && fired) {
+        LARGE_INTEGER now;
+        QueryPerformanceCounter(&now);
+        if (now.QuadPart > fired) {
+          delayed = (DWORD)((now.QuadPart - fired) / _ms_freq.QuadPart);
+        }
+      }
       DWORD bytes = *lpcbTransfer;
       for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
         DWORD data_bytes = min(bytes, buff._buffers[i].len);
         if (data_bytes && buff._buffers[i].buf) {
           DataChunk chunk(buff._buffers[i].buf, data_bytes);
-          _sockets.DataIn(s, chunk, false);
+          _sockets.DataIn(s, chunk, false, delayed);
+          delayed = 0;
           bytes -= data_bytes;
         }
       }
@@ -629,8 +666,58 @@ int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject,
     ret = _WSAEnumNetworkEvents(s, hEventObject, lpNetworkEvents);
 
   if (!ret && !_test_state._exit && 
-      lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT)
+      lpNetworkEvents && lpNetworkEvents->lNetworkEvents & FD_CONNECT) {
     _sockets.Connected(s);
+  }
 
   return ret;
+}
+
+static VOID CALLBACK RegisteredWaitCallback(PVOID lpParameter, 
+                              BOOLEAN TimerOrWaitFired) {
+  if (pHook) {
+    pHook->RegisteredWaitCallback(lpParameter, TimerOrWaitFired);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CWsHook::RegisterWaitForSingleObject(PHANDLE phNewWaitObject, 
+          HANDLE hObject, WAITORTIMERCALLBACK Callback, PVOID Context, 
+          ULONG dwMilliseconds, ULONG dwFlags) {
+  BOOL ret = FALSE;
+  if (_RegisterWaitForSingleObject) {
+    SOCKET s;
+    if (_socket_events.Lookup(hObject, s)) {
+      WsaCallbackInfo info(Callback, Context);
+      _callback_info.SetAt(hObject, info);
+      ret = _RegisterWaitForSingleObject(phNewWaitObject, hObject, 
+              ::RegisteredWaitCallback, hObject, dwMilliseconds, dwFlags);
+    } else {
+      ret = _RegisterWaitForSingleObject(phNewWaitObject, hObject, 
+              Callback, Context, dwMilliseconds, dwFlags);
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+VOID CWsHook::RegisteredWaitCallback(PVOID lpParameter, 
+                                                    BOOLEAN TimerOrWaitFired) {
+  // look up the original callback information
+  HANDLE hObject = (HANDLE)lpParameter;
+
+  SOCKET s;
+  if (_socket_events.Lookup(hObject, s)) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    _async_data_events.SetAt(s, now.QuadPart);
+  }
+  WsaCallbackInfo info;
+  if (_callback_info.Lookup(hObject, info)) {
+    if (info._callback) {
+      info._callback(info._context, TimerOrWaitFired);
+    }
+  }
 }

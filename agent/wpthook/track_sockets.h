@@ -75,7 +75,8 @@ public:
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
   bool ModifyDataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
-  void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted);
+  void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted, 
+                DWORD delayed_ms);
 
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);

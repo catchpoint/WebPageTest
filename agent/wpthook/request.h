@@ -218,7 +218,7 @@ public:
           Requests& requests);
   ~Request(void);
 
-  void DataIn(DataChunk& chunk);
+  void DataIn(DataChunk& chunk, DWORD delayed_ms);
   bool ModifyDataOut(DataChunk& chunk);
   void DataOut(DataChunk& chunk);
   void SocketClosed();
@@ -259,6 +259,8 @@ public:
   int _ms_dns_end;
   int _ms_ssl_start;
   int _ms_ssl_end;
+
+  int _ms_ttfb_delayed;
 
   bool _from_browser;
 

@@ -171,7 +171,7 @@ PRInt32 NsprHook::PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount) {
     if (ret > 0 && buf && !_test_state._exit) {
       SOCKET s = INVALID_SOCKET;
       if (_sockets.SslSocketLookup(fd, s)) {
-        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret), true);
+        _sockets.DataIn(s, DataChunk((LPCSTR)buf, ret), true, 0);
       }
     }
   }
