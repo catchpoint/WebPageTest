@@ -1,4 +1,6 @@
 <?php
+require_once('testStatus.inc');
+
 /**
 * Archive the given test if it hasn't already been archived
 * For now this will just zip and move to a location on disk
@@ -13,13 +15,13 @@ function ArchiveTest($id) {
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
+        $status = GetTestStatus($id, false);
+        $completed = true;
+        if ($status['statusCode'] >= 100 && $status['statusCode'] < 200) {
+            $completed = false;
+        }
         $testPath = realpath('./' . GetTestPath($id));
         $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        $completed = $testInfo['completed'];
-        if (!$completed) {
-            $test = parse_ini_file("$testPath/testinfo.ini", true);
-            $completed = isset($test['test']['completeTime']);
-        }
         if ($completed || $testInfo['batch']) {
             if( isset($testInfo['archived']) && $testInfo['archived'] ) {
                 if (VerifyArchive($id)) {

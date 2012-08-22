@@ -28,15 +28,18 @@ $deleted = 0;
 $log = fopen('./cli/archive.log', 'w');
 
 // check the old tests first
-CheckOldDir('./results/old');
-$now = time();
-
 /*
 *   Archive any tests that have not already been archived
 *   We will also keep track of all of the tests that are 
 *   known to have been archived separately so we don't thrash
 */  
 $UTC = new DateTimeZone('UTC');
+
+$now = time();
+CheckRelay();
+CheckOldDir('./results/old');
+
+// Archive the actual tests
 $years = scandir('./results');
 foreach( $years as $year ) {
     mkdir('./logs/archived', 0777, true);
@@ -50,10 +53,7 @@ foreach( $years as $year ) {
                 foreach( $days as $day ) {
                     $dayDir = "$monthDir/$day";
                     if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
-                        $date = DateTime::createFromFormat('ymd', "$year$month$day", $UTC);
-                        $daytime = $date->getTimestamp();
-                        $elapsed = max($now - $daytime, 0) / 86400;
-                        if ($elapsed >= ($MIN_DAYS - 1)) {
+                        if (ElapsedDays($year, $month, $day) >= ($MIN_DAYS - 1)) {
                             CheckDay($dayDir, "$year$month$day");
                         }
                     }
@@ -73,6 +73,82 @@ if( $log ) {
 
 if ($lock) {
     fclose($lock);
+}
+
+/**
+* Clean up the relay directory of old tests
+* 
+*/
+function CheckRelay() {
+    $dirs = scandir('./results/relay');
+    $keys = parse_ini_file('./settings/keys.ini');
+    foreach($dirs as $key) {
+        if ($key != '.' && $key != '..') {
+            $keydir = "./results/relay/$key";
+            if (is_dir($keydir)) {
+                if (array_key_exists($key, $keys)) {
+                    echo "\rChecking relay tests for $key";
+                    $years = scandir($keydir);
+                    foreach( $years as $year ) {
+                        if ($year != '.' && $year != '..') {
+                            $yearDir = "$keydir/$year";
+                            if (is_numeric($year)) {
+                                if (ElapsedDays($year, 1, 1) < 10) {
+                                    $months = scandir($yearDir);
+                                    foreach( $months as $month ) {
+                                        if ($month != '.' && $month != '..') {
+                                            $monthDir = "$yearDir/$month";
+                                            if (is_numeric($month)) {
+                                                if (ElapsedDays($year, $month, 1) < 10) {
+                                                    $days = scandir($monthDir);
+                                                    foreach( $days as $day ) {
+                                                        if ($day != '.' && $day != '..') {
+                                                            $dayDir = "$monthDir/$day";
+                                                            if (is_numeric($day)) {
+                                                                if (ElapsedDays($year, $month, $day) >= 10) {
+                                                                    delTree($dayDir);
+                                                                }
+                                                            } else {
+                                                                if (is_file($dayDir)) {
+                                                                    unlink($dayDir);
+                                                                } else {
+                                                                    delTree($dayDir);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    delTree($monthDir);
+                                                }
+                                            } else {
+                                                if (is_file($monthDir)) {
+                                                    unlink($monthDir);
+                                                } else {
+                                                    delTree($monthDir);
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    delTree($yearDir);
+                                }
+                            } else {
+                                if (is_file($yearDir)) {
+                                    unlink($yearDir);
+                                } else {
+                                    delTree($yearDir);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    delTree($keydir);
+                }
+            } else {
+                unlink($keydir);
+            }
+        }
+    }
 }
 
 /**
@@ -132,17 +208,30 @@ function CheckTest($testPath, $id) {
     echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
     $elapsed = TestLastAccessed($id);
-    if( $elapsed >= $MIN_DAYS && ArchiveTest($id) ) {
-        $archiveCount++;
-        $logLine .= "Archived";
-                                                                                      
-        if (VerifyArchive($id)) {
+    if( $elapsed >= $MIN_DAYS ) {
+        $delete = true;
+        if (ArchiveTest($id) ) {
+            $archiveCount++;
+            $logLine .= "Archived";
+                                                                                          
+            if (!VerifyArchive($id) && $elapsed < 60) {
+                $delete = false;
+            }
+        } else if ($elapsed < 60) {
+            $delete = false;
+        }
+        
+        if ($delete) {
             delTree("$testPath/");
             $deleted++;
             $logLine .= " Deleted";
+        } else {
+            $kept++;
         }
-    } else
+    } else {
+        $logLine .= "Last Accessed $elapsed days";
         $kept++;
+    }
         
     if( $log ) {
         $logLine .= "\n";
@@ -150,4 +239,15 @@ function CheckTest($testPath, $id) {
     }
 }
 
+/**
+* Calculate how many days have passed since the given day
+*/
+function ElapsedDays($year, $month, $day) {
+    global $now;
+    global $UTC;
+    $date = DateTime::createFromFormat('ymd', "$year$month$day", $UTC);
+    $daytime = $date->getTimestamp();
+    $elapsed = max($now - $daytime, 0) / 86400;
+    return $elapsed;
+}
 ?>
