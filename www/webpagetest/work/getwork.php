@@ -448,13 +448,13 @@ function CheckCron() {
                 $last_run = file_get_contents('./tmp/wpt_cron.dat');
             $now = time();
             $elapsed = $now - $last_run;
-            if (!$last_run || $elapsed > 600) {
+            if (!$last_run || $elapsed > 120) {
                 if ($elapsed > 1200) {
                     // if it has been over 20 minutes, run regardless of the wall-clock time
                     $should_run = true;
                 } else {
-                    $minute = gmdate('i', $now) % 15;
-                    if ($minute < 5)
+                    $minute = gmdate('i', $now) % 5;
+                    if ($minute < 2)
                         $should_run = true;
                 }
             }
@@ -485,8 +485,8 @@ function SendCronRequest($relative_url) {
     curl_setopt($c, CURLOPT_URL, $url);
     curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 5);
-    curl_setopt($c, CURLOPT_TIMEOUT, 5);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_setopt($c, CURLOPT_TIMEOUT, 1);
     curl_exec($c);
     curl_close($c);
 }

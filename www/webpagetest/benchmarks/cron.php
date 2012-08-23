@@ -126,8 +126,8 @@ function PreProcessBenchmark($benchmark) {
         curl_setopt($c, CURLOPT_URL, $url);
         curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($c, CURLOPT_TIMEOUT, 5);
+        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_setopt($c, CURLOPT_TIMEOUT, 1);
         curl_exec($c);
         curl_close($c);
     } else {
