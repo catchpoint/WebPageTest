@@ -9,7 +9,7 @@ $tests = array();
 $fastest = null;
 $ready = true;
 $error = null;
-$endTime = 'all';
+$endTime = 'visual';
 if( strlen($_REQUEST['end']) )
     $endTime = trim($_REQUEST['end']);
 
@@ -68,7 +68,9 @@ foreach($compTests as $t) {
 
                     // figure out the real end time (in ms)
                     if (isset($test['end'])) {
-                        if( !strcmp($test['end'], 'doc') )
+                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) )
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
+                        elseif( !strcmp($test['end'], 'doc') )
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
                         elseif(!strncasecmp($test['end'], 'doc+', 4))
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);

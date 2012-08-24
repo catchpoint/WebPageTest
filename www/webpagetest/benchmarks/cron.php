@@ -286,7 +286,7 @@ function CollectResults($benchmark, &$state) {
             }
             $testPath = './' . GetTestPath($test['id']);
             logMsg("Loading page data from $testPath", "./log/$logFile", true);
-            $page_data = loadAllPageData($testPath, array('SpeedIndex' => true));
+            $page_data = loadAllPageData($testPath);
             if (count($page_data)) {
                 foreach ($page_data as $run => &$page_run) {
                     foreach ($page_run as $cached => &$test_data) {

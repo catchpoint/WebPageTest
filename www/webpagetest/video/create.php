@@ -73,7 +73,7 @@ else
     if( !$exists )
     {
         $labels = array();
-        $endTime = 'all';
+        $endTime = 'visual';
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
         $videoIdExtra = "";
@@ -125,7 +125,10 @@ else
                 // figure out the real end time (in ms)
                 if( isset($test['end']) )
                 {
-                    if( !strcmp($test['end'], 'doc') || !strcmp($test['end'], 'docvisual') )
+                    if (!strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']])) {
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
+                    }
+                    elseif( !strcmp($test['end'], 'doc') || !strcmp($test['end'], 'docvisual') )
                     {
                         if( !strcmp($test['end'], 'docvisual') )
                         {

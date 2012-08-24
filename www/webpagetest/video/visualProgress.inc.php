@@ -72,6 +72,15 @@ function GetVisualProgress($testPath, $run, $cached) {
         $dirty = true;
         $frames['FLI'] = CalculateFeelsLikeIndex($frames);
     }
+    if (isset($frames)) {
+        $frames['visualComplete'] = 0;
+        foreach($frames['frames'] as $time => &$frame) {
+            if ($frame['progress'] == 100) {
+                $frames['visualComplete'] = $time;
+                break;
+            }
+        }
+    }
     if ($dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;

@@ -120,7 +120,7 @@ function loadPageData($file, $options = null)
                                 'loadEventEnd' => @(int)$fields[78],
                                 'domContentLoadedEventStart' => @(int)$fields[79],
                                 'domContentLoadedEventEnd' => @(int)$fields[80],
-                                'visualComplete' => @(int)$fields[81],
+                                'lastVisualChange' => @(int)$fields[81],
                                 'browser_name' => @trim($fields[82]),
                                 'browser_version' => @trim($fields[83])
                             );
@@ -143,19 +143,22 @@ function loadPageData($file, $options = null)
         $cached = 0;
         if (stripos($filename, 'Cached') !== false)
             $cached = 1;
-        if( is_dir($video_dir) && (!array_key_exists('visualComplete', $ret) || !$ret['visualComplete'])) {
+        if( is_dir($video_dir) && (!array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'])) {
             $frames = loadVideo($video_dir);
             if( $frames && count($frames) ) {
                 $last = end(array_keys($frames));
                 if( $last )
-                    $ret['visualComplete'] = $last * 100;
+                    $ret['lastVisualChange'] = $last * 100;
             }
         }
-        if (isset($options) && array_key_exists('SpeedIndex', $options) && $options['SpeedIndex']) {
-            require_once('./video/visualProgress.inc.php');
-            $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
-            if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
+        require_once('./video/visualProgress.inc.php');
+        $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
+        if (isset($progress) && is_array($progress)) {
+            if (array_key_exists('FLI', $progress)) {
                 $ret['SpeedIndex'] = $progress['FLI'];
+            }
+            if (array_key_exists('visualComplete', $progress)) {
+                $ret['visualComplete'] = $progress['visualComplete'];
             }
         }
     }

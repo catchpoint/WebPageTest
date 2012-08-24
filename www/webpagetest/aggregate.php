@@ -96,7 +96,7 @@ if( isset($test['test']) && $test['test']['batch'] )
             $label = $test['l'];
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
-            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
+            $pageData = loadAllPageData($testPath);
             if( count($pageData) )
             {
                 echo "\"$label\",\"$url\",";

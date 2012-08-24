@@ -36,7 +36,7 @@ $log = fopen('./cli/archive.log', 'w');
 $UTC = new DateTimeZone('UTC');
 
 $now = time();
-CheckRelay();
+//CheckRelay();
 CheckOldDir('./results/old');
 
 // Archive the actual tests

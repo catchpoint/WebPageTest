@@ -31,7 +31,7 @@ $videoDirty = false;
 if( gz_is_file("$testPath/video.json") )
     $videoInfo = json_decode(gz_file_get_contents("$testPath/video.json"), true);
 else {
-    $videoInfo = array('vID' => @$tests['vID'], 'vPathID' => @$tests['vPathID']);
+    $videoInfo = array('vidID' => @$tests['vidID'], 'vidPathID' => @$tests['vidPathID']);
 }
 
 // grab the location from the first test
@@ -534,7 +534,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
-        $test['end'] = 'docvisual';
+        $test['end'] = 'visual';
         if (!$count) {
             if (array_key_exists('endOriginal', $_GET)) {
                 $test['end'] = urlencode(trim($_GET['endOriginal']));
@@ -560,7 +560,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
                 $started = $testInfo['started'];
-            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
+            $pageData = loadAllPageData($testPath);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
@@ -836,7 +836,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         
         if (array_key_exists('pss_advanced', $testInfo) && $testInfo['pss_advanced']) {
-            echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=docvisual\" target=\"_blank\">open in new window</a>)</h2>";
+            echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=visual\" target=\"_blank\">open in new window</a>)</h2>";
             echo "<iframe scrolling=\"no\" frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}\"></iframe>";
         } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
             echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
@@ -912,46 +912,46 @@ function DisplayPSS(&$tests, $video, &$dirty)
     {
         $videoComplete = true;
         // regenerate a video if it was created a while ago and still isn't available
-        if( strlen($videoInfo['vID' . $videoCustom]) ) {
-            if (!CheckVideo($videoInfo['vID' . $videoCustom], $regenerate_video) && $regenerate_video) {
+        if( strlen($videoInfo['vidID' . $videoCustom]) ) {
+            if (!CheckVideo($videoInfo['vidID' . $videoCustom], $regenerate_video) && $regenerate_video) {
                 if (array_key_exists('regenerated' . $videoCustom, $videoInfo) && $videoInfo['regenerated'] . $videoCustom) {
                     $videoComplete = true;
-                    $videoInfo['vReady' . $videoCustom] = true;
+                    $videoInfo['vidReady' . $videoCustom] = true;
                 } else {
                     $videoInfo['regenerated' . $videoCustom] = true;
-                    $videoInfo['vID' . $videoCustom] = null;
+                    $videoInfo['vidID' . $videoCustom] = null;
                 }
                 $videoDirty = true;
             }
         }
-        if( !strlen($videoInfo['vID' . $videoCustom]) )
+        if( !strlen($videoInfo['vidID' . $videoCustom]) )
         {
-            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls']);
+            $videoInfo['vidID' . $videoCustom] = CreateVideo($tests['urls']);
             $videoDirty = true;
             $videoComplete = false;
-            if( !strlen($videoInfo['vID' . $videoCustom]) )
+            if( !strlen($videoInfo['vidID' . $videoCustom]) )
             {
                 // bail on the video if it couldn't be created
                 $videoComplete = true;
                 $videoInfo['vReady' . $videoCustom] = true;
             }
         }
-        elseif( !$videoInfo['vReady' . $videoCustom] )
+        elseif( !$videoInfo['vidReady' . $videoCustom] )
         {
-            $videoInfo['vReady' . $videoCustom] = CheckVideo($videoInfo['vID' . $videoCustom], $regenerate_video);
-            if( $videoInfo['vReady' . $videoCustom] )
+            $videoInfo['vidReady' . $videoCustom] = CheckVideo($videoInfo['vidID' . $videoCustom], $regenerate_video);
+            if( $videoInfo['vidReady' . $videoCustom] )
                 $videoDirty = true;
             else
                 $videoComplete = false;
         }
         
         if ($json) {
-            $json_response['data']['VideoID'] = $videoInfo['vID' . $videoCustom];
+            $json_response['data']['VideoID'] = $videoInfo['vidID' . $videoCustom];
             if ($videoComplete) {
                 $json_response['statusCode'] = 200;
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
+                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vidID' . $videoCustom];
             } else {
                 $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
@@ -960,11 +960,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $videoComplete )
             {
                 if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
-                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=docvisual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {
                     echo "<h2>Visual Comparison*</h2>";
                 }
-                VideoHtml($videoInfo['vID' . $videoCustom]);
+                VideoHtml($videoInfo['vidID' . $videoCustom]);
             }
             else
             {
@@ -1034,7 +1034,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $test['path'] = GetTestPath($test['id']);
             $entry['path'] = $test['path'];
             $testPath = './' . $test['path'];
-            $entry['pageData'] = loadAllPageData($testPath, array('SpeedIndex' => true));
+            $entry['pageData'] = loadAllPageData($testPath);
             $entry['median_run'] = GetMedianRun($entry['pageData'], 0, $median_metric);
             $entry['median'] = $entry['pageData'][$entry['median_run']][0];
             $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
@@ -1176,44 +1176,44 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
         if ($complete && $video) {
             $videoComplete = true;
             // regenerate a video if it was created a while ago and still isn't available
-            if( strlen($videoInfo['vID']) ) {
-                if (!CheckVideo($videoInfo['vID'], $regenerate_video) && $regenerate_video) {
-                    $videoInfo['vID'] = null;
+            if( strlen($videoInfo['vidID']) ) {
+                if (!CheckVideo($videoInfo['vidID'], $regenerate_video) && $regenerate_video) {
+                    $videoInfo['vidID'] = null;
                     $videoDirty = true;
                 }
             }
-            if (!strlen($videoInfo['vID'])) {
-                $videoInfo['vID'] = CreateVideo($videoTests, 'all');
+            if (!strlen($videoInfo['vidID'])) {
+                $videoInfo['vidID'] = CreateVideo($videoTests);
                 $videoDirty = true;
                 $videoComplete = false;
-                if (!strlen($videoInfo['vID'])) {
+                if (!strlen($videoInfo['vidID'])) {
                     $videoComplete = true;
-                    $videoInfo['vReady'] = true;
+                    $videoInfo['vidReady'] = true;
                 }
-            } elseif( !$videoInfo['vReady'] ) {
-                $videoInfo['vReady'] = CheckVideo($videoInfo['vID'], $regenerate_video);
-                if( $videoInfo['vReady'] )
+            } elseif( !$videoInfo['vidReady'] ) {
+                $videoInfo['vidReady'] = CheckVideo($videoInfo['vidID'], $regenerate_video);
+                if( $videoInfo['vidReady'] )
                     $videoDirty = true;
                 else
                     $videoComplete = false;
             }
-            if( strlen($videoInfo['vPathID']) ) {
-                if (!CheckVideo($videoInfo['vPathID'], $regenerate_video) && $regenerate_video) {
-                    $videoInfo['vPathID'] = null;
+            if( strlen($videoInfo['vidPathID']) ) {
+                if (!CheckVideo($videoInfo['vidPathID'], $regenerate_video) && $regenerate_video) {
+                    $videoInfo['vidPathID'] = null;
                     $videoDirty = true;
                 }
             }
-            if (!strlen($videoInfo['vPathID'])) {
-                $videoInfo['vPathID'] = CreateVideo($videoPathTests, 'all');
+            if (!strlen($videoInfo['vidPathID'])) {
+                $videoInfo['vidPathID'] = CreateVideo($videoPathTests);
                 $videoDirty = true;
                 $videoComplete = false;
-                if (!strlen($videoInfo['vPathID'])) {
+                if (!strlen($videoInfo['vidPathID'])) {
                     $videoComplete = true;
-                    $videoInfo['vPathReady'] = true;
+                    $videoInfo['vidPathReady'] = true;
                 }
-            } elseif( !$videoInfo['vPathReady'] ) {
-                $videoInfo['vPathReady'] = CheckVideo($videoInfo['vPathID'], $regenerate_video);
-                if( $videoInfo['vPathReady'] )
+            } elseif( !$videoInfo['vidPathReady'] ) {
+                $videoInfo['vidPathReady'] = CheckVideo($videoInfo['vidPathID'], $regenerate_video);
+                if( $videoInfo['vidPathReady'] )
                     $videoDirty = true;
                 else
                     $videoComplete = false;
@@ -1221,12 +1221,12 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             
             if( $videoComplete ) {
                 echo '<h2>First View Visual Comparison*</h2>';
-                VideoHtml($videoInfo['vID']);
-                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vID']}\" target=\"_blank\">view stand-alone video</a>";
+                VideoHtml($videoInfo['vidID']);
+                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vidID']}\" target=\"_blank\">view stand-alone video</a>";
                 echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Page']['Original']['id']},{$testData['Page']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
                 echo '<br><br><h2>Site Navigation Visual Comparison*</h2>';
                 VideoHtml($videoInfo['vPathID']);
-                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vPathID']}\" target=\"_blank\">view stand-alone video</a>";
+                echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vidPathID']}\" target=\"_blank\">view stand-alone video</a>";
                 echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Path']['Original']['id']},{$testData['Path']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
             } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
@@ -1376,7 +1376,7 @@ function DisplayBlinkTable($tests, $tableLabel)
         $testPath = './' . $test['path'];
         if( $test['c'] )
         {
-            $pageData = loadAllPageData($testPath, array('SpeedIndex' => true));
+            $pageData = loadAllPageData($testPath);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $metrics['Full Page Loaded'][$count] = $pageData[$fvMedian][0]['loadTime'];
@@ -1542,7 +1542,7 @@ function CreateVideo(&$tests, $end = null)
     $id = null;
 
     if (!strlen($end))
-        $end = 'docvisual';
+        $end = 'visual';
     $host  = $_SERVER['HTTP_HOST'];
     $request = "http://$host/video/create.php?f=json&force=1&end=$end&tests=";
 

@@ -324,7 +324,7 @@ function ScreenShotTable()
     global $interval;
     global $maxCompare;
     $aftAvailable = false;
-    $endTime = 'all';
+    $endTime = 'visual';
     if( strlen($_REQUEST['end']) )
         $endTime = trim($_REQUEST['end']);
 
@@ -553,7 +553,11 @@ function ScreenShotTable()
                         // fill in the end-point selection
                         echo "<td>";
                         if( !$aftAvailable && !strcasecmp($endTime, 'aft') )
-                            $endTime = 'all';
+                            $endTime = 'visual';
+                        $checked = '';
+                        if( !strcasecmp($endTime, 'visual') )
+                            $checked = ' checked=checked';
+                        echo "<input type=\"radio\" name=\"end\" value=\"visual\"$checked onclick=\"this.form.submit();\"> Visually Complete<br>";
                         $checked = '';
                         if( !strcasecmp($endTime, 'all') )
                             $checked = ' checked=checked';
