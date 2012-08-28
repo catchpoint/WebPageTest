@@ -57,4 +57,5 @@ private:
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
   void KillBrowsers();
+  void SetupScreen();
 };

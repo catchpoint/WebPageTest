@@ -94,6 +94,9 @@ void WptDriverCore::Start(void){
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
+    // auto-set the desktop resolution
+    SetupScreen();
+
     // start a background thread to do all of the actual test management
     _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
   }else{
@@ -457,6 +460,52 @@ void WptDriverCore::KillBrowsers() {
           }
         }
       }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Set the screen resolution if it is currently too low
+-----------------------------------------------------------------------------*/
+void WptDriverCore::SetupScreen(void) {
+  DEVMODE mode;
+  memset(&mode, 0, sizeof(mode));
+  mode.dmSize = sizeof(mode);
+  CStringA settings;
+  DWORD x = 0, y = 0, bpp = 0;
+
+  int index = 0;
+  DWORD targetWidth = 1920;
+  DWORD targetHeight = 1200;
+  while( EnumDisplaySettings( NULL, index, &mode) ) {
+    index++;
+
+    if ((mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
+        (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
+         mode.dmBitsPerPel >= bpp ) {
+      x = mode.dmPelsWidth;
+      y = mode.dmPelsHeight;
+      bpp = mode.dmBitsPerPel;
+    }
+    if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
+      break;
+    }
+  }
+
+  // get the current settings
+  if (x && y && bpp && 
+      EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &mode) ) {
+    if (mode.dmPelsWidth < x || 
+        mode.dmPelsHeight < y || 
+        mode.dmBitsPerPel < bpp ) {
+      DEVMODE newMode;
+      memcpy(&newMode, &mode, sizeof(mode));
+      
+      newMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+      newMode.dmBitsPerPel = bpp;
+      newMode.dmPelsWidth = x;
+      newMode.dmPelsHeight = y;
+      ChangeDisplaySettings( &newMode, CDS_UPDATEREGISTRY | CDS_GLOBAL );
     }
   }
 }
