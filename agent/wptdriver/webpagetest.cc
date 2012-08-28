@@ -423,6 +423,9 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
       port = parts.nPort;
       object = path;
       object += extra;
+      if (!host.CompareNoCase(_T("www.webpagetest.org"))) {
+        host = _T("agent.webpagetest.org");
+      }
       if( !port )
         port = INTERNET_DEFAULT_HTTP_PORT;
   }

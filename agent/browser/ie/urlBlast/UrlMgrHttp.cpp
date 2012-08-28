@@ -127,6 +127,9 @@ void CUrlMgrHttp::Start()
 		if( InternetCrackUrl((LPCTSTR)urlFilesUrl, urlFilesUrl.GetLength(), 0, &parts) )
 		{
 			host = szHost;
+      if (!host.CompareNoCase(_T("www.webpagetest.org"))) {
+        host = _T("agent.webpagetest.org");
+      }
 			port = parts.nPort;
 			if( !port )
 				port = 80;
