@@ -1641,15 +1641,25 @@ void CurlBlastDlg::SetupScreen(void)
 	while( EnumDisplaySettings( NULL, index, &mode) ) {
 		index++;
 
-		if( (mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
-        (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
-         mode.dmBitsPerPel >= bpp ) {
-			x = mode.dmPelsWidth;
-			y = mode.dmPelsHeight;
-			bpp = mode.dmBitsPerPel;
-		}
     if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
-      break;
+      // we already have at least one suitable resolution.  
+      // Make sure we didn't overshoot and pick too high of a resolution
+      // or see if a higher bpp is available
+      if (mode.dmPelsWidth >= targetWidth && mode.dmPelsWidth <= x &&
+          mode.dmPelsHeight >= targetHeight && mode.dmPelsHeight <= y &&
+          mode.dmBitsPerPel >= bpp) {
+			  x = mode.dmPelsWidth;
+			  y = mode.dmPelsHeight;
+			  bpp = mode.dmBitsPerPel;
+      }
+    } else {
+		  if( (mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
+          (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
+           mode.dmBitsPerPel >= 24 ) {
+			  x = mode.dmPelsWidth;
+			  y = mode.dmPelsHeight;
+			  bpp = mode.dmBitsPerPel;
+		  }
     }
 	}
 
