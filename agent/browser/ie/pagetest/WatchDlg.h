@@ -168,7 +168,7 @@ public:
 	void MoveControls(void);
 	void RememberPosition(void);
 
-	virtual void	ResizeWindow(void);
+	virtual void	ResizeWindow(DWORD width = 0, DWORD height = 0);
 
 	virtual void	StopTimers();
 	virtual void	StartTimer(UINT_PTR id, UINT elapse);

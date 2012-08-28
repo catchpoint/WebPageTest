@@ -277,7 +277,7 @@ public:
 	virtual void	DeleteImages(void);
 	virtual void	Reset(void);
 	virtual void	DoStartup(CString& szUrl, bool initializeDoc = false) = 0;
-	virtual void	ResizeWindow(void) = 0;
+	virtual void	ResizeWindow(DWORD width = 0, DWORD height = 0) = 0;
 	virtual void	StopTimers() = 0;
 	virtual void	StartTimer(UINT_PTR id, UINT elapse) = 0;
 	virtual void	Create(void) = 0;

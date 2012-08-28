@@ -668,42 +668,38 @@ BOOL CALLBACK PositionBrowser(HWND hwnd, LPARAM lParam) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CWatchDlg::ResizeWindow(void)
+void CWatchDlg::ResizeWindow(DWORD width, DWORD height)
 {
-	// see if we need to position the browser window
-	CRegKey key;
-	if( key.Open(HKEY_CURRENT_USER, _T("Software\\AOL\\ieWatch"), KEY_READ) == ERROR_SUCCESS )
-	{
-		DWORD left = 0, top = 0, height = 0, width = 0;
-		key.QueryDWORDValue(_T("Window Left"), left);
-		key.QueryDWORDValue(_T("Window Top"), top);
-		key.QueryDWORDValue(_T("Window Width"), width);
-		key.QueryDWORDValue(_T("Window Height"), height);
-	    
-	    key.DeleteValue(_T("Window Left"));
-	    key.DeleteValue(_T("Window Top"));
-	    key.DeleteValue(_T("Window Width"));
-	    key.DeleteValue(_T("Window Height"));
+	DWORD left = 0, top = 0;
+  if (!width || !height) {
+	  CRegKey key;
+	  if( key.Open(HKEY_CURRENT_USER, _T("Software\\AOL\\ieWatch"), KEY_READ) == ERROR_SUCCESS )
+	  {
+		  key.QueryDWORDValue(_T("Window Left"), left);
+		  key.QueryDWORDValue(_T("Window Top"), top);
+		  key.QueryDWORDValue(_T("Window Width"), width);
+		  key.QueryDWORDValue(_T("Window Height"), height);
+  	    
+      key.DeleteValue(_T("Window Left"));
+      key.DeleteValue(_T("Window Top"));
+      key.DeleteValue(_T("Window Width"));
+      key.DeleteValue(_T("Window Height"));
 
-		  key.Close();
-	    if( height && width && hMainWindow && ::IsWindow(hMainWindow) )
-			{
-        RECT rect;
-        rect.left = left;
-        rect.top = top;
-        rect.right = width;
-        rect.bottom = height;
+	    key.Close();
+    }
+	}
+  if( height && width && hMainWindow && ::IsWindow(hMainWindow) ) {
+    RECT rect;
+    rect.left = left;
+    rect.top = top;
+    rect.right = width;
+    rect.bottom = height;
 
-        EnumWindows(::PositionBrowser, (LPARAM)&rect);
+    EnumWindows(::PositionBrowser, (LPARAM)&rect);
 
-				// take over the wndproc
-				//if( !originalWndProc )
-				//	originalWndProc = (WNDPROC)::SetWindowLongPtr(hMainWindow, GWL_WNDPROC, (LONG)wndProc);
-
-				::ShowWindow(hMainWindow, SW_RESTORE);	// make sure it is not maximized
-				::SetWindowPos(hMainWindow, HWND_TOPMOST, left, top, width, height, SWP_NOACTIVATE);
-        ::UpdateWindow(hMainWindow);
-			}
+		::ShowWindow(hMainWindow, SW_RESTORE);	// make sure it is not maximized
+		::SetWindowPos(hMainWindow, HWND_TOPMOST, left, top, width, height, SWP_NOACTIVATE);
+    ::UpdateWindow(hMainWindow);
 	}
 }
 

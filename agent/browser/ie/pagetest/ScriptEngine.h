@@ -194,6 +194,7 @@ protected:
 	void ScriptComplete(void);
 	bool IncrementStep(bool waitForActivity = false);
 	void VarReplace(CString& value);
+  bool PreProcessScriptItem(CScriptItem &item);
 
 	CAtlList<CScriptItem>	script;
 	CAtlList<CScriptVariable>	variables;

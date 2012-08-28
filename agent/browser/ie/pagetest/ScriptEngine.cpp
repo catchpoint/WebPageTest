@@ -29,7 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "StdAfx.h"
+#include "WatchDlg.h"
 #include "ScriptEngine.h"
+
+extern CWatchDlg * dlg;
 
 CScriptEngine::CScriptEngine(void):
 	scriptStep(0)
@@ -212,9 +215,11 @@ bool CScriptEngine::LoadScript(CString file)
 									item.target = line.Tokenize(_T("\t"), linePos).Trim();
 									if( linePos >= 0 && !item.target.IsEmpty() )
 										item.value = line.Tokenize(_T("\t"), linePos);
-										
-									// add this item to the script
-									script.AddTail(item);
+
+                  if (PreProcessScriptItem(item)) {
+									  // add this item to the script
+									  script.AddTail(item);
+                  }
 								}
 							 }
 							 else if( !line.IsEmpty() )
@@ -1597,4 +1602,24 @@ bool CScriptEngine::ConditionMatches(CString condition, CString value) {
   }
 
   return match;
+}
+
+/*-----------------------------------------------------------------------------
+	Handle and script items that are global (at load time)
+-----------------------------------------------------------------------------*/
+bool CScriptEngine::PreProcessScriptItem(CScriptItem &item) {
+  bool keep = false;
+
+  if (!item.command.CompareNoCase(_T("setbrowsersize"))) {
+    DWORD width = _ttol(item.target);
+    DWORD height = _ttol(item.value);
+    if (width > 50 && height > 50 && width < 2500 && height < 2500 && dlg) {
+      dlg->ResizeWindow(width, height);
+    }
+  } else if (!item.command.CompareNoCase(_T("setviewportsize"))) {
+  } else {
+    keep = true;
+  }
+
+  return keep;
 }
