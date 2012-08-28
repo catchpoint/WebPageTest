@@ -1636,23 +1636,26 @@ void CurlBlastDlg::SetupScreen(void)
 
 	// Go through the possible modes to find the best candidate (>=1024x768 with the highest bpp)
 	int index = 0;
-	while( EnumDisplaySettings( NULL, index, &mode) )
-	{
+  DWORD targetWidth = 1920;
+  DWORD targetHeight = 1200;
+	while( EnumDisplaySettings( NULL, index, &mode) ) {
 		index++;
 
-		if( mode.dmPelsWidth >= (DWORD)browserWidth && mode.dmPelsHeight >= (DWORD)browserHeight && mode.dmBitsPerPel > bpp )
-		{
+		if( (mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
+        (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
+         mode.dmBitsPerPel >= bpp ) {
 			x = mode.dmPelsWidth;
 			y = mode.dmPelsHeight;
 			bpp = mode.dmBitsPerPel;
 		}
+    if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
+      break;
+    }
 	}
 
 	// get the current settings
-	if( x && y && bpp && EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &mode) )
-	{
-		if( mode.dmPelsWidth < x || mode.dmPelsHeight < y || mode.dmBitsPerPel < bpp )
-		{
+	if( x && y && bpp && EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &mode) ) {
+		if( mode.dmPelsWidth < x || mode.dmPelsHeight < y || mode.dmBitsPerPel < bpp ) {
 			DEVMODE newMode;
 			memcpy(&newMode, &mode, sizeof(mode));
 			
