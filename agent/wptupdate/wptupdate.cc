@@ -15,7 +15,7 @@
 #include <WtsApi32.h>
 #include <Psapi.h>
 
-bool FindWpt(TCHAR * wpt_path);
+bool FindWpt(TCHAR ** wpt_path);
 void TerminateProcs(void);
 void Reboot(void);
 
@@ -26,8 +26,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
 
-  // figure out the path we are updating to (where urlblast is running)
-  TCHAR wpt_path[MAX_PATH];
+  // figure out the path we are updating to (where wptdriver is running)
+  // support updating up to 100 instances
+  TCHAR * wpt_path[101];
+  memset(wpt_path, 0, sizeof(wpt_path));
   if (FindWpt(wpt_path)) {
     TerminateProcs();
 
@@ -52,21 +54,29 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
           lstrcmpi(fd.cFileName, _T("wptupdate.exe")) && 
           lstrcmpi(fd.cFileName, _T("wptupdate.ini"))) {
-          lstrcpy( src_file, src_path );
-          lstrcat( src_file, fd.cFileName );
-          lstrcpy( dest_file, wpt_path );
-          lstrcat( dest_file, fd.cFileName );
-          CopyFile(src_file, dest_file, FALSE);
+          int i = 0;
+          while( i < 100 && wpt_path[i] ){
+            lstrcpy( src_file, src_path );
+            lstrcat( src_file, fd.cFileName );
+            lstrcpy( dest_file, wpt_path[i] );
+            lstrcat( dest_file, fd.cFileName );
+            CopyFile(src_file, dest_file, FALSE);
+            i++;
+          }
         }
       } while( FindNextFile(find_handle, &fd) );
       FindClose(find_handle);
     }
 
     // Start wptdriver back up
-    lstrcat( wpt_path, _T("wptdriver.exe") );
-    if( (int)ShellExecute(NULL, NULL, wpt_path, NULL, wpt_path, 
-          SW_SHOWMINNOACTIVE) <= 32 )
-      Reboot();
+    int i = 0;
+    while( i < 100 && wpt_path[i] ){
+      lstrcat( wpt_path[i], _T("wptdriver.exe") );
+      ShellExecute(NULL, NULL, wpt_path[i], NULL, wpt_path[i], 
+        SW_SHOWMINNOACTIVE);
+      free(wpt_path[i]);
+      i++;
+    }
   }
 
   return 0;
@@ -74,26 +84,34 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool FindWpt(TCHAR * wpt_path) {
+bool FindWpt(TCHAR ** wpt_path) {
   bool found = false;
   *wpt_path = 0;
 
   WTS_PROCESS_INFO * proc = NULL;
   DWORD count = 0;
-  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count)) {
-    for (DWORD i = 0; i < count && !found ; i++) {
+  DWORD proc_count = 0;
+  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, 
+        &proc_count)) {
+    for (DWORD i = 0; i < proc_count && !found ; i++) {
       TCHAR * file = PathFindFileName(proc[i].pProcessName);
       if (!lstrcmpi(file, _T("wptdriver.exe"))) {
         TCHAR path[MAX_PATH];
         HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | 
                                     PROCESS_VM_READ,
                                     FALSE, proc[i].ProcessId);
-        if (process) {
+        if (process && count < 100) {
           if (GetModuleFileNameEx(process, NULL, path, MAX_PATH)) {
             *PathFindFileName(path) = 0;
-            lstrcpy( wpt_path, path );
-            if( lstrlen(wpt_path) )
+            wpt_path[count] = (TCHAR *)malloc(MAX_PATH * sizeof(TCHAR));
+            lstrcpy( wpt_path[count], path );
+            if( lstrlen(wpt_path[count]) ) {
               found = true;
+              count++;
+            } else {
+              free(wpt_path[count]);
+              wpt_path[count] = NULL;
+            }
           }
 
           CloseHandle(process);
@@ -183,24 +201,4 @@ void TerminateProcs(void) {
 
     WTSFreeMemory(proc);
   }
-}
-
-/*-----------------------------------------------------------------------------
-  Reboot the system
------------------------------------------------------------------------------*/
-void Reboot(void) {
-  HANDLE token;
-  if (OpenProcessToken(GetCurrentProcess(), 
-                  TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
-  {
-    TOKEN_PRIVILEGES tp;
-    if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
-      tp.PrivilegeCount = 1;
-      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-      AdjustTokenPrivileges(token, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0 ,0 );
-    }
-    CloseHandle(token);
-  }
-  
-  InitiateSystemShutdown(NULL, _T("wptdriver update installed."),0,TRUE,TRUE);
 }
