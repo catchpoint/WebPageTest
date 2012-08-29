@@ -1641,6 +1641,8 @@ void CurlBlastDlg::SetupScreen(void)
 	while( EnumDisplaySettings( NULL, index, &mode) ) {
 		index++;
 
+    log.Trace(_T("Available desktop resolution: %dx%d - %d bpp"), mode.dmPelsWidth, mode.dmPelsHeight, mode.dmBitsPerPel);
+
     if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
       // we already have at least one suitable resolution.  
       // Make sure we didn't overshoot and pick too high of a resolution
@@ -1663,6 +1665,8 @@ void CurlBlastDlg::SetupScreen(void)
     }
 	}
 
+  log.Trace(_T("Preferred desktop resolution: %dx%d - %d bpp"), x, y, bpp);
+
 	// get the current settings
 	if( x && y && bpp && EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &mode) ) {
 		if( mode.dmPelsWidth < x || mode.dmPelsHeight < y || mode.dmBitsPerPel < bpp ) {
@@ -1674,6 +1678,7 @@ void CurlBlastDlg::SetupScreen(void)
 			newMode.dmPelsWidth = x;
 			newMode.dmPelsHeight = y;
 			ChangeDisplaySettings( &newMode, CDS_UPDATEREGISTRY | CDS_GLOBAL );
+      log.Trace(_T("Changed desktop resolution: %dx%d - %d bpp"), x, y, bpp);
 		}
 	}
 }
