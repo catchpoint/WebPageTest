@@ -156,6 +156,7 @@ class CScriptEngine:
 public:
 	CScriptEngine(void);
 	virtual ~CScriptEngine(void);
+	bool LoadScript(CString file);
 	virtual bool RunScript(CString file);
 	virtual void Reset(void);
 	BOOL WndEnumProc(HWND hwnd);
@@ -189,7 +190,6 @@ public:
   CAtlList<CHostOverride> overrideHostUrls; // override the given host, redirect it's DNS and add the header to the actual URL
 
 protected:
-	bool LoadScript(CString file);
 	void ContinueScript(bool reset);
 	void ScriptComplete(void);
 	bool IncrementStep(bool waitForActivity = false);

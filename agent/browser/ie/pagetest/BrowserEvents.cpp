@@ -239,8 +239,11 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 					testUrl = buff;
 				
 				// if we have an url to test, launch it
-				if( testUrl.GetLength() )
-				{
+				if( testUrl.GetLength() ) {
+					if( !testUrl.Left(9).CompareNoCase(_T("script://")) ) {
+						CString script = testUrl.Right(testUrl.GetLength() - 9);
+						LoadScript(script);
+					}
 					OutputDebugString(_T("[Pagetest] - Browser loaded\n"));
 					StartTimer(2, 2500);
 				}

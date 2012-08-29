@@ -32,8 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WatchDlg.h"
 #include "ScriptEngine.h"
 
-extern CWatchDlg * dlg;
-
 CScriptEngine::CScriptEngine(void):
 	scriptStep(0)
 	, script_ignoreErrors(false)
@@ -156,13 +154,10 @@ bool CScriptEngine::RunScript(CString file)
 	script_result = 0;
 	script_active = true;
 
-	if( LoadScript(file) )
-	{
+  if (!script.IsEmpty() || LoadScript(file)) {
 		ret = true;
 		ContinueScript(true);
-	}
-	else
-	{
+	} else {
 		ScriptComplete();
 	}
 	
@@ -1610,13 +1605,28 @@ bool CScriptEngine::ConditionMatches(CString condition, CString value) {
 bool CScriptEngine::PreProcessScriptItem(CScriptItem &item) {
   bool keep = false;
 
-  if (!item.command.CompareNoCase(_T("setbrowsersize"))) {
+  if (!item.command.CompareNoCase(_T("setbrowsersize")) ||
+      !item.command.CompareNoCase(_T("setviewportsize"))) {
     DWORD width = _ttol(item.target);
     DWORD height = _ttol(item.value);
-    if (width > 50 && height > 50 && width < 2500 && height < 2500 && dlg) {
-      dlg->ResizeWindow(width, height);
+    if (!item.command.CompareNoCase(_T("setviewportsize")) && 
+        hMainWindow && hBrowserWnd && IsWindow(hMainWindow) && IsWindow(hBrowserWnd)) {
+      RECT browser, viewport;
+      if( GetWindowRect(hMainWindow, &browser) &&
+          GetWindowRect(hBrowserWnd, &viewport)) {
+          int margin_x = abs(browser.right - browser.left) - abs(viewport.right - viewport.left);
+          int margin_y = abs(browser.bottom - browser.top) - abs(viewport.bottom - viewport.top);
+          if (margin_x > 0) {
+            width += margin_x;
+          }
+          if (margin_y > 0) {
+            height += margin_y;
+          }
+      }
     }
-  } else if (!item.command.CompareNoCase(_T("setviewportsize"))) {
+    if (width > 50 && height > 50 && width < 2500 && height < 2500 && dlg) {
+      ResizeWindow(width, height);
+    }
   } else {
     keep = true;
   }
