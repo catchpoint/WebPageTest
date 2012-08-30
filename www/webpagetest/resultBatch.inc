@@ -569,6 +569,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if (array_key_exists('FLI', $visual)) {
                 $fvFLIvalue = $visual['FLI'];
             }
+            if (array_key_exists('visualComplete', $visual) && 
+                array_key_exists($visual['visualComplete'], $visual['frames']) &&
+                is_file('.' . $visual['frames'][$visual['visualComplete']]['path'])) {
+                $test['thumbnail'] = "video_$fvMedian/{$visual['frames'][$visual['visualComplete']]['file']}";
+            }
             if( $count )
             {
                 $optimized[0] = $pageData[$fvMedian][0];
@@ -882,7 +887,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         $testurl = "/result/{$test['id']}/";
                     $path = $test['path'];
                     $run = $test['fvMedian'];
-                    echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file={$run}_screen.jpg\" img_src=\"/$path/{$run}_screen.jpg\"><br>view test</a></td>";
+                    $thumbnail = "{$run}_screen.jpg";
+                    if (array_key_exists('thumbnail', $test)) {
+                        $thumbnail = urlencode($test['thumbnail']);
+                    }
+                    echo "<td><a href=\"$testurl\" target=\"_blank\"><img class=\"progress pimg\" src=\"/thumbnail.php?test={$test['id']}&width=150&run=$run&file=$thumbnail\" img_src=\"/$path/$thumbnail\"><br>view test</a></td>";
                     if( $count )
                         echo "<td></td>";
                     $count++;
