@@ -109,6 +109,7 @@ public class HarObject {
   // When computing page load times, ignore the interval between the start of navigation
   // and the first request being sent.
   private boolean ignoreDelayToFirstRequest;
+  private boolean complete;
 
   private JSONArray devtoolsLog;
 
@@ -125,6 +126,7 @@ public class HarObject {
     this.ignoreDelayToFirstRequest = ignoreDelayToFirstRequest;
     resources = Maps.newHashMap();
     requestIdsForContentToFetch = Lists.newLinkedList();
+    complete = true;
   }
 
   /** Create a new, empty HarObject. All times will be interpreted as UTC. */
@@ -260,6 +262,11 @@ public class HarObject {
     return contentCnt;
   }
 
+  /** Returns whether the HAR is known to be missing resources. */
+  public synchronized boolean isComplete() {
+    return complete;
+  }
+
   /**
    * Get the message that contains the same timing information as is available
    * by issuing the window.performance.timing command in a Chrome Developer
@@ -364,13 +371,17 @@ public class HarObject {
         // avoid conflicting with the actual response.
         Response redirectResponse = request.getRedirectResponse();
         if (redirectResponse != null) {
-          HarResource redirected = new HarResource();
-          String redirectedId = id + "__" +
-              r.getNetworkRequestWillBeSentMessage().getTimestamp().toString();
-          resources.put(redirectedId, redirected);
-          redirected.setNetworkRequestWillBeSentMessage(
-              r.getNetworkRequestWillBeSentMessage());
-          redirected.setRedirectResponseMessage(redirectResponse);
+          NetworkRequestWillBeSentMessage redirectRequest = r.getNetworkRequestWillBeSentMessage();
+          if (redirectRequest == null) {
+            logger.warning("Expected redirect to have corresponding request. Ignoring redirect.");
+            complete = false;
+          } else {
+            HarResource redirected = new HarResource();
+            String redirectedId = id + "__" + redirectRequest.getTimestamp().toString();
+            resources.put(redirectedId, redirected);
+            redirected.setNetworkRequestWillBeSentMessage(redirectRequest);
+            redirected.setRedirectResponseMessage(redirectResponse);
+          }
         }
         r.setNetworkRequestWillBeSentMessage(request);
       } else if (netmsg instanceof NetworkResponseReceivedMessage) {
