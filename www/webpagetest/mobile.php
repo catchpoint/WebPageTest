@@ -19,7 +19,7 @@ $page_description = "Run a free website speed test from around the globe using r
             $adLoc = 'Montreal_IE7';
             include 'header.inc';
             ?>
-            <form name="mobileForm" action="http://www.blaze.io/runtest.php" method="GET">
+            <form name="mobileForm" action="http://mobitest.akamai.com/m/bg/runtest.cgi" method="POST" enctype="multipart/form-data" >
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
