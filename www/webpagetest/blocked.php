@@ -17,7 +17,7 @@ $page_description = "Website speed test blocked.";
 
             <div class="translucent">
                 <h1>Oops...</h1>
-                <p>Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests or the volume of tests you are submitting).  Most free web hosts have been blocked from testing because of excessive link spam.  
+                <p>Your test request was intercepted by our abuse filters (or because we need to talk to you about how you are submitting tests or the volume of tests you are submitting).  Most free web hosts have been blocked from testing because of excessive link spam.  
                 <?php if($settings['contact']) echo 'If there is a site you want tested that was blocked, please <a href="mailto:' . $settings['contact'] . '">contact us</a>'. ' and send us your IP address (below) and URL that you are trying to test'; ?>.</p>
                 <p>
                 Your IP address: <b><?php echo $_SERVER['REMOTE_ADDR']; ?></b><br>
