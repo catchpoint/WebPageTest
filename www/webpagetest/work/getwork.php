@@ -93,17 +93,8 @@ function GetJob() {
             if( !is_dir($workDir) )
                 mkdir($workDir, 0777, true);
             
-            // load the tester information
-            $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-            if( !count($testers) )
-                $testers = array();
-            if( !isset($testers[$tester]) )
-                $testers[$tester] = array();
-            elseif( !is_array($testers[$tester]) )
-            {
-                unset($testers[$tester]);
-                $testers[$tester] = array();
-            }
+            $now = time();
+            $testers = GetTesters($location);
 
             // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
             if(!@$testers[$tester]['offline']) {
@@ -114,7 +105,6 @@ function GetJob() {
                 $recovered = false;
                 $backupDir = "$workDir/testing";
                 $backups = scandir($backupDir);
-                $now = time();
                 foreach( $backups as $file )
                 {
                     if( is_file( "$backupDir/$file" ) )
@@ -239,51 +229,30 @@ function GetJob() {
                     }
                 }
                     
-                // keep track of the last time this location reported in
-                $now = time();
-                $testers[$tester]['updated'] = $now;
-                $testers[$tester]['ip'] = $_SERVER['REMOTE_ADDR'];
-                $testers[$tester]['pc'] = $pc;
-                $testers[$tester]['ec2'] = $ec2;
-                $testers[$tester]['ver'] = $_GET['ver'];
-                $testers[$tester]['freedisk'] = @$_GET['freedisk'];
-                $testers[$tester]['test'] = @$testId;
-                if (isset($testId)) {
-                    $testers[$tester]['last'] = $now;
-                } else {
-                    // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
-                    if( isset($testers[$tester]['test']) && strlen($testers[$tester]['test']) )
-                        $testers[$tester]['last'] = $now;
-                    unset($testers[$tester]['test']);
-                }
-                        
-                // delete any testers in this location that haven't checked in in over an hour
-                foreach( $testers as $name => &$data )
-                {
-                    if( $now > $data['updated'] )
-                    {
-                        $elapsed = $now - $data['updated'];
-                        if( $elapsed > 3600 )
-                            unset( $testers[$name] );
-                    }
-                }
-                        
                 // zero out the tracked page loads in case some got lost
-                if( !$is_done )
-                {
+                if( !$is_done ) {
                     $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                    if( $tests )
-                    {
+                    if( $tests ) {
                         $tests['tests'] = 0;
                         file_put_contents("./tmp/$location.tests", json_encode($tests));
                     }
                 }
             }
             
-            if ($testers)
-                file_put_contents("./tmp/$location.tm", json_encode($testers));
-
             UnlockLocation($lock);
+
+            // keep track of the last time this location reported in
+            $testerInfo = array();
+            $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+            $testerInfo['pc'] = $pc;
+            $testerInfo['ec2'] = $ec2;
+            $testerInfo['ver'] = $_GET['ver'];
+            $testerInfo['freedisk'] = @$_GET['freedisk'];
+            $testerInfo['test'] = '';
+            if (isset($testId)) {
+                $testerInfo['test'] = $testId;
+            }
+            UpdateTester($location, $tester, $testerInfo);
         }
     }
     

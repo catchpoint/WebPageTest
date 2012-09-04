@@ -1752,4 +1752,54 @@ function SecureDir($path) {
     }
 }
 
+/**
+* Update the list of testers and the last contact time for the given tester
+* 
+* @param mixed $location
+* @param mixed $tester
+* @param mixed $testerInfo
+*/
+function UpdateTester($location, $tester, $testerInfo = null) {
+    if ($lock = LockLocation("testers-$location")) {
+        $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+        if( !count($testers) )
+            $testers = array();
+        if( !isset($testers[$tester]) )
+            $testers[$tester] = array();
+        elseif( !is_array($testers[$tester]) )
+        {
+            unset($testers[$tester]);
+            $testers[$tester] = array();
+        }
+        $now = time();
+        $testers[$tester]['updated'] = $now;
+        if (!array_key_exists('first_contact', $testers[$tester])) {
+            $testers[$tester]['first_contact'] = $now;
+        }
+        if (isset($testerInfo) && is_array($testerInfo)) {
+            // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
+            if (array_key_exists('test', $testerInfo) && 
+                (strlen($testerInfo['test']) || 
+                 (array_key_exists('test', $testers[$tester]) &&
+                  strlen($testers[$tester]['test'])))) {
+                $testers[$tester]['last'] = $now;
+            }
+            // update any other data passed in for the tester
+            foreach ($testerInfo as $key => $value) {
+                $testers[$tester][$key] = $value;
+            }
+        }
+        // delete any testers in this location that haven't checked in in over an hour
+        foreach( $testers as $name => &$data ) {
+            if( $now > $data['updated'] ) {
+                $elapsed = $now - $data['updated'];
+                if( $elapsed > 3600 )
+                    unset( $testers[$name] );
+            }
+        }
+                
+        file_put_contents("./tmp/$location.tm", json_encode($testers));
+        UnlockLocation($lock);
+    }
+}
 ?>

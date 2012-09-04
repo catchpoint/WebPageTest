@@ -168,6 +168,18 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             if( isset($testInfo) ) {
                 $testInfo['last_updated'] = $time;
                 $testInfo_dirty = true;
+                
+                if (array_key_exists('location', $testInfo) &&
+                    strlen($testInfo['location']) &&
+                    array_key_exists('tester', $testInfo) &&
+                    strlen($testInfo['tester'])) {
+                    $testerInfo = array();
+                    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+                    if ($done) {
+                        $testerInfo['test'] = '';
+                    }
+                    UpdateTester($testInfo['$location'], $testInfo['tester'], $testerInfo);
+                }
             }
         }
         
