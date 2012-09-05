@@ -99,8 +99,18 @@ ${LINT_JS} \
   | grep -v 'E:0214' \
 
 # Compile the logging code.
+ ${COMPILE_JS} ${FOR_WARNINGS} \
+   --input='wpt/logging.js' \
+   || exit $?;
+
+# Compile the extension utils module.
 ${COMPILE_JS} ${FOR_WARNINGS} \
-  --input='wpt/logging.js' \
+  --input='wpt/chromeExtensionUtils.js' \
+  || exit $?;
+
+# Compile the chrome debugger code.
+${COMPILE_JS} ${FOR_WARNINGS} \
+  --input='wpt/chromeDebugger.js' \
   || exit $?;
 
 # Compile the command runner.

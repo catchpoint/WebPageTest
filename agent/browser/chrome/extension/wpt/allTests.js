@@ -31,6 +31,7 @@
 
 goog.require('goog.testing.AsyncTestCase');
 goog.require('goog.testing.jsunit');
+goog.require('wpt.chromeExtensionUtils');
 goog.require('wpt.commands');
 goog.require('wpt.contentScript');
 
@@ -566,4 +567,24 @@ function testSubmitFormCommand() {
   // TODO: Test a successful submission.  Tricky because a submitted form
   // will cause navigation, unloading the test page.  Consider holding the form
   // in an iframe.
+}
+
+function testNetErrorStringToWptCode() {
+  assertEquals(
+      'Test that invalid strings get the default number.',
+      12999,
+      wpt.chromeExtensionUtils.netErrorStringToWptCode(
+          'this is not a network error string'));
+
+  assertEquals(
+      'Test a valid string.',
+      12007,
+      wpt.chromeExtensionUtils.netErrorStringToWptCode(
+          'net::ERR_NAME_NOT_RESOLVED'));
+
+  assertEquals(
+      'Test another valid string.',
+      12031,
+      wpt.chromeExtensionUtils.netErrorStringToWptCode(
+          'net::ERR_CONNECTION_RESET'));
 }

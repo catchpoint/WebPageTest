@@ -30,6 +30,7 @@
  ******************************************************************************/
 
 goog.require('wpt.chromeDebugger');
+goog.require('wpt.chromeExtensionUtils');
 goog.require('wpt.commands');
 goog.require('wpt.logging');
 
@@ -280,38 +281,26 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
 });
 
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
-  if (g_active) {
-    var error_code = 12999;
-    if (details.error == 'net::ERR_NAME_NOT_RESOLVED') {
-      error_code = 12007;
-    } else if (details.error == 'net::ERR_CONNECTION_ABORTED') {
-      error_code = 12030;
-    } else if (details.error == 'net::ERR_ADDRESS_UNREACHABLE') {
-      error_code = 12029;
-    } else if (details.error == 'net::ERR_CONNECTION_REFUSED') {
-      error_code = 12029;
-    } else if (details.error == 'net::ERR_CONNECTION_TIMED_OUT') {
-      error_code = 12029;
-    } else if (details.error == 'net::ERR_CONNECTION_RESET') {
-      error_code = 12031;
+    if (g_active) {
+      var error_code =
+          wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
+      wpt.LOG.info(details.error + ' = ' + error_code);
+      g_active = false;
+      wptSendEvent('navigate_error?error=' + error_code +
+                   '&str=' + encodeURIComponent(details.error), '');
     }
-    wpt.LOG.info(details.error + ' = ' + error_code);
-    g_active = false;
-    wptSendEvent('navigate_error?error=' + error_code +
-              '&str=' + encodeURIComponent(details.error), '');
-  }
-}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
+  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onCompleted.addListener(function(details) {
-  if (g_active) {
-    wpt.LOG.info('Completed, status = ' + details.statusCode);
-    if (details.statusCode >= 400) {
-      g_active = false;
-      wptSendEvent('navigate_error?error=' + details.statusCode, '');
+    if (g_active) {
+      wpt.LOG.info('Completed, status = ' + details.statusCode);
+      if (details.statusCode >= 400) {
+        g_active = false;
+        wptSendEvent('navigate_error?error=' + details.statusCode, '');
+      }
     }
-  }
-}, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
+  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
@@ -321,7 +310,8 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
       var scheme = urlParts[1].toString();
       var host = urlParts[2].toString();
       var object = urlParts[3].toString();
-      wpt.LOG.info('Checking host override for "' + host + '" in URL ' + details.url);
+      wpt.LOG.info('Checking host override for "' + host +
+                   '" in URL ' + details.url);
       if (g_overrideHosts[host] != undefined) {
         var newHost = g_overrideHosts[host];
         wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);

@@ -27,6 +27,7 @@
 
  ******************************************************************************/
 
+goog.require('wpt.chromeExtensionUtils');
 goog.require('wpt.logging');
 goog.provide('wpt.chromeDebugger');
 
@@ -128,20 +129,8 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       request = g_instance.requests[params.requestId];
       request.endTime = params.timestamp;
       request.error = params.errorText;
-      request.errorCode = 12999;
-      if (request.error == 'net::ERR_NAME_NOT_RESOLVED') {
-        request.errorCode = 12007;
-      } else if (request.error == 'net::ERR_CONNECTION_ABORTED') {
-        request.errorCode = 12030;
-      } else if (request.error == 'net::ERR_ADDRESS_UNREACHABLE') {
-        request.errorCode = 12029;
-      } else if (request.error == 'net::ERR_CONNECTION_REFUSED') {
-        request.errorCode = 12029;
-      } else if (request.error == 'net::ERR_CONNECTION_TIMED_OUT') {
-        request.errorCode = 12029;
-      } else if (request.error == 'net::ERR_CONNECTION_RESET') {
-        request.errorCode = 12031;
-      }
+      request.errorCode =
+          wpt.chromeExtensionUtils.netErrorStringToWptCode(request.error);
       wpt.chromeDebugger.sendRequestDetails(request);
     }
   }
@@ -243,8 +232,8 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
     eventData += 'firstByteTime=' + request.firstByteTime + '\n';
   if (request['endTime'] !== undefined)
     eventData += 'endTime=' + request.endTime + '\n';
-  if (request['initiator'] !== undefined
-      && request.initiator['type'] !== undefined) {
+  if (request['initiator'] !== undefined &&
+      request.initiator['type'] !== undefined) {
     eventData += 'initiatorType=' + request.initiator.type + '\n';
     if (request.initiator.type == 'parser') {
       if (request.initiator['url'] !== undefined)
@@ -252,8 +241,8 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
       if (request.initiator['lineNumber'] !== undefined)
         eventData += 'initiatorLineNumber=' + request.initiator.lineNumber + '\n';
     } else if (request.initiator.type == 'script' &&
-              request.initiator['stackTrace'] &&
-              request.initiator.stackTrace[0]) {
+               request.initiator['stackTrace'] &&
+               request.initiator.stackTrace[0]) {
       if (request.initiator.stackTrace[0]['url'] !== undefined)
         eventData += 'initiatorUrl=' + request.initiator.stackTrace[0].url + '\n';
       if (request.initiator.stackTrace[0]['lineNumber'] !== undefined)
