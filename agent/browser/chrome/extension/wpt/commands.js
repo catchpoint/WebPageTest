@@ -163,12 +163,42 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Implement the block command.
+ * Block all urls matching |blockPattern| using the declarative web
+ * request API.
  * @param {string} blockPattern
  */
-wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
-  // Create a listener which blocks all the requests that has the patterm. Also,
-  // pass an empty filter and 'blocking' as the extraInfoSpec.
+wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
+    function(blockPattern) {
+
+  // Match requests where any part of the URL contains |blockPattern|.
+  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
+    url: {
+      urlContains: blockPattern
+    }
+  });
+
+  // Blocking is implemented by canceling any matching request.
+  var blockingRule = {
+    conditions: [
+        requestMatcher
+    ],
+    actions: [
+        new chrome.declarativeWebRequest.CancelRequest()
+    ]
+  };
+
+  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
+};
+
+/**
+ * Block all urls matching |blockPattern| using the non-declarative web
+ * request API.
+ * @param {string} blockPattern
+ */
+wpt.commands.CommandRunner.prototype.doBlockUsingRequestCallback_ =
+    function(blockPattern) {
+  // Create a listener which blocks all the requests that has the pattern.
+  // Also, pass an empty filter and 'blocking' as the extraInfoSpec.
   var onBeforeRequestCallback = function(details) {
     if (details.url.indexOf(blockPattern) != -1) {
       return {'cancel': true };
@@ -181,10 +211,32 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
     tabId: this.tabId_
   };
 
-  chrome.webRequest.onBeforeRequest.addListener(
+  this.chromeApi_.webRequest.onBeforeRequest.addListener(
       onBeforeRequestCallback,
       requestFilter,
       ['blocking']);
+};
+
+/**
+ * Implement the block command.
+ * @param {string} blockPattern
+ */
+wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
+  // The declarative web request API does not delay every request to
+  // call our listener, so prefer it to the callback based version. If
+  // the version of chrome we are running does not have the declarative
+  // web request API, the test that we have permission to use it will
+  // fail.
+  var self = this;
+  this.chromeApi_.permissions.contains(
+      {permissions: ['declarativeWebRequest']},
+      function(hasPermission) {
+        if (hasPermission) {
+          self.doBlockUsingDeclarativeApi_(blockPattern);
+        } else {
+          self.doBlockUsingRequestCallback_(blockPattern);
+        }
+      });
 };
 
 /**

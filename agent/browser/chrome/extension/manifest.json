@@ -26,6 +26,7 @@
     "webNavigation",
     "webRequest",
     "webRequestBlocking",
+    "declarativeWebRequest",
     "browsingData",
     "management",
     "debugger",
