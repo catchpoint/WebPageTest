@@ -61,6 +61,11 @@ private:
   bool          _saved;
   LARGE_INTEGER _visually_complete;
 
+  CStringA      base_page_CDN_;
+  int           base_page_redirects_;
+  int           base_page_result_;
+  LARGE_INTEGER base_page_complete_;
+
   void ProcessRequests(void);
   void CalculateAFT(void);
   void SavePageData(OptimizationChecks&);

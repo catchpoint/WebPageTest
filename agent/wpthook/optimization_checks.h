@@ -76,6 +76,7 @@ public:
   int   _combine_score;
   int   _static_cdn_score;
   bool  _checked;
+  CStringA _base_page_CDN;
   
   // Helper member for CDN checking.
   CAtlArray<Request*> _cdn_requests;

@@ -175,6 +175,7 @@ void CPagetestReporting::Reset(void)
 		reportSt = NONE;
 		
 		basePageResult = -1;
+    basePageCDN.Empty();
 		html.Empty();
 
 		totalFlagged = 0;
@@ -974,6 +975,18 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
   pagespeed::GetPageSpeedVersion(&ver);
   if( ver.has_major() && ver.has_minor() )
     pageSpeedVersion.Format(_T("%d.%d"), ver.major(), ver.minor());
+
+  // Get the IE version
+  CString browserVersion;
+	CRegKey key;
+	if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ))) {
+    TCHAR buff[1024];
+		DWORD len = _countof(buff);
+    if (SUCCEEDED(key.QueryStringValue(_T("Version"), buff, &len))) {
+      browserVersion = buff;
+    }
+    key.Close();
+  }
 	
 	if( fIncludeHeader )
 	{
@@ -989,7 +1002,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 				_T("Host\tIP Address\tETag Score\tFlagged Requests\tFlagged Connections\tMax Simultaneous Flagged Connections\t")
 				_T("Time to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\t")
         _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)\tDOM Elements\tPage Speed Version\t")
-				_T("Page Title\tTime to Title\tLoad Event Start\tLoad Event End\tDOM Content Ready Start\tDOM Content Ready End\tVisually Complete (ms)\r\n");
+				_T("Page Title\tTime to Title\tLoad Event Start\tLoad Event End\tDOM Content Ready Start\tDOM Content Ready End\tVisually Complete (ms)\t")
+        _T("Browser Name\tBrowser Version\tBase Page Server Count\tBase Page Server RTT\tBase Page CDN\r\n");
 	}
 	else
 		buff.Empty();
@@ -1006,7 +1020,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
-                    _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d")
+                    _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d\t")
+                    _T("%s\t%s\t%d\t%d\t%s")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1019,7 +1034,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc,
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
-      msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete);
+      msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
+      _T("Internet Explorer"), browserVersion, -1, -1, basePageCDN);
 	buff += result;
 }
 
@@ -1998,8 +2014,6 @@ void CPagetestReporting::CheckCDN()
 	oneCdnScore = -1;
 	DWORD count = 0;
 	int total = 0;
-	CAtlArray<CString> cdnList;
-	
 	ATLTRACE(_T("[Pagetest] - CheckCDN\n"));
 
 	// wait for the parallel lookup threads to complete
@@ -2022,6 +2036,7 @@ void CPagetestReporting::CheckCDN()
 		CTrackedEvent * e = events.GetNext(pos);
 		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
 		{
+      bool isStatic = false;
 			CWinInetRequest * w = (CWinInetRequest *)e;
 			CString mime = w->response.contentType;
 			mime.MakeLower();
@@ -2048,40 +2063,25 @@ void CPagetestReporting::CheckCDN()
 					mime.Find(_T("javascript")) >= 0 || 
 					mime.Find(_T("image/")) >= 0) )
 			{
+        isStatic = true;
 				w->staticCdnScore = 0;
 				count++;
+      }
 				
-				CString host = w->host;
-				host.MakeLower();
+			CString host = w->host;
+			host.MakeLower();
 
-				if( IsCDN(w, w->cdnProvider) )
-				{
-					w->staticCdnScore = 100;
-					
-					// add it to the CDN list if we don't already have it
-					bool found = false;
-					for( size_t i = 0; i < cdnList.GetCount() && !found; i++ )
-						if( !cdnList[i].CompareNoCase(host) )
-							found = true;
-							
-					if( !found )
-						cdnList.Add(w->host);
-				}
-
-				if( !w->staticCdnScore )
-					w->warning = true;
-				total += w->staticCdnScore;
+			if( IsCDN(w, w->cdnProvider) && isStatic )
+			{
+			  w->staticCdnScore = 100;
 			}
-		}
-	}
 
-	size_t cnt = cdnList.GetCount();
-	if( cnt )
-	{
-		if( cnt > 10 )
-			oneCdnScore = 0;
-		else
-			oneCdnScore = 100 - ((int)(cnt - 1) * 10);
+      if (isStatic) {
+			  if( !w->staticCdnScore )
+				  w->warning = true;
+			  total += w->staticCdnScore;
+      }
+		}
 	}
 
 	// average the CDN scores of all of the objects for the page
@@ -2731,6 +2731,7 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
 	
 	CString host = w->host;
 	host.MakeLower();
+  provider.Empty();
 	if( !host.IsEmpty() )
 	{
 		// make sure we haven't already identified it
@@ -2834,6 +2835,10 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
 			LeaveCriticalSection(&csCDN);
 		}
 	}
+
+  if (ret && w->basePage) {
+    basePageCDN = w->cdnProvider;
+  }
 	
 	return ret;
 }
@@ -3436,38 +3441,13 @@ void CPagetestReporting::StartCDNLookups(void)
 		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
 		{
 			CWinInetRequest * w = (CWinInetRequest *)e;
-			CString mime = w->response.contentType;
-			mime.MakeLower();
-			CString exp = w->response.expires;
-			exp.Trim();
-			CString cache = w->response.cacheControl;
-			cache.MakeLower();
-			CString pragma = w->response.pragma;
-			pragma.MakeLower();
-			CString object = w->object;
-			object.MakeLower();
-			if( w->result == 200 &&
-				exp != _T("0") && 
-				exp != _T("-1") && 
-				!(cache.Find(_T("no-store")) > -1) &&
-				!(cache.Find(_T("no-cache")) > -1) &&
-				!(pragma.Find(_T("no-cache")) > -1) &&
-				!(mime.Find(_T("/html")) > -1)	&&
-				!(mime.Find(_T("/xhtml")) > -1)	&&
-				(	mime.Find(_T("shockwave-flash")) >= 0 || 
-					object.Right(4) == _T(".swf") ||
-					mime.Find(_T("text/")) >= 0 || 
-					mime.Find(_T("javascript")) >= 0 || 
-					mime.Find(_T("image/")) >= 0) )
-			{
-				bool found = false;
-				for( DWORD i = 0; i < cdnRequests.GetCount() && !found; i++ )
-					if( !w->host.CompareNoCase(cdnRequests[i]->host) )
-						found = true;
+			bool found = false;
+			for( DWORD i = 0; i < cdnRequests.GetCount() && !found; i++ )
+				if( !w->host.CompareNoCase(cdnRequests[i]->host) )
+					found = true;
 
-				if( !found )
-					cdnRequests.Add(w);
-			}
+			if( !found )
+				cdnRequests.Add(w);
 		}
 	}
 

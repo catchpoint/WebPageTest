@@ -122,7 +122,10 @@ function loadPageData($file, $options = null)
                                 'domContentLoadedEventEnd' => @(int)$fields[80],
                                 'lastVisualChange' => @(int)$fields[81],
                                 'browser_name' => @trim($fields[82]),
-                                'browser_version' => @trim($fields[83])
+                                'browser_version' => @trim($fields[83]),
+                                'server_count' => @(int)trim($fields[84]),
+                                'server_rtt' => @(int)trim($fields[85]),
+                                'base_page_cdn' => @trim($fields[86])
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));

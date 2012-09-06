@@ -175,7 +175,6 @@ void CLog::LogMachineInfo(void)
 	// IE
 	if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
 	{
-		// CPUID
 		len = _countof(buff);
 		if( SUCCEEDED(key.QueryStringValue(_T("Version"), buff, &len)) )
 		{

@@ -478,7 +478,7 @@ void OptimizationChecks::CheckCDN() {
   _static_cdn_score = -1;
   int count = 0;
   int total = 0;
-  CAtlArray<CStringA> cdnList;
+  _base_page_CDN.Empty();
 
   // Wait for the parallel lookup threads to complete.
   count = _h_cdn_threads.GetCount();
@@ -499,29 +499,25 @@ void OptimizationChecks::CheckCDN() {
   POSITION pos = _requests._requests.GetHeadPosition();
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
-    // We consider only static results
-    if (request && request->_processed && request->GetResult() == 200 &&
-        request->IsStatic() ) {
-      request->_scores._static_cdn_score = 0;
+    if (request && request->_processed) {
+      bool isStatic = false;
+      if (request->GetResult() == 200 && request->IsStatic() ) {
+        isStatic = true;
+        request->_scores._static_cdn_score = 0;
+      }
       CStringA host = request->GetHost();
       host.MakeLower();
-      // Get the remote ip address for this request.
-      struct sockaddr_in addr;
-      addr.sin_addr.S_un.S_addr = request->GetPeerAddress();
-      if( IsCDN(request, request->_scores._cdn_provider) ) {
+      if (IsCDN(request, request->_scores._cdn_provider) && isStatic) {
         request->_scores._static_cdn_score = 100;
-        // Add it to the CDN list if we don't already have it.
-        bool found = false;
-        for( size_t i = 0; i < cdnList.GetCount() && !found; i++ ) {
-          if( !cdnList[i].CompareNoCase(host) )
-            found = true;
-        }
-        if( !found )
-          cdnList.Add(request->GetHost());
+      }
+      if (request->_is_base_page) {
+        _base_page_CDN = request->_scores._cdn_provider;
       }
       
-      count++;
-      total += request->_scores._static_cdn_score;
+      if (isStatic) {
+        count++;
+        total += request->_scores._static_cdn_score;
+      }
     }
   }
   _requests.Unlock();
@@ -557,33 +553,31 @@ void OptimizationChecks::StartCDNLookups() {
   // Build a list of host names we care about for dns lookup.
   _requests.Lock();
   POSITION pos = _requests._requests.GetHeadPosition();
-  while( pos ) {
+  while (pos) {
     Request *request = _requests._requests.GetNext(pos);
-    if( request && request->_processed && request->IsStatic() ) {
-      bool found = false;
-      for( DWORD i = 0; i < _cdn_requests.GetCount() && !found; i++ ) {
-        if( !request->GetHost().CompareNoCase(_cdn_requests[i]->GetHost()) )
-          found = true;
-      }
-      if (!found ) {
-        _cdn_requests.Add(request);
-      }
+    bool found = false;
+    for (DWORD i = 0; i < _cdn_requests.GetCount() && !found; i++) {
+      if (!request->GetHost().CompareNoCase(_cdn_requests[i]->GetHost()))
+        found = true;
+    }
+    if (!found) {
+      _cdn_requests.Add(request);
     }
   }
   _requests.Unlock();
   
   // Spawn threads to do each of the lookups
   DWORD count = _cdn_requests.GetCount();
-  if( count ) {
+  if (count) {
     _h_cdn_threads.RemoveAll();
     // Point the global reference to the current object.
     global_checks = this;
-    for( DWORD i = 0; i < count; i++ ) {
+    for (DWORD i = 0; i < count; i++) {
       unsigned int addr = 0;
       // Spawn a dns lookup thread for this host.
-      HANDLE hThread = (HANDLE)_beginthreadex( 0, 0, ::CdnLookupThread, 
+      HANDLE hThread = (HANDLE)_beginthreadex(0, 0, ::CdnLookupThread, 
                                                   (void *)i, 0, &addr);
-      if( hThread ) {
+      if (hThread) {
         _h_cdn_threads.Add(hThread);
       }
     }
@@ -594,10 +588,9 @@ void OptimizationChecks::StartCDNLookups() {
 /*-----------------------------------------------------------------------------
   Thread doing the actual CDN lookups
 -----------------------------------------------------------------------------*/
-void OptimizationChecks::CdnLookupThread(DWORD index)
-{
+void OptimizationChecks::CdnLookupThread(DWORD index) {
   // Do a single lookup for the entry that is our responsibility
-  if( index >= 0 && index < _cdn_requests.GetCount() ) {
+  if (index >= 0 && index < _cdn_requests.GetCount()) {
     Request* request = _cdn_requests[index];
     
     // We don't care about the result right now, it will get cached for later
@@ -609,8 +602,7 @@ void OptimizationChecks::CdnLookupThread(DWORD index)
 /*-----------------------------------------------------------------------------
   See if the provided host belongs to a CDN
 -----------------------------------------------------------------------------*/
-bool OptimizationChecks::IsCDN(Request * request, CStringA &provider)
-{
+bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
   provider.Empty();
   bool ret = false;
 
@@ -657,7 +649,7 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider)
     }
 
     if (!found) {
-      // TODO: Move to getaddrinfo or atleast gethostbyname2. But since we don't
+      // TODO:Move to getaddrinfo or atleast gethostbyname2. But since we don't
       // care about ip-address (v4 or v6), we might not need this.
       // Look it up and look at the cname entries for the host and cache it.
       hostent * dnsinfo = gethostbyname(host);
@@ -701,7 +693,8 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider)
             // Use the globally defined CDN list from header file cdn.h
             CDN_PROVIDER * cdn = cdnList;
             // Iterate to check the hostname is a cdn or we reach end of list.
-            while( !ret && cdn->pattern && cdn->pattern.CompareNoCase("END_MARKER"))  {
+            while (!ret && cdn->pattern && 
+                   cdn->pattern.CompareNoCase("END_MARKER"))  {
               if( name.Find(cdn->pattern) >= 0 )  {
                 ret = true;
                 provider = cdn->name;

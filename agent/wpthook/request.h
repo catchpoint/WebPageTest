@@ -261,6 +261,7 @@ public:
   int _ms_ssl_end;
 
   bool _from_browser;
+  bool _is_base_page;
 
   // performance counter times
   LARGE_INTEGER _start;

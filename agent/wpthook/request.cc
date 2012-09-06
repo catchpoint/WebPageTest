@@ -334,6 +334,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _are_headers_complete(false)
   , _data_sent(false)
   , _from_browser(false)
+  , _is_base_page(false)
   , requests_(requests) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;

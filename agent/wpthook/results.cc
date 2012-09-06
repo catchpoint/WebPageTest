@@ -86,6 +86,10 @@ void Results::Reset(void) {
   _screen_capture.Reset();
   _saved = false;
   _visually_complete.QuadPart = 0;
+  base_page_CDN_.Empty();
+  base_page_redirects_ = 0;
+  base_page_result_ = 0;
+  base_page_complete_.QuadPart = 0;;
 }
 
 /*-----------------------------------------------------------------------------
@@ -97,6 +101,7 @@ void Results::Save(void) {
     ProcessRequests();
     OptimizationChecks checks(_requests, _test_state, _test);
     checks.Check();
+    base_page_CDN_ = checks._base_page_CDN;
     if( _test._aft )
       CalculateAFT();
     SaveRequests(checks);
@@ -574,9 +579,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Max Simultaneous Flagged Connections
     result += "\t";
     // Time to Base Page Complete (ms)
-    result += "\t";
+    result += FormatTime(base_page_complete_);
     // Base Page Result
-    result += "\t";
+    buff.Format("%d\t", base_page_result_);
+    result += buff;
     // Gzip Total Bytes
     buff.Format("%d\t", checks._gzip_total);
     result += buff;
@@ -595,7 +601,8 @@ void Results::SavePageData(OptimizationChecks& checks){
       checks._image_compress_total - checks._image_compress_target);
     result += buff;
     // Base Page Redirects
-    result += "\t";
+    buff.Format("%d\t", base_page_redirects_);
+    result += buff;
     // Optimization Checked (all optimization checks are implemented).
     if (checks._checked)
       result += "1\t";
@@ -618,7 +625,6 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += "\t";
     // Time to title (ms)
     result += FormatTime(_test_state._title_time);
-
     // W3C Navigation timings
     buff.Format("%d\t", _test_state._load_event_start);
     result += buff;
@@ -628,15 +634,20 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
     result += buff;
-
     // Visually complete
     result += FormatTime(_visually_complete);
-
-    // Browser name and version.
+    // Browser name
     result += _test_state._browser_name;
     result += "\t";
+    // Browser Version
     result += _test_state._browser_version;
     result += "\t";
+    // Base Page Server Count
+    result += "\t";
+    // Base Page Server RTT
+    result += "\t";
+    // Base Page CDN Name
+    result += base_page_CDN_ + "\t";
 
     result += "\r\n";
 
@@ -677,17 +688,22 @@ void Results::ProcessRequests(void) {
   // or DNS lookups that are not associated with a request
   POSITION pos = _requests._requests.GetHeadPosition();
   bool base_page = true;
+  base_page_redirects_ = 0;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request) {
       request->Process();
-      if (base_page && 
-          (!_test_state._test_result || 
-          _test_state._test_result == 99999) ) {
+      if (base_page) { 
         int result_code = request->GetResult();
-        if (result_code != 301 && result_code != 302) {
+        if (result_code == 301 || result_code == 302) {
+          base_page_redirects_++;
+        } else {
           base_page = false;
-          if (result_code >= 400) {
+          base_page_result_ = result_code;
+          request->_is_base_page = true;
+          base_page_complete_.QuadPart = request->_end.QuadPart;
+          if ((!_test_state._test_result ||  _test_state._test_result == 99999)
+              && base_page_result_ >= 400) {
             _test_state._test_result = result_code;
           }
         }
@@ -979,6 +995,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->initiator_ + _T("\t");
   result += request->initiator_line_ + _T("\t");
   result += request->initiator_column_ + _T("\t");
+  // Server Count
+  result += "\t";
 
   result += "\r\n";
 

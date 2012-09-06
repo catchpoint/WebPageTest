@@ -82,6 +82,7 @@ public:
 	double			tmBasePage;		// time to the base page being complete
 	int				reportSt;		// Done Reporting?
 	DWORD			basePageResult;	// result of the base page
+  CString   basePageCDN;    // CDN used by the base page (if any)
   DWORD     msAFT;      // AFT Time (if we're capturing it)
   DWORD     msVisualComplete; // Visually complete time (only available with video capture)
 
