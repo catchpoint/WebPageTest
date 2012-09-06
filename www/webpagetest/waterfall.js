@@ -109,11 +109,7 @@ function SelectRequest(request) {
             }
         }
         if (IsValidDuration(r['ttfb_ms'])) {
-            details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms';
-            if (IsValidDuration(r['ttfb_delay']) && r['ttfb_delay'] > 0) {
-                details += ' (delayed ' + r['ttfb_delay'] + ' ms)';
-            }
-            details += '<br>';
+            details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms<br>';
         }
         if (IsValidDuration(r['download_ms']))
             details += '<b>Content Download: </b>' + r['download_ms'] + ' ms<br>';

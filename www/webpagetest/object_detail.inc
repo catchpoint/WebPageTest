@@ -172,8 +172,7 @@ function LoadRequests($request_file_name) {
         67 => 'ssl_end',
         68 => 'initiator',
         69 => 'initiator_line',
-        70 => 'initiator_column',
-        71 => 'ttfb_delay',
+        70 => 'initiator_column'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {
