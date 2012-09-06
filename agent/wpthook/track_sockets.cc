@@ -51,6 +51,7 @@ TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
   _socketInfo.InitHashTable(257);
   _ssl_sockets.InitHashTable(257);
   _last_ssl_fd.InitHashTable(257);
+  ipv4_rtt_.InitHashTable(257);
 }
 
 /*-----------------------------------------------------------------------------
@@ -114,6 +115,22 @@ void TrackSockets::Connected(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   QueryPerformanceCounter(&info->_connect_end);
+  if (info->_connect_start.QuadPart && 
+      info->_connect_end.QuadPart && 
+      info->_connect_end.QuadPart >= info->_connect_start.QuadPart) {
+    DWORD elapsed = (DWORD)((info->_connect_end.QuadPart - 
+                             info->_connect_start.QuadPart) / 
+                             _test_state._ms_frequency.QuadPart);
+    DWORD addr = info->_addr.sin_addr.S_un.S_addr;
+    DWORD ms = -1;
+    if (ipv4_rtt_.Lookup(addr, ms)) {
+      if (elapsed < ms) {
+        ipv4_rtt_.SetAt(addr, elapsed);
+      }
+    } else {
+      ipv4_rtt_.SetAt(addr, elapsed);
+    }
+  }
   if (!info->IsLocalhost()) {
     _test_state.ActivityDetected();
   }
@@ -435,4 +452,16 @@ LONGLONG TrackSockets::GetEarliest(LONGLONG& after) {
   }
   LeaveCriticalSection(&cs);
   return earliest;
+}
+
+/*-----------------------------------------------------------------------------
+  Return the estimated RTT for the given IPV4 server as a string
+-----------------------------------------------------------------------------*/
+CStringA TrackSockets::GetRTT(DWORD ipv4_address) {
+  CStringA ret;
+  DWORD ms = -1;
+  if (ipv4_rtt_.Lookup(ipv4_address, ms)) {
+    ret.Format("%d", ms);
+  }
+  return ret;
 }

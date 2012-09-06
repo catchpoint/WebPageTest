@@ -173,7 +173,8 @@ function LoadRequests($request_file_name) {
         68 => 'initiator',
         69 => 'initiator_line',
         70 => 'initiator_column',
-        71 => 'server_count'
+        71 => 'server_count',
+        72 => 'server_rtt'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {

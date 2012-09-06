@@ -259,6 +259,9 @@ int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namel
 
 	if( _connect )
 		ret = _connect(s, name, namelen);
+  if (!ret) {
+    dlg->SocketConnected(s);
+  }
 
 	return ret;
 }

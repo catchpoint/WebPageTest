@@ -65,6 +65,7 @@ private:
   int           base_page_redirects_;
   int           base_page_result_;
   LARGE_INTEGER base_page_complete_;
+  CStringA      base_page_server_rtt_;
 
   void ProcessRequests(void);
   void CalculateAFT(void);

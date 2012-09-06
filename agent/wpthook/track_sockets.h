@@ -93,6 +93,7 @@ public:
                     LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);
+  CStringA GetRTT(DWORD ipv4_address);
 
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
@@ -110,4 +111,5 @@ private:
 
   CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
   CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
+  CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
 };

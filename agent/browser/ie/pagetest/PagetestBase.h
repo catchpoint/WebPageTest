@@ -291,7 +291,6 @@ public:
 	virtual void	RemoveBrowser(CComPtr<IWebBrowser2> browser);
 	virtual void	SaveImage(BOOL drawWaterfall, LPCTSTR fileName = NULL) = 0;
 	virtual void	FlushResults(void) = 0;
-	virtual void	LogError(bool scriptError = false) = 0;
 	virtual void	TestComplete(void) = 0;
 	virtual void	StartMeasuring(void) = 0;
   bool FindBrowserWindow();
@@ -301,6 +300,8 @@ public:
   void LoadAdPatterns();
   void  SetBrowserWindowUpdated(bool updated);
 	void	ChromeFrame(CComPtr<IChromeFrame> chromeFrame);
+  virtual CString GetRTT(DWORD ipv4_address) = 0;
+	virtual void UpdateRTT(DWORD ipv4_address, long elapsed) = 0;
 	
 	typedef enum{
 		equal = 0,

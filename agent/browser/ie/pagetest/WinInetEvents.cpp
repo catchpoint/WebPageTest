@@ -291,6 +291,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							{
 								r->socketConnected = now;
 								r->tmSocket = now <= r->socketConnect ? 0 : (DWORD)((now - r->socketConnect) / msFreq);
+                UpdateRTT(r->peer.sin_addr.S_un.S_addr, r->tmSocket);
 							}
 							
 							// remove the pending connect for this thread (no big deal if they don't all get removed in case of failure)
@@ -609,7 +610,6 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 								if( soc )
 								{
 									memcpy( &r->peer, &soc->address, sizeof(SOCKADDR_IN) );
-									r->flagged = CheckFlaggedConnection(NULL, r->peer.sin_addr.S_un.S_addr);
 								}
 							}
 							LeaveCriticalSection(&cs);

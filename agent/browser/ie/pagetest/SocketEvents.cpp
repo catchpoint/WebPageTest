@@ -36,9 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------*/
 CSocketEvents::CSocketEvents(void):
 	nextSocketId(1)
-	, simFlagged(0)
 	, bwBytesIn(0)
 {
+  rtt.InitHashTable(257);
 }
 
 /*-----------------------------------------------------------------------------
@@ -55,7 +55,6 @@ void CSocketEvents::Reset(void)
 	
 	EnterCriticalSection(&cs);
 	nextSocketId = 1;
-	simFlagged = 0;
 	bwBytesIn = 0;
 	LeaveCriticalSection(&cs);
 }
@@ -130,10 +129,6 @@ void CSocketEvents::CloseSocket(SOCKET s)
 	// remove the socket ID that was tied to this socket
 	socketID.RemoveKey((UINT_PTR)s);
 	
-	// if it was a flagged connection, reduce the simultaneous count
-	if( socketRequest && socketRequest->connect && socketRequest->connect->flaggedConnection && simFlagged > 0 )
-		simFlagged--;
-
 	LeaveCriticalSection(&cs);
 }
 
@@ -171,6 +166,7 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 				if( c && !c->end && c->s == s)
 				{
 					c->Done();
+          UpdateRTT(c);
 					
 					// remove it from the pending connections list (will still be in the tracked events)
 					connects.RemoveAt(old);
@@ -458,9 +454,6 @@ void CSocketEvents::SocketConnect(SOCKET s, struct sockaddr_in * addr)
 		if( c )
 			linkSocketRequestConnect(c);
 
-		// see if it is a flagged connection
-		CheckFlaggedConnection(c, addr->sin_addr.S_un.S_addr);
-
 		LeaveCriticalSection(&cs);
 
 		// see if we know the local port (so we can add it to the traffic shaping rules)
@@ -480,6 +473,29 @@ void CSocketEvents::SocketConnect(SOCKET s, struct sockaddr_in * addr)
 	}
 	else
 		delete c;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CSocketEvents::SocketConnected(SOCKET s)
+{
+		EnterCriticalSection(&cs);
+		POSITION pos = connects.GetHeadPosition();
+		while( pos )
+		{
+			POSITION old = pos;
+			CSocketConnect * c = connects.GetNext(pos);
+			if( c && !c->end && c->s == s)
+			{
+				c->Done();
+        UpdateRTT(c);
+				
+				// remove it from the pending connections list (will still be in the tracked events)
+				connects.RemoveAt(old);
+				pos = 0;
+			}
+		}
+		LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -531,39 +547,6 @@ bool CSocketEvents::IsFakeSocket(SOCKET s, DWORD dataLen, LPBYTE buff)
 	LeaveCriticalSection(&cs);
 	
 	return ret;
-}
-
-/*-----------------------------------------------------------------------------
-	See if the connection falls within an address range we're flagging
------------------------------------------------------------------------------*/
-bool CSocketEvents::CheckFlaggedConnection(CSocketConnect * c, DWORD hostAddr)
-{
-	bool found = false;
-
-/*	
-	DWORD addr = htonl(hostAddr);
-	
-	for( int i = 0; i < _countof(flagConnections) && !found; i++ )
-	{
-		DWORD ip = htonl(inet_addr(flagConnections[i].ip));
-		DWORD bits = flagConnections[i].bits;
-		
-		DWORD mask = 0xFFFFFFFF << (32 - bits);
-		if( (ip & mask) == (addr & mask) )
-			found = true;
-	}
-	
-	if( found && c )
-	{
-		c->flaggedConnection = true;
-		simFlagged++;
-		totalFlagged++;
-		if( simFlagged > maxSimFlagged )
-			maxSimFlagged = simFlagged;
-	}
-*/
-	
-	return found;
 }
 
 /*-----------------------------------------------------------------------------
@@ -680,4 +663,51 @@ void CSocketEvents::ModifyDataOut(LPBYTE buff, DWORD len) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CSocketEvents::UpdateRTT(CSocketConnect * c)
+{
+  DWORD addr = c->name.sin_addr.S_un.S_addr;
+  if (c->start && c->end && c->end >= c->start && addr)
+  {
+    long elapsed = (long)((c->end - c->start) / msFreq);
+    UpdateRTT(addr, elapsed) ;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CSocketEvents::UpdateRTT(DWORD ipv4_address, long elapsed) 
+{
+  if (ipv4_address)
+  {
+    long ms = -1;
+    if (rtt.Lookup(ipv4_address, ms))
+    {
+      if (elapsed < ms)
+      {
+        rtt.SetAt(ipv4_address,elapsed);
+      }
+    }
+    else
+    {
+      rtt.SetAt(ipv4_address,elapsed);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString CSocketEvents::GetRTT(DWORD ipv4_address)
+{
+  CString ret;
+  if (ipv4_address) {
+    long ms = -1;
+    if (rtt.Lookup(ipv4_address, ms)) {
+      ret.Format(_T("%d"), ms);
+    }
+  }
+  return ret;
 }

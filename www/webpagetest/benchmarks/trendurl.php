@@ -83,6 +83,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             'titleTime' => 'Time to Title', 
                             'render' => 'Time to Start Render', 
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 
+                            'server_rtt' => 'Estimated RTT to Server',
                             'domElements' => 'Number of DOM Elements', 
                             'connections' => 'Connections', 
                             'requests' => 'Requests (Fully Loaded)', 

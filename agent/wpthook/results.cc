@@ -87,6 +87,7 @@ void Results::Reset(void) {
   _saved = false;
   _visually_complete.QuadPart = 0;
   base_page_CDN_.Empty();
+  base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
   base_page_result_ = 0;
   base_page_complete_.QuadPart = 0;;
@@ -645,7 +646,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Base Page Server Count
     result += "\t";
     // Base Page Server RTT
-    result += "\t";
+    result += base_page_server_rtt_ + "\t";
     // Base Page CDN Name
     result += base_page_CDN_ + "\t";
 
@@ -700,6 +701,7 @@ void Results::ProcessRequests(void) {
         } else {
           base_page = false;
           base_page_result_ = result_code;
+          base_page_server_rtt_ = request->rtt_;
           request->_is_base_page = true;
           base_page_complete_.QuadPart = request->_end.QuadPart;
           if ((!_test_state._test_result ||  _test_state._test_result == 99999)
@@ -997,6 +999,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->initiator_column_ + _T("\t");
   // Server Count
   result += "\t";
+  // Server RTT
+  result += request->rtt_ + "\t";
 
   result += "\r\n";
 

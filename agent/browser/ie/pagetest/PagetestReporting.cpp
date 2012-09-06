@@ -176,6 +176,7 @@ void CPagetestReporting::Reset(void)
 		
 		basePageResult = -1;
     basePageCDN.Empty();
+    basePageRTT.Empty();
 		html.Empty();
 
 		totalFlagged = 0;
@@ -293,7 +294,6 @@ void CPagetestReporting::FlushResults(void)
 
       if (script_logData) {
 			  ProcessResults();
-			  LogError();
       }
 
 			ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Results Processed\n"));
@@ -711,6 +711,7 @@ void CPagetestReporting::ProcessResults(void)
 					{
 						basePage = w->end;
 						basePageResult = w->result;
+            basePageRTT = GetRTT(w->peer.sin_addr.S_un.S_addr);
 						if( html.IsEmpty() && w->body )
 							html = w->body;
 							
@@ -1021,7 +1022,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
                     _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d\t")
-                    _T("%s\t%s\t%d\t%d\t%s")
+                    _T("%s\t%s\t%d\t%s\t%s")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1035,7 +1036,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
       msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, -1, -1, basePageCDN);
+      _T("Internet Explorer"), browserVersion, -1, basePageRTT, basePageCDN);
 	buff += result;
 }
 
@@ -1080,6 +1081,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 					_T("Cache Score\tStatic CDN Score\tGZIP Score\tCookie Score\tKeep-Alive Score\tDOCTYPE Score\tMinify Score\tCombine Score\tCompression Score\tETag Score\tFlagged\t")
 					_T("Secure\tDNS Time\tConnect Time\tSSL Time\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\tCache Time (sec)")
 					_T("\tReal Start Time (ms)\tFull Time to Load (ms)\tOptimization Checked\tCDN Provider")
+          _T("\tDNS Start\tDNS End\tConnect Start\tConnect End\tSSL Start\tSSL End\tInitiator\tInitiator Line\tInitiator Column")
+          _T("\tServer Count\tServer RTT")
 					_T("\r\n");
 		}
 		else
@@ -1096,6 +1099,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 						_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 						_T("%d\t%s\t%s\t%s")
 						_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%s")
+            _T("\t\t\t\t\t\t\t\t\t")
+            _T("\t\t%s")
 						_T("\r\n"),
 				(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, 
 				(LPCTSTR)ip, _T(""), _T(""), (LPCTSTR)pageUrl,
@@ -1107,7 +1112,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 				doctypeScore, minifyScore, combineScore, compressionScore, etagScore, flaggedRequests,
 				0, _T(""), _T(""), _T(""),
 				gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, 
-        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T("") );
+        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T(""), (LPCTSTR)GetRTT(pageIP.sin_addr.S_un.S_addr) );
 		buff += result;
 
 		// loop through all of the requests on the page
@@ -1176,6 +1181,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 									_T("%d\t%s\t%s\t%s")
 									_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s")
 									_T("\t%d\t%d\t%d\t%s")
+                  _T("\t\t\t\t\t\t\t\t\t")
+                  _T("\t\t%s")
 									_T("\r\n"),
 							(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPTSTR)ip, 
 							(LPCTSTR)w->verb, (LPCTSTR)w->host, (LPCTSTR)w->object,
@@ -1190,7 +1197,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,
 							w->gzipTotal, w->gzipTotal - w->gzipTarget, w->minifyTotal, w->minifyTotal - w->minifyTarget, w->compressTotal, w->compressTotal - w->compressTarget, (LPCTSTR)ttl,
-              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider );
+              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr) );
 					buff += result;
 				}
 			}
@@ -2657,69 +2664,6 @@ void CPagetestReporting::CheckEtags()
 	// average the cookie scores of all of the objects for the page
 	if( count )
 		etagScore = total / count;
-}
-
-/*-----------------------------------------------------------------------------
-	Report any errors
------------------------------------------------------------------------------*/
-void CPagetestReporting::LogError(bool scriptError)
-{
-/*	
-	if( !logFile.IsEmpty() && ((errorCode && errorCode != 99999) || scriptError))
-	{
-		DWORD code = errorCode;
-		CString txt = _T("Pagetest result");
-		if( scriptError )
-		{
-			txt = _T("Script Error");
-			code = 88888;
-		}
-			
-		// get the last script command that was issued
-		CString cmd;
-		if( runningScript )
-			cmd = script_lastCommand;
-
-		CString file = logFile + _T("_log.txt");
-
-		// update the event name in case we're running a script
-		if( runningScript && !script_eventName.IsEmpty() )
-		{
-			if( somEventName.IsEmpty() )
-				somEventName = script_eventName;
-			else
-				somEventName.Replace(_T("%STEP%"), (LPCTSTR)script_eventName);
-		}
-
-		// make sure we have the proper script step
-		CString eventName = somEventName;
-		
-		// write out the actual error
-		TCHAR buff[1000];
-		wsprintf(buff, _T("%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\t%s\t%d\t%s\t%s\r\n"), 
-				(LPCTSTR)CTime::GetCurrentTime().Format(_T("%Y/%m/%d %H:%M:%S")),
-				labID, dialerID, 0, 0, code, (LPCTSTR)txt, (LPCTSTR)somEventName, (LPCTSTR)url, abm + 1, (LPCTSTR)domElementId, (LPCTSTR)cmd);
-					
-		// open (and lock) the error log
-		DWORD startMS = GetTickCount();
-		HANDLE hFile = INVALID_HANDLE_VALUE;
-		do
-		{
-			hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-			if( hFile == INVALID_HANDLE_VALUE )
-				Sleep(100);
-		}while( hFile == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 30000 );
-		
-		if( hFile != INVALID_HANDLE_VALUE )
-		{
-			DWORD bytes;
-			SetFilePointer(hFile, 0, 0, FILE_END);
-			CT2A str(buff);
-			WriteFile(hFile, (LPSTR)str, lstrlen(buff), &bytes, 0);
-			CloseHandle(hFile);
-		}
-	}
-*/
 }
 
 /*-----------------------------------------------------------------------------

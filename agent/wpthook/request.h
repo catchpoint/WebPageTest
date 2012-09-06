@@ -262,6 +262,7 @@ public:
 
   bool _from_browser;
   bool _is_base_page;
+  CStringA  rtt_;
 
   // performance counter times
   LARGE_INTEGER _start;

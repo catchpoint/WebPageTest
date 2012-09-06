@@ -526,6 +526,7 @@ bool Request::Process() {
         initiator_column_ = data.initiator_column_;
       }
     }
+    rtt_ = _sockets.GetRTT(_peer_address);
   }
   LeaveCriticalSection(&cs);
 

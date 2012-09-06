@@ -788,7 +788,6 @@ void CScriptEngine::ContinueScript(bool reset)
 			  {
 				  script_error = true;
 				  OutputDebugString(_T("[Pagetest] - Script error\n"));
-				  LogError(true);
 			  }
 
 			  if( err && !script_ignoreErrors && interactive )
