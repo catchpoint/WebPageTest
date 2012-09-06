@@ -72,7 +72,7 @@ public:
   ~Requests(void);
 
   void SocketClosed(DWORD socket_id);
-  void DataIn(DWORD socket_id, DataChunk& chunk, DWORD delayed_ms);
+  void DataIn(DWORD socket_id, DataChunk& chunk);
   bool ModifyDataOut(DWORD socket_id, DataChunk& chunk);
   void DataOut(DWORD socket_id, DataChunk& chunk);
   bool HasActiveRequest(DWORD socket_id);

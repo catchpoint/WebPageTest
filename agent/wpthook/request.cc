@@ -325,7 +325,6 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _ms_ssl_end(0)
   , _ms_dns_start(0)
   , _ms_dns_end(0)
-  , _ms_ttfb_delayed(0)
   , _test_state(test_state)
   , _test(test)
   , _sockets(sockets)
@@ -362,7 +361,7 @@ Request::~Request(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::DataIn(DataChunk& chunk, DWORD delayed_ms) {
+void Request::DataIn(DataChunk& chunk) {
   WptTrace(loglevel::kFunction, 
       _T("[wpthook] - Request::DataIn(len=%d)"), chunk.GetLength());
 
@@ -371,7 +370,6 @@ void Request::DataIn(DataChunk& chunk, DWORD delayed_ms) {
     QueryPerformanceCounter(&_end);
     if (!_first_byte.QuadPart) {
       _first_byte.QuadPart = _end.QuadPart;
-      _ms_ttfb_delayed = (int)delayed_ms;
     }
     if (!_is_spdy) {
       _response_data.AddChunk(chunk);

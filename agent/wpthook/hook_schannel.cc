@@ -211,7 +211,7 @@ SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext,
               pMessage->pBuffers[i].BufferType == SECBUFFER_DATA) {
             _sockets.DataIn(s, 
                       DataChunk((LPCSTR)pMessage->pBuffers[i].pvBuffer, len), 
-                      true, 0);
+                      true);
           }
         }
       }

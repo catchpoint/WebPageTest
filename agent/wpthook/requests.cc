@@ -96,14 +96,14 @@ void Requests::SocketClosed(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Requests::DataIn(DWORD socket_id, DataChunk& chunk, DWORD delayed_ms) {
+void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
   if (_test_state._active) {
     EnterCriticalSection(&cs);
     // See if socket maps to a known request.
     Request * request = NULL;
     if (_active_requests.Lookup(socket_id, request) && request) {
       _test_state.ActivityDetected();
-      request->DataIn(chunk, delayed_ms);
+      request->DataIn(chunk);
       WptTrace(loglevel::kFunction, 
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),
                socket_id, chunk.GetLength());

@@ -245,50 +245,47 @@ void Results::SaveVideo(void) {
   CxImage * last_image = NULL;
   DWORD width, height;
   CString file_name;
-  DWORD end_ms =_test_state.ElapsedMsFromStart(_test_state._last_activity)+100;
   POSITION pos = _screen_capture._captured_images.GetHeadPosition();
   while (pos) {
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
     CxImage * img = new CxImage;
     if (image.Get(*img)) {
-      DWORD image_time_ms =_test_state.ElapsedMsFromStart(image._capture_time);
-      if (image_time_ms <= end_ms) {
-        // we save the frames in increments of 100ms (for now anyway)
-        // round it to the closest interval
-        DWORD image_time = ((image_time_ms + 50) / 100);
-        // resize the image to a max width of 400 to reduce bandwidth/space
-        DWORD newWidth = min(400, img->GetWidth() / 2);
-        DWORD newHeight = (DWORD)((double)img->GetHeight() * 
-                            ((double)newWidth / (double)img->GetWidth()));
-        img->Resample2(newWidth, newHeight);
-        if (last_image) {
-          RGBQUAD black = {0,0,0,0};
-          if (img->GetWidth() > width)
-            img->Crop(0, 0, img->GetWidth() - width, 0);
-          if (img->GetHeight() > height)
-            img->Crop(0, 0, 0, img->GetHeight() - height);
-          if (img->GetWidth() < width)
-            img->Expand(0, 0, width - img->GetWidth(), 0, black);
-          if (img->GetHeight() < height)
-            img->Expand(0, 0, 0, height - img->GetHeight(), black);
-          if (ImagesAreDifferent(last_image, img)) {
-            _visually_complete.QuadPart = image._capture_time.QuadPart;
-            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveImage(*img, file_name, false, _test._image_quality);
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveHistogram(*img, file_name);
-          }
-        } else {
-          width = img->GetWidth();
-          height = img->GetHeight();
-          // always save the first image at time zero
-          file_name = _file_base + _T("_progress_0000.jpg");
+      DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
+      // we save the frames in increments of 100ms (for now anyway)
+      // round it to the closest interval
+      DWORD image_time = ((image_time_ms + 50) / 100);
+      // resize the image down to a max width of 400 to reduce bandwidth/space
+      DWORD newWidth = min(400, img->GetWidth() / 2);
+      DWORD newHeight = (DWORD)((double)img->GetHeight() * 
+                          ((double)newWidth / (double)img->GetWidth()));
+      img->Resample2(newWidth, newHeight);
+      if (last_image) {
+        RGBQUAD black = {0,0,0,0};
+        if (img->GetWidth() > width)
+          img->Crop(0, 0, img->GetWidth() - width, 0);
+        if (img->GetHeight() > height)
+          img->Crop(0, 0, 0, img->GetHeight() - height);
+        if (img->GetWidth() < width)
+          img->Expand(0, 0, width - img->GetWidth(), 0, black);
+        if (img->GetHeight() < height)
+          img->Expand(0, 0, 0, height - img->GetHeight(), black);
+        if (ImagesAreDifferent(last_image, img)) {
+          _visually_complete.QuadPart = image._capture_time.QuadPart;
+          file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+                            image_time);
           SaveImage(*img, file_name, false, _test._image_quality);
-          file_name = _file_base + _T("_progress_0000.hist");
+          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
+                            image_time);
           SaveHistogram(*img, file_name);
         }
+      } else {
+        width = img->GetWidth();
+        height = img->GetHeight();
+        // always save the first image at time zero
+        file_name = _file_base + _T("_progress_0000.jpg");
+        SaveImage(*img, file_name, false, _test._image_quality);
+        file_name = _file_base + _T("_progress_0000.hist");
+        SaveHistogram(*img, file_name);
       }
 
       if (last_image)
@@ -654,24 +651,16 @@ void Results::ProcessRequests(void) {
   _requests.Lock();
   // first pass, reset the actual start time to be the first measured action
   // to eliminate the gap at startup for browser initialization
-  // and the actual last activity time
   if (_test_state._start.QuadPart) {
     LONGLONG new_start = 0;
-    LONGLONG new_end = 0;
     if (_test_state._first_navigate.QuadPart)
       new_start = _test_state._first_navigate.QuadPart;
-    if (_test_state._on_load.QuadPart)
-      new_end = _test_state._on_load.QuadPart;
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request) {
-        if (request->_start.QuadPart && 
-          (!new_start || request->_start.QuadPart < new_start))
-          new_start = request->_start.QuadPart;
-        if (request->_end.QuadPart && request->_end.QuadPart > new_end)
-          new_end = request->_end.QuadPart;
-      }
+      if (request && request->_start.QuadPart && 
+        (!new_start || request->_start.QuadPart < new_start))
+        new_start = request->_start.QuadPart;
     }
     LONGLONG earliest_dns = _dns.GetEarliest(_test_state._start.QuadPart);
     if (earliest_dns && (!new_start || earliest_dns < new_start))
@@ -681,8 +670,6 @@ void Results::ProcessRequests(void) {
       new_start = earliest_socket;
     if (new_start)
       _test_state._start.QuadPart = new_start;
-    if (new_end)
-      _test_state._last_activity.QuadPart = new_end;
   }
 
   // Next do all of the processing.  We want to do ALL of the processing
@@ -992,9 +979,6 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->initiator_ + _T("\t");
   result += request->initiator_line_ + _T("\t");
   result += request->initiator_column_ + _T("\t");
-  // TTFB delay
-  buff.Format("%d\t", request->_ms_ttfb_delayed);
-  result += buff;
 
   result += "\r\n";
 

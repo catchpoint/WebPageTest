@@ -35,10 +35,6 @@ class TrackSockets;
 class TestState;
 class DataChunk;
 
-typedef BOOL(__stdcall * LPREGISTERWAITFORSINGLEOBJECT)
-        (PHANDLE phNewWaitObject, HANDLE hObject, WAITORTIMERCALLBACK Callback,
-          PVOID Context, ULONG dwMilliseconds, ULONG dwFlags);
-
 class WsaBuffTracker {
 public:
   WsaBuffTracker():_buffers(NULL),_buffer_count(0){}
@@ -53,22 +49,6 @@ public:
   }
   LPWSABUF _buffers;
   DWORD    _buffer_count;
-};
-
-class WsaCallbackInfo {
-public:
-  WsaCallbackInfo():_callback(NULL),_context(NULL){}
-  WsaCallbackInfo(WAITORTIMERCALLBACK callback, PVOID context):
-    _callback(callback),_context(context){}
-  WsaCallbackInfo(const WsaCallbackInfo& src){*this = src;}
-  ~WsaCallbackInfo(){}
-  const WsaCallbackInfo& operator =(const WsaCallbackInfo& src) {
-    _callback = src._callback;
-    _context = src._context;
-    return src;
-  }
-  WAITORTIMERCALLBACK _callback;
-  PVOID               _context;
 };
 
 class CWsHook {
@@ -107,16 +87,11 @@ public:
   int   WSAEventSelect(SOCKET s, WSAEVENT hEventObject, long lNetworkEvents);
   int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                               LPWSANETWORKEVENTS lpNetworkEvents);
-  BOOL RegisterWaitForSingleObject(PHANDLE phNewWaitObject, HANDLE hObject,
-                           WAITORTIMERCALLBACK Callback, PVOID Context, 
-                           ULONG dwMilliseconds, ULONG dwFlags);
-  VOID RegisteredWaitCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 
 private:
   TestState&        _test_state;
   NCodeHookIA32		  hook;
   CRITICAL_SECTION	cs;
-  LARGE_INTEGER     _ms_freq;
 
   // addresses that WE have alocated in case of DNS overrides
   CAtlMap<void *, void *>	dns_override; 
@@ -128,11 +103,6 @@ private:
   CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  _recv_buffers;
   CAtlMap<LPWSAOVERLAPPED, DataChunk>       _send_buffers;
   CAtlMap<LPWSAOVERLAPPED, DWORD>           _send_buffer_original_length;
-
-  // callback for overlapped completion
-  CAtlMap<HANDLE, WsaCallbackInfo>  _callback_info;
-  CAtlMap<HANDLE, SOCKET>           _socket_events;
-  CAtlMap<SOCKET, LONGLONG>         _async_data_events;
 
   // winsock event tracking
   TrackDns&      _dns;
@@ -155,5 +125,4 @@ private:
   LPFN_WSAGETOVERLAPPEDRESULT _WSAGetOverlappedResult;
   LPFN_WSAEVENTSELECT _WSAEventSelect;
   LPFN_WSAENUMNETWORKEVENTS _WSAEnumNetworkEvents;
-  LPREGISTERWAITFORSINGLEOBJECT _RegisterWaitForSingleObject;
 };
