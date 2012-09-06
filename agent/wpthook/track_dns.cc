@@ -74,6 +74,7 @@ void * TrackDns::LookupStart(CString& name) {
 void TrackDns::LookupAddress(void * context, ULONG &addr) {
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
+    AddAddress(info->_name, addr);
     CString host;
     if (info->_tracked && !_dns_hosts.Lookup(addr, host) || host.IsEmpty()) {
       _dns_hosts.SetAt(addr, info->_name);
@@ -191,4 +192,40 @@ CString TrackDns::GetHost(ULONG addr) {
   CString host;
   _dns_hosts.Lookup(addr, host);
   return host;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackDns::AddAddress(CString host, DWORD address) {
+  bool found = false;
+  POSITION pos = _host_addresses.GetHeadPosition();
+  while (pos && !found) {
+    DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
+    if (host_addresses.name_ == host) {
+      host_addresses.AddAddress(address);
+      found = true;
+    }
+  }
+  if (!found) {
+    DnsHostAddresses host_addresses;
+    host_addresses.name_ = host;
+    host_addresses.AddAddress(address);
+    _host_addresses.AddTail(host_addresses);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int TrackDns::GetAddressCount(CString host) {
+  int count = 0;
+  bool found = false;
+  POSITION pos = _host_addresses.GetHeadPosition();
+  while (pos && !found) {
+    DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
+    if (host_addresses.name_ == host) {
+      count = host_addresses.addresses_.GetCount();
+      found = true;
+    }
+  }
+  return count;
 }

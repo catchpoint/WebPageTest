@@ -84,6 +84,7 @@ public:
 	DWORD			basePageResult;	// result of the base page
   CString   basePageCDN;    // CDN used by the base page (if any)
   CString   basePageRTT;    // RTT for the base page
+  DWORD     basePageAddressCount;
   DWORD     msAFT;      // AFT Time (if we're capturing it)
   DWORD     msVisualComplete; // Visually complete time (only available with video capture)
 

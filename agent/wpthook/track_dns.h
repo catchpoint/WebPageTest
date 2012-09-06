@@ -58,6 +58,36 @@ public:
   struct in_addr	_override_addr;
 };
 
+class DnsHostAddresses {
+public:
+  DnsHostAddresses(){}
+  DnsHostAddresses(const DnsHostAddresses& src){*this = src;}
+  ~DnsHostAddresses(void){}
+  const DnsHostAddresses& operator =(const DnsHostAddresses& src){
+    name_ = src.name_;
+    addresses_.RemoveAll();
+    POSITION pos = src.addresses_.GetHeadPosition();
+    while (pos) {
+      addresses_.AddTail(src.addresses_.GetNext(pos));
+    }
+    return src;
+  }
+  void AddAddress(DWORD address){
+    bool found = false;
+    POSITION pos = addresses_.GetHeadPosition();
+    while (pos && !found) {
+      if (address == addresses_.GetNext(pos)) {
+        found = true;
+      }
+    }
+    if (!found) {
+      addresses_.AddTail(address);
+    }
+  }
+  CString          name_;
+  CAtlList<DWORD>  addresses_;
+};
+
 class TrackDns {
 public:
   TrackDns(TestState& test_state, WptTest& test);
@@ -70,12 +100,15 @@ public:
   bool Claim(CString name, ULONG addr, LARGE_INTEGER before,
              LARGE_INTEGER& start, LARGE_INTEGER& end);
   LONGLONG  GetEarliest(LONGLONG& after);
+  void AddAddress(CString host, DWORD address);
+  int GetAddressCount(CString host);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
   CAtlMap<ULONG, CString>     _dns_hosts;
   CRITICAL_SECTION            cs;
   TestState&                  _test_state;
   WptTest&                    _test;
+  CAtlList<DnsHostAddresses>  _host_addresses;
 
 private:
   CString GetHost(ULONG addr);

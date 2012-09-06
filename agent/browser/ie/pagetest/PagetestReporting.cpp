@@ -177,6 +177,7 @@ void CPagetestReporting::Reset(void)
 		basePageResult = -1;
     basePageCDN.Empty();
     basePageRTT.Empty();
+    basePageAddressCount = 0;
 		html.Empty();
 
 		totalFlagged = 0;
@@ -712,6 +713,7 @@ void CPagetestReporting::ProcessResults(void)
 						basePage = w->end;
 						basePageResult = w->result;
             basePageRTT = GetRTT(w->peer.sin_addr.S_un.S_addr);
+            basePageAddressCount = GetAddressCount(w->host);
 						if( html.IsEmpty() && w->body )
 							html = w->body;
 							
@@ -1036,7 +1038,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
       msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, -1, basePageRTT, basePageCDN);
+      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN);
 	buff += result;
 }
 
@@ -1182,7 +1184,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 									_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s")
 									_T("\t%d\t%d\t%d\t%s")
                   _T("\t\t\t\t\t\t\t\t\t")
-                  _T("\t\t%s")
+                  _T("\t%d\t%s")
 									_T("\r\n"),
 							(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPTSTR)ip, 
 							(LPCTSTR)w->verb, (LPCTSTR)w->host, (LPCTSTR)w->object,
@@ -1197,7 +1199,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,
 							w->gzipTotal, w->gzipTotal - w->gzipTarget, w->minifyTotal, w->minifyTotal - w->minifyTarget, w->compressTotal, w->compressTotal - w->compressTarget, (LPCTSTR)ttl,
-              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr) );
+              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr) );
 					buff += result;
 				}
 			}

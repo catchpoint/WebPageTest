@@ -90,6 +90,7 @@ void Results::Reset(void) {
   base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
   base_page_result_ = 0;
+  base_page_address_count_ = 0;
   base_page_complete_.QuadPart = 0;;
 }
 
@@ -644,7 +645,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += _test_state._browser_version;
     result += "\t";
     // Base Page Server Count
-    result += "\t";
+    buff.Format("%d\t", base_page_address_count_);
+    result += buff;
     // Base Page Server RTT
     result += base_page_server_rtt_ + "\t";
     // Base Page CDN Name
@@ -702,6 +704,8 @@ void Results::ProcessRequests(void) {
           base_page = false;
           base_page_result_ = result_code;
           base_page_server_rtt_ = request->rtt_;
+          base_page_address_count_ = _dns.GetAddressCount(
+                                          (LPCTSTR)CA2T(request->GetHost()));
           request->_is_base_page = true;
           base_page_complete_.QuadPart = request->_end.QuadPart;
           if ((!_test_state._test_result ||  _test_state._test_result == 99999)
@@ -998,7 +1002,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->initiator_line_ + _T("\t");
   result += request->initiator_column_ + _T("\t");
   // Server Count
-  result += "\t";
+  buff.Format("%d\t", _dns.GetAddressCount((LPCTSTR)CA2T(request->GetHost())));
+  result += buff;
   // Server RTT
   result += request->rtt_ + "\t";
 

@@ -31,6 +31,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "PagetestReporting.h"
 
+class DnsHostAddresses {
+public:
+  DnsHostAddresses(){}
+  DnsHostAddresses(const DnsHostAddresses& src){*this = src;}
+  ~DnsHostAddresses(void){}
+  const DnsHostAddresses& operator =(const DnsHostAddresses& src){
+    name_ = src.name_;
+    addresses_.RemoveAll();
+    POSITION pos = src.addresses_.GetHeadPosition();
+    while (pos) {
+      addresses_.AddTail(src.addresses_.GetNext(pos));
+    }
+    return src;
+  }
+  void AddAddress(DWORD address){
+    bool found = false;
+    POSITION pos = addresses_.GetHeadPosition();
+    while (pos && !found) {
+      if (address == addresses_.GetNext(pos)) {
+        found = true;
+      }
+    }
+    if (!found) {
+      addresses_.AddTail(address);
+    }
+  }
+  CString          name_;
+  CAtlList<DWORD>  addresses_;
+};
+
 class CDNSEvents :
 	public CPagetestReporting
 {
@@ -38,9 +68,12 @@ public:
 	CDNSEvents(void);
 	virtual ~CDNSEvents(void);
 	DWORD	bindAddr;
+  CAtlList<DnsHostAddresses>  _host_addresses;
 
 	virtual bool DnsLookupStart(CString & name, void *&context, CAtlArray<DWORD> &addresses);
 	virtual void DnsLookupAddress(void * context, struct in_addr& address);
 	virtual void DnsLookupDone(void * context);
 	virtual void DnsLookup(CString & name, void *&context, CAtlArray<DWORD> &addresses);
+  virtual void AddAddress(CString host, DWORD address);
+  virtual int GetAddressCount(CString host);
 };

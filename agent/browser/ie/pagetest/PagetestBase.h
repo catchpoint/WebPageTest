@@ -302,6 +302,8 @@ public:
 	void	ChromeFrame(CComPtr<IChromeFrame> chromeFrame);
   virtual CString GetRTT(DWORD ipv4_address) = 0;
 	virtual void UpdateRTT(DWORD ipv4_address, long elapsed) = 0;
+  virtual void AddAddress(CString host, DWORD address) = 0;
+  virtual int GetAddressCount(CString host) = 0;
 	
 	typedef enum{
 		equal = 0,

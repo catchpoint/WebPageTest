@@ -125,6 +125,7 @@ void CDNSEvents::DnsLookupAddress(void * context, struct in_addr& address)
 		EnterCriticalSection(&cs);
 
 		CDnsLookup * d = (CDnsLookup *)context;
+    AddAddress(d->name, address.S_un.S_addr);
 
 		// see if we need to override the address
 		if( d->overrideAddr.S_un.S_addr )
@@ -227,4 +228,39 @@ void CDNSEvents::DnsLookup(CString & name, void *&context, CAtlArray<DWORD> &add
 
 		delete [] servers;
 	}
+}
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CDNSEvents::AddAddress(CString host, DWORD address) {
+  bool found = false;
+  POSITION pos = _host_addresses.GetHeadPosition();
+  while (pos && !found) {
+    DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
+    if (host_addresses.name_ == host) {
+      host_addresses.AddAddress(address);
+      found = true;
+    }
+  }
+  if (!found) {
+    DnsHostAddresses host_addresses;
+    host_addresses.name_ = host;
+    host_addresses.AddAddress(address);
+    _host_addresses.AddTail(host_addresses);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CDNSEvents::GetAddressCount(CString host) {
+  int count = 0;
+  bool found = false;
+  POSITION pos = _host_addresses.GetHeadPosition();
+  while (pos && !found) {
+    DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
+    if (host_addresses.name_ == host) {
+      count = host_addresses.addresses_.GetCount();
+      found = true;
+    }
+  }
+  return count;
 }
