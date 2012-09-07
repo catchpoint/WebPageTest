@@ -97,6 +97,9 @@ function GetTestStatus($id, $includePosition = true)
                                         $out = str_replace('[test]', $complete, $test);
                                         file_put_contents("$testPath/testinfo.ini", $out);
                                     }
+                                    $ret['statusCode'] = 200;
+                                    $ret['statusText'] = 'Test Complete';
+                                    $ret['completeTime'] = $date;
                               }
                           }
                         }
