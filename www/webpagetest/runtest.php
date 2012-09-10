@@ -1632,7 +1632,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
 
         // store the entire test data structure JSON encoded (instead of a bunch of individual files)
+        $oldUrl = @$test['url'];
+        $test['url'] = $url;
         gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
+        $test['url'] = $oldUrl;
         
         // log the test
         if( isset($testId) )
