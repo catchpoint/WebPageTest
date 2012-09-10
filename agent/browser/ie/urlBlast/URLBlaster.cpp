@@ -1028,6 +1028,7 @@ bool CURLBlaster::ConfigureIE(void)
 			RegSetValueEx(hKey, _T("NoUpdateCheck"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 			RegSetValueEx(hKey, _T("NoJITSetup"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 			RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
 			RegCloseKey(hKey);
 		}
@@ -1182,6 +1183,16 @@ bool CURLBlaster::ConfigureIE(void)
         RegDeleteValue(hKey, _T("pagetest.exe"));
 			  RegCloseKey(hKey);
 		  }
+	  }
+
+    // configure the compatibility view settings
+	  if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\Microsoft\\Internet Explorer\\BrowserEmulation"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+	  {
+		  DWORD val = 1;
+      if (info.standards)
+        val = 0;
+		  RegSetValueEx(hKey, _T("MSCompatibilityMode"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+		  RegCloseKey(hKey);
 	  }
 
     // configure Chrome Frame to be the default renderer (if it is installed)

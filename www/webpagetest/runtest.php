@@ -85,6 +85,7 @@
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
             $test['trace'] = $req_trace;
+            $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
@@ -775,6 +776,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['web10'] = $test['web10'] ? 1 : 0;
             $test['ignoreSSL'] = $test['ignoreSSL'] ? 1 : 0;
             $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
+            $test['standards'] = $test['standards'] ? 1 : 0;
             $test['timeline'] = $test['timeline'] ? 1 : 0;
             $test['trace'] = $test['trace'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
@@ -1547,6 +1549,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nignoreSSL=1";
             if( $test['tcpdump'] )
                 $testFile .= "\r\ntcpdump=1";
+            if( $test['standards'] )
+                $testFile .= "\r\nstandards=1";
             if( $test['timeline'] )
                 $testFile .= "\r\ntimeline=1";
             if( $test['trace'] )

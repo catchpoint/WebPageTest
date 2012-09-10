@@ -272,6 +272,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="standards" id="force_standards_mode" class="checkbox" style="float: left;width: auto;">
+                                        <label for="force_standards_mode" class="auto_width">
+                                            Disable Compatibility View (IE Only)<br>
+                                            <small>Forces all pages to load in standards mode</small>
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="tcpdump" id="tcpdump" class="checkbox" style="float: left;width: auto;">
                                         <label for="tcpdump" class="auto_width">
                                             Capture network packet trace (tcpdump)
