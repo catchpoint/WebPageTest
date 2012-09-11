@@ -79,6 +79,16 @@ else
                 </script>
             <?php } $gaTemplate = 'Visual Comparison'; include ('head.inc'); ?>
             <style type="text/css">
+            <?php
+                $bgcolor = '000000';
+                $color = 'ffffff';
+                if (array_key_exists('bg', $_GET)) {
+                    $bgcolor = $_GET['bg'];
+                }
+                if (array_key_exists('text', $_GET)) {
+                    $color = $_GET['text'];
+                }
+            ?>
                 #video
                 {
                     margin-left: auto;
@@ -126,14 +136,18 @@ else
                 div.content
                 {
                     text-align:center;
-                    background: black;
-                    color: white;
+                    <?php
+                        echo "background: #$bgcolor;\n";
+                        echo "color: #$color;\n"
+                    ?>
                     font-family: arial,sans-serif
                 }
                 .pagelink
                 {
                     text-decoration: none;
-                    color: white;
+                    <?php
+                        echo "color: #$color;\n"
+                    ?>
                 }
                 .thumb{ border: none; }
                 .thumbChanged{border: 3px solid #FEB301;}
@@ -193,8 +207,10 @@ else
                 }
                 #advanced
                 {
-                    background: black;
-                    color: white;
+                    <?php
+                        echo "background: #$bgcolor;\n";
+                        echo "color: #$color;\n"
+                    ?>
                     font-family: arial,sans-serif;
                     padding: 20px;
                 }
@@ -323,6 +339,8 @@ function ScreenShotTable()
     global $thumbSize;
     global $interval;
     global $maxCompare;
+    global $color;
+    global $bgcolor;
     $aftAvailable = false;
     $endTime = 'visual';
     if( strlen($_REQUEST['end']) )
@@ -498,7 +516,7 @@ function ScreenShotTable()
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
         $ival = $interval * 100;
-        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime\">Export filmstrip as an image...</a>";
+        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime&color=$color&bgcolor=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
