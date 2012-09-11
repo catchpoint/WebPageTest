@@ -1214,7 +1214,11 @@ function RestoreTest($id)
                 $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                 if( !is_array($testInfo) || 
                     !count($testInfo) || 
-                    ($testInfo['restored'] && $testInfo['restoredDataOnly'] && !defined('RESTORE_DATA_ONLY')) )
+                    (array_key_exists('restored', $testInfo) && 
+                    $testInfo['restored'] && 
+                    array_key_exists('restoredDataOnly', $testInfo) &&
+                    $testInfo['restoredDataOnly'] && 
+                    !defined('RESTORE_DATA_ONLY')) )
                     $restore = true;
             }
             else
