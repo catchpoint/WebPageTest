@@ -87,6 +87,7 @@
             $test['trace'] = $req_trace;
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
+            $test['spdy3'] = $req_spdy3;
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
             $test['type'] = trim($req_type);
@@ -250,7 +251,7 @@
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
                 // redirect to the comparison page
-                if (isset($req_spof)) {
+                if (isset($req_spof) && strlen(trim($req_spof))) {
                     $spofTests = array();
                     $test['video'] = 1;
                     $test['label'] = 'Original';
@@ -812,6 +813,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['timeline'] = $test['timeline'] ? 1 : 0;
             $test['trace'] = $test['trace'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
+            $test['spdy3'] = $test['spdy3'] ? 1 : 0;
             $test['blockads'] = $test['blockads'] ? 1 : 0;
             $test['sensitive'] = $test['sensitive'] ? 1 : 0;
             $test['pngss'] = $test['pngss'] ? 1 : 0;
@@ -1589,6 +1591,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\ntrace=1";
             if( $test['netlog'] )
                 $testFile .= "\r\nnetlog=1";
+            if( $test['spdy3'] )
+                $testFile .= "\r\nspdy3=1";
             if( $test['blockads'] )
                 $testFile .= "\r\nblockads=1";
             if( $test['video'] )

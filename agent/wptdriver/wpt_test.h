@@ -147,6 +147,7 @@ public:
   bool    _trace;
   bool    _video;
   bool    _aft;
+  bool    _spdy3;
   DWORD   _aft_early_cutoff;
   DWORD   _aft_min_changes;
   CString _test_type;

@@ -42,6 +42,7 @@ static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
                                  _T(" --trace-startup-duration=240")
                                  _T(" --trace-startup-file=\"%s_trace.json\"");
+static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--ignore-certificate-errors"),
@@ -123,6 +124,9 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           CString trace;
           trace.Format(CHROME_TRACE, (LPCTSTR)_test._file_base);
           lstrcat(cmdLine, trace);
+        }
+        if (_test._spdy3) {
+          lstrcat(cmdLine, CHROME_SPDY3);
         }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {

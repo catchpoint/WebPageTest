@@ -88,6 +88,7 @@ void WptTest::Reset(void) {
   _netlog = false;
   _video = false;
   _aft = false;
+  _spdy3 = false;
   _aft_early_cutoff = AFT_EARLY_CUTOFF_SECS;
   _aft_min_changes = AFT_MIN_CHANGES_THRESHOLD;
   _test_type.Empty();
@@ -170,6 +171,8 @@ bool WptTest::Load(CString& test) {
           _netlog = true;
         else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
           _trace = true;
+        else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim()))
+          _spdy3 = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {
