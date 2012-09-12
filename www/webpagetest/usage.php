@@ -21,19 +21,19 @@ if( !$days || $days > 1000 )
 <?php
     if( strlen($req_k) )
     {
-        $day = gmdate('Ymd');
-        if( strlen($req_date) )
-            $day = $req_date;
-        $keyfile = "./dat/keys_$day.dat";
         $keys = parse_ini_file('./settings/keys.ini', true);
-        $usage = null;
-        if( is_file($keyfile) )
-          $usage = json_decode(file_get_contents($keyfile), true);
-        if( !isset($usage) )
-          $usage = array();
-
-        if( $admin )
+        if( $admin && $req_k == 'all' )
         {
+            $day = gmdate('Ymd');
+            if( strlen($req_date) )
+                $day = $req_date;
+            $keyfile = "./dat/keys_$day.dat";
+            $usage = null;
+            if( is_file($keyfile) )
+              $usage = json_decode(file_get_contents($keyfile), true);
+            if( !isset($usage) )
+              $usage = array();
+
             $used = array();
             foreach($keys as $key => &$keyUser)
             {
@@ -55,12 +55,29 @@ if( !$days || $days > 1000 )
             $key = $req_k;
             if( isset($keys[$key]) )
             {
+                $limit = (int)@$keys[$key]['limit'];
+                echo "<table><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
+                $targetDate = new DateTime('now', new DateTimeZone('GMT'));
+                for($offset = 0; $offset <= $days; $offset++)
+                {
+                    $keyfile = './dat/keys_' . $targetDate->format("Ymd") . '.dat';
+                    $usage = null;
+                    $used = 0;
+                    if( is_file($keyfile) ) {
+                      $usage = json_decode(file_get_contents($keyfile), true);
+                      $used = (int)@$usage[$key];
+                    }
+                    $date = $targetDate->format("Y/m/d");
+                    echo "<tr><td>$date</td><td>$used</td><td>$limit</td></tr>\n";
+                    $targetDate->modify('-1 day');
+                }
+                echo '</table>';
+
                 $limit = (int)$keys[$key]['limit'];
                 if( isset($usage[$key]) )
                   $used = (int)$usage[$key];
                 else
                   $used = 0;
-                echo "$used of $limit requests used";
             }
         }
     }
