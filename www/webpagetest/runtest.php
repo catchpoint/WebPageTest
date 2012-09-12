@@ -248,7 +248,35 @@
               
             if( !$error && !array_key_exists('id', $test) )
             {
-                if( $test['batch_locations'] && count($test['multiple_locations']) )
+                // see if we are doing a SPOF test (if so, we need to build the 2 tests and
+                // redirect to the comparison page
+                if (isset($req_spof)) {
+                    $spofTests = array();
+                    $test['video'] = 1;
+                    $test['label'] = 'Original';
+                    $id = CreateTest($test, $test['url']);
+                    if( isset($id) ) {
+                        $spofTests[] = $id;
+                        $test['label'] = 'SPOF';
+                        $script = '';
+                        $hosts = explode("\n", $req_spof);
+                        foreach($hosts as $host) {
+                            $script .= "setDnsName\t" . trim($host) . "\tblackhole.webpagetest.org\r\n";
+                        }
+                        if (strlen($script)) {
+                            if (strlen($test['script'])) {
+                                $test['script'] = $script . $test['script'];
+                            } else {
+                                $test['script'] = $script . "navigate\t{$test['url']}\r\n";
+                            }
+                            $id = CreateTest($test, $test['url']);
+                            if( isset($id) ) {
+                                $spofTests[] = $id;
+                            }
+                        }
+                    }
+                }
+                else if( $test['batch_locations'] && count($test['multiple_locations']) )
                 {
                     $test['id'] = CreateTest($test, $test['url'], 0, 1);
                     $test['batch_id'] = $test['id'];
@@ -489,11 +517,15 @@
                 }
                 else
                 {
-                    // redirect regardless if it is a bulk test or not
-                    if( FRIENDLY_URLS )
-                        header("Location: http://$host$uri/result/{$test['id']}/");    
-                    else
-                        header("Location: http://$host$uri/results.php?test={$test['id']}");
+                    if (count($spofTests) > 1) {
+                        header("Location: http://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
+                    } else {
+                        // redirect regardless if it is a bulk test or not
+                        if( FRIENDLY_URLS )
+                            header("Location: http://$host$uri/result/{$test['id']}/");    
+                        else
+                            header("Location: http://$host$uri/results.php?test={$test['id']}");
+                    }
                 }
             }
             else

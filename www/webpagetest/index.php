@@ -181,6 +181,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
+                                <li><a href="#spof">SPOF</a></li>
                                 <?php if (isset($settings['enableVideo'])) { ?>
                                 <li><a href="#video">Video</a></li>
                                 <?php } ?>
@@ -230,8 +231,7 @@ $loc = ParseLocations($locations);
                                         $runs = (int)$_COOKIE["runs"];
                                         if( isset($req_runs) )
                                             $runs = (int)$req_runs;
-                                        if( $runs < 1 || $runs > $settings['maxruns'] )
-                                            $runs = 1;
+                                        $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
                                         <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
                                     </li>
@@ -241,6 +241,9 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <?php
                                         $fvOnly = (int)$_COOKIE["testOptions"] & 2;
+                                        if (array_key_exists('fvonly', $_REQUEST)) {
+                                            $fvOnly = (int)$_REQUEST['fvonly'];
+                                        }
                                         ?>
                                         <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
                                         <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
@@ -400,6 +403,23 @@ $loc = ParseLocations($locations);
                                 <textarea name="block" id="block_requests_containing" cols="0" rows="0"></textarea>
                             </div>
 
+                            <div id="spof" class="test_subbox ui-tabs-hide">
+                                <p>
+                                    Simulate failure of specified domains.  This is done by re-routing all requests for 
+                                    the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html">blackhole.webpagetest.org</a> which will silently drop all requests.
+                                </p>
+                                <p>
+                                    <label for="spof_hosts" class="full_width">
+                                        Hosts to fail (one host per line)...
+                                    </label>
+                                </p>
+                                <textarea name="spof" id="spof_hosts" cols="0" rows="0"><?php
+                                    if (array_key_exists('spof', $_REQUEST)) {
+                                        echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
+                                    }
+                                ?></textarea>
+                            </div>
+                            
                             <?php if($settings['enableVideo']) { ?>
                             <div id="video" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
@@ -407,9 +427,16 @@ $loc = ParseLocations($locations);
                                         Video will appear in the Screenshot page of your results
                                     </div></div>
                                 </div>
-                                
-                                <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label">
+                                <?php
+                                $video = 0;
+                                if (array_key_exists('video', $_REQUEST)) {
+                                    $video = (int)$_REQUEST['video'];
+                                }
+                                ?>
+                                <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
                                 <label for="videoCheck" class="auto_width">Capture Video</label>
+                                <?php
+                                /*
                                 <br>
                                 <br>
                                 <p>
@@ -438,6 +465,8 @@ $loc = ParseLocations($locations);
                                         <input id="aftmc" type="text" name="aftmc" class="text" style="width: 3em;" value="<?php echo (int)$aftMinChanges; ?>"> Pixels
                                     </p>
                                 </div>
+                                */
+                                ?>
                             </div>
                             <?php } ?>
 
