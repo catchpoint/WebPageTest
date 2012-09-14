@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var child_process = require('child_process');
+var logger = require('logger');
 var nopt = require('nopt');
 var path = require('path');
 
@@ -53,11 +54,11 @@ function devToolsToHar(devToolsLogPath, harPath, callback) {
       devToolsLogPath,
       harPath
   ];
-  console.log('Starting devtools2har: %s %s',
-      JAVA_COMMAND_, javaArgs.join(' '));
+  logger.log('info', 'Starting devtools2har: ' + JAVA_COMMAND_ +
+      ' ' + javaArgs.join(' '));
   var serverProcess = child_process.spawn(JAVA_COMMAND_, javaArgs);
   serverProcess.on('exit', function(code, signal) {
-    console.log('devtools2har exit code %s, signal %s', code, signal);
+    logger.log('info', 'devtools2har exit code ' + code + ' signal ' + signal);
     if (code === 0) {
       callback();
     } else {
@@ -66,10 +67,10 @@ function devToolsToHar(devToolsLogPath, harPath, callback) {
     }
   });
   serverProcess.stdout.on('data', function(data) {
-    console.log('devtools2har STDOUT: %s', data);
+    logger.log('info', 'devtools2har STDOUT: ' + data);
   });
   serverProcess.stderr.on('data', function(data) {
-    console.log('devtools2har  STDERR: %s', data);
+    logger.log('warning', 'devtools2har  STDERR: ' + data);
   });
 }
 exports.devToolsToHar = devToolsToHar;
@@ -82,10 +83,10 @@ exports.setDevToolsToHarJar = setDevToolsToHarJar;
 
 function main(flags) {
   'use strict';
-  
+
   setDevToolsToHarJar(flags.devtools2har_jar);
   devToolsToHar(flags.devtools_log, 'out.har', function() {
-    console.log('converted to out.har');
+    logger.log('extra', 'converted to out.har');
   });
 }
 

@@ -28,14 +28,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*jslint nomen:false */
 
 var vm = require('vm');
+var logger = require('logger');
 var webdriver = require('webdriver');
-console.log('During import promise.Application: %s',
+logger.log('info', 'During import promise.Application: ' +
     JSON.stringify(webdriver.promise.Application));
 
 /**
- * Returns a new copy of the webdriver namespace in a secure sandbox.
+ * createSandboxedWebDriverModule creates a sandboxed webdriver Object
+ *
+ * @return {Object} a new copy of the webdriver namespace in a secure sandbox.
  */
-function createSandboxedWebDriverModule() {
+exports.createSandboxedWebDriverModule = function() {
   'use strict';
   var result = new webdriver.promise.Deferred();
 
@@ -46,18 +49,19 @@ function createSandboxedWebDriverModule() {
         result.reject(e);
       }
 
-      // Give WebDriver the info it needs to compile.
       var wdModuleSandbox = {
         setTimeout: global.setTimeout,
         setInterval: global.setInterval,
         clearTimeout: global.clearTimeout,
         clearInterval: global.clearInterval,
+        // TODO(klm): Why? We don't want a user script to be able
+        // to require arbitrary modules
         require: require,
         // Define a dummy process object so the user can use
         // webdriver.process.  Feel free to copy over whitelisted
         // ENV variables from our process.env - just don't give them
         // the real deal :)
-        process: {env:{}}
+        process: {env: {}}
       };
 
       // This is actually how node loads modules.
@@ -77,14 +81,25 @@ function createSandboxedWebDriverModule() {
   }
 
   return result.promise;
-}
+};
 
 /**
- * Returns a sandboxed webdriver namespace safe for user script execution.
+ * createSandboxedWdNamespace builds the sandboxed module then adds a
+ * protected builder to it
+ *
+ * @param {String} serverUrl the url of the webdriver server.
+ * @param {Object} capabilities sandbox information such as browser, version
+ *                 and platform.
+ * @param {Function} afterBuildCb the callback to be called once the sandbox
+ *                   Object has been created.
+ *
+ * @return {Object} a sandboxed webdriver namespace safe
+ *                  for user script execution.
  */
-function createSandboxedWdNamespace(serverUrl, capabilities, afterBuildCb) {
+exports.createSandboxedWdNamespace =
+    function(serverUrl, capabilities, afterBuildCb) {
   'use strict';
-  return createSandboxedWebDriverModule().then(function(wdSandbox) {
+  return exports.createSandboxedWebDriverModule().then(function(wdSandbox) {
     var isDriverBuilt = false;
 
     var operationNotPermitted = function(key) {
@@ -132,6 +147,4 @@ function createSandboxedWdNamespace(serverUrl, capabilities, afterBuildCb) {
         process: wdSandbox.process
     };
   });
-}
-
-exports.createSandboxedWdNamespace = createSandboxedWdNamespace;
+};

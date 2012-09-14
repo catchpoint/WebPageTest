@@ -35,6 +35,7 @@ exports.METHOD_PREFIX = METHOD_PREFIX;
 
 /**
  * Page load timeline DevTools API.
+ * @this {Timeline}
  *
  * @param devTools An instance of devtools.DevTools.
  */
@@ -57,5 +58,12 @@ Timeline.prototype.enable = function(callback) {
   'use strict';
   return this.devTools_.command({
     method: 'Timeline.enable'
+  }, callback);
+};
+
+Timeline.prototype.start = function(callback) {
+  'use strict';
+  return this.devTools_.command({
+    method: 'Timeline.start'
   }, callback);
 };

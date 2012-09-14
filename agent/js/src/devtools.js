@@ -31,6 +31,7 @@ var events = require('events');
 var http = require('http');
 var url = require('url');
 var util = require('util');
+var logger = require('logger');
 var WebSocket = require('ws');
 
 
@@ -38,11 +39,11 @@ function processResponse(response, callback) {
   'use strict';
   var responseBody = '';
   response.setEncoding('utf8');
-  response.on('data', function (chunk) {
+  response.on('data', function(chunk) {
     responseBody += chunk;
   });
-  response.on('end', function () {
-    console.log('Got response: ' + responseBody);
+  response.on('end', function() {
+    logger.log('info', 'Got response: ' + responseBody);
     if (callback) {
       callback(responseBody);
     }
@@ -51,6 +52,7 @@ function processResponse(response, callback) {
     throw new Error('Bad HTTP response: ' + JSON.stringify(response));
   });
 }
+exports.ProcessResponse = processResponse;
 
 
 function DevTools(devToolsUrl) {
@@ -68,7 +70,7 @@ DevTools.prototype.connect = function() {
   'use strict';
   var self = this;  // For closure
   http.get(url.parse(self.devToolsUrl_), function(response) {
-    processResponse(response, function(responseBody) {
+    exports.ProcessResponse(response, function(responseBody) {
       var devToolsJson = JSON.parse(responseBody);
       try {
         self.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
@@ -92,7 +94,7 @@ DevTools.prototype.connectDebugger_ = function() {
   });
 
   ws.on('open', function() {
-    // console.log('WebSocket connected: %s', JSON.stringify(ws));
+    logger.log('extra', 'WebSocket connected: ' + JSON.stringify(ws));
     self.ws_ = ws;
     self.emit('connect');
   });
@@ -100,7 +102,6 @@ DevTools.prototype.connectDebugger_ = function() {
   ws.on('message', function(data, flags) {
     // flags.binary will be set if a binary data is received
     // flags.masked will be set if the data was masked
-    // console.log('message: %s binary=%s', data, flags.binary);
     if (!flags.binary) {
       var messageJson = JSON.parse(data);
       if ('result' in messageJson && 'id' in messageJson) {

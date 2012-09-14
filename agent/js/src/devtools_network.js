@@ -35,8 +35,9 @@ exports.METHOD_PREFIX = METHOD_PREFIX;
 
 /**
  * Network tracking DevTools API.
+ * @this {Network}
  *
- * @param devTools An instance of devtools.DevTools.
+ * @param {Object} devTools An instance of devtools.DevTools.
  */
 function Network(devTools) {
   'use strict';

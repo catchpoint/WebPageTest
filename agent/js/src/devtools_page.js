@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var devtools = require('devtools');
 var events = require('events');
+var logger = require('logger');
 var util = require('util');
 
 var METHOD_PREFIX = 'Page.';
@@ -36,8 +37,9 @@ exports.METHOD_PREFIX = METHOD_PREFIX;
 
 /**
  * Page control DevTools API.
+ * @this {Page}
  *
- * @param devTools An instance of devtools.DevTools.
+ * @param {Object} devTools An instance of devtools.DevTools.
  */
 function Page(devTools) {
   'use strict';
@@ -80,15 +82,15 @@ function main() {
   dt.on('connect', function() {
     page.enable();
     var id = page.open('http://google.com/translate', function(result) {
-      console.log('Result for %s: %s', id, JSON.stringify(result));
+      logger.log('info', 'Result for ' + id + ': ' + JSON.stringify(result));
     });
-    console.log('Sent page open message id %s', id);
+    logger.log('extra', 'Sent page open message id ' + id);
   });
 
   dt.connect();
 }
 
 if (require.main === module) {
-  console.log('main for page');
+  logger.log('extra', 'main for page');
   main();
 }
