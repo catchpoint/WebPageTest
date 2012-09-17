@@ -28,6 +28,7 @@ else
         $parts = pathinfo($file);
         $type = $parts['extension'];
 
+        $fit = max(min(@$_REQUEST['fit'], 1000), 0);
         $newWidth = 250;
         $w = @$_REQUEST['width'];
         if( $w && $w > 20 && $w < 1000 )
@@ -145,14 +146,25 @@ function tbnDrawChecklist(&$img)
 function GenerateThumbnail(&$img, $type)
 {
     global $newWidth;
+    global $fit;
 
     // figure out what the height needs to be
     $width = imagesx($img);
     $height = imagesy($img);
     
-    if( $width > $newWidth )
-    {
+    if ($fit > 0) {
+        if ($width > $height) {
+            $scale = $fit / $width;
+        } else {
+            $scale = $fit / $height;
+        }
+    } else {
         $scale = $newWidth / $width;
+    }
+    
+    if( $scale < 1 )
+    {
+        $newWidth = (int)($width * $scale);
         $newHeight = (int)($height * $scale);
         
         # Create a new temporary image

@@ -370,8 +370,13 @@ function ScreenShotTable()
                 $aftAvailable = true;
             // figure out the height of this video
             $height = 100;
-            if( $test['video']['width'] && $test['video']['height'] )
-                $height = 10 + (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+            if( $test['video']['width'] && $test['video']['height'] ) {
+                if( $test['video']['width'] > $test['video']['height'] ) {
+                    $height = 10 + (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+                } else {
+                    $height = 10 + $thumbSize;
+                }
+            }
 
             $break = '';
             if( !strpos($test['name'], ' ') )
@@ -428,8 +433,16 @@ function ScreenShotTable()
             
             // figure out the height of the image
             $height = 0;
-            if( $test['video']['width'] && $test['video']['height'] )
-                $height = (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+            $width = $thumbSize;
+            if( $test['video']['width'] && $test['video']['height'] ) {
+                if ($test['video']['width'] > $test['video']['height'] ) {
+                    $width = $thumbSize;
+                    $height = (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+                } else {
+                    $height = $thumbSize;
+                    $width = (int)(((float)$thumbSize / (float)$test['video']['height']) * (float)$test['video']['width']);
+                }
+            }
             echo "<tr>";
             
             $lastThumb = null;
@@ -490,10 +503,10 @@ function ScreenShotTable()
                             $class = 'thumbAFT';
                         }
                         echo " class=\"$class\"";
-                        echo " width=\"$thumbSize\"";
+                        echo " width=\"$width\"";
                         if( $height )
                             echo " height=\"$height\"";
-                        echo " src=\"/thumbnail.php?test={$test['id']}&width=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                        echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
                         
                         if (isset($progress)) {
                             echo "<br>$progress%";

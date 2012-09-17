@@ -26,6 +26,23 @@ if (array_key_exists('text', $_GET)) {
 $bgcolor = html2rgb($bgcolor);
 $color = html2rgb($color);
 
+// go through each of the tests and figure out the width/height
+$columnWidth = 0;
+foreach( $tests as &$test ) {
+    if( $test['video']['width'] && $test['video']['height'] ) {
+        if( $test['video']['width'] > $test['video']['height'] ) {
+            $test['video']['thumbWidth'] = $thumbSize;
+            $test['video']['thumbHeight'] = (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+        } else {
+            $test['video']['thumbHeight'] = $thumbSize;
+            $test['video']['thumbWidth'] = (int)(((float)$thumbSize / (float)$test['video']['height']) * (float)$test['video']['width']);
+        }
+        if ($test['video']['thumbWidth'] > $columnWidth) {
+            $columnWidth = $test['video']['thumbWidth'];
+        }
+    }
+}
+
 // figure out the label width
 $labelWidth = 0;
 foreach( $tests as &$test )
@@ -63,17 +80,13 @@ for( $frame = 0; $frame <= $last; $frame++ )
         $count++;
     }
 }
-$width += ($thumbSize + ($colMargin * 2)) * $count;
+
+$width += ($columnWidth + ($colMargin * 2)) * $count;
 
 // figure out the height of each row
 $height = $fontHeight + ($rowMargin * 2);
-foreach( $tests as &$test )
-{
-    $rowheight = (int)($thumbSize * (4.0 / 3.0));
-    if( $test['video']['width'] && $test['video']['height'] )
-        $rowheight = (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
-    $test['thumbHeight'] = $rowheight;
-    $height += $rowheight + ($rowMargin * 2);
+foreach( $tests as &$test ) {
+    $height += $test['video']['thumbHeight'] + ($rowMargin * 2);
 }
 
 // create the blank image
@@ -100,9 +113,9 @@ for( $frame = 0; $frame <= $last; $frame++ )
         $left += $colMargin;
         $skipped = 0;
         $val = number_format((float)$frame / 10.0, 1) . 's';
-        $x = $left + (int)($thumbSize / 2.0) - (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
+        $x = $left + (int)($columnWidth / 2.0) - (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
         imagestring($im, $font, $x, $top, $val, $textColor);
-        $left += $thumbSize + $colMargin;
+        $left += $columnWidth + $colMargin;
     }
 }
 
@@ -113,9 +126,9 @@ foreach( $tests as &$test )
 {
     $top += $rowMargin;
     $x = $left + $labelWidth - (int)(strlen($test['label']) * $fontWidth);
-    $y = $top + (int)(($test['thumbHeight'] / 2.0) - ($fontHeight / 2.0));
+    $y = $top + (int)(($test['video']['thumbHeight'] / 2.0) - ($fontHeight / 2.0));
     imagestring($im, $font, $x, $y, $test['label'], $textColor);
-    $top += $test['thumbHeight'] + $rowMargin;
+    $top += $test['video']['thumbHeight'] + $rowMargin;
 }
 
 // fill in the actual thumbnails
@@ -182,25 +195,27 @@ foreach( $tests as &$test )
                     $tmp = imagecreatefromjpeg("./$imgPath");
                     if( $tmp )
                     {
-                        $thumb = imagecreatetruecolor($thumbSize, $test['thumbHeight']);
-                        fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $thumbSize, $test['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);
+                        $thumb = imagecreatetruecolor($test['video']['thumbWidth'], $test['video']['thumbHeight']);
+                        fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $test['video']['thumbWidth'], $test['video']['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);
                         imagedestroy($tmp);
                     }
                 }
                 
                 // draw the thumbnail
                 $left += $colMargin;
+                $width = imagesx($thumb);
+                $padding = ($columnWidth - $width) / 2;
                 if( isset($border) )
-                    imagefilledrectangle($im, $left - 2, $top - 2, $left + imagesx($thumb) + 2, $top + imagesy($thumb) + 2, $border);
-                imagecopy($im, $thumb, $left, $top, 0, 0, imagesx($thumb), imagesy($thumb));
-                $left += $thumbSize + $colMargin;
+                    imagefilledrectangle($im, $left - 2 + $padding, $top - 2, $left + imagesx($thumb) + 2 + $padding, $top + imagesy($thumb) + 2, $border);
+                imagecopy($im, $thumb, $left + $padding, $top, 0, 0, $width, imagesy($thumb));
+                $left += $columnWidth + $colMargin;
                 
                 $lastThumb = $path;
             }
         }
     }
     
-    $top += $test['thumbHeight'] + $rowMargin;
+    $top += $test['video']['thumbHeight'] + $rowMargin;
 }
 
 // spit the image out to the browser
