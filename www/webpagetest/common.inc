@@ -34,7 +34,7 @@ else
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 58);           // version of the sitewide css file
+define('VER_CSS', 59);           // version of the sitewide css file
 define('VER_JS', 20);            // version of the sitewide javascript file
 define('VER_JS_TEST', 20);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
@@ -67,6 +67,9 @@ if (!isset($settings) || !is_array($settings)) {
 }
 if (!array_key_exists('nogzip', $settings)) {
     $settings['nogzip'] = false;
+}
+if (!array_key_exists('nolinks', $settings)) {
+    $settings['nolinks'] = 0;
 }
 
 // override some settings from the URI

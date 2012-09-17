@@ -885,6 +885,8 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 * 
 */
 function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_options = '') {
+    global $settings;
+    
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
     echo '<map name="waterfall_map">';
@@ -962,6 +964,7 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_option
     echo "<script type=\"text/javascript\">\n";
     echo "var wptRequestCount=" . count($requests) . ";\n";
     echo "var wptRequestData=" . json_encode($requests) . ";\n";
+    echo "var wptNoLinks={$settings['nolinks']};\n";
     echo "</script>";
 }
 

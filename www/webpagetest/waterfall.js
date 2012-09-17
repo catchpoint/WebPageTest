@@ -71,8 +71,13 @@ function SelectRequest(request) {
     }
     if (wptRequestData[request - 1] !== undefined) {
         var r = wptRequestData[request - 1];
-        if (r['full_url'] !== undefined)
-            details += '<b>URL:</b> <a href="' + r['full_url'] + '">' + r['full_url'] + '</a><br>';
+        if (r['full_url'] !== undefined) {
+            if (wptNoLinks) {
+                details += '<b>URL:</b> ' + r['full_url'] + '<br>';
+            } else {
+                details += '<b>URL:</b> <a href="' + r['full_url'] + '">' + r['full_url'] + '</a><br>';
+            }
+        }
         if (r['initiator'] !== undefined && r['initiator'].length > 0) {
             details += '<b>Loaded By:</b> ' + r['initiator'];
             if (r['initiator_line'] !== undefined)

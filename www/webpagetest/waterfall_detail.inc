@@ -52,7 +52,11 @@ foreach($requests as $reqNum => $request)
 		elseif ( $request['load_start'] < $data['docTime'])
 			$highlight .= 'Doc';
 		
-		echo '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
+        if ($settings['nolinks']) {
+            echo '<td class="reqNum ' . $highlight . '">' . $requestNum . '</td>';
+        } else {
+            echo '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
+        }
 		
 		if( $request['host'] || $request['url'] )
 		{
@@ -61,7 +65,11 @@ foreach($requests as $reqNum => $request)
 				$protocol = 'https://';
 			$url = $protocol . $request['host'] . $request['url'];
             $displayurl = ShortenUrl($url);
-			echo '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url .  '">' . $displayurl . '</a></td>';
+            if ($settings['nolinks']) {
+                echo "<td class=\"reqUrl $highlight\"><a title=\"$url\" href=\"#request$requestNum\">$displayurl</a></td>";
+            } else {
+			    echo '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url .  '">' . $displayurl . '</a></td>';
+            }
 		}
 		else
 			echo '<td class="reqUrl ' . $highlight . '">-</td>';
@@ -205,7 +213,11 @@ foreach($requests as $reqNum => $request)
 							    if((bool)@$request['is_secure'])
 								    $protocol = 'https://';
 							    $url = $protocol . $request['host'] . $request['url'];
-							    echo '<b>URL: </b><a rel="nofollow" href="' . $url .  '">' . $url . "</a><br>\n";
+                                if ($settings['nolinks']) {
+                                    echo "<b>URL: </b>$url<br>\n";
+                                } else {
+							        echo "<b>URL: </b><a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                                }
 						    }
 						    echo '<b>Host: </b>' . $request['host'] . "<br>\n";
 						    echo '<b>IP: </b>' . $request['ip_addr'] . "<br>\n";

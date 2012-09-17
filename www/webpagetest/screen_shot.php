@@ -20,6 +20,7 @@ BuildVideoScript($testPath, $videoPath);
 
 $page_keywords = array('Screen Shot','Webpagetest','Website Speed Test');
 $page_description = "Website performance test screen shots$testLabel.";
+$userImages = true;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>

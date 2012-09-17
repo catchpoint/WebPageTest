@@ -204,7 +204,13 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         
         echo '<div id="header_data">';
             $shortUrl = str_replace('http://', '',  FitText($url, 120));
-            echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br><a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a></h2>";
+            echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
+            if ($settings['nolinks']) {
+                echo "<span class=\"medium colored\">$shortUrl</span>";
+            } else {
+                echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a>";
+            }
+            echo "</h2>";
             
             echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
             if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started'])) )

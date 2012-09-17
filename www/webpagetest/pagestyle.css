@@ -14,6 +14,8 @@ input.checkbox, input.radio {margin: 0 10px 0 0;}
 textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
 
 h2 .small {font-weight:normal; font-size: 12px;}
+h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
+.colored {color: #00A;}
 .page {width: 980px;margin: 0 auto;}
 .centered {text-align: center;}
 .left {text-align: left;}
