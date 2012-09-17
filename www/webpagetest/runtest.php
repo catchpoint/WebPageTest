@@ -262,9 +262,13 @@
                         $script = '';
                         $hosts = explode("\n", $req_spof);
                         foreach($hosts as $host) {
-                            $script .= "setDnsName\t" . trim($host) . "\tblackhole.webpagetest.org\r\n";
+                            $host = trim($host);
+                            if (strlen($host)) {
+                                $script .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
+                            }
                         }
                         if (strlen($script)) {
+                            $script .= "setTimeout\t240\r\n";
                             if (strlen($test['script'])) {
                                 $test['script'] = $script . $test['script'];
                             } else {
