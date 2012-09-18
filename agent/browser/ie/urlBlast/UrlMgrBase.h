@@ -36,6 +36,7 @@ public:
     browser.Empty();
     tcpdump = false;
     standards = 0;
+    noscript = 0;
 	  blockads = 0;
     aft = 0;
     aftMinChanges = 0;
@@ -100,6 +101,7 @@ public:
 	bool	ipfw;				    // do we need to do a custom bandwidth?
   DWORD  tcpdump;       // packet capture?
   DWORD standards;
+  DWORD noscript;
   DWORD  blockads;
   CString tcpdumpFile;
   DWORD aft;            // above-the-fold time

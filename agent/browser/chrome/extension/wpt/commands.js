@@ -340,5 +340,15 @@ wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
   }
 };
 
+/**
+ * Implement the noscript command.
+ */
+wpt.commands.CommandRunner.prototype.doNoScript = function() {
+  console.log("disabling javascript");
+  this.chromeApi_.contentSettings.javascript.set({
+    'primaryPattern': '<all_urls>',
+    'setting': 'block'
+  });
+};
 
 })());  // namespace

@@ -13902,6 +13902,16 @@ wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
   }
 };
 
+/**
+ * Implement the noscript command.
+ */
+wpt.commands.CommandRunner.prototype.doNoScript = function() {
+  console.log("disabling javascript");
+  this.chromeApi_.contentSettings.javascript.set({
+    'primaryPattern': '<all_urls>',
+    'setting': 'block'
+  });
+};
 
 })());  // namespace
 /******************************************************************************
@@ -14681,6 +14691,9 @@ function wptExecuteTask(task) {
         break;
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
+        break;
+      case 'noscript':
+        g_commandRunner.doNoScript();
         break;
       case 'overridehost':
         g_overrideHosts[task.target] = task.value;

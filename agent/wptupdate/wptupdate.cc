@@ -133,8 +133,9 @@ void TerminateProcs(void) {
   HWND wnd = ::GetWindow(desktop, GW_CHILD);
   TCHAR szTitle[1025];
   const TCHAR * szClose[] = { 
-    _T("wptdriver")
-    , _T("google chrome")
+    _T("WPT_Watchdog")
+    ,_T("wptdriver")
+    ,_T("google chrome")
   };
 
   // Send close messages to everything

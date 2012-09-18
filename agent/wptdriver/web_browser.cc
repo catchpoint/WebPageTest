@@ -403,22 +403,26 @@ bool WebBrowser::FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi) {
 -----------------------------------------------------------------------------*/
 void WebBrowser::ConfigureFirefoxPrefs() {
   if (_browser._profile_directory.GetLength() && 
-      _browser._template.GetLength() &&
-      _test._script.GetLength()) {
+      _browser._template.GetLength()) {
     CStringA user_prefs;
-    _test.BuildScript();
-    if (!_test._script_commands.IsEmpty()) {
-      POSITION pos = _test._script_commands.GetHeadPosition();
-      while (pos) {
-        ScriptCommand cmd = _test._script_commands.GetNext(pos);
-        if (!cmd.command.CompareNoCase(_T("firefoxPref")) && 
-            cmd.target.GetLength() && cmd.value.GetLength()) {
-          CStringA pref;
-          pref.Format("user_pref(\"%S\", %S);\r\n", 
-                      (LPCTSTR)cmd.target, (LPCTSTR)cmd.value);
-          user_prefs += pref;
+    if (_test._script.GetLength()) {
+      _test.BuildScript();
+      if (!_test._script_commands.IsEmpty()) {
+        POSITION pos = _test._script_commands.GetHeadPosition();
+        while (pos) {
+          ScriptCommand cmd = _test._script_commands.GetNext(pos);
+          if (!cmd.command.CompareNoCase(_T("firefoxPref")) && 
+              cmd.target.GetLength() && cmd.value.GetLength()) {
+            CStringA pref;
+            pref.Format("user_pref(\"%S\", %S);\r\n", 
+                        (LPCTSTR)cmd.target, (LPCTSTR)cmd.value);
+            user_prefs += pref;
+          }
         }
       }
+    }
+    if (_test._noscript) {
+      user_prefs += "user_pref(\"javascript.enabled\", false);\r\n";
     }
     if (!user_prefs.IsEmpty()) {
       CString prefs_file = _browser._profile_directory + _T("\\prefs.js");

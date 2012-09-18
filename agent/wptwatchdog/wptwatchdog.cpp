@@ -56,10 +56,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   }
 
   // only allow a single instance to run
-  HANDLE instance_mutex = CreateMutex(NULL, FALSE, window_class);
-  if (process_handle && lstrlen(command_line) &&
-      GetLastError() != ERROR_ALREADY_EXISTS && 
-      GetLastError() != ERROR_ACCESS_DENIED) {
+  if (process_handle && lstrlen(command_line)) {
     MSG msg;
 
     // create the hidden main window
@@ -86,18 +83,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         }
 
         must_exit = true;
-        if (instance_mutex) {
-          CloseHandle(instance_mutex);
-          instance_mutex = NULL;
-        }
         WaitForSingleObject(watch_thread, 30000);
         CloseHandle(watch_thread);
       }
     }
   }
-
-  if (instance_mutex)
-    CloseHandle(instance_mutex);
 
   return 0;
 }

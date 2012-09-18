@@ -252,6 +252,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								info.tcpdump = _ttol(value);
 							else if( !key.CompareNoCase(_T("standards")) )
 								info.standards = _ttol(value);
+							else if( !key.CompareNoCase(_T("noscript")) )
+								info.noscript = _ttol(value);
 							else if( !key.CompareNoCase(_T("blockads")) )
 								info.blockads = _ttol(value);
 							else if( !key.CompareNoCase(_T("connections")) )

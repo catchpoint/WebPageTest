@@ -434,6 +434,9 @@ function wptExecuteTask(task) {
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;
+      case 'noscript':
+        g_commandRunner.doNoScript();
+        break;
       case 'overridehost':
         g_overrideHosts[task.target] = task.value;
         break;

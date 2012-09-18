@@ -1195,6 +1195,17 @@ bool CURLBlaster::ConfigureIE(void)
 		  RegCloseKey(hKey);
 	  }
 
+    // configure javascript
+	  if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\3"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
+	  {
+		  DWORD val = 0;
+      if (info.noscript)
+        val = 3;
+		  RegSetValueEx(hKey, _T("1400"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+		  RegCloseKey(hKey);
+	  }
+
+
     // configure Chrome Frame to be the default renderer (if it is installed)
 		if( RegCreateKeyEx((HKEY)hProfile, _T("Software\\Google\\ChromeFrame"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
 		{

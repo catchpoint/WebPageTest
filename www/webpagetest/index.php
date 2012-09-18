@@ -268,6 +268,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="noscript" id="noscript" class="checkbox" style="float: left;width: auto;">
+                                        <label for="noscript" class="auto_width">
+                                            Disable Javascript
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="ignoreSSL" id="ignore_ssl_cerificate_errors" class="checkbox" style="float: left;width: auto;">
                                         <label for="ignore_ssl_cerificate_errors" class="auto_width">
                                             Ignore SSL Certificate Errors<br>
@@ -299,12 +305,16 @@ $loc = ParseLocations($locations);
                                             Capture Network Log (Chrome Only)
                                         </label>
                                     </li>
+                                    <?php
+                                    /*
                                     <li>
                                         <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
                                         <label for="spdy3" class="auto_width">
                                             Force Spdy version 3 (Chrome Only)
                                         </label>
                                     </li>
+                                    */
+                                    ?>
                                     <li>
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
@@ -441,8 +451,6 @@ $loc = ParseLocations($locations);
                                 ?>
                                 <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
                                 <label for="videoCheck" class="auto_width">Capture Video</label>
-                                <?php
-                                /*
                                 <br>
                                 <br>
                                 <p>
@@ -471,8 +479,6 @@ $loc = ParseLocations($locations);
                                         <input id="aftmc" type="text" name="aftmc" class="text" style="width: 3em;" value="<?php echo (int)$aftMinChanges; ?>"> Pixels
                                     </p>
                                 </div>
-                                */
-                                ?>
                             </div>
                             <?php } ?>
 

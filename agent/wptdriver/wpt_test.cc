@@ -89,6 +89,7 @@ void WptTest::Reset(void) {
   _video = false;
   _aft = false;
   _spdy3 = false;
+  _noscript = false;
   _aft_early_cutoff = AFT_EARLY_CUTOFF_SECS;
   _aft_min_changes = AFT_MIN_CHANGES_THRESHOLD;
   _test_type.Empty();
@@ -173,6 +174,8 @@ bool WptTest::Load(CString& test) {
           _trace = true;
         else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim()))
           _spdy3 = true;
+        else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim()))
+          _noscript = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
         else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {
@@ -436,6 +439,13 @@ void WptTest::BuildScript() {
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
+  if (_noscript) {
+    ScriptCommand command;
+    command.command = _T("noscript");
     command.record = false;
     _script_commands.AddHead(command);
   }
