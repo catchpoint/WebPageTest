@@ -81,6 +81,10 @@ else
         }
         $runs = max(array_keys($pageData));
         echo "<runs>$runs</runs>\n";
+        echo "<successfulFVRuns>" . CountSuccessfulTests($pageData, 0) . "</successfulFVRuns>\n";
+        if( isset($rv) ) {
+            echo "<successfulRVRuns>" . CountSuccessfulTests($pageData, 1) . "</successfulRVRuns>\n";
+        }
         echo "<average>\n";
         echo "<firstView>\n";
         foreach( $fv as $key => $val )
@@ -110,10 +114,6 @@ else
                 if( strlen($score) )
                     echo "<PageSpeedScore>$score</PageSpeedScore>\n";
             }
-            $progress = GetVisualProgress($testPath, $fvMedian, 0);
-            if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-                echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
-            }
             if( FRIENDLY_URLS )
                 echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             else
@@ -137,10 +137,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                    }
-                    $progress = GetVisualProgress($testPath, $rvMedian, 1);
-                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     if( FRIENDLY_URLS )
                         echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
@@ -175,10 +171,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                    }
-                    $progress = GetVisualProgress($testPath, $i, 0);
-                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     echo "</results>\n";
 
@@ -271,10 +263,6 @@ else
                         $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
                         if( strlen($score) )
                             echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                    }
-                    $progress = GetVisualProgress($testPath, $i, 1);
-                    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-                        echo "<SpeedIndex>{$progress['FLI']}</SpeedIndex>\n";
                     }
                     echo "</results>\n";
 
