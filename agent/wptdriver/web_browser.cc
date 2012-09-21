@@ -139,8 +139,10 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       }
       if (exe.Find(_T("iexplore.exe")) >= 0) {
         hook = false;
+        lstrcat ( cmdLine, _T(" about:blank"));
+      } else {
+        lstrcat ( cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
-      lstrcat ( cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
 
       _status.Set(_T("Launching: %s\n"), cmdLine);
 
