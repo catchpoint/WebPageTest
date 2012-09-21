@@ -54,6 +54,7 @@ private:
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);
   void FlushDNS(void);
+  void FlushCertCaches(void);
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
   void KillBrowsers();

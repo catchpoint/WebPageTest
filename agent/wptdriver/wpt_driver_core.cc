@@ -217,6 +217,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     if (test._clear_cache) {
       browser.ClearUserData();
       FlushDNS();
+      FlushCertCaches();
     }
     if (test._tcpdump)
       _winpcap.StartCapture( test._file_base + _T(".cap") );
@@ -327,6 +328,17 @@ void WptDriverCore::FlushDNS(void) {
 
   if (!flushed)
     LaunchProcess(_T("ipconfig.exe /flushdns"));
+}
+
+/*-----------------------------------------------------------------------------
+  Empty the OS CRL and OCSP caches
+-----------------------------------------------------------------------------*/
+void WptDriverCore::FlushCertCaches(void) {
+  _status.Set(_T("Flushing Certificate caches..."));
+
+  LaunchProcess(_T("certutil.exe -urlcache * delete"));
+  LaunchProcess(
+    _T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
 }
 
 /*-----------------------------------------------------------------------------
