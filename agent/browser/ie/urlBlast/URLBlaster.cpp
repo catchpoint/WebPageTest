@@ -511,6 +511,10 @@ void CURLBlaster::ClearCache(void)
   // delete the local storage quotas from the registry
   DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"), false);
   DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"), false);
+
+  // flush the certificate revocation caches
+  Launch(_T("certutil.exe -urlcache * delete"));
+  Launch(_T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
 	
 	cached = false;
 }
