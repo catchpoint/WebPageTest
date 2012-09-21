@@ -199,6 +199,7 @@ protected:
   bool      ProcessCommand(ScriptCommand& command, bool &consumed);
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
+  void      ParseBlockCommand(CString block_list, bool add_head);
 
   // DNS overrides
   CAtlList<CDNSEntry>	_dns_override;

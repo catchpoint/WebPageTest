@@ -363,39 +363,19 @@ void WptTest::BuildScript() {
             script_command.record = NavigationCommand(command);
             script_command.command = command;
             script_command.target = line.Tokenize(_T("\t"),command_pos).Trim();
-            if (!_no_run && 
-                command_pos > 0 && 
+            if (!_no_run && command_pos > 0 && 
                 script_command.target.GetLength()) {
-              // If command is "block" then parse all the space separated patterns
-              // in target into separate "block" commands.
               if (script_command.command == _T("block")) {
-                CString patterns = script_command.target;
-                int pattern_pos = 0;
-                while (pattern_pos < patterns.GetLength()) {
-                  CString pattern = patterns.Tokenize(_T(" "), pattern_pos).Trim();
-                  // For each pattern, add a new script command.
-                  ScriptCommand block_script_command;
-                  block_script_command.command = script_command.command;
-                  block_script_command.target = pattern;
-                  // Block command don't need pre-processing and so add it directly.
-                  _script_commands.AddTail(block_script_command);
-                  WptTrace(loglevel::kFrequentEvent,_T("Block Script command: %s,%s,%s\n"), 
-                            (LPCTSTR)block_script_command.command,
-                            (LPCTSTR)block_script_command.target,
-                            (LPCTSTR)block_script_command.value);
-                }
+                ParseBlockCommand(script_command.target, false);
               }
               else {
-                script_command.value =line.Tokenize(_T("\t"),command_pos).Trim();
+                script_command.value =
+                                  line.Tokenize(_T("\t"),command_pos).Trim();
               }
             }
 
-            // Don't process the block commands since they are processed already.
+            // Don't process the block commands again
             if (script_command.command != _T("block")) {
-              WptTrace(loglevel::kFrequentEvent,_T("Script command: %s,%s,%s\n"), 
-                        (LPCTSTR)script_command.command,
-                        (LPCTSTR)script_command.target,
-                        (LPCTSTR)script_command.value);
               if (script_command.record)
                 has_measurement = true;
               
@@ -429,11 +409,7 @@ void WptTest::BuildScript() {
   }
 
   if (_block.GetLength() ) {
-    ScriptCommand command;
-    command.command = _T("block");
-    command.target = _block;
-    command.record = false;
-    _script_commands.AddHead(command);
+    ParseBlockCommand(_block, true);
   }
 
   if (_timeline) {
@@ -805,4 +781,25 @@ bool WptTest::ConditionMatches(ScriptCommand& command) {
     }
   }
   return match;
+}
+
+/*-----------------------------------------------------------------------------
+  Parse the list of block strings into individual commands
+-----------------------------------------------------------------------------*/
+void WptTest::ParseBlockCommand(CString block_list, bool add_head) {
+  int pattern_pos = 0;
+  while (pattern_pos < block_list.GetLength()) {
+    CString pattern = block_list.Tokenize(_T(" "), pattern_pos).Trim();
+    if (pattern.GetLength()) {
+      // For each pattern, add a new script command.
+      ScriptCommand block_script_command;
+      block_script_command.command = _T("block");
+      block_script_command.target = pattern;
+      if (add_head) {
+        _script_commands.AddHead(block_script_command);
+      } else {
+        _script_commands.AddTail(block_script_command);
+      }
+    }
+  }
 }
