@@ -38,14 +38,35 @@ class DataChunk;
 class WsaBuffTracker {
 public:
   WsaBuffTracker():_buffers(NULL),_buffer_count(0){}
-  WsaBuffTracker(LPWSABUF buffers, DWORD buffer_count):
-      _buffers(buffers),_buffer_count(buffer_count){}
-  WsaBuffTracker(const WsaBuffTracker& src){*this = src;}
-  ~WsaBuffTracker(){}
+  WsaBuffTracker(const WsaBuffTracker& src):_buffers(NULL),_buffer_count(0){
+    *this = src;
+  }
+  WsaBuffTracker(LPWSABUF buffers, DWORD buffer_count):_buffers(NULL),
+    _buffer_count(0){
+    Copy(buffers, buffer_count);
+  }
+  ~WsaBuffTracker(){Reset();}
   const WsaBuffTracker& operator =(const WsaBuffTracker& src) {
-    _buffers = src._buffers;
-    _buffer_count = src._buffer_count;
+    Copy(src._buffers, src._buffer_count);
     return src;
+  }
+  void Copy(LPWSABUF buffers, DWORD buffer_count) {
+    Reset();
+    if (buffer_count && buffers) {
+      _buffer_count = buffer_count;
+      _buffers = (LPWSABUF)malloc(sizeof(WSABUF) * _buffer_count);
+      for (DWORD i = 0; i < buffer_count; i++) {
+        _buffers[i].len = buffers[i].len;
+        _buffers[i].buf = buffers[i].buf;
+      }
+    }
+  }
+  void Reset(){
+    if (_buffers) {
+      free(_buffers);
+    }
+    _buffers = NULL;
+    _buffer_count = 0;
   }
   LPWSABUF _buffers;
   DWORD    _buffer_count;
