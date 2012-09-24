@@ -547,6 +547,12 @@ CStringA Request::GetResponseHeader(CStringA field_name) {
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool Request::HasResponseHeaders() {
+  return _response_data.HasHeaders();
+}
+
+/*-----------------------------------------------------------------------------
   Check whether the request is a static resource.
 -----------------------------------------------------------------------------*/
 bool Request::IsStatic() {
@@ -627,7 +633,8 @@ bool Request::GetExpiresRemaining(bool& expiration_set,
   CStringA cache = GetResponseHeader("cache-control").MakeLower();
   CStringA pragma = GetResponseHeader("pragma").MakeLower();
 
-  if (cache.Find("no-store") != -1 || 
+  if (!HasResponseHeaders() ||
+      cache.Find("no-store") != -1 || 
       cache.Find("no-cache") != -1 ||
       pragma.Find("no-cache") != -1) {
     is_cacheable = false;

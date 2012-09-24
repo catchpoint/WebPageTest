@@ -119,6 +119,7 @@ class HttpData {
   HttpData(): _data(NULL), _data_size(0) {}
   ~HttpData() { delete _data; }
 
+  bool HasHeaders() { CopyData(); return _headers.GetLength() != 0; }
   CStringA GetHeaders() { CopyData(); return _headers; }
   DWORD GetDataSize() { return _data_size; }
 
@@ -226,6 +227,7 @@ public:
   bool Process();
   CStringA GetRequestHeader(CStringA header);
   CStringA GetResponseHeader(CStringA header);
+  bool HasResponseHeaders();
   bool IsStatic();
   bool IsText();
   int GetResult();
