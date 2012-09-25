@@ -230,6 +230,7 @@ public:
   bool HasResponseHeaders();
   bool IsStatic();
   bool IsText();
+  bool IsIcon();
   int GetResult();
   CStringA GetHost();
   CStringA GetMime();

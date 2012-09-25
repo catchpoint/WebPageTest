@@ -174,7 +174,8 @@ void OptimizationChecks::CheckGzip()
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
     if (request && request->_processed &&
-        request->GetResult() == 200 && request->IsText()) {
+        request->GetResult() == 200 && 
+        (request->IsText() || request->IsIcon())) {
       CStringA encoding = request->GetResponseHeader("content-encoding");
       encoding.MakeLower();
       request->_scores._gzip_score = 0;

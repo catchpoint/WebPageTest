@@ -1853,13 +1853,20 @@ void CPagetestReporting::CheckGzip()
 	while( pos )
 	{
 		CTrackedEvent * e = events.GetNext(pos);
-		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
+		CWinInetRequest * w = (CWinInetRequest *)e;
+		if( e && 
+        e->type == CTrackedEvent::etWinInetRequest && 
+        (!e->ignore || !w->object.Right(11).CompareNoCase(_T("favicon.ico"))) )
 		{
-			CWinInetRequest * w = (CWinInetRequest *)e;
 			CString mime = w->response.contentType;
 			mime.MakeLower();
 			if( w->result == 200
-				&& (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) 
+				&& (mime.Find(_T("text/")) >= 0 || 
+            mime.Find(_T("javascript")) >= 0 || 
+            mime.Find(_T("/ico")) >= 0 || 
+            mime.Find(_T(".icon")) >= 0 || 
+            mime.Find(_T("/x-icon")) >= 0 || 
+            mime.Find(_T("json")) >= 0) 
 				&& mime.Find(_T("xml")) == -1 
 				&& w->linkedRequest
 				&& w->fromNet

@@ -585,7 +585,6 @@ int Request::GetResult() {
 }
 
 /*-----------------------------------------------------------------------------
-  Check whether the request is gzippable.
 -----------------------------------------------------------------------------*/
 bool Request::IsText() {
   if (!_processed)
@@ -593,8 +592,26 @@ bool Request::IsText() {
 
   int temp_pos = 0;
   CStringA mime = GetMime().MakeLower();
-  if( mime.Find("text/") >= 0 || mime.Find("javascript") >= 0
-    || mime.Find("json") >= 0 || mime.Find("xml") >= 0 ) {
+  if( mime.Find("text/") >= 0 || 
+      mime.Find("javascript") >= 0 || 
+      mime.Find("json") >= 0 || 
+      mime.Find("xml") >= 0 ) {
+    return true;
+  }
+  return false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool Request::IsIcon() {
+  if (!_processed)
+    return false;
+
+  int temp_pos = 0;
+  CStringA mime = GetMime().MakeLower();
+  if( mime.Find("/ico") >= 0 || 
+      mime.Find("/x-icon") >= 0 ||
+      mime.Find(".icon") >= 0) {
     return true;
   }
   return false;
