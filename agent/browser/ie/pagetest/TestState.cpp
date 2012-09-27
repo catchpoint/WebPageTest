@@ -396,37 +396,117 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 		// clear the cache if necessary (extra precaution)
 		if( ok && !cached && !cacheCleared )
 		{
-			GROUPID id;
-			HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL, 0,0, &id, 0);
-			if( hGroup )
-			{
-				do
-				{
-					DeleteUrlCacheGroup(id, CACHEGROUP_FLAG_FLUSHURL_ONDELETE, 0);
-				}while(FindNextUrlCacheGroup(hGroup, &id,0));
+      HANDLE hEntry;
+	    DWORD len, entry_size = 0;
+      GROUPID id;
+      INTERNET_CACHE_ENTRY_INFO * info = NULL;
+      HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL, 0, 0, &id, 0);
+      if (hGroup) {
+	      do {
+          len = entry_size;
+          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len, NULL, NULL, NULL);
+          if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+            entry_size = len;
+            info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+            if (info) {
+              hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len, NULL, NULL, NULL);
+            }
+          }
+          if (hEntry && info) {
+            bool ok = true;
+            do {
+              DeleteUrlCacheEntry(info->lpszSourceUrlName);
+              len = entry_size;
+              if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+                  entry_size = len;
+                  info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+                  if (info) {
+                    if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+                      ok = false;
+                    }
+                  }
+                } else {
+                  ok = false;
+                }
+              }
+            } while (ok);
+          }
+          if (hEntry) {
+            FindCloseUrlCache(hEntry);
+          }
+          DeleteUrlCacheGroup(id, CACHEGROUP_FLAG_FLUSHURL_ONDELETE, 0);
+	      } while(FindNextUrlCacheGroup(hGroup, &id,0));
+	      FindCloseUrlCache(hGroup);
+      }
 
-				FindCloseUrlCache(hGroup);
-			}
+      len = entry_size;
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, NULL, NULL, NULL);
+      if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+        entry_size = len;
+        info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+        if (info) {
+          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, NULL, NULL, NULL);
+        }
+      }
+      if (hEntry && info) {
+        bool ok = true;
+        do {
+          DeleteUrlCacheEntry(info->lpszSourceUrlName);
+          len = entry_size;
+          if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+              entry_size = len;
+              info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+              if (info) {
+                if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+                  ok = false;
+                }
+              }
+            } else {
+              ok = false;
+            }
+          }
+        } while (ok);
+      }
+      if (hEntry) {
+        FindCloseUrlCache(hEntry);
+      }
 
-			// just use a huge buffer big enough to hold more than it will ever need to avoid constantly re-allocating it
-			DWORD dwSize = 102400;
-			INTERNET_CACHE_ENTRY_INFO * info = (INTERNET_CACHE_ENTRY_INFO *)malloc(dwSize);
-			if( info )
-			{
-				DWORD len = dwSize / sizeof(TCHAR);
-				HANDLE hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
-				if( hEntry )
-				{
-					do
-					{
-						DeleteUrlCacheEntry(info->lpszSourceUrlName);
-						len = dwSize / sizeof(TCHAR);
-					}
-					while(FindNextUrlCacheEntry(hEntry, info, &len));
-				}
-
-				free(info);
-			}
+      len = entry_size;
+      hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+      if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+        entry_size = len;
+        info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+        if (info) {
+          hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+        }
+      }
+      if (hEntry && info) {
+        bool ok = true;
+        do {
+          DeleteUrlCacheEntry(info->lpszSourceUrlName);
+          len = entry_size;
+          if (!FindNextUrlCacheEntry(hEntry, info, &len)) {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+              entry_size = len;
+              info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+              if (info) {
+                if (!FindNextUrlCacheEntry(hEntry, info, &len)) {
+                  ok = false;
+                }
+              }
+            } else {
+              ok = false;
+            }
+          }
+        } while (ok);
+      }
+      if (hEntry) {
+        FindCloseUrlCache(hEntry);
+      }
+      if (info)
+	      free(info);
 
 			cacheCleared = true;
 		}
