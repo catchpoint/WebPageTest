@@ -73,6 +73,7 @@ function LoadLocations()
 {
     $locations = array();
     $loc = parse_ini_file('./settings/locations.ini', true);
+    FilterLocations($loc);
     BuildLocations($loc);
     
     if( isset($loc['locations']['default']) )
@@ -96,17 +97,20 @@ function LoadLocations()
             $j = 1;
             while( isset($group[$j]) )
             {
-                $locations[$group[$j]] = array( 'Label' => $label, 
-                                                'location' => $loc[$group[$j]]['location'],
-                                                'Browser' => $loc[$group[$j]]['browser'],
-                                                'localDir' => $loc[$group[$j]]['localDir'],
-                                                'relayServer' => $loc[$group[$j]]['relayServer'],
-                                                'relayLocation' => $loc[$group[$j]]['relayLocation']
-                                                );
+                if (array_key_exists($group[$j], $loc)) {
+                    if (!$loc[$group[$j]]['hidden'] || $_REQUEST['hidden']) {
+                        $locations[$group[$j]] = array( 'Label' => $label, 
+                                                        'location' => $loc[$group[$j]]['location'],
+                                                        'Browser' => $loc[$group[$j]]['browser'],
+                                                        'localDir' => $loc[$group[$j]]['localDir'],
+                                                        'relayServer' => $loc[$group[$j]]['relayServer'],
+                                                        'relayLocation' => $loc[$group[$j]]['relayLocation']
+                                                        );
 
-                if( $default == $loc['locations'][$i] && $def == $group[$j] )
-                    $locations[$group[$j]]['default'] = true;
-                
+                        if( $default == $loc['locations'][$i] && $def == $group[$j] )
+                            $locations[$group[$j]]['default'] = true;
+                    }
+                }                
                 $j++;
             }
         }
