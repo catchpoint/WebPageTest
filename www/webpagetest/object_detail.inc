@@ -215,7 +215,13 @@ function AddLocationData(&$requests) {
 
     if (isset($geo_ip)) {
         foreach($requests as &$request) {
-            if ($request['ip_addr']) {
+            if (array_key_exists('cdn_provider', $request) && 
+                strlen($request['cdn_provider'])) {
+                $request['location'] = $request['cdn_provider'];
+            } elseif (array_key_exists('cdn_score', $request) && 
+                      $request['cdn_score'] == 100) {
+                $request['location'] = 'CDN';
+            } elseif ($request['ip_addr']) {
                 try {
                     $location = $geo_ip->lookupLocation($request['ip_addr']);
                     if ($location) {
