@@ -161,7 +161,11 @@ function SelectRequest(request) {
             }
         } else if (r['contentType'] !== undefined && r['contentType'].indexOf('image') >= 0) {
             $('#response-body-button').show();
-            $("#response-body").html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
+            if (wptNoLinks) {
+                $("#response-body").html('<img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '">');
+            } else {
+                $("#response-body").html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
+            }
         }
     }
     $("#request-details").html(details);
