@@ -348,7 +348,7 @@ function DisplayTests(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    echo '<th>Median Speed Index<br>(First View)</th>';
+    echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
     echo    '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -390,7 +390,7 @@ function DisplayTestsWithVariations(&$tests)
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
     if( $showSpeedIndex ) {
-        echo '<th>Median Speed Index<br>(First View)</th>';
+        echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
     }
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
@@ -511,6 +511,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $videoDirty;
     global $admin;
     global $median_metric;
+    global $showSpeedIndex;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -867,10 +868,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 DisplayMetric('Page Load Time', $fvLoadTimes, $count);
                 if( $includeRender )
                     DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-                if( $admin || strpos($_COOKIE['google_email'], '@google.com') !== false ) {
-                    DisplayMetric('Speed Index (lower is better)', $fvFLI, $count, false, false);
-                }
-                if( !$fvonly )
+                DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
+                if( $showSpeedIndex && !$fvonly )
                 {
                     DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
                     if( $includeRender )

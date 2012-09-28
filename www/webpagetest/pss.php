@@ -44,6 +44,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="mv" value="1">
             <input type="hidden" name="web10" value="1">
+            <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="sensitive" value="1">
             <?php
             if( strlen($_GET['origin']) )
@@ -204,6 +205,13 @@ $page_description = "Comparison Test$testLabel.";
                     </ul>
                     <ul class="input_fields">
                         <li>
+                            <label for="backend">Optimization Settings</label>
+                            <select name="backend" id="backend">
+                                <option value="prod" selected>Default (Safe)</option>
+                                <option value="aggressive">Aggressive</option>
+                            </select>
+                        </li>
+                        <li>
                             <label for="wait">Expected Wait</label>
                             <span id="wait"></span>
                         </li>
@@ -216,19 +224,10 @@ $page_description = "Comparison Test$testLabel.";
                             <input type="checkbox" name="timeline" id="timeline" class="checkbox">
                         </li>
                         <li>
-                            <label for="backend">Back-End</label>
-                            <select name="backend" id="backend">
-                                <option value="prod" selected>Production - default rewriters</option>
-                                <option value="staging">Staging - aggressive rewriters</option>
-                            </select>
-                        </li>
-                        <li>
                             <label for="addheaders">Custom HTTP Headers<br><br><small>One header per line in the format Header: Value.  i.e.<br><br>ModPagespeedDomainShardCount: 2<br>X-MyOtherHeader: yes</small></label>
                             <textarea name="addheaders" id="addheaders" cols="0" rows="0"></textarea>
                         </li>
                         <?php
-                        } else {
-                            echo "<input type=\"hidden\" name=\"backend\" value=\"prod\">\n";
                         }
                         ?>
                     </ul>
@@ -338,7 +337,12 @@ $page_description = "Comparison Test$testLabel.";
                 if (!array_key_exists('origin', $_GET) || !strlen($_GET['origin'])) {
                 ?>
                 var backend = form.backend.value;
-                if (backend == 'staging') {
+                if (backend == 'aggressive') {
+                    script = form.script.value;
+                    script = "addHeader\tModPagespeedFilters:combine_css,rewrite_css,inline_import_to_link,extend_cache,combine_javascript,rewrite_javascript,resize_images,move_css_to_head,rewrite_style_attributes_with_url,convert_png_to_jpeg,convert_jpeg_to_webp,recompress_images,convert_jpeg_to_progressive,convert_meta_tags,inline_css,inline_images,inline_javascript,lazyload_images,flatten_css_imports,inline_preview_images,defer_javascript,defer_iframe\t%HOST_REGEX%\n" + script;
+                    form.script.value = script;
+                    form.web10.value = 0;
+                } else if (backend == 'staging') {
                     script = form.script.value;
                     script = script.replace(/psa\.pssdemos\.com/g, 'demo.pssplayground.com');
                     script = script.replace(/pss_blocking_rewrite/g, 'pss_staging');
