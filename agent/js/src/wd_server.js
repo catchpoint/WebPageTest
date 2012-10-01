@@ -134,10 +134,10 @@ var WebDriverServer = {
     this.serverUrl_ = 'http://localhost:4444/wd/hub';
 
     // Create an executor to simplify querying the server to see if it is ready.
-    var client = new webdriver.node.HttpClient(this.serverUrl_);
+    var client = new webdriver.http.HttpClient(this.serverUrl_);
     var executor = new webdriver.http.Executor(client);
-    var command =
-        new webdriver.Command(webdriver.CommandName.GET_SERVER_STATUS);
+    var command = new webdriver.command.Command(
+        webdriver.command.CommandName.GET_SERVER_STATUS);
     var wdApp = webdriver.promise.Application.getInstance();
     wdApp.scheduleWait('Waiting for WD server to be ready', function() {
       var isReady = new webdriver.promise.Deferred();

@@ -2,17 +2,17 @@
 
 export WPT_SERVER=http://localhost:8888
 export LOCATION=Test
-export SRC_PATH="src"
 export WPT_VERBOSE=false
 export WPT_DEBUG=false
 export WPT_MAX_LOGLEVEL=5
+src_dir="src"
 
 while getopts mvds:l:g:c o
 do  case "$o" in
   s)  export WPT_SERVER="$OPTARG";;
   l)  export LOCATION="$OPTARG";;
   g)  export tests="$OPTARG";;
-  c)  export SRC_PATH="src-cov";;
+  c)  export src_dir="src-cov";;
   m)  export WPT_MAX_LOGLEVEL="$OPTARG";;
   v)  export WPT_VERBOSE=true;;
   d)  export WPT_DEBUG=true;;
@@ -35,27 +35,25 @@ do  case "$o" in
 done
 
 case "$0" in
-  /*) project_root="$0" ;;
-  *)  project_root="$PWD/$0" ;;
+  /*) wpt_root="$0" ;;
+  *)  wpt_root="$PWD/$0" ;;
 esac
 while true; do
-  if [[ -d "$project_root/webpagetest/agent/js" ]]; then
+  if [[ -d "$wpt_root/agent/js/src" ]]; then
     break
   fi
-  project_root="${project_root%/*}"
-  if [[ -z "$project_root" ]]; then
+  wpt_root="${wpt_root%/*}"
+  if [[ -z "$wpt_root" ]]; then
     echo "Cannot determine project root from $0" 1>&2
     exit 2
   fi
 done
-export PROJECT_ROOT="${project_root}"
 
-export SELENIUM_BUILD="${PROJECT_ROOT}/Selenium/selenium-read-only/build"
-agent="${PROJECT_ROOT}/webpagetest/agent/js"
-export NODE_PATH="${agent}:${agent}/${SRC_PATH}:${SELENIUM_BUILD}/javascript/webdriver"
+agent="${wpt_root}/agent/js"
+export NODE_PATH="${agent}:${agent}/${src_dir}:${wpt_root}/lib/webdriver/javascript/node"
 
 if [ -z "${tests}" ]; then
-  if [ "$SRC_PATH" = "src-cov" ]; then
+  if [ "$src_dir" = "src-cov" ]; then
     rm -R src-cov
     jscoverage src src-cov
     mocha --reporter html-cov > cov.html
@@ -71,7 +69,7 @@ else
     "") unset tests;;
   esac
 
-  if [ "$SRC_PATH" = "src-cov" ]; then
+  if [ "$src_dir" = "src-cov" ]; then
     rm -R src-cov
     jscoverage src src-cov
     mocha --grep $tests --reporter html-cov > cov.html

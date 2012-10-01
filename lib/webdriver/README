@@ -1,0 +1,21 @@
+java/ -- WebDriver server jar.
+
+cd <selenium-svn>
+./go selenium-server-standalone
+cp -p build/java/server/src/org/openqa/grid/selenium/selenium-standalone.jar <webpagetest-svn>/lib/webdriver/java/selenium-standalone-<rev>.jar
+Then adjust the symlink "selenium-standalone.jar".
+
+
+javascript/ -- WebDriverJS.
+
+cd <selenium-svn>
+./go //javascript/node:webdriver
+cp -rp build/javascript/node <webpagetest-svn>/lib/webdriver/javascript/node-<rev>
+Then adjust the symlink "node".
+
+
+chromedriver/ -- The chromedriver binary.
+
+Download from https://code.google.com/p/chromedriver/downloads/list
+Unzip, copy to chromedriver/ renamed with "-<version>.
+Adjust the symlink "chromedriver".

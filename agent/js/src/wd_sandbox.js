@@ -42,7 +42,7 @@ exports.createSandboxedWebDriverModule = function() {
   'use strict';
   var result = new webdriver.promise.Deferred();
 
-  if (webdriver.process.isNative()) {
+  if (false) {  // TODO: webdriver.node.toSource no longer available
     // Running in Node.js -- reload the module in a more restricted context.
     webdriver.node.toSource(function(e, wdModuleSource) {
       if (e) {

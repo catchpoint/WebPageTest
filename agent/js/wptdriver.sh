@@ -29,28 +29,29 @@ shift $OPTIND-1
 
 # Determine parent directory of the webpagetest project
 case "$0" in
-  /*) project_root="$0" ;;
-  *)  project_root="$PWD/$0" ;;
+  /*) wpt_root="$0" ;;
+  *)  wpt_root="$PWD/$0" ;;
 esac
 while true; do
-  if [[ -d "$project_root/webpagetest/agent/js" ]]; then
+  if [[ -d "$wpt_root/agent/js/src" ]]; then
     break
   fi
-  project_root="${project_root%/*}"
-  if [[ -z "$project_root" ]]; then
+  wpt_root="${wpt_root%/*}"
+  if [[ -z "$wpt_root" ]]; then
     echo "Cannot determine project root from $0" 1>&2
     exit 2
   fi
 done
 
-agent="$project_root/webpagetest/agent/js"
-devtools2har_jar="$project_root/webpagetest/lib/dt2har/target/dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar"
-selenium_build="$project_root/Selenium/selenium-read-only/build"
+agent="$wpt_root/agent/js"
+devtools2har_jar="$wpt_root/lib/dt2har/target/dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar"
+selenium_jar="$wpt_root/lib/webdriver/java/selenium-standalone.jar"
+chromedriver="$wpt_root/lib/webdriver/chromedriver/chromedriver"
 
-export NODE_PATH="${agent}:${agent}/src:${selenium_build}/javascript/webdriver"
+export NODE_PATH="${agent}:${agent}/src:${wpt_root}/lib/webdriver/javascript/node"
 echo "NODE_PATH=$NODE_PATH"
 
-declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} --chromedriver "$selenium_build/chromedriver" --selenium_jar "$selenium_build/java/server/src/org/openqa/grid/selenium/selenium-standalone.jar" --devtools2har_jar="$devtools2har_jar")
+declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} --chromedriver "$chromedriver" --selenium_jar "$selenium_jar" --devtools2har_jar="$devtools2har_jar")
 
 echo "${cmd[@]}"
 "${cmd[@]}"
