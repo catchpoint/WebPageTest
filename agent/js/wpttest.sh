@@ -49,8 +49,12 @@ while true; do
   fi
 done
 
+# Find the latest version of WDJS
+declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)
+wdjs_dir=${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
+
 agent="${wpt_root}/agent/js"
-export NODE_PATH="${agent}:${agent}/${src_dir}:${wpt_root}/lib/webdriver/javascript/node"
+export NODE_PATH="${agent}:${agent}/${src_dir}:${wdjs_dir}"
 
 if [ -z "${tests}" ]; then
   if [ "$src_dir" = "src-cov" ]; then

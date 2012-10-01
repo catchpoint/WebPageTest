@@ -1,6 +1,6 @@
 @echo off
 
-set PROJECT_ROOT=%~dp0
+set WPT_ROOT=%~dp0
 set DP0=%~dp0
 
 set WPT_SERVER=http://localhost:8888
@@ -58,27 +58,30 @@ if NOT "%1"=="" (
     goto :EOF
 )
 
-:FINDPROJECTROOT
-if not exist webpagetest\agent\js goto NOTFOUNDPROJECTROOT
-goto FOUNDPROJECTROOT
+:FINDWPTROOT
+if not exist agent\js\src goto NOTFOUNDWPTROOT
+goto FOUNDWPTROOT
 
-:NOTFOUNDPROJECTROOT
+:NOTFOUNDWPTROOT
 cd ..
-if %CD%==%CD:~0,3% goto :PROJECTROOTERROR
-goto :FINDPROJECTROOT
+if %CD%==%CD:~0,3% goto :WPTROOTERROR
+goto :FINDWPTROOT
 
-:PROJECTROOTERROR
+:WPTROOTERROR
 echo Couldn't find project root
 cd %DP0%
 goto :eof
 
-:FOUNDPROJECTROOT
-set PROJECT_ROOT=%CD%
+:FOUNDWPTROOT
+set WPT_ROOT=%CD%
 cd %DP0%
 
-set agent=%PROJECT_ROOT%\webpagetest\agent\js
-set SELENIUM_BUILD=%project_root%\Selenium\selenium-read-only\build
-set NODE_PATH=%agent%;%agent%\src;%SELENIUM_BUILD%\javascript\webdriver
+set agent=%WPT_ROOT%\agent\js
+
+rem Find the latest version of WDJS
+for /D %%dir in (%WPT_ROOT%\lib\webdriver\javascript\node-*) do set WDJS_DIR=%%jar
+
+set NODE_PATH=%agent%;%agent%\src;%WDJS_DIR%
 
 IF NOT [%tests%]==[""] GOTO RUN_MOCHA_WITH_GREP
 goto RUN_MOCHA_WITHOUT_GREP

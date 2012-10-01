@@ -47,29 +47,36 @@ if NOT "%1"=="" (
     goto :EOF
 )
 
-set PROJECT_ROOT=%~dp0
+set WPT_ROOT=%~dp0
 
-:FINDPROJECTROOT
-if not exist webpagetest\agent\js goto NOTFOUNDPROJECTROOT
-goto FOUNDPROJECTROOT
+:FINDWPTROOT
+if not exist agent\js\src goto NOTFOUNDWPTROOT
+goto FOUNDWPTROOT
 
-:NOTFOUNDPROJECTROOT
+:NOTFOUNDWPTROOT
 cd ..
-if %CD%==%CD:~0,3% goto :PROJECTROOTERROR
-goto :FINDPROJECTROOT
+if %CD%==%CD:~0,3% goto :WPTROOTERROR
+goto :FINDWPTROOT
 
-:PROJECTROOTERROR
+:WPTROOTERROR
 echo Couldn't find project root
 cd %DP0%
 goto :eof
 
-:FOUNDPROJECTROOT
-set PROJECT_ROOT=%CD%
+:FOUNDWPTROOT
+set WPT_ROOT=%CD%
 cd %DP0%
 
-set AGENT=%PROJECT_ROOT%\webpagetest\agent\js
-set DEVTOOLS2HAR_JAR=%PROJECT_ROOT%\webpagetest\lib\dt2har\target\dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar
-set SELENIUM_BUILD=%project_root%\Selenium\selenium-read-only\build
-set NODE_PATH="%AGENT%;%AGENT%\src;%SELENIUM_BUILD%\javascript\webdriver
+set AGENT=%WPT_ROOT%\agent\js
+set DEVTOOLS2HAR_JAR=%WPT_ROOT%\webpagetest\lib\dt2har\target\dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar
 
-node src\agent_main --wpt_server %WPT_SERVER% --location %LOCATION% --chromedriver %SELENIUM_BUILD%\chromedriver.exe --selenium_jar %SELENIUM_BUILD%\java\server\src\org\openqa\grid\selenium\selenium-standalone.jar --devtools2har_jar=%DEVTOOLS2HAR_JAR%
+rem Find the latest version of WD server jar, WDJS, platform-specific chromedriver
+for %%jar in (%WPT_ROOT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%jar
+
+for /D %%dir in (%WPT_ROOT%\lib\webdriver\javascript\node-*) do set WDJS_DIR=%%jar
+
+for %%exe in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%jar
+
+set NODE_PATH="%AGENT%;%AGENT%\src;%WDJS_DIR%
+
+node src\agent_main --wpt_server %WPT_SERVER% --location %LOCATION% --chromedriver %CHROMEDRIVER% --selenium_jar %SELENIUM_JAR% --devtools2har_jar=%DEVTOOLS2HAR_JAR%
