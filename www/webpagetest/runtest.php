@@ -796,7 +796,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if ($use_closest) {
                 if (!isset($destination_url))
                     $destination_url = $test['url'];
-                $test['location'] = GetClosestLocation($destination_url);
+                $test['location'] = GetClosestLocation($destination_url, $test['browser']);
             }
 
             // make sure the test runs are between 1 and the max
@@ -1857,9 +1857,24 @@ function RelayTest()
 * 
 * @param mixed $url
 */
-function GetClosestLocation($url) {
+function GetClosestLocation($url, $browser) {
     $location = null;
     $locations = parse_ini_file('./settings/closest.ini', true);
+    // filter the locations so only those that match the browser are included
+    if (count($locations)) {
+        foreach($locations as $name => &$data) {
+            if (strlen($browser)) {
+                if (!array_key_exists('browsers', $data) ||
+                    stripos($data['browsers'], $browser) === false) {
+                    unset($locations[$name]);
+                }
+            } else {
+                if (array_key_exists('browsers', $data)) {
+                    unset($locations[$name]);
+                }
+            }
+        }
+    }
     if (count($locations)) {
         // figure out the IP address of the server
         if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
