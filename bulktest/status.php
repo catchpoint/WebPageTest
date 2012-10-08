@@ -10,8 +10,8 @@ if (LoadResults($results)) {
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
-//            (!array_key_exists('result', $result) || !strlen($result['result']))) {
-            true) {
+            (!array_key_exists('result', $result) || !strlen($result['result']))) {
+//            true) {
             $testCount++;
         }
     }
@@ -74,8 +74,8 @@ function UpdateResults(&$results, $testCount) {
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
-//            (!array_key_exists('result', $result) || !strlen($result['result']))) {
-            true) {
+            (!array_key_exists('result', $result) || !strlen($result['result']))) {
+//            true) {
             $count++;
             echo "\rUpdating the status of test $count of $testCount...                  ";
 

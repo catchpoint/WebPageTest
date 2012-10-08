@@ -76,8 +76,8 @@ if (LoadResults($results)) {
                 }
                 fwrite($file, ',');
                 $compare = "\"http://www.webpagetest.org/video/compare.php?thumbSize=200&ival=100&end=doc&tests=";
-                $compare .= $urlData['Chrome']['id'] . '-l:Chrome,';
-                $compare .= $urlData['Firefox']['id'] . '-l:Firefox,';
+                $compare .= $urlData['Chrome']['id'] . '-l:Chrome%2021,';
+                $compare .= $urlData['Firefox']['id'] . '-l:Firefox%2015,';
                 $compare .= $urlData['IE 9']['id'] . '-l:IE%209';
                 $compare .= '"';
                 fwrite($file, $compare);
