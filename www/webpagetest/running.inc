@@ -32,9 +32,15 @@
             ?>
             <div id="runningHeader">
                 <p>
-                Url: <a rel="nofollow" href=<?php echo '"' . $url . '"';?>><?php echo $url;?></a><br>
-                From: <?php echo $test['test']['location'];?><br>
-                <?php echo GetTestInfoHtml(false); ?>
+                <?php
+                    if ($settings['nolinks']) {
+                        echo "Url: $url<br>\n";
+                    } else {
+                        echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    }
+                    echo "From: {$test['test']['location']}<br>\n";
+                    echo GetTestInfoHtml(false);
+                ?>
                 </p>
                 <h3>Testing...</h3>
                 <?php

@@ -125,7 +125,8 @@ function loadPageData($file, $options = null)
                                 'browser_version' => @trim($fields[83]),
                                 'server_count' => @(int)trim($fields[84]),
                                 'server_rtt' => @(int)trim($fields[85]),
-                                'base_page_cdn' => @trim($fields[86])
+                                'base_page_cdn' => @trim($fields[86]),
+                                'adult_site' => @(int)trim($fields[87])
                             );
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));

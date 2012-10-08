@@ -92,6 +92,7 @@ void Results::Reset(void) {
   base_page_result_ = 0;
   base_page_address_count_ = 0;
   base_page_complete_.QuadPart = 0;;
+  adult_site_ = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -651,6 +652,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += base_page_server_rtt_ + "\t";
     // Base Page CDN Name
     result += base_page_CDN_ + "\t";
+    // Adult Site
+    if (adult_site_) {
+      result += "1\t";
+    } else {
+      result += "0\t";
+    }
 
     result += "\r\n";
 
@@ -692,6 +699,7 @@ void Results::ProcessRequests(void) {
   POSITION pos = _requests._requests.GetHeadPosition();
   bool base_page = true;
   base_page_redirects_ = 0;
+  adult_site_ = false;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request) {
@@ -711,6 +719,14 @@ void Results::ProcessRequests(void) {
           if ((!_test_state._test_result ||  _test_state._test_result == 99999)
               && base_page_result_ >= 400) {
             _test_state._test_result = result_code;
+          }
+          // check for adult content
+          if (result_code == 200) {
+            DataChunk body_chunk = request->_response_data.GetBody(true);
+            CStringA body(body_chunk.GetData(), body_chunk.GetLength());
+            if (body.Find("2257") != -1) {
+              adult_site_ = true;
+            }
           }
         }
       }

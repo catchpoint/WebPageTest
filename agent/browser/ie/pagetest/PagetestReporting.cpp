@@ -580,6 +580,7 @@ void CPagetestReporting::ProcessResults(void)
 	in_doc = 0;
 	out = 0;
 	out_doc = 0;
+  adultSite = 0;
 
 	// sort the events by start time
 	SortEvents();
@@ -714,8 +715,12 @@ void CPagetestReporting::ProcessResults(void)
 						basePageResult = w->result;
             basePageRTT = GetRTT(w->peer.sin_addr.S_un.S_addr);
             basePageAddressCount = GetAddressCount(w->host);
-						if( html.IsEmpty() && w->body )
+            if( html.IsEmpty() && w->body ) {
 							html = w->body;
+              if (html.Find("2257") != -1) {
+                adultSite = 1;
+              }
+            }
 							
 						// use the ttfb of the base page (override the earlier ttfb)
 						if( w->firstByte )
@@ -1006,7 +1011,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 				_T("Time to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\t")
         _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)\tDOM Elements\tPage Speed Version\t")
 				_T("Page Title\tTime to Title\tLoad Event Start\tLoad Event End\tDOM Content Ready Start\tDOM Content Ready End\tVisually Complete (ms)\t")
-        _T("Browser Name\tBrowser Version\tBase Page Server Count\tBase Page Server RTT\tBase Page CDN\r\n");
+        _T("Browser Name\tBrowser Version\tBase Page Server Count\tBase Page Server RTT\tBase Page CDN\tAdult Site\r\n");
 	}
 	else
 		buff.Empty();
@@ -1024,7 +1029,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
                     _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d\t")
-                    _T("%s\t%s\t%d\t%s\t%s")
+                    _T("%s\t%s\t%d\t%s\t%s\t%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1038,7 +1043,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
       msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN);
+      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite);
 	buff += result;
 }
 
@@ -1535,11 +1540,11 @@ void CPagetestReporting::CheckOptimization(void)
 		CheckImageCompression();
 		CheckCache();
 		CheckCombine();
-		CheckCDN();
 		CheckMinify();
 		CheckCookie();
 		CheckEtags();
     CheckCustomRules();
+		CheckCDN();
 
 		// Run all Page Speed checks.
 		// This is the entry point that invokes the Page Speed engine.

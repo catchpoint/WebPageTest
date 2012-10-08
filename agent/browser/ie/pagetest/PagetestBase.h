@@ -251,6 +251,7 @@ public:
 	int minifyScore;
 	int compressionScore;
 	int etagScore;
+  int adultSite;
 	
 	// screen shots of various stages
   ScreenCapture screenCapture;

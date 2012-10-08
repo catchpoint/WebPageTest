@@ -589,6 +589,8 @@ function LoadLocations()
             unset( $loc['key'] );
         if( isset($loc['remoteDir']) )
             unset( $loc['remoteDir'] );
+        if( isset($loc['notify']) )
+            unset( $loc['notify'] );
     }
     
     return $locations;

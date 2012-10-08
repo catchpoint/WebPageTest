@@ -203,6 +203,7 @@ void CPagetestBase::Reset(void)
 		minifyScore = -1;
 		compressionScore = -1;
 		etagScore = -1;
+    adultSite = 0;
 
 		errorCode = 0;
 

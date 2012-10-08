@@ -1,5 +1,18 @@
 <?php
 require_once('page_data.inc');
+if( !isset($pageData) && isset($id) && isset($testPath) )
+    $pageData = loadAllPageData($testPath);
+if (isset($pageData) && is_array($pageData)) {
+    foreach($pageData as &$run_data) {
+        foreach($run_data as &$test_data) {
+            if( array_key_exists('adult_site', $test_data) && $test_data['adult_site']) {
+                define('ADULT_SITE', true);
+                $adult_site = true;
+                break 2;
+            }
+        }
+    }
+}
 
 if( $supportsAuth && !defined('EMBED') )
 {
@@ -79,6 +92,9 @@ if (!defined('EMBED')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
+            if (!$privateInstall) {
+                $navTabs['Try Acceleration'] = 'http://www.webpagetest.org/compare';
+            }
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {

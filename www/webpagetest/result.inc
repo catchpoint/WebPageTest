@@ -55,7 +55,11 @@ $page_description = "Website performance test result$testLabel.";
                 <p class="left">
                 <br>
                 <?php 
-                    echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    if ($settings['nolinks']) {
+                        echo "Url: $url<br>\n";
+                    } else {
+                        echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                    }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml();
                 ?>
