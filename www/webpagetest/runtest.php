@@ -1,4 +1,18 @@
 <?php
+    // deal with magic quotes being enabled
+    if (get_magic_quotes_gpc()) {
+        function DealWithMagicQuotes(&$arr) {
+            foreach ($arr as $key => &$val) {
+                if ($key == "GLOBALS") { continue; }
+                if (is_array($val)) {
+                    DealWithMagicQuotes($val);
+                } else {
+                    $val = stripslashes($val);
+                }
+            }
+        }
+        DealWithMagicQuotes($GLOBALS);
+    }
     require_once('common.inc');
     set_time_limit(300);
 
@@ -925,40 +939,42 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 */
 function ValidateScript(&$script, &$error)
 {
-    global $test;
-    FixScript($test, $script);
-    
-    $navigateCount = 0;
-    $ok = false;
     $url = null;
-    $lines = explode("\n", $script);
-    foreach( $lines as $line )
-    {
-        $tokens = explode("\t", $line);
-        $command = trim($tokens[0]);
-        if( !strcasecmp($command, 'navigate') )
+    if (stripos($script, 'webdriver.Builder(') === false) {
+        global $test;
+        FixScript($test, $script);
+        
+        $navigateCount = 0;
+        $ok = false;
+        $lines = explode("\n", $script);
+        foreach( $lines as $line )
         {
-            $navigateCount++;
-            $ok = true;
-            $url = trim($tokens[1]);
-            if (stripos($url, '%URL%') !== false)
-                $url = null;
+            $tokens = explode("\t", $line);
+            $command = trim($tokens[0]);
+            if( !strcasecmp($command, 'navigate') )
+            {
+                $navigateCount++;
+                $ok = true;
+                $url = trim($tokens[1]);
+                if (stripos($url, '%URL%') !== false)
+                    $url = null;
+            }
+            elseif( !strcasecmp($command, 'loadVariables') )
+                $error = "loadVariables is not a supported command for uploaded scripts.";
+            elseif( !strcasecmp($command, 'loadFile') )
+                $error = "loadFile is not a supported command for uploaded scripts.";
+            elseif( !strcasecmp($command, 'fileDialog') )
+                $error = "fileDialog is not a supported command for uploaded scripts.";
         }
-        elseif( !strcasecmp($command, 'loadVariables') )
-            $error = "loadVariables is not a supported command for uploaded scripts.";
-        elseif( !strcasecmp($command, 'loadFile') )
-            $error = "loadFile is not a supported command for uploaded scripts.";
-        elseif( !strcasecmp($command, 'fileDialog') )
-            $error = "fileDialog is not a supported command for uploaded scripts.";
+        
+        if( !$ok )
+            $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
+        else if( $navigateCount > 20 )
+            $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
+        
+        if( strlen($error) )
+            unset($url);
     }
-    
-    if( !$ok )
-        $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
-    else if( $navigateCount > 20 )
-        $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
-    
-    if( strlen($error) )
-        unset($url);
     
     return $url;
 }
