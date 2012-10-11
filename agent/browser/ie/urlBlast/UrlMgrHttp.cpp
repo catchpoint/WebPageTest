@@ -578,10 +578,25 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
           diskSpace.Format(_T("&freedisk=%0.3f"), freeDisk);
         }
 
+        // IE Version
+	      CRegKey key;
+        CString IEVer;
+	      if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
+	      {
+	        TCHAR iebuff[1024];
+	        ULONG iebufflen = _countof(iebuff);
+		      if( SUCCEEDED(key.QueryStringValue(_T("Version"), iebuff, &iebufflen)) && iebufflen )
+		      {
+            IEVer.Format(_T("&ie=%s"), iebuff);
+            IEVer.Trim();
+		      }
+          key.Close();
+	      }
+
 				CHttpConnection * connection = session->GetHttpConnection(host, port);
 				if( connection )
 				{
-					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
+					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
 					if( file )
 					{
 						if( file->SendRequest() )

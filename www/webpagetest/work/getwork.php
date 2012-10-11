@@ -248,6 +248,7 @@ function GetJob() {
             $testerInfo['ec2'] = $ec2;
             $testerInfo['ver'] = $_GET['ver'];
             $testerInfo['freedisk'] = @$_GET['freedisk'];
+            $testerInfo['ie'] = @$_GET['ie'];
             $testerInfo['test'] = '';
             if (isset($testId)) {
                 $testerInfo['test'] = $testId;

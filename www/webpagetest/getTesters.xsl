@@ -29,6 +29,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>PC</th>
             <th>EC2 Instance</th>
             <th>Free Disk (GB)</th>
+            <th>IE Version</th>
             <th>IP</th>
             <th>Busy?</th>
             <th>Last Check (minutes)</th>
@@ -41,6 +42,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
                 <td><xsl:value-of select="freedisk"/></td>
+                <td><xsl:value-of select="ie"/></td>
                 <td><xsl:value-of select="ip"/></td>
                 <td><xsl:value-of select="busy"/></td>
                 <td><xsl:value-of select="elapsed"/></td>
