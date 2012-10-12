@@ -742,17 +742,43 @@ function ProcessUploadedHAR($testPath)
 
 function ProcessHARText($testPath, $harIsFromSinglePageLoad)
 {
-    // Read the json HAR file
-    $rawHar = file_get_contents("{$testPath}/results.har");
+    $mergedHar = null;
 
-    // Parse the json file
-    $parsedHar = json_decode($rawHar, true);
-    if (!$parsedHar)
+    $dir = opendir($testPath);
+    if( $dir )
     {
-        logMalformedInput("Failed to parse json file");
+        while($file = readdir($dir)) 
+        {
+            if (preg_match("/^(\d+_(Cached_)?)?results?\.har$/", $file))
+            {
+                // Read and parse the json HAR file
+                $parsedHar = json_decode(file_get_contents("{$testPath}/{$file}"), true);
+                if (!$parsedHar)
+                {
+                    logMalformedInput("Failed to parse json file '{$file}'");
+                    continue;
+                }
+
+                if( $mergedHar === null)
+                {
+                    $mergedHar = $parsedHar;
+                } else {
+                    $mergedHar['log']['pages'] = array_merge(
+                        $mergedHar['log']['pages'], $parsedHar['log']['pages']);
+                    $mergedHar['log']['entries'] = array_merge(
+                        $mergedHar['log']['entries'], $parsedHar['log']['entries']);
+                }
+            }
+        }
+    }
+
+    if( $mergedHar === null)
+    {
+        logMalformedInput("Missing result json file");
         return;
     }
-    ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad);
+
+    ProcessHARData($mergedHar, $testPath, $harIsFromSinglePageLoad);
 }
 
 /**
