@@ -3,11 +3,11 @@
     This is called every 15 minutes as long as agents are polling for work
 */
 ignore_user_abort(true);
-set_time_limit(36000);
 chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
+set_time_limit(36000);
 $debug=true;
 if (!is_dir('./log')) {
     mkdir('./log', 0777, true);
@@ -599,7 +599,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
             $agg_data = array();
         }
         AggregateMetric($metric, $info, $data, $run_time, $agg_data, $options);
-        gz_file_put_contents($metric_file, json_encode($agg_data));
+        gz_file_put_contents($metric_file, @json_encode($agg_data));
         unset($agg_data);
         
         if (array_key_exists('labels', $info) && count($info['labels']) <= 20) {
@@ -815,7 +815,7 @@ function CalculateMetrics(&$records) {
         // geometric mean
         $sum = 0.0;
         foreach($records as $value) {
-             $sum += log($value);
+             $sum += log(doubleval($value));
         }
         $entry['geo-mean'] = exp($sum/$count);  
         // median
