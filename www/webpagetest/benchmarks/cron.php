@@ -537,6 +537,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
 * @param mixed $state
 */
 function AggregateResults($benchmark, &$state, $options) {
+    global $logFile;
+    
     if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
         mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
     if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
@@ -564,12 +566,15 @@ function AggregateResults($benchmark, &$state, $options) {
     foreach ($state['runs'] as $run_time) {
         if (!array_key_exists($run_time, $info['runs'])) {
             $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $run_time) . '.json';
+            logMsg("Aggregating Results for $file_name", "./log/$logFile", true);
             if (gz_is_file($file_name)) {
                 $data = json_decode(gz_file_get_contents($file_name), true);
                 FilterRawData($data, $options);
                 CreateAggregates($info, $data, $benchmark, $run_time, $options);
                 unset($data);
                 $info['runs'][$run_time] = 1;
+            } else {
+                logMsg("Missing data file - $file_name", "./log/$logFile", true);
             }
         }
     }
