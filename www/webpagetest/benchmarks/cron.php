@@ -216,6 +216,7 @@ function ProcessBenchmark($benchmark) {
         }
         file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
+    logMsg("Done Processing benchmark '$benchmark'", "./log/$logFile", true);
 }
 
 /**
