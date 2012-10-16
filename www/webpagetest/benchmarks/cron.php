@@ -96,7 +96,7 @@ function PreProcessBenchmark($benchmark) {
                         $needsRunning = true;
                     }
                 } else {
-                    $state = array('last_run' => 0);
+                    $needsRunning = true;
                 }
                 
                 // see if we need to kick off a new benchmark run
@@ -108,7 +108,9 @@ function PreProcessBenchmark($benchmark) {
                         $needsRunning = true;
                     }
                 }
-                file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+                if (isset($state)) {
+                    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+                }
             }
         } else {
             echo "Benchmark '$benchmark' is currently locked\n";
