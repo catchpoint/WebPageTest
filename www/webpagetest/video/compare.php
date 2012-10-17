@@ -1,7 +1,4 @@
 <?php
-// maximum number of tests that are allowed to be compared in video
-$maxCompare = 9;
-
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -236,6 +233,7 @@ else
                     padding: 5px;
                     width: 100%;
                 }
+                div.compare-graph {margin:20px 0; width:900px; height:600px;margin-left:auto; margin-right:auto;}
                 <?php
                 include "waterfall.css";
                 if (defined('EMBED')) {
@@ -270,6 +268,7 @@ else
                         echo "<div id=\"location\">Tested From: $location</div>";
                     }
                     ScreenShotTable();
+                    DisplayGraphs();
                 } else {
                     DisplayStatus();
                 }
@@ -279,28 +278,6 @@ else
             </div>
 
             <script type="text/javascript">
-                <?php echo "var maxCompare = $maxCompare;"; ?>
-                function ValidateInput(form)
-                {
-                    var ret = false;
-                    
-                    var count = $('input:checked[name="t[]"]').size();
-                    if( count > 0 )
-                    {
-                        if( count <= maxCompare )
-                            ret = true;
-                        else
-                        {
-                            alert("Select no more than " + maxCompare + " tests to compare");
-                            return false;
-                        }
-                    }
-                    else
-                        alert("Please select at least one test to create a video from");
-                    
-                    return ret;
-                }
-
                 function ShowAdvanced()
                 {
                     $("#advanced").modal({opacity:80});
@@ -358,8 +335,9 @@ function ScreenShotTable()
         if (!defined('EMBED')) {
             echo '<br>';
         }
-        echo '<form id="createForm" name="create" method="get" action="/video/create.php" onsubmit="return ValidateInput(this)">';
+        echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
+        echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
         echo '<table id="videoContainer"><tr>';
 
         // build a table with the labels
@@ -372,9 +350,9 @@ function ScreenShotTable()
             $height = 100;
             if( $test['video']['width'] && $test['video']['height'] ) {
                 if( $test['video']['width'] > $test['video']['height'] ) {
-                    $height = 10 + (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
+                    $height = 22 + (int)(((float)$thumbSize / (float)$test['video']['width']) * (float)$test['video']['height']);
                 } else {
-                    $height = 10 + $thumbSize;
+                    $height = 22 + $thumbSize;
                 }
             }
 
@@ -393,7 +371,7 @@ function ScreenShotTable()
                 $testEnd = (float)$testEnd / 10.0;
             }
             if (!defined('EMBED')) {
-                echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
+                //echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
                 $cached = '';
                 if( $test['cached'] )
                     $cached = 'cached/';
@@ -532,7 +510,7 @@ function ScreenShotTable()
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
-        echo "Select up to $maxCompare tests and <input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
+        echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
         echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
         echo "</div></form>";
         if (!defined('EMBED')) {
@@ -698,5 +676,92 @@ function WrapableString($in)
         $out = join("&#8203;",str_split($in,1));
     
     return $out;
+}
+
+/**
+* Display the comparison graph with the various time metrics
+* 
+*/
+function DisplayGraphs() {
+    global $tests;
+    require_once('breakdown.inc');
+    $mimeTypes = array('html', 'js', 'css', 'text', 'image', 'flash', 'other');
+    $timeMetrics = array('visualComplete' => 'Visually Complete',
+                        'docTime' => 'Load Time (onload)', 
+                        'fullyLoaded' => 'Load Time (Fully Loaded)',
+                        'SpeedIndex' => 'Speed Index',
+                        'TTFB' => 'Time to First Byte', 
+                        'titleTime' => 'Time to Title', 
+                        'render' => 'Time to Start Render');
+    foreach($tests as &$test) {
+        $requests;
+        $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
+    }
+    echo '<div id="compare_times" class="compare-graph"></div>';
+    echo '<div id="compare_requests" class="compare-graph"></div>';
+    echo '<div id="compare_bytes" class="compare-graph"></div>';
+    ?>
+    <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load('visualization', '1', {'packages':['table', 'corechart']});
+        google.setOnLoadCallback(drawCharts);
+        function drawCharts() {
+            var dataTimes = new google.visualization.DataTable();
+            var dataRequests = new google.visualization.DataTable();
+            var dataBytes = new google.visualization.DataTable();
+            dataTimes.addColumn('string', 'Time (ms)');
+            dataRequests.addColumn('string', 'MIME Type');
+            dataBytes.addColumn('string', 'MIME Type');
+            <?php
+            foreach($tests as &$test) {
+                echo "dataTimes.addColumn('number', '{$test['name']}');\n";
+                echo "dataRequests.addColumn('number', '{$test['name']}');\n";
+                echo "dataBytes.addColumn('number', '{$test['name']}');\n";
+            }
+            echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
+            echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
+            echo 'dataBytes.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
+            $row = 0;
+            foreach($timeMetrics as $metric => $label) {
+                echo "dataTimes.setValue($row, 0, '$label');\n";
+                $column = 1;
+                foreach($tests as &$test) {
+                    echo "dataTimes.setValue($row, $column, {$test['pageData'][$test['run']][$test['cached']][$metric]});\n";
+                    $column++;
+                }
+                $row++;
+            }
+            echo "dataRequests.setValue(0, 0, 'Total');\n";
+            echo "dataBytes.setValue(0, 0, 'Total');\n";
+            $column = 1;
+            foreach($tests as &$test) {
+                echo "dataRequests.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['requests']});\n";
+                echo "dataBytes.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['bytesIn']});\n";
+                $column++;
+            }
+            $row = 1;
+            foreach($mimeTypes as $mimeType) {
+                echo "dataRequests.setValue($row, 0, '$mimeType');\n";
+                echo "dataBytes.setValue($row, 0, '$mimeType');\n";
+                $column = 1;
+                foreach($tests as &$test) {
+                    echo "dataRequests.setValue($row, $column, {$test['breakdown'][$mimeType]['requests']});\n";
+                    echo "dataBytes.setValue($row, $column, {$test['breakdown'][$mimeType]['bytes']});\n";
+                    $column++;
+                }
+                $row++;
+            }
+            ?>
+            var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
+            timesChart.draw(dataTimes, {title: 'Page Load Timings (ms)'});
+
+            var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));
+            requestsChart.draw(dataRequests, {title: 'Requests'});
+
+            var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));
+            bytesChart.draw(dataBytes, {title: 'Bytes'});
+        }
+    </script>
+    <?php
 }
 ?>

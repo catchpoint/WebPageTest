@@ -49,6 +49,7 @@ foreach($compTests as $t) {
                     $info['priority'] >= 1) {
                     $defaultInterval = 100;
                 }
+                $test['url'] = $info['url'];
             }
             
             $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
@@ -147,10 +148,15 @@ function LoadTestData() {
     global $admin;
     global $supportsAuth;
 
+    $count = 0;
     foreach( $tests as &$test ) {
-        $testPath = GetTestPath($test['id']);
-        $pageData = loadAllPageData($testPath);
-        $test['url'] = trim($pageData[1][0]['URL']);
+        $count++;
+        $testPath = &$test['path'];
+        $pageData = &$test['pageData'];
+        $url = trim($pageData[1][0]['URL']);
+        if (strlen($url)) {
+            $test['url'] = $url;
+        }
         
         if( strlen($test['label']) )
             $test['name'] = $test['label'];
@@ -163,6 +169,8 @@ function LoadTestData() {
             $test['name'] = str_replace('http://', '', $test['name']);
             $test['name'] = str_replace('https://', '', $test['name']);
         }
+        $test['index'] = $count;
+        $test['name'] = "$count: {$test['name']}";
         
         $videoPath = "./$testPath/video_{$test['run']}";
         if( $test['cached'] )
