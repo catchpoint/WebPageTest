@@ -209,6 +209,11 @@ $page_description = "Comparison Test$testLabel.";
                             <select name="backend" id="backend">
                                 <option value="prod" selected>Default (Safe)</option>
                                 <option value="aggressive">Aggressive</option>
+                                <?php
+                                if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
+                                    echo '<option value="staging">Staging</option>';
+                                }                                    
+                                ?>
                             </select>
                         </li>
                         <li>

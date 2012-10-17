@@ -92,9 +92,9 @@ if (!defined('EMBED')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
-            if (!$privateInstall) {
-                $navTabs['Try Acceleration'] = 'http://www.webpagetest.org/compare';
-            }
+            //if (!$privateInstall) {
+            //    $navTabs['Try Acceleration'] = 'http://www.webpagetest.org/compare';
+            //}
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {
