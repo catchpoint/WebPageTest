@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chart>
+  <!--  <message bg_color="#BBBB00" text_color="#FFFFFF"><![CDATA[You can broadcast any message to chart from data XML file]]></message> -->
+	<graphs>
+		<graph gid="0">
+			<point x="154" y="45" value="112"></point>
+			<point x="187" y="85" value="155"></point>
+			<point x="198" y="32" value="160"></point>
+      <point x="224" y="12" value="95"></point>
+      <point x="244" y="19" value="78"></point>
+      <point x="268" y="88" value="53"></point>			
+		</graph>
+	</graphs>
+</chart>

@@ -1,0 +1,68 @@
+<html>
+  <head>
+    <title>All tests for the chrome WebPageTest extension</title>
+    <link rel="stylesheet" type="text/css" href="allTests.css"></link>
+  </head>
+
+  <body>
+    <div id="hiddenTestStuff">
+      <div id="testFindDomElements">
+        <!-- testFindDomElements() -->
+        <span aaa=one bbb=two>First span</span>
+        <div bbb=two>First div</div>
+        <div bbb=three>Second div</div>
+
+        <!-- testFindDomElementWithGetElementById() -->
+        <a id="thisIdExists">Anchor with id</a>
+
+        <!-- testFindDomElementWithGetElementByName() -->
+        <a name="thisNameExists">Anchor with name</a>
+        <a name="thitNameHasMultipleMatches">First named anchor</a>
+        <a name="thitNameHasMultipleMatches">Second named anchor</a>
+
+        <!-- testFindDomElementMultipleDelimiters() -->
+        <a aaa="bbb'ccc">Single quote in value</a>
+        <a aaa="bbb=ccc">Equals in value</a>
+        <a aaa'bbb="ccc">Single quote in target</a>
+      </div>
+
+      <!-- testClickCommandInPage -->
+      <div id="testClickCommand">
+        <input index=1 class=testClickCommand type="button" aaaa=one></input>
+        <input index=2 class=testClickCommand type="button" bbbb=value></input>
+        <input index=3 class=testClickCommand type="button" bbbb=value></input>
+        <input index=4 class=testClickCommand type="button" foo="bar'thud"></input>
+      </div>
+
+      <!-- testSetInnerText -->
+      <div id="testSetInnerTextCommand">
+        <div id='uniqueDiv' aaaa=one>Initial text</div>
+        <div id='firstDuplicateDiv' bbbb=value>Initial text</div>
+        <div id='secondDuplicateDiv' bbbb=value>Initial text</div>
+      </div>
+
+      <!-- testSetInnerHtml -->
+      <div id="testSetInnerHtmlCommand">
+        <div id='innerHtmlSubDiv' ggg='ggg'>
+          <div id='testSetInnerHtmlCommandInitialDiv'>initial</div>
+        </div>
+      </div>
+
+      <!-- testSetValue -->
+      <div id="testSetValueCommand">
+        <div testKey=wrongTagType></div>
+        <form method="get">
+          <input testKey=inputTag value=initial />
+        </form>
+      </div>
+
+      <!-- testSubmitForm -->
+      <div id="testSubmitFormCommand">
+        <div testKey=cantSubmitADiv></div>
+      </div>
+    </div>
+
+    <!-- allTests.js will append test results to the page body.  -->
+    <script src="allTests.js"></script>
+  </body>
+</html>

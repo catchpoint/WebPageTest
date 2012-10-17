@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$GTMArchive</key>
+	<string>GTMUnitTestingArchive</string>
+	<key>$GTMVersion</key>
+	<integer>1</integer>
+	<key>WindowContent</key>
+	<dict>
+		<key>ViewIsHidden</key>
+		<false/>
+		<key>ViewSubView 0</key>
+		<dict>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>-1</integer>
+				<key>CellValue</key>
+				<dict>
+					<key>ImageSize</key>
+					<string>{128, 128}</string>
+				</dict>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSImageView</string>
+			<key>ControlValue</key>
+			<dict>
+				<key>ImageSize</key>
+				<string>{128, 128}</string>
+			</dict>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+	</dict>
+	<key>WindowIsMain</key>
+	<false/>
+	<key>WindowIsVisible</key>
+	<true/>
+	<key>WindowTitle</key>
+	<string></string>
+</dict>
+</plist>

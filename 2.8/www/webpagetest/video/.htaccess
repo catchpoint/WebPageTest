@@ -1,0 +1,11 @@
+#
+#Friendly urls
+#
+
+<IfModule mod_rewrite.c>
+RewriteEngine on
+
+#main pages
+RewriteRule ^compare$ compare.php
+
+</IfModule>

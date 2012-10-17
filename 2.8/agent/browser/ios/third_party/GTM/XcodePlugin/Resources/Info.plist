@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>${EXECUTABLE_NAME}</string>
+	<key>CFBundleGetInfoString</key>
+	<string>${GTM_VERSIONINFO_FINDER}</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.google.GTM.xcodeplugin</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>${PRODUCT_NAME}</string>
+	<key>CFBundlePackageType</key>
+	<string>BNDL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>${GTM_VERSIONINFO_SHORT}</string>
+	<key>CFBundleVersion</key>
+	<string>${GTM_VERSIONINFO_LONG}</string>
+	<key>LoadAtLaunch</key>
+	<string>YES</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>${GTM_VERSIONINFO_ABOUT}</string>
+	<key>NSPrincipalClass</key>
+	<string>GTMXcodePlugin</string>
+	<key>XCGCReady</key>
+	<string>YES</string>
+	<key>XCPluginHasUI</key>
+	<string>YES</string>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+
+zero'd checksum fields should be computed and set in __str__()
+
+length fields should not be set except manually (maybe automatically
+in set_data() methods?)
+
+set_data() should do nice length field, zero'd checksum, named member,
+etc. fixups like the unpacking constructor... maybe later
+
