@@ -29,6 +29,10 @@
     $json = false;
     if( !strcasecmp($req_f, 'json') )
         $json = true;
+    $headless = false;
+    if (array_key_exists('headless', $settings) && $settings['headless']) {
+        $headless = true;
+    }
 
     // load the location information
     $locations = parse_ini_file('./settings/locations.ini', true);
@@ -223,9 +227,14 @@
         }
 
         // the API key requirements are for all test paths
+        if ($headless) {
+            $test['vd'] = $req_vd;
+            $test['vh'] = $req_vh;
+        } else {
+            $test['vd'] = '';
+            $test['vh'] = '';
+        }
         $test['owner'] = $req_vo;
-        $test['vd'] = $req_vd;
-        $test['vh'] = $req_vh;
         $test['key'] = $req_k;
             
         // some myBB integration to get the requesting user

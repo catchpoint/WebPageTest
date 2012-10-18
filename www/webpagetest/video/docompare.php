@@ -10,25 +10,30 @@ $key = '';
 $keys = parse_ini_file('./settings/keys.ini', true);
 if( $keys && isset($keys['server']) && isset($keys['server']['key']) )
   $key = trim($keys['server']['key']);
-
-
-foreach( $urls as $index => $url )
-{
-    $url = trim($url);
-    if( strlen($url) )
-    {
-        $id = SubmitTest($url, $labels[$index], $key);
-        if( $id && strlen($id) )
-            $ids[] = $id;
-    }
+$headless = false;
+if (array_key_exists('headless', $settings) && $settings['headless']) {
+    $headless = true;
 }
 
-// now add the industry urls
-foreach( $_REQUEST['t'] as $tid )
-{
-    $tid = trim($tid);
-    if( strlen($tid) )
-        $ids[] = $tid;
+if (!$headless) {
+    foreach( $urls as $index => $url )
+    {
+        $url = trim($url);
+        if( strlen($url) )
+        {
+            $id = SubmitTest($url, $labels[$index], $key);
+            if( $id && strlen($id) )
+                $ids[] = $id;
+        }
+    }
+
+    // now add the industry urls
+    foreach( $_REQUEST['t'] as $tid )
+    {
+        $tid = trim($tid);
+        if( strlen($tid) )
+            $ids[] = $tid;
+    }
 }
 
 // if we were successful, redirect to the result page

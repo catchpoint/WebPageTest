@@ -128,7 +128,7 @@ function GetTestStatus($id, $includePosition = true)
                 }
                 else
                 {
-                    if( $includePosition )
+                    if( $includePosition && array_key_exists('workdir', $testInfoJson) )
                     {
                         $count = FindJobPosition($testInfoJson['workdir'], $id);
                         if( $count >= 0 )

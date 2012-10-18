@@ -22,6 +22,10 @@ if (!isset($settings['maxruns'])) {
 if (isset($_REQUEST['map'])) {
     $settings['map'] = 1;
 }
+$headless = false;
+if (array_key_exists('headless', $settings) && $settings['headless']) {
+    $headless = true;
+}
 // load the secret key (if there is one)
 $secret = '';
 if (is_file('./settings/keys.ini')) {
@@ -65,6 +69,7 @@ $loc = ParseLocations($locations);
             <?php
             $tab = 'Home';
             include 'header.inc';
+            if (!$headless) {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
@@ -531,6 +536,7 @@ $loc = ParseLocations($locations);
             <?php
             if( is_file('settings/intro.inc') )
                 include('settings/intro.inc');
+            } // $headless
             ?>
 
             <?php include('footer.inc'); ?>

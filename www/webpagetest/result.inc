@@ -12,6 +12,10 @@ $testComplete = true;
 $status = GetTestStatus($id, false);
 if( $status['statusCode'] < 200 ) 
     $testComplete = false;
+$headless = false;
+if (array_key_exists('headless', $settings) && $settings['headless']) {
+    $headless = true;
+}
 
 $page_keywords = array('Results','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test result$testLabel.";
@@ -75,7 +79,7 @@ $page_description = "Website performance test result$testLabel.";
                 <div id="testinfo">
                     <?php
                     echo GetTestInfoHtml();
-                    if( gz_is_file("$testPath/testinfo.json") )
+                    if( !$headless && gz_is_file("$testPath/testinfo.json") )
                     {
                         // load the secret key (if there is one)
                         $secret = '';
