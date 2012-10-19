@@ -33,12 +33,6 @@ if( isset($testPath) )
     // build up the array
     $result = BuildResult($pageData);
     
-    if (array_key_exists('testinfo', $test) && 
-        !array_key_exists('exported', $test['testinfo'])) {
-        $test['testinfo']['exported'] = true;
-        gz_file_put_contents("$testPath/testinfo.json", json_encode($test['testinfo']));
-    }
-
     // spit it out as json
     $filename = '';
     if (@strlen($url))
