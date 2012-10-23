@@ -58,7 +58,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
         
         // draw the optimization checks separators
         $standards = array( 'score_keep-alive' => 'Keep-Alive',
-                            'score_gzip' => 'GZip Text',
+                            'score_gzip' => 'GZip',
                             'score_compress' => 'Compress Img',
                             'score_cache' => 'Cache Static', 
                             'score_combine' => 'Combine',

@@ -13,7 +13,7 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
     {
         ReportTTFB($pageData, $requests, $id, $run, $cached, $test);
         ReportKeepAlive($pageData, $requests);
-        ReportTextCompression($pageData, $requests);
+        ReportTransferCompression($pageData, $requests);
         ReportImageCompression($pageData, $requests);
         ReportCache($pageData, $requests);
         ReportCombine($pageData, $requests);
@@ -83,7 +83,7 @@ function ReportKeepAlive(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportTextCompression(&$pageData, &$requests)
+function ReportTransferCompression(&$pageData, &$requests)
 {
     $score = 'N/A';
     $report = array();
@@ -122,7 +122,7 @@ function ReportTextCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"compress_text\"><h3>GZIP encode all appropriate text assets: $score</h3></a>\n";
+    echo "<a  name=\"compress_text\"><h3>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";

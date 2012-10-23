@@ -174,13 +174,11 @@ void OptimizationChecks::CheckGzip()
   while( pos ) {
     Request *request = _requests._requests.GetNext(pos);
     if (request && request->_processed &&
-        request->GetResult() == 200 && 
-        (request->IsText() || request->IsIcon())) {
+        request->GetResult() == 200) {
       CStringA encoding = request->GetResponseHeader("content-encoding");
       encoding.MakeLower();
       request->_scores._gzip_score = 0;
       DWORD numRequestBytes = request->_response_data.GetDataSize();
-      totalBytes += numRequestBytes;
       DWORD targetRequestBytes = numRequestBytes;
 
       // If there is gzip encoding, then we are all set.
@@ -203,7 +201,7 @@ void OptimizationChecks::CheckGzip()
             char* buff = (char*) malloc(len);
             if( buff ) {
               // Do the compression and check the target bytes to set for this.
-              if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 9) == Z_OK)
+              if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
                 targetRequestBytes = len + headSize;
               free(buff);
             }
@@ -212,18 +210,18 @@ void OptimizationChecks::CheckGzip()
           if( targetRequestBytes >= (origSize * 0.9) || 
               origSize - targetRequestBytes < 1400 ) {
             targetRequestBytes = origSize;
-            request->_scores._gzip_score = 100;
+            request->_scores._gzip_score = -1;
           }
         }
       }
 
-      request->_scores._gzip_total = numRequestBytes;
-      request->_scores._gzip_target = targetRequestBytes;
-      targetBytes += targetRequestBytes;
-            
       if( request->_scores._gzip_score != -1 ) {
         count++;
         total += request->_scores._gzip_score;
+        request->_scores._gzip_total = numRequestBytes;
+        request->_scores._gzip_target = targetRequestBytes;
+        targetBytes += targetRequestBytes;
+        totalBytes += numRequestBytes;
       }
     }
   }

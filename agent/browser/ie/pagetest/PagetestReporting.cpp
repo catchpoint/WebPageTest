@@ -1866,13 +1866,6 @@ void CPagetestReporting::CheckGzip()
 			CString mime = w->response.contentType;
 			mime.MakeLower();
 			if( w->result == 200
-				&& (mime.Find(_T("text/")) >= 0 || 
-            mime.Find(_T("javascript")) >= 0 || 
-            mime.Find(_T("/ico")) >= 0 || 
-            mime.Find(_T(".icon")) >= 0 || 
-            mime.Find(_T("/x-icon")) >= 0 || 
-            mime.Find(_T("json")) >= 0) 
-				&& mime.Find(_T("xml")) == -1 
 				&& w->linkedRequest
 				&& w->fromNet
 				&& !w->secure )
@@ -1880,7 +1873,6 @@ void CPagetestReporting::CheckGzip()
 				CString enc = w->response.contentEncoding;
 				enc.MakeLower();
 				w->gzipScore = 0;
-				totalBytes += w->in;
 				DWORD target = w->in;
 				
 				if( enc.Find(_T("gzip")) >= 0 || enc.Find(_T("deflate")) >= 0 )
@@ -1905,7 +1897,7 @@ void CPagetestReporting::CheckGzip()
 							LPBYTE buff = (LPBYTE)malloc(len);
 							if( buff )
 							{
-								if( compress2(buff, &len, body, origLen, 9) == Z_OK )
+								if( compress2(buff, &len, body, origLen, 7) == Z_OK )
 									target = len + headSize;
 								
 								free(buff);
@@ -1917,20 +1909,19 @@ void CPagetestReporting::CheckGzip()
 						else
 						{
 							target = origSize;
-							w->gzipScore = 100;
+							w->gzipScore = -1;
 						}
 					}
 				}
 
-				w->gzipTotal = w->in;
-				w->gzipTarget = target;
-				
-				targetBytes += target;
-					
 				if( w->gzipScore != -1 )
 				{
 					count++;
+				  w->gzipTotal = w->in;
+				  w->gzipTarget = target;
+				  targetBytes += target;
 					total += w->gzipScore;
+				  totalBytes += w->in;
 				}
 			}
 		}

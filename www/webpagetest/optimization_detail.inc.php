@@ -42,7 +42,7 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         // define the labels for all  of them
         $opt['ttfb']['label'] = 'First Byte Time';
         $opt['keep-alive']['label'] = 'Keep-alive Enabled';
-        $opt['gzip']['label'] = 'Compress Text';
+        $opt['gzip']['label'] = 'Compress Transfer';
         $opt['image_compression']['label'] = 'Compress Images';
         $opt['caching']['label'] = 'Cache static content';
         $opt['combine']['label'] = 'Combine js and css files';
