@@ -13,6 +13,10 @@ $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
 
+$preview = false;
+if( strlen($_GET['preview']) && $_GET['preview'] )
+    $preview = true;
+
 $page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Comparison Test$testLabel.";
 ?>
@@ -47,13 +51,14 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="sensitive" value="1">
             <?php
-            if( strlen($_GET['origin']) )
-            {
+            if ($preview) {
+                echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setCookie&#09;http://%HOSTR%&#09;_GPSSPRVW=1&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
+                echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
+            } elseif( strlen($_GET['origin']) ) {
                 echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
-            }
-            else
-            {
+            } else {
                 echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
@@ -74,7 +79,9 @@ $page_description = "Comparison Test$testLabel.";
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
               
-              if( strlen($_GET['origin']) )
+              if ($preview) {
+                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+              } elseif( strlen($_GET['origin']) )
                 echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
               else
                 echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
@@ -205,6 +212,9 @@ $page_description = "Comparison Test$testLabel.";
                     </ul>
                     <ul class="input_fields">
                         <li>
+                            <?php
+                            if (!$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
+                            ?>
                             <label for="backend">Optimization Settings</label>
                             <select name="backend" id="backend">
                                 <option value="prod" selected>Default (Safe)</option>
@@ -215,6 +225,11 @@ $page_description = "Comparison Test$testLabel.";
                                 }                                    
                                 ?>
                             </select>
+                            <?php
+                            } else {
+                            echo "<input type=\"hidden\" name=\"backend\" id=\"backend\" value=\"prod\">\n";
+                            }
+                            ?>
                         </li>
                         <li>
                             <label for="wait">Expected Wait</label>
@@ -339,7 +354,7 @@ $page_description = "Comparison Test$testLabel.";
                 }
 
                 <?php
-                if (!array_key_exists('origin', $_GET) || !strlen($_GET['origin'])) {
+                if (!$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
                 ?>
                 var backend = form.backend.value;
                 if (backend == 'aggressive') {

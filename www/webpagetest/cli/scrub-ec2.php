@@ -45,15 +45,21 @@ if( $ec2 )
             foreach($locations as $loc) {
                 $loc_testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
                 foreach ($loc_testers as $id => $info) {
-                    if (!array_key_exists($id, $testers)) {
-                        $testers[$id] = $info;
-                        $testers[$id]['locCount'] = 1;
-                    } else {
-                        $testerLocCount = $testers[$id]['locCount'];
-                        if (array_key_exists('test', $info) && strlen($info['test'])) {
+                    $elapsed = 0;
+                    if (array_key_exists('updated', $info) && $info['updated'] < $now) {
+                        $elapsed = $now - $info['updated'];
+                    }
+                    if ($elapsed < 1800) {   // only count test machines that have contacted us in the last 30 minutes
+                        if (!array_key_exists($id, $testers)) {
                             $testers[$id] = $info;
+                            $testers[$id]['locCount'] = 1;
+                        } else {
+                            $testerLocCount = $testers[$id]['locCount'];
+                            if (array_key_exists('test', $info) && strlen($info['test'])) {
+                                $testers[$id] = $info;
+                            }
+                            $testers[$id]['locCount'] = $testerLocCount + 1;
                         }
-                        $testers[$id]['locCount'] = $testerLocCount + 1;
                     }
                 }
             }
@@ -62,11 +68,17 @@ if( $ec2 )
             // they aren't showing up for all of the locations, reboot them
             $reboot = array();
             foreach ($testers as $id => $info) {
+                $lifetime = 0;
+                if (array_key_exists('first_contact', $info) && $info['first_contact'] < $now) {
+                    $lifetime = $now - $info['first_contact'];
+                }
+                $busy = false;
+                if (array_key_exists('test', $info) && strlen($info['test'])) {
+                    $busy = true;
+                }
                 if ($info['locCount'] < $locCount && 
-                    (!array_key_exists('test', $info) || !strlen($info['test'])) &&
-                    array_key_exists('first_contact', $info) && 
-                    $info['first_contact'] < $now &&
-                    $now - $info['first_contact'] > 600) {
+                    !$busy &&
+                    $lifetime > 600) {
                     echo "$id needs to be rebooted\n";
                     $reboot[] = $id;
                 }
