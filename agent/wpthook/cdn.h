@@ -77,6 +77,7 @@ CDN_PROVIDER cdnList[] = {
   {".swiftcdn1.com", "SwiftCDN"},
   {".cdngc.net", "CDNetworks"},
   {".fastly.net", "Fastly"},
+  {".nocookie.net", "Fastly"},
   {".gslb.taobao.com", "Taobao"},
   {".gslb.tbcache.com", "Alimama"},
   {".mirror-image.net", "Mirror Image"},
