@@ -684,6 +684,8 @@ function WrapableString($in)
 */
 function DisplayGraphs() {
     global $tests;
+    global $filmstrip_end_frame;
+    $progress_end = 0;
     require_once('breakdown.inc');
     $mimeTypes = array('html', 'js', 'css', 'text', 'image', 'flash', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
@@ -696,6 +698,17 @@ function DisplayGraphs() {
     foreach($tests as &$test) {
         $requests;
         $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
+        if (array_key_exists('progress', $test['video']) 
+            && array_key_exists('frames', $test['video']['progress'])) {
+                foreach ($test['video']['progress']['frames'] as $ms => &$data) {
+                    if ($ms > $progress_end && array_key_exists('progress', $data)) {
+                        $progress_end = $ms;
+                    }
+                }
+            }
+    }
+    if ($progress_end) {
+        echo '<div id="compare_visual_progress" class="compare-graph"></div>';
     }
     echo '<div id="compare_times" class="compare-graph"></div>';
     echo '<div id="compare_requests" class="compare-graph"></div>';
@@ -721,6 +734,32 @@ function DisplayGraphs() {
             echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
             echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
             echo 'dataBytes.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
+            if ($progress_end) {
+                echo "var dataProgress = google.visualization.arrayToDataTable([\n";
+                echo "  ['Time (ms)'";
+                foreach($tests as &$test) {
+                    echo ", '{$test['name']}'";
+                }
+                echo " ]";
+                for ($ms = 0; $ms <= $progress_end; $ms += 100) {
+                    echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
+                    foreach($tests as &$test) {
+                        $progress = 0;
+                        if (array_key_exists('last_progress', $test)) {
+                            $progress = $test['last_progress'];
+                        }
+                        if (array_key_exists('progress', $test['video']) 
+                            && array_key_exists('frames', $test['video']['progress'])
+                            && array_key_exists($ms, $test['video']['progress']['frames'])) {
+                            $progress = $test['video']['progress']['frames'][$ms]['progress'];
+                        }
+                        $test['last_progress'] = $progress;
+                        echo ", $progress";
+                    }
+                    echo "]";
+                }
+                echo "]);\n";
+            }
             $row = 0;
             foreach($timeMetrics as $metric => $label) {
                 echo "dataTimes.setValue($row, 0, '$label');\n";
@@ -751,6 +790,10 @@ function DisplayGraphs() {
                 }
                 $row++;
             }
+            if ($progress_end) {
+                echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
+                echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
+            }            
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
             timesChart.draw(dataTimes, {title: 'Page Load Timings (ms)'});
