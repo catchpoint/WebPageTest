@@ -57,12 +57,15 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_render_check_thread(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
-  ,_test(test) {
+  ,_test(test)
+  ,no_gdi_(false)
+  ,gdi_only_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
+  paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -404,6 +407,9 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
 -----------------------------------------------------------------------------*/
 void TestState::UpdateBrowserWindow() {
   DWORD browser_process_id = GetCurrentProcessId();
+  if (no_gdi_) {
+    browser_process_id = GetParentProcessId(browser_process_id);
+  }
   HWND old_frame = _frame_window;
   if (::FindBrowserWindow(browser_process_id, _frame_window, 
                           _document_window)) {
@@ -756,6 +762,14 @@ DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
 void TestState::FindBrowserNameAndVersion() {
   TCHAR file_name[MAX_PATH];
   if (GetModuleFileName(NULL, file_name, _countof(file_name))) {
+    CString exe(file_name);
+    exe.MakeLower();
+    if (exe.Find(_T("webkit2webprocess.exe")) >= 0) {
+      no_gdi_ = true;
+      _browser_name = _T("Safari");
+    } else if (exe.Find(_T("safari.exe")) >= 0) {
+      gdi_only_ = true;
+    }
     DWORD unused;
     DWORD info_size = GetFileVersionInfoSize(file_name, &unused);
     if (info_size) {
@@ -778,7 +792,8 @@ void TestState::FindBrowserNameAndVersion() {
           WORD code_page;
         } *translate;
         // Read the list of languages and code pages.
-        if (VerQueryValue(version_info, TEXT("\\VarFileInfo\\Translation"),
+        if (_browser_name.IsEmpty() &&
+            VerQueryValue(version_info, TEXT("\\VarFileInfo\\Translation"),
                           (LPVOID*)&translate, &size)) {
           // Use the first language/code page.
           CString key;

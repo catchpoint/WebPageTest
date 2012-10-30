@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static CWsHook * pHook = NULL;
 
+//#define TRACE_WINSOCK 1
+
 /******************************************************************************
 *******************************************************************************
 **															                                    				 **
@@ -257,12 +259,18 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
     if( ret != INVALID_SOCKET && !_test_state._exit )
       _sockets.Create(ret);
   }
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSASocketW, socket created"), ret);
+#endif
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 int CWsHook::closesocket(SOCKET s) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - closesocket"), s);
+#endif
   int ret = SOCKET_ERROR;
   _sockets.ResetSslFd();
   EnterCriticalSection(&cs);
@@ -279,18 +287,36 @@ int CWsHook::closesocket(SOCKET s) {
 -----------------------------------------------------------------------------*/
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, 
                                                               IN int namelen) {
+#ifdef TRACE_WINSOCK
+  if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
+    struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
+    ATLTRACE(_T("%d - connect started to %d.%d.%d.%d"), s,
+             ip_name->sin_addr.S_un.S_un_b.s_b1,
+             ip_name->sin_addr.S_un.S_un_b.s_b2,
+             ip_name->sin_addr.S_un.S_un_b.s_b3,
+             ip_name->sin_addr.S_un.S_un_b.s_b4);
+  } else {
+    ATLTRACE(_T("%d - connect started, unsupported protocol"), s);
+  }
+#endif
   int ret = SOCKET_ERROR;
   _sockets.ResetSslFd();
   if (!_test_state._exit)
     _sockets.Connect(s, name, namelen);
   if (_connect)
     ret = _connect(s, name, namelen);
-  if (!ret)
+  if (!ret) {
     _sockets.Connected(s);
-  else if(ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - connected synchronously"), s);
+#endif
+  } else if(ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK) {
     EnterCriticalSection(&cs);
     _connecting.SetAt(s,s);
     LeaveCriticalSection(&cs);
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - async connect started"), s);
+#endif
   }
   return ret;
 }
@@ -310,6 +336,9 @@ int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
       _sockets.DataIn(s, chunk, false);
     }
   }
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - recv, %d byte buffer returned %d"), s, len, ret);
+#endif
   return ret;
 }
 
@@ -343,6 +372,9 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     }
   }
   _sockets.ResetSslFd();
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSARecv returned %d"), s, ret);
+#endif
   return ret;
 }
 
@@ -350,6 +382,9 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
 -----------------------------------------------------------------------------*/
 int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - send %d bytes"), s, len);
+#endif
   if (_send) {
     _sockets.ClaimSslFd(s);
     DataChunk chunk(buf, len);
@@ -372,6 +407,9 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
               LPWSAOVERLAPPED lpOverlapped,
               LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSASend %d buffers"), s, dwBufferCount);
+#endif
   if (_WSASend) {
     bool is_modified = 0;
     unsigned original_len = 0;
@@ -435,6 +473,9 @@ int CWsHook::select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
     }
     LeaveCriticalSection(&cs);
   }
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("select returned %d"), ret);
+#endif
   return ret;
 }
 
@@ -571,6 +612,9 @@ void CWsHook::FreeAddrInfoW(PADDRINFOW pAddrInfo) {
 -----------------------------------------------------------------------------*/
 BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
               LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSAGetOverlappedResult"), s);
+#endif
   BOOL ret = false;
   _sockets.ResetSslFd();
   if (_WSAGetOverlappedResult)
@@ -612,6 +656,9 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
 -----------------------------------------------------------------------------*/
 int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject, 
                                 long lNetworkEvents) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSAEventSelect"), s);
+#endif
   int ret = SOCKET_ERROR;
   _sockets.ResetSslFd();
   if (_WSAEventSelect)
@@ -623,6 +670,9 @@ int CWsHook::WSAEventSelect(SOCKET s, WSAEVENT hEventObject,
 -----------------------------------------------------------------------------*/
 int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                             LPWSANETWORKEVENTS lpNetworkEvents) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("%d - WSAEnumNetworkEvents"), s);
+#endif
   int ret = SOCKET_ERROR;
   _sockets.ResetSslFd();
   if (_WSAEnumNetworkEvents)

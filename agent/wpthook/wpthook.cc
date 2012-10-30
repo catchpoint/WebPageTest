@@ -110,10 +110,12 @@ void WptHook::Init(){
 #ifdef DEBUG
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
-  _winsock_hook.Init();
-  _nspr_hook.Init();
-  _schannel_hook.Init();
-  _wininet_hook.Init();
+  if (!_test_state.gdi_only_) {
+    _winsock_hook.Init();
+    _nspr_hook.Init();
+    _schannel_hook.Init();
+    _wininet_hook.Init();
+  }
   _gdi_hook.Init();
   _test_state.Init();
   _test.LoadFromFile();
@@ -184,14 +186,21 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
             _done = true;
             if (_test_state._frame_window) {
               WptTrace(loglevel::kTrace, 
-                          _T("[wpthook] - **** Exiting Chrome\n"));
+                          _T("[wpthook] - **** Exiting Hooked Browser\n"));
               ::SendMessage(_test_state._frame_window,WM_CLOSE,0,0);
             }
           }
         }
 
     default:
-        ret = false;
+        if (message == _test_state.paint_msg_) {
+          if (!_test_state._exit && _test_state._active) {
+            _test_state._screen_updated = true;
+            _test_state.CheckStartRender();
+          }
+        } else {
+          ret = false;
+        }
         break;
   }
 
@@ -217,7 +226,8 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 void WptHook::BackgroundThread() {
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
 
-  _test_server.Start();
+  if (!_test_state.gdi_only_)
+    _test_server.Start();
 
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;

@@ -142,6 +142,9 @@ public:
   int   _current_document;
   bool  _exit;
   bool  _navigated;
+  bool no_gdi_;
+  bool gdi_only_;
+  UINT paint_msg_;
 
   HWND  _frame_window;
   HWND  _document_window;

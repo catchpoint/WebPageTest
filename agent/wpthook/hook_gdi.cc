@@ -134,6 +134,10 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     _test_state.CheckStartRender();
   }
 
+  if (is_document && _test_state.gdi_only_) {
+    PostMessage(HWND_BROADCAST, _test_state.paint_msg_, 0, 0);
+  }
+
   return ret;
 }
 

@@ -50,6 +50,9 @@ TrackDns::~TrackDns(void){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void * TrackDns::LookupStart(CString& name) {
+  if (name == _T("127.0.0.1"))
+    return NULL;
+
   WptTrace(loglevel::kFrequentEvent, 
             _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
               GetCurrentThreadId(), (LPCTSTR)name);

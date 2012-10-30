@@ -46,6 +46,7 @@ private:
   void ResetIpfw(void);
   bool FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi);
   void ConfigureFirefoxPrefs();
+  HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 
   WptSettings&    _settings;
   WptTestDriver&  _test;

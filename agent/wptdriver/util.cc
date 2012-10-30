@@ -41,7 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   _T("Internet Explorer_Server"),
   _T("Chrome_RenderWidgetHostHWND"),
-  _T("MozillaWindowClass")
+  _T("MozillaWindowClass"),
+  _T("WebKit2WebViewWindowClass")
 };
 
 /*-----------------------------------------------------------------------------
@@ -181,7 +182,7 @@ bool IsBrowserDocument(HWND wnd) {
 }
 
 /*-----------------------------------------------------------------------------
-  Recursively find the highest visible window for the fiven process
+  Recursively find the highest visible window for the given process
 -----------------------------------------------------------------------------*/
 static HWND FindDocumentWindow(DWORD process_id, HWND parent) {
   HWND document_window = NULL;
@@ -528,3 +529,25 @@ CStringA JSONEscape(CString src) {
   return JSONEscapeA((LPCSTR)CT2A(src, CP_UTF8));
 }
 
+/*-----------------------------------------------------------------------------
+  Get the process ID of the parent for the supplied process
+-----------------------------------------------------------------------------*/
+DWORD GetParentProcessId(DWORD pid) {
+  DWORD parent_pid = pid;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap != INVALID_HANDLE_VALUE) {
+    PROCESSENTRY32 proc;
+    proc.dwSize = sizeof(proc);
+    if (Process32First(snap, &proc)) {
+      bool found = false;
+      do {
+        if (proc.th32ProcessID == pid) {
+          found = true;
+          parent_pid = proc.th32ParentProcessID;
+        }
+      } while (!found && Process32Next(snap, &proc));
+    }
+    CloseHandle(snap);
+  }
+  return parent_pid;
+}

@@ -59,6 +59,7 @@ public:
   CString _wpt_directory;
   CString _exe_directory;
   CString _profile_directory;
+  CString _cache_directory;
 };
 
 // dynamic settings loaded from file

@@ -140,6 +140,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       if (exe.Find(_T("iexplore.exe")) >= 0) {
         hook = false;
         lstrcat ( cmdLine, _T(" about:blank"));
+      } else if (exe.Find(_T("safari.exe")) >= 0) {
       } else {
         lstrcat ( cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
@@ -177,6 +178,12 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           ok = false;
           critical_error = true;
           _status.Set(_T("Error instrumenting browser\n"));
+        }
+
+        HANDLE hook_process = FindAdditionalHookProcess(pi.hProcess, exe);
+        if (hook_process) {
+          InstallHook(hook_process);
+          CloseHandle(hook_process);
         }
 
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
@@ -438,4 +445,45 @@ void WebBrowser::ConfigureFirefoxPrefs() {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  See if we should be hooking a process other than the one we launched
+  (i.e. Safari)
+-----------------------------------------------------------------------------*/
+HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process, 
+                                             CString exe) {
+  HANDLE hook_process = launched_process;
+
+  if (exe.Find(_T("safari.exe"))) {
+    DWORD parent_pid = GetProcessId(launched_process);
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        bool found = false;
+        do {
+          if (proc.th32ParentProcessID == parent_pid) {
+            CString exe(proc.szExeFile);
+            exe.MakeLower();
+            if (exe.Find(_T("webkit2webprocess.exe") >= 0)) {
+              found = true;
+              hook_process = OpenProcess(PROCESS_QUERY_INFORMATION | 
+                                         PROCESS_CREATE_THREAD |
+                                         PROCESS_SET_INFORMATION |
+                                         PROCESS_SUSPEND_RESUME |
+                                         PROCESS_VM_OPERATION | 
+                                         PROCESS_VM_READ | PROCESS_VM_WRITE |
+                                         PROCESS_TERMINATE | SYNCHRONIZE,
+                                         FALSE, proc.th32ProcessID);
+            }
+          }
+        } while (!found && Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  }
+
+  return hook_process;
 }

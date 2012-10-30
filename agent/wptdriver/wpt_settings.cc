@@ -237,10 +237,26 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   _wpt_directory = buff;
   _wpt_directory.Trim(_T("\\"));
 
+  CString app_data;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, buff))) {
+    app_data = buff;
+  }
+  CString local_app_data;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, buff))) {
+    local_app_data = buff;
+  }
+  CString program_files;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,
+                                NULL, SHGFP_TYPE_CURRENT, buff))) {
+    program_files = buff;
+  }
+
   // create a profile directory for the given browser
   _profile_directory = _wpt_directory + _T("\\profiles\\");
-  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-                                NULL, SHGFP_TYPE_CURRENT, buff)) ) {
+  if (!app_data.IsEmpty()) {
+    lstrcpy(buff, app_data);
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
@@ -261,6 +277,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _exe = buff;
+    _exe.Replace(_T("%PROGRAM_FILES%"), program_files);
     _exe.Trim(_T("\""));
 
     lstrcpy(buff, _exe);
@@ -278,6 +295,19 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     _options.Replace(_T("%PROFILE%"), _profile_directory);
   }
 
+  // set up some browser-specific settings
+  CString exe(_exe);
+  exe.MakeLower();
+  if (exe.Find(_T("safari.exe")) >= 0) {
+    _profile_directory = app_data + _T("\\Apple Computer");
+    if (_template.IsEmpty()) {
+      _template = _T("Safari");
+    }
+    if (_cache_directory.IsEmpty()) {
+      _cache_directory = local_app_data + _T("\\Apple Computer\\Safari");
+    }
+  }
+
   return ret;
 }
 
@@ -290,5 +320,8 @@ void BrowserSettings::ResetProfile() {
     DeleteDirectory(_profile_directory, false);
     CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\"))+_template,
                       _profile_directory);
+  }
+  if (_cache_directory.GetLength()) {
+    DeleteDirectory(_cache_directory, false);
   }
 }
