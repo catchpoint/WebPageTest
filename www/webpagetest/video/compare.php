@@ -796,7 +796,7 @@ function DisplayGraphs() {
             }            
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
-            timesChart.draw(dataTimes, {title: 'Page Load Timings (ms)'});
+            timesChart.draw(dataTimes, {title: 'Timings (ms)'});
 
             var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));
             requestsChart.draw(dataRequests, {title: 'Requests'});
