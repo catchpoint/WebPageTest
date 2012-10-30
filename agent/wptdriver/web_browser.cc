@@ -453,7 +453,7 @@ void WebBrowser::ConfigureFirefoxPrefs() {
 -----------------------------------------------------------------------------*/
 HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process, 
                                              CString exe) {
-  HANDLE hook_process = launched_process;
+  HANDLE hook_process = NULL;
 
   if (exe.Find(_T("safari.exe"))) {
     DWORD parent_pid = GetProcessId(launched_process);
