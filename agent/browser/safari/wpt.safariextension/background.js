@@ -89,9 +89,7 @@ wpt.getTask = function() {
   }
 };
 
-wpt.onStartup = function() {
-  safari.application.activeBrowserWindow.activeTab.url = 'http://127.0.0.1:8888/blank.html';
-
+wpt.onStartTesting = function() {
   // Install the event handlers for navigation events
   safari.application.activeBrowserWindow.activeTab.addEventListener("beforeNavigate", function(){
     wpt.sendEventToDriver_('navigate');
@@ -104,6 +102,12 @@ wpt.onStartup = function() {
   // Fetch tasks from wptdriver.exe .
   window.setInterval(function() {wpt.getTask();}, TASK_INTERVAL);
 };
+
+wpt.onStartup = function() {
+  safari.application.activeBrowserWindow.activeTab.url = 'http://127.0.0.1:8888/blank.html';
+
+  setTimeout(function() {wpt.onStartTesting();}, STARTUP_DELAY);
+}
 
 /***********************************************************
                       Script Commands
@@ -125,7 +129,7 @@ wpt.executeTask = function(task) {
   }
 };
 
-// Start loading tasks.
+// Initialize the startup
 setTimeout(function() {wpt.onStartup();}, STARTUP_DELAY);
 
 })();  // End closure

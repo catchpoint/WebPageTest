@@ -100,6 +100,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
   if (_test.Start()) {
     if (_browser._exe.GetLength()) {
       bool hook = true;
+      bool hook_child = false;
       TCHAR cmdLine[4096];
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
       if (_browser._options.GetLength() )
@@ -141,6 +142,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         hook = false;
         lstrcat ( cmdLine, _T(" about:blank"));
       } else if (exe.Find(_T("safari.exe")) >= 0) {
+        hook_child = true;
       } else {
         lstrcat ( cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
@@ -161,6 +163,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
 
       EnterCriticalSection(&cs);
       _browser_process = NULL;
+      HANDLE additional_process = NULL;
       bool ok = true;
       if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, CREATE_SUSPENDED, 
                         NULL, NULL, &si, &pi)) {
@@ -172,6 +175,18 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           critical_error = true;
           _status.Set(_T("Error waiting for browser to launch\n"));
         }
+
+        // wait for the child process to start if we are expecting one (Safari)
+        if (ok && hook_child) {
+          Sleep(1000);
+          for (int attempts = 0;
+               attempts < 600 && !additional_process;
+               attempts++) {
+            additional_process = FindAdditionalHookProcess(pi.hProcess, exe);
+            if (!additional_process)
+              Sleep(100);
+          }
+        }
         SuspendThread(pi.hThread);
 
         if (ok && hook && !InstallHook(pi.hProcess)) {
@@ -180,15 +195,12 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           _status.Set(_T("Error instrumenting browser\n"));
         }
 
-        HANDLE hook_process = FindAdditionalHookProcess(pi.hProcess, exe);
-        if (hook_process) {
-          InstallHook(hook_process);
-          CloseHandle(hook_process);
-        }
+        if (additional_process)
+          InstallHook(additional_process);
 
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
         if (!ConfigureIpfw(_test))
-            ok = false;
+          ok = false;
         ResumeThread(pi.hThread);
         CloseHandle(pi.hThread);
       } else {
@@ -201,16 +213,21 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       if (_browser_process && ok) {
         _status.Set(_T("Waiting up to %d seconds for the test to complete\n"), 
                     (_test._test_timeout / SECONDS_TO_MS) * 2);
+        DWORD wait_time = _test._test_timeout * 2;
         #ifdef DEBUG
-        if (WaitForSingleObject(_browser_process, INFINITE )==WAIT_OBJECT_0 ) {
-          ret = true;
-        }
-        #else
-        if (WaitForSingleObject(_browser_process, _test._test_timeout * 2) == 
+        wait_time = INFINITE;
+        #endif
+        if (additional_process) {
+          HANDLE handles[2];
+          handles[0] = _browser_process;
+          handles[1] = additional_process;
+          DWORD result = WaitForMultipleObjects(2, handles, TRUE, wait_time);
+          if (result == WAIT_OBJECT_0 || result == WAIT_OBJECT_0 + 1)
+            ret = true;
+        } else if (WaitForSingleObject(_browser_process, wait_time) == 
             WAIT_OBJECT_0 ) {
           ret = true;
         }
-        #endif
 
         // see if we need to attach to a child firefox process 
         // < 4.x spawns a child process after initializing a new profile
@@ -256,6 +273,11 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         WaitForSingleObject(_browser_process, 120000);
         CloseHandle(_browser_process);
         _browser_process = NULL;
+      }
+      if (additional_process) {
+        TerminateProcess(additional_process, 0);
+        WaitForSingleObject(additional_process, 120000);
+        CloseHandle(additional_process);
       }
       LeaveCriticalSection(&cs);
       ResetIpfw();
