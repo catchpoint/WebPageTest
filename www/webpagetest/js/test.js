@@ -146,7 +146,10 @@ function LocationChanged()
         var selected = '';
         if( browser == defaultBrowser )
             selected = ' selected';
-        browserHtml += '<option value="' + key + '"' + selected + '>' + browser + '</option>';
+        var display=browser;
+        if (display == 'Safari')
+            display = 'Safari (Windows)';
+        browserHtml += '<option value="' + key + '"' + selected + '>' + display + '</option>';
     }
     $('#browser').html(browserHtml);
     
