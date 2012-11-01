@@ -25,24 +25,21 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global describe: true, before: true, afterEach: true, it: true*/
 
 var should = require('should');
-var sinon = require('sinon');
-var logger = require('logger');
 var wd_sandbox = require('wd_sandbox');
 
-var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
-
 describe('wd_sandbox small', function() {
+  'use strict';
+
   it('should be able to create a sandboxed webdriver module', function() {
     //var sandboxedWdModule = wd_sandbox.createSandboxedWebDriverModule();
-    wd_sandbox.createSandboxedWebDriverModule.should.not.throw();
+    wd_sandbox.createSandboxedWebDriverModule.should.not.throwError();
   });
 
   it('should be able to create and build a sandboxed webdriver namespace',
       function() {
-    (function() {
-      wd_sandbox.createSandboxedWdNamespace;
-    }).should.not.throw();
+    wd_sandbox.createSandboxedWdNamespace.should.not.throwError();
   });
 });

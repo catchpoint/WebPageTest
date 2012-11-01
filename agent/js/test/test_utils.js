@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-exports.stubs = [];
+exports.stubs_ = [];
 
 /**
  * registerStub adds a stubs to the list of stubs
@@ -34,7 +34,8 @@ exports.stubs = [];
  * @param  {Object} stub to be restored at the end of the test.
  */
 exports.registerStub = function(stub) {
-  exports.stubs.push(stub);
+  'use strict';
+  exports.stubs_.push(stub);
 };
 
 /**
@@ -42,8 +43,10 @@ exports.registerStub = function(stub) {
  * cleanup any stubs that were created in the test
  */
 exports.restoreStubs = function() {
-  while (exports.stubs.length != 0)
-    var stub = exports.stubs.shift().restore();
+  'use strict';
+  while (exports.stubs_.length > 0) {
+    exports.stubs_.shift().restore();
+  }
 };
 
 /**
@@ -52,7 +55,8 @@ exports.restoreStubs = function() {
  * @param {String} desc is the error message that will be thrown.
 */
 exports.failTest = function(desc) {
-  (function() {
+  'use strict';
+  (function () {
     throw new Error(desc);
   }).should.not.throw();
 };

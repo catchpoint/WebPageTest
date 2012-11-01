@@ -25,61 +25,46 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global describe: true, before: true, afterEach: true, it: true*/
 
+var logger = require('logger');
 var sinon = require('sinon');
 var should = require('should');
 var test_utils = require('./test_utils.js');
-var logger = require('logger');
-
-var stubs = [];
-var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
-var LOCATION = process.env.LOCATION || 'TEST';
 
 describe('logger small', function() {
+  'use strict';
+
+  var logToConsole = logger.LOG_TO_CONSOLE;
+
   afterEach(function() {
     test_utils.restoreStubs();
+    logger.LOG_TO_CONSOLE = logToConsole;
   });
 
   it('should be able to output to the error, warn, info, and log consoles zzz',
       function() {
-        var consoleErrorSpy = sinon.spy();
-        var consoleErrorStub = sinon.stub(console, 'error', consoleErrorSpy);
-        test_utils.registerStub(consoleErrorStub);
+    var consoleSpy = sinon.spy();
+    Object.keys(logger.LEVELS).forEach(function(levelName) {
+      logger.LEVELS[levelName][1] = consoleSpy;
+    });
+    logger.LOG_TO_CONSOLE = true;
 
-        var consoleWarnSpy = sinon.spy();
-        var consoleWarnStub = sinon.stub(console, 'warn', consoleWarnSpy);
-        test_utils.registerStub(consoleWarnStub);
+    logger.MAX_LOG_LEVEL = 99;
+    logger.error('error message');
+    logger.warn('warning message');
+    logger.info('info message');
+    logger.extra('log message');
+    logger.MAX_LOG_LEVEL = -1;
+    logger.extra('log message');
+    logger.MAX_LOG_LEVEL = logger.LEVELS.extra[0];
+    logger.extra('log message');
+    logger.MAX_LOG_LEVEL = logger.LEVELS.alert[0];
+    logger.extra('log message');
 
-        var consoleInfoSpy = sinon.spy();
-        var consoleInfoStub = sinon.stub(console, 'info', consoleInfoSpy);
-        test_utils.registerStub(consoleInfoStub);
-
-        var consoleLogSpy = sinon.spy();
-        var consoleLogStub = sinon.stub(console, 'log', consoleLogSpy);
-        test_utils.registerStub(consoleLogStub);
-
-        var oldVerboseVar = process.env.WPT_VERBOSE;
-        var oldMaxLogLevel = process.env.WPT_MAX_LOGLEVEL;
-        process.env.WPT_MAX_LOGLEVEL = 99;
-        process.env.WPT_VERBOSE = 'true';
-        logger.log('error', 'error message');
-        logger.log('warning', 'warning message');
-        logger.log('info', 'info message');
-        logger.log('extra', 'log message');
-        process.env.WPT_MAX_LOGLEVEL = -1;
-        logger.log('extra', 'log message');
-        process.env.WPT_MAX_LOGLEVEL = 'extra';
-        logger.log('extra', 'log message');
-        process.env.WPT_MAX_LOGLEVEL = 'critical';
-        logger.log('extra', 'log message');
-        process.env.WPT_VERBOSE = oldVerboseVar;
-        process.env.WPT_MAX_LOGLEVEL = oldMaxLogLevel;
-
-        should.ok(consoleErrorSpy.withArgs('error: "error message"')
-                                 .calledOnce);
-        should.ok(consoleWarnSpy.withArgs('warning: "warning message"')
-                                .calledOnce);
-        should.ok(consoleInfoSpy.withArgs('info: "info message"').calledOnce);
-        should.ok(consoleLogSpy.withArgs('extra: "log message"').calledTwice);
-      });
+    should.ok(consoleSpy.withArgs('E: error message').calledOnce);
+    should.ok(consoleSpy.withArgs('W: warning message').calledOnce);
+    should.ok(consoleSpy.withArgs('I: info message').calledOnce);
+    should.ok(consoleSpy.withArgs('F: log message').calledTwice);
+  });
 });

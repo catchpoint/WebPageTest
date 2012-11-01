@@ -7,7 +7,7 @@ export WPT_DEBUG=false
 export WPT_MAX_LOGLEVEL=5
 src_dir="src"
 
-while getopts mvds:l:g:c o
+while getopts vds:l:m:g:c o
 do  case "$o" in
   s)  export WPT_SERVER="$OPTARG";;
   l)  export LOCATION="$OPTARG";;
@@ -17,6 +17,7 @@ do  case "$o" in
   v)  export WPT_VERBOSE=true;;
   d)  export WPT_DEBUG=true;;
   [?])  echo "Usage: $0 [-s server] [-l location] [-v] [-d] [-m level] [-c]"
+    echo "        -g    test-type    One of: client, server, sandbox"
     echo "        -s    server       WebPagetest server"
     echo "        -l    location     location name of the WebPagetest server"
     echo "        -v    verbose      mirrors all logs to stdout"
@@ -51,10 +52,19 @@ done
 
 # Find the latest version of WDJS
 declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)
-wdjs_dir=${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
+wdjs_dir="${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
 
 agent="${wpt_root}/agent/js"
+
+# Find the latest version of WD server jar, WDJS, platform-specific chromedriver
+declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)
+export SELENIUM_JAR="${selenium_jars[${#selenium_jars[@]}-1]}"
+
+declare -a chromedrivers=("$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
+export CHROMEDRIVER="${chromedrivers[${#chromedrivers[@]}-1]}"
+
 export NODE_PATH="${agent}:${agent}/${src_dir}:${wdjs_dir}"
+export PATH="${agent}/node_modules/.bin:${PATH}"
 
 if [ -z "${tests}" ]; then
   if [ "$src_dir" = "src-cov" ]; then

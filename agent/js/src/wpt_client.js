@@ -29,21 +29,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var events = require('events');
 var http = require('http');
+var logger = require('logger');
+var multipart = require('multipart');
 var path = require('path');
 var url = require('url');
 var util = require('util');
-var logger = require('logger');
 
-var getWorkServlet_ = 'work/getwork.php';
-var workDoneServlet_ = 'work/workdone.php';
+var GET_WORK_SERVLET = 'work/getwork.php';
+var RESULT_IMAGE_SERVLET = 'work/resultimage.php';
+var WORK_DONE_SERVLET = 'work/workdone.php';
 var JOB_TEST_ID = 'Test ID';
 exports.JOB_TEST_ID = JOB_TEST_ID;
+var JOB_CAPTURE_VIDEO = 'Capture Video';
+var JOB_RUNS = 'runs';
 
 var DEFAULT_JOB_TIMEOUT = 60000;
 exports.NO_JOB_PAUSE_ = 10000;
-
-var CRLF_ = '\r\n';
-var CRLF2_ = CRLF_ + CRLF_;
 
 
 /**
@@ -65,6 +66,8 @@ exports.Job = function(client, task) {
   this.client_ = client;
   this.task = task;
   this.id = task[JOB_TEST_ID];
+  this.captureVideo = (1 === task[JOB_CAPTURE_VIDEO]);
+  this.runs = task[JOB_RUNS];
   this.resultFiles = [];
   this.error = undefined;
 
@@ -72,7 +75,7 @@ exports.Job = function(client, task) {
   process.once('uncaughtException', uncaughtExceptionHandler);
 
   this.done = function() {
-    logger.log('alert', 'Finished job: ' + this.id);
+    logger.alert('Finished job: %s', this.id);
     process.removeListener('uncaughtException', uncaughtExceptionHandler);
     this.client_.jobFinished_(this);
   };
@@ -87,7 +90,7 @@ exports.Job = function(client, task) {
  */
 exports.Job.prototype.onUncaughtException_ = function(e) {
   'use strict';
-  logger.log('critical', 'Uncaught exception for job : ' + this.id);
+  logger.critical('Uncaught exception for job : %s', this.id);
   this.error = e;
   this.done();
 };
@@ -101,7 +104,7 @@ exports.Job.prototype.onUncaughtException_ = function(e) {
  * @param {String} resultType a ResultType constant defining the file role.
  * @param {String} fileName file will be sent to the server with this filename.
  * @param {String} contentType MIME content type.
- * @param {String} content the content to send.
+ * @param {String|Buffer} content the content to send.
  */
 exports.ResultFile = function(resultType, fileName, contentType, content) {
   'use strict';
@@ -117,7 +120,9 @@ exports.ResultFile = function(resultType, fileName, contentType, content) {
 exports.ResultFile.ResultType = Object.freeze({
   // PCAP: 'pcap',
   HAR: 'har',
-  TIMELINE: 'timeline'
+  TIMELINE: 'timeline',
+  IMAGE: 'image',
+  IMAGE_ANNOTATIONS: 'image_annotations'
 });
 
 
@@ -136,7 +141,7 @@ exports.processResponse = function(response, callback) {
     responseBody += chunk;
   });
   response.on('end', function() {
-    logger.log('extra', 'Got response: ' + responseBody);
+    logger.extra('Got response: %s', responseBody);
     if (callback) {
       callback(responseBody);
     }
@@ -169,13 +174,9 @@ exports.Client = function(baseUrl, location, apiKey, job_timeout) {
   this.apiKey = apiKey;
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
-  if (job_timeout)
-    this.job_timeout = job_timeout;
-  else
-    this.job_timeout = DEFAULT_JOB_TIMEOUT;
+  this.job_timeout = job_timeout || DEFAULT_JOB_TIMEOUT;
 
-  logger.log('extra', 'Created Client (urlPath=' + urlPath + '): ' +
-      JSON.stringify(this));
+  logger.extra('Created Client (urlPath=%s): %j', urlPath, this);
 };
 util.inherits(exports.Client, events.EventEmitter);
 
@@ -189,7 +190,7 @@ util.inherits(exports.Client, events.EventEmitter);
  */
 exports.Client.prototype.onUncaughtException_ = function(job, e) {
   'use strict';
-  logger.log('critical', 'Uncaught exception for job ' + job.id);
+  logger.critical('Uncaught exception for job %s', job.id);
   job.error = e;
   job.done();
 };
@@ -205,6 +206,7 @@ exports.Client.prototype.processJobResponse_ = function(responseBody) {
   'use strict';
   var self = this;
   var job = new exports.Job(this, JSON.parse(responseBody));
+  logger.info('Got job: %j', job);
   // Set up job timeout
   this.timeoutTimer_ = global.setTimeout(function() {
     self.emit('timeout', job);
@@ -217,7 +219,7 @@ exports.Client.prototype.processJobResponse_ = function(responseBody) {
   try {
     this.emit('job', job);
   } catch (e) {
-    logger.log('critical', 'Exception while running the job: ' + e.message);
+    logger.critical('Exception while running the job: %j', e);
     job.error = e;
     job.done();
   }
@@ -232,10 +234,10 @@ exports.Client.prototype.requestNextJob_ = function() {
   'use strict';
   var self = this;
   var getWorkUrl = url.resolve(this.baseUrl_,
-      getWorkServlet_ +
+      GET_WORK_SERVLET +
       '?location=' + encodeURIComponent(this.location_) + '&f=json');
 
-  logger.log('info', 'Get work: ' + getWorkUrl);
+  logger.info('Get work: %s', getWorkUrl);
   http.get(url.parse(getWorkUrl), function(res) {
     exports.processResponse(res, function(responseBody) {
       if (responseBody === '' || responseBody[0] === '<') {
@@ -260,78 +262,69 @@ exports.Client.prototype.requestNextJob_ = function() {
  */
 exports.Client.prototype.jobFinished_ = function(job) {
   'use strict';
+  logger.debug('jobFinished_: job=%s', job.id);
   // Expected finish of the current job
   if (this.currentJob_ === job) {
-    logger.log('notice', 'Job finished: ' + job.id);
+    logger.alert('Job finished: %s', job.id);
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
     this.currentJob_ = undefined;
     this.submitResult_(job);
   } else {  // Belated finish of an old already timed-out job
-    logger.log('error', 'Timed-out job finished, but too late: ' + job.id);
+    logger.error('Timed-out job finished, but too late: %s', job.id);
   }
 };
 
 /**
- * postResultFile_ will create the result file for the job.
+ * postResultFile_ submits one part of the job result, with an optional file.
  * @private
  *
  * @param  {Object} job the result file will be saved for.
- * @param  {Object} resultFile of type ResultFile.
- * @param  {Boolean} isDone whether or not the file is the last one.
- * @param  {Function} callback passed to processResponse in
- *                    the http.request callback.
+ * @param  {Object} resultFile of type ResultFile. May be null/undefined.
+ * @param  {Boolean} isDone true if this is the last part of the job result.
+ * @param  {Function} callback will get called with the HTTP response body.
  */
 exports.Client.prototype.postResultFile_ =
     function(job, resultFile, isDone, callback) {
   'use strict';
-  logger.log('extra', 'postResultFile: job=' + JSON.stringify(job) +
-    ' resultFile=' + JSON.stringify(resultFile) + ' isDone=' + isDone +
-    ' callback=' + callback);
-  // Roll MIME multipart by hand, it's too simple to justify a complex library,
-  // and it gives us more control over all the headers.
-  var boundary = '-----12345correcthorsebatterystaple6789';
-  var textPlain = 'Content-Type: text/plain';
-  var partHead = '--' + boundary + CRLF_ +
-      'Content-Disposition: form-data; name=';
-
-  var body = partHead + '"id"' + CRLF_ + textPlain + CRLF2_ + job.id + CRLF_;
+  logger.extra('postResultFile: job=%s resultFile=%s isDone=%s callback=%s',
+      job.id, (resultFile ? 'present' : null), isDone, callback);
+  var servlet = WORK_DONE_SERVLET;
+  var mp = new multipart.Multipart();
+  mp.addPart('id', job.id, ['Content-Type: text/plain']);
   if (isDone) {  // Final result submission for this job ID
-    body += partHead + '"done"' + CRLF2_ + '1' + CRLF_;
+    mp.addPart('done', '1');
   }
-  body += partHead + '"location"' + CRLF2_ + this.location_ + CRLF_;
+  mp.addPart('location', this.location_);
   if (this.apiKey) {
-    body += partHead + '"key"' + CRLF2_ + this.apiKey + CRLF_;
+    mp.addPart('key', this.apiKey);
   }
   if (resultFile) {
     // A part with name="resultType" and then the content with name="file"
-    body += partHead + '"' + resultFile.resultType + '"' + CRLF2_ +
-        '1' + CRLF_ +
-        partHead + '"file"; filename="' + resultFile.fileName + '"' +
-        CRLF_ + 'Content-Type: ' + resultFile.contentType + CRLF_ +
-        'Content-Length: ' + resultFile.content.length + CRLF_ +
-        'Content-Transfer-Encoding: binary' + CRLF2_ +
-        resultFile.content + CRLF_;
+    if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType) {
+      // Images go to a different servlet and don't need the resultType part
+      servlet = RESULT_IMAGE_SERVLET;
+    } else {
+      mp.addPart(resultFile.resultType, '1');
+    }
+    mp.addFilePart(
+        'file',
+        resultFile.fileName, resultFile.contentType, resultFile.content);
   }
-  body += '--' + boundary + '--' + CRLF_;
-  // TODO(klm): change body to chunked request.write() after adding unit tests,
-  // so that console printout would no longer be a valuable debugging aid.
+  // TODO(klm): change body to chunked request.write().
+  // Only makes sense if done for file content, the rest is peanuts.
+  var mpResponse = mp.getHeadersAndBody();
 
-  var headers = {};
-  headers['Content-Type'] = 'multipart/form-data; boundary=' + boundary;
-  headers['Content-Length'] = body.length;
-
-  var workDonePath = path.join(this.baseUrl_.path, workDoneServlet_);
   var options = {
     method: 'POST',
     host: this.baseUrl_.hostname,
     port: this.baseUrl_.port,
-    path: workDonePath,
-    headers: headers};
+    path: path.join(this.baseUrl_.path, servlet),
+    headers: mpResponse.headers};
   var request = http.request(options, function(res) {
     exports.processResponse(res, callback);
   });
-  request.end(body, 'UTF-8');
+  request.end(mpResponse.bodyBuffer, 'UTF-8');
 };
 
 /**
@@ -342,20 +335,20 @@ exports.Client.prototype.postResultFile_ =
  */
 exports.Client.prototype.submitResult_ = function(job) {
   'use strict';
-  var self = this;
+  logger.debug('submitResult_: job=%s', job.id);
   // TODO(klm): Figure out how to submit failed jobs (with job.error)
   var filesToSubmit = job.resultFiles.slice();
   // Chain submitNextResult calls off of the HTTP request callback
   var submitNextResult = function() {
     var resultFile = filesToSubmit.shift();
     if (resultFile) {
-      self.postResultFile_(job, resultFile, /*isDone=*/false, submitNextResult);
+      this.postResultFile_(job, resultFile, /*isDone=*/false, submitNextResult);
     } else {
-      self.postResultFile_(job, undefined, /*isDone=*/true, function() {
-        self.emit('done', job);
-      });
+      this.postResultFile_(job, undefined, /*isDone=*/true, function() {
+        this.emit('done', job);
+      }.bind(this));
     }
-  };
+  }.bind(this);
   submitNextResult();
 };
 

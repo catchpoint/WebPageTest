@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var vm = require('vm');
 var logger = require('logger');
 var webdriver = require('webdriver');
-logger.log('info', 'During import promise.Application: ' +
-    JSON.stringify(webdriver.promise.Application));
 
 /**
  * createSandboxedWebDriverModule creates a sandboxed webdriver Object
@@ -83,6 +81,44 @@ exports.createSandboxedWebDriverModule = function() {
   return result.promise;
 };
 
+function operationNotPermitted(name) {
+  'use strict';
+  throw new Error('Operation is not permitted: ' + name);
+}
+
+function SandboxedDriver(driver, wdSandbox, sandboxedDriverListener) {
+  'use strict';
+  logger.extra('Creating SandboxedDriver');
+
+  this.quit = operationNotPermitted.bind('quit');
+
+  var realSchedule = driver.schedule;
+  driver.schedule = function(command, description) {
+    var commandArgs = arguments;
+    wdSandbox.promise.Application.getInstance().schedule(
+        'onBeforeDriverAction: ' + description, function() {
+      sandboxedDriverListener.onBeforeDriverAction(
+          driver, command, commandArgs);
+    });
+    return realSchedule.apply(driver, arguments).then(function(result) {
+      sandboxedDriverListener.onAfterDriverAction(
+          driver, command, commandArgs, result);
+      return result;  // Don't mess with the result.
+    }, function(e) {
+      sandboxedDriverListener.onAfterDriverError(driver, command, arguments, e);
+    });
+  };
+
+  // Copy non-overridden methods
+  var methodName;
+  for (methodName in driver) {
+    if (typeof driver[methodName] === 'function' &&
+        this[methodName] === undefined) {
+      this[methodName] = driver[methodName].bind(driver);
+    }
+  }
+}
+
 /**
  * createSandboxedWdNamespace builds the sandboxed module then adds a
  * protected builder to it
@@ -90,21 +126,21 @@ exports.createSandboxedWebDriverModule = function() {
  * @param {String} serverUrl the url of the webdriver server.
  * @param {Object} capabilities sandbox information such as browser, version
  *                 and platform.
- * @param {Function} afterBuildCb the callback to be called once the sandbox
- *                   Object has been created.
+ * @param {Object} sandboxedDriverListener an object with three methods:
+ *     onDriverBuild -- called after the driver is built, with
+ *     the driver and sandbox as args.
+ *     onAfterDriverAction -- called after each WebDriver action with
+ *     the driver, action name, array of args, and its result.
+ *     onAfterErrorCb -- called after a WebDriver action error with
+ *     the driver, action name, array of args, and the error.
  *
- * @return {Object} a sandboxed webdriver namespace safe
- *                  for user script execution.
+ * @return {Object} a sandboxed webdriver namespace for user script execution.
  */
-exports.createSandboxedWdNamespace =
-    function(serverUrl, capabilities, afterBuildCb) {
+exports.createSandboxedWdNamespace = function(
+    serverUrl, capabilities, sandboxedDriverListener) {
   'use strict';
   return exports.createSandboxedWebDriverModule().then(function(wdSandbox) {
     var isDriverBuilt = false;
-
-    var operationNotPermitted = function(key) {
-      throw new Error('Operation is not permitted: ' + key);
-    };
 
     /**
      * A proxy for restricting access to Builder operations.
@@ -121,10 +157,10 @@ exports.createSandboxedWdNamespace =
       var builder = new wdSandbox.Builder()
           .usingServer(serverUrl)
           .withCapabilities(capabilities);
-
-      for (var key in builder) {
-        if (typeof builder[key] === 'function') {
-          this[key] = operationNotPermitted.bind(key);
+      var methodName;
+      for (methodName in builder) {
+        if (typeof builder[methodName] === 'function') {
+          this[methodName] = operationNotPermitted.bind(methodName.toString());
         }
       }
 
@@ -134,8 +170,8 @@ exports.createSandboxedWdNamespace =
         }
         var builtWd = builder.build();
         isDriverBuilt = true;
-        afterBuildCb(builtWd, wdSandbox);
-        return builtWd;
+        sandboxedDriverListener.onDriverBuild(builtWd, capabilities, wdSandbox);
+        return new SandboxedDriver(builtWd, wdSandbox, sandboxedDriverListener);
       };
     }
 

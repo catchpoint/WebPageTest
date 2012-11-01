@@ -1,47 +1,64 @@
 A Node.js based agent that allows WebDriverJS scripts.
 
-= Sources layout:
+= Running the agent
+
+./wptdriver.sh (or .bat)
+
+All the runtime dependencies are cross platform and checked in under lib and
+node_modules.
+
+= Sources layout
 
 src/* -- node agent source
 src-cov/* -- Instrumented src/*. Generated and used by wpttest.sh -c
-test/*_test_*.js -- mocha unit tests
-test/jstd/* -- old js test driver tests (superseded by mocha)
-wptdriver.* -- *nix/win32 script to run the agent
-wpttest.* -- *nix/win32 script to run the unit and BDD tests
+test/* -- mocha unit tests
+wptdriver.{sh,bat} -- *nix/win32 script to run the agent
+wpttest.{sh,bat} -- *nix/win32 script to run the unit and BDD tests
 
-= Current state of affairs and missing features:
+= Current state of affairs and missing features
 
 Node.js agent can successfully complete an entire job.
 However, it currently only works with Chrome and instead of entering the url
 in the "Website Url" text field on WebPagetest, you have to enter a webdriver
 script in the script tab. The most basic script looks like this:
-/*
-navigate  google.com
-*/
-driver  = new webdriver.Builder().build();
+
+driver = new webdriver.Builder().build();
 driver.get('http://www.google.com');
 driver.wait(function()  {
-return  driver.getTitle();
+  return driver.getTitle();
 });
-NOTE: there is a required tab between navigate and the url
 
-Open question -- how to deal with it if we run the agent in a browser...
+Integrate with Dummynet: done (gpeal@), untested.
 
-Collect DevTools Timeline events.
-Corresponding WPT feature -- show Timeline in the test result,
-based on the extracted DevTools Timeline viewer UI (Gabriel Peal).
-Currently the Node.js agent collects and saves timeline events and WebPagetest
-has the ability to display them in the new timeline viewer, but there is a
-problem with the way or name they are saved so the link to display them doesn't
-show up in the results
+= Running tests
 
-Migrate DevTools JSON collection to the WD logs API, after the test.
-That way other browsers could implement it as well via WD.
-No need for it to be realtime, we only need it at the very end of the test.
-That way we can quickly claim support for all other browsers and have
-browser specific DevTools collection code where it belongs -- in WD.
+./wpttest.sh (or .bat) -v -m 10
 
-Run the agent in a browser instead of NodeJS. Means reuse WD server, because
-have no ability to launch WD server. What to do if WD server crashes?
+See the script source for various options.
 
-Integrate with Dummynet (done, untested).
+The tests use Mocha (http://visionmedia.github.com/mocha/) for running
+tests, including code coverage collection;
+Should.js (https://github.com/visionmedia/should.js) for assertions;
+Sinon (https://github.com/cjohansen/sinon.js) for mocking/stubbing.
+All of these are checked in under node_modules, plain non-coverage tests
+can run from the repo itself, with no external dependencies and nothing
+to build.
+
+Coverage uses the JSCoverage library, which is no longer maintained and is
+superseded by JSCover. So far -- install jscoverage globally:
+
+  sudo npm install -g jscoverage
+
+This requires automake, which on Mac needs to be installed with "brew install
+automake". On Mac there are other issues: 1) jscoverage configure file
+specifies am__api_version="1.10", while the current one in brew is 1.12, and
+the oldest brew knows is 1.11. So while npm install jscoverage started, but
+hasn't yet launched configure, quickly Ctrl-Z it and patch that version
+in the configure script. Also, there seems to be a missing directive -lv8,
+resulting in link failures -- haven't figured that out yet, but it's
+going to be moot after we switch to JSCover.
+
+TODO(klm): switch JSCoverage -> JSCover.
+
+TODO(klm): Revamp test/disabled/wd_server_tests_large.js. Currently they have
+too many issues to run.

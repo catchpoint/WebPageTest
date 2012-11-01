@@ -25,6 +25,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global describe: true, before: true, afterEach: true, it: true*/
 
 var should = require('should');
 var http = require('http');
@@ -41,10 +42,10 @@ var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
 var LOCATION = process.env.LOCATION || 'TEST';
 
 describe('wpt_client small', function() {
+  'use strict';
 
   before(function() {
-    process.send = function(m, args) {
-    }
+    process.send = function(/*m, args*/) {};
     agent_main.setSystemCommands();
   });
 
@@ -109,7 +110,7 @@ describe('wpt_client small', function() {
 
   it('should submit the correct number of result files', function() {
     this.timeout(10000);
-    var submitResultFiles = function(numFiles, last) {
+    var submitResultFiles = function(numFiles/*, last*/) {
       var filesSubmitted = 0;
       var flags = {
         wpt_server: WPT_SERVER,
@@ -122,16 +123,17 @@ describe('wpt_client small', function() {
         filesSubmitted += 1;
         if (isDone) {
           filesSubmitted.should.equal(numFiles + 1);
-          return;
-        }
-        else
+        } else {
           callback();
+        }
       }.bind(client));
 
       var resultFiles = [];
-      for (var i = 0; i < numFiles; i++)
-        resultFiles.push({fileName: 'file' + i,
+      var iFile;
+      for (iFile = 0; iFile < numFiles; iFile += 1) {
+        resultFiles.push({fileName: 'file' + iFile,
                           content: 'this is some content'});
+      }
 
       client.submitResult_({resultFiles: resultFiles});
     };
@@ -151,7 +153,7 @@ describe('wpt_client small', function() {
     var job = {resultFiles: [{content: 'this is the result file'}]};
 
     sinon.stub(client, 'postResultFile_',
-        function(job, resultFile, isDone, callback) {
+        function(job, resultFile/*, isDone, callback*/) {
       should.equal(resultFile.content, job.resultFiles[0].content);
       done();
     });
@@ -190,7 +192,7 @@ describe('wpt_client small', function() {
 
     var processResponseStub = sinon.stub(wpt_client, 'processResponse',
         function(res, callback) {
-      logger.log('info', 'process response callback');
+      logger.info('process response callback');
       callback('shutdown');
     });
     test_utils.registerStub(processResponseStub);

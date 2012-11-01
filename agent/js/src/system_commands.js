@@ -25,8 +25,15 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-var LINUX = 0;
-var WIN32 = 1;
+var logger = require('logger');
+
+var UNIX_ = 0;
+var WIN32_ = 1;
+var PLATFORM_TYPES_ = {
+  'linux': UNIX_,
+  'darwin': UNIX_,
+  'unix': UNIX_,
+  'win32': WIN32_};
 
 var commands = {};
 
@@ -36,22 +43,17 @@ var commands = {};
  *
  * @param {String} desc a human readable description of the command.
  * @param {String} command the platform dependent command.
- * @param {String} platform name. Probably 'linux' or 'win32'.
+ * @param {String} platform name. Probably 'UNIX' or 'win32'.
  */
 exports.set = function(desc, command, platform) {
-   var platformId;
-   switch (platform) {
-    case 'linux':
-    platformId = LINUX;
-    break;
-    case 'win32':
-    platformId = WIN32;
-    break;
-    default:
-    return;
+  'use strict';
+  var platformId = PLATFORM_TYPES_[platform];
+  if (undefined === platformId) {
+    throw new Error('Unknown platform: ' + platform);
   }
-  if (typeof commands[desc] === 'undefined')
+  if (undefined === commands[desc]) {
     commands[desc] = {};
+  }
 
   commands[desc][platformId] = command;
 };
@@ -61,29 +63,32 @@ exports.set = function(desc, command, platform) {
  *
  * @param  {String} desc the human readable description of the command.
  * @param  {String[]} args an array of arguments which will be parsed and
- *                    inserted into the command if applicable.
+ *                    inserted into the command for $0, $1, etc.
  *
  * @return {String} the command.
  */
 exports.get = function(desc, args) {
-   var platformId;
-   switch (process.platform) {
-    case 'linux':
-    platformId = LINUX;
-    break;
-    case 'win32':
-    platformId = WIN32;
-    break;
-    default:
-    return '';
+  'use strict';
+  var platformId = PLATFORM_TYPES_[process.platform];
+  if (undefined === platformId) {
+    throw new Error('Unknown process.platform: ' + process.platform);
   }
-  if (typeof commands[desc] === 'undefined')
-    return '';
+  if (undefined === commands[desc]) {
+    throw new Error('Unknown command ' + desc);
+  }
+  var command = commands[desc][platformId];
+  if (undefined === command) {
+    throw new Error(
+        'Unknown command ' + desc + ' for platform ' + process.platform);
+  }
 
-  var command = commands[desc][platformId] || '';
-
-  for (var i in args)
-    command = command.replace('$' + i, args[i]);
+  // Positional arg substitution, count backward to avoid overlap of $10 and $1.
+  if (args) {
+    var iArg;
+    for (iArg = args.length - 1; iArg >= 0; iArg -= 1) {
+      command = command.replace('$' + iArg, args[iArg]);
+    }
+  }
 
   return command;
 };

@@ -54,11 +54,10 @@ function devToolsToHar(devToolsLogPath, harPath, callback) {
       devToolsLogPath,
       harPath
   ];
-  logger.log('info', 'Starting devtools2har: ' + JAVA_COMMAND_ +
-      ' ' + javaArgs.join(' '));
+  logger.info('Starting devtools2har: %s %j', JAVA_COMMAND_, javaArgs);
   var serverProcess = child_process.spawn(JAVA_COMMAND_, javaArgs);
   serverProcess.on('exit', function(code, signal) {
-    logger.log('info', 'devtools2har exit code ' + code + ' signal ' + signal);
+    logger.info('devtools2har exit code %d, signal %s', code, signal);
     if (code === 0) {
       callback();
     } else {
@@ -67,10 +66,10 @@ function devToolsToHar(devToolsLogPath, harPath, callback) {
     }
   });
   serverProcess.stdout.on('data', function(data) {
-    logger.log('info', 'devtools2har STDOUT: ' + data);
+    logger.debug('devtools2har STDOUT: %s', data);
   });
   serverProcess.stderr.on('data', function(data) {
-    logger.log('warning', 'devtools2har  STDERR: ' + data);
+    logger.debug('devtools2har STDERR: %s', data);
   });
 }
 exports.devToolsToHar = devToolsToHar;
@@ -86,7 +85,7 @@ function main(flags) {
 
   setDevToolsToHarJar(flags.devtools2har_jar);
   devToolsToHar(flags.devtools_log, 'out.har', function() {
-    logger.log('extra', 'converted to out.har');
+    logger.extra('converted to out.har');
   });
 }
 

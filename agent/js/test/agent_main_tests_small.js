@@ -25,22 +25,29 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global after: true, describe: true, before: true, afterEach: true, it: true*/
+
 var child_process = require('child_process');
 var events = require('events');
 var sinon = require('sinon');
 var should = require('should');
 var util = require('util');
 var agent_main = require('agent_main');
-var logger = require('logger');
 var test_utils = require('./test_utils.js');
 
 describe('agent_main', function() {
+  'use strict';
+
+  before(function() {
+    agent_main.setSystemCommands();
+  });
+
   afterEach(function() {
     test_utils.restoreStubs();
   });
 
   it('should cleanup job on timeout', function() {
-    var Client = function() { };
+    function Client() {}
     util.inherits(Client, events.EventEmitter);
     Client.prototype.run = function() { };
     var client = new Client();
@@ -100,16 +107,18 @@ describe('agent_main', function() {
     var childProcessExecCallCount = 0;
     var childProcessExecStub = sinon.stub(child_process, 'exec',
         function(command, callback) {
-      childProcessExecCallCount++;
-      if (childProcessExecCallCount == 1)
+      childProcessExecCallCount += 1;
+      if (childProcessExecCallCount === 1) {
         callback(undefined, '456 def\n789 ghi', '');
-      else
+      } else {
         callback(undefined, '', '');
+      }
     });
     test_utils.registerStub(childProcessExecStub);
 
     var killPidsSpy = sinon.spy();
     var killPidsStub = sinon.stub(agent_main, 'killPids', killPidsSpy);
+    test_utils.registerStub(killPidsStub);
 
     agent_main.killCallPidCommands = [];
     agent_main.killCallsCompleted = 0;

@@ -43,7 +43,6 @@ exports.METHOD_PREFIX = METHOD_PREFIX;
  */
 function Page(devTools) {
   'use strict';
-  var self = this;
   this.devTools_ = devTools;
 }
 util.inherits(Page, events.EventEmitter);
@@ -82,15 +81,15 @@ function main() {
   dt.on('connect', function() {
     page.enable();
     var id = page.open('http://google.com/translate', function(result) {
-      logger.log('info', 'Result for ' + id + ': ' + JSON.stringify(result));
+      logger.info('Result for ' + id + ': ' + JSON.stringify(result));
     });
-    logger.log('extra', 'Sent page open message id ' + id);
+    logger.extra('Sent page open message id ' + id);
   });
 
   dt.connect();
 }
 
 if (require.main === module) {
-  logger.log('extra', 'main for page');
+  logger.extra('main for page');
   main();
 }

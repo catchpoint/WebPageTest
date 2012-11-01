@@ -25,6 +25,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global describe: true, before: true, afterEach: true, it: true*/
 
 var sinon = require('sinon');
 var should = require('should');
@@ -36,6 +37,8 @@ var devtools = require('devtools');
 var test_utils = require('./test_utils');
 
 describe('devtools small', function() {
+  'use strict';
+
   afterEach(function() {
     test_utils.restoreStubs();
   });
@@ -47,7 +50,7 @@ describe('devtools small', function() {
     var setEncodingSpy = sinon.spy();
     function ResponseType() {
       events.EventEmitter.call(this);
-    };
+    }
     util.inherits(ResponseType, events.EventEmitter);
     ResponseType.prototype.setEncoding = setEncodingSpy;
     var response = new ResponseType();
@@ -58,7 +61,7 @@ describe('devtools small', function() {
     response.emit('data', responseBody1);
     response.emit('data', responseBody2);
     response.emit('end');
-    (function() { response.emit('error'); }).should.throw();
+    response.emit.bind(response, 'error').should.throwError();
     should.ok(callbackSpy.calledOnce);
     should.equal(callbackSpy.args[0][0], responseBody1 + responseBody2);
   });
@@ -85,11 +88,12 @@ describe('devtools small', function() {
     var connectDebuggerSpy = sinon.spy();
     var connectDebuggerStub = sinon.stub(myDevtools, 'connectDebugger_',
         connectDebuggerSpy);
-   myDevtools.connect();
-   should.equal(myDevtools.debuggerUrl_, debuggerUrl);
-   getResponse = '';
-   (function() { myDevtools.connect() }).should.throw();
-   should.ok(connectDebuggerSpy.calledOnce);
+    test_utils.registerStub(connectDebuggerStub);
 
+    myDevtools.connect();
+    should.equal(myDevtools.debuggerUrl_, debuggerUrl);
+    getResponse = '';
+    myDevtools.connect.should.throwError();
+    should.ok(connectDebuggerSpy.calledOnce);
    });
 });

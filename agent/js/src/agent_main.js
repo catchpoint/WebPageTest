@@ -35,16 +35,17 @@ var system_commands = require('system_commands');
 var logger = require('logger');
 var webdriver = require('webdriver');
 var wd_utils = require('wd_utils.js');
-var wpt_client = require('./wpt_client');
+var wpt_client = require('wpt_client');
+var Zip = require('node-zip');
 
 var flagDefs = {
   knownOpts: {
     wpt_server: [String, null],
     location: [String, null],
     java: [String, null],
-    selenium_jar: [String, null],
+    seleniumJar: [String, null],
     chromedriver: [String, null],
-    devtools2har_jar: [String, null],
+    devtools2harJar: [String, null],
     job_timeout: [Number, null],
     api_key: [String, null]
   },
@@ -55,10 +56,11 @@ var HAR_FILE_ = './results.har';
 var DEVTOOLS_EVENTS_FILE_ = './devtools_events.json';
 var IPFW_FLUSH_FILE_ = './ipfw_flush.sh';
 
-var javaCommand, selenium_jar, chromedriver;
-exports.selenium_jar = selenium_jar;
-exports.chromedriver = chromedriver;
+var javaCommand;
 var wdServer_;
+
+exports.seleniumJar = undefined;
+exports.chromedriver = undefined;
 
 exports.killCallPidCommands = [];
 exports.killCallsCompleted = 0;
@@ -69,14 +71,13 @@ exports.killCallsCompleted = 0;
  */
 function deleteHarTempFiles() {
   'use strict';
-  var paths = [DEVTOOLS_EVENTS_FILE_, HAR_FILE_];
-  for (var i in paths) {
+  [DEVTOOLS_EVENTS_FILE_, HAR_FILE_].forEach(function(path) {
     try {
-      fs.unlinkSync(paths[i]);
+      fs.unlinkSync(path);
     } catch (e) {
       // Ignore exception if the file does not exist
     }
-  }
+  });
 }
 
 /**
@@ -93,15 +94,126 @@ function convertDevToolsToHar(devToolsMessages, harCallback) {
   fs.writeFileSync(
       DEVTOOLS_EVENTS_FILE_, JSON.stringify(devToolsMessages), 'UTF-8');
   devtools2har.devToolsToHar(DEVTOOLS_EVENTS_FILE_, HAR_FILE_, function() {
+    var harContent;
     try {
-      var harContent = fs.readFileSync(HAR_FILE_, 'UTF-8');
+      harContent = fs.readFileSync(HAR_FILE_, 'UTF-8');
     } catch (e) {
-      logger.log('error', 'Error reading results.har');
+      logger.error('Error reading results.har: %s', e);
       return;
     }
     deleteHarTempFiles();
     harCallback(harContent);
   });
+}
+
+/** flusIpfw runs the flush script used when setting or resetting ipfw */
+function flushIpfw() {
+  'use strict';
+  child_process.exec(system_commands.get('run', [IPFW_FLUSH_FILE_]));
+}
+
+/**
+ * Actually makes the system calls to start traffic shaping.
+ *
+ * @param {Number} bwIn input bandwidth throttling.
+ * @param {Number} bwOut output bandwidth throttling.
+ * @param {Number} latency induces fixed round trip latency.
+ */
+function startIpfw(bwIn, bwOut, latency) {
+  'use strict';
+  logger.info('Starting traffic shaping');
+  var latencyIn, latencyOut;
+  if (typeof bwIn === 'undefined') {
+    bwIn = 0;
+  }
+  if (typeof bwOut === 'undefined') {
+    bwOut = 0;
+  }
+  if (typeof latency === 'undefined') {
+    latencyIn = latencyOut = 'noerror';
+  } else {
+    latencyIn = latencyOut = Math.floor(latency / 2);
+    // if the latency is odd, add 1 to latencyOut to ensure they sum to latency.
+    if (0 !== latency % 2) {
+      latencyOut += 1;
+    }
+  }
+  var pipeInCommand = 'ipfw pipe 1 config bw ' + bwIn + 'Kbit/s delay' +
+      (latencyIn ? ' ' + latencyIn  + 'ms' : '');
+  var pipeOutCommand = 'ipfw pipe 2 config bw ' + bwOut + 'Kbit/s delay' +
+          (latencyOut ? ' ' + latencyOut  + 'ms' : '');
+
+  var mainWdApp = webdriver.promise.Application.getInstance();
+  // TODO(klm): promise & resolution in child_process.exec callback.
+  mainWdApp.schedule('Start ipfw traffic shaping', function() {
+    flushIpfw();
+  }).then(function() {
+    child_process.exec(pipeInCommand);
+  }).then(function() {
+    child_process.exec(pipeOutCommand);
+  });
+}
+
+/**
+ * startTrafficShaping tell startIpfw to start traffic shaping if it can.
+ *
+ * @param {Number} bwIn input bandwidth throttling.
+ * @param {Number} bwOut output bandwidth throttling.
+ * @param {Number} latency induces fixed round trip latency.
+ */
+function startTrafficShaping(bwIn, bwOut, latency) {
+  'use strict';
+  wd_utils.commandExists('ipfw',
+      startIpfw.bind(bwIn, bwOut, latency),
+      function() {
+        logger.error('ipfw command not found, skipping traffic shaping');
+      });
+}
+
+function processDone(ipcMsg, job) {
+  'use strict';
+  var zip = new Zip();
+  if (ipcMsg.devToolsTimelineMessages) {
+    var timelineJson = JSON.stringify(ipcMsg.devToolsTimelineMessages);
+    zip.file('1_timeline.json', timelineJson);
+  }
+  if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
+    var imageDescriptors = [];
+    ipcMsg.screenshots.forEach(function(screenshot) {
+      job.resultFiles.push(new wpt_client.ResultFile(
+          wpt_client.ResultFile.ResultType.IMAGE,
+          screenshot.fileName,
+          screenshot.contentType,
+          new Buffer(screenshot.base64, 'base64')));
+      if (screenshot.description) {
+        imageDescriptors.push({
+          filename: screenshot.fileName,
+          description: screenshot.description});
+      }
+    });
+    if (imageDescriptors.length > 0) {
+      zip.file('1_images.json', JSON.stringify(imageDescriptors));
+    }
+  }
+  if (Object.keys(zip.files).length > 0) {
+    job.resultFiles.push(new wpt_client.ResultFile(
+        wpt_client.ResultFile.ResultType.TIMELINE,
+        '1_results.zip',
+        'application/zip',
+        new Buffer(zip.generate({compression:'DEFLATE'}), 'base64')));
+  }
+  if (ipcMsg.devToolsMessages) {
+    convertDevToolsToHar(ipcMsg.devToolsMessages, function(harContent) {
+      job.resultFiles.push(new wpt_client.ResultFile(
+          wpt_client.ResultFile.ResultType.HAR,
+          'results.har',
+          'application/json',
+          harContent));
+      job.done();
+    });
+  } else {
+    job.done();
+  }
 }
 
 /**
@@ -113,51 +225,33 @@ function convertDevToolsToHar(devToolsMessages, harCallback) {
 exports.run = function(client) {
   'use strict';
   client.on('job', function(job) {
-    logger.log('alert', 'Running job: ' + job.id);
-    if ('script' in job.task) {
-      logger.log('info', 'Starting traffic shaping');
+    logger.info('Running job: %s', job.id);
+    if (job.task.script) {
       startTrafficShaping(job.task.bwIn, job.task.bwOut, job.task.latency);
-      logger.log('info', 'Running script: ' + job.task.script);
+      logger.info('Running script: %s', job.task.script);
       wdServer_ = child_process.fork('./src/wd_server.js',
         [], {env: process.env});
       // is setting up the message listener after the fork a race condition?
       // I don't see a way to set up the listener before wdServer_ inherits from
       // eventemitter though.
-      wdServer_.on('message', function(m) {
-        if (m.cmd === 'done') {
-          if (m.devToolsTimelineMessages) {
-            var timelineResult = new wpt_client.ResultFile(
-                wpt_client.ResultFile.ResultType.TIMELINE,
-                job.id + '_timeline.json',
-                'application/json',
-                JSON.stringify(m.devToolsTimelineMessages));
-            job.resultFiles.push(timelineResult);
-          }
-          if (m.devToolsMessages) {
-            convertDevToolsToHar(m.devToolsMessages, function(harContent) {
-              var harResult = new wpt_client.ResultFile(
-                  wpt_client.ResultFile.ResultType.HAR,
-                  'results.har',
-                  'application/json',
-                  harContent);
-              job.resultFiles.push(harResult);
-              job.done();
-            });
-          } else {
-              job.done();
-            }
-        } else if (m.cmd === 'error') {
-          job.error = m.e;
+      wdServer_.on('message', function(ipcMsg) {
+        logger.extra('agent_main: got IPC: %s', ipcMsg.cmd);
+        if (ipcMsg.cmd === 'done') {
+          processDone(ipcMsg, job);
+        } else if (ipcMsg.cmd === 'error') {
+          job.error = ipcMsg.e;
           job.done();
-        } else if (m.cmd === 'exit') {
+        } else if (ipcMsg.cmd === 'exit') {
           exports.cleanupJob();
         }
       });
       wdServer_.send({
           cmd: 'init',
           options: {browserName: job.task.browser},
+          runNumber: 1,
+          captureVideo: job.captureVideo,
           script: job.task.script,
-          selenium_jar: exports.selenium_jar,
+          seleniumJar: exports.seleniumJar,
           chromedriver: exports.chromedriver,
           javaCommand: javaCommand
       });
@@ -166,63 +260,11 @@ exports.run = function(client) {
   });
 
   client.on('timeout', function(job) {
-    logger.log('critical', 'Stopping WD server for timed out job: ' + job.id);
+    logger.error('Stopping WD server for timed out job: %s', job.id);
     exports.cleanupJob();
   });
   client.run(/*forever=*/true);
 };
-
-/**
- * startTrafficShaping tell startIpfw to start traffic shaping if it can.
- *
- * @param {Number} bwIn input bandwidth throttling.
- * @param {Number} bwOut output bandwidth throttling.
- * @param {Number} latency induces fixed round trip latency.
- */
-function startTrafficShaping(bwIn, bwOut, latency) {
-  wd_utils.commandExists('ipfw', startIpfw, function() { });
-}
-
-/**
- * Actually makes the system calls to start traffic shaping.
- *
- * @param {Number} bwIn input bandwidth throttling.
- * @param {Number} bwOut output bandwidth throttling.
- * @param {Number} latency induces fixed round trip latency.
- */
-function startIpfw(bwIn, bwOut, latency) {
-  var latency1, latency2;
-  if (typeof bwIn === 'undefined')
-    bwIn = 0;
-  if (typeof bwOut === 'undefined')
-    bwOut = 0;
-  if (typeof latency === 'undefined')
-    latency1 = latency2 = 'noerror';
-  else {
-    latency1 = latency2 = Math.floor(latency / 2);
-    // if the latency is odd, add 1 to latency 2
-    if (latency % 2)
-      latency2++;
-  }
-  var pipe1command = 'ipfw pipe 1 config bw ' + bwIn +
-      'Kbit/s delay ' + bwOut + 'ms ' + latency1;
-  var pipe2command = 'ipfw pipe 2 config bw ' + bwIn +
-      'Kbit/s delay ' + bwOut + 'ms ' + latency2;
-
-  var mainWdApp = webdriver.promise.Application.getInstance();
-  mainWdApp.schedule('Start ipfw traffic shaping', function() {
-    flushIpfw();
-  }).then(function() {
-    child_process.exec(pipe1command);
-  }).then(function() {
-    child_process.exec(pipe2command);
-  });
-}
-
-/** flusIpfw runs the flush script used when setting or resetting ipfw */
-function flushIpfw() {
-  child_process.exec(system_commands.get('run', [IPFW_FLUSH_FILE_]));
-}
 
 /**
  * cleanupJob will try to kill the webdriver server if it has been started and
@@ -230,9 +272,10 @@ function flushIpfw() {
  */
 exports.cleanupJob = function() {
   'use strict';
-  logger.log('info', 'Cleaning up child processes');
-  if (typeof wdServer_ != 'undefined')
+  logger.info('Cleaning up child processes');
+  if (typeof(wdServer_) !== 'undefined') {
     wdServer_.kill();
+  }
   wd_utils.commandExists('ipfw', flushIpfw, function() { });
   exports.killCallsCompleted = 0;
   exports.killCallPidCommands = [];
@@ -250,18 +293,17 @@ exports.killDanglingProcesses = function() {
   var command = system_commands.get('dangling pids');
   child_process.exec(command, function(error, stdout, stderr) {
     if (error && stderr !== '') {
-      logger.log('error', stderr);
+      logger.error(stderr);
     } else {
-      if (stdout === '')
+      if (stdout === '') {
         return;
-      var pidCommands = stdout.trim().split('\n')
-                                     .map(exports.pidCommandFromPsLine);
-      for (var i in pidCommands) {
-        if (pidCommands[i] !== '') {
-          logger.log('warn', pidCommands[i].pid + ' is a dangling process');
-          exports.killChildTree(pidCommands[i]);
-        }
       }
+      var pidCommands =
+          stdout.trim().split('\n').map(exports.pidCommandFromPsLine);
+      pidCommands.forEach(function(pidCommand) {
+        logger.warn('Dangling process: %s', pidCommand.pid);
+        exports.killChildTree(pidCommand);
+      });
     }
   });
 };
@@ -278,20 +320,21 @@ exports.killChildTree = function(pidCommand) {
   exports.killCallPidCommands.unshift(pidCommand);
   var command = system_commands.get('find children', [pidCommand.pid]);
   child_process.exec(command, function(error, stdout, stderr) {
-    exports.killCallsCompleted++;
+    exports.killCallsCompleted += 1;
     if (error && stderr !== '') {
-      logger.log('error', stderr);
+      logger.error(stderr);
     } else {
       if (stdout !== '') {
-        var pidCommands = stdout.trim().split('\n')
-                                       .map(exports.pidCommandFromPsLine);
-        for (var i in pidCommands) {
-          exports.killChildTree(pidCommands[i]);
-        }
+        var pidCommands =
+            stdout.trim().split('\n').map(exports.pidCommandFromPsLine);
+        pidCommands.forEach(function(pidCommand) {
+          exports.killChildTree(pidCommand);
+        });
       }
     }
-    if (exports.killCallPidCommands.length === exports.killCallsCompleted)
+    if (exports.killCallPidCommands.length === exports.killCallsCompleted) {
       exports.killPids(exports.killCallPidCommands);
+    }
   });
 };
 
@@ -306,12 +349,11 @@ exports.killChildTree = function(pidCommand) {
  */
 exports.killPids = function(pidCommands) {
   'use strict';
-  for (var i in pidCommands) {
-    logger.log('warn', 'Killing PID ' + pidCommands[i].pid + ' Command: ' +
-          pidCommands[i].command);
-    var command = system_commands.get('kill', [pidCommands[i].pid]);
+  pidCommands.forEach(function(pidCommand) {
+    logger.warn('Killing PID %s Command: ', pidCommand.pid, pidCommand.command);
+    var command = system_commands.get('kill', [pidCommand.pid]);
     child_process.exec(command);
-  }
+  });
 };
 
 /**
@@ -337,9 +379,10 @@ exports.pidCommandFromPsLine = function(psLine) {
  * platform is returned
  */
 exports.setSystemCommands = function() {
+  'use strict';
   system_commands.set('dangling pids',
     'ps -o pid,command --no-headers --ppid 1 | ' +
-    "egrep 'chromedriver|selenium|wd_server'",
+    'egrep "chromedriver|selenium|wd_server"',
     'linux');
   system_commands.set('dangling pids',
     'jps -l | find "selenium"',
@@ -376,7 +419,7 @@ exports.main = function(flags) {
     javaCommand = flags.java;
   }
   if (flags.selenium_jar) {
-    exports.selenium_jar = flags.selenium_jar;
+    exports.seleniumJar = flags.selenium_jar;
   } else {
     throw new Error('Flag --selenium_jar is required');
   }

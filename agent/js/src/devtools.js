@@ -43,7 +43,7 @@ function processResponse(response, callback) {
     responseBody += chunk;
   });
   response.on('end', function() {
-    logger.log('info', 'Got response: ' + responseBody);
+    logger.info('Got response: ' + responseBody);
     if (callback) {
       callback(responseBody);
     }
@@ -94,7 +94,7 @@ DevTools.prototype.connectDebugger_ = function() {
   });
 
   ws.on('open', function() {
-    logger.log('extra', 'WebSocket connected: ' + JSON.stringify(ws));
+    logger.extra('WebSocket connected: ' + JSON.stringify(ws));
     self.ws_ = ws;
     self.emit('connect');
   });
@@ -102,17 +102,18 @@ DevTools.prototype.connectDebugger_ = function() {
   ws.on('message', function(data, flags) {
     // flags.binary will be set if a binary data is received
     // flags.masked will be set if the data was masked
+    var callbackErrback;
     if (!flags.binary) {
       var messageJson = JSON.parse(data);
-      if ('result' in messageJson && 'id' in messageJson) {
-        var callbackErrback = self.commandCallbacks_[messageJson.id];
+      if (messageJson.result && messageJson.id) {
+        callbackErrback = self.commandCallbacks_[messageJson.id];
         if (callbackErrback && callbackErrback.callback) {
           delete self.commandCallbacks_[messageJson.id];
           callbackErrback.callback(messageJson.result);
         }
         self.emit('result', messageJson.id, messageJson.result);
-      } else if ('error' in messageJson && 'id' in messageJson) {
-        var callbackErrback = self.commandCallbacks_[messageJson.id];
+      } else if (messageJson.error && messageJson.id) {
+        callbackErrback = self.commandCallbacks_[messageJson.id];
         if (callbackErrback && callbackErrback.errback) {
           delete self.commandCallbacks_[messageJson.id];
           callbackErrback.errback(messageJson.error);

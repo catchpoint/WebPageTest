@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var child_process = require('child_process');
 var events = require('events');
-var util = require('util');
 var vm = require('vm');
 var devtools = require('devtools');
 var devtools_network = require('devtools_network');
@@ -37,6 +36,7 @@ var devtools_page = require('devtools_page');
 var devtools_timeline = require('devtools_timeline');
 var logger = require('logger');
 var system_commands = require('system_commands');
+var util = require('util');
 var webdriver = require('webdriver');
 var wd_sandbox = require('wd_sandbox');
 
@@ -58,35 +58,48 @@ var WebDriverServer = {
    * This is acts like a constructor
    * @this {WebDriverServer}
    *
-   * @param  {Object} options can have the properties:
-   *                    browserName: Selenium name of the browser
-   *                    browserVersion: Selenium version of the browser
-   * @param  {String} script webdriverjs script.
-   * @param  {String} selenium_jar path to the selenium jar.
-   * @param  {String} chromedriver path to the chromedriver executable.
-   * @param  {?javaCommand=} javaCommand system java command.
+   * @param  {Object} initMessage the IPC message with test run parameters.
+   *     Has attributes:
+   *     {Object} options can have the properties:
+   *         browserName: Selenium name of the browser
+   *         browserVersion: Selenium version of the browser
+   *     {int} runNumber the test iteration number, starting with 1.
+   *     {String} script webdriverjs script.
+   *     {String} seleniumJar path to the selenium jar.
+   *     {String} chromedriver path to the chromedriver executable.
+   *     {?javaCommand=} javaCommand system java command.
    */
-  init: function(options, script, selenium_jar, chromedriver, javaCommand) {
+  init: function(initMessage) {
+      //options, runNumber, captureVideo, script,
+      //seleniumJar, chromedriver, javaCommand) {
     'use strict';
-    this.selenium_jar = selenium_jar;
-    this.chromedriver_ = chromedriver;
-    this.options_ = options || {};
-    this.script_ = script;
+    this.options_ = initMessage.options || {};
+    this.runNumber_ = initMessage.runNumber;
+    this.captureVideo_ = initMessage.captureVideo;
+    this.script_ = initMessage.script;
     this.serverProcess_ = undefined;
     this.serverUrl_ = undefined;
     this.driver_ = undefined;
+    this.driverBuildTime_ = undefined;
     this.devToolsPort_ = 1234;
     this.devToolsMessages_ = [];
     this.devToolsTimelineMessages_ = [];
-    this.javaCommand_ = javaCommand || 'java';
+    this.screenshots_ = [];
+    this.seleniumJar_ = initMessage.seleniumJar;
+    this.chromedriver_ = initMessage.chromedriver;
+    this.javaCommand_ = initMessage.javaCommand || 'java';
+    // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
+    // processing in these functions, if they call a WebDriver method.
+    // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
+    // to false upon completion of that method.
+    this.actionCbRecurseGuard_ = false;
 
     this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
   },
 
   onUncaughtException_: function(e) {
     'use strict';
-    logger.log('critical', 'Stopping WebDriver server on uncaught exception: ' +
-        e);
+    logger.critical('Stopping WebDriver server on uncaught exception: %s', e);
     process.send({cmd: 'error', e: e.toString()});
     this.stop();
   },
@@ -100,35 +113,34 @@ var WebDriverServer = {
   startServer_: function() {
     'use strict';
     var self = this;
-    if (!this.selenium_jar) {
+    if (!this.seleniumJar_) {
       throw new Error('Must set server jar before starting WebDriver server');
     }
     if (this.serverProcess_) {
-      logger.log('warning', 'prior WD server alive when launching');
+      logger.warn('prior WD server alive when launching');
       this.serverProcess_.kill();
       this.serverProcess_ = undefined;
       this.serverUrl_ = undefined;
     }
     var javaArgs = [
       '-Dwebdriver.chrome.driver=' + this.chromedriver_,
-      '-jar', this.selenium_jar
+      '-jar', this.seleniumJar_
     ];
-    logger.log('info', 'Starting WD server: ' +
-        this.javaCommand_ + ' ' + javaArgs.join(' '));
+    logger.info('Starting WD server: %s %j', this.javaCommand_, javaArgs);
     var serverProcess = child_process.spawn(this.javaCommand_, javaArgs);
     serverProcess.on('exit', function(code, signal) {
-      logger.log('info', 'WD EXIT code ' + code + ' signal ' + signal);
+      logger.info('WD EXIT code %s signal %s', code, signal);
       self.serverProcess_ = undefined;
       self.serverUrl_ = undefined;
       process.send({cmd: 'exit', code: code, signal: signal});
     });
     serverProcess.stdout.on('data', function(data) {
-      logger.log('info', 'WD STDOUT: ' + data);
+      logger.info('WD STDOUT: %s', data);
     });
     // WD STDERR only gets log level warn because it outputs a lot of harmless
     // information over STDERR
     serverProcess.stderr.on('warn', function(data) {
-      logger.log('error', 'WD STDERR: ' + data);
+      logger.error('WD STDERR: %s', data);
     });
     this.serverProcess_ = serverProcess;
     this.serverUrl_ = 'http://localhost:4444/wd/hub';
@@ -152,16 +164,6 @@ var WebDriverServer = {
     }, WD_CONNECT_TIMEOUT_MS_);
   },
 
-  onDriverBuild_: function(driver, browserCaps, wdNamespace) {
-    'use strict';
-    logger.log('extra', 'WD post-build callback, driver=' +
-        JSON.stringify(driver));
-    this.driver_ = driver;
-    if (browserCaps.browserName.indexOf('chrome') !== -1) {
-      this.connectDevTools_(wdNamespace);
-    }
-  },
-
   /**
    * connectDevTools_ attempts to create a new devtools instance and attempts to
    * connect it to the webdriver server
@@ -183,21 +185,21 @@ var WebDriverServer = {
         var pageTools = new devtools_page.Page(devTools);
         var timelineTools = new devtools_timeline.Timeline(devTools);
         networkTools.enable(function() {
-          logger.log('info', 'DevTools Network events enabled');
+          logger.info('DevTools Network events enabled');
         });
         pageTools.enable(function() {
-          logger.log('info', 'DevTools Page events enabled');
+          logger.info('DevTools Page events enabled');
         });
         timelineTools.enable(function() {
-          logger.log('info', 'DevTools Timeline events enabled');
+          logger.info('DevTools Timeline events enabled');
         });
         timelineTools.start(function() {
-          logger.log('info', 'DevTools Timeline events started');
+          logger.info('DevTools Timeline events started');
         });
         isDevtoolsConnected.resolve(true);
       });
       devTools.on('message', function(message) {
-         self.onDevToolsMessage_(message);
+          self.onDevToolsMessage_(message);
       });
       devTools.connect();
       return isDevtoolsConnected.promise;
@@ -205,36 +207,160 @@ var WebDriverServer = {
   },
 
   /**
-   * Creates a sandbox (map) in which to run a user script.
+   * Called by the sandboxed Builder after the user script calls build().
    *
-   * @param {Object}  seeds is an object that contains the additional stuff
-   *                  to put in the sandbox.
-   * @return {Object} the sandbox for the vm API.
+   * @param {Object} driver the built driver instance (real one, not sandboxed).
+   * @param {Object} browserCaps browser capabilities used to build the driver.
+   * @param {Object} wdNamespace the sandboxed namespace, for app/promise sync.
    */
-  createSandbox_: function(seeds) {
+  onDriverBuild: function(driver, browserCaps, wdNamespace) {
     'use strict';
-    var sandbox = {
-      console: console,
-      setTimeout: global.setTimeout
-    };
-    for (var property in seeds) {
-      if (seeds.hasOwnProperty(property)) {
-        logger.log('info', 'Copying seed property into sandbox: ' + property);
-        sandbox[property] = seeds[property];
-      }
+    logger.extra('WD post-build callback, driver=%j', driver);
+    this.driver_ = driver;
+    if (browserCaps.browserName.indexOf('chrome') !== -1) {
+      this.connectDevTools_(wdNamespace);
     }
-    return sandbox;
+    this.driverBuildTime_ = Date.now();
+  },
+
+  takeScreenshot_: function(driver, fileName, description) {
+    'use strict';
+    if (this.actionCbRecurseGuard_) {
+      // Check the recursion guard in the calling function
+      logger.error('Recursion guard true in takeScreenshot_');
+    }
+    this.actionCbRecurseGuard_ = true;
+    // We operate in milliseconds, WPT wants "tens of seconds" units.
+    return driver.takeScreenshot().then(function(screenshot) {
+      this.actionCbRecurseGuard_ = false;
+      logger.info('Screenshot: %s', description);
+      this.screenshots_.push({
+        fileName: fileName,
+        contentType: 'image/png',
+        base64: screenshot,
+        description: description});
+      return screenshot;  // Allow following then()'s to reuse the screenshot.
+    }.bind(this), function(e) {
+      this.actionCbRecurseGuard_ = false;
+      logger.error('failed to take screenshot: %s', e.message);
+    }.bind(this));
   },
 
   /**
-   * connect schedules the entire webpagetest job. It starts the server,
+   * Called by the sandboxed driver before each command.
+   *
+   * @param {Object} driver the built driver instance (real one, not sandboxed).
+   * @param {String} command WebDriver command name.
+   * @param {Object} commandArgs array of command arguments.
+   * *param {Object} result command result.
+   */
+  onBeforeDriverAction: function(driver, command, commandArgs) {
+    'use strict';
+    logger.extra('Injected before WD command: %s', commandArgs[1]);
+    if (this.actionCbRecurseGuard_) {
+      logger.extra('Recursion guard: before');
+      return;
+    }
+    if (command.getName() === webdriver.command.CommandName.QUIT) {
+      this.takeScreenshot_(
+          driver,
+          util.format('%d_screen.png', this.runNumber_),
+          'before WebDriver.quit()');
+    }
+  },
+
+  /**
+   * Called by the sandboxed driver after each command completion.
+   *
+   * @param {Object} driver the built driver instance (real one, not sandboxed).
+   * @param {String} command WebDriver command name.
+   * @param {Object} commandArgs array of command arguments.
+   * *param {Object} result command result.
+   */
+  onAfterDriverAction: function(driver, command, commandArgs/*, result*/) {
+    'use strict';
+    logger.extra('Injected after command: %s', commandArgs[1]);
+    if (this.actionCbRecurseGuard_) {
+      logger.extra('Recursion guard: after');
+      return;
+    }
+    if (command.getName() === webdriver.command.CommandName.QUIT) {
+      return;  // Cannot do anything after quitting the browser
+    }
+    var commandStr = commandArgs[1];
+    if (this.captureVideo_) {
+      // We operate in milliseconds, WPT wants "tens of seconds" units.
+      var wptTimestamp = (Date.now() - this.driverBuildTime_) * 10;
+      var progressFileName =
+          util.format('%d_progress_%d.png', this.runNumber_, wptTimestamp);
+      logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
+      this.takeScreenshot_(driver, progressFileName, 'After ' + commandStr)
+          .then(function(screenshot) {
+        if (command.getName() === webdriver.command.CommandName.GET) {
+          // This is also the doc-complete screenshot.
+          this.screenshots_.push({
+            fileName: util.format('%d_screen_doc.png', this.runNumber_),
+            contentType: 'image/png',
+            base64: screenshot,
+            description: commandStr});
+        }
+      }.bind(this));
+    } else if (command.getName() === webdriver.command.CommandName.GET) {
+      // No video -- just intercept a get() and take a doc-complete screenshot.
+      logger.debug('Doc-complete screenshot after: %s', commandStr);
+      this.takeScreenshot_(
+          driver,
+          util.format('%d_screen_doc.png', this.runNumber_),
+          commandStr);
+    }
+  },
+
+  /**
+   * Called by the sandboxed driver after a command failure.
+   *
+   * @param {Object} driver the built driver instance (real one, not sandboxed).
+   * @param {String} command WebDriver command name.
+   * @param {Object} commandArgs array of command arguments.
+   * @param {Object} e command error.
+   */
+  onAfterDriverError: function(driver, command, commandArgs, e) {
+    'use strict';
+    logger.error('Driver error: %s', e.message);
+    this.onAfterDriverAction(driver, command, commandArgs, e);
+  },
+
+  /**
+   * Runs the user script in a sandboxed environment.
+   *
+   * @param {Object} browserCaps browser capabilities to build the driver.
+   * @return {Object} promise that resolves when it is safe to kill the browser.
+   */
+  runSandboxedSession_: function(browserCaps) {
+    'use strict';
+    return wd_sandbox.createSandboxedWdNamespace(
+        this.serverUrl_, browserCaps, this).then(function(wdSandbox) {
+      var sandboxWdApp = wdSandbox.promise.Application.getInstance();
+      sandboxWdApp.on(wdSandbox.promise.Application.EventType.IDLE,
+          function() {
+            logger.info('The sandbox application has gone idle, history: %j',
+                sandboxWdApp.getHistory());
+          });
+      // Bring it!
+      return sandboxWdApp.schedule(
+          'Run Script',
+          this.runScript_.bind(this, wdSandbox)).then(
+          this.waitForCoalesce_.bind(this, wdSandbox, WAIT_AFTER_ONLOAD_MS_));
+    }.bind(this));
+  },
+
+  /**
+   * Schedules the entire webpagetest job. It starts the server,
    * connects the devtools, and uses the webdriver promise manager to schedule
    * the rest of the steps required to execute the job.
    * @this {WebDriverServer}
    */
   connect: function() {
     'use strict';
-    var self = this;
     this.startServer_();  // TODO(klm): Handle process failure
     process.once('uncaughtException', this.uncaughtExceptionHandler_);
     var browserCaps = {
@@ -246,83 +372,69 @@ var WebDriverServer = {
       'chrome.switches': ['-remote-debugging-port=' + this.devToolsPort_]
     };
     var mainWdApp = webdriver.promise.Application.getInstance();
-    mainWdApp.schedule('Run sandboxed WD session', function() {
-      return wd_sandbox.createSandboxedWdNamespace(
-          self.serverUrl_, browserCaps, function(driver, wdSandbox) {
-            self.onDriverBuild_(driver, browserCaps, wdSandbox);
-          }).then(function(wdSandbox) {
-            var sandboxWdApp = wdSandbox.promise.Application.getInstance();
-            sandboxWdApp.on(wdSandbox.promise.Application.EventType.IDLE,
-                function() {
-              logger.log('warn', 'The sandbox application has gone idle, ' +
-                  'history: ' + sandboxWdApp.getHistory());
-            });
-            // Bring it!
-            return sandboxWdApp.schedule('Run Script', function() {
-            self.runScript_(self.script_, wdSandbox);
-          }).then(self.waitForCoalesce(sandboxWdApp, WAIT_AFTER_ONLOAD_MS_));
-      });
-    }).then(function() {
-      self.done_();
-    }, function(e) {
-      self.onError_(e);
-    });
+    mainWdApp.schedule('Run sandboxed WD session',
+        this.runSandboxedSession_.bind(this, browserCaps)).then(
+        this.done_.bind(this),
+        this.onError_.bind(this));
 
     mainWdApp.on(webdriver.promise.Application.EventType.IDLE, function() {
-      logger.log('warn', 'The main application has gone idle, history: ' +
+      logger.info('The main application has gone idle, history: %j',
           mainWdApp.getHistory());
     });
 
-    logger.log('info', 'WD connect promise setup complete');
+    logger.info('WD connect promise setup complete');
   },
 
   /**
-   * runScript will take script and run it in the context of wd_sandbox.
-   * @this {WebDriverServer}
+   * Runs the user script in a sandboxed sandbox.
    *
-   * @param  {String} script the webdriverjs script.
    * @param  {Object} wdSandbox the context in which the script will run.
    */
-  runScript_: function(script, wdSandbox) {
+  runScript_: function(wdSandbox) {
     'use strict';
-    var sandbox = this.createSandbox_({
+    var sandbox = {
+      console: console,
+      setTimeout: global.setTimeout,
       webdriver: wdSandbox
-    });
-    vm.runInNewContext(script, sandbox, 'WPT Job Script');
+    };
+    logger.info('Running user script');
+    vm.runInNewContext(this.script_, sandbox, 'WPT Job Script');
+    logger.info('User script returned, but not necessarily finished');
   },
 
   /**
-   * waitForCoalesce is called once the webdriver script finishes and allows
-   * delayed javascript to run on the loaded page.
+   * Called once the webdriver script finishes and allows post-onLoad
+   * activity to finish on the page.
    *
-   * @param  {Object} sandboxWdApp the main instance of the webdriver sandbox.
+   * @param  {Object} wdSandbox the context in which the user script runs.
    * @param  {Number} timeout how long the browser should wait after the page
    *                  finishes loading.
    */
-  waitForCoalesce: function(sandboxWdApp, timeout) {
+  waitForCoalesce_: function(wdSandbox, timeout) {
     'use strict';
-    logger.log('info', 'Sandbox finished, waiting for browser to coalesce');
-    sandboxWdApp.scheduleTimeout(
-        'Wait to let the browser coalesce', timeout);
+    logger.info('Sandbox finished, waiting for browser to coalesce');
+    wdSandbox.promise.Application.getInstance().scheduleTimeout(
+        'Waiting for browser to coalesce', timeout);
   },
 
   done_: function() {
     'use strict';
-    var self = this;
     var mainWdApp = webdriver.promise.Application.getInstance();
-    logger.log('info', 'Sandboxed session succeeded');
+    logger.info('Sandboxed session succeeded');
     this.stop();
     mainWdApp.schedule('Emit done', function() {
+      logger.extra('wd_server: sending IPC done');
       process.send({
           cmd: 'done',
-          devToolsMessages: self.devToolsMessages_,
-          devToolsTimelineMessages: self.devToolsTimelineMessages_});
-    });
+          devToolsMessages: this.devToolsMessages_,
+          devToolsTimelineMessages: this.devToolsTimelineMessages_,
+          screenshots: this.screenshots_});
+    }.bind(this));
   },
 
   onError_: function(e) {
     'use strict';
-    logger.log('error', 'Sandboxed session failed, calling server stop(): ' +
+    logger.error('Sandboxed session failed, calling server stop(): %s',
         e.stack);
     this.stop();
     process.send({cmd: 'error', e: e});
@@ -330,8 +442,8 @@ var WebDriverServer = {
 
   onDevToolsMessage_: function(message) {
     'use strict';
-    logger.log('extra', 'DevTools message: ' + JSON.stringify(message));
-    if ('method' in message) {
+    logger.extra('DevTools message: %j', message);
+    if (undefined !== message.method) {
       if (message.method.slice(0, devtools_network.METHOD_PREFIX.length) ===
           devtools_network.METHOD_PREFIX ||
           message.method.slice(0, devtools_page.METHOD_PREFIX.length) ===
@@ -358,43 +470,47 @@ var WebDriverServer = {
         try {
           self.killServerProcess();
         } catch (killException) {
-          logger.log('error', 'WebDriver server kill failed: ' + killException);
+          logger.error('WebDriver server kill failed: %s', killException);
         }
       } else {
-        logger.log('warn', 'stop(): server process is already unset');
+        logger.warn('stop(): server process is already unset');
       }
       // Unconditionally unset them, even if the scheduled quit/kill fails
       self.driver_ = undefined;
+      self.driverBuildTime_ = undefined;
       self.serverUrl_ = undefined;
-    }
+    };
     // For closure -- this.driver_ would be reset
     var driver = this.driver_;
     if (driver) {
-      logger.log('extra', 'stop(): driver.quit()');
+      logger.extra('stop(): driver.quit()');
       driver.quit().then(killProcess, killProcess);
 
 
     } else {
-      logger.log('warn', 'stop(): driver is already unset');
+      logger.warn('stop(): driver is already unset');
       killProcess();
     }
   },
 
   killServerProcess: function() {
     'use strict';
-    if (this.serverProcess_)
+    if (this.serverProcess_) {
       this.serverProcess_.kill(system_commands.get('kill signal'));
+    }
   }
 };
 exports.WebDriverServer = WebDriverServer;
 
 process.on('message', function(m) {
+  'use strict';
   if (m.cmd === 'init') {
-    exports.WebDriverServer.init(m.options, m.script,
-        m.selenium_jar, m.chromedriver, m.javaCommand);
+    exports.WebDriverServer.init(m);
   } else if (m.cmd === 'connect') {
     exports.WebDriverServer.connect();
   } else if (m.cmd === 'stop') {
     exports.WebDriverServer.stop();
+  } else {
+    logger.error('Unrecognized IPC command %s, message: %j', m.cmd, m);
   }
 });

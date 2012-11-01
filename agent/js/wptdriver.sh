@@ -2,8 +2,8 @@
 
 server=http://localhost:8888
 location=Test
-export WPT_VERBOSE=false
-export WPT_MAX_LOGLEVEL=5
+export WPT_MAX_LOGLEVEL=7
+export WPT_VERBOSE=true
 export WPT_DEBUG=false
 
 while getopts vds:l:m: o
@@ -47,7 +47,7 @@ agent="$wpt_root/agent/js"
 devtools2har_jar="$wpt_root/lib/dt2har/target/dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar"
 
 # Find the latest version of WD server jar, WDJS, platform-specific chromedriver
-declare -a selenium_jars=("$wpt_root/lib/webdriver/java/selenium-standalone-"*.jar)
+declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)
 selenium_jar="${selenium_jars[${#selenium_jars[@]}-1]}"
 
 declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)

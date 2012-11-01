@@ -25,29 +25,27 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
+/*global describe: true, before: true, afterEach: true, it: true*/
 
 var sinon = require('sinon');
 var should = require('should');
 var child_process = require('child_process');
 var vm = require('vm');
 var devtools = require('devtools');
-var devtools2har = require('devtools2har');
 var devtools_network = require('devtools_network');
 var devtools_page = require('devtools_page');
 var devtools_timeline = require('devtools_timeline');
 var webdriver = require('webdriver');
 var logger = require('logger');
-var system_commands = require('system_commands');
 var agent_main = require('agent_main');
 var wd_server = require('wd_server');
-var wd_sandbox = require('wd_sandbox');
 var wpt_client = require('wpt_client');
 var test_utils = require('./test_utils.js');
 
-var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
-var LOCATION = process.env.LOCATION || 'TEST';
 
 describe('wd_server small', function() {
+  'use strict';
+
   afterEach(function() {
     test_utils.restoreStubs();
   });
@@ -55,7 +53,7 @@ describe('wd_server small', function() {
   before(function() {
     agent_main.setSystemCommands();
     // Needed because in the local context process has no send method
-    process.send = function(m, args) { }
+    process.send = function(/*m, args*/) {};
   });
 
   //TODO (gpeal): remove sinon.test?
@@ -71,20 +69,20 @@ describe('wd_server small', function() {
       agent_main.main(flags);
     };
 
-    runMainWithFlags.should.throw();
+    runMainWithFlags.should.throwError();
 
 
     flags.selenium_jar = 'jar';
-    runMainWithFlags.should.throw();
+    runMainWithFlags.should.throwError();
 
     flags.selenium_jar = undefined;
     flags.devtools2har_jar = 'jar';
-    runMainWithFlags.should.throw();
+    runMainWithFlags.should.throwError();
 
     flags.selenium_jar = 'jar';
 
     agent_main.main(flags);
-    agent_main.run.called.should.be.ok;
+    should.ok(agent_main.run.calledOnce);
   }));
 
   it('should be able to run a script', function() {
@@ -96,21 +94,20 @@ describe('wd_server small', function() {
       'driver.wait(function()  {return  driver.getTitle();' +
       '});';
     var sandbox_ = {a: function() {}, b: 10, c: 'abc'};
-    var description_ = 'WPT Job Script';
     var vmStub = sinon.stub(vm, 'runInNewContext',
         function(script, sandbox, description) {
       should.equal(script_, script);
       should.equal(sandbox_, sandbox_);
-      should.equal(description_, description);
     });
     test_utils.registerStub(vmStub);
+    wd_server.WebDriverServer.script_ = script_;
 
-    wd_server.WebDriverServer.runScript_(script_, sandbox_, description_);
+    wd_server.WebDriverServer.runScript_(sandbox_);
   });
 
   it('should be able to schedule a timeout to let the browser coalesce',
       function() {
-    var description_ = 'Wait to let the browser coalesce';
+    var description_ = 'Waiting for browser to coalesce';
     var timeout_ = 1337;
     var sandboxWdApp = {
       scheduleTimeout: function(description, timeout) {
@@ -118,8 +115,12 @@ describe('wd_server small', function() {
         should.equal(timeout_, timeout);
       }
     };
+    var wdSandbox = {
+      promise: {
+        Application: {
+          getInstance: function() { return sandboxWdApp; }}}};
 
-      wd_server.WebDriverServer.waitForCoalesce(sandboxWdApp, timeout_);
+      wd_server.WebDriverServer.waitForCoalesce_(wdSandbox, timeout_);
   });
 
   it('should be able to receive devtools messages ' +
@@ -142,7 +143,7 @@ describe('wd_server small', function() {
                                     }
                           };
 
-    wd_server.WebDriverServer.init();
+    wd_server.WebDriverServer.init({});
 
     wd_server.WebDriverServer.onDevToolsMessage_(devToolsTimelineMessage);
     wd_server.WebDriverServer.onDevToolsMessage_(devToolsMessage);
@@ -164,6 +165,7 @@ describe('wd_server small', function() {
       undefined);
   });
 
+/* TODO(klm): the runScript_ test should handle this
   it('should be able to make a sandbox with console, ' +
      'setTimeout, and arbitrary seeds', function() {
     var seedFunction1 = function() {
@@ -183,11 +185,12 @@ describe('wd_server small', function() {
     should.equal(sandbox.seed3, 'abc');
     should.equal(sandbox.seed4, 123);
   });
+*/
 
   it('should fail if you try to start the webdriver server before ' +
      'setting the server jar', function() {
-    wd_server.WebDriverServer.selenium_jar = undefined;
-    wd_server.WebDriverServer.startServer_.should.throw();
+    wd_server.WebDriverServer.seleniumJar_ = undefined;
+    wd_server.WebDriverServer.startServer_.should.throwError();
   });
 
   it('should be able to set the driver', function() {
@@ -199,7 +202,7 @@ describe('wd_server small', function() {
     test_utils.registerStub(connectDevToolsStub);
 
 
-    wd_server.WebDriverServer.onDriverBuild_(driver, { browserName: 'chrome' },
+    wd_server.WebDriverServer.onDriverBuild(driver, { browserName: 'chrome' },
         wdNamespace);
 
     should.ok(connectDevToolsSpy.withArgs(wdNamespace).calledOnce);
@@ -229,9 +232,9 @@ describe('wd_server small', function() {
       function() {
     var quitDriverTimesCalled = 0;
     var quitDriver = function() {
-      quitDriverTimesCalled++;
+      quitDriverTimesCalled += 1;
       return { then: function(callback, callback2) { callback(); } };
-    }
+    };
     wd_server.WebDriverServer.driver_ = { quit: quitDriver };
 
     wd_server.WebDriverServer.serverProcess_ = {};
