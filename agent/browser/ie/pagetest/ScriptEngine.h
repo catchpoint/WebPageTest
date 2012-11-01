@@ -178,6 +178,7 @@ public:
 	CString	script_url;
 	bool	fileOk;
 	DWORD	script_timeout;
+  DWORD script_activity_timeout;
 	bool	script_active;
   bool  script_waitForJSDone;
   int   script_combineSteps;

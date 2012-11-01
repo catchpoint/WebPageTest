@@ -34,13 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Mmsystem.h>
 #include "Psapi.h"
 
-// various timeouts that control when we call a page done
-#define ACTIVITY_TIMEOUT 2000
-#define REQUEST_ACTIVITY_TIMEOUT 30000
-#define FORCE_ACTIVITY_TIMEOUT 240000
-#define DOC_TIMEOUT 1000
-#define AFT_TIMEOUT 240000
-
 CTestState::CTestState(void):
 	hTimer(0)
 	,lastBytes(0)
@@ -115,6 +108,9 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 				
 				if( script_timeout != -1 )
 					timeout = script_timeout;
+
+				if( script_activity_timeout )
+					activityTimeout = script_activity_timeout;
 
 				if( !szEventName.IsEmpty() && szEventName == somEventName )
 					ok = false;
@@ -358,7 +354,10 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			// load iewatch settings
 			if( ok )
 			{
-				bindAddr = 0;
+				if( script_activity_timeout )
+					activityTimeout = script_activity_timeout;
+
+        bindAddr = 0;
 				if( key.Open(HKEY_CURRENT_USER, _T("SOFTWARE\\AOL\\ieWatch"), KEY_READ) == ERROR_SUCCESS )
 				{
 					if( runningScript && script_timeout != -1 )
@@ -661,7 +660,7 @@ void CTestState::CheckComplete()
 					  {
               DWORD elapsed = now > lastActivity && lastActivity ? (DWORD)((now - lastActivity ) / (freq / 1000)) : 0;
               DWORD elapsedRequest = now > lastRequest && lastRequest ? (DWORD)((now - lastRequest ) / (freq / 1000)) : 0;
-						  if ( (!openRequests && elapsed > ACTIVITY_TIMEOUT) ||					// no open requests and it's been longer than 2 seconds since the last request
+						  if ( (!openRequests && elapsed > activityTimeout) ||					// no open requests and it's been longer than 2 seconds since the last request
 							   (!openRequests && elapsedRequest > REQUEST_ACTIVITY_TIMEOUT) ||	// no open requests and it's been longer than 30 seconds since the last traffic on the wire
 							   (openRequests && elapsedRequest > FORCE_ACTIVITY_TIMEOUT) )	// open requests but it's been longer than 60 seconds since the last one (edge case) that touched the wire
 						  {

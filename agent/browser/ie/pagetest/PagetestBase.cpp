@@ -37,6 +37,7 @@ CPagetestBase::CPagetestBase(void):
 	, openRequests(0)
 	, testUrl(_T(""))
 	, timeout(240)
+  , activityTimeout(ACTIVITY_TIMEOUT)
 	, exitWhenDone(false)
 	, interactive(false)
 	, runningScript(false)

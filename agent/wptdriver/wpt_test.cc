@@ -42,11 +42,11 @@ static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
-
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void):_version(0),
   _test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS),
+  _activity_timeout(DEFAULT_ACTIVITY_TIMEOUT),
   _measurement_timeout(DEFAULT_TEST_TIMEOUT) {
   QueryPerformanceFrequency(&_perf_frequency);
 
@@ -499,6 +499,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     int seconds = _ttoi(command.target);
     if (seconds > 0 && seconds < 600)
       _measurement_timeout = seconds * 1000;
+  } else if (cmd == _T("setactivitytimeout")) {
+    _activity_timeout = __min(__max(_ttoi(command.target), 0), 30000);
   } else if (cmd == _T("setuseragent")) {
     _user_agent = CT2A(command.target);
   } else if (cmd == _T("addheader")) {

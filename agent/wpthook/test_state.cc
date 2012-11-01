@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Mmsystem.h>
 #include "wpt_test_hook.h"
 
-static const DWORD ACTIVITY_TIMEOUT = 2000;
 // TODO: Keep the test running till aft timeout.
 static const DWORD AFT_TIMEOUT = 10 * 1000;
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
@@ -319,7 +318,7 @@ bool TestState::IsDone() {
       } else if (is_loaded && _test._doc_complete) {
         is_page_done = true;
         done_reason = _T("Stop at document complete (i.e. onload).");
-      } else if (is_loaded && inactive_ms > ACTIVITY_TIMEOUT) {
+      } else if (is_loaded && inactive_ms > _test._activity_timeout) {
         // This is the default done criteria: onload is done and at least
         // 2 more seconds have elapsed since the last network activity.
         is_page_done = true;

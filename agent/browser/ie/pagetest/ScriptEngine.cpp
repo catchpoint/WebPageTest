@@ -41,6 +41,7 @@ CScriptEngine::CScriptEngine(void):
 	, script_error(false)
 	, script_logData(true)
 	, script_timeout(-1)
+  , script_activity_timeout(0)
 	, script_active(false)
 	, script_modifyUserAgent(true)
   , script_waitForJSDone(false)
@@ -85,6 +86,7 @@ void CScriptEngine::ScriptComplete(void)
 	script_logErrors = true;
 	script_logData = true;
 	script_timeout = -1;
+  script_activity_timeout = 0;
 	script_active = false;
 	script_modifyUserAgent = true;
 	script_lastCommand.Empty();
@@ -363,6 +365,12 @@ void CScriptEngine::ContinueScript(bool reset)
 			  {
 				  // set the ABM mode
 				  script_ABM = _ttol(item.target);
+				  err = false;
+			  }
+			  else if( !item.command.CompareNoCase(_T("setActivityTimeout")) )
+			  {
+				  // set the timeout for a given step (in seconds)
+				  script_activity_timeout = __min(__max(_ttol(item.target), 0), 30000);
 				  err = false;
 			  }
 			  else if( !item.command.CompareNoCase(_T("setTimeout")) )

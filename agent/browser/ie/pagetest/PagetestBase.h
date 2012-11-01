@@ -49,6 +49,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JPEG_DEFAULT_QUALITY 30
 #define JPEG_VIDEO_QUALITY 30
 
+// various timeouts that control when we call a page done
+#define ACTIVITY_TIMEOUT 2000
+#define REQUEST_ACTIVITY_TIMEOUT 30000
+#define FORCE_ACTIVITY_TIMEOUT 240000
+#define DOC_TIMEOUT 1000
+#define AFT_TIMEOUT 240000
+
 typedef void (__stdcall * SETGDIWINDOW)(HWND hWnd, HWND hNotify, UINT msgNotify);
 typedef void (__stdcall * SETGDIWINDOWUPDATED)(bool);
 typedef bool (__stdcall * GDIWINDOWUPDATED)(void);
@@ -231,6 +238,7 @@ public:
 	CString	testOptions;
 	bool		exitWhenDone;
 	DWORD		timeout;
+  DWORD   activityTimeout;
 	DWORD		ignoreSSL;
   DWORD    clearShortTermCacheSecs;
 	CString	customHost;
