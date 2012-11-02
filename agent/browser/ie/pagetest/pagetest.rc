@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,2,0,336
- PRODUCTVERSION 2,2,0,336
+ FILEVERSION 2,2,0,337
+ PRODUCTVERSION 2,2,0,337
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,13 +69,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "WebPagetest LLC"
+            VALUE "CompanyName", "WPO Foundation, Inc."
             VALUE "FileDescription", "IE Diagnostic Browser Plugin"
-            VALUE "FileVersion", "2.2.0.336"
+            VALUE "FileVersion", "2.2.0.337"
             VALUE "InternalName", "Pagetest.dll"
-            VALUE "LegalCopyright", "(c) 2011 WebPagetest LLC,  All rights reserved."
+            VALUE "LegalCopyright", "(c) 2012 WPO Foundation, Inc.,  All rights reserved."
             VALUE "OriginalFilename", "Pagetest.dll"
-            VALUE "ProductVersion", "2.2.0.336"
+            VALUE "ProductVersion", "2.2.0.337"
         END
     END
     BLOCK "VarFileInfo"
