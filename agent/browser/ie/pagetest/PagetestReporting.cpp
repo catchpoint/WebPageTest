@@ -3177,8 +3177,8 @@ void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
       r[i] = g[i] = b[i] = 0;
     }
     DWORD width = __max(image.GetWidth() - RIGHT_MARGIN, 0);
-    DWORD height = __max(image.GetHeight() - BOTTOM_MARGIN, 0);
-    for (DWORD y = 0; y < height; y++) {
+    DWORD height = image.GetHeight();
+    for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
       for (DWORD x = 0; x < width; x++) {
         RGBQUAD pixel = image.GetPixelColor(x,y);
         if (pixel.rgbRed != 255 || 
@@ -3585,9 +3585,9 @@ bool CPagetestReporting::ImagesAreDifferent(CxImage * img1, CxImage* img2)
         if (img1->GetBpp() == 32)
           pixel_bytes = 4;
         DWORD width = __max(img1->GetWidth() - RIGHT_MARGIN, 0);
-        DWORD height = __max(img1->GetHeight() - BOTTOM_MARGIN, 0);
+        DWORD height = img1->GetHeight();
         DWORD row_length = width * pixel_bytes;
-        for (DWORD row = 0; row < height && !different; row++) 
+        for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) 
         {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);

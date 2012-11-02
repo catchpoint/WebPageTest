@@ -268,7 +268,7 @@ void Results::SaveVideo(void) {
       DWORD newWidth = min(400, img->GetWidth() / 2);
       DWORD newHeight = (DWORD)((double)img->GetHeight() * 
                           ((double)newWidth / (double)img->GetWidth()));
-      img->Resample2(newWidth, newHeight);
+      //img->Resample2(newWidth, newHeight);
       if (last_image) {
         RGBQUAD black = {0,0,0,0};
         if (img->GetWidth() > width)
@@ -324,9 +324,9 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
         if (img1->GetBpp() == 32)
           pixel_bytes = 4;
         DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
-        DWORD height = max(img1->GetHeight() - BOTTOM_MARGIN, 0);
+        DWORD height = img1->GetHeight();
         DWORD row_length = width * pixel_bytes;
-        for (DWORD row = 0; row < height && !different; row++) {
+        for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);
           if (r1 && r2 && memcmp(r1, r2, row_length))
@@ -364,8 +364,8 @@ void Results::SaveHistogram(CxImage& image, CString file) {
       r[i] = g[i] = b[i] = 0;
     }
     DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
-    DWORD height = max(image.GetHeight() - BOTTOM_MARGIN, 0);
-    for (DWORD y = 0; y < height; y++) {
+    DWORD height = image.GetHeight();
+    for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
       for (DWORD x = 0; x < width; x++) {
         RGBQUAD pixel = image.GetPixelColor(x,y);
         if (pixel.rgbRed != 255 || 
