@@ -44,13 +44,20 @@ else
         {
             tbnDrawChecklist($img);
         }
-        elseif( is_file("$testPath/$file") ) {
-            if( !strcasecmp( $type, 'jpg') )
-                $img = imagecreatefromjpeg("$testPath/$file");
-            elseif( !strcasecmp( $type, 'gif') )
-                $img = imagecreatefromgif("$testPath/$file");
-            else
-                $img = imagecreatefrompng("$testPath/$file");
+        else {
+            if( !is_file("$testPath/$file") ) {
+                $file = str_ireplace('.jpg', '.png', $file);
+                $parts = pathinfo($file);
+                $type = $parts['extension'];
+            }
+            if( is_file("$testPath/$file") ) {
+                if( !strcasecmp( $type, 'jpg') )
+                    $img = imagecreatefromjpeg("$testPath/$file");
+                elseif( !strcasecmp( $type, 'gif') )
+                    $img = imagecreatefromgif("$testPath/$file");
+                else
+                    $img = imagecreatefrompng("$testPath/$file");
+            }
         }
 
         if( $img )
