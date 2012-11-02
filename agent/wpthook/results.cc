@@ -54,6 +54,8 @@ static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
+static const DWORD RIGHT_MARGIN = 25;
+static const DWORD BOTTOM_MARGIN = 25;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -321,8 +323,8 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
         DWORD pixel_bytes = 3;
         if (img1->GetBpp() == 32)
           pixel_bytes = 4;
-        DWORD width = img1->GetWidth();
-        DWORD height = img1->GetHeight();
+        DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
+        DWORD height = max(img1->GetHeight() - BOTTOM_MARGIN, 0);
         DWORD row_length = width * pixel_bytes;
         for (DWORD row = 0; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
@@ -361,8 +363,8 @@ void Results::SaveHistogram(CxImage& image, CString file) {
     for (int i = 0; i < 256; i++) {
       r[i] = g[i] = b[i] = 0;
     }
-    DWORD width = image.GetWidth();
-    DWORD height = image.GetHeight();
+    DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
+    DWORD height = max(image.GetHeight() - BOTTOM_MARGIN, 0);
     for (DWORD y = 0; y < height; y++) {
       for (DWORD x = 0; x < width; x++) {
         RGBQUAD pixel = image.GetPixelColor(x,y);

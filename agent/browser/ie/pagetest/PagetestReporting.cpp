@@ -60,6 +60,9 @@ using namespace std::tr1;
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 CPagetestReporting * reporting = NULL;
 
+static const DWORD RIGHT_MARGIN = 25;
+static const DWORD BOTTOM_MARGIN = 25;
+
 CPagetestReporting::CPagetestReporting(void):
 	reportSt(NONE)
 	, experimental(0)
@@ -3173,8 +3176,8 @@ void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
     for (int i = 0; i < 256; i++) {
       r[i] = g[i] = b[i] = 0;
     }
-    DWORD width = image.GetWidth();
-    DWORD height = image.GetHeight();
+    DWORD width = __max(image.GetWidth() - RIGHT_MARGIN, 0);
+    DWORD height = __max(image.GetHeight() - BOTTOM_MARGIN, 0);
     for (DWORD y = 0; y < height; y++) {
       for (DWORD x = 0; x < width; x++) {
         RGBQUAD pixel = image.GetPixelColor(x,y);
@@ -3581,8 +3584,8 @@ bool CPagetestReporting::ImagesAreDifferent(CxImage * img1, CxImage* img2)
         DWORD pixel_bytes = 3;
         if (img1->GetBpp() == 32)
           pixel_bytes = 4;
-        DWORD width = img1->GetWidth();
-        DWORD height = img1->GetHeight();
+        DWORD width = __max(img1->GetWidth() - RIGHT_MARGIN, 0);
+        DWORD height = __max(img1->GetHeight() - BOTTOM_MARGIN, 0);
         DWORD row_length = width * pixel_bytes;
         for (DWORD row = 0; row < height && !different; row++) 
         {
