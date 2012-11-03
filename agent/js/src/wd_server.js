@@ -220,10 +220,15 @@ var WebDriverServer = {
     if (browserCaps.browserName.indexOf('chrome') !== -1) {
       this.connectDevTools_(wdNamespace);
     }
+    if (this.captureVideo_) {
+      this.takeScreenshot_(
+          driver, util.format('%d_0000', this.runNumber_),
+          'after Builder.build()');
+    }
     this.driverBuildTime_ = Date.now();
   },
 
-  takeScreenshot_: function(driver, fileName, description) {
+  takeScreenshot_: function(driver, fileNameNoExt, description) {
     'use strict';
     if (this.actionCbRecurseGuard_) {
       // Check the recursion guard in the calling function
@@ -233,9 +238,10 @@ var WebDriverServer = {
     // We operate in milliseconds, WPT wants "tens of seconds" units.
     return driver.takeScreenshot().then(function(screenshot) {
       this.actionCbRecurseGuard_ = false;
-      logger.info('Screenshot: %s', description);
+      logger.info('Screenshot %s (%d bytes): %s',
+          fileNameNoExt, screenshot.length, description);
       this.screenshots_.push({
-        fileName: fileName,
+        fileName: fileNameNoExt + '.png',
         contentType: 'image/png',
         base64: screenshot,
         description: description});
@@ -264,7 +270,7 @@ var WebDriverServer = {
     if (command.getName() === webdriver.command.CommandName.QUIT) {
       this.takeScreenshot_(
           driver,
-          util.format('%d_screen.png', this.runNumber_),
+          util.format('%d_screen', this.runNumber_),
           'before WebDriver.quit()');
     }
   },
@@ -289,10 +295,10 @@ var WebDriverServer = {
     }
     var commandStr = commandArgs[1];
     if (this.captureVideo_) {
-      // We operate in milliseconds, WPT wants "tens of seconds" units.
-      var wptTimestamp = (Date.now() - this.driverBuildTime_) * 10;
+      // We operate in milliseconds, WPT wants "tenths of a second" units.
+      var wptTimestamp = Math.round((Date.now() - this.driverBuildTime_) / 100);
       var progressFileName =
-          util.format('%d_progress_%d.png', this.runNumber_, wptTimestamp);
+          util.format('%d_progress_%d', this.runNumber_, wptTimestamp);
       logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
       this.takeScreenshot_(driver, progressFileName, 'After ' + commandStr)
           .then(function(screenshot) {
@@ -310,7 +316,7 @@ var WebDriverServer = {
       logger.debug('Doc-complete screenshot after: %s', commandStr);
       this.takeScreenshot_(
           driver,
-          util.format('%d_screen_doc.png', this.runNumber_),
+          util.format('%d_screen_doc', this.runNumber_),
           commandStr);
     }
   },

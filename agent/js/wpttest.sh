@@ -3,8 +3,7 @@
 export WPT_SERVER=http://localhost:8888
 export LOCATION=Test
 export WPT_VERBOSE=false
-export WPT_DEBUG=false
-export WPT_MAX_LOGLEVEL=5
+export WPT_MAX_LOGLEVEL=extra
 src_dir="src"
 
 while getopts vds:l:m:g:c o

@@ -2,9 +2,8 @@
 
 server=http://localhost:8888
 location=Test
-export WPT_MAX_LOGLEVEL=7
+export WPT_MAX_LOGLEVEL=debug
 export WPT_VERBOSE=true
-export WPT_DEBUG=false
 
 while getopts vds:l:m: o
 do  case "$o" in
