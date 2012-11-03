@@ -180,15 +180,21 @@ function processDone(ipcMsg, job) {
   if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
     var imageDescriptors = [];
     ipcMsg.screenshots.forEach(function(screenshot) {
+      var contentBuffer = new Buffer(screenshot.base64, 'base64');
       job.resultFiles.push(new wpt_client.ResultFile(
           wpt_client.ResultFile.ResultType.IMAGE,
           screenshot.fileName,
           screenshot.contentType,
-          new Buffer(screenshot.base64, 'base64')));
+          contentBuffer));
       if (screenshot.description) {
         imageDescriptors.push({
           filename: screenshot.fileName,
           description: screenshot.description});
+      }
+      if (logger.isLogging('debug')) {
+        logger.debug('Writing a local copy of %s (%s)',
+            screenshot.fileName, screenshot.description);
+        fs.writeFileSync(screenshot.fileName, contentBuffer);
       }
     });
     if (imageDescriptors.length > 0) {

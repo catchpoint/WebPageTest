@@ -90,7 +90,8 @@ exports.Job = function(client, task) {
  */
 exports.Job.prototype.onUncaughtException_ = function(e) {
   'use strict';
-  logger.critical('Uncaught exception for job : %s', this.id);
+  logger.critical('Uncaught exception for job %s: %s', this.id, e.message);
+  logger.debug(e.stack);
   this.error = e;
   this.done();
 };
