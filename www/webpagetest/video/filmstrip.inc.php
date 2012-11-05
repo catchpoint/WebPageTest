@@ -181,7 +181,11 @@ function LoadTestData() {
             $test['video']['start'] = 20000;
             $test['video']['end'] = 0;
             $test['video']['frames'] = array();
-            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached']);
+            $end = null;
+            if (is_numeric($test['end']) && $test['end'] > 0) {
+                $end = $test['end'] / 1000.0;
+            }
+            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end);
             
             // get the path to each of the video files
             $dir = opendir($videoPath);

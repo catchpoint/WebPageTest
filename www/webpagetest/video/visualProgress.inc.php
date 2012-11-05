@@ -2,7 +2,7 @@
 /**
 * Calculate the progress for all of the images in a given directory
 */
-function GetVisualProgress($testPath, $run, $cached, $options = null) {
+function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null) {
     $frames = null;
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
@@ -10,7 +10,13 @@ function GetVisualProgress($testPath, $run, $cached, $options = null) {
     $cache_file = "$testPath/$run.$cached.visual.dat";
     $dirty = false;
     $current_version = 3;
-    if (!isset($options) && gz_is_file($cache_file)) {
+    if (isset($end)) {
+        if (is_numeric($end))
+            $end = (int)($end * 1000);
+        else
+            unset($end);
+    }
+    if (!isset($end) && !isset($options) && gz_is_file($cache_file)) {
         $frames = json_decode(gz_file_get_contents($cache_file), true);
         if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
             unset($frames);
@@ -31,10 +37,12 @@ function GetVisualProgress($testPath, $run, $cached, $options = null) {
                 if (count($parts) >= 2) {
                     if (!isset($first_file))
                         $first_file = $file;
-                    $last_file = $file;
                     $time = ((int)$parts[1]) * 100;
-                    $frames['frames'][$time] = array( 'path' => "$base_path/$file",
-                                            'file' => $file);
+                    if (!isset($end) || $time <= $end) {
+                        $last_file = $file;
+                        $frames['frames'][$time] = array( 'path' => "$base_path/$file",
+                                                'file' => $file);
+                    }
                 }
             } 
         }
@@ -69,7 +77,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null) {
             }
         }
     }
-    if (!isset($options) && $dirty && isset($frames) && count($frames))
+    if (!isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
 }

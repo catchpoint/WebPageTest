@@ -156,7 +156,10 @@ function loadPageData($file, $options = null)
             }
         }
         require_once('./video/visualProgress.inc.php');
-        $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
+        $end = null;
+        if (isset($options) && array_key_exists('end', $options))
+            $end = $options['end'];
+        $progress = GetVisualProgress(dirname($file), (int)$filename, $cached, null, $end);
         if (isset($progress) && is_array($progress)) {
             if (array_key_exists('FLI', $progress)) {
                 $ret['SpeedIndex'] = $progress['FLI'];

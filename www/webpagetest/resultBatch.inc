@@ -561,12 +561,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
                 $started = $testInfo['started'];
-            $pageData = loadAllPageData($testPath);
+            $options = array('SpeedIndex' => true, 'end' => $test['end']);
+            $pageData = loadAllPageData($testPath, $options);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
-            $visual = GetVisualProgress($testPath, $fvMedian, 0);
+            $visual = GetVisualProgress($testPath, $fvMedian, 0, null, $test['end']);
             if (array_key_exists('FLI', $visual)) {
                 $fvFLIvalue = $visual['FLI'];
             }
@@ -843,7 +844,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
         
         if (array_key_exists('pss_advanced', $testInfo) && $testInfo['pss_advanced']) {
             echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=visual\" target=\"_blank\">open in new window</a>)</h2>";
-            echo "<iframe scrolling=\"no\" frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}\"></iframe>";
+            $e1='';
+            if (is_numeric($tests['urls'][0]['end']))
+                $e1="-e:{$tests['urls'][0]['end']}";
+            $e2='';
+            if (is_numeric($tests['urls'][1]['end']))
+                $e2="-e:{$tests['urls'][1]['end']}";
+            echo "<iframe scrolling=\"no\" frameborder=\"0\" id=\"filmstrip\" src=\"/video/compare.php?embed=1&tests={$tests['urls'][0]['id']}$e1,{$tests['urls'][1]['id']}$e2&end=visual\"></iframe>";
         } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
             echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
                     <tr>
@@ -968,7 +975,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $videoComplete )
             {
                 if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
-                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                    echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {
                     echo "<h2>Visual Comparison*</h2>";
                 }
