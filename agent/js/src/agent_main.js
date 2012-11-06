@@ -240,7 +240,7 @@ exports.run = function(client, flags) {
       // I don't see a way to set up the listener before wdServer_ inherits from
       // eventemitter though.
       wdServer_.on('message', function(ipcMsg) {
-        logger.extra('agent_main: got IPC: %s', ipcMsg.cmd);
+        logger.debug('agent_main: got IPC: %s', ipcMsg.cmd);
         if (ipcMsg.cmd === 'done') {
           processDone(ipcMsg, job);
         } else if (ipcMsg.cmd === 'error') {
@@ -279,7 +279,8 @@ exports.run = function(client, flags) {
 exports.cleanupJob = function() {
   'use strict';
   logger.info('Cleaning up child processes');
-  if (typeof(wdServer_) !== 'undefined') {
+  if (wdServer_) {
+    logger.debug('Killing wd_server');
     wdServer_.kill();
   }
   wd_utils.commandExists('ipfw', flushIpfw, function() { });

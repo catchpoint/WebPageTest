@@ -450,7 +450,7 @@ var WebDriverServer = {
     logger.info('Sandboxed session succeeded');
     this.stop();
     mainWdApp.schedule('Emit done', function() {
-      logger.extra('wd_server: sending IPC done');
+      logger.debug('wd_server: sending IPC done');
       process.send({
           cmd: 'done',
           devToolsMessages: this.devToolsMessages_,
@@ -489,13 +489,12 @@ var WebDriverServer = {
    */
   stop: function() {
     'use strict';
-    var self = this;
     // Stop handling uncaught exceptions
     process.removeListener('uncaughtException', this.uncaughtExceptionHandler_);
     var killProcess = function() {
-      if (self.serverProcess_) {
+      if (this.serverProcess_) {
         try {
-          self.killServerProcess();
+          this.killServerProcess();
         } catch (killException) {
           logger.error('WebDriver server kill failed: %s', killException);
         }
@@ -503,17 +502,13 @@ var WebDriverServer = {
         logger.warn('stop(): server process is already unset');
       }
       // Unconditionally unset them, even if the scheduled quit/kill fails
-      self.driver_ = undefined;
-      self.driverBuildTime_ = undefined;
-      self.serverUrl_ = undefined;
-    };
-    // For closure -- this.driver_ would be reset
-    var driver = this.driver_;
-    if (driver) {
-      logger.extra('stop(): driver.quit()');
-      driver.quit().then(killProcess, killProcess);
-
-
+      this.driver_ = undefined;
+      this.driverBuildTime_ = undefined;
+      this.serverUrl_ = undefined;
+    }.bind(this);
+    if (this.driver_) {
+      logger.debug('stop(): driver.quit()');
+      this.driver_.quit().then(killProcess, killProcess);
     } else {
       logger.warn('stop(): driver is already unset');
       killProcess();
@@ -529,6 +524,7 @@ var WebDriverServer = {
       killSignal = undefined;
     }
     if (this.serverProcess_) {
+      logger.debug('Killing the WD server');
       this.serverProcess_.kill(killSignal);
     }
   },
