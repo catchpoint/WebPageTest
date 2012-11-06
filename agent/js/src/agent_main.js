@@ -28,13 +28,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*jslint nomen:false */
 
 var child_process = require('child_process');
-var fs = require('fs');
-var nopt = require('nopt');
 var devtools2har = require('devtools2har');
-var system_commands = require('system_commands');
+var fs = require('fs');
 var logger = require('logger');
-var webdriver = require('webdriver');
+var nopt = require('nopt');
+var process_utils = require('process_utils');
+var system_commands = require('system_commands');
 var wd_utils = require('wd_utils.js');
+var webdriver = require('webdriver');
 var wpt_client = require('wpt_client');
 var Zip = require('node-zip');
 
@@ -44,6 +45,7 @@ var flagDefs = {
     location: [String, null],
     java: [String, null],
     seleniumJar: [String, null],
+    chrome: [String, null],
     chromedriver: [String, null],
     devtools2harJar: [String, null],
     job_timeout: [Number, null],
@@ -56,14 +58,10 @@ var HAR_FILE_ = './results.har';
 var DEVTOOLS_EVENTS_FILE_ = './devtools_events.json';
 var IPFW_FLUSH_FILE_ = './ipfw_flush.sh';
 
-var javaCommand;
 var wdServer_;
 
 exports.seleniumJar = undefined;
 exports.chromedriver = undefined;
-
-exports.killCallPidCommands = [];
-exports.killCallsCompleted = 0;
 
 
 /**
@@ -226,9 +224,10 @@ function processDone(ipcMsg, job) {
  * run listens for wpt_client to start a job. Once it receives the job message
  * it initializes the webdriver server and wait for it to be done or error out
  *
- * @param  {Object} client webpagetest client object.
+ * @param {Object} client webpagetest client object.
+ * @param {Object} flags a map of flag name to flag value.
  */
-exports.run = function(client) {
+exports.run = function(client, flags) {
   'use strict';
   client.on('job', function(job) {
     logger.info('Running job: %s', job.id);
@@ -257,9 +256,10 @@ exports.run = function(client) {
           runNumber: 1,
           captureVideo: job.captureVideo,
           script: job.task.script,
-          seleniumJar: exports.seleniumJar,
-          chromedriver: exports.chromedriver,
-          javaCommand: javaCommand
+          seleniumJar: flags.selenium_jar,
+          chromedriver: flags.chromedriver,
+          chrome: flags.chrome,
+          javaCommand: flags.java
       });
       wdServer_.send({cmd: 'connect'});
     }
@@ -283,98 +283,7 @@ exports.cleanupJob = function() {
     wdServer_.kill();
   }
   wd_utils.commandExists('ipfw', flushIpfw, function() { });
-  exports.killCallsCompleted = 0;
-  exports.killCallPidCommands = [];
-  exports.killDanglingProcesses();
-};
-
-/**
- * killDanglingProcesses will search for any processes of type selenium,
- * chromedriver, or wd_server and will call killChildTree on it to kill the
- * entire process tree before killing itself.
- */
-exports.killDanglingProcesses = function() {
-  'use strict';
-  // Find PIDs of any *orphaned* Java WD server and chromedriver processes
-  var command = system_commands.get('dangling pids');
-  child_process.exec(command, function(error, stdout, stderr) {
-    if (error && stderr !== '') {
-      logger.error(stderr);
-    } else {
-      if (stdout === '') {
-        return;
-      }
-      var pidCommands =
-          stdout.trim().split('\n').map(exports.pidCommandFromPsLine);
-      pidCommands.forEach(function(pidCommand) {
-        logger.warn('Dangling process: %s', pidCommand.pid);
-        exports.killChildTree(pidCommand);
-      });
-    }
-  });
-};
-
-/**
- * Hard-kills children of pid recursively and then pid itself.
- * First it traverses the process tree and builds a list of children
- * Then it goes through the tree and kills every process in it
- *
- * @param {string} pidCommand a single line of ps info terminal/console output.
- */
-exports.killChildTree = function(pidCommand) {
-  'use strict';
-  exports.killCallPidCommands.unshift(pidCommand);
-  var command = system_commands.get('find children', [pidCommand.pid]);
-  child_process.exec(command, function(error, stdout, stderr) {
-    exports.killCallsCompleted += 1;
-    if (error && stderr !== '') {
-      logger.error(stderr);
-    } else {
-      if (stdout !== '') {
-        var pidCommands =
-            stdout.trim().split('\n').map(exports.pidCommandFromPsLine);
-        pidCommands.forEach(function(pidCommand) {
-          exports.killChildTree(pidCommand);
-        });
-      }
-    }
-    if (exports.killCallPidCommands.length === exports.killCallsCompleted) {
-      exports.killPids(exports.killCallPidCommands);
-    }
-  });
-};
-
-/**
- * killPids will iterate through a list of pidCommands and kill the pid in each
- * one. The pidCommand object is that returned by pidCommandFromPsLine which
- * has properties pid and command
- *
- * @param  {Object[]} pidCommands an array of Objects representing the processes
- *                                that should be killed. Each Object should have
- *                                the properties pid and command.
- */
-exports.killPids = function(pidCommands) {
-  'use strict';
-  pidCommands.forEach(function(pidCommand) {
-    logger.warn('Killing PID %s Command: ', pidCommand.pid, pidCommand.command);
-    var command = system_commands.get('kill', [pidCommand.pid]);
-    child_process.exec(command);
-  });
-};
-
-/**
- * pidCommandFromPsLine takes a line of stdout from a ps call, parses it,
- * and creates an Object that has the properties pid and command
- *
- * @param  {String} psLine a line of stdout from a ps or tasklist call.
- *
- * @return {Object} an object with the parsed ps information that has the
- *                  properties pid and command.
- */
-exports.pidCommandFromPsLine = function(psLine) {
-  'use strict';
-  var splitLine = psLine.trim().split(' ');
-  return {pid: splitLine.shift(), command: splitLine.join(' ')};
+  process_utils.killDanglingProcesses();
 };
 
 /**
@@ -386,28 +295,9 @@ exports.pidCommandFromPsLine = function(psLine) {
  */
 exports.setSystemCommands = function() {
   'use strict';
-  system_commands.set('dangling pids',
-    'ps -o pid,command --no-headers --ppid 1 | ' +
-    'egrep "chromedriver|selenium|wd_server"',
-    'linux');
-  system_commands.set('dangling pids',
-    'jps -l | find "selenium"',
-    'win32');
+  process_utils.setSystemCommands();
 
-  system_commands.set('find children',
-    'ps -o pid,command --no-headers --ppid $0',
-    'linux');
-  // windows doesn't need 'find children' because the taskkill /T killes
-  // the entire process tree
-
-  system_commands.set('kill', 'kill -9 $0', 'linux');
-  system_commands.set('kill', 'taskkill /F /PID $0 /T', 'win32');
-
-  system_commands.set('kill signal', 'SIGHUP', 'linux');
-  // windows should send the default kill signal
-  // system_commands.set('kill signal', '', 'win32');
-
-  system_commands.set('run', './$0', 'linux');
+  system_commands.set('run', './$0', 'unix');
   system_commands.set('run', '$0', 'win32');
 };
 
@@ -421,25 +311,17 @@ exports.setSystemCommands = function() {
 exports.main = function(flags) {
   'use strict';
   exports.setSystemCommands();
-  if (flags.java) {
-    javaCommand = flags.java;
-  }
-  if (flags.selenium_jar) {
-    exports.seleniumJar = flags.selenium_jar;
-  } else {
-    throw new Error('Flag --selenium_jar is required');
-  }
-  if (flags.chromedriver) {
-    exports.chromedriver = flags.chromedriver;
-  }
   if (flags.devtools2har_jar) {
     devtools2har.setDevToolsToHarJar(flags.devtools2har_jar);
   } else {
     throw new Error('Flag --devtools2har_jar is required');
   }
+  if (!flags.selenium_jar) {
+    throw new Error('Flag --selenium_jar is required');
+  }
   var client = new wpt_client.Client(flags.wpt_server, flags.location,
     flags.api_key, flags.job_timeout);
-  exports.run(client);
+  exports.run(client, flags);
 };
 
 if (require.main === module) {

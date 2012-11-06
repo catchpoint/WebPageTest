@@ -4,6 +4,9 @@ server=http://localhost:8888
 location=Test
 export WPT_MAX_LOGLEVEL=debug
 export WPT_VERBOSE=true
+declare -a chrome=()
+# Uncomment to use Chrome Canary on OSX
+# declare -a chrome=(--chrome "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary")
 
 while getopts vds:l:m: o
 do  case "$o" in
@@ -58,7 +61,7 @@ chromedriver="${chromedrivers[${#chromedrivers[@]}-1]}"
 export NODE_PATH="${agent}:${agent}/src:${wdjs_dir}"
 echo "NODE_PATH=$NODE_PATH"
 
-declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} --chromedriver "$chromedriver" --selenium_jar "$selenium_jar" --devtools2har_jar="$devtools2har_jar")
+declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} --chromedriver "$chromedriver" "${chrome[@]}" --selenium_jar "$selenium_jar" --devtools2har_jar="$devtools2har_jar")
 
 echo "${cmd[@]}"
 "${cmd[@]}"

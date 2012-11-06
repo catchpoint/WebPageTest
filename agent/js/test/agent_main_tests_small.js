@@ -57,73 +57,10 @@ describe('agent_main', function() {
       cleanupJobSpy);
     test_utils.registerStub(cleanupJobStub);
 
-    agent_main.run(client);
+    agent_main.run(client, {});
 
     client.emit('timeout', 'e');
 
     should.ok(cleanupJobSpy.calledOnce);
-  });
-
-  it('should kill all process in killPids', function() {
-    var pidCommands = [{ command: 'a', pid: 1 },
-                 { command: 'b', pid: 2 },
-                 { command: 'c', pid: 3 },
-                 { command: 'd', pid: 4 },
-                 { command: 'e', pid: 5 }];
-    var childProcessExecSpy = sinon.spy();
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
-        childProcessExecSpy);
-    test_utils.registerStub(childProcessExecStub);
-
-    agent_main.killPids(pidCommands);
-
-    should.equal(childProcessExecSpy.callCount, 5);
-  });
-
-  it('should be able to create a pidCommand', function() {
-    var pidCommand = agent_main.pidCommandFromPsLine('123 abc');
-    should.equal(pidCommand.pid, '123');
-    should.equal(pidCommand.command, 'abc');
-  });
-
-  it('should be able to attempt to kill dangling processes', function() {
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
-        function(command, callback) {
-      callback(undefined, '123 abc\n456 def', '');
-    });
-    test_utils.registerStub(childProcessExecStub);
-
-    var killChildTreeSpy = sinon.spy();
-    var killChildTreeStub = sinon.stub(agent_main, 'killChildTree',
-        killChildTreeSpy);
-    test_utils.registerStub(killChildTreeStub);
-
-    agent_main.killDanglingProcesses();
-
-    should.equal(killChildTreeSpy.callCount, 2);
-  });
-
-  it('should be able to kill a process tree', function() {
-    var childProcessExecCallCount = 0;
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
-        function(command, callback) {
-      childProcessExecCallCount += 1;
-      if (childProcessExecCallCount === 1) {
-        callback(undefined, '456 def\n789 ghi', '');
-      } else {
-        callback(undefined, '', '');
-      }
-    });
-    test_utils.registerStub(childProcessExecStub);
-
-    var killPidsSpy = sinon.spy();
-    var killPidsStub = sinon.stub(agent_main, 'killPids', killPidsSpy);
-    test_utils.registerStub(killPidsStub);
-
-    agent_main.killCallPidCommands = [];
-    agent_main.killCallsCompleted = 0;
-    agent_main.killChildTree('123 abc');
-
-    should.equal(killPidsSpy.callCount, 3);
   });
 });

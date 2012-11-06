@@ -71,7 +71,7 @@ if [ -z "${tests}" ]; then
     jscoverage src src-cov
     mocha --reporter html-cov > cov.html
   else
-    mocha
+    mocha --reporter spec
   fi
 else
   case tests in
@@ -85,8 +85,8 @@ else
   if [ "$src_dir" = "src-cov" ]; then
     rm -R src-cov
     jscoverage src src-cov
-    mocha --grep $tests --reporter html-cov > cov.html
+    mocha --reporter html-cov --grep $tests > cov.html
   else
-    mocha --grep $tests
+    mocha --reporter spec --grep $tests
   fi
 fi

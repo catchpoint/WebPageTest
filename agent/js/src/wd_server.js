@@ -87,6 +87,7 @@ var WebDriverServer = {
     this.screenshots_ = [];
     this.seleniumJar_ = initMessage.seleniumJar;
     this.chromedriver_ = initMessage.chromedriver;
+    this.chrome_ = initMessage.chrome;
     this.javaCommand_ = initMessage.javaCommand || 'java';
     // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
     // processing in these functions, if they call a WebDriver method.
@@ -95,6 +96,7 @@ var WebDriverServer = {
     this.actionCbRecurseGuard_ = false;
 
     this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
+    this.setSystemCommands_();
   },
 
   onUncaughtException_: function(e) {
@@ -377,6 +379,9 @@ var WebDriverServer = {
       // Only used when launching actual Chrome, ignored otherwise
       'chrome.switches': ['-remote-debugging-port=' + this.devToolsPort_]
     };
+    if (this.chrome_) {
+      browserCaps['chrome.binary'] = this.chrome_;
+    }
     var mainWdApp = webdriver.promise.Application.getInstance();
     mainWdApp.schedule('Run sandboxed WD session',
         this.runSandboxedSession_.bind(this, browserCaps)).then(
@@ -501,9 +506,23 @@ var WebDriverServer = {
 
   killServerProcess: function() {
     'use strict';
-    if (this.serverProcess_) {
-      this.serverProcess_.kill(system_commands.get('kill signal'));
+    var killSignal;
+    try {
+      killSignal = system_commands.get('kill signal');
+    } catch (e) {
+      killSignal = undefined;
     }
+    if (this.serverProcess_) {
+      this.serverProcess_.kill(killSignal);
+    }
+  },
+
+  setSystemCommands_: function() {
+    'use strict';
+
+    system_commands.set('kill signal', 'SIGHUP', 'unix');
+    // windows should send the default kill signal
+    // system_commands.set('kill signal', '', 'win32');
   }
 };
 exports.WebDriverServer = WebDriverServer;

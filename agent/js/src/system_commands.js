@@ -30,8 +30,8 @@ var logger = require('logger');
 var UNIX_ = 0;
 var WIN32_ = 1;
 var PLATFORM_TYPES_ = {
-  'linux': UNIX_,
   'darwin': UNIX_,
+  'linux': UNIX_,
   'unix': UNIX_,
   'win32': WIN32_};
 
@@ -43,7 +43,7 @@ var commands = {};
  *
  * @param {String} desc a human readable description of the command.
  * @param {String} command the platform dependent command.
- * @param {String} platform name. Probably 'UNIX' or 'win32'.
+ * @param {String} platform name, one of: darwin, linux, unix, win32.
  */
 exports.set = function(desc, command, platform) {
   'use strict';
