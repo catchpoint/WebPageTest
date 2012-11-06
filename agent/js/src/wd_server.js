@@ -224,10 +224,13 @@ var WebDriverServer = {
     }
     if (this.captureVideo_) {
       this.takeScreenshot_(
-          driver, util.format('%d_0000', this.runNumber_),
-          'after Builder.build()');
+          driver, util.format('%d_progress_0', this.runNumber_),
+          'after Builder.build()').then(function() {
+        this.driverBuildTime_ = Date.now();
+      }.bind(this));
+    } else {
+      this.driverBuildTime_ = Date.now();
     }
-    this.driverBuildTime_ = Date.now();
   },
 
   takeScreenshot_: function(driver, fileNameNoExt, description) {
