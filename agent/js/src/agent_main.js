@@ -316,8 +316,8 @@ exports.main = function(flags) {
   } else {
     throw new Error('Flag --devtools2har_jar is required');
   }
-  if (!flags.selenium_jar) {
-    throw new Error('Flag --selenium_jar is required');
+  if (!flags.selenium_jar && !flags.chromedriver) {
+    throw new Error('Either --selenium_jar or --chromedriver is required');
   }
   var client = new wpt_client.Client(flags.wpt_server, flags.location,
     flags.api_key, flags.job_timeout);

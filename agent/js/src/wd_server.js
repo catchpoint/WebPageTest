@@ -78,6 +78,7 @@ var WebDriverServer = {
     this.captureVideo_ = initMessage.captureVideo;
     this.script_ = initMessage.script;
     this.serverProcess_ = undefined;
+    this.serverPort_ = 4444;
     this.serverUrl_ = undefined;
     this.driver_ = undefined;
     this.driverBuildTime_ = undefined;
@@ -107,29 +108,40 @@ var WebDriverServer = {
   },
 
   /**
-   * startServer attempts to start the webdriver server. It initiates a promise
-   * that makes this function synchronous until the server either successfully
-   * starts or fails.
+   * Starts the WebDriver server and schedules a wait for it to be ready.
+   *
    * @this {WebDriverServer}
+   * @param {Object} browserCaps capabilities to be passed to Builder.build().
    */
-  startServer_: function() {
+  startServer_: function(browserCaps) {
     'use strict';
     var self = this;
     if (!this.seleniumJar_) {
       throw new Error('Must set server jar before starting WebDriver server');
     }
     if (this.serverProcess_) {
-      logger.warn('prior WD server alive when launching');
+      logger.error('prior WD server alive when launching');
       this.serverProcess_.kill();
       this.serverProcess_ = undefined;
       this.serverUrl_ = undefined;
     }
-    var javaArgs = [
-      '-Dwebdriver.chrome.driver=' + this.chromedriver_,
-      '-jar', this.seleniumJar_
-    ];
-    logger.info('Starting WD server: %s %j', this.javaCommand_, javaArgs);
-    var serverProcess = child_process.spawn(this.javaCommand_, javaArgs);
+    var serverCommand, serverArgs, serverUrlPath;
+    if ('chrome' === browserCaps.browserName) {
+      // Run chromedriver directly.
+      serverCommand = this.chromedriver_;
+      serverArgs = ['-port=' + this.serverPort_];
+      serverUrlPath = '';
+    } else {
+      // Fall back to the universal Java server
+      serverCommand = this.javaCommand_;
+      serverArgs = [
+        '-jar', this.seleniumJar_,
+        '-port=' + this.serverPort_
+      ];
+      serverUrlPath = '/wd/hub';
+    }
+    logger.info('Starting WD server: %s %j', serverCommand, serverArgs);
+    var serverProcess = child_process.spawn(serverCommand, serverArgs);
     serverProcess.on('exit', function(code, signal) {
       logger.info('WD EXIT code %s signal %s', code, signal);
       self.serverProcess_ = undefined;
@@ -145,7 +157,8 @@ var WebDriverServer = {
       logger.error('WD STDERR: %s', data);
     });
     this.serverProcess_ = serverProcess;
-    this.serverUrl_ = 'http://localhost:4444/wd/hub';
+    this.serverUrl_ = 'http://localhost:' + this.serverPort_ + serverUrlPath;
+    logger.info('WebDriver URL: %s', this.serverUrl_);
 
     // Create an executor to simplify querying the server to see if it is ready.
     var client = new webdriver.http.HttpClient(this.serverUrl_);
@@ -372,8 +385,6 @@ var WebDriverServer = {
    */
   connect: function() {
     'use strict';
-    this.startServer_();  // TODO(klm): Handle process failure
-    process.once('uncaughtException', this.uncaughtExceptionHandler_);
     var browserCaps = {
       browserName: (this.options_.browserName || 'chrome').toLowerCase(),
       version: this.options_.browserVersion || '',
@@ -385,6 +396,8 @@ var WebDriverServer = {
     if (this.chrome_) {
       browserCaps['chrome.binary'] = this.chrome_;
     }
+    process.once('uncaughtException', this.uncaughtExceptionHandler_);
+    this.startServer_(browserCaps);  // TODO(klm): Handle process failure
     var mainWdApp = webdriver.promise.Application.getInstance();
     mainWdApp.schedule('Run sandboxed WD session',
         this.runSandboxedSession_.bind(this, browserCaps)).then(
