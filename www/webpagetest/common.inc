@@ -182,6 +182,7 @@ if (strlen($id)) {
     }
     $cached = @(int)$req_cached;  // define a global used in other files
     $cachedText = $cached ? '_Cached' : '';
+    $test = array();
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
         touch("$testPath/testinfo.ini");
