@@ -3,7 +3,11 @@ include 'common.inc';
 include 'object_detail.inc'; 
 require_once('page_data.inc');
 require_once('waterfall.inc');
-$data = loadPageRunData($testPath, $run, $cached, array('SpeedIndex' => true));
+
+$options = null;
+if (array_key_exists('end', $_REQUEST))
+    $options = array('end' => $_REQUEST['end']);
+$data = loadPageRunData($testPath, $run, $cached, $options);
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -175,8 +179,12 @@ $page_description = "Website performance test details$testLabel";
                                 $aft = 'N/A';
                             echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
                         }
-                        if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 )
-                            echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
+                        if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
+                            if (array_key_exists('SpeedIndexCustom', $data))
+                                echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
+                            else
+                                echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
+                        }
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
                         if( $data['domElements'] > 0 )

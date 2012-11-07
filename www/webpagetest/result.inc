@@ -200,8 +200,12 @@ $page_description = "Website performance test result$testLabel.";
                                 $aft = 'N/A';
                             echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
                         }
-                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0)
-                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
+                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
+                            if(array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))
+                                echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexCustom']}</td>\n";
+                            else
+                                echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
+                        }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
                         if($pageData[$fvMedian][0]['domElements'] > 0)
@@ -370,9 +374,15 @@ $page_description = "Website performance test result$testLabel.";
                         if( gz_is_file("$testPath/{$run}_trace.json") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Trace\">Trace</a>";
                         }
-                    ?></td>
-                    <td align="center" valign="middle"><a href="<?php echo FRIENDLY_URLS ? "/result/$id/$run/details/" : "/details.php?test=$id&run=$run"; ?>"><img class="progress" width=250 src="<?php echo FRIENDLY_URLS ? "/result/$id/{$run}_waterfall_thumb.png" : "/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png"; ?>"></a></td>
-                    <?php
+                    echo "</td>\n";
+                    echo '<td align="center" valign="middle">';
+                    $testUrl = "/details.php?test=$id&run=$run";
+                    if ($run == $fvMedian && array_key_exists('end', $_REQUEST))
+                        $testUrl .= "&end={$_REQUEST['end']}";
+                    elseif (FRIENDLY_URLS)
+                        $testUrl = "/result/$id/$run/details/";
+                    echo "<a href=\"$testUrl\">";
+                    echo "<img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png\"></a></td>\n";
                     if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
                     {
                         if( FRIENDLY_URLS )
@@ -385,9 +395,15 @@ $page_description = "Website performance test result$testLabel.";
                         echo '<td align="center" valign="middle">';
                         if( is_dir("$testPath/video_$run") )
                         {
-                            echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:0\">Filmstrip View</a><br>-<br>";
-                            echo "<a href=\"/video/create.php?tests=$id-r:$run-c:0&id={$id}.{$run}.0\">Watch Video</a><br>-<br>";
-                            echo "<a href=\"/video/?tid=$id&run=$run&cached=0\">Compare to</a>";
+                            $end = '';
+                            $endId = '';
+                            if ($run == $fvMedian && array_key_exists('end', $_REQUEST)) {
+                                $end = "-e:{$_REQUEST['end']}";
+                                $endId = "-e{$_REQUEST['end']}";
+                            }
+                            echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:0$end\">Filmstrip View</a><br>-<br>";
+                            echo "<a href=\"/video/create.php?tests=$id-r:$run-c:0$end&id={$id}.{$run}.0$endId\">Watch Video</a>";
+                            //echo "<br>-<br><a href=\"/video/?tid=$id&run=$run&cached=0\">Compare to</a>";
                         }
                         else
                             echo "not available";

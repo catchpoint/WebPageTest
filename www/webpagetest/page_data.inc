@@ -156,16 +156,25 @@ function loadPageData($file, $options = null)
             }
         }
         require_once('./video/visualProgress.inc.php');
-        $end = null;
-        if (isset($options) && array_key_exists('end', $options))
-            $end = $options['end'];
-        $progress = GetVisualProgress(dirname($file), (int)$filename, $cached, null, $end);
+        $progress = GetVisualProgress(dirname($file), (int)$filename, $cached);
         if (isset($progress) && is_array($progress)) {
             if (array_key_exists('FLI', $progress)) {
                 $ret['SpeedIndex'] = $progress['FLI'];
             }
             if (array_key_exists('visualComplete', $progress)) {
                 $ret['visualComplete'] = $progress['visualComplete'];
+            }
+        }
+        // see if we need a custom Speed Index as well
+        $end = null;
+        if (isset($options) && array_key_exists('end', $options)) {
+            $end = $options['end'];
+            $progress = GetVisualProgress(dirname($file), (int)$filename, $cached, null, $end);
+            if (isset($progress) && is_array($progress)) {
+                if (array_key_exists('FLI', $progress)) {
+                    $ret['SpeedIndexCustom'] = $progress['FLI'];
+                }
+                $ret['visualCompleteCustom'] = $progress['visualComplete'];
             }
         }
     }

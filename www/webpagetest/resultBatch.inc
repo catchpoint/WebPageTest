@@ -568,8 +568,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
             $visual = GetVisualProgress($testPath, $fvMedian, 0, null, $test['end']);
-            if (array_key_exists('FLI', $visual)) {
-                $fvFLIvalue = $visual['FLI'];
+            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
+                $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndex'];
+            }
+            if (array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0])) {
+                $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndexCustom'];
             }
             if (array_key_exists('visualComplete', $visual) && 
                 array_key_exists($visual['visualComplete'], $visual['frames']) &&
@@ -889,7 +892,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 foreach( $tests['urls'] as &$test )
                 {
                     $testurl = "/results.php?test={$test['id']}";
-                    if( FRIENDLY_URLS )
+                    if (is_numeric($test['end']))
+                        $testurl .= "&end={$test['end']}";
+                    elseif( FRIENDLY_URLS )
                         $testurl = "/result/{$test['id']}/";
                     $path = $test['path'];
                     $run = $test['fvMedian'];

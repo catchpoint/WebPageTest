@@ -1,7 +1,11 @@
 <?php
 require_once('page_data.inc');
-if( !isset($pageData) && isset($id) && isset($testPath) )
-    $pageData = loadAllPageData($testPath);
+if( !isset($pageData) && isset($id) && isset($testPath) ) {
+    $options = null;
+    if (array_key_exists('end', $_REQUEST))
+        $options = array('end' => $_REQUEST['end']);
+    $pageData = loadAllPageData($testPath, $options);
+}
 if (isset($pageData) && is_array($pageData)) {
     foreach($pageData as &$run_data) {
         foreach($run_data as &$test_data) {
@@ -68,7 +72,11 @@ if (!defined('EMBED')) {
 
 <div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
         if ($id) {
-            $resultUrl = FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id";
+            $resultUrl = "/results.php?test=$id";
+            if (array_key_exists('end', $_REQUEST))
+                $resultUrl .= "&end={$_REQUEST['end']}";
+            elseif (FRIENDLY_URLS)
+                $resultUrl = "/result/$id/";
         }
         if (!isset($navTabs) || !count($navTabs)) {
             $navTabs = array(  'Home' => '/' );
@@ -260,30 +268,39 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         echo '<ul class="test_menu">';
         
         if( !$run )
-            $run = $avgRun;
+            $run = $gradeRun;
         
         $cTxt = '';
         if( $cached )
             $cTxt = 'cached/';
 
-        $tabs = array( 'Summary' => FRIENDLY_URLS ? "/result/$id/" : "results.php?test=$id",
-                    'Details' => FRIENDLY_URLS ? "/result/$id/$run/details/$cTxt" : "/details.php?test=$id&run=$run&cached=$cached"
-                    );
+        $resultUrl = "/results.php?test=$id";
+        $details = "/details.php?test=$id&run=$gradeRun&cached=$cached";
+        $domains = "/domains.php?test=$id&run=$gradeRun&cached=$cached";
+        $end = '';
+        if (array_key_exists('end', $_REQUEST)) {
+            $resultUrl .= "&end={$_REQUEST['end']}";
+            $details .= "&end={$_REQUEST['end']}";
+            $end = "&end={$_REQUEST['end']}";
+        } elseif (FRIENDLY_URLS) {
+            $resultUrl = "/result/$id/";
+            $details = "/result/$id/$gradeRun/details/$cTxt";
+        }
+        $tabs = array( 'Summary' => $resultUrl, 'Details' => $details);
                     
-        if( $pageData[$run][$cached]['optimization_checked'] )
-            $tabs['Performance Review'] = FRIENDLY_URLS ? "/result/$id/$run/performance_optimization/$cTxt" : "/performance_optimization.php?test=$id&run=$run&cached=$cached";
+        if( $pageData[$gradeRun][$cached]['optimization_checked'] )
+            $tabs['Performance Review'] = "/performance_optimization.php?test=$id&run=$gradeRun&cached=$cached$end";
         
         $cTxt2 = '';
         if( $cached )
             $cTxt2 = '_Cached';
-        if( gz_is_file("$testPath/$run{$cTxt2}_pagespeed.txt") )
-            $tabs['Page Speed'] = FRIENDLY_URLS ? "/result/$id/$run/pagespeed/$cTxt" : "/pagespeed.php?test=$id&run=$run&cached=$cached";
-
-        $tabs['Content Breakdown'] = FRIENDLY_URLS ? "/result/$id/$run/breakdown/$cTxt" : "/breakdown.php?test=$id&run=$run&cached=$cached";
-        $tabs['Domains'] = FRIENDLY_URLS ? "/result/$id/$run/domains/$cTxt" : "/domains.php?test=$id&run=$run&cached=$cached";
+        if( gz_is_file("$testPath/$gradeRun{$cTxt2}_pagespeed.txt") )
+            $tabs['Page Speed'] = "/pagespeed.php?test=$id&run=$gradeRun&cached=$cached$end";
+        $tabs['Content Breakdown'] = "/breakdown.php?test=$id&run=$gradeRun&cached=$cached$end";
+        $tabs['Domains'] = "/domains.php?test=$id&run=$gradeRun&cached=$cached$end";
         
         if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-            $tabs['Screen Shot'] = FRIENDLY_URLS ? "/result/$id/$run/screen_shot/$cTxt" : "/screen_shot.php?test=$id&run=$run&cached=$cached";
+            $tabs['Screen Shot'] = "/screen_shot.php?test=$id&run=$gradeRun&cached=$cached$end";
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
         foreach( $tabs as $tabName => $tabUrl )

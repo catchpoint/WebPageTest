@@ -6,7 +6,10 @@ if( !isset($test) && array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json
     $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
     json_response($ret);
 } else {
-    $pageData = loadAllPageData($testPath);
+    $options = null;
+    if (array_key_exists('end', $_REQUEST))
+        $options = array('end' => $_REQUEST['end']);
+    $pageData = loadAllPageData($testPath, $options);
 
     // if we don't have an url, try to get it from the page results
     if( !strlen($url) )
