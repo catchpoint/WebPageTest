@@ -359,7 +359,7 @@ $page_description = "Comparison Test$testLabel.";
                 var backend = form.backend.value;
                 if (backend == 'aggressive') {
                     script = form.script.value;
-                    script = "addHeader\tModPagespeedFilters:combine_css,rewrite_css,inline_import_to_link,extend_cache,combine_javascript,rewrite_javascript,resize_images,move_css_to_head,rewrite_style_attributes_with_url,convert_png_to_jpeg,convert_jpeg_to_webp,recompress_images,convert_jpeg_to_progressive,convert_meta_tags,inline_css,inline_images,inline_javascript,lazyload_images,flatten_css_imports,inline_preview_images,defer_javascript,defer_iframe\t%HOST_REGEX%\n" + script;
+                    script = "addHeader\tModPagespeedFilters:combine_css,rewrite_css,inline_import_to_link,extend_cache,combine_javascript,rewrite_javascript,resize_images,move_css_to_head,rewrite_style_attributes_with_url,convert_png_to_jpeg,convert_jpeg_to_webp,recompress_images,convert_jpeg_to_progressive,convert_meta_tags,inline_css,inline_images,inline_javascript,lazyload_images,flatten_css_imports,inline_preview_images,defer_javascript,defer_iframe,add_instrumentation,flush_subresources,fallback_rewrite_css_urls,insert_dns_prefetch\t%HOST_REGEX%\n" + script;
                     form.script.value = script;
                     form.web10.value = 0;
                 } else if (backend == 'staging') {
