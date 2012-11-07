@@ -15,7 +15,7 @@ if( !isset($test) && array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json
     if( !strlen($url) )
         $url = $pageData[1][0]['URL'];
     if( (isset($test['test']) && ( $test['test']['batch'] || $test['test']['batch_locations'] )) ||
-        (array_key_exists('testinfo', $test) && $test['testinfo']['batch']) )
+        (!array_key_exists('test', $test) && array_key_exists('testinfo', $test) && $test['testinfo']['batch']) )
         include 'resultBatch.inc';
     elseif( isset($test['testinfo']['cancelled']) )
         include 'testcancelled.inc';
