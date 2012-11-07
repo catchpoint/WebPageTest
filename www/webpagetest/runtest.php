@@ -227,10 +227,9 @@
         }
 
         // the API key requirements are for all test paths
+        $test['vd'] = $req_vd;
+        $test['vh'] = $req_vh;
         if ($headless) {
-            $test['vd'] = $req_vd;
-            $test['vh'] = $req_vh;
-        } else {
             $test['vd'] = '';
             $test['vh'] = '';
         }
