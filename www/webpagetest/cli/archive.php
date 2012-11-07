@@ -20,7 +20,7 @@ set_time_limit(3300);   // only allow it to run for 55 minutes
 if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
 }
-$MIN_DAYS = max($MIN_DAYS,1);
+$MIN_DAYS = max($MIN_DAYS,0.1);
 
 $kept = 0;
 $archiveCount = 0;
