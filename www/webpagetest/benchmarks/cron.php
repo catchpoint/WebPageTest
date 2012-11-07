@@ -185,8 +185,6 @@ function ProcessBenchmark($benchmark) {
             CheckBenchmarkStatus($benchmark, $state);
             // update the state between steps
             file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
-            CollectResults($benchmark, $state);
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
         } else {
             $state['running'] = false;
         }
@@ -229,6 +227,16 @@ function ProcessBenchmark($benchmark) {
 function CheckBenchmarkStatus($benchmark, &$state) {
     global $logFile;
     if ($state['running']) {
+        if (!$state['last_run'])
+            $state['last_run'] = time();
+        $start_time = $state['last_run'];
+        if (!is_dir("./results/benchmarks/$benchmark/data"))
+            mkdir("./results/benchmarks/$benchmark/data", 0777, true);
+        $dataFile = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
+        $updated = 0;
+        $data = array();
+        if (is_file($dataFile))
+            $data = json_decode(gz_file_get_contents($dataFile), true);
         $done = true;
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
@@ -258,12 +266,34 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", "./log/$logFile", true);
                 }
+                
+                // collect the test data and archive the test as we get each result
+                if ($test['completed']) {
+                    $updated++;
+                    CollectResults($test, $data);
+                    if (ArchiveTest($test['id'])) {
+                        logMsg("Test {$test['id']} : Archived", "./log/$logFile", true);
+                        $path = GetTestPath($test['id']);
+                        if (strlen($path))
+                            delTree($path);
+                    }
+                }
             }
         }
         
+        if ($updated) {
+            logMsg("Data updated for for $updated tests", "./log/$logFile", true);
+            gz_file_put_contents($dataFile, json_encode($data));
+        } else {
+            logMsg("No test data updated", "./log/$logFile", true);
+        }
+
         if ($done) {
             logMsg("Benchmark '$benchmark' is finished", "./log/$logFile", true);
+            $state['runs'][] = $start_time;
             $state['running'] = false;
+            $state['needs_aggregation'] = true;
+            unset($state['tests']);    
         } else {
             logMsg("Benchmark '$benchmark' is still running", "./log/$logFile", true);
         }
@@ -277,69 +307,45 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 * 
 * @param mixed $state
 */
-function CollectResults($benchmark, &$state) {
-    global $logFile;
-    if (!$state['running'] && array_key_exists('tests', $state)) {
-        logMsg("Collecting results for '$benchmark'", "./log/$logFile", true);
-        $start_time = time();
-        $data = array();
-        foreach ($state['tests'] as &$test) {
-            if (@$test['submitted'] && $test['submitted'] < $start_time) {
-                $start_time = $test['submitted'];
-            }
-            $testPath = './' . GetTestPath($test['id']);
-            logMsg("Loading page data from $testPath", "./log/$logFile", true);
-            $page_data = loadAllPageData($testPath);
-            if (count($page_data)) {
-                foreach ($page_data as $run => &$page_run) {
-                    foreach ($page_run as $cached => &$test_data) {
-                        $data_row = $test_data;
-                        unset($data_row['URL']);
-                        // figure out the per-type request info (todo: measure how expensive this is and see if we have a better way)
-                        $breakdown = getBreakdown($test['id'], $testPath, $run, $cached, $requests);
-                        foreach ($breakdown as $mime => &$values) {
-                            $data_row["{$mime}_requests"] = $values['requests'];
-                            $data_row["{$mime}_bytes"] = $values['bytes'];
-                        }
-                        // capture the page speed score
-                        if ($cached)
-                            $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_Cached_pagespeed.txt");
-                        else
-                            $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_pagespeed.txt");
-                        $data_row['url'] = $test['url'];
-                        $data_row['label'] = $test['label'];
-                        $data_row['location'] = $test['location'];
-                        $data_row['config'] = $test['config'];
-                        $data_row['cached'] = $cached;
-                        $data_row['run'] = $run;
-                        $data_row['id'] = $test['id'];
-                        $data[] = $data_row;
-                        $test['has_data'] = 1;
-                    }
+function CollectResults(&$test, &$data) {
+    $testPath = './' . GetTestPath($test['id']);
+    logMsg("Loading page data from $testPath", "./log/$logFile", true);
+    $page_data = loadAllPageData($testPath);
+    if (count($page_data)) {
+        foreach ($page_data as $run => &$page_run) {
+            foreach ($page_run as $cached => &$test_data) {
+                $data_row = $test_data;
+                unset($data_row['URL']);
+                // figure out the per-type request info (todo: measure how expensive this is and see if we have a better way)
+                $breakdown = getBreakdown($test['id'], $testPath, $run, $cached, $requests);
+                foreach ($breakdown as $mime => &$values) {
+                    $data_row["{$mime}_requests"] = $values['requests'];
+                    $data_row["{$mime}_bytes"] = $values['bytes'];
                 }
-            } else {
-                $data_row = array();
+                // capture the page speed score
+                if ($cached)
+                    $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_Cached_pagespeed.txt");
+                else
+                    $data_row['page_speed'] = GetPageSpeedScore("$testPath/{$run}_pagespeed.txt");
                 $data_row['url'] = $test['url'];
                 $data_row['label'] = $test['label'];
                 $data_row['location'] = $test['location'];
                 $data_row['config'] = $test['config'];
+                $data_row['cached'] = $cached;
+                $data_row['run'] = $run;
                 $data_row['id'] = $test['id'];
                 $data[] = $data_row;
+                $test['has_data'] = 1;
             }
         }
-        
-        if (count($data)) {
-            logMsg("Collected data for " . count($data) . " individual runs", "./log/$logFile", true);
-            if (!is_dir("./results/benchmarks/$benchmark/data"))
-                mkdir("./results/benchmarks/$benchmark/data", 0777, true);
-            $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
-            gz_file_put_contents($file_name, json_encode($data));
-            $state['runs'][] = $start_time;
-        } else {
-            logMsg("No test data collected", "./log/$logFile", true);
-        }
-        unset($state['tests']);
-        $state['needs_aggregation'] = true;
+    } else {
+        $data_row = array();
+        $data_row['url'] = $test['url'];
+        $data_row['label'] = $test['label'];
+        $data_row['location'] = $test['location'];
+        $data_row['config'] = $test['config'];
+        $data_row['id'] = $test['id'];
+        $data[] = $data_row;
     }
 }
 
