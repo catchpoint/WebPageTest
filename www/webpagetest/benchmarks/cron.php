@@ -231,12 +231,14 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         if (!is_dir("./results/benchmarks/$benchmark/data"))
             mkdir("./results/benchmarks/$benchmark/data", 0777, true);
         $dataFile = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
+        logMsg("Data File: $dataFile", "./log/$logFile", true);
         $updated = 0;
-        if (is_file($dataFile)) {
+        if (gz_is_file($dataFile)) {
             $data = json_decode(gz_file_get_contents($dataFile), true);
             logMsg("Loaded " . count($data) . " existing records", "./log/$logFile", true);
         } else {
             $data = array();
+            logMsg("Data file doesn't exist, starting fresh", "./log/$logFile", true);
         }
         $done = true;
         foreach ($state['tests'] as &$test) {
