@@ -227,16 +227,17 @@ function ProcessBenchmark($benchmark) {
 function CheckBenchmarkStatus($benchmark, &$state) {
     global $logFile;
     if ($state['running']) {
-        if (!$state['last_run'])
-            $state['last_run'] = time();
         $start_time = $state['last_run'];
         if (!is_dir("./results/benchmarks/$benchmark/data"))
             mkdir("./results/benchmarks/$benchmark/data", 0777, true);
         $dataFile = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
         $updated = 0;
-        $data = array();
-        if (is_file($dataFile))
+        if (is_file($dataFile)) {
             $data = json_decode(gz_file_get_contents($dataFile), true);
+            logMsg("Loaded " . count($data) . " existing records", "./log/$logFile", true);
+        } else {
+            $data = array();
+        }
         $done = true;
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
@@ -282,7 +283,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         }
         
         if ($updated) {
-            logMsg("Data updated for for $updated tests", "./log/$logFile", true);
+            logMsg("Data updated for for $updated tests, total data rows: " . count($data), "./log/$logFile", true);
             gz_file_put_contents($dataFile, json_encode($data));
         } else {
             logMsg("No test data updated", "./log/$logFile", true);
@@ -308,6 +309,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 * @param mixed $state
 */
 function CollectResults(&$test, &$data) {
+    global $logFile;
     $testPath = './' . GetTestPath($test['id']);
     logMsg("Loading page data from $testPath", "./log/$logFile", true);
     $page_data = loadAllPageData($testPath);
@@ -587,6 +589,7 @@ function AggregateResults($benchmark, &$state, $options) {
     
     file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", json_encode($info));
     $state['needs_aggregation'] = false;
+    logMsg("Agregation complete", "./log/$logFile", true);
 }
 
 /**

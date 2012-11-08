@@ -19,6 +19,21 @@ date_default_timezone_set('UTC');
 extract($_POST, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 
+// set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
+if (function_exists('curl_init')) {
+    $CURL_CONTEXT = curl_init();
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($context, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($context, CURLOPT_FAILONERROR, true);
+        curl_setopt($context, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($context, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($context, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($context, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($context, CURLOPT_TIMEOUT, 600);
+    }
+} else
+    $CURL_CONTEXT = false;
+
 require_once('./logging.inc');
 
 if (function_exists('apache_request_headers')) {
@@ -1808,5 +1823,23 @@ function UpdateTester($location, $tester, $testerInfo = null) {
         file_put_contents("./tmp/$location.tm", json_encode($testers));
         UnlockLocation($lock);
     }
+}
+
+/**
+* Wrapper function that will use CURL or file_get_contents to retrieve the contents of an URL
+* 
+* @param mixed $url
+*/
+function http_fetch($url) {
+    $ret = null;
+    global $CURL_CONTEXT;
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($context, CURLOPT_URL, $url);
+        $ret = curl_exec($context);
+    } else {
+        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
+        $ret = file_get_contents($url, false, $context);
+    }
+    return $ret;
 }
 ?>

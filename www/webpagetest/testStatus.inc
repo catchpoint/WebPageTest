@@ -282,19 +282,18 @@ function GetRelayStatus($id, $testPath, &$test)
     $server = $locations[$location]['relayServer'];
     $key = $locations[$location]['relayKey'];
     
-    $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
-    $status = json_decode(file_get_contents("{$server}testStatus.php?test=$id&rkey=$key&pos=1", false, $context), true);
+    $status = json_decode(http_fetch("{$server}testStatus.php?test=$id&rkey=$key&pos=1"), true);
     if( is_array($status) ) {
         if( $status['statusCode'] == 200 ) {
             // download the test result and delete it from the relay server
             $tmp = tempnam(realpath('./tmp'), 'relay');
-            if (file_put_contents($tmp, file_get_contents("{$server}download.php?test=$id&rkey=$key", false, $context))) {
+            if (file_put_contents($tmp, http_fetch("{$server}download.php?test=$id&rkey=$key"))) {
                 $zip = new ZipArchive();
                 if ($zip->open($tmp) === true) {
                     if ($zip->extractTo($testPath)) {
                         require_once('archive.inc');
                         ArchiveTest($id);
-                        file_get_contents("{$server}delete.php?test=$id&rkey=$key", false, $context);
+                        http_fetch("{$server}delete.php?test=$id&rkey=$key");
                         $ret = $status['data'];
                     }
                         

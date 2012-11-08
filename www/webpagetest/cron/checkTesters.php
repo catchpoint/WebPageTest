@@ -17,8 +17,7 @@ if (is_file('./settings/checkTesters.inc')) {
 function CheckLocation($url, &$locations) {
     $doc = new MyDOMDocument();
     if( $doc ) {
-        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 60)));
-        $response = file_get_contents($url, false, $context);
+        $response = http_fetch($url);
         if( strlen($response) ) {
             $response = preg_replace('/[^(\x20-\x7F)]*/','', $response);
             $doc->loadXML($response);
