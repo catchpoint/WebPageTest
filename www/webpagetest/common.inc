@@ -23,13 +23,13 @@ extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
     if ($CURL_CONTEXT !== false) {
-        curl_setopt($context, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($context, CURLOPT_FAILONERROR, true);
-        curl_setopt($context, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($context, CURLOPT_CONNECTTIMEOUT, 30);
-        curl_setopt($context, CURLOPT_DNS_CACHE_TIMEOUT, 600);
-        curl_setopt($context, CURLOPT_MAXREDIRS, 10);
-        curl_setopt($context, CURLOPT_TIMEOUT, 600);
+        curl_setopt($CURL_CONTEXT, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_FAILONERROR, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($CURL_CONTEXT, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($CURL_CONTEXT, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 600);
     }
 } else
     $CURL_CONTEXT = false;
@@ -1833,9 +1833,9 @@ function UpdateTester($location, $tester, $testerInfo = null) {
 function http_fetch($url) {
     $ret = null;
     global $CURL_CONTEXT;
-    if (false /*$CURL_CONTEXT !== false*/) {
-        curl_setopt($context, CURLOPT_URL, $url);
-        $ret = curl_exec($context);
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
+        $ret = curl_exec($CURL_CONTEXT);
     } else {
         $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
         $ret = file_get_contents($url, false, $context);
