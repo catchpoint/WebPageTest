@@ -91,6 +91,7 @@ CDN_PROVIDER cdnList[] = {
   {"tbcdn.cn", "Taobao"},
   {".taobaocdn.com", "Taobao"},
   {".ngenix.net", "NGENIX"},
+  {".pagerain.net", "PageRain"},
   {"END_MARKER", "END_MARKER"}
 };
 
