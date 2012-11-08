@@ -1833,7 +1833,7 @@ function UpdateTester($location, $tester, $testerInfo = null) {
 function http_fetch($url) {
     $ret = null;
     global $CURL_CONTEXT;
-    if ($CURL_CONTEXT !== false) {
+    if (false /*$CURL_CONTEXT !== false*/) {
         curl_setopt($context, CURLOPT_URL, $url);
         $ret = curl_exec($context);
     } else {
