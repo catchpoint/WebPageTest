@@ -8,6 +8,7 @@ CDN_PROVIDER cdnList[] = {
 	{".akamaiedge.net", _T("Akamai")},
 	{".llnwd.net", _T("Limelight")},
 	{"edgecastcdn.net", _T("Edgecast")},
+	{".systemcdn.net", _T("Edgecast")},
 	{"hwcdn.net", _T("Highwinds")},
 	{".panthercdn.com", _T("Panther")},
 	{".simplecdn.net", _T("Simple CDN")},

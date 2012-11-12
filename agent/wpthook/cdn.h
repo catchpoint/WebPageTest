@@ -48,6 +48,7 @@ CDN_PROVIDER cdnList[] = {
   {".akamaiedge.net", "Akamai"},
   {".llnwd.net", "Limelight"},
   {"edgecastcdn.net", "Edgecast"},
+  {".systemcdn.net", "Edgecast"},
   {"hwcdn.net", "Highwinds"},
   {".panthercdn.com", "Panther"},
   {".simplecdn.net", "Simple CDN"},
