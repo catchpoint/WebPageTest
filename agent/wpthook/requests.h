@@ -84,6 +84,7 @@ public:
 
   CAtlList<Request *>       _requests;        // all requests
   CAtlMap<DWORD, Request *> _active_requests; // requests indexed by socket
+  CAtlMap<DWORD, bool>      connections_;     // Connection IDs
 
 private:
   CRITICAL_SECTION  cs;

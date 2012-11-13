@@ -46,6 +46,7 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
   , _dns(dns)
   , _test(test) {
   _active_requests.InitHashTable(257);
+  connections_.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
 
@@ -249,7 +250,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   CStringA request_headers, response_headers;
   double  start_time = 0, end_time = 0, first_byte = 0;
   long  dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
-        ssl_start = -1, ssl_end = -1, connection = 0, error_code = 0, 
+        ssl_start = -1, ssl_end = -1, send_start = -1, send_end = -1,
+        headers_end = -1, connection = 0, error_code = 0, 
         status = 0;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
@@ -310,8 +312,12 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               ssl_start = _ttol(value);
             } else if (!key.CompareNoCase(_T("timing.sslEnd"))) {
               ssl_end = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.requestTime"))) {
-              start_time = _ttof(value) * 1000.0;
+            } else if (!key.CompareNoCase(_T("timing.sendStart"))) {
+              send_start = _ttol(value);
+            } else if (!key.CompareNoCase(_T("timing.sendEnd"))) {
+              send_end = _ttol(value);
+            } else if (!key.CompareNoCase(_T("timing.receiveHeadersEnd"))) {
+              headers_end = _ttol(value);
             }
           }
         }
@@ -341,29 +347,42 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_ = initiator;
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
+
+    bool already_connected = false;
+    if (connection) {
+      connections_.Lookup(connection, already_connected);
+      connections_.SetAt(connection, true);
+    }
     // figure out the conversion from browser time to perf counter
     request->_is_ssl = true;
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
     request->_end.QuadPart = now.QuadPart;
     request->_start.QuadPart = now.QuadPart - 
                 (LONGLONG)((end_time - start_time) * ms_freq);
+    LONGLONG start = request->_start.QuadPart;
     if (first_byte > 0) {
       request->_first_byte.QuadPart = now.QuadPart - 
                 (LONGLONG)((end_time - first_byte) * ms_freq);
     }
-    LONGLONG start = request->_start.QuadPart;
-    if (dns_start > -1 && dns_end > -1) {
-      request->_dns_start.QuadPart = start + (dns_start * ms_freq);
-      request->_dns_end.QuadPart = start + (dns_end * ms_freq);
+    // if we have request timing info, use it instead
+    if (headers_end != -1 && send_start != -1 && headers_end >= send_start) {
+      request->_start.QuadPart = request->_first_byte.QuadPart - 
+          (LONGLONG)((headers_end - send_start) * ms_freq);
     }
-    if (connect_start > -1 && connect_end > -1) {
-      if (ssl_start > -1 && ssl_end > -1) {
-        connect_end = ssl_start;
-        request->_ssl_start.QuadPart = start + (ssl_start * ms_freq);
-        request->_ssl_end.QuadPart = start + (ssl_end * ms_freq);
+    if (!already_connected) {
+      if (dns_start > -1 && dns_end > -1) {
+        request->_dns_start.QuadPart = start + (dns_start * ms_freq);
+        request->_dns_end.QuadPart = start + (dns_end * ms_freq);
       }
-      request->_connect_start.QuadPart = start + (connect_start * ms_freq);
-      request->_connect_end.QuadPart = start + (connect_end * ms_freq);
+      if (connect_start > -1 && connect_end > -1) {
+        if (ssl_start > -1 && ssl_end > -1) {
+          connect_end = ssl_start;
+          request->_ssl_start.QuadPart = start + (ssl_start * ms_freq);
+          request->_ssl_end.QuadPart = start + (ssl_end * ms_freq);
+        }
+        request->_connect_start.QuadPart = start + (connect_start * ms_freq);
+        request->_connect_end.QuadPart = start + (connect_end * ms_freq);
+      }
     }
     if (request_headers.GetLength()) {
       request_headers += "\r\n";
@@ -375,7 +394,9 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       DataChunk chunk((LPCSTR)response_headers, response_headers.GetLength());
       request->_response_data.AddChunk(chunk);
     }
+    EnterCriticalSection(&cs);
     _requests.AddTail(request);
+    LeaveCriticalSection(&cs);
   }
 }
 

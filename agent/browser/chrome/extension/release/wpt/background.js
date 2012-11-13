@@ -14182,6 +14182,12 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
       eventData += 'timing.sslStart=' + request.response.timing.sslStart + '\n';
       eventData += 'timing.sslEnd=' + request.response.timing.sslEnd + '\n';
       eventData += 'timing.requestTime=' + request.response.timing.requestTime + '\n';
+      if (request.response.timing['sendStart'] !== undefined)
+        eventData += 'timing.sendStart=' + request.response.timing.sendStart + '\n';
+      if (request.response.timing['sendEnd'] !== undefined)
+        eventData += 'timing.sendEnd=' + request.response.timing.sendEnd + '\n';
+      if (request.response.timing['receiveHeadersEnd'] !== undefined)
+        eventData += 'timing.receiveHeadersEnd=' + request.response.timing.receiveHeadersEnd + '\n';
     }
 
     // the end of the data is ini-file style for multi-line values
