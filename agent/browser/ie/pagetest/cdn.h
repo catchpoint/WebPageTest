@@ -53,6 +53,7 @@ CDN_PROVIDER cdnList[] = {
   {".taobaocdn.com", _T("Taobao")},
   {".ngenix.net", _T("NGENIX")},
   {".pagerain.net", _T("PageRain")},
+  {".ccgslb.com", _T("ChinaCache")},
   {NULL, NULL}
 };
 
