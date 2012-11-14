@@ -47,7 +47,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory.h>
 #include <Psapi.h>
 #include <tchar.h>
+#undef _WIN32_WINNT
+#define _WIN32_WINNT  0x0600
 #include <Ws2tcpip.h>
+#undef _WIN32_WINNT
+#define _WIN32_WINNT  0x0501
 
 #include <shlobj.h>
 #include <atlstr.h>

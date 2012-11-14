@@ -107,7 +107,19 @@ public:
                 LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags);
   int   WSAEventSelect(SOCKET s, WSAEVENT hEventObject, long lNetworkEvents);
   int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
-                              LPWSANETWORKEVENTS lpNetworkEvents);
+                             LPWSANETWORKEVENTS lpNetworkEvents);
+  int GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
+      LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
+      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+      LPHANDLE lpNameHandle);
+  int GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
+      LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
+      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+      LPHANDLE lpHandle);
+  void FreeAddrInfoEx(PADDRINFOEXA pAddrInfoEx);
+  void FreeAddrInfoExW(PADDRINFOEXW pAddrInfoEx);
 
 private:
   TestState&        _test_state;
@@ -138,8 +150,12 @@ private:
   LPFN_SELECT         _select;
   LPFN_GETADDRINFO	  _getaddrinfo;
   LPFN_GETADDRINFOW	  _GetAddrInfoW;
+  LPFN_GETADDRINFOEXA _GetAddrInfoExA;
+  LPFN_GETADDRINFOEXW _GetAddrInfoExW;
   LPFN_FREEADDRINFO	  _freeaddrinfo;
   LPFN_FREEADDRINFOW	_FreeAddrInfoW;
+  LPFN_FREEADDRINFOEXA _FreeAddrInfoEx;
+  LPFN_FREEADDRINFOEXW _FreeAddrInfoExW;
   LPFN_GETHOSTBYNAME  _gethostbyname;
   LPFN_WSARECV		    _WSARecv;
   LPFN_WSASEND        _WSASend;

@@ -172,6 +172,41 @@ int WSAAPI WSAEnumNetworkEvents_Hook(SOCKET s, WSAEVENT hEventObject,
   return ret;
 }
 
+int WSAAPI GetAddrInfoExA_Hook(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
+    LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
+    struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+    LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+    LPHANDLE lpNameHandle) {
+  int ret = EAI_FAIL;
+  if (pHook)
+    ret = pHook->GetAddrInfoExA(pName, pServiceName, dwNameSpace, lpNspId,
+        hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+        lpNameHandle);
+  return ret;
+}
+
+int WSAAPI GetAddrInfoExW_Hook(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
+    LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
+    struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+    LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+    LPHANDLE lpHandle) {
+  int ret = EAI_FAIL;
+  if (pHook)
+    ret = pHook->GetAddrInfoExW(pName, pServiceName, dwNameSpace, lpNspId,
+        hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+        lpHandle);
+  return ret;
+}
+
+void WSAAPI FreeAddrInfoEx_Hook(PADDRINFOEXA pAddrInfoEx) {
+  if (pHook)
+    pHook->FreeAddrInfoEx(pAddrInfoEx);
+}
+
+void WSAAPI FreeAddrInfoExW_Hook(PADDRINFOEXW pAddrInfoEx) {
+  if (pHook)
+    pHook->FreeAddrInfoExW(pAddrInfoEx);
+}
 
 /******************************************************************************
 *******************************************************************************
@@ -205,35 +240,43 @@ void CWsHook::Init() {
 
   // install the code hooks
   _WSASocketW = hook.createHookByName("ws2_32.dll", "WSASocketW", 
-                                                              WSASocketW_Hook);
+                                      WSASocketW_Hook);
   _closesocket = hook.createHookByName("ws2_32.dll", "closesocket", 
-                                                             closesocket_Hook);
+                                       closesocket_Hook);
   _connect = hook.createHookByName("ws2_32.dll", "connect", connect_Hook);
   _recv = hook.createHookByName("ws2_32.dll", "recv", recv_Hook);
   _send = hook.createHookByName("ws2_32.dll", "send", send_Hook);
   _select = hook.createHookByName("ws2_32.dll", "select", select_Hook);
   _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
-                                                            GetAddrInfoW_Hook);
+                                        GetAddrInfoW_Hook);
   _gethostbyname = hook.createHookByName("ws2_32.dll", "gethostbyname", 
-                                                            gethostbyname_Hook);
+                                         gethostbyname_Hook);
+  _GetAddrInfoExA = hook.createHookByName("ws2_32.dll", "GetAddrInfoExA", 
+                                          GetAddrInfoExA_Hook);
+  _GetAddrInfoExW = hook.createHookByName("ws2_32.dll", "GetAddrInfoExW", 
+                                          GetAddrInfoExW_Hook);
+  _FreeAddrInfoEx = hook.createHookByName("ws2_32.dll", "FreeAddrInfoEx", 
+                                          FreeAddrInfoEx_Hook);
+  _FreeAddrInfoExW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoExW", 
+                                           FreeAddrInfoExW_Hook);
   _FreeAddrInfoW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoW", 
-                                                           FreeAddrInfoW_Hook);
+                                         FreeAddrInfoW_Hook);
   _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
   _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
   _WSAGetOverlappedResult = hook.createHookByName("ws2_32.dll", 
-                        "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
-  _WSAEventSelect = hook.createHookByName("ws2_32.dll", 
-                        "WSAEventSelect", WSAEventSelect_Hook);
-  _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll", 
-                        "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
+      "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
+  _WSAEventSelect = hook.createHookByName("ws2_32.dll", "WSAEventSelect",
+                                          WSAEventSelect_Hook);
+  _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll",
+      "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if (!_GetAddrInfoW)
     _getaddrinfo = hook.createHookByName("ws2_32.dll", "getaddrinfo", 
-                                                             getaddrinfo_Hook);
+                                         getaddrinfo_Hook);
   if (!_FreeAddrInfoW)
     _freeaddrinfo = hook.createHookByName("ws2_32.dll", "freeaddrinfo", 
-                                                            freeaddrinfo_Hook);
+                                          freeaddrinfo_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -684,3 +727,89 @@ int CWsHook::WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject,
 
   return ret;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
+    LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
+    struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+    LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+    LPHANDLE lpNameHandle) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("GetAddrInfoExA - %S"), pName);
+#endif
+  int ret = EAI_FAIL;
+  _sockets.ResetSslFd();
+  void * context = NULL;
+  CString name = (LPCWSTR)CA2W(pName);
+  if (!_test_state._exit)
+      context = _dns.LookupStart(name);
+
+  if (_GetAddrInfoExA)
+    ret = _GetAddrInfoExA((LPCSTR)CW2A(name), pServiceName, dwNameSpace,
+        lpNspId, hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+        lpNameHandle);
+
+  int err = WSAHOST_NOT_FOUND;
+  if (ret == NO_ERROR) {
+    // TODO: override response IP's
+    err = 0;
+  }
+  if (context)
+    _dns.LookupDone(context, err);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CWsHook::GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
+    LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
+    struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+    LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+    LPHANDLE lpHandle) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("GetAddrInfoExW - %s, overlapped = 0x%p, completion = 0x%p"),
+      pName, lpOverlapped, lpCompletionRoutine);
+#endif
+  int ret = EAI_FAIL;
+  _sockets.ResetSslFd();
+  void * context = NULL;
+  CString name = pName;
+  if (!_test_state._exit)
+      context = _dns.LookupStart(name);
+
+  if (_GetAddrInfoExW)
+    ret = _GetAddrInfoExW(LPCWSTR(name), pServiceName, dwNameSpace, lpNspId,
+        hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+        lpHandle);
+
+  int err = WSAHOST_NOT_FOUND;
+  if (ret == NO_ERROR) {
+    // TODO: override response IP's
+    err = 0;
+  }
+  if (context)
+    _dns.LookupDone(context, err);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CWsHook::FreeAddrInfoEx(PADDRINFOEXA pAddrInfoEx) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("FreeAddrInfoEx"));
+#endif
+  if (_FreeAddrInfoEx)
+    _FreeAddrInfoEx(pAddrInfoEx);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CWsHook::FreeAddrInfoExW(PADDRINFOEXW pAddrInfoEx) {
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("FreeAddrInfoExW"));
+#endif
+  if (_FreeAddrInfoExW)
+    _FreeAddrInfoExW(pAddrInfoEx);
+}
+
