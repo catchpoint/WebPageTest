@@ -33,7 +33,6 @@ import static org.junit.Assert.fail;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -94,7 +93,8 @@ public class DevtoolsMessageFactoryTest {
     jsonObject = (JSONObject) JSONValue.parse(jsonString);
     assertTrue(factory.decodeDevtoolsJson(jsonObject) instanceof NetworkRequestWillBeSentMessage);
 
-    jsonString = "{\"method\":\"Network.responseReceived\",\"params\":{\"response\":{}" +
+    jsonString = "{\"method\":\"Network.responseReceived\",\"params\":{\"response\":{" +
+        "\"headers\": {}}" +
         ",\"timestamp\":1.328670832131262E9,\"requestId\":\"15832.2\",\"type\":\"Document\"}}";
     jsonObject = (JSONObject) JSONValue.parse(jsonString);
     assertTrue(factory.decodeDevtoolsJson(jsonObject) instanceof NetworkResponseReceivedMessage);
@@ -108,6 +108,11 @@ public class DevtoolsMessageFactoryTest {
         "{\"method\":\"Page.loadEventFired\",\"params\":{\"timestamp\":1.328670832433752E9}}";
     jsonObject = (JSONObject) JSONValue.parse(jsonString);
     assertTrue(factory.decodeDevtoolsJson(jsonObject) instanceof PageLoadEventFiredMessage);
+
+    jsonString =
+        "{\"method\":\"Page.frameNavigated\",\"params\":{\"frame\":{\"id\":\"31259.2\"}}}";
+    jsonObject = (JSONObject) JSONValue.parse(jsonString);
+    assertTrue(factory.decodeDevtoolsJson(jsonObject) instanceof PageFrameNavigatedMessage);
 
     jsonString =
         "{\"id\":8,\"result\":{\"result\":" + "[]" + "}}";

@@ -29,11 +29,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.webpagetest.dt2har.protocol;
 
 import org.json.simple.JSONObject;
+import org.webpagetest.dt2har.converter.HarObject;
+
+import java.util.logging.Logger;
 
 /**
  * A class representing a Devtools response object.
  */
 public class Response {
+
+  private static final Logger logger = Logger.getLogger(HarObject.class.getName());
 
   /** Physical connection id that was actually used for this request. */
   protected final Long connectionId;
@@ -74,6 +79,9 @@ public class Response {
   /** The raw JSON message. */
   protected final JSONObject json;
 
+  /** The length specified in the Content-Length header. */
+  protected final Long contentLength;
+
   /** Constructs a response object. */
   public Response(JSONObject response) {
     connectionId = (Long) response.get("connectionId");
@@ -84,6 +92,13 @@ public class Response {
       fromDiskCache = null;
     }
     headers = (JSONObject) response.get("headers");
+    String contentLengthKey = findKeyIgnoreCase(headers, "content-length");
+    if (contentLengthKey != null) {
+      String contentLengthString = (String) headers.get(contentLengthKey);
+      contentLength = Long.parseLong(contentLengthString);
+    } else {
+      contentLength = null;
+    }
     if (response.containsKey("headersText")) {
       headersText = (String) response.get("headersText");
     } else {
@@ -205,6 +220,25 @@ public class Response {
   @Override
   public int hashCode() {
     return json.toJSONString().hashCode();
+  }
+
+  /** Returns the Content-Length header if available. */
+  public Long getContentLength() throws OptionalInformationUnavailableException {
+    if (contentLength == null) {
+      throw new OptionalInformationUnavailableException("Content-Length header", json);
+    }
+    return contentLength;
+  }
+
+  // Returns a key if found in the JSONObject, ignoring case, and null otherwise.
+  protected String findKeyIgnoreCase(JSONObject object, String keyToFind) {
+    for (Object obj : object.keySet()) {
+      String key = (String) obj;
+      if (keyToFind.toLowerCase().equals(key.toLowerCase())) {
+        return key;
+      }
+    }
+    return null;
   }
 }
 

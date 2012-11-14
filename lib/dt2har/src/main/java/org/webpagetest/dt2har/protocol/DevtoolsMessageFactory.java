@@ -157,6 +157,8 @@ public class DevtoolsMessageFactory {
         return new PageDomContentEventFiredMessage(message);
       } else if (method.equals("Page.loadEventFired")) {
         return new PageLoadEventFiredMessage(message);
+      } else if (method.equals("Page.frameNavigated")) {
+        return new PageFrameNavigatedMessage(message);
       } else {
         throw new MalformedDevtoolsMessageException(message);
       }

@@ -751,7 +751,7 @@ public class HarObject {
   }
 
   @SuppressWarnings("unchecked")
-  private JSONArray createHarEntries() {
+  private JSONArray createHarEntries() throws HarConstructionException {
 
     //    "entries": [
     //                {

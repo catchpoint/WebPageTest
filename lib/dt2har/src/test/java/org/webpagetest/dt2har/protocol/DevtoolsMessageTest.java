@@ -36,7 +36,6 @@ import static org.junit.Assert.fail;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -321,6 +320,17 @@ public class DevtoolsMessageTest {
     PageLoadEventFiredMessage message = new PageLoadEventFiredMessage(jsonObject);
     assertTrue(message.getMethod().equals("Page.loadEventFired"));
     assertEquals(new BigDecimal("1.328670832433752E9"), message.getTimestamp());
+  }
+
+  /** Tests parsing of {@code PageFrameNavigatedMessage}. */
+  @Test
+  public void pageFrameNavigatedMessage() throws Exception {
+    String jsonString =
+        "{\"method\":\"Page.frameNavigated\",\"params\":{\"frame\":{\"id\":\"31259.2\"}}}";
+    JSONObject jsonObject = (JSONObject) JSONValue.parse(jsonString);
+    PageFrameNavigatedMessage message = new PageFrameNavigatedMessage(jsonObject);
+    assertTrue(message.getMethod().equals("Page.frameNavigated"));
+    assertTrue(message.getFrame().toString().equals("{\"id\":\"31259.2\"}"));
   }
 
   /** Tests construction of {@code PageNavigateMessage} JSON. */

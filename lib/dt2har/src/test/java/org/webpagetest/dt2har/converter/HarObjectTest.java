@@ -136,9 +136,13 @@ public class HarObjectTest {
       }
     }
     // invariant: bodySize + compression == size
-    assertEquals(2900L, response.get("bodySize"));
-    assertEquals(6929L, content.get("size"));
-    assertEquals(4029L, content.get("compression"));
+    long bodySize = (Long) response.get("bodySize");
+    long size = (Long) content.get("size");
+    long compression = (Long) content.get("compression");
+    assertEquals(2208L, bodySize);
+    assertEquals(6929L, size);
+    assertEquals(4721L, compression);
+    assertEquals(size, bodySize + compression);
 
     assertEquals(har.getFirstRequest().getDocumentUrl(), ctitle);
     assertEquals(1314123547541L, har.getPageTimings().get("navigationStartTime"));
@@ -248,7 +252,8 @@ public class HarObjectTest {
         "{\"method\": \"Network.responseReceived\", \"params\":" +
         "{\"frameId\": \"16233.2\", \"loaderId\": \"16233.1\", \"requestId\": \"16233.2\"," +
         "\"response\": {\"connectionId\": 26, \"connectionReused\": " + connectionReused +
-        "\"headers\": {}, \"headersText\": \"\", \"bodySize\": 850," +
+        "\"headers\": {\"Content-Length\":\"1000\"}, \"headersText\": " +
+        "\"Content-Length: 1000\r\n\r\n\", \"bodySize\": 850," +
         "\"timing\": { ";
     responseJson += "\"requestTime\": " + requestTime.toString() + ", ";
     responseJson += "\"dnsStart\": " + dnsStart + ", ";
@@ -262,7 +267,8 @@ public class HarObjectTest {
     responseJson += "\"sendStart\": " + sendStart + ", ";
     responseJson += "\"sendEnd\": " + sendEnd + ", ";
     responseJson += "\"receiveHeadersEnd\": " + receiveHeadersEnd + ", ";
-    responseJson += "}, \"url\": \"" + url + "\",}, \"timestamp\": " + responseTime.toString() +
+    responseJson += "}, \"status\": 200," +
+    "\"url\": \"" + url + "\",}, \"timestamp\": " + responseTime.toString() +
         ", \"type\": \"Document\"}}";
 
     retval[1] = devtoolsMessageFactory.decodeDevtoolsJson(
@@ -395,5 +401,4 @@ public class HarObjectTest {
       assertEquals(urls[i], url);
     }
   }
-
 }

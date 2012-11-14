@@ -29,7 +29,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.webpagetest.dt2har.converter;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -43,12 +45,13 @@ import org.webpagetest.dt2har.protocol.OptionalInformationUnavailableException;
 import org.webpagetest.dt2har.protocol.Response;
 
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,6 +94,7 @@ public class HarResource {
   static final String HAR_RESPONSE_REDIRECT_URL = "redirectURL";
   static final String HAR_RESPONSE_HEADERS_SIZE = "headersSize";
   static final String HAR_RESPONSE_BODY_SIZE = "bodySize";
+  static final String HAR_RESPONSE_FROM_DISK_CACHE = "fromDiskCache";
 
   static final String HAR_REQUEST_HEADERS_NAME = "name";
   static final String HAR_REQUEST_HEADERS_VALUE = "value";
@@ -120,6 +124,16 @@ public class HarResource {
   // other string constants
   static final String JPEG_IMAGE = "image/jpeg";
 
+  public static final String CAVEAT_NO_DATALENGTH_MP4 =
+      "mp4 resource provides no data length";
+  // This is presumably because of a bug
+  // (see: http://code.google.com/p/chromium/issues/detail?id=111052) in how devtools interfaces
+  // with the Chrome network stack.
+  public static final String CAVEAT_NO_DATALENGTH_GOOGLE_RESOURCE =
+      "Resource from Google has no datalength";
+  public static final String CAVEAT_NO_DATALENGTH_TRACKED =
+      "Resource had no associated dataReceived Devtools messages";
+
   NetworkRequestWillBeSentMessage request;        // Network.requestWillBeSent
   NetworkResponseReceivedMessage response;        // Network.responseReceived
   Response redirectResponse;                      // Embedded in Network.requestWillBeSent
@@ -127,10 +141,12 @@ public class HarResource {
   NetworkLoadingFinishedMessage loaded;           // Network.loadingFinished
   NetworkRequestServedFromCacheMessage cached;    // Network.resourcedMarkedAsCached
   NetworkGetResponseBodyResponseMessage content;  // has "id" and "result" -> "content"
+  List<String> caveats;
 
   @VisibleForTesting
   public HarResource() {
-    data = new ArrayList<NetworkDataReceivedMessage>();
+    data = Lists.newArrayList();
+    caveats = Lists.newArrayList();
   }
 
   void setNetworkRequestWillBeSentMessage(NetworkRequestWillBeSentMessage msg) {
@@ -244,7 +260,7 @@ public class HarResource {
    * @return The record
    */
   @SuppressWarnings("unchecked")
-  public JSONObject createHarEntry() {
+  public JSONObject createHarEntry() throws HarConstructionException {
     JSONObject harEntry = new JSONObject();
     BigDecimal requestTime = getRequestTime();
     JSONObject timings = createHarTimings();
@@ -294,7 +310,13 @@ public class HarResource {
     JSONObject harRequest = new JSONObject();
     harRequest.put(HAR_REQUEST_METHOD, request.getRequest().getMethod());
     harRequest.put(HAR_REQUEST_URL, request.getRequest().getUrl());
-    harRequest.put(HAR_REQUEST_HTTP_VERSION, getHttpVersion());
+    try {
+      harRequest.put(HAR_REQUEST_HTTP_VERSION, getHttpVersion());
+    } catch (OptionalInformationUnavailableException e) {
+      harRequest.put(HAR_REQUEST_HTTP_VERSION, "");
+      harRequest.put(HAR_COMMENT, "HTTP version not provided by devtools.");
+      logger.warning("No HTTP Version field in response message: " + getResponse().getJson());
+    }
     harRequest.put(HAR_REQUEST_COOKIES, createHarCookies());
     harRequest.put(HAR_REQUEST_HEADERS, createHarRequestHeaders());
     harRequest.put(HAR_REQUEST_QUERY_STRING, createHarQueryString());
@@ -318,8 +340,10 @@ public class HarResource {
   }
 
   @SuppressWarnings("unchecked")
-  private JSONObject createHarResponse() {
+  private JSONObject createHarResponse() throws HarConstructionException {
 
+    // Note: fromDiskCache is not part of the HAR 1.2 specification, but is added as a
+    // convenience to determine whether or not this resources was loaded from cache.
     //    "response": {
     //      "status": 200,
     //      "statusText": "OK",
@@ -330,17 +354,23 @@ public class HarResource {
     //      "redirectURL": "",
     //      "headersSize" : 160,
     //      "bodySize" : 850,
+    //      "fromDiskCache" : false,
     //      "comment" : ""
     //    },
 
     JSONObject harResponse = new JSONObject();
     Long status = getResponse().getStatus();
     String statusText = getResponse().getStatusText();
-    String httpVersion = getHttpVersion();
     Long headersSize = getResponseHeadersSize();
     Long bodySize = getResponseBodySize();
 
-    harResponse.put(HAR_RESPONSE_HTTP_VERSION, httpVersion);
+    try {
+      harResponse.put(HAR_RESPONSE_HTTP_VERSION, getHttpVersion());
+    } catch (OptionalInformationUnavailableException e) {
+      harResponse.put(HAR_RESPONSE_HTTP_VERSION, "");
+      harResponse.put(HAR_COMMENT, "HTTP version not provided by devtools.");
+      logger.warning("No HTTP Version field in response message: " + getResponse().getJson());
+    }
     harResponse.put(HAR_RESPONSE_STATUS, status);
     harResponse.put(HAR_RESPONSE_STATUS_TEXT, statusText);
     harResponse.put(HAR_RESPONSE_COOKIES, createHarCookies());
@@ -350,6 +380,11 @@ public class HarResource {
     harResponse.put(HAR_RESPONSE_REDIRECT_URL, HAR_EMPTY_STRING);
     harResponse.put(HAR_RESPONSE_HEADERS_SIZE, headersSize);
     harResponse.put(HAR_RESPONSE_BODY_SIZE, bodySize);
+    try {
+      harResponse.put(HAR_RESPONSE_FROM_DISK_CACHE, getResponse().isFromDiskCache());
+    } catch (OptionalInformationUnavailableException e) {
+      logger.warning("Missing field: " + e);
+    }
     return harResponse;
   }
 
@@ -462,7 +497,7 @@ public class HarResource {
   }
 
   @SuppressWarnings("unchecked")
-  private JSONObject createHarContent() {
+  private JSONObject createHarContent() throws HarConstructionException {
 
     //    "content": {
     //        "size": 33,
@@ -474,27 +509,43 @@ public class HarResource {
 
     JSONObject harContent = new JSONObject();
     Long dataSize = 0L;
-    Long encodedSize = 0L;
-    Long compression = 0L;
+    Long compression = null;
     String text = "";
     String mimeType = getResponse().getMimeType();
     StringBuilder comment = new StringBuilder("");
 
     for (NetworkDataReceivedMessage dataMsg : data) {
       dataSize += dataMsg.getDataLength();
-      encodedSize += dataMsg.getEncodedDataLength();
     }
+
     if (content != null) {
       text = content.getBody();
     } else {
       comment.append("Devtools messages provided no response content for this resource. ");
-      logger.log(Level.WARNING,
-          "no content available for resource {0}", request.getRequest().getUrl());
+      logger.warning("no content available for resource: " + request.getRequest().getUrl());
     }
-    if (dataSize >= encodedSize) {
-      compression = dataSize - encodedSize;
-    } else {
-      comment.append("Encoded size is greater than inflated data size. ");
+
+    // Follow the logic of responseCompression() in WebCore/inspector/front-end/HAREntry.js.
+    boolean fromDiskCache = false;
+    try {
+      fromDiskCache = getResponse().isFromDiskCache();
+    } catch (OptionalInformationUnavailableException e) {
+      comment.append("Presuming not from disk cache. ");
+    }
+    long status = getResponse().getStatus();
+    if (!fromDiskCache &&
+        status != HttpURLConnection.HTTP_NOT_MODIFIED &&
+        status != HttpURLConnection.HTTP_MOVED_PERM &&
+        status != HttpURLConnection.HTTP_MOVED_TEMP) {
+      long responseHeadersSize = getResponseHeadersSize();
+      long transferSize = getTransferSize();
+      Preconditions.checkState(responseHeadersSize > 0,
+          "responseHeadersSize: " + responseHeadersSize);
+      compression = dataSize - (transferSize - responseHeadersSize);
+    }
+
+    if (!caveats.isEmpty()) {
+      comment.append(Joiner.on(" ").join(caveats));
     }
 
     // Remove a trailing space if there is one.
@@ -502,7 +553,10 @@ public class HarResource {
       comment.deleteCharAt(comment.length() - 1);
     }
     harContent.put(HAR_CONTENT_SIZE, dataSize);
-    harContent.put(HAR_CONTENT_COMPRESSION, compression);
+
+    if (compression != null) {
+      harContent.put(HAR_CONTENT_COMPRESSION, compression);
+    }
     harContent.put(HAR_CONTENT_TEXT, text);
     harContent.put(HAR_CONTENT_MIME_TYPE, mimeType);
     harContent.put(HAR_COMMENT, comment.toString());
@@ -675,33 +729,180 @@ public class HarResource {
 
   private static final String VERSION_REGEX = "\\AHTTP/(\\d+\\.\\d+)";
 
-  private String getHttpVersion() {
-
-    String version;
-    try {
-      String headersText = getResponse().getHeadersText();
-      Pattern p = Pattern.compile(VERSION_REGEX);
-      Matcher m = p.matcher(headersText);
-      if (m.find()) {
-        version = m.group(1);
-      } else {
-        logger.warning("Version not found in response headers text");
-        version = "";
-      }
-    } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING,
-          "No Http Version field in response message: {0}", getResponse().getJson());
-        version = ""; // Har needs a version and one wasn't provided
+  private String getHttpVersion() throws OptionalInformationUnavailableException {
+    // Data URLs don't have response headers.
+    if (getResponse().getUrl().startsWith("data")) {
+      return "";
     }
-    return version;
+
+    // about:blank URLs don't have response headers.
+    if (getResponse().getUrl().equals("about:blank")) {
+      return "";
+    }
+
+    // Cached resources don't have response headers.
+    try {
+      if (getResponse().isFromDiskCache()) {
+        return "";
+      }
+    } catch (OptionalInformationUnavailableException e2) {
+      // Presume not cached.
+    }
+
+    String headersText = getResponse().getHeadersText();
+    Pattern p = Pattern.compile(VERSION_REGEX);
+    Matcher m = p.matcher(headersText);
+    if (m.find()) {
+      return m.group(1);
+    } else {
+      logger.warning("Version not found in response headers text");
+    }
+    return "";
   }
 
-  private Long getResponseBodySize() {
-    Long responseBodySize = 0L;
-    for (NetworkDataReceivedMessage b : data) {
-      responseBodySize += b.getEncodedDataLength();
+  @VisibleForTesting
+  Long getResponseBodySize() throws HarConstructionException {
+    // See get responseBodySize() in WebCore/inspector/front-end/HAREntry.js.
+    Long headersSize = getResponseHeadersSize();
+    Long transferSize = getTransferSize();
+    boolean cached = false;
+    try {
+      cached = getResponse().isFromDiskCache();
+    } catch (OptionalInformationUnavailableException e) {
+      // Presume not cached and continue.
     }
-    return responseBodySize;
+
+    long status = getResponse().getStatus();
+    if (cached ||
+        status == HttpURLConnection.HTTP_NOT_MODIFIED ||
+        status == HttpURLConnection.HTTP_MOVED_PERM ||
+        status == HttpURLConnection.HTTP_MOVED_TEMP) {
+      return 0L;
+    }
+
+    // In general, the headerSize should be less than or equal to the transfer size.
+    // The one exception is when the following two conditions are true:
+    // (1) The header is compressed (as it is via SPDY), and
+    // (2) the transfer size is determined using the encodedDataLength.
+    // The encodedDataLength is meant to carry the number of bytes that were actually
+    // transported over the wire including the header. It can be less than the
+    // uncompressed header size when the body size is close to zero.
+    // Since header compression is not exposed to devtools and cannot be taken into account,
+    // we warn when this occurs.
+    if (headersSize > transferSize) {
+      logger.warning(
+          "Response headers size " + headersSize + " greater than transfer size " + transferSize);
+      return 0L;
+    }
+    return transferSize - headersSize;
+  }
+
+  @VisibleForTesting
+  Long getTransferSize() throws HarConstructionException {
+    // This follows the logic in get transferSize() in
+    // WebCore/inspector/front-end/NetworkRequest.js.
+    // That function returns 0 if cached or a 304. Otherwise, it returns:
+    // (1) encodedDataLength, if encodedDataLength > 0;
+    // (2) contentLength + responseHeadersSize, if the Content-Length response header is
+    //     present; OR
+    // (3) dataLength + responseHeadersSize
+    // WHERE:
+    // encodedDataLength and dataLength are the respective sums of the encodedDataLength and
+    // dataLength fields in all Network.dataReceived messages for this resource,
+    // contentLength is the value of the Content-Length header, and
+    // responseHeadersSize is the size of the uncompressed response headers taken from
+    // responseHeadersText in Network.responseReceivedMessage.
+    Long responseHeadersSize = getResponseHeadersSize();
+    logger.fine("responseHeadersSize: " + responseHeadersSize);
+    try {
+      if (getResponse().isFromDiskCache()) {
+        return 0L;
+      }
+    } catch (OptionalInformationUnavailableException e) {
+      logger.fine("No fromDiskCache field in response: " + getResponse().getJson());
+      // Presume not cached and continue.
+    }
+    long status = getResponse().getStatus();
+    if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+      return 0L;
+    }
+
+    Long transferSize = null;
+    Long resourceSize = null;
+    for (NetworkDataReceivedMessage b : data) {
+      int encodedDataLength = b.getEncodedDataLength();
+      if (encodedDataLength > 0) {
+        if (transferSize == null) {
+          transferSize = (long) encodedDataLength;
+        } else {
+          transferSize += encodedDataLength;
+        }
+      }
+      int dataLength = b.getDataLength();
+      if (dataLength > 0) {
+        if (resourceSize == null) {
+          resourceSize = (long) dataLength;
+        } else {
+          resourceSize += dataLength;
+        }
+      }
+    }
+    if (transferSize != null) {
+      // This includes the responseHeadersSize.
+      logger.fine("TransferSize (from encodedDataLength): " + transferSize);
+      return transferSize;
+    }
+    // From Webcore/inspector:
+    // If we did not receive actual transfer size from network stack, we prefer using
+    // Content-Length over resourceSize as resourceSize may differ from actual transfer size if
+    // platform's network stack performed decoding (e.g. gzip decompression). The Content-Length,
+    // though, is expected to come from raw response headers and will reflect actual transfer
+    // length. This won't work for chunked content encoding, so fall back to resourceSize when we
+    // don't have Content-Length. This still won't work for chunks with non-trivial encodings. We
+    // need a way to get actual transfer size from the network stack.
+    try {
+      transferSize =  getResponse().getContentLength() + responseHeadersSize;
+      logger.fine("TransferSize (from Content-Length): " + transferSize);
+      return transferSize;
+    } catch (OptionalInformationUnavailableException e) {
+      logger.fine("No Content-Length header in response: " + getResponse().getJson());
+    }
+    if (resourceSize != null) {
+      transferSize = resourceSize + responseHeadersSize;
+      logger.fine("TransferSize (from dataLength): " + transferSize);
+      return transferSize;
+    } else {
+      // These are additional cases (not in Webcore) where we wouldn't expect Network.dataReceived
+      // messages, which contain dataLength.
+      if (status == HttpURLConnection.HTTP_MOVED_PERM ||
+          status == HttpURLConnection.HTTP_MOVED_TEMP ||
+          getResponse().getUrl().equals("about:blank")) {
+        logger.fine("No dataLength in response expected: " + getResponse().getJson());
+        Preconditions.checkState(data.isEmpty(),
+            "Expected no payload data for 301s and 302s and about:blank URLS");
+        return 0L;
+      } else {
+        try {
+          URL url = new URL(request.getRequest().getUrl());
+          // Special cases.
+          if (url.getPath().endsWith(".mp4")) {
+            caveats.add(CAVEAT_NO_DATALENGTH_MP4 + " : " + url);
+            return 0L;
+          } else if (url.getHost().contains("google")) {
+            caveats.add(CAVEAT_NO_DATALENGTH_GOOGLE_RESOURCE + " : " + url);
+            return 0L;
+          } else if (data.isEmpty() && loaded != null) {
+            caveats.add(CAVEAT_NO_DATALENGTH_TRACKED + " : " + url);
+            return 0L;
+          }
+        } catch (MalformedURLException e) {
+          throw new HarConstructionException(
+              "No dataLength in response: " + getResponse().getJson().toString(), e);
+        }
+        throw new HarConstructionException(
+            "No dataLength in response: " + getResponse().getJson().toString());
+      }
+    }
   }
 
   /** Returns the time that the resource was requested in seconds since the epoch. */
@@ -710,8 +911,7 @@ public class HarResource {
     try {
         return getResponse().getTiming().getRequestTime();
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING,
-          "Timing information unavailable, falling back to request timestamp. {0}",
+      logger.warning("Timing information unavailable, falling back to request timestamp: " +
           getResponse().getJson());
       return request.getTimestamp();
     }
@@ -723,7 +923,7 @@ public class HarResource {
       Long start = getResponse().getTiming().getDnsStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
+      logger.warning("Timing information unavailable: " + getResponse().getJson());
       return null;
     }
   }
@@ -734,7 +934,7 @@ public class HarResource {
       Long start = getResponse().getTiming().getConnectStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
+      logger.warning("Timing information unavailable. " + getResponse().getJson());
       return null;
     }
   }
@@ -745,7 +945,7 @@ public class HarResource {
       Long start = getResponse().getTiming().getSendStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
+      logger.warning("Timing information unavailable: " + getResponse().getJson());
       return null;
     }
   }
@@ -756,7 +956,7 @@ public class HarResource {
       Long start = getResponse().getTiming().getSslStart();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable. {0}", getResponse().getJson());
+      logger.warning("Timing information unavailable: " + getResponse().getJson());
       return null;
     }
   }
@@ -767,7 +967,7 @@ public class HarResource {
       Long start = getResponse().getTiming().getSendEnd();
       return end - start;
     } catch (OptionalInformationUnavailableException e) {
-      logger.log(Level.WARNING, "Timing information unavailable: {0}", getResponse().getJson());
+      logger.warning("Timing information unavailable: " + getResponse().getJson());
       return null;
     }
   }
