@@ -115,16 +115,6 @@ struct hostent * WSAAPI gethostbyname_Hook(const char * name) {
   return ret;
 }
 
-void WSAAPI freeaddrinfo_Hook(PADDRINFOA pAddrInfo) {
-  if (pHook)
-    pHook->freeaddrinfo(pAddrInfo);
-}
-
-void WSAAPI FreeAddrInfoW_Hook(PADDRINFOW pAddrInfo) {
-  if (pHook)
-    pHook->FreeAddrInfoW(pAddrInfo);
-}
-
 int WSAAPI WSARecv_Hook(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, 
                         LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, 
                         LPWSAOVERLAPPED lpOverlapped, 
@@ -198,16 +188,6 @@ int WSAAPI GetAddrInfoExW_Hook(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSp
   return ret;
 }
 
-void WSAAPI FreeAddrInfoEx_Hook(PADDRINFOEXA pAddrInfoEx) {
-  if (pHook)
-    pHook->FreeAddrInfoEx(pAddrInfoEx);
-}
-
-void WSAAPI FreeAddrInfoExW_Hook(PADDRINFOEXW pAddrInfoEx) {
-  if (pHook)
-    pHook->FreeAddrInfoExW(pAddrInfoEx);
-}
-
 /******************************************************************************
 *******************************************************************************
 **													                                    						 **
@@ -220,11 +200,9 @@ void WSAAPI FreeAddrInfoExW_Hook(PADDRINFOEXW pAddrInfoEx) {
 -----------------------------------------------------------------------------*/
 CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _getaddrinfo(NULL)
-  , _freeaddrinfo(NULL)
   , _dns(dns)
   , _sockets(sockets)
   , _test_state(test_state) {
-  dns_override.InitHashTable(257);
   _recv_buffers.InitHashTable(257);
   _send_buffers.InitHashTable(257);
   _send_buffer_original_length.InitHashTable(257);
@@ -255,12 +233,6 @@ void CWsHook::Init() {
                                           GetAddrInfoExA_Hook);
   _GetAddrInfoExW = hook.createHookByName("ws2_32.dll", "GetAddrInfoExW", 
                                           GetAddrInfoExW_Hook);
-  _FreeAddrInfoEx = hook.createHookByName("ws2_32.dll", "FreeAddrInfoEx", 
-                                          FreeAddrInfoEx_Hook);
-  _FreeAddrInfoExW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoExW", 
-                                           FreeAddrInfoExW_Hook);
-  _FreeAddrInfoW = hook.createHookByName("ws2_32.dll", "FreeAddrInfoW", 
-                                         FreeAddrInfoW_Hook);
   _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
   _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
   _WSAGetOverlappedResult = hook.createHookByName("ws2_32.dll", 
@@ -274,9 +246,6 @@ void CWsHook::Init() {
   if (!_GetAddrInfoW)
     _getaddrinfo = hook.createHookByName("ws2_32.dll", "getaddrinfo", 
                                          getaddrinfo_Hook);
-  if (!_FreeAddrInfoW)
-    _freeaddrinfo = hook.createHookByName("ws2_32.dll", "freeaddrinfo", 
-                                          freeaddrinfo_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -618,40 +587,6 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
 }
 
 /*-----------------------------------------------------------------------------
-  Free the descriptor if it is one that we allocated, otherwise pass it through
------------------------------------------------------------------------------*/
-void CWsHook::freeaddrinfo(PADDRINFOA pAddrInfo) {
-  void * mem = NULL;
-  _sockets.ResetSslFd();
-  EnterCriticalSection(&cs);
-  if (dns_override.Lookup(pAddrInfo, mem))
-    dns_override.RemoveKey(pAddrInfo);
-  LeaveCriticalSection(&cs);
-
-  if( mem )
-    free(mem);
-  else if(_freeaddrinfo)
-    _freeaddrinfo(pAddrInfo);
-}
-
-/*-----------------------------------------------------------------------------
-  Free the descriptor if it is one that we allocated, otherwise pass it through
------------------------------------------------------------------------------*/
-void CWsHook::FreeAddrInfoW(PADDRINFOW pAddrInfo) {
-  void * mem = NULL;
-  _sockets.ResetSslFd();
-  EnterCriticalSection(&cs);
-  if (dns_override.Lookup(pAddrInfo, mem))
-    dns_override.RemoveKey(pAddrInfo);
-  LeaveCriticalSection(&cs);
-
-  if( mem )
-    free(mem);
-  else if(_FreeAddrInfoW)
-    _FreeAddrInfoW(pAddrInfo);
-}
-
-/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
               LPDWORD lpcbTransfer, BOOL fWait, LPDWORD lpdwFlags) {
@@ -751,8 +686,16 @@ int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
         lpNameHandle);
 
   int err = WSAHOST_NOT_FOUND;
-  if (ret == NO_ERROR) {
-    // TODO: override response IP's
+  if (ret == NO_ERROR && ppResult && *ppResult) {
+    PADDRINFOEXA addr = *ppResult;
+    while (addr) {
+      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+          addr->ai_family == AF_INET) {
+        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+      }
+      addr = addr->ai_next;
+    }
     err = 0;
   }
   if (context)
@@ -784,32 +727,19 @@ int CWsHook::GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace
         lpHandle);
 
   int err = WSAHOST_NOT_FOUND;
-  if (ret == NO_ERROR) {
-    // TODO: override response IP's
+  if (ret == NO_ERROR && ppResult && *ppResult) {
+    PADDRINFOEXW addr = *ppResult;
+    while (addr) {
+      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+          addr->ai_family == AF_INET) {
+        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+      }
+      addr = addr->ai_next;
+    }
     err = 0;
   }
   if (context)
     _dns.LookupDone(context, err);
   return ret;
 }
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void CWsHook::FreeAddrInfoEx(PADDRINFOEXA pAddrInfoEx) {
-#ifdef TRACE_WINSOCK
-  ATLTRACE(_T("FreeAddrInfoEx"));
-#endif
-  if (_FreeAddrInfoEx)
-    _FreeAddrInfoEx(pAddrInfoEx);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void CWsHook::FreeAddrInfoExW(PADDRINFOEXW pAddrInfoEx) {
-#ifdef TRACE_WINSOCK
-  ATLTRACE(_T("FreeAddrInfoExW"));
-#endif
-  if (_FreeAddrInfoExW)
-    _FreeAddrInfoExW(pAddrInfoEx);
-}
-

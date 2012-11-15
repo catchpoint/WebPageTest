@@ -280,17 +280,18 @@ void  Wpt::ClearCache(void) {
   DWORD len, entry_size = 0;
   GROUPID id;
   INTERNET_CACHE_ENTRY_INFO * info = NULL;
-  HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL,0,0, &id,0);
+  HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL,
+                                         0, 0, &id, 0);
   if (hGroup) {
     do {
       len = entry_size;
-      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len, 
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len,
                                         NULL, NULL, NULL);
       if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
         entry_size = len;
         info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
         if (info) {
-          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, 
+          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info,
                                             &len, NULL, NULL, NULL);
         }
       }
@@ -304,8 +305,8 @@ void  Wpt::ClearCache(void) {
               entry_size = len;
               info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
               if (info) {
-                if (!FindNextUrlCacheEntryEx(hEntry, info, &len, 
-                                             NULL, NULL, NULL)) {
+                if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, 
+                                             NULL)) {
                   ok = false;
                 }
               }
@@ -324,13 +325,13 @@ void  Wpt::ClearCache(void) {
   }
 
   len = entry_size;
-  hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, 
+  hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len,
                                     NULL, NULL, NULL);
   if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
     entry_size = len;
     info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
     if (info) {
-      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, 
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len,
                                         NULL, NULL, NULL);
     }
   }
@@ -344,8 +345,8 @@ void  Wpt::ClearCache(void) {
           entry_size = len;
           info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
           if (info) {
-            if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, 
-                                         NULL, NULL)) {
+            if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL,
+                                         NULL)) {
               ok = false;
             }
           }

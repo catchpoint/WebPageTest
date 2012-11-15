@@ -90,11 +90,18 @@ public:
   int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
                               const ADDRINFOA * pHints, PADDRINFOA * ppResult);
   struct hostent * gethostbyname(const char * pNodeName);
-
   int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
                               const ADDRINFOW * pHints, PADDRINFOW * ppResult);
-  void	freeaddrinfo(PADDRINFOA pAddrInfo);
-  void	FreeAddrInfoW(PADDRINFOW pAddrInfo);
+  int GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
+      LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
+      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+      LPHANDLE lpNameHandle);
+  int GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
+      LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
+      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
+      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
+      LPHANDLE lpHandle);
   int		WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, 
                 LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, 
                 LPWSAOVERLAPPED lpOverlapped, 
@@ -108,18 +115,6 @@ public:
   int   WSAEventSelect(SOCKET s, WSAEVENT hEventObject, long lNetworkEvents);
   int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                              LPWSANETWORKEVENTS lpNetworkEvents);
-  int GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
-      LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
-      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
-      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-      LPHANDLE lpNameHandle);
-  int GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
-      LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
-      struct timeval *timeout, LPOVERLAPPED lpOverlapped,
-      LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-      LPHANDLE lpHandle);
-  void FreeAddrInfoEx(PADDRINFOEXA pAddrInfoEx);
-  void FreeAddrInfoExW(PADDRINFOEXW pAddrInfoEx);
 
 private:
   TestState&        _test_state;
@@ -152,10 +147,6 @@ private:
   LPFN_GETADDRINFOW	  _GetAddrInfoW;
   LPFN_GETADDRINFOEXA _GetAddrInfoExA;
   LPFN_GETADDRINFOEXW _GetAddrInfoExW;
-  LPFN_FREEADDRINFO	  _freeaddrinfo;
-  LPFN_FREEADDRINFOW	_FreeAddrInfoW;
-  LPFN_FREEADDRINFOEXA _FreeAddrInfoEx;
-  LPFN_FREEADDRINFOEXW _FreeAddrInfoExW;
   LPFN_GETHOSTBYNAME  _gethostbyname;
   LPFN_WSARECV		    _WSARecv;
   LPFN_WSASEND        _WSASend;
