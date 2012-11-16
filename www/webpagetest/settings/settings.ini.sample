@@ -28,6 +28,7 @@ enableVideo=1
 ;showslow=http://www.showslow.com
 ;beaconRate=100
 showslow_key=<your showslow API key>
+tcpdump_view="http://cloudshark.org/view?url="
 
 ; image quality (defaults to 30)
 iq=75
