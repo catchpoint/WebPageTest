@@ -151,6 +151,57 @@ public class HarObjectTest {
     assertEquals(25, devtools.size());
   }
 
+  /** Tests that the HAR attributes from HarObject constructor args make it into the HAR. */
+  @Test
+  public void customAttributesFromConstructor() throws Exception {
+    HarObject har = new HarObject(
+        "creatorName", "creatorVersion", "creatorComment",
+        "browserName", "browserVersion", "browserComment",
+        "pageId", /*ignoreDelayToFirstRequest=*/ false);
+    TestUtils.populateTestHar(devtoolsMessageFactory, har, DEVTOOLS_MESSAGES_JSON);
+    har.createHarFromMessages();
+
+    validateHarAttributes(har,
+        "creatorName", "creatorVersion", "creatorComment",
+        "browserName", "browserVersion", "browserComment", "pageId");
+  }
+
+  /** Tests that the HAR attributes from HarObject methods make it into the HAR. */
+  @Test
+  public void customAttributesFromMethods() throws Exception {
+    HarObject har = new HarObject();
+    har.setCreatorInfo("creatorName", "creatorVersion", "creatorComment");
+    har.setBrowserInfo("browserName", "browserVersion", "browserComment");
+    har.setPageId("pageId");
+    TestUtils.populateTestHar(devtoolsMessageFactory, har, DEVTOOLS_MESSAGES_JSON);
+    har.createHarFromMessages();
+
+    validateHarAttributes(har,
+        "creatorName", "creatorVersion", "creatorComment",
+        "browserName", "browserVersion", "browserComment", "pageId");
+  }
+
+  private void validateHarAttributes(
+      HarObject har, String creatorName, String creatorVersion, String creatorComment,
+      String browserName, String browserVersion, String browserComment, String pageId) {
+    JSONObject harObj = har.getHar();
+    JSONObject harLog = (JSONObject) harObj.get("log");
+    JSONObject harCreator = (JSONObject) harLog.get("creator");
+    JSONObject harBrowser = (JSONObject) harLog.get("browser");
+    JSONArray harPages = (JSONArray) harLog.get("pages");
+    JSONObject harPage = (JSONObject) harPages.get(0);
+
+    assertEquals(creatorName, harCreator.get("name"));
+    assertEquals(creatorVersion, harCreator.get("version"));
+    assertEquals(creatorComment, harCreator.get("comment"));
+
+    assertEquals(browserName, harBrowser.get("name"));
+    assertEquals(browserVersion, harBrowser.get("version"));
+    assertEquals(browserComment, harBrowser.get("comment"));
+
+    assertEquals("pageId", harPage.get("id"));
+  }
+
   /** Tests that various methods succeed or fail before and after HAR population. */
   @Test
   public void harPopulationState() throws Exception {

@@ -31,6 +31,10 @@ package org.webpagetest.dt2har.converter;
 import org.webpagetest.dt2har.protocol.DevtoolsMessageFactory;
 import org.webpagetest.dt2har.protocol.MalformedDevtoolsMessageException;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -49,17 +53,39 @@ import java.util.logging.Logger;
 public class DevTools2HarMain {
   private static final Logger logger = Logger.getLogger(DevTools2HarMain.class.getName());
 
-  private final String devToolsFilePath;
-  private final String harFilePath;
-  private final HarObject har = new HarObject();
+  private static final JCommander jCommander = new JCommander();
+
+  @Parameter(names = "--devtools", description = "DevTools event log JSON file", required=true)
+  private String devToolsFilePath;
+
+  @Parameter(names = "--har", description = "Output HAR file", required=true)
+  private String harFilePath;
+
+  @Parameter(names = "--browser_name", description = "Browser name")
+  private String browserName = "Chrome";
+
+  @Parameter(names = "--browser_version", description = "Browser version")
+  private String browserVersion = "";
+
+  @Parameter(names = "--har_page_id", description = "Page ID string for the HAR")
+  private String harPageId = HarObject.DEFAULT_PAGE_ID;
+
+  @Parameter(names = "--har_creator", description = "HAR creator name")
+  private String harCreator = HarObject.DEFAULT_CREATOR;
+
+  private final HarObject har;
 
   public DevTools2HarMain(final String[] args) {
-    if (args.length != 2) {
-      String usage = "Usage: devtools2har <devtools-log-file> <har-file>";
-      throw new IllegalArgumentException(usage);
-    }
-    devToolsFilePath = args[0];
-    harFilePath = args[1];
+    jCommander.addObject(this);
+    jCommander.parse(args);
+    assert null != devToolsFilePath;
+    assert null != harFilePath;
+    assert null != harPageId;
+    assert null != harCreator;
+
+    har = new HarObject(
+        harCreator, HarObject.VERSION, "", browserName, browserVersion, "",
+        harPageId, /*ignoreDelayToFirstRequest=*/false);
   }
 
   public void run() throws IOException, ParseException {
@@ -91,7 +117,14 @@ public class DevTools2HarMain {
    */
   public static void main(final String[] args)
       throws IOException, ParseException {
-    DevTools2HarMain dt2har = new DevTools2HarMain(args);
+    DevTools2HarMain dt2har = null;
+    try {
+      dt2har = new DevTools2HarMain(args);
+    } catch (ParameterException e) {
+      System.err.println(e.getLocalizedMessage());
+      jCommander.usage();
+      System.exit(2);
+    }
     dt2har.run();
   }
 

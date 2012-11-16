@@ -75,7 +75,9 @@ import java.util.zip.GZIPOutputStream;
  * TODO: Add a mechanism to support newer AND older protocol versions.
  */
 public class HarObject {
-  public static final String DEVTOOLS2HAR_VERSION = "1.1";
+  public static final String VERSION = "1.1";
+  public static final String DEFAULT_CREATOR = "devtools2har";
+  public static final String DEFAULT_PAGE_ID = "page_0";
 
   private static final Logger logger = Logger.getLogger(HarObject.class.getName());
 
@@ -106,6 +108,7 @@ public class HarObject {
   private String browserName;
   private String browserVersion;
   private String browserVersionComment;
+  private String pageId;  // We support only one page now. Multi-page would need a scheme.
   // When computing page load times, ignore the interval between the start of navigation
   // and the first request being sent.
   private boolean ignoreDelayToFirstRequest;
@@ -116,13 +119,14 @@ public class HarObject {
   /** Create a new, empty HarObject. All times will be interpreted as UTC. */
   public HarObject(String creatorName, String creatorVersion, String creatorVersionComment,
                    String browserName, String browserVersion, String browserVersionComment,
-                   boolean ignoreDelayToFirstRequest) {
+                   String pageId, boolean ignoreDelayToFirstRequest) {
     this.creatorName = creatorName;
     this.creatorVersion = creatorVersion;
     this.creatorVersionComment = creatorVersionComment;
     this.browserName = browserName;
     this.browserVersion = browserVersion;
     this.browserVersionComment = browserVersionComment;
+    this.pageId = pageId;
     this.ignoreDelayToFirstRequest = ignoreDelayToFirstRequest;
     resources = Maps.newHashMap();
     requestIdsForContentToFetch = Lists.newLinkedList();
@@ -131,7 +135,7 @@ public class HarObject {
 
   /** Create a new, empty HarObject. All times will be interpreted as UTC. */
   public HarObject() {
-    this("devtools2har", DEVTOOLS2HAR_VERSION, "", "", "", "", false);
+    this(DEFAULT_CREATOR, VERSION, "", "", "", "", DEFAULT_PAGE_ID, false);
   }
 
   /**
@@ -195,6 +199,13 @@ public class HarObject {
     this.browserName = browserName;
     this.browserVersion = browserVersion;
     this.browserVersionComment = browserVersionComment;
+  }
+
+  /**
+   * Set the page ID for the first (and only) page in the HAR.
+   */
+  public synchronized void setPageId(String pageId) {
+    this.pageId = pageId;
   }
 
   /**
@@ -582,7 +593,7 @@ public class HarObject {
   @SuppressWarnings("unchecked")
   private JSONObject createHarPage() throws HarConstructionException {
     JSONObject page = new JSONObject();
-    page.put("id", "page_0");
+    page.put("id", pageId);
     page.put("title", getFirstRequest().getDocumentUrl());
     page.put("pageTimings", createHarPageTimings());
     // Must be created after createHarPageTimings extracts the navigation start time.
