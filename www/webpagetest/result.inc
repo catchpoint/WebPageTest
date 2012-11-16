@@ -430,10 +430,14 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached.cap") )
                         {
+                            $tcpdump_url = "/getgzip.php?test=$id&file={$run}_Cached.cap";
                             if( FRIENDLY_URLS )
-                                echo "<br><br><a href=\"/result/$id/{$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
-                            else
-                                echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached.cap\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                                $tcpdump_url = "/result/$id/{$run}_Cached.cap";
+                            echo "<br><br><a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                            if (array_key_exists('tcpdump_view', $settings) && strlen($settings['tcpdump_view'])) {
+                                $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
+                                echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
+                            }
                         }
                         if( gz_is_file("$testPath/{$run}_Cached_timeline.json") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
