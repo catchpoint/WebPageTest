@@ -55,7 +55,9 @@ STDMETHODIMP_(void) WptBHO::OnDocumentComplete(IDispatch *pDisp,
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
     _wpt.OnLoad();
     if (!url.CompareNoCase(_T("about:blank"))) {
-      _wpt.Start(_web_browser);
+      _wpt.Install(_web_browser);
+    } else if(!url.CompareNoCase(_T("http://127.0.0.1:8888/blank.html"))) {
+      _wpt.Start();
     }
   }
 }

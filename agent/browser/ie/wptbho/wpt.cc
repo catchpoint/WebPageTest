@@ -42,21 +42,30 @@ VOID CALLBACK TaskTimer(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Wpt::Start(CComPtr<IWebBrowser2> web_browser) {
+void Wpt::Install(CComPtr<IWebBrowser2> web_browser) {
   AtlTrace(_T("[wptbho] - Start"));
   HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
   if (!_task_timer && active_mutex) {
     if (InstallHook()) {
       _web_browser = web_browser;
-      timeBeginPeriod(1);
-      CreateTimerQueueTimer(&_task_timer, NULL, ::TaskTimer, this, 
-                            TASK_INTERVAL, TASK_INTERVAL, WT_EXECUTEDEFAULT);
+      CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
+      _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
     }
   } else {
     AtlTrace(_T("[wptbho] - Start, failed to open mutex"));
   }
   if (active_mutex)
     CloseHandle(active_mutex);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Wpt::Start(void) {
+  if (!_task_timer) {
+    timeBeginPeriod(1);
+    CreateTimerQueueTimer(&_task_timer, NULL, ::TaskTimer, this, 
+                          TASK_INTERVAL, TASK_INTERVAL, WT_EXECUTEDEFAULT);
+  }
 }
 
 /*-----------------------------------------------------------------------------

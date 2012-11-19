@@ -6,7 +6,8 @@ class Wpt {
 public:
   Wpt(void);
   ~Wpt(void);
-  void Start(CComPtr<IWebBrowser2> web_browser);
+  void Install(CComPtr<IWebBrowser2> web_browser);
+  void Start(void);
   void Stop(void);
   bool InstallHook();
   void CheckForTask();
@@ -25,11 +26,11 @@ private:
   WptInterface  _wpt_interface;
   HMODULE       _hook_dll;
 
-	typedef enum{
-		equal = 0,
-		left = 1,
-		mid = 2
-	}attrOperator;
+  typedef enum{
+    equal = 0,
+    left = 1,
+    mid = 2
+  }attrOperator;
 
   CComPtr<IHTMLElement> FindDomElement(CString target);
   CComPtr<IHTMLElement> FindDomElementInDocument(CString tag, 
