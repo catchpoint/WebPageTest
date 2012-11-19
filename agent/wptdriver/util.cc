@@ -99,17 +99,8 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           PathAppend( path, fd.cFileName );
           if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             DeleteDirectory(path, true);
-          else {
-            if (DeleteFile(path)) {
-              CString buff;
-              buff.Format(L"Deleted %s", path);
-              OutputDebugString(buff);
-            } else {
-              CString buff;
-              buff.Format(L"FAILED to delete %s", path);
-              OutputDebugString(buff);
-            }
-          }
+          else
+            DeleteFile(path);
         }
       }while(FindNextFile(hFind, &fd));
       
