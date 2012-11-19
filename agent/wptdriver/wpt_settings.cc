@@ -36,7 +36,7 @@ WptSettings::WptSettings(void):
   _timeout(DEFAULT_TEST_TIMEOUT)
   ,_startup_delay(DEFAULT_STARTUP_DELAY)
   ,_polling_delay(DEFAULT_POLLING_DELAY)
-  ,_debug(0){
+  ,_debug(0) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -237,26 +237,12 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   _wpt_directory = buff;
   _wpt_directory.Trim(_T("\\"));
 
-  CString app_data;
-  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-                                NULL, SHGFP_TYPE_CURRENT, buff))) {
-    app_data = buff;
-  }
-  CString local_app_data;
-  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE,
-                                NULL, SHGFP_TYPE_CURRENT, buff))) {
-    local_app_data = buff;
-  }
-  CString program_files;
-  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,
-                                NULL, SHGFP_TYPE_CURRENT, buff))) {
-    program_files = buff;
-  }
+  GetStandardDirectories();
 
   // create a profile directory for the given browser
   _profile_directory = _wpt_directory + _T("\\profiles\\");
-  if (!app_data.IsEmpty()) {
-    lstrcpy(buff, app_data);
+  if (!app_data_dir_.IsEmpty()) {
+    lstrcpy(buff, app_data_dir_);
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
@@ -277,7 +263,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _exe = buff;
-    _exe.Replace(_T("%PROGRAM_FILES%"), program_files);
+    _exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir_);
     _exe.Trim(_T("\""));
 
     lstrcpy(buff, _exe);
@@ -299,12 +285,12 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   CString exe(_exe);
   exe.MakeLower();
   if (exe.Find(_T("safari.exe")) >= 0) {
-    _profile_directory = app_data + _T("\\Apple Computer");
+    _profile_directory = app_data_dir_ + _T("\\Apple Computer");
     if (_template.IsEmpty()) {
       _template = _T("Safari");
     }
     if (_cache_directory.IsEmpty()) {
-      _cache_directory = local_app_data + _T("\\Apple Computer\\Safari");
+      _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
     }
   }
 
@@ -315,13 +301,246 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
   Reset the browser user profile (nuke the directory, copy the template over)
 -----------------------------------------------------------------------------*/
 void BrowserSettings::ResetProfile() {
+  // clear the browser-specific profile directory
+  if (_cache_directory.GetLength()) {
+    DeleteDirectory(_cache_directory, false);
+  }
   if (_profile_directory.GetLength() ) {
     SHCreateDirectoryEx(NULL, _profile_directory, NULL);
     DeleteDirectory(_profile_directory, false);
     CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\"))+_template,
                       _profile_directory);
   }
-  if (_cache_directory.GetLength()) {
-    DeleteDirectory(_cache_directory, false);
+
+  // flush the certificate revocation caches
+  LaunchProcess(_T("certutil.exe -urlcache * delete"));
+  LaunchProcess(
+      _T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
+
+  // Clear the various IE caches that we know about
+  DeleteRegKey(HKEY_CURRENT_USER, 
+      _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"),
+      false);
+  DeleteRegKey(HKEY_CURRENT_USER,
+      _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"),
+      false);
+  DeleteDirectory(cookies_dir_, false);
+  DeleteDirectory(history_dir_, false);
+  DeleteDirectory(dom_storage_dir_, false);
+  DeleteDirectory(temp_files_dir_, false);
+  DeleteDirectory(temp_dir_, false);
+  DeleteDirectory(silverlight_dir_, false);
+  DeleteDirectory(recovery_dir_, false);
+  DeleteDirectory(flash_dir_, false);
+  DeleteDirectory(windows_dir_ + _T("\\temp"), false);
+  ClearWinInetCache();
+  ClearWebCache();
+}
+
+/*-----------------------------------------------------------------------------
+  Locate the directories for a bunch of Windows caches
+-----------------------------------------------------------------------------*/
+void BrowserSettings::GetStandardDirectories() {
+  TCHAR path[4096];
+  windows_dir_ = _T("c:\\windows");
+  if (GetWindowsDirectory(path, _countof(path)))
+    windows_dir_ = path;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, path)))
+    app_data_dir_ = path;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, path)))
+    local_app_data_dir_ = path;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,
+                                NULL, SHGFP_TYPE_CURRENT, path)))
+    program_files_dir_ = path;
+  if (SHGetSpecialFolderPath(NULL, path, CSIDL_PROFILE, FALSE))
+    profile_dir_ = path;
+  HKEY hKey;
+  if (SUCCEEDED(RegOpenKeyEx(HKEY_CURRENT_USER,
+      L"Software\\Microsoft\\Windows\\CurrentVersion"
+      L"\\Explorer\\User Shell Folders", 0, KEY_READ, &hKey))) {
+    DWORD len = _countof(path);
+    if (SUCCEEDED(RegQueryValueEx(hKey, _T("Cookies"), 0, 0, 
+                                  (LPBYTE)path, &len)))
+      cookies_dir_ = path;
+    len = _countof(path);
+    if (SUCCEEDED(RegQueryValueEx(hKey, _T("History"), 0, 0, 
+                                  (LPBYTE)path, &len)))
+      history_dir_ = path;
+    len = _countof(path);
+    if (SUCCEEDED(RegQueryValueEx(hKey, _T("Cache"), 0, 0,
+                                  (LPBYTE)path, &len)))
+      temp_files_dir_ = path;
+    temp_dir_ = local_app_data_dir_ + L"\\Temp";
+    flash_dir_ = app_data_dir_ + L"\\Macromedia\\Flash Player\\#SharedObjects";
+    recovery_dir_ = local_app_data_dir_ + 
+        L"\\Microsoft\\Internet Explorer\\Recovery\\Active";
+    silverlight_dir_ = local_app_data_dir_ + L"\\Microsoft\\Silverlight";
+
+    RegCloseKey(hKey);
   }
+  if (SUCCEEDED(RegOpenKeyEx(HKEY_CURRENT_USER,
+      L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
+      L"\\5.0\\Cache\\Extensible Cache\\DOMStore", 0, KEY_READ, &hKey))) {
+    DWORD len = _countof(path);
+    if (SUCCEEDED(RegQueryValueEx(hKey, L"CachePath", 0, 0,
+                                  (LPBYTE)path, &len)))
+      dom_storage_dir_ = path;
+    RegCloseKey(hKey);
+  }
+  webcache_dir_ = local_app_data_dir_ + L"\\Microsoft\\Windows\\WebCache";
+
+  cookies_dir_.Replace(_T("%USERPROFILE%"), profile_dir_);
+  history_dir_.Replace(_T("%USERPROFILE%"), profile_dir_);
+  temp_files_dir_.Replace(_T("%USERPROFILE%"), profile_dir_);
+  dom_storage_dir_.Replace(_T("%USERPROFILE%"), profile_dir_);
+}
+
+/*-----------------------------------------------------------------------------
+  Clear out the WinInet caches (have to do this before launching the browser)
+-----------------------------------------------------------------------------*/
+void BrowserSettings::ClearWinInetCache() {
+  HANDLE hEntry;
+  DWORD len, entry_size = 0;
+  GROUPID id;
+  INTERNET_CACHE_ENTRY_INFO * info = NULL;
+  HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL, 0,
+                                         0, &id, 0);
+  if (hGroup) {
+    do {
+      len = entry_size;
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len,
+                                        NULL, NULL, NULL);
+      if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+        entry_size = len;
+        info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+        if (info) {
+          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info,
+                                            &len, NULL, NULL, NULL);
+        }
+      }
+      if (hEntry && info) {
+        bool ok = true;
+        do {
+          DeleteUrlCacheEntry(info->lpszSourceUrlName);
+          len = entry_size;
+          if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+              entry_size = len;
+              info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+              if (info) {
+                if (!FindNextUrlCacheEntryEx(hEntry, info, &len,
+                                             NULL, NULL, NULL)) {
+                  ok = false;
+                }
+              }
+            } else {
+              ok = false;
+            }
+          }
+        } while (ok);
+      }
+      if (hEntry) {
+        FindCloseUrlCache(hEntry);
+      }
+      DeleteUrlCacheGroup(id, CACHEGROUP_FLAG_FLUSHURL_ONDELETE, 0);
+    } while(FindNextUrlCacheGroup(hGroup, &id,0));
+    FindCloseUrlCache(hGroup);
+  }
+
+  len = entry_size;
+  hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len,
+                                    NULL, NULL, NULL);
+  if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+    entry_size = len;
+    info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+    if (info) {
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len,
+                                        NULL, NULL, NULL);
+    }
+  }
+  if (hEntry && info) {
+    bool ok = true;
+    do {
+      DeleteUrlCacheEntry(info->lpszSourceUrlName);
+      len = entry_size;
+      if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+          entry_size = len;
+          info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+          if (info) {
+            if (!FindNextUrlCacheEntryEx(hEntry, info, &len,
+                                         NULL, NULL, NULL)) {
+              ok = false;
+            }
+          }
+        } else {
+          ok = false;
+        }
+      }
+    } while (ok);
+  }
+  if (hEntry) {
+    FindCloseUrlCache(hEntry);
+  }
+
+  len = entry_size;
+  hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+  if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+    entry_size = len;
+    info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+    if (info) {
+      hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+    }
+  }
+  if (hEntry && info) {
+    bool ok = true;
+    do {
+      DeleteUrlCacheEntry(info->lpszSourceUrlName);
+      len = entry_size;
+      if (!FindNextUrlCacheEntry(hEntry, info, &len)) {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+          entry_size = len;
+          info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+          if (info) {
+            if (!FindNextUrlCacheEntry(hEntry, info, &len)) {
+              ok = false;
+            }
+          }
+        } else {
+          ok = false;
+        }
+      }
+    } while (ok);
+  }
+  if (hEntry) {
+    FindCloseUrlCache(hEntry);
+  }
+  if (info)
+    free(info);
+}
+
+/*-----------------------------------------------------------------------------
+  Delete the connection tracking history in IE 10
+-----------------------------------------------------------------------------*/
+void BrowserSettings::ClearWebCache() {
+  CAtlList<DWORD> processes;
+  POSITION pos;
+
+  // Kill all running instances of dllhost.exe and taskhostex.exe.
+  // It's ugly but it's the only way to nuke the connection cache files
+  // right now
+  FindProcessIds(L"dllhost.exe", processes);
+  FindProcessIds(L"taskhostex.exe", processes);
+
+  if (!processes.IsEmpty()) {
+    pos = processes.GetHeadPosition();
+    while (pos) {
+      DWORD pid = processes.GetNext(pos);
+      TerminateProcessById(pid);
+    }
+  }
+
+  DeleteDirectory(webcache_dir_, false);
 }

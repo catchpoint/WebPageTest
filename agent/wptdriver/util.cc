@@ -99,8 +99,17 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           PathAppend( path, fd.cFileName );
           if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             DeleteDirectory(path, true);
-          else
-            DeleteFile(path);
+          else {
+            if (DeleteFile(path)) {
+              CString buff;
+              buff.Format(L"Deleted %s", path);
+              OutputDebugString(buff);
+            } else {
+              CString buff;
+              buff.Format(L"FAILED to delete %s", path);
+              OutputDebugString(buff);
+            }
+          }
         }
       }while(FindNextFile(hFind, &fd));
       
@@ -136,6 +145,34 @@ void CopyDirectoryTree(CString source, CString destination) {
     }
   }
 }
+
+/*-----------------------------------------------------------------------------
+  Recursively delete the given reg key
+-----------------------------------------------------------------------------*/
+void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove) {
+  HKEY hKey;
+  if (SUCCEEDED(RegOpenKeyEx(hParent, key, 0, KEY_READ | KEY_WRITE, &hKey))) {
+    CAtlList<CString> keys;
+    TCHAR subKey[255];
+    memset(subKey, 0, sizeof(subKey));
+    DWORD len = 255;
+    DWORD i = 0;
+    while (RegEnumKeyEx(hKey, i, subKey, &len, 0, 0, 0, 0) == ERROR_SUCCESS) {
+      keys.AddTail(subKey);
+      i++;
+      len = 255;
+      memset(subKey, 0, sizeof(subKey));
+    }
+    while (!keys.IsEmpty()) {
+      CString child = keys.RemoveHead();
+      DeleteRegKey(hKey, child, true);
+    }
+    RegCloseKey(hKey);
+    if (remove)
+      RegDeleteKey(hParent, key);
+  }
+}
+
 
 /*-----------------------------------------------------------------------------
   Recursively check to see if the given window has a child of the same class
@@ -550,4 +587,40 @@ DWORD GetParentProcessId(DWORD pid) {
     CloseHandle(snap);
   }
   return parent_pid;
+}
+
+/*-----------------------------------------------------------------------------
+  Build a list of process ID's for the given exe name
+-----------------------------------------------------------------------------*/
+DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids) {
+  DWORD count = 0;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap != INVALID_HANDLE_VALUE) {
+    PROCESSENTRY32 proc;
+    proc.dwSize = sizeof(proc);
+    if (Process32First(snap, &proc)) {
+      bool found = false;
+      do {
+        if (!lstrcmpi(exe, proc.szExeFile)) {
+          count++;
+          pids.AddTail(proc.th32ProcessID);
+        }
+      } while (!found && Process32Next(snap, &proc));
+    }
+    CloseHandle(snap);
+  }
+  return count;
+}
+
+/*-----------------------------------------------------------------------------
+  Terminate a process given it's process ID
+-----------------------------------------------------------------------------*/
+void TerminateProcessById(DWORD pid) {
+  // terminate the target process
+  HANDLE process = OpenProcess( PROCESS_TERMINATE | SYNCHRONIZE, FALSE, pid);
+  if (process) {
+    TerminateProcess(process, 0);
+    WaitForSingleObject(process, 120000);
+    CloseHandle(process);
+  }
 }

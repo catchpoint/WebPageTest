@@ -52,6 +52,9 @@ public:
   ~BrowserSettings(){}
   bool Load(const TCHAR * browser, const TCHAR * iniFile);
   void ResetProfile();
+  void GetStandardDirectories();
+  void ClearWinInetCache();
+  void ClearWebCache();
 
   CString _browser;
   CString _template;
@@ -61,6 +64,22 @@ public:
   CString _exe_directory;
   CString _profile_directory;
   CString _cache_directory;
+
+  // Windows/IE directories
+  CString windows_dir_;
+  CString app_data_dir_;
+  CString local_app_data_dir_;
+  CString program_files_dir_;
+  CString profile_dir_;
+  CString cookies_dir_;
+  CString history_dir_;
+  CString dom_storage_dir_;
+  CString temp_files_dir_;
+  CString temp_dir_;
+  CString silverlight_dir_;
+  CString recovery_dir_;
+  CString flash_dir_;
+  CString webcache_dir_;
 };
 
 // dynamic settings loaded from file

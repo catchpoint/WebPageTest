@@ -45,6 +45,7 @@ namespace loglevel {
 
 bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL);
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
+void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
 void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
                           HWND& document_window);
@@ -55,8 +56,10 @@ typedef CAtlMap<CStringA, DWORD64> HookOffsets;
 CString CreateAppDataDir();
 bool GetModuleByName(HANDLE process, LPCTSTR module_name,
     MODULEENTRY32 * module);
+DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids);
 DWORD GetParentProcessId(DWORD pid);
 void TerminateProcessAndChildren(DWORD pid);
+void TerminateProcessById(DWORD pid);
 bool IsBrowserDocument(HWND wnd);
 CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);
