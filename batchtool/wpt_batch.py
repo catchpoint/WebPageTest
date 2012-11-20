@@ -83,10 +83,10 @@ def RunBatch(options):
                  'mv': options.mv
                 }
   if options.connectivity == 'custom':
-    test_params['bwOut'] = options.bwup,
-    test_params['bwIn'] = options.bwdown,
-    test_params['latency'] = options.latency,
-    test_params['plr'] = options.plr,
+    test_params['bwOut'] = options.bwup
+    test_params['bwIn'] = options.bwdown
+    test_params['latency'] = options.latency
+    test_params['plr'] = options.plr
     test_params['location'] = options.location + '.custom'
   else:
     test_params['location'] = options.location + '.' + options.connectivity
