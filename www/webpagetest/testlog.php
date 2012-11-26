@@ -198,7 +198,8 @@ else
                                             $ok = false;
                                             if ($includePrivate) {
                                                 $ok = true;
-                                            } elseif (isset($uid) && $uid == $testUID) {
+                                            } elseif ((isset($uid) && $uid == $testUID) || 
+                                                (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
@@ -210,7 +211,8 @@ else
                                             
                                         if ($ok && !$all) {
                                             $ok = false;
-                                            if (isset($uid) && $uid == $testUID) {
+                                            if ((isset($uid) && $uid == $testUID) || 
+                                                (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
