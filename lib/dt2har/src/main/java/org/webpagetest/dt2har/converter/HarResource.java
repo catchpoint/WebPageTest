@@ -118,7 +118,6 @@ public class HarResource {
   static final String HAR_COMMENT = "comment";
 
   // HAR default values
-  static final String HAR_ENTRY_PAGEREF_DEFAULT = "page_0";
   static final String HAR_EMPTY_STRING = "";
 
   // other string constants
@@ -134,19 +133,19 @@ public class HarResource {
   public static final String CAVEAT_NO_DATALENGTH_TRACKED =
       "Resource had no associated dataReceived Devtools messages";
 
+  final String pageId;                            // The parent page ID
   NetworkRequestWillBeSentMessage request;        // Network.requestWillBeSent
   NetworkResponseReceivedMessage response;        // Network.responseReceived
   Response redirectResponse;                      // Embedded in Network.requestWillBeSent
-  List<NetworkDataReceivedMessage> data;          // Network.dataReceived
+  final List<NetworkDataReceivedMessage> data = Lists.newArrayList();  // Network.dataReceived
   NetworkLoadingFinishedMessage loaded;           // Network.loadingFinished
   NetworkRequestServedFromCacheMessage cached;    // Network.resourcedMarkedAsCached
   NetworkGetResponseBodyResponseMessage content;  // has "id" and "result" -> "content"
-  List<String> caveats;
+  final List<String> caveats = Lists.newArrayList();
 
   @VisibleForTesting
-  public HarResource() {
-    data = Lists.newArrayList();
-    caveats = Lists.newArrayList();
+  public HarResource(String pageId) {
+    this.pageId = pageId;
   }
 
   void setNetworkRequestWillBeSentMessage(NetworkRequestWillBeSentMessage msg) {
@@ -274,7 +273,7 @@ public class HarResource {
         }
       }
     }
-    harEntry.put(HAR_ENTRY_PAGEREF, HAR_ENTRY_PAGEREF_DEFAULT);
+    harEntry.put(HAR_ENTRY_PAGEREF, pageId);
     harEntry.put(HAR_ENTRY_STARTED_DATE_TIME, getISO8601Time(requestTime));
     harEntry.put(HAR_ENTRY_TIME, time);
     harEntry.put(HAR_ENTRY_REQUEST, createHarRequest());

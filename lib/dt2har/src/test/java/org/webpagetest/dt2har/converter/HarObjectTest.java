@@ -83,7 +83,7 @@ public class HarObjectTest {
   @Test
   public void addResourceContentMessage() throws Exception {
     HarObject har = new HarObject();
-    har.resources.put("23255.2", new HarResource());
+    har.resources.put("23255.2", new HarResource("myPage"));
     NetworkGetResponseBodyResponseMessage response = synthesizeResourceContentResponseMessage();
     har.addResourceContentMessage(response, "23255.2");
     assertEquals(response.getJson(), har.resources.get("23255.2")

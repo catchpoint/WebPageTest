@@ -172,7 +172,7 @@ public class HarResourceTest {
   // (See https://velodrome.googleplex.com/taskdetail/view?task_id=35790147.)"
   @Test
   public void testGetTransferSize() throws Exception {
-    HarResource resource = new HarResource();
+    HarResource resource = new HarResource("myPage");
     resource.setNetworkRequestWillBeSentMessage(synthesizeRequest());
 
     // Cached.
@@ -199,7 +199,7 @@ public class HarResourceTest {
 
   @Test
   public void testGetResponseBodySize() throws Exception {
-    HarResource resource = new HarResource();
+    HarResource resource = new HarResource("myPage");
     resource.setNetworkRequestWillBeSentMessage(synthesizeRequest());
     resource.setNetworkResponseReceivedMessage(synthesizeResponse(200, false, 1000, 300));
     resource.addNetworkDataReceivedMessage(synthesizeData(3000, 2300));

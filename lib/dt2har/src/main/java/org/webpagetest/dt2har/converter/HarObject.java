@@ -367,7 +367,7 @@ public class HarObject {
       String id = netmsg.getRequestId();
       HarResource r = resources.get(id);
       if (r == null) {
-        r = new HarResource();
+        r = new HarResource(pageId);
         resources.put(id, r);
       }
       if (netmsg instanceof NetworkRequestWillBeSentMessage) {
@@ -387,7 +387,7 @@ public class HarObject {
             logger.warning("Expected redirect to have corresponding request. Ignoring redirect.");
             complete = false;
           } else {
-            HarResource redirected = new HarResource();
+            HarResource redirected = new HarResource(pageId);
             String redirectedId = id + "__" + redirectRequest.getTimestamp().toString();
             resources.put(redirectedId, redirected);
             redirected.setNetworkRequestWillBeSentMessage(redirectRequest);
@@ -597,7 +597,7 @@ public class HarObject {
     page.put("title", getFirstRequest().getDocumentUrl());
     page.put("pageTimings", createHarPageTimings());
     // Must be created after createHarPageTimings extracts the navigation start time.
-    String startTime = new HarResource().getISO8601Time(this.getNavigationStartTime());
+    String startTime = new HarResource(pageId).getISO8601Time(this.getNavigationStartTime());
     page.put("startedDateTime", startTime);
     return page;
   }
