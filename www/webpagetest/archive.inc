@@ -150,6 +150,7 @@ function RestoreArchive($id) {
                 if (isset($settings['archive_dir'])) {
                     $source = GetArchiveFile($id);
                     if (is_file($source)) {
+                        touch($source);
                         copy($source, $zipfile);
                     }
                 } elseif (isset($settings['archive_s3_url'])) {
