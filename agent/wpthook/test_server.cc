@@ -261,34 +261,42 @@ void TestServer::SendResponse(struct mg_connection *conn,
 
   // start with the HTTP Header
   CStringA response = "HTTP/1.1 200 OK\r\n"
+    "Server: wptdriver\r\n"
     "Cache: no-cache\r\n"
-    "Content-Type: application/json\r\n"
-    "\r\n";
+    "Pragma: no-cache\r\n"
+    "Content-Type: application/json\r\n";
 
   if (!callback.IsEmpty())
     response += callback + "(";
 
   // now the standard REST container
   CStringA buff;
+  CStringA data = "";
   buff.Format("{\"statusCode\":%d,\"statusText\":\"%s\"", response_code, 
     (LPCSTR)response_code_string);
-  response += buff;
+  data += buff;
   if (request_id.GetLength())
-    response += CStringA(",\"requestId\":\"") + request_id + "\"";
+    data += CStringA(",\"requestId\":\"") + request_id + "\"";
 
   // and the actual data
   if (response_data.GetLength()) {
-    response += ",\"data\":";
-    response += response_data;
+    data += ",\"data\":";
+    data += response_data;
   }
 
   // close it out
-  response += "}";
+  data += "}";
   if (!callback.IsEmpty())
-    response += ");";
+    data += ");";
+
+  DWORD len = data.GetLength();
+  buff.Format("Content-Length: %d\r\n", len);
+  response += buff;
+  response += "\r\n";
+  response += data;
 
   // and finally, send it
-  mg_printf(conn, "%s", (LPCSTR)response);
+  mg_write(conn, (LPCSTR)response, response.GetLength());
 }
 
 /*-----------------------------------------------------------------------------
