@@ -438,63 +438,78 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 								
 							// remove it from the lookup
 							OnInternetCloseHandle(r->hRequest);
-							
-							// create a new request
-							CWinInetRequest * req = new CWinInetRequest(currentDoc);
-							
-							// if this is for the base page, move it to the redirected request
-							if( r->basePage )
-							{
-								basePageRedirects++;
-								r->basePage = false;
-								req->basePage = true;
-							}
 
-							req->verb = r->verb;
-							req->hRequest = r->hRequest;
-	
-							// split up the url
-							URL_COMPONENTS parts;
-							memset(&parts, 0, sizeof(parts));
-							TCHAR scheme[10000];
-							TCHAR host[10000];
-							TCHAR object[10000];
-							TCHAR extra[10000];
-							
-							memset(scheme, 0, sizeof(scheme));
-							memset(host, 0, sizeof(host));
-							memset(object, 0, sizeof(object));
-							memset(extra, 0, sizeof(extra));
+              // see if we need to block the new request
+              bool block = false;
+			        POSITION pos = blockRequests.GetHeadPosition();
+			        while (pos && !block) {
+				        CString blockRequest = blockRequests.GetNext(pos);
+				        blockRequest.Trim();
+                if (blockRequest.GetLength() && url.Find(blockRequest) != -1) {
+					        block = true;
+				          blockedRequests.AddTail(url);
+                }
+			        }
+              if (block) {
+                InternetCloseHandle(r->hRequest);
+              } else {
+							  // create a new request
+							  CWinInetRequest * req = new CWinInetRequest(currentDoc);
+  							
+							  // if this is for the base page, move it to the redirected request
+							  if( r->basePage )
+							  {
+								  basePageRedirects++;
+								  r->basePage = false;
+								  req->basePage = true;
+							  }
 
-							parts.lpszScheme = scheme;
-							parts.dwSchemeLength = _countof(scheme);
-							parts.lpszHostName = host;
-							parts.dwHostNameLength = _countof(host);
-							parts.lpszUrlPath = object;
-							parts.dwUrlPathLength = _countof(object);
-							parts.lpszExtraInfo = extra;
-							parts.dwExtraInfoLength = _countof(extra);
-							parts.dwStructSize = sizeof(parts);
-							
-							if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) )
-							{
-								req->host = host;
-								req->object = CString(object) + extra;
-								req->scheme = scheme;
-                if (!req->scheme.Left(5).CompareNoCase(_T("https")))
-                  req->secure = true;
-							}
-							
-							EnterCriticalSection(&cs);
-							winInetRequests.SetAt(req->hRequest, req);
-							winInetRequestList.AddHead(req);
-              OverrideHost(req);
-							
-							// keep track of the request that is actively sending on this thread
-							winInetThreadSends.SetAt(GetCurrentThreadId(), req);
-							LeaveCriticalSection(&cs);
-							
-							AddEvent(req);
+							  req->verb = r->verb;
+							  req->hRequest = r->hRequest;
+  	
+							  // split up the url
+							  URL_COMPONENTS parts;
+							  memset(&parts, 0, sizeof(parts));
+							  TCHAR scheme[10000];
+							  TCHAR host[10000];
+							  TCHAR object[10000];
+							  TCHAR extra[10000];
+  							
+							  memset(scheme, 0, sizeof(scheme));
+							  memset(host, 0, sizeof(host));
+							  memset(object, 0, sizeof(object));
+							  memset(extra, 0, sizeof(extra));
+
+							  parts.lpszScheme = scheme;
+							  parts.dwSchemeLength = _countof(scheme);
+							  parts.lpszHostName = host;
+							  parts.dwHostNameLength = _countof(host);
+							  parts.lpszUrlPath = object;
+							  parts.dwUrlPathLength = _countof(object);
+							  parts.lpszExtraInfo = extra;
+							  parts.dwExtraInfoLength = _countof(extra);
+							  parts.dwStructSize = sizeof(parts);
+  							
+							  if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) )
+							  {
+								  req->host = host;
+								  req->object = CString(object) + extra;
+								  req->scheme = scheme;
+                  if (!req->scheme.Left(5).CompareNoCase(_T("https")))
+                    req->secure = true;
+							  }
+  							
+							  EnterCriticalSection(&cs);
+							  winInetRequests.SetAt(req->hRequest, req);
+							  winInetRequestList.AddHead(req);
+                OverrideHost(req);
+  							
+							  // keep track of the request that is actively sending on this thread
+							  winInetThreadSends.SetAt(GetCurrentThreadId(), req);
+							  LeaveCriticalSection(&cs);
+  							
+							  AddEvent(req);
+              }
 						}
 						break;
 						
