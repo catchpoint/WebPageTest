@@ -78,6 +78,15 @@ if (array_key_exists('f', $_REQUEST)) {
                             <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
                             <option value="count" <?php if ($aggregate == 'count') echo "selected"; ?>>Count</option>
                         </select>
+                        <br>
+                        Time Period <select name="days" size="1" onchange="this.form.submit();">
+                            <option value="7" <?php if ($days == 7) echo "selected"; ?>>Week</option>
+                            <option value="31" <?php if ($days == 31) echo "selected"; ?>>Month</option>
+                            <option value="93" <?php if ($days == 93) echo "selected"; ?>>3 Months</option>
+                            <option value="183" <?php if ($days == 183) echo "selected"; ?>>6 Months</option>
+                            <option value="366" <?php if ($days == 366) echo "selected"; ?>>Year</option>
+                            <option value="all" <?php if ($days == 0) echo "selected"; ?>>All</option>
+                        </select>
                     </form>
                 </div>
             </div>

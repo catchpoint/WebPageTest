@@ -4,6 +4,12 @@ require_once('common.inc');
 $raw_data = null;
 $trend_data = null;
 $median_data = null;
+$start_time = 0;
+$days = 93;
+if (array_key_exists('days', $_REQUEST))
+    $days = (int)$_REQUEST['days'];
+if ($days > 0)
+    $start_time = time() - (86400 * $days);
 
 /**
 * Get a list of the series to display
@@ -157,6 +163,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
 */
 function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggregate, $loc) {
     $ok = false;
+    global $start_time;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
@@ -168,27 +175,29 @@ function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggre
                         array_key_exists($aggregate, $row) &&
                         strlen($row[$aggregate])) {
                         $time = $row['time'];
-                        $config = $row['config'];
-                        $location = $row['location'];
-                        if (isset($loc_aliases) && count($loc_aliases)) {
-                            foreach($loc_aliases as $loc_name => &$aliases) {
-                                foreach($aliases as $alias) {
-                                    if ($location == $alias) {
-                                        $location = $loc_name;
-                                        break 2;
+                        if (!$start_time || $time > $start_time) {
+                            $config = $row['config'];
+                            $location = $row['location'];
+                            if (isset($loc_aliases) && count($loc_aliases)) {
+                                foreach($loc_aliases as $loc_name => &$aliases) {
+                                    foreach($aliases as $alias) {
+                                        if ($location == $alias) {
+                                            $location = $loc_name;
+                                            break 2;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (!isset($loc) || $loc == $location) {
-                            $ok = true;
-                            if (!array_key_exists($time, $data)) {
-                                $data[$time] = array();
+                            if (!isset($loc) || $loc == $location) {
+                                $ok = true;
+                                if (!array_key_exists($time, $data)) {
+                                    $data[$time] = array();
+                                }
+                                if (!array_key_exists($config, $data[$time])) {
+                                    $data[$time][$config] = array();
+                                }
+                                $data[$time][$config][$location] = $row[$aggregate];
                             }
-                            if (!array_key_exists($config, $data[$time])) {
-                                $data[$time][$config] = array();
-                            }
-                            $data[$time][$config][$location] = $row[$aggregate];
                         }
                     }
                 }
@@ -600,6 +609,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
 */
 function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $url, $loc) {
     global $trend_data;
+    global $start_time;
     $ok = false;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
@@ -611,57 +621,59 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                     $UTC = new DateTimeZone('UTC');
                     $date = DateTime::createFromFormat('Ymd_Hi', $matches[1], $UTC);
                     $time = $date->getTimestamp();
-                    $tests = array();
-                    $file = basename($file, ".gz");
-                    $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
-                    if (count($raw_data)) {
-                        foreach($raw_data as $row) {
-                            if (array_key_exists('docTime', $row) && 
-                                ($row['result'] == 0 || $row['result'] == 99999) &&
-                                ($row['label'] == $url || $row['url'] == $url)) {
-                                $location = $row['location'];
-                                $id = $row['id'];
-                                if (!array_key_exists($id, $tests)) {
-                                    $tests[$id] = array();
-                                }
-                                $row['time'] = $time;
-                                $tests["$id-{$row['cached']}"][] = $row;
-                            }
-                        }
-                        // grab the median run from each test
-                        if (count($tests)) {
-                            $info = GetBenchmarkInfo($benchmark);
-                            $median_metric = 'docTime';
-                            if (isset($info) && is_array($info) && 
-                                array_key_exists('options', $info) && 
-                                array_key_exists('median_run', $info['options'])) {
-                                $median_metric = $info['options']['median_run'];
-                            }
-                            foreach($tests as &$test) {
-                                if (is_array($test) && count($test)) {
-                                    $times = array();
-                                    foreach($test as $row) {
-                                        $times[] = $row[$median_metric];
+                    if (!$start_time || $time > $start_time) {
+                        $tests = array();
+                        $file = basename($file, ".gz");
+                        $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
+                        if (count($raw_data)) {
+                            foreach($raw_data as $row) {
+                                if (array_key_exists('docTime', $row) && 
+                                    ($row['result'] == 0 || $row['result'] == 99999) &&
+                                    ($row['label'] == $url || $row['url'] == $url)) {
+                                    $location = $row['location'];
+                                    $id = $row['id'];
+                                    if (!array_key_exists($id, $tests)) {
+                                        $tests[$id] = array();
                                     }
-                                    $median_run_index = 0;
-                                    $count = count($times);
-                                    if( $count > 1 ) {
-                                        asort($times);
-                                        $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
-                                        $current = 0;
-                                        foreach( $times as $index => $time ) {
-                                            $current++;
-                                            if( $current == $medianIndex ) {
-                                                $median_run_index = $index;
-                                                break;
+                                    $row['time'] = $time;
+                                    $tests["$id-{$row['cached']}"][] = $row;
+                                }
+                            }
+                            // grab the median run from each test
+                            if (count($tests)) {
+                                $info = GetBenchmarkInfo($benchmark);
+                                $median_metric = 'docTime';
+                                if (isset($info) && is_array($info) && 
+                                    array_key_exists('options', $info) && 
+                                    array_key_exists('median_run', $info['options'])) {
+                                    $median_metric = $info['options']['median_run'];
+                                }
+                                foreach($tests as &$test) {
+                                    if (is_array($test) && count($test)) {
+                                        $times = array();
+                                        foreach($test as $row) {
+                                            $times[] = $row[$median_metric];
+                                        }
+                                        $median_run_index = 0;
+                                        $count = count($times);
+                                        if( $count > 1 ) {
+                                            asort($times);
+                                            $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+                                            $current = 0;
+                                            foreach( $times as $index => $time ) {
+                                                $current++;
+                                                if( $current == $medianIndex ) {
+                                                    $median_run_index = $index;
+                                                    break;
+                                                }
                                             }
                                         }
+                                        $trend_data[] = $test[$median_run_index];
                                     }
-                                    $trend_data[] = $test[$median_run_index];
                                 }
                             }
+                            unset($raw_data);
                         }
-                        unset($raw_data);
                     }
                 }
             }
