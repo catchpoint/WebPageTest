@@ -16,6 +16,9 @@ $loc = ParseLocations($locations);
 $preview = false;
 if( strlen($_GET['preview']) && $_GET['preview'] )
     $preview = true;
+$mps = false;
+if (array_key_exists('mps', $_REQUEST))
+    $mps = true;
 
 $page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Comparison Test$testLabel.";
@@ -51,7 +54,10 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="sensitive" value="1">
             <?php
-            if ($preview) {
+            if ($mps) {
+                echo "<input type=\"hidden\" name=\"script\" value=\"addHeader&#09;ModPagespeed:off&#09;%HOST_REGEX%&#10;navigate&#09;%URL%\">\n";
+                echo "<input type=\"hidden\" name=\"runs\" value=\"7\">\n";
+            } elseif ($preview) {
                 echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setCookie&#09;http://%HOSTR%&#09;_GPSSPRVW=1&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
@@ -79,7 +85,9 @@ $page_description = "Comparison Test$testLabel.";
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
               
-              if ($preview) {
+              if ($mps) {
+                echo '<h2 class="cufon-dincond_black"><small>Compare your currently optimized site to it\'s unoptimized version</a></small></h2>';
+              } elseif ($preview) {
                 echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
               } elseif( strlen($_GET['origin']) )
                 echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
@@ -200,20 +208,26 @@ $page_description = "Comparison Test$testLabel.";
                             <input type="checkbox" name="bodies" id="save_bodies" class="checkbox">
                         </li>
                         <li>
-                            <label for="pss_advanced"><a style="color:#fff;" href="https://developers.google.com/speed/docs/pss/PrioritizeAboveTheFold">Advanced Rewriters</a></label>
                             <?php
-                            $checked = '';
-                            if (array_key_exists('option', $_GET) && $_GET['option'] == 'prioritize_visible_content') {
-                                $checked = ' checked="checked"';
-                            }
-                            echo "<input type=\"checkbox\" name=\"pss_advanced\" id=\"pss_advanced\" class=\"checkbox\"$checked>\n";
+                            if (!$mps) {
+                            ?>
+                                <label for="pss_advanced"><a style="color:#fff;" href="https://developers.google.com/speed/docs/pss/PrioritizeAboveTheFold">Advanced Rewriters</a></label>
+                                <?php
+                                $checked = '';
+                                if (array_key_exists('option', $_GET) && $_GET['option'] == 'prioritize_visible_content') {
+                                    $checked = ' checked="checked"';
+                                }
+                                echo "<input type=\"checkbox\" name=\"pss_advanced\" id=\"pss_advanced\" class=\"checkbox\"$checked>\n";
+                            } else {
+                                echo "<input type=\"hidden\" name=\"pss_advanced\" id=\"pss_advanced\" value=\"0\">\n";
+                            } // $mps
                             ?>
                         </li>
                     </ul>
                     <ul class="input_fields">
                         <li>
                             <?php
-                            if (!$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
+                            if (!$mps && !$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
                             ?>
                             <label for="backend">Optimization Settings</label>
                             <select name="backend" id="backend">
@@ -329,7 +343,7 @@ $page_description = "Comparison Test$testLabel.";
                 
                 <?php
                 // build the psuedo batch-url list
-                if( strlen($_GET['origin']) )
+                if( $mps || strlen($_GET['origin']) )
                     echo 'var batch = "Original=" + url + "\nOptimized=" + url + " noscript";' . "\n";
                 else
                     echo 'var batch = "Original=" + url + " noscript\nOptimized=" + url;' . "\n";
