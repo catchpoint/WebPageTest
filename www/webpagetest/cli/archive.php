@@ -22,6 +22,11 @@ if (array_key_exists('archive_days', $settings)) {
 }
 $MIN_DAYS = max($MIN_DAYS,0.1);
 
+$archive_dir = null;
+if (array_key_exists('archive_dir', $settings)) {
+    $archive_dir = $settings['archive_dir'];
+}
+
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
@@ -36,32 +41,35 @@ $log = fopen('./cli/archive.log', 'w');
 $UTC = new DateTimeZone('UTC');
 
 $now = time();
-//CheckRelay();
-CheckOldDir('./results/old');
 
-// Archive the actual tests
-$years = scandir('./results');
-foreach( $years as $year ) {
-    mkdir('./logs/archived', 0777, true);
-    $yearDir = "./results/$year";
-    if( is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..' ) {
-        $months = scandir($yearDir);
-        foreach( $months as $month ) {
-            $monthDir = "$yearDir/$month";
-            if( is_dir($monthDir) && $month != '.' && $month != '..' ) {
-                $days = scandir($monthDir);
-                foreach( $days as $day ) {
-                    $dayDir = "$monthDir/$day";
-                    if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
-                        if (ElapsedDays($year, $month, $day) >= ($MIN_DAYS - 1)) {
-                            CheckDay($dayDir, "$year$month$day");
+if (isset($archive_dir) && strlen($archive_dir)) {
+    //CheckRelay();
+    CheckOldDir('./results/old');
+
+    // Archive the actual tests
+    $years = scandir('./results');
+    foreach( $years as $year ) {
+        mkdir('./logs/archived', 0777, true);
+        $yearDir = "./results/$year";
+        if( is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..' ) {
+            $months = scandir($yearDir);
+            foreach( $months as $month ) {
+                $monthDir = "$yearDir/$month";
+                if( is_dir($monthDir) && $month != '.' && $month != '..' ) {
+                    $days = scandir($monthDir);
+                    foreach( $days as $day ) {
+                        $dayDir = "$monthDir/$day";
+                        if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
+                            if (ElapsedDays($year, $month, $day) >= ($MIN_DAYS - 1)) {
+                                CheckDay($dayDir, "$year$month$day");
+                            }
                         }
                     }
+                    rmdir($monthDir);
                 }
-                rmdir($monthDir);
             }
+            rmdir($yearDir);
         }
-        rmdir($yearDir);
     }
 }
 echo "\nDone\n\n";
