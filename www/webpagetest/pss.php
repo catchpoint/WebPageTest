@@ -50,7 +50,13 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="mv" value="1">
-            <input type="hidden" name="web10" value="1">
+            <?php
+                if (array_key_exists('origin', $_GET) && strlen($_GET['origin'])) {
+                    echo '<input type="hidden" name="web10" value="0">';
+                } else {
+                    echo '<input type="hidden" name="web10" value="1">';
+                }
+            ?>
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="sensitive" value="1">
             <?php
