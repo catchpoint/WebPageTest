@@ -847,6 +847,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['pngss'] = $test['pngss'] ? 1 : 0;
             $test['bodies'] = $test['bodies'] ? 1 : 0;
             $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
+            $test['noheaders'] = $test['noheaders'] ? 1 : 0;
                 
             if( $test['aft'] )
             {
@@ -1477,41 +1478,6 @@ function CheckUrl($url)
     }
     
     return $ok;
-}
-
-/**
-* Generate a shard key to better spread out the test results
-* 
-*/
-function ShardKey($test_num) {
-    global $settings;
-    $key = '';
-
-    if( array_key_exists('bucket_size', $settings) && $settings['bucket_size'] > 0 ) {
-        // group the tests sequentially
-        $bucket_size = (int)$settings['bucket_size'];
-        $bucket = $test_num / $bucket_size;
-        $key = NumToString($bucket) . '_';
-    } else {
-        // default to a 2-digit shard (1024-way shard)
-        $size = 2;
-        if( array_key_exists('shard', $settings) )
-            $size = (int)$settings['shard'];
-        
-        if( $size > 0 && $size < 20 )
-        {
-            $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-            $digitCount = strlen($digits) - 1;
-            while( $size )
-            {
-                $key .= substr($digits, rand(0, $digitCount), 1);
-                $size--;
-            }
-            $key .= '_';
-        }
-    }
-    
-    return $key;
 }
 
 /**

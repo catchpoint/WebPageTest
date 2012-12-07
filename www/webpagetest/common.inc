@@ -1842,4 +1842,39 @@ function http_fetch($url) {
     }
     return $ret;
 }
+
+/**
+* Generate a shard key to better spread out the test results
+* 
+*/
+function ShardKey($test_num) {
+    global $settings;
+    $key = '';
+
+    if( array_key_exists('bucket_size', $settings) && $settings['bucket_size'] > 0 ) {
+        // group the tests sequentially
+        $bucket_size = (int)$settings['bucket_size'];
+        $bucket = $test_num / $bucket_size;
+        $key = NumToString($bucket) . '_';
+    } else {
+        // default to a 2-digit shard (1024-way shard)
+        $size = 2;
+        if( array_key_exists('shard', $settings) )
+            $size = (int)$settings['shard'];
+        
+        if( $size > 0 && $size < 20 )
+        {
+            $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+            $digitCount = strlen($digits) - 1;
+            while( $size )
+            {
+                $key .= substr($digits, rand(0, $digitCount), 1);
+                $size--;
+            }
+            $key .= '_';
+        }
+    }
+    
+    return $key;
+}
 ?>

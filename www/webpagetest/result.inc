@@ -78,8 +78,11 @@ $page_description = "Website performance test result$testLabel.";
             <div id="download">
                 <div id="testinfo">
                     <?php
+                    $show_sensitive = false;
                     echo GetTestInfoHtml();
-                    if( !$headless && gz_is_file("$testPath/testinfo.json") )
+                    if( !$headless && gz_is_file("$testPath/testinfo.json") 
+                        && !array_key_exists('published', $test['testinfo'])
+                        && ($isOwner || !$test['testinfo']['sensitive']) )
                     {
                         // load the secret key (if there is one)
                         $secret = '';

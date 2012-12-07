@@ -401,10 +401,20 @@ $loc = ParseLocations($locations);
                                     <textarea name="script" id="enter_script" cols="0" rows="0"></textarea>
                                 </div>
                                 <br>
-                                <input type="checkbox" name="sensitive" id="sensitive" class="checkbox" style="float: left;width: auto;">
-                                <label for="sensitive" class="auto_width">
-                                    Script includes sensitive data<br><small>The script will be discarded and the http headers will not be available in the results</small>
-                                </label>
+                                <ul class="input_fields">
+                                    <li>
+                                        <input type="checkbox" name="sensitive" id="sensitive" class="checkbox" style="float: left;width: auto;">
+                                        <label for="sensitive" class="auto_width">
+                                            Script includes sensitive data<br><small>The script will be discarded and the http headers will not be available in the results</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="noheaders" id="noheaders" class="checkbox" style="float: left;width: auto;">
+                                        <label for="noheaders" class="auto_width">
+                                            Discard all HTTP headers
+                                        </label>
+                                    </li>
+                                </ul>
                             </div>
 
                             <div id="block" class="test_subbox ui-tabs-hide">
