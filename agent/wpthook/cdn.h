@@ -94,6 +94,7 @@ CDN_PROVIDER cdnList[] = {
   {".ngenix.net", "NGENIX"},
   {".pagerain.net", "PageRain"},
   {".ccgslb.com", "ChinaCache"},
+  {"cdn.sfr.net", "SFR"},
   {"END_MARKER", "END_MARKER"}
 };
 
