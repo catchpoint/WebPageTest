@@ -137,8 +137,13 @@ $page_description = "Website performance test result$testLabel.";
                 <?php 
                 $fvMedian = GetMedianRun($pageData, 0, $median_metric);
                 $rvMedian = GetMedianRun($pageData, 1, $median_metric);
-                
-                if( $fvMedian )
+                $is_test_error = false;
+                if (array_key_exists('testinfo', $test) && 
+                    array_key_exists('test_error', $test['testinfo']) &&
+                    strlen($test['testinfo']['test_error'])) {
+                    $is_test_error = true;
+                }
+                if( $fvMedian && !$is_test_error )
                 {
                     if( count($pageData) > 1) 
                         echo '<h2>Performance Results (Median Run)</h2>';
@@ -319,8 +324,30 @@ $page_description = "Website performance test result$testLabel.";
 		<?php
 		    }
                 }
-                else
-                    echo '<h3>The test completed but there were no successful results.</h3>';
+                else {
+                    $error = 'The test completed but there were no successful results.';
+                    $detail = null;
+                    if ($is_test_error) {
+                        $error = 'The test failed to run.';
+                        $detail = $test['testinfo']['test_error'];
+                    } elseif(array_key_exists('testinfo', $test) &&
+                             array_key_exists('errors', $test['testinfo'])) {
+                        // just grab the first error we find from an individual run
+                        foreach($test['testinfo']['errors'] as &$error_run) {
+                            foreach($error_run as &$error_str) {
+                                if (strlen($error_str)) {
+                                    $error = 'The testing completed but failed.';
+                                    $detail = $error_str;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                    echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                    if (isset($detail)) {
+                        echo '<h4>' . htmlspecialchars($detail) . '</h4>';
+                    }
+                }
                 ?>
             </div>
             <?php } ?>
@@ -329,7 +356,7 @@ $page_description = "Website performance test result$testLabel.";
             if( count($pageData) > 1) 
                 echo '<h3 style="text-align:center;">Test Results</h3>';
 
-            $runs = max(array_keys($pageData));
+            $runs = $test['test']['runs'];
             $fvonly = 1;
             if( isset($rv) )
                 $fvonly = 0;

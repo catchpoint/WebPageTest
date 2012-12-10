@@ -223,6 +223,23 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
         }
+        
+        // keep track of any overall or run-specific errors reported by the agent
+        if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
+            $testInfo['test_error'] = $_REQUEST['testerror'];
+            $testInfo_dirty = true;
+        }
+        if (isset($runNumber) && 
+            isset($cacheWarmed) && 
+            array_key_exists('error', $_REQUEST) && 
+            strlen($_REQUEST['error'])) {
+            if (!array_key_exists('errors', $testInfo))
+                $testInfo['errors'] = array();
+            if (!array_key_exists($runNumber, $testInfo['errors']))
+                $testInfo['errors'][$runNumber] = array();
+            $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
+            $testInfo_dirty = true;
+        }
             
         // see if the test is complete
         if( $done )
