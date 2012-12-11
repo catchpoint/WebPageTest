@@ -4,8 +4,9 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['Pat_Chrome:Current.Native'] = 'Reference';
-$loc['Pat_Chrome:Dev.Native'] = 'Experiment';
+$loc['EC2_East_wptdriver:Chrome.DSL'] = 'Chrome';
+$loc['EC2_East_wptdriver:Firefox.DSL'] = 'Firefox';
+$loc['EC2_East.DSL'] = 'IE 9';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests');
 
@@ -40,64 +41,89 @@ if (LoadResults($results)) {
     foreach ($metrics as $metric) {
         $file = fopen("./$metric.csv", 'w+');
         if ($file) {
-            fwrite($file, "URL,Reference,Experiment,Experiment Delta,Test Comparison\r\n");
-            $metricData = array('Reference' => array(), 'Experiment' => array());
-            $experimentFaster = 0;
+            fwrite($file, "URL,Chrome 23,Firefox 16,Firefox 16 Delta,IE 9,IE 9 Delta,Test Comparison\r\n");
+            $metricData = array('Chrome' => array(), 'Firefox' => array(), 'IE' => array());
+            $firefoxFaster = 0;
+            $ieFaster = 0;
             foreach($data as $url => &$urlData) {
                 fwrite($file, "$url,");
-                $reference = null;
-                if (array_key_exists('Reference', $urlData) && array_key_exists($metric, $urlData['Reference'])) {
-                    $reference = $urlData['Reference'][$metric];
-                    fwrite($file, $reference);
+                $chrome = null;
+                if (array_key_exists('Chrome', $urlData) && array_key_exists($metric, $urlData['Chrome'])) {
+                    $chrome = $urlData['Chrome'][$metric];
+                    fwrite($file, $chrome);
                 }
                 fwrite($file, ',');
-                $experiment = null;
-                if (array_key_exists('Experiment', $urlData) && array_key_exists($metric, $urlData['Experiment'])) {
-                    $experiment = $urlData['Experiment'][$metric];
-                    fwrite($file, $experiment);
+                $firefox = null;
+                if (array_key_exists('Firefox', $urlData) && array_key_exists($metric, $urlData['Firefox'])) {
+                    $firefox = $urlData['Firefox'][$metric];
+                    fwrite($file, $firefox);
                 }
                 fwrite($file, ',');
-                if (isset($reference) && isset($experiment)) {
-                    $delta = $experiment - $reference;
+                if (isset($chrome) && isset($firefox)) {
+                    $delta = $firefox - $chrome;
+                    fwrite($file, $delta);
+                }
+                fwrite($file, ',');
+                $ie = null;
+                if (array_key_exists('IE 9', $urlData) && array_key_exists($metric, $urlData['IE 9'])) {
+                    $ie = $urlData['IE 9'][$metric];
+                    fwrite($file, $ie);
+                }
+                fwrite($file, ',');
+                if (isset($chrome) && isset($ie)) {
+                    $delta = $ie - $chrome;
                     fwrite($file, $delta);
                 }
                 fwrite($file, ',');
                 $compare = "\"http://www.webpagetest.org/video/compare.php?thumbSize=200&ival=100&end=doc&tests=";
-                $compare .= $urlData['Reference']['id'] . '-l:Reference,';
-                $compare .= $urlData['Experiment']['id'] . '-l:Experiment,';
+                $compare .= $urlData['Chrome']['id'] . '-l:Chrome%2023,';
+                $compare .= $urlData['Firefox']['id'] . '-l:Firefox%2016,';
+                $compare .= $urlData['IE 9']['id'] . '-l:IE%209';
                 $compare .= '"';
                 fwrite($file, $compare);
                 fwrite($file, "\r\n");
-                if (isset($reference) && isset($experiment)) {
-                    $metricData['Reference'][] = $reference;
-                    $metricData['Experiment'][] = $experiment;
-                    if ($experiment < $reference) {
-                        $experimentFaster++;
+                if (isset($chrome) && isset($firefox) && isset($ie)) {
+                    $metricData['Chrome'][] = $chrome;
+                    $metricData['Firefox'][] = $firefox;
+                    $metricData['IE'][] = $ie;
+                    if ($firefox < $chrome) {
+                        $firefoxFaster++;
+                    }
+                    if ($ie < $chrome) {
+                        $ieFaster++;
                     }
                 }
             }
             fclose($file);
             $summary = fopen("./{$metric}_Summary.csv", 'w+');
             if ($summary) {
-                sort($metricData['Reference']);
-                sort($metricData['Experiment']);
-                fwrite($summary, ",Reference,Experiment,Experiment delta\r\n");
-                $reference = Avg($metricData['Reference']);
-                $experiment = Avg($metricData['Experiment']);
-                $experimentDelta = $experiment - $reference;
-                $experimentDeltaPct = round(($experimentDelta / $reference) * 100);
-                fwrite($summary, "Average,$reference,$experiment,$experimentDelta ($experimentDeltaPct%)\r\n");
+                sort($metricData['Chrome']);
+                sort($metricData['Firefox']);
+                sort($metricData['IE']);
+                fwrite($summary, ",Chrome 23,Firefox 16,Firefox 16 delta,IE 9,IE 9 delta\r\n");
+                $chrome = Avg($metricData['Chrome']);
+                $firefox = Avg($metricData['Firefox']);
+                $firefoxDelta = $firefox - $chrome;
+                $firefoxDeltaPct = round(($firefoxDelta / $chrome) * 100);
+                $ie = Avg($metricData['IE']);
+                $ieDelta = $ie - $chrome;
+                $ieDeltaPct = number_format(($ieDelta / $chrome) * 100, 2);
+                fwrite($summary, "Average,$chrome,$firefox,$firefoxDelta ($firefoxDeltaPct%),$ie,$ieDelta ($ieDeltaPct%)\r\n");
                 $percentiles = array(25,50,75,95,99);
                 foreach($percentiles as $percentile) {
-                    $reference = Percentile($metricData['Reference'], $percentile);
-                    $experiment = Percentile($metricData['Experiment'], $percentile);
-                    $experimentDelta = $experiment - $reference;
-                    $experimentDeltaPct = number_format(($experimentDelta / $reference) * 100, 2);
-                    fwrite($summary, "{$percentile}th Percentile,$reference,$experiment,$experimentDelta ($experimentDeltaPct%)\r\n");
+                    $chrome = Percentile($metricData['Chrome'], $percentile);
+                    $firefox = Percentile($metricData['Firefox'], $percentile);
+                    $firefoxDelta = $firefox - $chrome;
+                    $firefoxDeltaPct = number_format(($firefoxDelta / $chrome) * 100, 2);
+                    $ie = Percentile($metricData['IE'], $percentile);
+                    $ieDelta = $ie - $chrome;
+                    $ieDeltaPct = number_format(($ieDelta / $chrome) * 100, 2);
+                    fwrite($summary, "{$percentile}th Percentile,$chrome,$firefox,$firefoxDelta ($firefoxDeltaPct%),$ie,$ieDelta ($ieDeltaPct%)\r\n");
                 }
                 fwrite($summary, "\r\n");
-                fwrite($summary, "Test Count," . count($metricData['Reference']) . "\r\n");
-                fwrite($summary, "Experiment Faster,$experimentFaster\r\n");
+                fwrite($summary, "Test Count," . count($metricData['Chrome']) . "\r\n");
+                fwrite($summary, "Firefox Faster,$firefoxFaster\r\n");
+                fwrite($summary, "IE Faster,$ieFaster\r\n");
                 fclose($summary);
             }
         }
