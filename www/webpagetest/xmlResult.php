@@ -228,6 +228,7 @@ else
                         $frames = loadVideo("$testPath/video_{$i}");
                         if( $frames && count($frames) )
                         {
+                            $progress = GetVisualProgress($testPath, $i, 0);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
@@ -308,6 +309,7 @@ else
                         $frames = loadVideo("$testPath/video_{$i}_cached");
                         if( $frames && count($frames) )
                         {
+                            $progress = GetVisualProgress($testPath, $i, 1);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
