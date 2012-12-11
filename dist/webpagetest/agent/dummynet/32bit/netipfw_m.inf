@@ -4,7 +4,8 @@ Signature  = "$Windows NT$"
 Class      = Net
 ClassGUID  = {4D36E972-E325-11CE-BFC1-08002BE10318}
 Provider   = %Unipi%
-DriverVer  = 26/02/2010,3.0.0.2
+DriverVer  = 2012/08/12,3.0.0.1
+CatalogFile= netipfw_m.cat
 
 ; control flags section
 ; optional, unused in netipfw.inf inf, used in netipfw_m.inf
@@ -18,12 +19,14 @@ DefaultDestDir=12
 
 ; manufacturer section
 [Manufacturer]
-%Unipi% = UNIPI,NTx86
+%Unipi% = UNIPI,NTx86,NTamd64
 
 ; models section
 [UNIPI] ; Win2k
 %Desc% = IpfwMP.ndi, unipi_ipfwmp
 [UNIPI.NTx86] ;For WinXP and later
+%Desc% = IpfwMP.ndi, unipi_ipfwmp
+[UNIPI.NTamd64] ;For x64
 %Desc% = IpfwMP.ndi, unipi_ipfwmp
 
 ; ddinstall section
