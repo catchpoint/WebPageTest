@@ -11,7 +11,7 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
+CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef)
 : userName(_T(""))
 , hLogonToken(NULL)
 , hProfile(NULL)
@@ -40,6 +40,7 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef)
 , winpcap(logRef)
 , keepDNS(0)
 , heartbeatEvent(NULL)
+, ipfw(ipfwRef)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -632,82 +633,6 @@ void CURLBlaster::ClearCache(void)
   }
 
 	cached = false;
-}
-
-/*-----------------------------------------------------------------------------
-	recursively delete the given directory
------------------------------------------------------------------------------*/
-void DeleteDirectory( LPCTSTR inPath, bool remove )
-{
-	if( lstrlen(inPath) )
-	{
-		TCHAR * path = new TCHAR[MAX_PATH];	// allocate off of the heap so we don't blow the stack
-		lstrcpy( path, inPath );
-		PathAppend( path, _T("*.*") );
-		
-		WIN32_FIND_DATA fd;
-		HANDLE hFind = FindFirstFile(path, &fd);
-		if( hFind != INVALID_HANDLE_VALUE )
-		{
-			do
-			{
-				if( lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName, _T("..")) )
-				{
-					lstrcpy( path, inPath );
-					PathAppend( path, fd.cFileName );
-					
-					if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-						DeleteDirectory(path);
-					else
-					{
-						cacheCount++;
-						DeleteFile(path);
-					}
-				}
-			}while(FindNextFile(hFind, &fd));
-			
-			FindClose(hFind);
-		}
-		
-		delete [] path;
-		
-		// remove the actual directory
-		if( remove )
-			RemoveDirectory(inPath);
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Recursively delete the given reg key
------------------------------------------------------------------------------*/
-void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove)
-{
-  HKEY hKey;
-  if( SUCCEEDED(RegOpenKeyEx(hParent, key, 0, KEY_READ | KEY_WRITE, &hKey)))
-  {
-    CAtlList<CString> keys;
-    TCHAR subKey[255];
-    memset(subKey, 0, sizeof(subKey));
-    DWORD len = 255;
-    DWORD i = 0;
-    while( RegEnumKeyEx(hKey, i, subKey, &len, 0, 0, 0, 0) == ERROR_SUCCESS )
-    {
-      keys.AddTail(subKey);
-      i++;
-      len = 255;
-      memset(subKey, 0, sizeof(subKey));
-    }
-
-    while( !keys.IsEmpty() )
-    {
-      CString child = keys.RemoveHead();
-      DeleteRegKey(hKey, child, true);
-    }
-
-    RegCloseKey(hKey);
-    if( remove )
-      RegDeleteKey(hParent, key);
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -1493,17 +1418,17 @@ bool CURLBlaster::ConfigureIpfw(void)
 		OutputDebugString(buff);
 
 		// create the inbound pipe
-		if( ipfw.CreatePipe(pipeIn, info.bwIn * 1000, latency, info.plr / 100.0) )
+		if( ipfw.SetPipe(pipeIn, info.bwIn * 1000, latency, info.plr / 100.0) )
 		{
 			// make up for odd values
 			if( info.latency % 2 )
 				latency++;
 
 			// create the outbound pipe
-			if( ipfw.CreatePipe(pipeOut, info.bwOut * 1000, latency, info.plr / 100.0) )
+			if( ipfw.SetPipe(pipeOut, info.bwOut * 1000, latency, info.plr / 100.0) )
 				ret = true;
 			else
-				ipfw.CreatePipe(pipeIn, 0, 0, 0);
+				ipfw.SetPipe(pipeIn, 0, 0, 0);
 		}
 	}
 	else
@@ -1518,9 +1443,9 @@ bool CURLBlaster::ConfigureIpfw(void)
 void CURLBlaster::ResetIpfw(void)
 {
 	if( pipeIn )
-		ipfw.CreatePipe(pipeIn, 0, 0, 0);
+		ipfw.SetPipe(pipeIn, 0, 0, 0);
 	if( pipeOut )
-		ipfw.CreatePipe(pipeOut, 0, 0, 0);
+		ipfw.SetPipe(pipeOut, 0, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------

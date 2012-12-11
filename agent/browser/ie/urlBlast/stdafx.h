@@ -58,6 +58,7 @@
 #include <Wininet.h>
 #include <Iphlpapi.h>
 #include "zip/zip.h"
+#include "../../../wptdriver/util.h"
 
 #ifdef _UNICODE
 #if defined _M_IX86

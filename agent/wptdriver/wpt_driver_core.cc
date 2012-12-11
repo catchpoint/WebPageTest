@@ -94,8 +94,11 @@ void WptDriverCore::Start(void){
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
-    // auto-set the desktop resolution
     SetupScreen();
+    _status.Set(_T("Initializing Dummynet..."));
+    if (!_ipfw.Init()) {
+      _status.Set(_T("Failed to initialize Dummynet..."));
+    }
 
     // start a background thread to do all of the actual test management
     _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
@@ -143,7 +146,8 @@ void WptDriverCore::WorkThread(void) {
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser)) {
-        WebBrowser browser(_settings, test, _status, _settings._browser);
+        WebBrowser browser(_settings, test, _status, _settings._browser, 
+                           _ipfw);
         if (SetupWebPageReplay(test, browser) &&
             !TracerouteTest(test)) {
           test._index = 1;
@@ -530,4 +534,11 @@ void WptDriverCore::SetupScreen(void) {
       ChangeDisplaySettings( &newMode, CDS_UPDATEREGISTRY | CDS_GLOBAL );
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Run the dummynet initialization script if it is present
+-----------------------------------------------------------------------------*/
+void WptDriverCore::SetupDummynet(void) {
+  _status.Set(_T("Configuring dummynet..."));
 }

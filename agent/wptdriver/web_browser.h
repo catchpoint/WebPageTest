@@ -34,7 +34,7 @@ class BrowserSettings;
 class WebBrowser {
 public:
   WebBrowser(WptSettings& settings, WptTestDriver& test, WptStatus &status, 
-              BrowserSettings& browser);
+             BrowserSettings& browser, CIpfw &ipfw);
   ~WebBrowser(void);
 
   bool RunAndWait(bool &critical_error);
@@ -52,7 +52,7 @@ private:
   WptTestDriver&  _test;
   WptStatus&      _status;
   BrowserSettings& _browser;
-  CIpfw           _ipfw;
+  CIpfw&          _ipfw;
 
   HANDLE        _browser_process;
 

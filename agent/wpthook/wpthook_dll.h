@@ -42,6 +42,4 @@ _import void WINAPI SetClearedCache(bool cleared_cache);
 _import bool WINAPI GetClearedCache();
 _import void WINAPI SetCurrentRun(DWORD run);
 _import void WINAPI SetDebugLevel(int level, const WCHAR * log_file);
-_import bool WINAPI WptCheckLogLevel(int level);
-_import void WINAPI WptLogMessage(const WCHAR * msg);
 }

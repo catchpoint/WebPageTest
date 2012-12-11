@@ -117,9 +117,6 @@
     <ClInclude Include="wptdriver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ipfw_int.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Source Files</Filter>
     </ClInclude>

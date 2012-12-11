@@ -68,3 +68,8 @@ protected:
 	SECURITY_ATTRIBUTES nullDacl;
 	SECURITY_DESCRIPTOR SD;
 };
+
+extern "C" {
+bool WINAPI WptCheckLogLevel(int level);
+void WINAPI WptLogMessage(const WCHAR * msg);
+}

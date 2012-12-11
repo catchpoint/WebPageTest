@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 
-#include "../wpthook/wpthook_dll.h"
-
 static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   _T("Internet Explorer_Server"),
   _T("Chrome_RenderWidgetHostHWND"),
@@ -49,7 +47,8 @@ static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
 -----------------------------------------------------------------------------*/
-bool LaunchProcess(CString command_line, HANDLE * process_handle){
+bool LaunchProcess(CString command_line, HANDLE * process_handle,
+                   const TCHAR * dir){
   bool ret = false;
 
   if (command_line.GetLength()) {
@@ -60,7 +59,7 @@ bool LaunchProcess(CString command_line, HANDLE * process_handle){
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     if (CreateProcess(NULL, (LPTSTR)(LPCTSTR)command_line, 0, 0, FALSE, 
-                      NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
+                      NORMAL_PRIORITY_CLASS , 0, dir, &si, &pi)) {
       if (process_handle) {
         *process_handle = pi.hProcess;
         ret = true;
@@ -248,27 +247,24 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTrace(int level, LPCTSTR format, ...) {
-  if (WptCheckLogLevel(level)) {
-    va_list args;
-    va_start( args, format );
+  #ifdef DEBUG
+  va_list args;
+  va_start( args, format );
 
-    int len = _vsctprintf( format, args ) + 1;
-    if (len) {
-      TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
-      if (msg) {
-        if (_vstprintf_s( msg, len, format, args ) > 0) {
-          if (lstrlen(msg)) {
-            #ifdef DEBUG
-            OutputDebugString(msg);
-            #endif
-            WptLogMessage(msg);
-          }
+  int len = _vsctprintf( format, args ) + 1;
+  if (len) {
+    TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
+    if (msg) {
+      if (_vstprintf_s( msg, len, format, args ) > 0) {
+        if (lstrlen(msg)) {
+          OutputDebugString(msg);
         }
-
-        free( msg );
       }
+
+      free( msg );
     }
   }
+  #endif
 }
 
 /*-----------------------------------------------------------------------------

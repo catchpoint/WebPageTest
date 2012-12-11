@@ -129,42 +129,6 @@ BEGIN_MESSAGE_MAP(CurlBlastDlg, CDialog)
 	ON_MESSAGE(MSG_CONTINUE_STARTUP, OnContinueStartup)
 END_MESSAGE_MAP()
 
-
-/*-----------------------------------------------------------------------------
-  Launch the provided process and wait for it to finish 
-  (unless process_handle is provided in which case it will return immediately)
------------------------------------------------------------------------------*/
-bool LaunchProcess(CString command_line, HANDLE * process_handle){
-  bool ret = false;
-
-  if (command_line.GetLength()) {
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si;
-    memset( &si, 0, sizeof(si) );
-    si.cb = sizeof(si);
-    si.dwFlags = STARTF_USESHOWWINDOW;
-    si.wShowWindow = SW_HIDE;
-    if (CreateProcess(NULL, (LPTSTR)(LPCTSTR)command_line, 0, 0, FALSE, 
-                      NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
-      if (process_handle) {
-        *process_handle = pi.hProcess;
-        ret = true;
-        CloseHandle(pi.hThread);
-      } else {
-        WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);
-        DWORD code;
-        if( GetExitCodeProcess(pi.hProcess, &code) && code == 0 )
-          ret = true;
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
-      }
-    }
-  } else
-    ret = true;
-
-  return ret;
-}
-
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 BOOL CurlBlastDlg::OnInitDialog()
@@ -202,6 +166,9 @@ BOOL CurlBlastDlg::OnInitDialog()
 	LoadSettings();
 
 	SetupScreen();
+
+	status.SetWindowText(_T("Configuring Dummynet..."));
+  ipfw.Init();
 	
 	rebooting.SetWindowText(_T(""));
 	status.SetWindowText(_T("Starting up..."));
@@ -383,9 +350,6 @@ void CurlBlastDlg::DoStartup(void)
 
   InstallSystemGDIHook();
 
-	status.SetWindowText(_T("Configuring Dummynet..."));
-  ConfigureDummynet();
-	
 	// disable the DNS cache
 	status.SetWindowText(_T("Disabling DNS cache..."));
 	DisableDNSCache();
@@ -1552,7 +1516,7 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			buff.Format(_T("Starting user%d..."), i+1);
 			status.SetWindowText(buff);
 			
-			CURLBlaster * blaster = new CURLBlaster(m_hWnd, log);
+			CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw);
 			workers.Add(blaster);
 			
 			cacheHandles[i] = blaster->hClearedCache;
@@ -1841,35 +1805,6 @@ bool CurlBlastDlg::GetUrlText(CString url, CString &response)
 	log.Trace(_T("EC2 '%s' -> '%s'"), (LPCTSTR)url, (LPCTSTR)response);
 
 	return ret;
-}
-
-/*-----------------------------------------------------------------------------
-	Run ipfw.cmd if it exists in the dummynet folder below our current directory
------------------------------------------------------------------------------*/
-void CurlBlastDlg::ConfigureDummynet()
-{
-	TCHAR dir[MAX_PATH];
-	if( GetModuleFileName(NULL, dir, _countof(dir)) )
-	{
-    *PathFindFileName(dir) = 0;
-    lstrcat(dir, _T("dummynet\\"));
-
-    TCHAR command[1024];
-    wsprintf(command, _T("cmd /C \"%sipfw.cmd\""), dir);
-
-    log.Trace(_T("Running %s in %s"), command, dir);
-	  STARTUPINFO si;
-	  memset(&si, 0, sizeof(si));
-	  si.cb = sizeof(si);
-  	
-	  PROCESS_INFORMATION pi;
-	  if( CreateProcess(NULL, command, 0, 0, FALSE, 0, 0, dir, &si, &pi) )
-	  {
-		  WaitForSingleObject(pi.hProcess, INFINITE);
-		  CloseHandle(pi.hThread);
-		  CloseHandle(pi.hProcess);
-	  }
-  }
 }
 
 typedef void (__stdcall * WPTGHOOK_INSTALLHOOK)(void);

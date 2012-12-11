@@ -1,7 +1,7 @@
 #pragma once
 #include "UrlManager.h"
-#include "../pagetest/ipfw.h"
 #include "WinPCap.h"
+#include "../../../wptdriver/ipfw.h"
 
 #define MSG_UPDATE_UI (WM_APP + 1)
 #define MSG_CONTINUE_STARTUP (WM_APP + 2)
@@ -29,7 +29,7 @@ public:
 class CURLBlaster
 {
 public:
-	CURLBlaster(HWND hWnd, CLog &logRef);
+	CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef);
 	~CURLBlaster(void);
 	bool Start(int userIndex);
 	void Stop(void);
@@ -44,7 +44,7 @@ public:
 	int index;
 	DWORD count;
 	HWND hDlg;
-	CIpfw ipfw;
+	CIpfw &ipfw;
 
 	CString errorLog;
 	CUrlManager * urlManager;
@@ -118,7 +118,3 @@ protected:
 	void CloseDynaTrace();
 	int ZipDir(CString dir, CString dest, CString depth, zipFile file);
 };
-
-// utility routine
-void DeleteDirectory( LPCTSTR inPath, bool remove = true );
-void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);

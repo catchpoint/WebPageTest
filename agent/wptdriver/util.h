@@ -43,12 +43,13 @@ namespace loglevel {
 
 // Utility routines shared by all of the code
 
-bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL);
+bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL,
+                   const TCHAR *dir = NULL);
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
 void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
 void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
-                          HWND& document_window);
+                       HWND& document_window);
 void WptTrace(int level, LPCTSTR format, ...);
 
 typedef CAtlList<CStringA> HookSymbolNames;

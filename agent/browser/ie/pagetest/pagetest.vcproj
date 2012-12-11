@@ -258,10 +258,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ipfw.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\pagetest.cpp"
 				>
 			</File>
@@ -377,14 +373,6 @@
 			</File>
 			<File
 				RelativePath=".\IEHook.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ipfw.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ipfw_int.h"
 				>
 			</File>
 			<File

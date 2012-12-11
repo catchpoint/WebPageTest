@@ -31,15 +31,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CIpfw {
 public:
   CIpfw(void);
-  ~CIpfw(void);
+  ~CIpfw(void){};
 
-  bool CreatePipe(unsigned int num, unsigned long bandwidth, 
-                    unsigned long delay, double plr = 0.0);
-  bool DeletePipe(unsigned int num);
-  bool Flush();
+  bool Init();
+  bool SetPipe(unsigned int num, unsigned long bandwidth, 
+               unsigned long delay, double plr = 0.0);
 
 protected:
-  HANDLE hDriver;
-  bool Set(int cmd, void * data, size_t len);
-  bool Get(int cmd, void * data, size_t &len);
+  bool Execute(CString cmd);
+  CString ipfw_dir_;
+  CString ipfw_exe_;
 };

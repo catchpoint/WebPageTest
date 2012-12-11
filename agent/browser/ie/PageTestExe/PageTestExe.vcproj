@@ -359,10 +359,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\pagetest\ipfw.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\pagetest\PagetestBase.cpp"
 					>
 				</File>

@@ -101,6 +101,7 @@ protected:
   HMODULE hHookDll;
   int keepDNS;
   DWORD clearShortTermCacheSecs;
+  CIpfw ipfw;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;
@@ -121,7 +122,6 @@ protected:
 	void SetupScreen(void);
 	void GetEC2Config();
 	bool GetUrlText(CString url, CString &response);
-  void ConfigureDummynet();
   void InstallSystemGDIHook();
   void RemoveSystemGDIHook();
 };

@@ -48,6 +48,7 @@ private:
   bool        _exit;
   HANDLE      _work_thread;
   HANDLE      _testing_mutex;
+  CIpfw       _ipfw;
 
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
@@ -59,4 +60,5 @@ private:
   bool ExtractZipFile(CString file);
   void KillBrowsers();
   void SetupScreen();
+  void SetupDummynet();
 };

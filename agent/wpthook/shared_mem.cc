@@ -80,17 +80,3 @@ void WINAPI SetDebugLevel(int level, const WCHAR * log_file) {
   shared_debug_level = level;
   lstrcpyW(shared_log_file, log_file);
 }
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-bool WINAPI WptCheckLogLevel(int level) {
-  bool should_log = false;
-  if (level <= shared_debug_level)
-    should_log = true;
-  return should_log;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI WptLogMessage(const WCHAR * msg) {
-}

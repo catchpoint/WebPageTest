@@ -210,7 +210,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\ipfw.cpp"
+				RelativePath="..\..\..\wptdriver\ipfw.cc"
 				>
 			</File>
 			<File
@@ -286,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\wptdriver\util.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\WinPCap.cpp"
 				>
 			</File>
@@ -300,11 +304,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\ipfw.h"
-				>
-			</File>
-			<File
-				RelativePath="..\pagetest\ipfw_int.h"
+				RelativePath="..\..\..\wptdriver\ipfw.h"
 				>
 			</File>
 			<File
@@ -365,6 +365,10 @@
 			</File>
 			<File
 				RelativePath=".\UrlMgrList.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\wptdriver\util.h"
 				>
 			</File>
 			<File
@@ -430,11 +434,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File
