@@ -40,5 +40,4 @@ public:
 protected:
   bool Execute(CString cmd);
   CString ipfw_dir_;
-  CString ipfw_exe_;
 };

@@ -1417,14 +1417,14 @@ bool CURLBlaster::ConfigureIpfw(void)
 		OutputDebugString(buff);
 
 		// create the inbound pipe
-		if( ipfw.SetPipe(pipeIn, info.bwIn * 1000, latency, info.plr / 100.0) )
+		if( ipfw.SetPipe(pipeIn, info.bwIn, latency, info.plr / 100.0) )
 		{
 			// make up for odd values
 			if( info.latency % 2 )
 				latency++;
 
 			// create the outbound pipe
-			if( ipfw.SetPipe(pipeOut, info.bwOut * 1000, latency, info.plr / 100.0) )
+			if( ipfw.SetPipe(pipeOut, info.bwOut, latency, info.plr / 100.0) )
 				ret = true;
 			else
 				ipfw.SetPipe(pipeIn, 0, 0, 0);

@@ -37,7 +37,6 @@ CIpfw::CIpfw(void) {
     *PathFindFileName(dir) = 0;
     ipfw_dir_ = dir;
     ipfw_dir_ += _T("dummynet\\");
-    ipfw_exe_ = CString(_T("\"")) + ipfw_dir_ + _T("ipfw.exe\"");
   }
 }
 
@@ -65,7 +64,7 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
     cmd += buff;
   }
   if (delay > 0) {
-    buff.Format(_T(" delay %d"), delay);
+    buff.Format(_T(" delay %dms"), delay);
     cmd += buff;
   }
   if (plr > 0.0) {
@@ -81,9 +80,10 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
 -----------------------------------------------------------------------------*/
 bool CIpfw::Execute(CString cmd) {
   bool ret = false;
-  if (!ipfw_exe_.IsEmpty()) {
-    CString command = ipfw_exe_ + _T(" ");
-    command += cmd;
+  if (!ipfw_dir_.IsEmpty()) {
+    CString command;
+    command.Format(_T("cmd /C \"%sipfw.exe %s\""), 
+                   (LPCTSTR)ipfw_dir_, (LPCTSTR)cmd);
     ATLTRACE(command);
     ret = LaunchProcess(command, NULL, ipfw_dir_);
   }
