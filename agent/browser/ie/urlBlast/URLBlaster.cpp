@@ -11,7 +11,7 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef)
+CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef)
 : userName(_T(""))
 , hLogonToken(NULL)
 , hProfile(NULL)
@@ -41,12 +41,12 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef)
 , keepDNS(0)
 , heartbeatEvent(NULL)
 , ipfw(ipfwRef)
+, testingMutex(testingMutexRef)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
 	hClearedCache = CreateEvent(0, TRUE, FALSE, NULL );
 	hRun = CreateEvent(0, TRUE, FALSE, NULL );
-  testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 	srand(GetTickCount());
 }
 
@@ -77,7 +77,6 @@ CURLBlaster::~CURLBlaster(void)
 	CloseHandle( hMustExit );
 	CloseHandle( hClearedCache );
 	CloseHandle( hRun );
-  CloseHandle( testingMutex );
 	EnterCriticalSection(&cs);
 	if( userSID )
 	{

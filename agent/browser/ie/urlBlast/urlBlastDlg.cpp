@@ -65,6 +65,7 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
   , keepDNS(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+  testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 	
 	// handle crash events
 	crashLog = &log;
@@ -165,10 +166,11 @@ BOOL CurlBlastDlg::OnInitDialog()
 	
 	LoadSettings();
 
+  WaitForSingleObject(testingMutex, INFINITE);
 	SetupScreen();
-
 	status.SetWindowText(_T("Configuring Dummynet..."));
   ipfw.Init();
+  ReleaseMutex(testingMutex);
 	
 	rebooting.SetWindowText(_T(""));
 	status.SetWindowText(_T("Starting up..."));
@@ -255,6 +257,7 @@ void CurlBlastDlg::OnClose()
   RemoveSystemGDIHook();
 
 	crashLog = NULL;
+  CloseHandle( testingMutex );
 	
 	CDialog::OnOK();
 }
@@ -1516,7 +1519,7 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 			buff.Format(_T("Starting user%d..."), i+1);
 			status.SetWindowText(buff);
 			
-			CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw);
+			CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
 			workers.Add(blaster);
 			
 			cacheHandles[i] = blaster->hClearedCache;

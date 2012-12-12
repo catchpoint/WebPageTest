@@ -94,11 +94,13 @@ void WptDriverCore::Start(void){
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
+    WaitForSingleObject(_testing_mutex, INFINITE);
     SetupScreen();
     _status.Set(_T("Initializing Dummynet..."));
     if (!_ipfw.Init()) {
       _status.Set(_T("Failed to initialize Dummynet..."));
     }
+    ReleaseMutex(_testing_mutex);
 
     // start a background thread to do all of the actual test management
     _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);

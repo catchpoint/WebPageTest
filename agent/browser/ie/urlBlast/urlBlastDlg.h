@@ -102,6 +102,7 @@ protected:
   int keepDNS;
   DWORD clearShortTermCacheSecs;
   CIpfw ipfw;
+  HANDLE testingMutex;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;

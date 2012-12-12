@@ -29,7 +29,7 @@ public:
 class CURLBlaster
 {
 public:
-	CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef);
+	CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef);
 	~CURLBlaster(void);
 	bool Start(int userIndex);
 	void Stop(void);
@@ -96,7 +96,7 @@ protected:
 	CString eventName;
 	HANDLE hDynaTrace;
   CWinPCap  winpcap;
-  HANDLE testingMutex;
+  HANDLE &testingMutex;
   CString heartbeatEventName;
   HANDLE  heartbeatEvent;
 	
