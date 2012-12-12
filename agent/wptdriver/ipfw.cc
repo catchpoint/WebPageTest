@@ -49,10 +49,6 @@ bool CIpfw::Init() {
     CString command;
     command.Format(_T("cmd /C \"%sipfw.cmd\""), (LPCTSTR)ipfw_dir_);
     ret = LaunchProcess(command, NULL, ipfw_dir_);
-    if (ret) {
-      SetPipe(1,0,0,0);
-      SetPipe(2,0,0,0);
-    }
   }
   return ret;
 }
