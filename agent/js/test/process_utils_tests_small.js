@@ -26,98 +26,90 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 /*jslint nomen:false */
-
-/*global describe: true, before: true, afterEach: true, it: true*/
+/*global describe:true, before:true, beforeEach:true, afterEach:true, it:true*/
 
 var child_process = require('child_process');
 var logger = require('logger');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
-var system_commands = require('system_commands');
 var test_utils = require('./test_utils.js');
 
 describe('process_utils small', function() {
   'use strict';
 
+  var sandbox;
+
   before(function() {
     process_utils.setSystemCommands();
   });
 
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+  });
+
   afterEach(function() {
-    test_utils.restoreStubs();
+    sandbox.verifyAndRestore();
   });
 
-  it('should kill all process in killPids', function() {
-    var processInfos = [{ command: 'a', pid: 1 },
-      { command: 'b', pid: 2 },
-      { command: 'c', pid: 3 },
-      { command: 'd', pid: 4 },
-      { command: 'e', pid: 5 }];
-    var childProcessExecSpy = sinon.spy();
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
-        childProcessExecSpy);
-    test_utils.registerStub(childProcessExecStub);
+  it('should create a ProcessInfo', function() {
+    var processInfo = new process_utils.ProcessInfo('123 456 abc def');
+    should.equal('123', processInfo.ppid);
+    should.equal('456', processInfo.pid);
+    should.equal('abc def', processInfo.command);
 
-    process_utils.killPids(processInfos);
-
-    should.equal(childProcessExecSpy.callCount, 5);
+    // Moar whitespaces plz!
+    processInfo = new process_utils.ProcessInfo('  123   456    abc   def');
+    should.equal('123', processInfo.ppid);
+    should.equal('456', processInfo.pid);
+    should.equal('abc def', processInfo.command);
   });
 
-  it('should be able to create a processInfo', function() {
-    var processInfo = process_utils.processInfoFromPsLine('123 456 abc def');
-    should.equal(processInfo.pid, '123');
-    should.equal(processInfo.ppid, '456');
-    should.equal(processInfo.command, 'abc def');
-  });
-
-  it('should be able to attempt to kill dangling processes', function() {
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
+  it('should kill all process in killProcesses', function() {
+    var processInfos = [
+        new process_utils.ProcessInfo('0 1 a'),
+        new process_utils.ProcessInfo('0 2 b'),
+        new process_utils.ProcessInfo('0 3 c'),
+        new process_utils.ProcessInfo('0 4 d'),
+        new process_utils.ProcessInfo('0 5 e')];
+    var numKilled = 0;
+    sandbox.stub(child_process, 'exec',
         function(command, callback) {
-      callback(undefined, '123  4  abc\n456 4 def', '');
+      logger.info('Stub exec: %s', command);
+      numKilled += 1;
+      callback(undefined, '', '');
     });
-    test_utils.registerStub(childProcessExecStub);
 
-    var killChildTreeSpy = sinon.spy();
-    var killChildTreeStub = sinon.stub(process_utils, 'killChildTree',
-        killChildTreeSpy);
-    test_utils.registerStub(killChildTreeStub);
-
-    process_utils.killDanglingProcesses();
-
-    should.equal(killChildTreeSpy.callCount, 2);
+    var doneSpy = sandbox.spy();
+    process_utils.killProcesses(processInfos, doneSpy);
+    should.ok(doneSpy.calledOnce);
+    should.equal(5, numKilled);
   });
 
-  it('should be able to kill a process tree', function() {
-    var processInfo = {pid: '4', ppid: '1', command: 'abc'};
-    var firstFind = system_commands.get('find children', processInfo.pid);
-    var childProcessExecCallCount = 0;
-    var childProcessExecStub = sinon.stub(child_process, 'exec',
+  it('should kill dangling processes', function() {
+    sandbox.stub(child_process, 'exec',
         function(command, callback) {
-      logger.info('Running command: %s', command);
-      // should.equal(command, findCommand);
-      childProcessExecCallCount += 1;
-      if (command === firstFind) {
-        // Two child processes with the same ppid 4.
-        callback(/*error=*/undefined, /*stdout=*/'123    4 def\n567 4 ghi', '');
-      } else if (callback) {
-        callback(/*error=*/undefined, /*stdout=*/'', '');
+      logger.info('Stub exec: %s', command);
+      if (/[0-9]/.test(command)) {  // Get children: command has a PID
+        callback(undefined, '', '');
+      } else {  // List top dangling processes
+        callback(undefined, ' 1  123  abc\n1 456 def', '');
       }
     });
-    test_utils.registerStub(childProcessExecStub);
 
-    var killedPids = [];
-    var killPidsStub = sinon.stub(process_utils, 'killPids',
-        function(processInfos) {
-      processInfos.forEach(function(processInfo) {
-        logger.info('Stub kill %s, command: %s',
-            processInfo.pid, processInfo.command);
-        killedPids.push(processInfo.pid);
-      });
+    var capturedChildProcesses = [];
+    sandbox.stub(process_utils, 'killProcessTrees',
+        function(childProcesses, callback) {
+      should.equal(0, capturedChildProcesses.length);  // Called only once
+      capturedChildProcesses = childProcesses;
+      callback();
     });
-    test_utils.registerStub(killPidsStub);
 
-    process_utils.killChildTree(processInfo);
-    should.equal('567,123,4', killedPids.join());
+    var doneSpy = sandbox.spy();
+    process_utils.killDanglingProcesses(doneSpy);
+    should.ok(doneSpy.calledOnce);
+    should.equal(2, capturedChildProcesses.length);
+    should.equal('123', capturedChildProcesses[0].pid);
+    should.equal('456', capturedChildProcesses[1].pid);
   });
 });

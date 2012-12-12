@@ -43,7 +43,18 @@ var JAVA_COMMAND_ = 'java';
 var devToolsToHarJar_;
 
 
-function devToolsToHar(devToolsLogPath, harPath, callback) {
+/**
+ * Converts a Chrome DevTools JSON log file to a HAR file.
+ *
+ * @param {String} devToolsLogPath the source DevTools JSON log file.
+ * @param {String} harPath the target HAR file.
+ * @param {String} [pageId] the page ID string for (the only page) in the HAR.
+ * @param {String} [browserName] browser name for the HAR.
+ * @param {String} [browserVersion] browser version for the HAR.
+ * @param callback called once the conversion finishes.
+ */
+function devToolsToHar(
+    devToolsLogPath, harPath, pageId, browserName, browserVersion, callback) {
   'use strict';
   if (!devToolsToHarJar_) {
     throw new Error('Internal error: devtools2har.jar path is not set.');
@@ -51,9 +62,18 @@ function devToolsToHar(devToolsLogPath, harPath, callback) {
 
   var javaArgs = [
       '-jar', devToolsToHarJar_,
-      devToolsLogPath,
-      harPath
+      '--devtools', devToolsLogPath,
+      '--har', harPath
   ];
+  if (pageId) {
+    javaArgs.push('--har_page_id', pageId);
+  }
+  if (browserName) {
+    javaArgs.push('--browser_name', browserName);
+  }
+  if (browserVersion) {
+    javaArgs.push('--browser_version', browserVersion);
+  }
   logger.info('Starting devtools2har: %s %j', JAVA_COMMAND_, javaArgs);
   var serverProcess = child_process.spawn(JAVA_COMMAND_, javaArgs);
   serverProcess.on('exit', function(code, signal) {

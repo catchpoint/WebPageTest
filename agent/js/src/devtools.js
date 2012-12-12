@@ -34,6 +34,10 @@ var util = require('util');
 var logger = require('logger');
 var WebSocket = require('ws');
 
+exports.PREFIX_NETWORK = 'Network.';
+exports.PREFIX_PAGE = 'Page.';
+exports.PREFIX_TIMELINE = 'Timeline.';
+
 
 function processResponse(response, callback) {
   'use strict';
@@ -43,7 +47,7 @@ function processResponse(response, callback) {
     responseBody += chunk;
   });
   response.on('end', function() {
-    logger.info('Got response: ' + responseBody);
+    logger.extra('Got response: ' + responseBody);
     if (callback) {
       callback(responseBody);
     }
@@ -53,7 +57,6 @@ function processResponse(response, callback) {
   });
 }
 exports.ProcessResponse = processResponse;
-
 
 function DevTools(devToolsUrl) {
   'use strict';
@@ -107,16 +110,20 @@ DevTools.prototype.connectDebugger_ = function() {
       var messageJson = JSON.parse(data);
       if (messageJson.result && messageJson.id) {
         callbackErrback = self.commandCallbacks_[messageJson.id];
-        if (callbackErrback && callbackErrback.callback) {
+        if (callbackErrback) {
           delete self.commandCallbacks_[messageJson.id];
-          callbackErrback.callback(messageJson.result);
+          if (callbackErrback.callback) {
+            callbackErrback.callback(messageJson.result);
+          }
         }
         self.emit('result', messageJson.id, messageJson.result);
       } else if (messageJson.error && messageJson.id) {
         callbackErrback = self.commandCallbacks_[messageJson.id];
-        if (callbackErrback && callbackErrback.errback) {
+        if (callbackErrback) {
           delete self.commandCallbacks_[messageJson.id];
-          callbackErrback.errback(messageJson.error);
+          if (callbackErrback.errback) {
+            callbackErrback.errback(messageJson.result);
+          }
         }
         //self.emit('error', messageJson.id, messageJson.error);
       } else {
@@ -140,4 +147,40 @@ DevTools.prototype.command = function(command, callback, errback) {
   }
   this.ws_.send(JSON.stringify(command));
   return command.id;
+};
+
+DevTools.prototype.networkMethod = function(method, callback, errback) {
+  'use strict';
+  this.command({method: exports.PREFIX_NETWORK + method}, callback, errback);
+};
+
+DevTools.prototype.pageMethod = function(method, callback, errback) {
+  'use strict';
+  this.command({method: exports.PREFIX_PAGE + method}, callback, errback);
+};
+
+DevTools.prototype.timelineMethod = function(method, callback, errback) {
+  'use strict';
+  this.command({method: exports.PREFIX_TIMELINE + method}, callback, errback);
+};
+
+exports.isNetworkMessage = function(message) {
+  'use strict';
+  return (message.method &&
+      message.method.slice(0, exports.PREFIX_NETWORK.length) ===
+          exports.PREFIX_NETWORK);
+};
+
+exports.isPageMessage = function(message) {
+  'use strict';
+  return (message.method &&
+      message.method.slice(0, exports.PREFIX_PAGE.length) ===
+          exports.PREFIX_PAGE);
+};
+
+exports.isTimelineMessage = function(message) {
+  'use strict';
+  return (message.method &&
+      message.method.slice(0, exports.PREFIX_TIMELINE.length) ===
+          exports.PREFIX_TIMELINE);
 };

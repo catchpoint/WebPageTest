@@ -25,42 +25,107 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global after: true, describe: true, before: true, afterEach: true, it: true*/
+/*global after:true, describe:true, before:true, beforeEach:true,
+  afterEach:true, it:true*/
 
-var child_process = require('child_process');
-var events = require('events');
-var sinon = require('sinon');
-var should = require('should');
-var util = require('util');
 var agent_main = require('agent_main');
+var events = require('events');
+var process_utils = require('process_utils');
+var should = require('should');
+var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
+var util = require('util');
+var webdriver = require('webdriver');
+var wpt_client = require('wpt_client');
 
+
+function FakeEmitterWithRun() {
+  'use strict';
+}
+util.inherits(FakeEmitterWithRun, events.EventEmitter);
+
+FakeEmitterWithRun.prototype.run = function() {
+  'use strict';
+};
+
+
+/**
+ * All tests are synchronous, do NOT use Mocha's function(done) async form.
+ *
+ * The synchronization is via:
+ * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
+ * 2) stubbing out anything else with async callbacks, e.g. process or network.
+ */
 describe('agent_main', function() {
   'use strict';
+
+  var app = webdriver.promise.Application.getInstance();
+  process_utils.injectWdAppLogging('wd_server app', app);
+
+  var sandbox;
 
   before(function() {
     agent_main.setSystemCommands();
   });
 
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+    test_utils.fakeTimers(sandbox);
+
+    sandbox.stub(process_utils, 'scheduleExec', function() {
+      return new webdriver.promise.Deferred();
+    });
+    sandbox.stub(process_utils, 'scheduleExitWaitOrKill', function() {
+      return new webdriver.promise.Deferred();
+    });
+    sandbox.stub(process_utils, 'killDanglingProcesses', function(callback) {
+      callback();
+    });
+
+    app.reset();  // We reuse the app across tests, clean it up.
+  });
+
   afterEach(function() {
-    test_utils.restoreStubs();
+    sandbox.verifyAndRestore();
   });
 
   it('should cleanup job on timeout', function() {
-    function Client() {}
-    util.inherits(Client, events.EventEmitter);
-    Client.prototype.run = function() { };
-    var client = new Client();
+    var client = new FakeEmitterWithRun();
 
-    var cleanupJobSpy = sinon.spy();
-    var cleanupJobStub = sinon.stub(agent_main, 'cleanupJob',
-      cleanupJobSpy);
-    test_utils.registerStub(cleanupJobStub);
+    var runFinishedSpy = sandbox.spy();
+    var fakeJob = {runFinished: runFinishedSpy};
 
-    agent_main.run(client, {});
+    var agent = new agent_main.Agent(client, /*flags=*/{});
+    agent.run();
 
-    client.emit('timeout', 'e');
+    client.onJobTimeout(fakeJob);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    should.ok(runFinishedSpy.calledOnce);
+  });
 
-    should.ok(cleanupJobSpy.calledOnce);
+  it('should require selenium jar and devtools2har jar', function() {
+    sandbox.stub(agent_main, 'Agent', FakeEmitterWithRun);
+    sandbox.spy(FakeEmitterWithRun.prototype, 'run');
+    sandbox.stub(wpt_client, 'Client', FakeEmitterWithRun);
+
+    var flags = {};
+    var runMainWithFlags = function() {
+      agent_main.main(flags);
+    };
+
+    runMainWithFlags.should.throwError();
+
+    flags.selenium_jar = 'jar';
+    runMainWithFlags.should.throwError();
+
+    flags.selenium_jar = undefined;
+    flags.devtools2har_jar = 'jar';
+    runMainWithFlags.should.throwError();
+
+    flags.selenium_jar = 'jar';
+
+    should.ok(!FakeEmitterWithRun.prototype.run.called);
+    agent_main.main(flags);
+    should.ok(FakeEmitterWithRun.prototype.run.calledOnce);
   });
 });

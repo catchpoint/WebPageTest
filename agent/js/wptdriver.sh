@@ -46,7 +46,7 @@ while true; do
 done
 
 agent="$wpt_root/agent/js"
-devtools2har_jar="$wpt_root/lib/dt2har/target/dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar"
+devtools2har_jar="$wpt_root/lib/dt2har/target/dt2har-1.1-SNAPSHOT-jar-with-dependencies.jar"
 
 # Find the latest version of WD server jar, WDJS, platform-specific chromedriver
 declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)

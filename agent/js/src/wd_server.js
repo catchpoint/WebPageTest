@@ -31,18 +31,18 @@ var child_process = require('child_process');
 var events = require('events');
 var vm = require('vm');
 var devtools = require('devtools');
-var devtools_network = require('devtools_network');
-var devtools_page = require('devtools_page');
-var devtools_timeline = require('devtools_timeline');
 var logger = require('logger');
+var process_utils = require('process_utils');
 var system_commands = require('system_commands');
 var util = require('util');
 var webdriver = require('webdriver');
 var wd_sandbox = require('wd_sandbox');
 
+exports.process = process;  // Allow to stub out in tests
+
 var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
-var WAIT_AFTER_ONLOAD_MS_ = 10000;
+exports.WAIT_AFTER_ONLOAD_MS = 10000;
 
 /**
  * WebDriverServer Responsible for a WebDriver server for a given browser type.
@@ -95,16 +95,12 @@ var WebDriverServer = {
     // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
     // to false upon completion of that method.
     this.actionCbRecurseGuard_ = false;
+    this.app_ = webdriver.promise.Application.getInstance();
+    this.sandboxApp_ = undefined;
+    process_utils.injectWdAppLogging('wd_server app', this.app_);
 
     this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
     this.setSystemCommands_();
-  },
-
-  onUncaughtException_: function(e) {
-    'use strict';
-    logger.critical('Stopping WebDriver server on uncaught exception: %s', e);
-    process.send({cmd: 'error', e: e.toString()});
-    this.stop();
   },
 
   /**
@@ -115,15 +111,12 @@ var WebDriverServer = {
    */
   startServer_: function(browserCaps) {
     'use strict';
-    var self = this;
     if (!this.seleniumJar_) {
       throw new Error('Must set server jar before starting WebDriver server');
     }
     if (this.serverProcess_) {
       logger.error('prior WD server alive when launching');
-      this.serverProcess_.kill();
-      this.serverProcess_ = undefined;
-      this.serverUrl_ = undefined;
+      this.killServerProcess_();
     }
     var serverCommand, serverArgs, serverUrlPath;
     if ('chrome' === browserCaps.browserName) {
@@ -143,11 +136,10 @@ var WebDriverServer = {
     logger.info('Starting WD server: %s %j', serverCommand, serverArgs);
     var serverProcess = child_process.spawn(serverCommand, serverArgs);
     serverProcess.on('exit', function(code, signal) {
-      logger.info('WD EXIT code %s signal %s', code, signal);
-      self.serverProcess_ = undefined;
-      self.serverUrl_ = undefined;
-      process.send({cmd: 'exit', code: code, signal: signal});
-    });
+      logger.info('WD EXIT code %s signal %s, sending IPC exit', code, signal);
+      this.serverProcess_ = undefined;
+      this.serverUrl_ = undefined;
+    }.bind(this));
     serverProcess.stdout.on('data', function(data) {
       logger.info('WD STDOUT: %s', data);
     });
@@ -165,8 +157,7 @@ var WebDriverServer = {
     var executor = new webdriver.http.Executor(client);
     var command = new webdriver.command.Command(
         webdriver.command.CommandName.GET_SERVER_STATUS);
-    var wdApp = webdriver.promise.Application.getInstance();
-    wdApp.scheduleWait('Waiting for WD server to be ready', function() {
+    this.app_.scheduleWait('Waiting for WD server to be ready', function() {
       var isReady = new webdriver.promise.Deferred();
       executor.execute(command, function(error /*, unused_response*/) {
         if (error) {
@@ -189,36 +180,43 @@ var WebDriverServer = {
    */
   connectDevTools_: function(wdNamespace) {
     'use strict';
-    var self = this;
-    var wdApp = wdNamespace.promise.Application.getInstance();
-    wdApp.scheduleWait('Connect DevTools', function() {
+    this.app_.scheduleWait('Connect DevTools', function() {
       var isDevtoolsConnected = new wdNamespace.promise.Deferred();
       var devTools = new devtools.DevTools(
-          'http://localhost:' + self.devToolsPort_ + '/json');
+          'http://localhost:' + this.devToolsPort_ + '/json');
+
       devTools.on('connect', function() {
-        var networkTools = new devtools_network.Network(devTools);
-        var pageTools = new devtools_page.Page(devTools);
-        var timelineTools = new devtools_timeline.Timeline(devTools);
-        networkTools.enable(function() {
+        devTools.networkMethod('enable', function() {
           logger.info('DevTools Network events enabled');
+          devTools.pageMethod('enable', function() {
+            logger.info('DevTools Page events enabled');
+            // Timeline enable event never gets a response.
+            devTools.timelineMethod('start', function() {
+              logger.info('DevTools Timeline events enabled');
+              isDevtoolsConnected.resolve(true);
+            }, process_utils.getLoggingErrback('DevTools Timeline start'));
+          });
         });
-        pageTools.enable(function() {
-          logger.info('DevTools Page events enabled');
-        });
-        timelineTools.enable(function() {
-          logger.info('DevTools Timeline events enabled');
-        });
-        timelineTools.start(function() {
-          logger.info('DevTools Timeline events started');
-        });
-        isDevtoolsConnected.resolve(true);
       });
+
       devTools.on('message', function(message) {
-          self.onDevToolsMessage_(message);
-      });
+        this.onDevToolsMessage_(message);
+      }.bind(this));
+
       devTools.connect();
       return isDevtoolsConnected.promise;
-    }, DEVTOOLS_CONNECT_TIMEOUT_MS_);
+    }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
+  },
+
+  onDevToolsMessage_: function(message) {
+    'use strict';
+    if (devtools.isNetworkMessage(message) || devtools.isPageMessage(message)) {
+      logger.extra('DevTools message: %j', message);
+      this.devToolsMessages_.push(message);
+    } else {
+      logger.extra('DevTools timeline message: %j', message);
+      this.devToolsTimelineMessages_.push(message);
+    }
   },
 
   /**
@@ -363,17 +361,18 @@ var WebDriverServer = {
     'use strict';
     return wd_sandbox.createSandboxedWdNamespace(
         this.serverUrl_, browserCaps, this).then(function(wdSandbox) {
-      var sandboxWdApp = wdSandbox.promise.Application.getInstance();
-      sandboxWdApp.on(wdSandbox.promise.Application.EventType.IDLE,
-          function() {
-            logger.info('The sandbox application has gone idle, history: %j',
-                sandboxWdApp.getHistory());
-          });
+      this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
+      this.sandboxApp_.on(
+          wdSandbox.promise.Application.EventType.IDLE, function() {
+        logger.info('The sandbox application has gone idle, history: %j',
+            this.sandboxApp_.getHistory());
+      }.bind(this));
       // Bring it!
-      return sandboxWdApp.schedule(
+      return this.sandboxApp_.schedule(
           'Run Script',
           this.runScript_.bind(this, wdSandbox)).then(
-          this.waitForCoalesce_.bind(this, wdSandbox, WAIT_AFTER_ONLOAD_MS_));
+          this.waitForCoalesce_.bind(this, wdSandbox,
+              exports.WAIT_AFTER_ONLOAD_MS));
     }.bind(this));
   },
 
@@ -396,18 +395,17 @@ var WebDriverServer = {
     if (this.chrome_) {
       browserCaps['chrome.binary'] = this.chrome_;
     }
-    process.once('uncaughtException', this.uncaughtExceptionHandler_);
+    exports.process.once('uncaughtException', this.uncaughtExceptionHandler_);
     this.startServer_(browserCaps);  // TODO(klm): Handle process failure
-    var mainWdApp = webdriver.promise.Application.getInstance();
-    mainWdApp.schedule('Run sandboxed WD session',
+    this.app_.schedule('Run sandboxed WD session',
         this.runSandboxedSession_.bind(this, browserCaps)).then(
         this.done_.bind(this),
         this.onError_.bind(this));
-
-    mainWdApp.on(webdriver.promise.Application.EventType.IDLE, function() {
+    // When IDLE is emitted, the app no longer runs an event loop.
+    this.app_.on(webdriver.promise.Application.EventType.IDLE, function() {
       logger.info('The main application has gone idle, history: %j',
-          mainWdApp.getHistory());
-    });
+          this.app_.getHistory());
+    }.bind(this));
 
     logger.info('WD connect promise setup complete');
   },
@@ -440,113 +438,120 @@ var WebDriverServer = {
   waitForCoalesce_: function(wdSandbox, timeout) {
     'use strict';
     logger.info('Sandbox finished, waiting for browser to coalesce');
-    wdSandbox.promise.Application.getInstance().scheduleTimeout(
+    this.sandboxApp_.scheduleTimeout(
         'Waiting for browser to coalesce', timeout);
   },
 
   done_: function() {
     'use strict';
-    var mainWdApp = webdriver.promise.Application.getInstance();
-    logger.info('Sandboxed session succeeded');
-    this.stop();
-    mainWdApp.schedule('Emit done', function() {
-      logger.debug('wd_server: sending IPC done');
-      process.send({
+    logger.info('Sandboxed session succeeded, quitting WebDriver');
+    // We must schedule/run a driver quit before we emit 'done', to make sure
+    // we take the final screenshot and send it in the 'done' IPC message.
+    this.scheduleDriverQuit_();
+    this.app_.schedule('Send IPC done', function() {
+      logger.debug('sending IPC done');
+      exports.process.send({
           cmd: 'done',
           devToolsMessages: this.devToolsMessages_,
           devToolsTimelineMessages: this.devToolsTimelineMessages_,
           screenshots: this.screenshots_});
     }.bind(this));
+    this.scheduleStop();
   },
 
   onError_: function(e) {
     'use strict';
-    logger.error('Sandboxed session failed, calling server stop(): %s',
-        e.stack);
-    this.stop();
-    process.send({cmd: 'error', e: e});
+    logger.error('Sandboxed session failed, stopping: %s', e.stack);
+    // Take the final screenshot (useful for debugging) and kill the browser.
+    // We must schedule/run a driver quit before we emit 'done', to make sure
+    // we take the final screenshot and send it in the 'done' IPC message.
+    this.scheduleDriverQuit_();
+    this.app_.schedule('Send IPC error', function() {
+      logger.error('Sending IPC error: %j', e);
+      exports.process.send({
+          cmd: 'error',
+          e: e.message,
+          devToolsMessages: this.devToolsMessages_,
+          devToolsTimelineMessages: this.devToolsTimelineMessages_,
+          screenshots: this.screenshots_});
+    }.bind(this));
+    this.scheduleStop();
   },
 
-  onDevToolsMessage_: function(message) {
+  onUncaughtException_: function(e) {
     'use strict';
-    logger.extra('DevTools message: %j', message);
-    if (undefined !== message.method) {
-      if (message.method.slice(0, devtools_network.METHOD_PREFIX.length) ===
-          devtools_network.METHOD_PREFIX ||
-          message.method.slice(0, devtools_page.METHOD_PREFIX.length) ===
-          devtools_page.METHOD_PREFIX) {
-        this.devToolsMessages_.push(message);
-      } else {
-        this.devToolsTimelineMessages_.push(message);
-      }
+    logger.critical('Uncaught exception: %s', e);
+    exports.process.send({cmd: 'error', e: e.message});
+    this.scheduleStop();
+  },
+
+  scheduleDriverQuit_: function() {
+    'use strict';
+    if (this.driver_) {
+      logger.debug('scheduling driver.quit()');
+      this.driver_.quit().addErrback(process_utils.getLoggingErrback('quit'))
+          .then(function() {
+        this.driverBuildTime_ = undefined;
+      }.bind(this));
+      this.driver_ = undefined;
+    } else {
+      logger.warn('driver is already unset');
     }
   },
 
   /**
-   * stop will cleanup after a job. First it asks the webdriver server to kill
-   * the driver. After that it tris to kill the webdriver server itself.
-   * @this {WebDriverServer}
+   * Cleans up after a job.
+   *
+   * First it asks the webdriver server to kill the driver.
+   * After that it tris to kill the webdriver server itself.
    */
-  stop: function() {
+  scheduleStop: function() {
     'use strict';
     // Stop handling uncaught exceptions
-    process.removeListener('uncaughtException', this.uncaughtExceptionHandler_);
-    var killProcess = function() {
-      if (this.serverProcess_) {
-        try {
-          this.killServerProcess();
-        } catch (killException) {
-          logger.error('WebDriver server kill failed: %s', killException);
-        }
-      } else {
-        logger.warn('stop(): server process is already unset');
-      }
-      // Unconditionally unset them, even if the scheduled quit/kill fails
-      this.driver_ = undefined;
-      this.driverBuildTime_ = undefined;
-      this.serverUrl_ = undefined;
-    }.bind(this);
-    if (this.driver_) {
-      logger.debug('stop(): driver.quit()');
-      this.driver_.quit().then(killProcess, killProcess);
-    } else {
-      logger.warn('stop(): driver is already unset');
-      killProcess();
-    }
+    exports.process.removeListener('uncaughtException',
+        this.uncaughtExceptionHandler_);
+    this.scheduleDriverQuit_();
+    this.app_.schedule('Kill WD server', this.killServerProcess_.bind(this));
+    // Disconnect parent IPC to exit gracefully without a process.exit() call.
+    // This should be the last source of event queue events.
+    this.app_.schedule('Disconnect IPC',
+        exports.process.disconnect.bind(process));
   },
 
-  killServerProcess: function() {
+  killServerProcess_: function() {
     'use strict';
-    var killSignal;
-    try {
-      killSignal = system_commands.get('kill signal');
-    } catch (e) {
-      killSignal = undefined;
-    }
     if (this.serverProcess_) {
       logger.debug('Killing the WD server');
-      this.serverProcess_.kill(killSignal);
+      var killSignal;
+      try {
+        killSignal = system_commands.get('kill signal');
+      } catch (e) {
+        killSignal = undefined;
+      }
+      try {
+        this.serverProcess_.kill(killSignal);
+      } catch (killException) {
+        logger.error('WebDriver server kill failed: %s', killException);
+      }
+      this.serverProcess_ = undefined;
+      this.serverUrl_ = undefined;
+    } else {
+      logger.warn('WD server process is already unset');
     }
   },
 
   setSystemCommands_: function() {
     'use strict';
-
     system_commands.set('kill signal', 'SIGHUP', 'unix');
-    // windows should send the default kill signal
-    // system_commands.set('kill signal', '', 'win32');
   }
 };
 exports.WebDriverServer = WebDriverServer;
 
-process.on('message', function(m) {
+exports.process.on('message', function(m) {
   'use strict';
-  if (m.cmd === 'init') {
+  if (m.cmd === 'run') {
     exports.WebDriverServer.init(m);
-  } else if (m.cmd === 'connect') {
     exports.WebDriverServer.connect();
-  } else if (m.cmd === 'stop') {
-    exports.WebDriverServer.stop();
   } else {
     logger.error('Unrecognized IPC command %s, message: %j', m.cmd, m);
   }

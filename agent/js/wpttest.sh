@@ -85,8 +85,8 @@ else
   if [ "$src_dir" = "src-cov" ]; then
     rm -R src-cov
     jscoverage src src-cov
-    mocha --reporter html-cov --grep $tests > cov.html
+    mocha --reporter html-cov --grep "$tests" > cov.html
   else
-    mocha --reporter spec --grep $tests
+    mocha --reporter spec --grep "$tests"
   fi
 fi

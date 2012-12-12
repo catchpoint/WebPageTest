@@ -25,7 +25,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, afterEach: true, it: true*/
+/*global describe:true, before:true, beforeEach:true, afterEach:true, it:true*/
 
 var sinon = require('sinon');
 var should = require('should');
@@ -34,16 +34,29 @@ var http = require('http');
 var url = require('url');
 var util = require('util');
 var devtools = require('devtools');
-var test_utils = require('./test_utils');
 
+
+/**
+ * All tests are synchronous, do NOT use Mocha's function(done) async form.
+ *
+ * The synchronization is via:
+ * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
+ * 2) stubbing out anything else with async callbacks, e.g. process or network.
+ */
 describe('devtools small', function() {
   'use strict';
 
-  afterEach(function() {
-    test_utils.restoreStubs();
+  var sandbox;
+
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
   });
 
-  it('should be able to correctly process a response', function() {
+  afterEach(function() {
+    sandbox.verifyAndRestore();
+  });
+
+  it('should process a response', function() {
     var responseBody1 = 'body1';
     var responseBody2 = 'body2';
 
@@ -55,7 +68,7 @@ describe('devtools small', function() {
     ResponseType.prototype.setEncoding = setEncodingSpy;
     var response = new ResponseType();
 
-    var callbackSpy = sinon.spy();
+    var callbackSpy = sandbox.spy();
     devtools.ProcessResponse(response, callbackSpy);
 
     response.emit('data', responseBody1);
@@ -66,34 +79,27 @@ describe('devtools small', function() {
     should.equal(callbackSpy.args[0][0], responseBody1 + responseBody2);
   });
 
-  it('should be able to attempt to connect to devtools', function() {
-    var devtoolsUrl = 'http://devtools.com/';
-    var debuggerUrl = 'http://someurl.com:1337';
+  it('should connect to devtools', function() {
+    var devtoolsUrl = 'http://my.machine:1234/';
+    var debuggerUrl = 'http://my.machine:1337';
     var getResponse = '[{ "webSocketDebuggerUrl": "' + debuggerUrl + '"}]';
-    var httpStub = sinon.stub(http, 'get', function(getUrl, callback) {
+    sandbox.stub(http, 'get', function(getUrl, callback) {
       should.equal(getUrl.href, url.parse(devtoolsUrl).href);
       callback(getResponse, callback);
     });
-    test_utils.registerStub(httpStub);
-
-    var processResponseStub = sinon.stub(devtools, 'ProcessResponse',
+    sandbox.stub(devtools, 'ProcessResponse',
         function(response, callback) {
       callback(response);
     });
-    test_utils.registerStub(processResponseStub);
-
 
     var myDevtools = new devtools.DevTools(devtoolsUrl);
 
-    var connectDebuggerSpy = sinon.spy();
-    var connectDebuggerStub = sinon.stub(myDevtools, 'connectDebugger_',
-        connectDebuggerSpy);
-    test_utils.registerStub(connectDebuggerStub);
+    var connectDebuggerStub = sandbox.stub(myDevtools, 'connectDebugger_');
 
     myDevtools.connect();
     should.equal(myDevtools.debuggerUrl_, debuggerUrl);
     getResponse = '';
     myDevtools.connect.should.throwError();
-    should.ok(connectDebuggerSpy.calledOnce);
-   });
+    should.ok(connectDebuggerStub.calledOnce);
+  });
 });

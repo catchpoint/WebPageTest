@@ -35,18 +35,33 @@ var test_utils = require('./test_utils.js');
 describe('logger small', function() {
   'use strict';
 
-  var logToConsole = logger.LOG_TO_CONSOLE;
+  var logToConsole, maxLogLevel, restoreCalls;
+
+  before(function() {
+    logToConsole = logger.LOG_TO_CONSOLE;
+    maxLogLevel = logger.MAX_LOG_LEVEL;
+    restoreCalls = [];
+  });
 
   afterEach(function() {
-    test_utils.restoreStubs();
     logger.LOG_TO_CONSOLE = logToConsole;
+    logger.MAX_LOG_LEVEL = maxLogLevel;
+    restoreCalls.forEach(function(restoreCall) {
+      restoreCall();
+    });
   });
 
   it('should be able to output to the error, warn, info, and log consoles zzz',
       function() {
-    var consoleSpy = sinon.spy();
+    var lines = [];
     Object.keys(logger.LEVELS).forEach(function(levelName) {
-      logger.LEVELS[levelName][1] = consoleSpy;
+      var originalLogger = logger.LEVELS[levelName][1];
+      restoreCalls.push(function() {
+        logger.LEVELS[levelName][1] = originalLogger;
+      });
+      logger.LEVELS[levelName][1] = function(message) {
+        lines.push(message);
+      };
     });
     logger.LOG_TO_CONSOLE = true;
 
@@ -62,9 +77,11 @@ describe('logger small', function() {
     logger.MAX_LOG_LEVEL = logger.LEVELS.alert[0];
     logger.extra('log message');
 
-    should.ok(consoleSpy.withArgs('E: error message').calledOnce);
-    should.ok(consoleSpy.withArgs('W: warning message').calledOnce);
-    should.ok(consoleSpy.withArgs('I: info message').calledOnce);
-    should.ok(consoleSpy.withArgs('F: log message').calledTwice);
+    should.equal(5, lines.length);
+    should.ok(/E .*: error message/.test(lines[0]));
+    should.ok(/W .*: warning message/.test(lines[1]));
+    should.ok(/I .*: info message/.test(lines[2]));
+    should.ok(/F .*: log message/.test(lines[3]));
+    should.ok(/F .*: log message/.test(lines[4]));
   });
 });

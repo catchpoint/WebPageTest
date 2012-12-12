@@ -25,192 +25,267 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, afterEach: true, it: true*/
+/*global describe: true, before: true, afterEach: true, beforeEach: true,
+         it: true*/
 
-var should = require('should');
+var events = require('events');
 var http = require('http');
-var wpt_client = require('wpt_client');
-var wd_server = require('wd_server');
-var agent_main = require('agent_main');
-var sinon = require('sinon');
-var webdriver = require('webdriver');
 var ins = require('util').inspect;
-var test_utils = require('./test_utils.js');
 var logger = require('logger');
+var sandbox = require('sinon');
+var should = require('should');
+var sinon = require('sinon');
+var Stream = require('stream');
+var test_utils = require('./test_utils.js');
+var wd_server = require('wd_server');
+var webdriver = require('webdriver');
+var wpt_client = require('wpt_client');
 
 var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
 var LOCATION = process.env.LOCATION || 'TEST';
 
+
+/**
+ * All tests are synchronous, do NOT use Mocha's function(done) async form.
+ *
+ * The synchronization is via:
+ * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
+ * 2) stubbing out anything else with async callbacks, e.g. process or network.
+ */
 describe('wpt_client small', function() {
   'use strict';
 
-  before(function() {
-    process.send = function(/*m, args*/) {};
-    agent_main.setSystemCommands();
+  var sandbox;
+
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+    test_utils.fakeTimers(sandbox);
+    // Re-create stub process for each test to avoid accumulating listeners.
+    wpt_client.process = new events.EventEmitter();
   });
 
   afterEach(function() {
-    test_utils.restoreStubs();
+    // Call unfakeTimers before verifyAndRestore, which may throw.
+    test_utils.unfakeTimers(sandbox);
+    sandbox.verifyAndRestore();
+    wpt_client.process = process;
   });
 
-  it('should call client.jobFinished_ when job done', sinon.test(function() {
+  it('should call client.finishRun_ when job done', function() {
     var client = new wpt_client.Client('base', 'location', 'apiKey', 0);
-    var mock = sinon.mock(client);
-    mock.expects('jobFinished_').once();
+    sandbox.mock(client).expects('finishRun_').once();
 
     var job = new wpt_client.Job(client, {JOB_TEST_ID: 'ABC'});
-    job.done();
-
-    mock.verify();
-
-  }));
-
-  it('should be able to timeout a job', function(done) {
-    var flags = {
-      wpt_server: WPT_SERVER,
-      location: LOCATION,
-      job_timeout: 1
-    };
-    var client = new wpt_client.Client(flags.wpt_server, flags.location,
-      undefined, flags.job_timeout);
-    client.on('timeout', function() { done(); });
-
-    client.processJobResponse_('{}');
+    job.runFinished();
   });
 
-  it('should emit job when a new job is processed', function(done) {
-    var flags = {
-      wpt_server: WPT_SERVER,
-      location: LOCATION
+  it('should be able to timeout a job', function() {
+    var client = new wpt_client.Client('server', 'location',
+      undefined, /*jobTimeout=*/1);
+    var isTimedOut = false;
+    client.onJobTimeout = function() {
+      logger.info('Caught timeout in test');
+      isTimedOut = true;
     };
-    var client = new wpt_client.Client(flags.wpt_server, flags.location);
-    client.on('job', function() { done(); });
+    client.onStartJobRun = function() {};  // Never call runFinished => timeout.
 
     client.processJobResponse_('{}');
+    sandbox.clock.tick(1);
+    should.ok(isTimedOut);
+  });
+
+  it('should call onStartJobRun when a new job is processed', function() {
+    var client = new wpt_client.Client('url');
+    client.onStartJobRun = function() {};
+    var startJobRunSpy = sandbox.spy(client, 'onStartJobRun');
+
+    client.processJobResponse_('{}');
+    should.ok(startJobRunSpy.calledOnce);
   });
 
   it('should do a http get request to the correct url when requesting next job',
       function() {
-    var getSpy = sinon.spy(http, 'get');
-    test_utils.registerStub(getSpy);
+    sandbox.stub(http, 'get');
 
-    var flags = {
-      wpt_server: WPT_SERVER,
-      location: LOCATION
-    };
-    var client = new wpt_client.Client(flags.wpt_server, flags.location);
-
-
+    var client = new wpt_client.Client('http://server', 'Test');
     client.requestNextJob_();
 
     should.ok(http.get.calledOnce);
-    should.equal(http.get.firstCall.args[0].path,
-        '/work/getwork.php?location=Test&f=json');
+    should.equal(http.get.firstCall.args[0].href,
+        'http://server/work/getwork.php?location=Test&f=json');
   });
 
-  it('should submit the correct number of result files', function() {
-    this.timeout(10000);
-    var submitResultFiles = function(numFiles/*, last*/) {
+  it('should submit right number of result files', function() {
+    var submitResultFiles = function(numFiles, callback) {
       var filesSubmitted = 0;
-      var flags = {
-        wpt_server: WPT_SERVER,
-        location: LOCATION
-      };
-      var client = new wpt_client.Client(flags.wpt_server, flags.location);
+      var client = new wpt_client.Client('server', 'location');
 
-      sinon.stub(client, 'postResultFile_',
-          function(job, resultFile, isDone, callback) {
+      sandbox.stub(client, 'postResultFile_',
+          function(job, resultFile, fields, callback) {
+        logger.debug('stub postResultFile_ f=%j fields=%j', resultFile, fields);
         filesSubmitted += 1;
-        if (isDone) {
-          filesSubmitted.should.equal(numFiles + 1);
-        } else {
-          callback();
-        }
-      }.bind(client));
+        callback();
+      });
 
       var resultFiles = [];
       var iFile;
-      for (iFile = 0; iFile < numFiles; iFile += 1) {
-        resultFiles.push({fileName: 'file' + iFile,
-                          content: 'this is some content'});
+      for (iFile = 1; iFile <= numFiles; iFile += 1) {
+        resultFiles.push({
+            fileName: 'file ' + iFile, content: 'content ' + iFile});
       }
 
-      client.submitResult_({resultFiles: resultFiles});
+      client.submitResult_({id: "test", resultFiles: resultFiles}, function() {
+        should.equal(filesSubmitted, numFiles + 1);
+        callback();
+      });
     };
 
-    submitResultFiles(0);
-    submitResultFiles(1);
-    submitResultFiles(2);
-    submitResultFiles(4, true);
+    var isDone = false;
+    submitResultFiles(0, function() {
+      submitResultFiles(1, function() {
+        submitResultFiles(2, function() {
+          isDone = true;
+        });
+      });
+    });
+    should.ok(isDone);
   });
 
-  it('should submit the correct files', function(done) {
-    var flags = {
-      wpt_server: WPT_SERVER,
-      location: LOCATION
-     };
-    var client = new wpt_client.Client(flags.wpt_server, flags.location);
-    var job = {resultFiles: [{content: 'this is the result file'}]};
+  it('should submit the right files', function() {
+    var client = new wpt_client.Client('server', 'location');
+    var content = 'fruits of my labour';
+    var job = {id: 'test', resultFiles: [{content: content}]};
 
-    sinon.stub(client, 'postResultFile_',
-        function(job, resultFile/*, isDone, callback*/) {
-      should.equal(resultFile.content, job.resultFiles[0].content);
-      done();
+    sandbox.stub(client, 'postResultFile_',
+        function(job, resultFile, fields, callback) {
+      if (resultFile) {
+        should.equal(resultFile.content, content);
+      }
+      callback();
     });
 
-    client.submitResult_(job);
+    var isDone = false;
+    client.submitResult_(job, function() {
+      isDone = true;
+    });
+    should.ok(isDone);
   });
 
-  it('run should call requestNextJob initially, on job, and on nojob',
-      function(done) {
-    var flags = {
-      wpt_server: WPT_SERVER,
-      location: LOCATION
-     };
-    var client = new wpt_client.Client(flags.wpt_server, flags.location);
-    wpt_client.NO_JOB_PAUSE_ = 2;
+  it('run should do HTTP GET initially, on job, and on nojob', function() {
+    sandbox.mock(http).expects('get').exactly(3);
 
-    var mock = sinon.mock(client);
-    mock.expects('requestNextJob_').exactly(3);
+    var client = new wpt_client.Client('url');
     client.run(true);
     client.emit('done');
     client.emit('nojob');
-
-    setTimeout(function() {
-      mock.verify();
-      done();
-    }, 10);
+    // Force nojob's delayed GET to run.
+    sandbox.clock.tick(wpt_client.NO_JOB_PAUSE);
   });
 
   it('should emit shutdown if it receives shutdown in its request',
-      function(done) {
+      function() {
     var client = new wpt_client.Client(WPT_SERVER, LOCATION);
 
-    client.on('shutdown', function() {
-      done();
+    var shutdownSpy = sandbox.spy();
+    client.on('shutdown', shutdownSpy);
+
+    var response = new Stream();
+    response.setEncoding = function() {};
+    sandbox.stub(http, 'get', function(url, responseCb) {
+      url.href.should.match(new RegExp('^' + WPT_SERVER));
+      responseCb(response);
+      response.emit('data', 'shutdown');
+      response.emit('end');
     });
 
-    var processResponseStub = sinon.stub(wpt_client, 'processResponse',
-        function(res, callback) {
-      logger.info('process response callback');
-      callback('shutdown');
-    });
-    test_utils.registerStub(processResponseStub);
+    client.run(/*forever=*/true);
+    should.ok(shutdownSpy.calledOnce);
+  });
 
-    client.requestNextJob_();
+  it('should run a 3-run job 3 times', function() {
+    var numJobRuns = 0;
+
+    var client = new wpt_client.Client('url', 'test');
+    var doneSpy = sandbox.spy();
+    client.on('done', doneSpy);
+
+    client.onStartJobRun = function(job) {
+      logger.debug('New job run');
+      numJobRuns += 1;
+      // Simulate an async runFinished() call as in the real system.
+      global.setTimeout(function() {
+        job.runFinished();
+      }, 0);
+    };
+
+    var getResponse = new Stream();
+    getResponse.setEncoding = function() {};
+    sandbox.stub(http, 'get', function(url, responseCb) {
+      logger.debug('Stub GET %s', url.href);
+      url.href.should.match(/\/work\/getwork/);
+      responseCb(getResponse);
+      getResponse.emit('data', JSON.stringify({
+        'Test ID': '121106_WK_M',
+        runs: 3
+      }));
+      getResponse.emit('end');
+    });
+    // Must use a different Stream object for the POST, because getResponse
+    // already has other completely unrelated event callbacks registered.
+    var postResponse = new Stream();
+    postResponse.setEncoding = function() {};
+    sandbox.stub(http, 'request',
+        function(options, responseCb) {
+      logger.debug('Stub POST http://%s:%s%s',
+          options.host, options.port, options.path);
+      options.path.should.match(/\/work\/workdone/);
+      responseCb(postResponse);
+      return {  // Fake request object
+        end: function(/*body, encoding*/) {
+          postResponse.emit('end');  // No data in the response
+        }
+      };
+    });
+
+    client.run(/*forever=*/false);
+    sandbox.clock.tick(1);  // Trigger delayed runFinished from onStartJobRun.
+    should.ok(doneSpy.calledOnce);
+    should.equal(3, numJobRuns);
   });
 
   it('should set job error and call done on job uncaught exception',
       function() {
-    var e = 'this is an error';
-    var job = new wpt_client.Job({}, {});
-    var doneSpy = sinon.spy();
-    sinon.stub(job, 'done', doneSpy);
-    job.onUncaughtException_(e);
-    should.equal(job.error, e);
-    e = 'this is the second error';
-    wpt_client.Client.prototype.onUncaughtException_(job, e);
-    should.equal(job.error, e);
-    should.ok(doneSpy.calledTwice);
+    var e = new Error('this is an error');
+    var fakeTask = {};
+    fakeTask[wpt_client.JOB_TEST_ID] = 'test';
+    var client = new wpt_client.Client('url');
+    client.onStartJobRun = function() {};  // Do nothing, wait for exception.
+    sandbox.stub(client, 'postResultFile_',
+        function(job, resultFile, fields, callback) {
+      logger.debug('stub postResultFile_ f=%j fields=%j', resultFile, fields);
+      should.equal(job.error, e.message);
+      callback();
+    });
+    var doneSpy = sandbox.spy();
+    client.on('done', function(job) {
+      logger.debug('client done');
+      should.equal(job.error, e.message);
+      // Second uncaught exception outside of job processing is ignored.
+      // Spy on logger.critical just for this exception and make sure
+      // that we log the message "outside of job".
+      var spyLogCritical = sandbox.spy(logger, 'critical');
+      try {
+        wpt_client.process.emit('uncaughtException', e);
+        should.ok(spyLogCritical.calledWithMatch(/outside of job/));
+      } finally {
+        spyLogCritical.restore();
+      }
+      doneSpy();
+    }.bind(this));
+    client.processJobResponse_('{"Test ID": "test"}');
+    logger.debug('emitting uncaught');
+    // First uncaught exception finishes the job.
+    wpt_client.process.emit('uncaughtException', e);
+    should.ok(doneSpy.calledOnce);
   });
 });

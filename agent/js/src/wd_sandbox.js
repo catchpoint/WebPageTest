@@ -94,6 +94,7 @@ function SandboxedDriver(driver, wdSandbox, sandboxedDriverListener) {
 
   var realSchedule = driver.schedule;
   driver.schedule = function(command, description) {
+    logger.extra('User script: %s', description);
     var commandArgs = arguments;
     wdSandbox.promise.Application.getInstance().schedule(
         'onBeforeDriverAction: ' + description, function() {

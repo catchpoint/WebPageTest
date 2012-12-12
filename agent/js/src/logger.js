@@ -74,6 +74,18 @@ exports.isLogging = function(level) {
 };
 
 /**
+ * Parses a stack trace line like this:
+ * " at qualified.function.<name> (/source/file.js:123:456)"
+ * The regex strips "Object." and "exports." prefixes, strips file path,
+ * and matches positional groups 1:function 2:file 3:line.
+ */
+var STACK_LINE_RE_ = new RegExp(
+    // Function name
+    /^ +at +(?:Object\.)?(?:exports\.)?([\S \[\]]+) +/.source +
+    // file:line
+    /\((?:\S+\/)?(\S+?):(\d+)[\s\S]*/.source);
+
+/**
  * log is a wrapper for the visionmedia jog module that will:
  * a) automatically wrap strings in an object to get maximum info.
  * b) use jog.info because it stores the most information.
@@ -82,27 +94,36 @@ exports.isLogging = function(level) {
  * d) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
  *    greater than or equal to the maximum log level.
  *
- * @param  {String} level the log level (can be grepped with jog command line).
- * @param  {Object/String} data an object or string (which will be converted to
- *                         an object) that will be logged.
+ * @param  {String} levelName the log level.
+ * @param  {Object|String} data an object or string
+ *    (which will be converted to an object for jog) that will be logged.
 */
 function log(levelName, levelProperties, data) {
   'use strict';
   if (levelProperties[0] <= exports.MAX_LOG_LEVEL) {
+    var stamp = new Date();  // Take timestamp early for better precision
+    var sourceAnnotation = new Error().stack.split('\n', 3)[2].replace(
+        STACK_LINE_RE_, '$2:$3 $1');
     var message;
+    var logData = data;
     if (typeof data === 'string') {
       message = util.format.apply(
           /*this=*/undefined, Array.prototype.slice.call(arguments, 2)).trim();
-      data = { data: message };
+      logData = { message: message, source: sourceAnnotation };
+    } else {
+      logData = data.slice();  // Don't modify the original
+      data.source = sourceAnnotation;
     }
     if (exports.LOG_TO_CONSOLE) {
       if (!message) {
         message = JSON.stringify(data);
       }
-      levelProperties[1](levelProperties[2] + ': ' + message);
+      levelProperties[1](levelProperties[2] + ' ' +
+          stamp.toISOString().slice(5,-1).replace('T', 'Z').replace('-', '') +
+          ' ' + sourceAnnotation + ': ' + message);
     }
 
-    jsonFileLogger.info(levelName, data);
+    jsonFileLogger.info(levelName, logData);
   }
 }
 

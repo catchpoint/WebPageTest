@@ -26,37 +26,85 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-exports.stubs_ = [];
+var logger = require('logger');
+var sinon = require('sinon');
+var timers = require('timers');
 
-/**
- * registerStub adds a stubs to the list of stubs
- *
- * @param  {Object} stub to be restored at the end of the test.
- */
-exports.registerStub = function(stub) {
-  'use strict';
-  exports.stubs_.push(stub);
-};
-
-/**
- * restoreStubs should be called after every function and will automatically
- * cleanup any stubs that were created in the test
- */
-exports.restoreStubs = function() {
-  'use strict';
-  while (exports.stubs_.length > 0) {
-    exports.stubs_.shift().restore();
-  }
-};
 
 /**
  * failTest asserts a failure with a description
  *
  * @param {String} desc is the error message that will be thrown.
-*/
+ */
 exports.failTest = function(desc) {
   'use strict';
-  (function () {
+  function throwError () {
     throw new Error(desc);
-  }).should.not.throw();
+  }
+  throwError.should.not.throw();
+};
+
+/**
+ * Generic timer function fake for use in fakeTimers.
+ */
+var fakeTimerFunction = function(sandbox, method, args) {
+  'use strict';
+  logger.info('%s(%s)', method, Array.prototype.slice.apply(args));
+  return sandbox.clock[method].apply(sandbox.clock, args);
+};
+
+// Timer functions to fake/unfake
+var fakeTimerFunctions = [
+  'setTimeout', 'clearTimeout', 'setInverval', 'clearInterval'];
+
+/**
+ * Makes the sandbox use fake timers and replaces them in the 'timers' module.
+ *
+ * When a well sandboxed module like webdriver calls global timer functions,
+ * they are resolved at module import time and cannot be faked out. We use
+ * the fact that the default global timer functions invoke the corresponding
+ * ones in the 'timers' module -- we substitute fakes into that module.
+ * SinonJS (fake_timers) by itself does not do that.
+ *
+ * In MochaJS tests, call this function from beforeEach, and call unfakeTimers
+ * from afterEach. Call sandbox.verifyAndRestore separately in afterEach.
+ *
+ * @param {!sinon.sandbox} sandbox a SinonJS sandbox used by the test.
+ */
+exports.fakeTimers = function(sandbox) {
+  'use strict';
+  if (sandbox.origTimerFunctions) {
+    throw new Error('call unfakeTimers() before a repeat call to fakeTimers()');
+  }
+  logger.extra('Faking timer functions %j', fakeTimerFunctions);
+  sandbox.origTimerFunctions = {};
+  sandbox.useFakeTimers();
+  fakeTimerFunctions.forEach(function(method) {
+    sandbox.origTimerFunctions[method] = timers[method];
+    timers[method] = function () {
+      return fakeTimerFunction(sandbox, method, arguments);
+    };
+  });
+  // For some reason the faked functions don't actually get called without this:
+  timers.setInterval = function () {
+    return fakeTimerFunction(sandbox, 'setInterval', arguments);
+  };
+};
+
+/**
+ * Restores functions in the 'timers' module and clears them in the sandbox.
+ *
+ * @param {!sinon.sandbox} sandbox a SinonJS sandbox used by the test.
+ */
+exports.unfakeTimers = function(sandbox) {
+  'use strict';
+  if (sandbox.origTimerFunctions) {
+    logger.extra('Unfaking timer functions');
+    fakeTimerFunctions.forEach(function(method) {
+      timers[method] = sandbox.origTimerFunctions[method];
+    });
+    delete sandbox.origTimerFunctions;
+    // The Sinon fake_timers add it, and it trips Mocha global leak detection.
+    delete global.timeouts;
+  }
 };

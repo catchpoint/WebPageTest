@@ -25,310 +25,196 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, afterEach: true, it: true*/
+/*global describe: true, before: true, beforeEach: true, afterEach: true,
+  it: true*/
 
+var devtools = require('devtools');
+var events = require('events');
+var logger = require('logger');
+var process_utils = require('process_utils');
 var sinon = require('sinon');
 var should = require('should');
-var child_process = require('child_process');
-var vm = require('vm');
-var devtools = require('devtools');
-var devtools_network = require('devtools_network');
-var devtools_page = require('devtools_page');
-var devtools_timeline = require('devtools_timeline');
-var webdriver = require('webdriver');
-var logger = require('logger');
-var agent_main = require('agent_main');
-var wd_server = require('wd_server');
-var wpt_client = require('wpt_client');
 var test_utils = require('./test_utils.js');
+var timers = require('timers');
+var webdriver = require('webdriver');
+var wd_server = require('wd_server');
+var wd_sandbox = require('wd_sandbox');
 
 
+/**
+ * All tests are synchronous, do NOT use Mocha's function(done) async form.
+ *
+ * The synchronization is via:
+ * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
+ * 2) stubbing out anything else with async callbacks, e.g. process or network.
+ */
 describe('wd_server small', function() {
   'use strict';
 
+  var app = webdriver.promise.Application.getInstance();
+  process_utils.injectWdAppLogging('wd_server app', app);
+  // Set to a small number of WD event loop ticks to reduce no-op ticks.
+  wd_server.WAIT_AFTER_ONLOAD_MS =
+      webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 2;
+
+  var sandbox;
+
+  beforeEach(function() {
+    sandbox = sinon.sandbox.create();
+    test_utils.fakeTimers(sandbox);
+    // Re-create stub process for each test to avoid accumulating listeners.
+    wd_server.process = new events.EventEmitter();
+    wd_server.process.send = function() {};
+    wd_server.process.disconnect = function() {};
+
+    app.reset();  // We reuse the app across tests, clean it up.
+    wd_server.WebDriverServer.init({});
+  });
+
   afterEach(function() {
-    test_utils.restoreStubs();
+    // Call unfakeTimers before verifyAndRestore, which may throw.
+    test_utils.unfakeTimers(sandbox);
+    sandbox.verifyAndRestore();
+    wd_server.process = process;
   });
 
   before(function() {
-    agent_main.setSystemCommands();
     // Needed because in the local context process has no send method
     process.send = function(/*m, args*/) {};
   });
 
-  //TODO (gpeal): remove sinon.test?
-  it('should require selenium jar and devtools2har jar', sinon.test(function() {
-    var mainRunStub = sinon.stub(agent_main, 'run', function() { });
-    test_utils.registerStub(mainRunStub);
-    var clientStub = sinon.stub(wpt_client, 'Client', function() { });
-    test_utils.registerStub(clientStub);
-
-
-    var flags = {};
-    var runMainWithFlags = function() {
-      agent_main.main(flags);
-    };
-
-    runMainWithFlags.should.throwError();
-
-
-    flags.selenium_jar = 'jar';
-    runMainWithFlags.should.throwError();
-
-    flags.selenium_jar = undefined;
-    flags.devtools2har_jar = 'jar';
-    runMainWithFlags.should.throwError();
-
-    flags.selenium_jar = 'jar';
-
-    agent_main.main(flags);
-    should.ok(agent_main.run.calledOnce);
-  }));
-
-  it('should be able to run a script', function() {
-    var script_ = '/*navigate  google.com*/' +
-      'driver  = new webdriver.Builder().build();' +
-      'driver.get("http://www.google.com");' +
-      'driver.findElement(webdriver.By.name("q")).sendKeys("webdriver");' +
-      'driver.findElement(webdriver.By.name("btnG")).click();' +
-      'driver.wait(function()  {return  driver.getTitle();' +
-      '});';
-    var sandbox_ = {a: function() {}, b: 10, c: 'abc'};
-    var vmStub = sinon.stub(vm, 'runInNewContext',
-        function(script, sandbox, description) {
-      should.equal(script_, script);
-      should.equal(sandbox_, sandbox_);
+  it('should run a sandboxed session', function() {
+    var wdContext = {promise: webdriver.promise, isSetFromScript: false};
+    var isIdleReached = false;
+    sandbox.stub(wd_sandbox, 'createSandboxedWdNamespace', function() {
+      return app.schedule('stub sandboxed WD namespace', function() {
+        return wdContext;
+      });
     });
-    test_utils.registerStub(vmStub);
-    wd_server.WebDriverServer.script_ = script_;
+    wd_server.WebDriverServer.script_ = 'webdriver.isSetFromScript = true';
+    app.on(webdriver.promise.Application.EventType.IDLE, function() {
+      isIdleReached = true;
+    });
 
-    wd_server.WebDriverServer.runScript_(sandbox_);
+    wd_server.WebDriverServer.runSandboxedSession_({});
+    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    should.ok(wdContext.isSetFromScript);
+    should.ok(isIdleReached);
   });
 
-  it('should be able to schedule a timeout to let the browser coalesce',
-      function() {
-    var description_ = 'Waiting for browser to coalesce';
-    var timeout_ = 1337;
-    var sandboxWdApp = {
-      scheduleTimeout: function(description, timeout) {
-        should.equal(description_, description);
-        should.equal(timeout_, timeout);
-      }
-    };
-    var wdSandbox = {
-      promise: {
-        Application: {
-          getInstance: function() { return sandboxWdApp; }}}};
-
-      wd_server.WebDriverServer.waitForCoalesce_(wdSandbox, timeout_);
+  it('should fail to connect if the server jar is not set', function() {
+    wd_server.WebDriverServer.connect.should.throwError();
   });
 
-  it('should be able to receive devtools messages ' +
-    'and devtools timeline messages', function() {
-    var devToolsTimelineMessage = {method: 'Timeline.eventRecorded',
-                                   params: {record:
-                                               {startTime: 1344629182997.628,
-                                                data: {},
-                                                type: 'BeginFrame',
-                                                'usedHeapSize': 16067872,
-                                                'totalHeapSize': 23725824
-                                               }
-                                             }
-                                  };
-    var devToolsMessage = {method: 'Network.dataReceived',
-                           params: {requestId: '9.17',
-                                     'timestamp': 1344629364.669511,
-                                     'dataLength': 22,
-                                     'encodedDataLength': 1208
-                                    }
-                          };
-
-    wd_server.WebDriverServer.init({});
-
-    wd_server.WebDriverServer.onDevToolsMessage_(devToolsTimelineMessage);
-    wd_server.WebDriverServer.onDevToolsMessage_(devToolsMessage);
-    wd_server.WebDriverServer.onDevToolsMessage_(devToolsMessage);
-    wd_server.WebDriverServer.onDevToolsMessage_(devToolsTimelineMessage);
-
-    should.equal(wd_server.WebDriverServer.devToolsTimelineMessages_[0],
-      devToolsTimelineMessage);
-    should.equal(wd_server.WebDriverServer.devToolsTimelineMessages_[1],
-      devToolsTimelineMessage);
-    should.equal(wd_server.WebDriverServer.devToolsTimelineMessages_[2],
-      undefined);
-
-    should.equal(wd_server.WebDriverServer.devToolsMessages_[0],
-      devToolsMessage);
-    should.equal(wd_server.WebDriverServer.devToolsMessages_[1],
-      devToolsMessage);
-    should.equal(wd_server.WebDriverServer.devToolsMessages_[2],
-      undefined);
-  });
-
-/* TODO(klm): the runScript_ test should handle this
-  it('should be able to make a sandbox with console, ' +
-     'setTimeout, and arbitrary seeds', function() {
-    var seedFunction1 = function() {
-      return '1';
-    };
-    var seedFunction2 = function() {
-      return '2';
-    };
-    var seeds = {seedFunction1: seedFunction1, seedFunction2: seedFunction2,
-      seed3: 'abc', seed4: 123};
-
-    var sandbox = wd_server.WebDriverServer.createSandbox_(seeds);
-    should.equal(typeof sandbox.console, 'object');
-    should.equal(typeof sandbox.setTimeout, 'function');
-    should.equal(sandbox.seedFunction1, seedFunction1);
-    should.equal(sandbox.seedFunction2, seedFunction2);
-    should.equal(sandbox.seed3, 'abc');
-    should.equal(sandbox.seed4, 123);
-  });
-*/
-
-  it('should fail if you try to start the webdriver server before ' +
-     'setting the server jar', function() {
-    wd_server.WebDriverServer.seleniumJar_ = undefined;
-    wd_server.WebDriverServer.startServer_.should.throwError();
-  });
-
-  it('should be able to set the driver', function() {
-    var wdNamespace = 'chrome wd namespace';
+  it('should set the driver', function() {
+    var wdNamespace = {wd: 'chrome wd namespace'};
     var driver = 'this is a driver';
-    var connectDevToolsSpy = sinon.spy();
-    var connectDevToolsStub = sinon.stub(wd_server.WebDriverServer,
-        'connectDevTools_', connectDevToolsSpy);
-    test_utils.registerStub(connectDevToolsStub);
+    var connectDevToolsStub = sandbox.stub(wd_server.WebDriverServer,
+        'connectDevTools_');
 
+    wd_server.WebDriverServer.onDriverBuild(
+        driver, {browserName: 'chrome'}, wdNamespace);
 
-    wd_server.WebDriverServer.onDriverBuild(driver, { browserName: 'chrome' },
-        wdNamespace);
-
-    should.ok(connectDevToolsSpy.withArgs(wdNamespace).calledOnce);
+    should.ok(connectDevToolsStub.withArgs(wdNamespace).calledOnce);
     should.equal(wd_server.WebDriverServer.driver_, driver);
+    should.equal(wd_server.WebDriverServer.driverBuildTime_, Date.now());
   });
 
-  it('should stop and emit error on onError_',
-      function(done) {
+  it('should stop and emit error on onError_', function() {
     var error = 'this is an error';
-    var stopSpy = sinon.spy();
-    var stopStub = sinon.stub(wd_server.WebDriverServer, 'stop', stopSpy);
-    test_utils.registerStub(stopStub);
+    var sendStub = sandbox.stub(wd_server.process, 'send');
+    var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
 
-    var processSendStub = sinon.stub(process, 'send', function(m) {
-      should.equal(m.cmd, 'error');
-      should.equal(m.e, error);
-      done();
-    });
-    test_utils.registerStub(processSendStub);
+    wd_server.WebDriverServer.onError_(new Error(error));
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
 
-    wd_server.WebDriverServer.onError_(error);
-
-    should.ok(stopSpy.calledOnce);
-  });
-
-  it('should try to quit the driver and kill the server process on stop',
-      function() {
-    var quitDriverTimesCalled = 0;
-    var quitDriver = function() {
-      quitDriverTimesCalled += 1;
-      return { then: function(callback, callback2) { callback(); } };
-    };
-    wd_server.WebDriverServer.driver_ = { quit: quitDriver };
-
-    wd_server.WebDriverServer.serverProcess_ = {};
-    var handler = function() { return 'this is the exception handler'; };
-    wd_server.WebDriverServer.uncaughtExceptionHandler_ = handler;
-
-
-    var removeListenerSpy = sinon.spy();
-    var removeListenerStub = sinon.stub(process, 'removeListener',
-        removeListenerSpy);
-    test_utils.registerStub(removeListenerStub);
-
-
-    var killServerProcessSpy = sinon.spy();
-    var killServerProcessStub = sinon.stub(wd_server.WebDriverServer,
-        'killServerProcess', killServerProcessSpy);
-    test_utils.registerStub(killServerProcessStub);
-
-    wd_server.WebDriverServer.stop();
-
-    should.ok(removeListenerSpy.calledOnce);
-    should.ok(removeListenerSpy.calledWith('uncaughtException', handler));
-    should.equal(quitDriverTimesCalled, 1);
-    should.ok(killServerProcessSpy.calledOnce);
+    should.ok(sendStub.calledOnce);
+    should.equal(sendStub.firstCall.args[0].cmd, 'error');
+    should.equal(sendStub.firstCall.args[0].e, error);
+    should.ok(disconnectStub.calledOnce);
   });
 
   it('should correctly handle uncaught exceptions', function() {
-    var e = 'this is an error';
-    var processSendStub = sinon.stub(process, 'send', function(m) {
-      should.equal(m.cmd, 'error');
-      should.equal(m.e, e);
-    });
-    var stopSpy = sinon.spy();
-    var stopStub = sinon.stub(wd_server.WebDriverServer, 'stop', stopSpy);
-    test_utils.registerStub(stopStub);
+    // connect() does this
+    wd_server.process.once('uncaughtException',
+        wd_server.WebDriverServer.uncaughtExceptionHandler_);
 
-    wd_server.WebDriverServer.onUncaughtException_(e);
-    should.ok(stopSpy.calledOnce);
+    var error = 'this is an error';
+    var sendStub = sandbox.stub(wd_server.process, 'send');
+    var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
+
+    wd_server.process.emit('uncaughtException', new Error(error));
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+
+    should.ok(sendStub.calledOnce);
+    should.equal(sendStub.firstCall.args[0].cmd, 'error');
+    should.equal(sendStub.firstCall.args[0].e, error);
+    should.ok(disconnectStub.calledOnce);
   });
 
-  it('should properly try to connect the devtools', function() {
-    var wdNamespace = {
-      promise: {
-        Application: {
-          getInstance: function() {
-            return {
-              scheduleWait: function(desription, callback) { callback(); }
-            };
-          }
-        },
-        Deferred: function() { return { resolve: function() { } }; }
-      }
+  it('should send job results and kill the driver and server when done',
+      function() {
+    var fakeDriver = {};
+    var driverQuitSpy = sinon.spy();
+    fakeDriver.quit = function() {
+      return app.schedule('Fake WebDriver.quit()', driverQuitSpy);
     };
+    wd_server.WebDriverServer.driver_ = fakeDriver;
 
-    var devtoolsConnectSpy = sinon.spy();
-    var devtoolsConnectStub = sinon.stub(devtools.DevTools.prototype, 'connect',
-        function() {
-          this.emit('connect');
-          this.emit('message');
-        });
-    test_utils.registerStub(devtoolsConnectStub);
+    var uncaughtStub = sandbox.stub(
+        wd_server.WebDriverServer, 'uncaughtExceptionHandler_');
+    // connect() does this, we verify below that it gets unset while stopping.
+    wd_server.process.once('uncaughtException',
+        wd_server.WebDriverServer.uncaughtExceptionHandler_);
 
-    var networkToolsEnableSpy = sinon.spy();
-    var networkToolsEnableStub = sinon.stub(devtools_network.Network.prototype,
-        'enable', networkToolsEnableSpy);
-    test_utils.registerStub(networkToolsEnableStub);
+    var fakeChildProcess = {};
+    fakeChildProcess.kill = function() {};
+    var childKillStub = sandbox.stub(fakeChildProcess, 'kill');
+    wd_server.WebDriverServer.serverProcess_ = fakeChildProcess;
 
-    var pageToolsEnableSpy = sinon.spy();
-    var pageToolsEnableStub = sinon.stub(devtools_page.Page.prototype,
-        'enable', pageToolsEnableSpy);
-    test_utils.registerStub(pageToolsEnableStub);
+    var sendStub = sandbox.stub(wd_server.process, 'send');
+    var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
 
-    var timelineToolsEnableSpy = sinon.spy();
-    var timelineToolsEnableStub =
-        sinon.stub(devtools_timeline.Timeline.prototype,
-        'enable', timelineToolsEnableSpy);
-    test_utils.registerStub(timelineToolsEnableStub);
+    wd_server.WebDriverServer.done_();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
 
-    var timelineToolsStartSpy = sinon.spy();
-    var timelineToolsStartStub =
-        sinon.stub(devtools_timeline.Timeline.prototype,
-        'start', timelineToolsStartSpy);
-    test_utils.registerStub(timelineToolsStartStub);
+    // Verify uncaught handler unset: uncaughtStub not called again, still once.
+    wd_server.process.emit('uncaughtException', new Error('gaga'));
+    should.ok(!uncaughtStub.called);
 
-    var onDevtoolsMessageSpy = sinon.spy();
-    var onDevtoolsMessageStub = sinon.stub(wd_server.WebDriverServer,
-        'onDevToolsMessage_', onDevtoolsMessageSpy);
+    should.ok(driverQuitSpy.calledOnce);
+    should.ok(childKillStub.calledOnce);
+    should.ok(sendStub.calledOnce);
+    should.equal(sendStub.firstCall.args[0].cmd, 'done');
+    should.ok(disconnectStub.calledOnce);
+  });
 
-    wd_server.WebDriverServer.connectDevTools_(wdNamespace);
+  it('should connect the devtools', function() {
+    var devTools;
+    sandbox.stub(devtools.DevTools.prototype, 'connect', function() {
+      devTools = this;
+      this.emit('connect');
+    });
 
-    should.ok(networkToolsEnableSpy.calledOnce);
-    should.ok(pageToolsEnableSpy.calledOnce);
-    should.ok(timelineToolsEnableSpy.calledOnce);
-    should.ok(timelineToolsStartSpy.calledOnce);
-    should.ok(onDevtoolsMessageSpy.calledOnce);
+    var commands = [];
+    sandbox.stub(devtools.DevTools.prototype, 'command',
+        function(message, callback) {
+      message.result = "ok";
+      commands.push(message.method);
+      callback(message);
+    });
+
+    wd_server.WebDriverServer.connectDevTools_(webdriver);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    var pageMessage = {method: 'Page.gaga'};
+    var timelineMessage = {method: 'Timeline.ulala'};
+    devTools.emit('message', pageMessage);
+    devTools.emit('message', timelineMessage);
+
+    ['Network.enable', 'Page.enable', 'Timeline.start'].should.eql(commands);
+    [pageMessage].should.eql(wd_server.WebDriverServer.devToolsMessages_);
+    [timelineMessage].should.eql(
+        wd_server.WebDriverServer.devToolsTimelineMessages_);
   });
 });
