@@ -49,7 +49,7 @@ exports.failTest = function(desc) {
  */
 var fakeTimerFunction = function(sandbox, method, args) {
   'use strict';
-  logger.info('%s(%s)', method, Array.prototype.slice.apply(args));
+  logger.extra('%s(%s)', method, Array.prototype.slice.apply(args));
   return sandbox.clock[method].apply(sandbox.clock, args);
 };
 

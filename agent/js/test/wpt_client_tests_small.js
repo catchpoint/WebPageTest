@@ -182,7 +182,7 @@ describe('wpt_client small', function() {
     sandbox.clock.tick(wpt_client.NO_JOB_PAUSE);
   });
 
-  it('should emit shutdown if it receives shutdown in its request',
+  it('should emit shutdown if it receives shutdown as the next job response',
       function() {
     var client = new wpt_client.Client(WPT_SERVER, LOCATION);
 
@@ -264,6 +264,13 @@ describe('wpt_client small', function() {
         function(job, resultFile, fields, callback) {
       logger.debug('stub postResultFile_ f=%j fields=%j', resultFile, fields);
       should.equal(job.error, e.message);
+      var isFoundErrorField = false;
+      fields.forEach(function(nameValue) {
+        if ('error' === nameValue[0]) {
+          isFoundErrorField = true;
+          should.equal(e.message, nameValue[1]);
+        }
+      });
       callback();
     });
     var doneSpy = sandbox.spy();

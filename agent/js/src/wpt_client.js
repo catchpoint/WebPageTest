@@ -256,6 +256,7 @@ Client.prototype.startNextRun_ = function(job) {
   'use strict';
   if (job.runNumber < job.runs) {
     job.runNumber += 1;
+    job.error = undefined;  // Reset previous run's error, if any.
     // For comparison in finishRun_()
     this.currentJob_ = job;
     // Set up job timeout
@@ -273,13 +274,13 @@ Client.prototype.startNextRun_ = function(job) {
       try {
         this.onStartJobRun(job);
       } catch (e) {
-        logger.error('Exception while running the job: %s', e.message);
-        job.error = e;
+        logger.error('Exception while running the job: %s', e);
+        job.error = e.message;
         job.runFinished();
       }
     } else {
       logger.critical('Client.onStartJobRun must be set');
-      job.error = new Error('Agent is not configured to process jobs');
+      job.error = 'Agent is not configured to process jobs';
       job.runFinished();
     }
   }
@@ -374,20 +375,27 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
 Client.prototype.submitResult_ = function(job, callback) {
   'use strict';
   logger.debug('submitResult_: job=%s', job.id);
-  // TODO(klm): Figure out how to submit failed jobs (with job.error)
   var filesToSubmit = job.resultFiles.slice();
+  var fields;
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
   var submitNextResult = function() {
     var resultFile = filesToSubmit.shift();
     if (resultFile) {
-      var fields = [
+      fields = [
           ['_runNumber', String(job.runNumber)],
           ['_cacheWarmed', '0']];
+      if (job.error) {
+        fields.push(['error', job.error]);
+      }
       this.postResultFile_(job, resultFile, fields, submitNextResult);
     } else {
       if (job.runNumber === job.runs) {
-        this.postResultFile_(job, undefined, [['done', '1']], function() {
+        fields = [['done', '1']];
+        if (job.error) {
+          fields.push(['testerror', job.error]);
+        }
+        this.postResultFile_(job, undefined, fields, function() {
           if (callback) {
             callback();
           }

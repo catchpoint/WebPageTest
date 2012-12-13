@@ -68,15 +68,15 @@ exports.chromedriver = undefined;
 function deleteHarTempFiles(callback) {
   'use strict';
   var files = [DEVTOOLS_EVENTS_FILE_, HAR_FILE_];
-  function unlink (file, e) {
-    if (e) {
-      logger.error('Unlink error for %s: %s', file, e);
+  function unlink (prevFile, prevError) {
+    if (prevError) {
+      logger.error('Unlink error for %s: %s', prevFile, prevError);
     }
     var nextFile = files.pop();
-    if (file) {
-      fs.unlink(nextFile, unlink.bind(undefined, file));
+    if (nextFile) {
+      fs.unlink(nextFile, unlink.bind(undefined, nextFile));
     } else if (callback) {
-      callback(e);
+      callback(prevError);
     }
   }
   unlink();
@@ -90,28 +90,40 @@ function deleteHarTempFiles(callback) {
  * @param {String} [pageId] the page ID string for (the only page) in the HAR.
  * @param {String} [browserName] browser name for the HAR.
  * @param {String} [browserVersion] browser version for the HAR.
- * @param {Function(String)} harCallback will be called with HAR as a string.
+ * @param {Function(String)} harCallback the callback to call upon completion:
+ *     #param {String} harContent HAR content.
+ *     #param {Error} [e] exception, if any.
  */
 function convertDevToolsToHar(
     devToolsMessages, pageId, browserName, browserVersion, harCallback) {
   'use strict';
-  deleteHarTempFiles();
-  fs.writeFile(DEVTOOLS_EVENTS_FILE_, JSON.stringify(devToolsMessages), 'UTF-8',
-      function(e) {
+  deleteHarTempFiles(function(e) {
     if (e) {
       harCallback('', e);
     } else {
-      devtools2har.devToolsToHar(
-          DEVTOOLS_EVENTS_FILE_, HAR_FILE_, pageId, browserName, browserVersion,
-          function() {
-        fs.readFile(HAR_FILE_, 'UTF-8', function(e, data) {
-          if (e) {
-            logger.error('Error reading results.har: %s', e);
-            harCallback('', e);
-          } else {
-            deleteHarTempFiles(harCallback.bind(undefined, data));
-          }
-        });
+      fs.writeFile(
+          DEVTOOLS_EVENTS_FILE_, JSON.stringify(devToolsMessages), 'UTF-8',
+          function(e) {
+        if (e) {
+          harCallback('', e);
+        } else {
+          devtools2har.devToolsToHar(
+              DEVTOOLS_EVENTS_FILE_, HAR_FILE_,
+              pageId, browserName, browserVersion, function(e) {
+            if (e) {
+              deleteHarTempFiles(harCallback.bind(undefined, '', e));
+            } else {
+              fs.readFile(HAR_FILE_, 'UTF-8', function(e, data) {
+                if (e) {
+                  logger.error('Error reading results.har: %s', e);
+                  deleteHarTempFiles(harCallback.bind(undefined, data, e));
+                } else {
+                  deleteHarTempFiles(harCallback.bind(undefined, data));
+                }
+              });
+            }
+          });
+        }
       });
     }
   });
@@ -301,6 +313,9 @@ Agent.prototype.startJobRun_ = function(job) {
     this.wdServer_.on('message', function(ipcMsg) {
       logger.debug('got IPC: %s', ipcMsg.cmd);
       if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
+        if ('error' === ipcMsg.cmd) {
+          job.error = ipcMsg.e;
+        }
         this.scheduleProcessDone_(ipcMsg, job);
         this.scheduleCleanup_();
         // Do this only at the very end, as it starts a new run of the job.

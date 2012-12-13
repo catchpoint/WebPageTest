@@ -77,12 +77,14 @@ function devToolsToHar(
   logger.info('Starting devtools2har: %s %j', JAVA_COMMAND_, javaArgs);
   var serverProcess = child_process.spawn(JAVA_COMMAND_, javaArgs);
   serverProcess.on('exit', function(code, signal) {
-    logger.info('devtools2har exit code %d, signal %s', code, signal);
     if (code === 0) {
+      logger.info('devtools2har exit code %d, signal %s', code, signal);
       callback();
     } else {
-      throw new Error(
+      var e = new Error(
           'devtools2har failed, exit code ' + code + ', signal ' + signal);
+      logger.error(e);
+      callback(e);
     }
   });
   serverProcess.stdout.on('data', function(data) {

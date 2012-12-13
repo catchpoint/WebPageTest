@@ -51,7 +51,19 @@ exports.WAIT_AFTER_ONLOAD_MS = 10000;
  *                 browserName -- Selenium name of the browser.
  *                 browserVersion -- Selenium version of the browser.
  */
-var WebDriverServer = {
+exports.WebDriverServer = {
+  initIpc: function() {
+    'use strict';
+    exports.process.on('message', function(m) {
+      if (m.cmd === 'run') {
+        this.init(m);
+        this.connect();
+      } else {
+        logger.error('Unrecognized IPC command %s, message: %j', m.cmd, m);
+      }
+    }.bind(this));
+  },
+
   /**
    * init sets up the WebDriver server with all of the properties it needs to
    * complete a job. It also sets up an uncaught exception handler.
@@ -111,20 +123,23 @@ var WebDriverServer = {
    */
   startServer_: function(browserCaps) {
     'use strict';
-    if (!this.seleniumJar_) {
-      throw new Error('Must set server jar before starting WebDriver server');
-    }
     if (this.serverProcess_) {
       logger.error('prior WD server alive when launching');
       this.killServerProcess_();
     }
     var serverCommand, serverArgs, serverUrlPath;
     if ('chrome' === browserCaps.browserName) {
+      if (!this.chromedriver_) {
+        throw new Error('Must set chromedriver before starting it');
+      }
       // Run chromedriver directly.
       serverCommand = this.chromedriver_;
       serverArgs = ['-port=' + this.serverPort_];
       serverUrlPath = '';
     } else {
+      if (!this.seleniumJar_) {
+        throw new Error('Must set server jar before starting WebDriver server');
+      }
       // Fall back to the universal Java server
       serverCommand = this.javaCommand_;
       serverArgs = [
@@ -136,7 +151,7 @@ var WebDriverServer = {
     logger.info('Starting WD server: %s %j', serverCommand, serverArgs);
     var serverProcess = child_process.spawn(serverCommand, serverArgs);
     serverProcess.on('exit', function(code, signal) {
-      logger.info('WD EXIT code %s signal %s, sending IPC exit', code, signal);
+      logger.info('WD EXIT code %s signal %s', code, signal);
       this.serverProcess_ = undefined;
       this.serverUrl_ = undefined;
     }.bind(this));
@@ -545,14 +560,5 @@ var WebDriverServer = {
     system_commands.set('kill signal', 'SIGHUP', 'unix');
   }
 };
-exports.WebDriverServer = WebDriverServer;
 
-exports.process.on('message', function(m) {
-  'use strict';
-  if (m.cmd === 'run') {
-    exports.WebDriverServer.init(m);
-    exports.WebDriverServer.connect();
-  } else {
-    logger.error('Unrecognized IPC command %s, message: %j', m.cmd, m);
-  }
-});
+exports.WebDriverServer.initIpc();
