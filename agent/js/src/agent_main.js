@@ -69,14 +69,20 @@ function deleteHarTempFiles(callback) {
   'use strict';
   var files = [DEVTOOLS_EVENTS_FILE_, HAR_FILE_];
   function unlink (prevFile, prevError) {
-    if (prevError) {
+    if (prevError && !(prevError.code && 'ENOENT' === prevError.code)) {
+      // There is an error other than 'file not found'
       logger.error('Unlink error for %s: %s', prevFile, prevError);
     }
     var nextFile = files.pop();
     if (nextFile) {
       fs.unlink(nextFile, unlink.bind(undefined, nextFile));
     } else if (callback) {
-      callback(prevError);
+      if (prevError && !(prevError.code && 'ENOENT' === prevError.code)) {
+        // There is an error other than 'file not found'
+        callback(prevError);
+      } else {
+        callback();
+      }
     }
   }
   unlink();
