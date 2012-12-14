@@ -771,6 +771,7 @@ function ProcessHARText($testPath, $harIsFromSinglePageLoad)
                 // Read and parse the json HAR file
                 $parsedHar = json_decode(file_get_contents("{$testPath}/{$file}"), true);
                 gz_compress("{$testPath}/{$file}");
+                unlink("{$testPath}/{$file}");
                 if (!$parsedHar)
                 {
                     logMalformedInput("Failed to parse json file '{$file}'");
@@ -890,7 +891,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
     foreach ($parsedHar['log']['pages'] as $pagecount => $page)
     {
         $pageref = $page['id'];
-        $curPageData;
+        $curPageData = array();
 
         // Extract direct page data and save in data array
         $curPageData["url"] = $page['title'];
@@ -1076,6 +1077,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
 
         // Store the data for the next loops
         $pageData[$pageref] = $curPageData;
+        unset($curPageData);
     }
 
     // Iterate the entries
