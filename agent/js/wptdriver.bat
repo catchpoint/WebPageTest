@@ -71,11 +71,11 @@ set AGENT=%WPT_ROOT%\agent\js
 set DEVTOOLS2HAR_JAR=%WPT_ROOT%\webpagetest\lib\dt2har\target\dt2har-1.1-SNAPSHOT-jar-with-dependencies.jar
 
 rem Find the latest version of WD server jar, WDJS, platform-specific chromedriver
-for %%jar in (%WPT_ROOT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%jar
+for %%J in (%WPT_ROOT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%J
 
-for /D %%dir in (%WPT_ROOT%\lib\webdriver\javascript\node-*) do set WDJS_DIR=%%jar
+for /D %%D in (%WPT_ROOT%\lib\webdriver\javascript\node-*) do set WDJS_DIR=%%D
 
-for %%exe in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%jar
+for %%E in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%E
 
 set NODE_PATH="%AGENT%;%AGENT%\src;%WDJS_DIR%
 
