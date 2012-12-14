@@ -41,15 +41,11 @@ $page_description = "Run a free website speed test from around the globe using r
                             <li>
                                 <select name="device">
                                 <option value="">Select a device</option> 
-                                <option value="iphone50">Ottawa iPhone 5.0</option>
-                                <option value="android">Ottawa Galaxy S</option>
-                                <option value="nexus-s">Ottawa Nexus S</option>
-                                <option value="ipad">Ottawa iPad 1</option>
-                                <option value="ipad2">Ottawa iPad 2</option>
-                                <option value="xoom">Ottawa Motorola XOOM</option>
-                                <option value="apeters-iphone">Amsterdam iPhone 4.3</option>
-                                <option value="pmeenan-nexus-s">Dulles, VA Nexus S</option>
-                                <option value="isim50">Ohio iPhone Simulator, 3G Speed</option>
+                                <option value="iphone50-us">Cambridge, MA - iPhone 4 iOS 5</option>
+                                <option value="munich-iphone1">Munich, Germany - iPhone 4 iOS 5</option>
+                                <option value="ipad-us">Washington, DC iPad iOS 5</option>
+                                <option value="isim50">Ohio iPhone Simulator, 3G Speed iOS 5</option>
+                                <option value="pmeenan-nexus-s">Dulles, VA Nexus S Android 2.3</option>
                                 </select>
                             </li>
                             <li>
