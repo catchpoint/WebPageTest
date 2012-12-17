@@ -367,14 +367,17 @@ $page_description = "Website performance test result$testLabel.";
                     array_key_exists('errors', $test['testinfo']) && 
                     array_key_exists($run, $test['testinfo']['errors']) && 
                     strlen($test['testinfo']['errors'][$run])) {
-                    $error_str = $test['testinfo']['errors'][$run];
+                    $error_str = 'Test Error: ' . $test['testinfo']['errors'][$run];
                 } elseif (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
-                    $error_str = 'Data is missing.';
+                    if ($testComplete)
+                        $error_str = 'Test Error: Data is missing.';
+                    else
+                        $error_str = 'Waiting for test result...';
                 }
                 if( $runs > 1 )
                     echo '<h4><a name="run' . $run. '">Run ' . $run . ':</a></h4>';
                 if (isset($error_str)) {
-                    echo '<p>Test Error: ' . htmlspecialchars($error_str) . '</p>';
+                    echo '<p>' . htmlspecialchars($error_str) . '</p>';
                 } else {
             ?>
                 <table id="table<?php echo $run;?>" class="pretty result" align="center" border="1" cellpadding="20" cellspacing="0">
