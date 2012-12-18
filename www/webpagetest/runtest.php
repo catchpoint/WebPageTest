@@ -1154,10 +1154,6 @@ function SubmitUrl($testId, $testData, &$test, $url)
     global $error;
     global $locations;
     
-    // make sure the work directory exists
-    if( !is_dir($test['workdir']) )
-        mkdir($test['workdir'], 0777, true);
-    
     $out = "Test ID=$testId\r\nurl=";
     if( !strlen($test['script']) )
         $out .= $url;
@@ -1237,7 +1233,10 @@ function WriteJob($location, &$test, &$job, $testId)
     }
     else
     {
-        $workDir = $locations[$location]['localDir'];
+        // make sure the work directory exists
+        if( !is_dir($test['workdir']) )
+            mkdir($test['workdir'], 0777, true);
+        $workDir = $test['workdir'];
         $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
         if( $lockFile )
         {
@@ -1245,19 +1244,17 @@ function WriteJob($location, &$test, &$job, $testId)
             {
                 $fileName = $test['job'];
                 $file = "$workDir/$fileName";
-                if( file_put_contents($file, $job) )
-                {
-                    if( AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit']) )
-                    {
+                if( file_put_contents($file, $job) ) {
+                    if (AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit'])) {
                         // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-                        $test['work_dir'] = $workDir;
-                        $test['job_file'] = $file;
-                        $testPath = GetTestPath($testId);
-                        if (ValidateTestId($testId) && strlen($testPath)) {
-                            $testPath = './' . $testPath;
-                            if (!is_dir($testPath)) {
-                                mkdir($testPath, 0777, true);
-                                file_put_contents("$testPath/$fileName.test", $job);
+                        $test['job_file'] = realpath($file);
+                        if (ValidateTestId($testId)) {
+                            $testPath = GetTestPath($testId);
+                            if (strlen($testPath)) {
+                                $testPath = './' . $testPath;
+                                if (!is_dir($testPath))
+                                    mkdir($testPath, 0777, true);
+                                file_put_contents("$testPath/test.job", $job);
                             }
                         }
                         $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
