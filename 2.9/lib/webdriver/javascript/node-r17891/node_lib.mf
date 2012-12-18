@@ -1,0 +1,4 @@
+build/javascript/node/node_lib.mf
+//javascript/webdriver:webdriver_lib
+javascript/node/builder.js
+javascript/node/http/http.js

@@ -1,0 +1,38 @@
+{
+  "name": "WPT Chrome Extension",
+  "version": "1.1",
+  "description": "WebPagetest Chrome Extension.",
+  "background": {
+    "scripts": ["wpt/background.js"]
+  },
+  "browser_action": {
+    "default_popup": "wpt/browserActionPopup.html",
+    "default_title": "WPT Chrome Extension",
+    "default_icon": "wpt/icon.jpg"
+  },
+  "content_scripts": [
+    {
+      "all_frames": false,
+      "js": ["wpt/script.js"],
+      "matches": ["http://*/*", "https://*/*"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": "default-src 'self'; connect-src http://127.0.0.1:8888",
+  "permissions": [
+    "cookies",
+    "experimental",
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "declarativeWebRequest",
+    "browsingData",
+    "management",
+    "debugger",
+    "contentSettings",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "manifest_version": 2
+}

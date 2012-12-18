@@ -1,0 +1,78 @@
+#include "StdAfx.h"
+#include "wpt_test_driver.h"
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+WptTestDriver::WptTestDriver(DWORD default_timeout)
+{
+  _test_timeout = default_timeout;
+  _measurement_timeout = default_timeout;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+WptTestDriver::~WptTestDriver(void) {
+}
+
+/*-----------------------------------------------------------------------------
+  We are starting a new run, build up the script for the browser to execute
+-----------------------------------------------------------------------------*/
+bool WptTestDriver::Start() {
+  bool ret = false;
+
+  if (!_test_type.CompareNoCase(_T("traceroute"))) {
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _index);
+    ret = true;
+  } else {
+    // build up a new script
+    _script_commands.RemoveAll();
+    
+    if (_directory.GetLength()) {
+      SetFileBase();
+      SetClearedCache(_clear_cache);
+      SetCurrentRun(_run);
+      ret = true;
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptTestDriver::Load(CString& test) {
+  WptTrace(loglevel::kFunction, _T("[wptdriver] - WptTestDriver::Load\n"));
+  bool ret = WptTest::Load(test);
+
+  if (_directory.GetLength() )
+    DeleteDirectory(_directory, false);
+
+  if (ret) {
+    HANDLE file = CreateFile(_test_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+                              0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD bytes_written = 0;
+      WriteFile(file, (LPCWSTR)test, test.GetLength() * sizeof(wchar_t),
+                &bytes_written, 0);
+      CloseHandle(file);
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptTestDriver::SetFileBase() {
+  bool ret = false;
+  if (_directory.GetLength() ) {
+      // set up the base file name for results files for this run
+    _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _index);
+    if (!_clear_cache)
+      _file_base += _T("_Cached");
+    SetResultsFileBase(_file_base);
+    ret = true;
+  }
+  return ret;
+}
+

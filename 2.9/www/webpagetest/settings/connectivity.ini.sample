@@ -1,0 +1,46 @@
+[DSL]
+label="DSL (1.5 Mbps/384 Kbps 50ms RTT)"
+bwIn=1500000
+bwOut=384000
+latency=50
+plr=0
+aftCutoff=45
+
+[Cable]
+label="Cable (5/1 Mbps 28ms RTT)"
+bwIn=5000000
+bwOut=1000000
+latency=28
+plr=0
+aftCutoff=45
+
+[FIOS]
+label="FIOS (20/5 Mbps 4ms RTT)"
+bwIn=20000000
+bwOut=5000000
+latency=4
+plr=0
+aftCutoff=25
+
+[3G]
+label="Mobile 3G (USA) (2/1 Mbps 150ms RTT)"
+bwIn=2048000
+bwOut=1024000
+latency=150
+plr=0
+aftCutoff=120
+
+[Dial]
+label="56K Dial-Up (49/30 Kbps 120ms RTT)"
+bwIn=49000
+bwOut=30000
+latency=120
+plr=0
+aftCutoff=120
+
+[Native]
+label="Native Connection (No Traffic Shaping)"
+bwIn=0
+bwOut=0
+latency=0
+plr=0

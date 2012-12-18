@@ -1,0 +1,18 @@
+java/ -- WebDriver server jar.
+
+cd <selenium-svn>
+./go selenium-server-standalone
+cp -p build/java/server/src/org/openqa/grid/selenium/selenium-standalone.jar <webpagetest-svn>/lib/webdriver/java/selenium-standalone-<rev>.jar
+
+
+javascript/ -- WebDriverJS.
+
+cd <selenium-svn>
+./go //javascript/node:webdriver
+cp -rp build/javascript/node <webpagetest-svn>/lib/webdriver/javascript/node-<rev>
+
+
+chromedriver/ -- chromedriver binary, in platform dirs named $(uname -ms).
+
+Download from https://code.google.com/p/chromedriver/downloads/list, note the version.
+Unzip, copy to "chromedriver/$(uname -ms)/chromedriver-<version>".
