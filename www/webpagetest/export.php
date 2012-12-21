@@ -137,6 +137,12 @@ function BuildResult(&$pageData)
             if( strlen($score) )
                 $pd['_pageSpeed'] = array( 'score' => $score );
             
+            // dump all of our metrics into the har data as custom fields
+            foreach($data as $name => $value) {
+                if (!is_array($value))
+                    $pd["_$name"] = $value;
+            }
+            
             // add the page-level ldata to the result
             $result['log']['pages'][] = $pd;
             
@@ -314,6 +320,12 @@ function BuildResult(&$pageData)
                 
                 if (array_key_exists('custom_rules', $r)) {
                     $entry['_custom_rules'] = $r['custom_rules'];
+                }
+
+                // dump all of our metrics into the har data as custom fields
+                foreach($r as $name => $value) {
+                    if (!is_array($value))
+                        $entry["_$name"] = $value;
                 }
                 
                 // add it to the list of entries
