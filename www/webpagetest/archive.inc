@@ -187,30 +187,13 @@ function RestoreArchive($id) {
             }
             $zip = new ZipArchive;
             if ($zip->open($zipfile) === TRUE) {
-                if (defined('RESTORE_DATA_ONLY')) {
-                    for( $i = 0; $i < $zip->numFiles; $i++ ) {
-                        $file = $zip->getNameIndex($i);
-                        if( strpos($file, '.jpg') === false && 
-                            strpos($file, '.png') == false &&
-                            strpos($file, 'pagespeed.') == false &&
-                            strpos($file, 'progress.') == false &&
-                            strpos($file, 'report.') == false &&
-                            strpos($file, '/') == false )
-                            file_put_contents("$testPath/$file", $zip->getFromIndex($i));
-                    }
-                } else {
-                    $zip->extractTo($testPath);
-                }
-                
+                $zip->extractTo($testPath);
                 $zip->close();
 
                 $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                 $testInfo['archived'] = true;
                 $testInfo['restored'] = true;
-                if( defined('RESTORE_DATA_ONLY') )
-                    $testInfo['restoredDataOnly'] = true;
-                else
-                    $testInfo['restoredDataOnly'] = false;
+                $testInfo['restoredDataOnly'] = false;
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                 
                 $ret = true;

@@ -1236,8 +1236,7 @@ function RestoreTest($id)
                     (array_key_exists('restored', $testInfo) && 
                     $testInfo['restored'] && 
                     array_key_exists('restoredDataOnly', $testInfo) &&
-                    $testInfo['restoredDataOnly'] && 
-                    !defined('RESTORE_DATA_ONLY')) )
+                    $testInfo['restoredDataOnly']) )
                     $restore = true;
             }
             else
