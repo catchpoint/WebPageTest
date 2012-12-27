@@ -56,6 +56,8 @@ CDN_PROVIDER cdnList[] = {
   {".ccgslb.com", _T("ChinaCache")},
   {"cdn.sfr.net", _T("SFR")},
   {".azioncdn.net", _T("Azion")},
+  {".azioncdn.com", _T("Azion")},
+  {".azion.net", _T("Azion")},
   {NULL, NULL}
 };
 

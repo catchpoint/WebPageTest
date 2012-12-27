@@ -96,6 +96,8 @@ CDN_PROVIDER cdnList[] = {
   {".ccgslb.com", "ChinaCache"},
   {"cdn.sfr.net", "SFR"},
   {".azioncdn.net", "Azion"},
+  {".azioncdn.com", "Azion"},
+  {".azion.net", "Azion"},
   {"END_MARKER", "END_MARKER"}
 };
 
