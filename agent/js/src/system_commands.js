@@ -31,6 +31,7 @@ var UNIX_ = 0;
 var WIN32_ = 1;
 var PLATFORM_TYPES_ = {
   'darwin': UNIX_,
+  'freebsd': UNIX_,
   'linux': UNIX_,
   'unix': UNIX_,
   'win32': WIN32_};
