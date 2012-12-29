@@ -75,44 +75,44 @@ exports.WebDriverServer = {
    *     {Object} options can have the properties:
    *         browserName: Selenium name of the browser
    *         browserVersion: Selenium version of the browser
-   *     {int} runNumber the test iteration number, starting with 1.
    *     {String} script webdriverjs script.
    *     {String} seleniumJar path to the selenium jar.
    *     {String} chromedriver path to the chromedriver executable.
    *     {?javaCommand=} javaCommand system java command.
    */
   init: function(initMessage) {
-      //options, runNumber, captureVideo, script,
-      //seleniumJar, chromedriver, javaCommand) {
     'use strict';
     this.options_ = initMessage.options || {};
-    this.runNumber_ = initMessage.runNumber;
+    this.exitWhenDone_ = initMessage.exitWhenDone;
     this.captureVideo_ = initMessage.captureVideo;
     this.script_ = initMessage.script;
-    this.serverProcess_ = undefined;
-    this.serverPort_ = 4444;
-    this.serverUrl_ = undefined;
-    this.driver_ = undefined;
-    this.driverBuildTime_ = undefined;
-    this.devToolsPort_ = 1234;
     this.devToolsMessages_ = [];
     this.devToolsTimelineMessages_ = [];
     this.screenshots_ = [];
-    this.seleniumJar_ = initMessage.seleniumJar;
-    this.chromedriver_ = initMessage.chromedriver;
-    this.chrome_ = initMessage.chrome;
-    this.javaCommand_ = initMessage.javaCommand || 'java';
-    // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
-    // processing in these functions, if they call a WebDriver method.
-    // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
-    // to false upon completion of that method.
-    this.actionCbRecurseGuard_ = false;
-    this.app_ = webdriver.promise.Application.getInstance();
-    this.sandboxApp_ = undefined;
-    process_utils.injectWdAppLogging('wd_server app', this.app_);
+    if (!this.serverProcess_) {  // First run
+      this.serverProcess_ = undefined;
+      this.serverPort_ = 4444;
+      this.serverUrl_ = undefined;
+      this.driver_ = undefined;
+      this.driverBuildTime_ = undefined;
+      this.devToolsPort_ = 1234;
+      this.seleniumJar_ = initMessage.seleniumJar;
+      this.chromedriver_ = initMessage.chromedriver;
+      this.chrome_ = initMessage.chrome;
+      this.javaCommand_ = initMessage.javaCommand || 'java';
+      // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
+      // processing in these functions, if they call a WebDriver method.
+      // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
+      // to false upon completion of that method.
+      this.actionCbRecurseGuard_ = false;
+      this.app_ = webdriver.promise.Application.getInstance();
+      this.wdSandbox_ = undefined;
+      this.sandboxApp_ = undefined;
+      process_utils.injectWdAppLogging('wd_server app', this.app_);
 
-    this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
-    this.setSystemCommands_();
+      this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
+      this.setSystemCommands_();
+    }
   },
 
   /**
@@ -124,8 +124,7 @@ exports.WebDriverServer = {
   startServer_: function(browserCaps) {
     'use strict';
     if (this.serverProcess_) {
-      logger.error('prior WD server alive when launching');
-      this.killServerProcess_();
+      throw new Error('Internal error: prior WD server running unexpectedly');
     }
     var serverCommand, serverArgs, serverUrlPath;
     if ('chrome' === browserCaps.browserName) {
@@ -183,6 +182,8 @@ exports.WebDriverServer = {
       });
       return isReady.promise;
     }, WD_CONNECT_TIMEOUT_MS_);
+
+    logger.info('WD connect promise setup complete');
   },
 
   /**
@@ -244,14 +245,17 @@ exports.WebDriverServer = {
   onDriverBuild: function(driver, browserCaps, wdNamespace) {
     'use strict';
     logger.extra('WD post-build callback, driver=%j', driver);
-    this.driver_ = driver;
-    if (browserCaps.browserName.indexOf('chrome') !== -1) {
-      this.connectDevTools_(wdNamespace);
+    if (!this.driver_) {
+      this.driver_ = driver;
+      if (browserCaps.browserName.indexOf('chrome') !== -1) {
+        this.connectDevTools_(wdNamespace);
+      }
+    } else if (this.driver_ !== driver) {
+      throw new Error('Internal error: repeat onDriverBuild with wrong driver');
     }
     if (this.captureVideo_) {
-      this.takeScreenshot_(
-          driver, util.format('%d_progress_0', this.runNumber_),
-          'after Builder.build()').then(function() {
+      this.takeScreenshot_('progress_0', 'after Builder.build()').then(
+          function() {
         this.driverBuildTime_ = Date.now();
       }.bind(this));
     } else {
@@ -259,7 +263,7 @@ exports.WebDriverServer = {
     }
   },
 
-  takeScreenshot_: function(driver, fileNameNoExt, description) {
+  takeScreenshot_: function(fileNameNoExt, description) {
     'use strict';
     if (this.actionCbRecurseGuard_) {
       // Check the recursion guard in the calling function
@@ -267,54 +271,51 @@ exports.WebDriverServer = {
     }
     this.actionCbRecurseGuard_ = true;
     // We operate in milliseconds, WPT wants "tens of seconds" units.
-    return driver.takeScreenshot().then(function(screenshot) {
-      this.actionCbRecurseGuard_ = false;
-      logger.info('Screenshot %s (%d bytes): %s',
-          fileNameNoExt, screenshot.length, description);
-      this.screenshots_.push({
-        fileName: fileNameNoExt + '.png',
-        contentType: 'image/png',
-        base64: screenshot,
-        description: description});
-      return screenshot;  // Allow following then()'s to reuse the screenshot.
-    }.bind(this), function(e) {
-      this.actionCbRecurseGuard_ = false;
-      logger.error('failed to take screenshot: %s', e.message);
-    }.bind(this));
+    var result = null;
+    if (this.driver_) {
+      result = this.driver_.takeScreenshot().then(function(screenshot) {
+        this.actionCbRecurseGuard_ = false;
+        logger.info('Screenshot %s (%d bytes): %s',
+            fileNameNoExt, screenshot.length, description);
+        this.screenshots_.push({
+            fileName: fileNameNoExt + '.png',
+            contentType: 'image/png',
+            base64: screenshot,
+            description: description});
+        return screenshot;  // Allow following then()'s to reuse the screenshot.
+      }.bind(this), function(e) {
+        this.actionCbRecurseGuard_ = false;
+        logger.error('failed to take screenshot: %s', e.message);
+      }.bind(this));
+    } else {
+      logger.error('Trying to take a screenshot while there is no driver');
+    }
+    return result;
   },
 
   /**
    * Called by the sandboxed driver before each command.
    *
-   * @param {Object} driver the built driver instance (real one, not sandboxed).
    * @param {String} command WebDriver command name.
-   * @param {Object} commandArgs array of command arguments.
-   * *param {Object} result command result.
+   * *param {Object} commandArgs array of command arguments.
    */
-  onBeforeDriverAction: function(driver, command, commandArgs) {
+  onBeforeDriverAction: function(command/*, commandArgs*/) {
     'use strict';
-    logger.extra('Injected before WD command: %s', commandArgs[1]);
-    if (this.actionCbRecurseGuard_) {
-      logger.extra('Recursion guard: before');
-      return;
-    }
     if (command.getName() === webdriver.command.CommandName.QUIT) {
-      this.takeScreenshot_(
-          driver,
-          util.format('%d_screen', this.runNumber_),
-          'before WebDriver.quit()');
+      logger.debug('Before WD quit: resetting driver, driverBuildTime');
+      this.driver_ = undefined;
+      this.driverBuildTime_ = undefined;
     }
   },
 
   /**
    * Called by the sandboxed driver after each command completion.
    *
-   * @param {Object} driver the built driver instance (real one, not sandboxed).
    * @param {String} command WebDriver command name.
    * @param {Object} commandArgs array of command arguments.
    * *param {Object} result command result.
    */
-  onAfterDriverAction: function(driver, command, commandArgs/*, result*/) {
+  onAfterDriverAction: function(command, commandArgs/*, result*/) {
     'use strict';
     logger.extra('Injected after command: %s', commandArgs[1]);
     if (this.actionCbRecurseGuard_) {
@@ -322,21 +323,20 @@ exports.WebDriverServer = {
       return;
     }
     if (command.getName() === webdriver.command.CommandName.QUIT) {
+      this.driver_ = undefined;
       return;  // Cannot do anything after quitting the browser
     }
     var commandStr = commandArgs[1];
     if (this.captureVideo_) {
       // We operate in milliseconds, WPT wants "tenths of a second" units.
       var wptTimestamp = Math.round((Date.now() - this.driverBuildTime_) / 100);
-      var progressFileName =
-          util.format('%d_progress_%d', this.runNumber_, wptTimestamp);
       logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
-      this.takeScreenshot_(driver, progressFileName, 'After ' + commandStr)
+      this.takeScreenshot_('progress_' + wptTimestamp, 'After ' + commandStr)
           .then(function(screenshot) {
         if (command.getName() === webdriver.command.CommandName.GET) {
           // This is also the doc-complete screenshot.
           this.screenshots_.push({
-            fileName: util.format('%d_screen_doc.png', this.runNumber_),
+            fileName: 'screen_doc.png',
             contentType: 'image/png',
             base64: screenshot,
             description: commandStr});
@@ -345,25 +345,21 @@ exports.WebDriverServer = {
     } else if (command.getName() === webdriver.command.CommandName.GET) {
       // No video -- just intercept a get() and take a doc-complete screenshot.
       logger.debug('Doc-complete screenshot after: %s', commandStr);
-      this.takeScreenshot_(
-          driver,
-          util.format('%d_screen_doc', this.runNumber_),
-          commandStr);
+      this.takeScreenshot_('screen_doc', commandStr);
     }
   },
 
   /**
    * Called by the sandboxed driver after a command failure.
    *
-   * @param {Object} driver the built driver instance (real one, not sandboxed).
    * @param {String} command WebDriver command name.
    * @param {Object} commandArgs array of command arguments.
    * @param {Object} e command error.
    */
-  onAfterDriverError: function(driver, command, commandArgs, e) {
+  onAfterDriverError: function(command, commandArgs, e) {
     'use strict';
     logger.error('Driver error: %s', e.message);
-    this.onAfterDriverAction(driver, command, commandArgs, e);
+    this.onAfterDriverAction(command, commandArgs, e);
   },
 
   /**
@@ -374,21 +370,33 @@ exports.WebDriverServer = {
    */
   runSandboxedSession_: function(browserCaps) {
     'use strict';
-    return wd_sandbox.createSandboxedWdNamespace(
-        this.serverUrl_, browserCaps, this).then(function(wdSandbox) {
-      this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
-      this.sandboxApp_.on(
-          wdSandbox.promise.Application.EventType.IDLE, function() {
-        logger.info('The sandbox application has gone idle, history: %j',
-            this.sandboxApp_.getHistory());
+    var promise;
+    if (this.sandboxApp_) {
+      // Repeat load with an already running WD server and driver.
+      promise = this.sandboxApp_.schedule(
+              'Run Script',
+              this.runScript_.bind(this, this.wdSandbox_)).then(
+              this.waitForCoalesce_.bind(this, this.wdSandbox_,
+                  exports.WAIT_AFTER_ONLOAD_MS));
+    } else {
+      promise = wd_sandbox.createSandboxedWdNamespace(
+          this.serverUrl_, browserCaps, this).then(function(wdSandbox) {
+        this.wdSandbox_ = wdSandbox;
+        this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
+        this.sandboxApp_.on(
+            wdSandbox.promise.Application.EventType.IDLE, function() {
+          logger.info('The sandbox application has gone idle, history: %j',
+              this.sandboxApp_.getHistory());
+        }.bind(this));
+        // Bring it!
+        return this.sandboxApp_.schedule(
+            'Run Script',
+            this.runScript_.bind(this, wdSandbox)).then(
+            this.waitForCoalesce_.bind(this, wdSandbox,
+                exports.WAIT_AFTER_ONLOAD_MS));
       }.bind(this));
-      // Bring it!
-      return this.sandboxApp_.schedule(
-          'Run Script',
-          this.runScript_.bind(this, wdSandbox)).then(
-          this.waitForCoalesce_.bind(this, wdSandbox,
-              exports.WAIT_AFTER_ONLOAD_MS));
-    }.bind(this));
+    }
+    return promise;
   },
 
   /**
@@ -411,7 +419,11 @@ exports.WebDriverServer = {
       browserCaps['chrome.binary'] = this.chrome_;
     }
     exports.process.once('uncaughtException', this.uncaughtExceptionHandler_);
-    this.startServer_(browserCaps);  // TODO(klm): Handle process failure
+
+    if (!this.serverProcess_) {
+      this.startServer_(browserCaps);  // TODO(klm): Handle process failure
+    }
+
     this.app_.schedule('Run sandboxed WD session',
         this.runSandboxedSession_.bind(this, browserCaps)).then(
         this.done_.bind(this),
@@ -421,8 +433,6 @@ exports.WebDriverServer = {
       logger.info('The main application has gone idle, history: %j',
           this.app_.getHistory());
     }.bind(this));
-
-    logger.info('WD connect promise setup complete');
   },
 
   /**
@@ -459,10 +469,21 @@ exports.WebDriverServer = {
 
   done_: function() {
     'use strict';
-    logger.info('Sandboxed session succeeded, quitting WebDriver');
+    logger.info('Sandboxed session succeeded');
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
-    this.scheduleDriverQuit_();
+    this.takeScreenshot_('screen', 'end of run').then(function(screenshot) {
+      if (this.captureVideo_) {
+        // Last video frame
+        var wptTimestamp =
+            Math.round((Date.now() - this.driverBuildTime_) / 100);
+        this.screenshots_.push({
+            fileName: 'progress_' + wptTimestamp + '.png',
+            contentType: 'image/png',
+            base64: screenshot,
+            description: 'end of run'});
+      }
+    }.bind(this));
     this.app_.schedule('Send IPC done', function() {
       logger.debug('sending IPC done');
       exports.process.send({
@@ -471,7 +492,9 @@ exports.WebDriverServer = {
           devToolsTimelineMessages: this.devToolsTimelineMessages_,
           screenshots: this.screenshots_});
     }.bind(this));
-    this.scheduleStop();
+    if (this.exitWhenDone_) {
+      this.scheduleStop();
+    }
   },
 
   onError_: function(e) {
@@ -480,7 +503,7 @@ exports.WebDriverServer = {
     // Take the final screenshot (useful for debugging) and kill the browser.
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
-    this.scheduleDriverQuit_();
+    this.takeScreenshot_('screen', 'run error');
     this.app_.schedule('Send IPC error', function() {
       logger.error('Sending IPC error: %j', e);
       exports.process.send({
@@ -496,6 +519,7 @@ exports.WebDriverServer = {
   onUncaughtException_: function(e) {
     'use strict';
     logger.critical('Uncaught exception: %s', e);
+    logger.debug('Uncaught exception stack: %s', e.stack);
     exports.process.send({cmd: 'error', e: e.message});
     this.scheduleStop();
   },
@@ -504,11 +528,11 @@ exports.WebDriverServer = {
     'use strict';
     if (this.driver_) {
       logger.debug('scheduling driver.quit()');
+      // onAfterDriverAction resets this.driver_ and this.driverBuildTime_.
       this.driver_.quit().addErrback(process_utils.getLoggingErrback('quit'))
           .then(function() {
         this.driverBuildTime_ = undefined;
       }.bind(this));
-      this.driver_ = undefined;
     } else {
       logger.warn('driver is already unset');
     }
@@ -548,7 +572,6 @@ exports.WebDriverServer = {
       } catch (killException) {
         logger.error('WebDriver server kill failed: %s', killException);
       }
-      this.serverProcess_ = undefined;
       this.serverUrl_ = undefined;
     } else {
       logger.warn('WD server process is already unset');

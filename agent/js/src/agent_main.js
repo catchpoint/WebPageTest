@@ -34,9 +34,9 @@ var logger = require('logger');
 var nopt = require('nopt');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
+var util = require('util');
 var webdriver = require('webdriver');
 var wpt_client = require('wpt_client');
-var Zip = require('node-zip');
 
 var flagDefs = {
   knownOpts: {
@@ -184,9 +184,10 @@ Agent.prototype.scheduleIpfwReset_ = function() {
  *
  * @param {Number} bwIn input bandwidth throttling.
  * @param {Number} bwOut output bandwidth throttling.
- * @param {Number} latency induces fixed round trip latency.
+ * @param {Number} latency round trip latency.
+ * @param {Number} plr packet loss rate.
  */
-Agent.prototype.scheduleIpfwStart_ = function(bwIn, bwOut, latency) {
+Agent.prototype.scheduleIpfwStart_ = function(bwIn, bwOut, latency, plr) {
   'use strict';
   logger.info('Starting traffic shaping');
   var pipeInArgs = '';
@@ -206,6 +207,11 @@ Agent.prototype.scheduleIpfwStart_ = function(bwIn, bwOut, latency) {
     pipeOutArgs += ' delay ' + latencyOut  + 'ms';
   }
 
+  if (plr) {
+    // Incur all loss on the output.
+    pipeOutArgs += ' plr ' + plr;
+  }
+
   this.scheduleIpfwReset_();
   if (pipeInArgs) {
     var pipeInCommand = 'ipfw pipe 1 config ' + pipeInArgs;
@@ -221,79 +227,69 @@ Agent.prototype.startWdServer_ = function() {
   'use strict';
   this.wdServer_ = child_process.fork('./src/wd_server.js',
       [], {env: process.env});
-  this.wdServer_.on('exit', function() {
+  this.wdServer_.on('exit', function(code, signal) {
+    logger.info('wd_server child process exit code %s signal %s', code, signal);
     this.wdServer_ = undefined;
   }.bind(this));
 };
 
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
-  var done = new webdriver.promise.Deferred();
-  var zip = new Zip();
-  if (ipcMsg.devToolsTimelineMessages) {
-    var timelineJson = JSON.stringify(ipcMsg.devToolsTimelineMessages);
-    zip.file(job.runNumber + '_timeline.json', timelineJson);
-  }
-  if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
-    var imageDescriptors = [];
-    ipcMsg.screenshots.forEach(function(screenshot) {
-      logger.debug('Adding screenshot %s', screenshot.fileName);
-      var contentBuffer = new Buffer(screenshot.base64, 'base64');
-      job.resultFiles.push(new wpt_client.ResultFile(
-          wpt_client.ResultFile.ResultType.IMAGE,
-          screenshot.fileName,
-          screenshot.contentType,
-          contentBuffer));
-      if (screenshot.description) {
-        imageDescriptors.push({
+  this.scheduleNoFault_('Process job results', function() {
+    // This promise ties regular callbacks into the promise manager.
+    var done = new webdriver.promise.Deferred();
+    if (ipcMsg.devToolsTimelineMessages) {
+      job.zipResultFiles['timeline.json'] =
+          JSON.stringify(ipcMsg.devToolsTimelineMessages);
+    }
+    if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
+      var imageDescriptors = [];
+      ipcMsg.screenshots.forEach(function(screenshot) {
+        logger.debug('Adding screenshot %s', screenshot.fileName);
+        var contentBuffer = new Buffer(screenshot.base64, 'base64');
+        job.resultFiles.push(new wpt_client.ResultFile(
+            wpt_client.ResultFile.ResultType.IMAGE,
+            screenshot.fileName,
+            screenshot.contentType,
+            contentBuffer));
+        if (screenshot.description) {
+          imageDescriptors.push({
             filename: screenshot.fileName,
             description: screenshot.description
-        });
+          });
+        }
+      });
+      if (imageDescriptors.length > 0) {
+        job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
-      if (logger.isLogging('debug')) {
-        logger.debug('Writing a local copy of %s (%s)',
-            screenshot.fileName, screenshot.description);
-        // Don't pass a callback, we don't care when it finishes or fails.
-        fs.writeFile(screenshot.fileName, contentBuffer);
-      }
-    });
-    if (imageDescriptors.length > 0) {
-      zip.file(
-          job.runNumber + '_images.json', JSON.stringify(imageDescriptors));
     }
-  }
-  if (Object.keys(zip.files).length > 0) {
-    job.resultFiles.push(new wpt_client.ResultFile(
-        wpt_client.ResultFile.ResultType.TIMELINE,
-        job.runNumber + '_results.zip',
-        'application/zip',
-        new Buffer(zip.generate({compression:'DEFLATE'}), 'base64')));
-  }
-  if (ipcMsg.devToolsMessages) {
-    convertDevToolsToHar(
-        ipcMsg.devToolsMessages,
-        'page_' + job.runNumber + '_0',
-        job.task.browser,
-        /*browserVersion=*/undefined,
-        function(harContent, e) {
-      if (e) {
-        done.reject(e);
-      } else if (harContent) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.HAR,
-            job.runNumber + '_results.har',
-            'application/json',
-            harContent));
-        done.resolve(job);
-      } else {
-        logger.error('HAR content empty even though devtools2har succeeded');
-        done.resolve();
-      }
-    });
-  } else {
-    done.resolve();
-  }
-  this.scheduleNoFault_('Process job results', function() {
+    if (ipcMsg.devToolsMessages) {
+      // For debugging devtools2har, preserve the original devtools messages.
+      job.zipResultFiles['network_page.json'] =
+          JSON.stringify(ipcMsg.devToolsMessages);
+      convertDevToolsToHar(
+          ipcMsg.devToolsMessages,
+          'page_' + job.runNumber + (job.isCacheWarm ? '1' : '0'),
+          job.task.browser,
+          /*browserVersion=*/undefined,
+          function(harContent, e) {
+        if (e) {
+          done.reject(e);
+        } else if (harContent) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.HAR,
+              'results.har',
+              'application/json',
+              harContent));
+          done.resolve(job);
+        } else {
+          done.reject(new Error(
+              'HAR content empty after devtools2har succeeded'));
+        }
+      });
+    } else {
+      done.resolve();
+    }
     return done.promise;
   });
 };
@@ -307,41 +303,51 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
  */
 Agent.prototype.startJobRun_ = function(job) {
   'use strict';
-  logger.info('Running job: %s', job.id);
+  job.isCacheWarm = !!this.wdServer_;
+  logger.info('Running job %s run %d/%d cacheWarm=%s',
+      job.id, job.runNumber, job.runs, job.isCacheWarm);
   if (job.task.script) {
-    this.scheduleIpfwStart_(
-        job.task.bwIn, job.task.bwOut, job.task.latency);
-    logger.info('Running script: %s', job.task.script);
-    this.startWdServer_();
-    // is setting up the message listener after the fork a race condition?
-    // I don't see a way to set up the listener before wdServer_ inherits from
-    // eventemitter though.
-    this.wdServer_.on('message', function(ipcMsg) {
-      logger.debug('got IPC: %s', ipcMsg.cmd);
-      if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
-        if ('error' === ipcMsg.cmd) {
-          job.error = ipcMsg.e;
+    if (!this.wdServer_) {
+      this.scheduleIpfwStart_(
+          job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
+      this.startWdServer_();
+      this.wdServer_.on('message', function(ipcMsg) {
+        logger.debug('got IPC: %s', ipcMsg.cmd);
+        if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
+          var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+          if ('error' === ipcMsg.cmd) {
+            job.error = ipcMsg.e;
+            // Error in a first-view run: can't do a repeat run.
+            isRunFinished = true;
+          }
+          this.scheduleProcessDone_(ipcMsg, job);
+          if (isRunFinished) {
+            this.scheduleCleanup_();
+          }
+          // Do this only at the very end, as it starts a new run of the job.
+          this.scheduleNoFault_('Job finished',
+              job.runFinished.bind(job, isRunFinished));
         }
-        this.scheduleProcessDone_(ipcMsg, job);
-        this.scheduleCleanup_();
-        // Do this only at the very end, as it starts a new run of the job.
-        this.scheduleNoFault_('Job finished', job.runFinished.bind(job));
-      }
+      }.bind(this));
+    }
+    this.scheduleNoFault_('Send IPC "run"', function() {
+      this.wdServer_.send({
+        cmd: 'run',
+        options: {browserName: job.task.browser},
+        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
+        captureVideo: job.captureVideo,
+        script: job.task.script,
+        seleniumJar: this.flags_.selenium_jar,
+        chromedriver: this.flags_.chromedriver,
+        chrome: this.flags_.chrome,
+        javaCommand: this.flags_.java
+      });
     }.bind(this));
-    this.wdServer_.send({
-      cmd: 'run',
-      options: {browserName: job.task.browser},
-      runNumber: job.runNumber,
-      captureVideo: job.captureVideo,
-      script: job.task.script,
-      seleniumJar: this.flags_.selenium_jar,
-      chromedriver: this.flags_.chromedriver,
-      chrome: this.flags_.chrome,
-      javaCommand: this.flags_.java
-    });
   } else {
+    // TODO: generate a page-load script.
     job.error = 'NodeJS agent currently only supports tasks with a script';
-    this.scheduleNoFault_('Job finished', job.runFinished.bind(job));
+    this.scheduleNoFault_('Job finished',
+        job.runFinished.bind(job, /*isRunFinished=*/true));
   }
 };
 
@@ -357,7 +363,8 @@ Agent.prototype.jobTimeout_ = function(job) {
     this.wdServer_ = undefined;
   }
   this.scheduleCleanup_();
-  this.scheduleNoFault_('Timed out job finished', job.runFinished.bind(job));
+  this.scheduleNoFault_('Timed out job finished',
+      job.runFinished.bind(job, /*isRunFinished=*/true));
 };
 
 /**

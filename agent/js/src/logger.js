@@ -75,15 +75,16 @@ exports.isLogging = function(level) {
 
 /**
  * Parses a stack trace line like this:
- * " at qualified.function.<name> (/source/file.js:123:456)"
- * The regex strips "Object." and "exports." prefixes, strips file path,
+ * " at [qualified.function.<name> (]/source/file.js:123<...>"
+ * The regex strips "Object." and "exports." qualifications
+ * (yes there is sometimes "Object.exports."), strips file path,
  * and matches positional groups 1:function 2:file 3:line.
  */
 var STACK_LINE_RE_ = new RegExp(
-    // Function name
-    /^ +at +(?:Object\.)?(?:exports\.)?([\S \[\]]+) +/.source +
-    // file:line
-    /\((?:\S+\/)?(\S+?):(\d+)[\s\S]*/.source);
+    // Either "at <function> (" or just "at " if the function is unknown.
+    /^ +at +(?:(?:(?:Object\.)?(?:exports\.))?([\S \[\]]+) +\()?/.source +
+    // /path/file:line
+    /(?:\S+\/)?(\S+?):(\d+)[\s\S]*/.source);
 
 /**
  * log is a wrapper for the visionmedia jog module that will:
@@ -94,16 +95,20 @@ var STACK_LINE_RE_ = new RegExp(
  * d) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
  *    greater than or equal to the maximum log level.
  *
- * @param  {String} levelName the log level.
- * @param  {Object|String} data an object or string
+ * @param {String} levelName the log level.
+ * @param {Array} levelProperties [<level>, <stream>, <abbreviation>].
+ * @param {Object|String} data an object or string
  *    (which will be converted to an object for jog) that will be logged.
+ * @param {*} arguments substitution arguments for the data string.
 */
 function log(levelName, levelProperties, data) {
   'use strict';
   if (levelProperties[0] <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
-    var sourceAnnotation = new Error().stack.split('\n', 3)[2].replace(
-        STACK_LINE_RE_, '$2:$3 $1');
+    var callerStackLine = new Error().stack.split('\n', 3)[2];
+    var matches = callerStackLine.match(STACK_LINE_RE_);
+    var functionName = matches[1] || 'unknown';
+    var sourceAnnotation = matches[2] + ':' + matches[3] + ' ' + functionName;
     var message;
     var logData = data;
     if (typeof data === 'string') {

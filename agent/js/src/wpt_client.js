@@ -34,19 +34,23 @@ var multipart = require('multipart');
 var path = require('path');
 var url = require('url');
 var util = require('util');
+var Zip = require('node-zip');
 
 exports.process = process;  // Allow to stub out in tests
 
 var GET_WORK_SERVLET = 'work/getwork.php';
 var RESULT_IMAGE_SERVLET = 'work/resultimage.php';
 var WORK_DONE_SERVLET = 'work/workdone.php';
+
+// Task JSON field names
 var JOB_TEST_ID = 'Test ID';
-exports.JOB_TEST_ID = JOB_TEST_ID;
 var JOB_CAPTURE_VIDEO = 'Capture Video';
 var JOB_RUNS = 'runs';
+var JOB_FIRST_VIEW_ONLY = 'fvonly';
 
 var DEFAULT_JOB_TIMEOUT = 60000;
 exports.NO_JOB_PAUSE = 10000;
+var MAX_RUNS = 1000;  // Sanity limit
 
 
 /**
@@ -55,10 +59,24 @@ exports.NO_JOB_PAUSE = 10000;
  * Public attributes:
  *   task JSON descriptor received from the server for this job.
  *   id the job id
+ *   captureVideo true to capture a video of the page load.
+ *   runs the total number of repetitions for the job.
+ *   runNumber the current iteration number.
+ *       Incremented when calling runFinished with isRunFinished=true.
+ *   isFirstViewOnly if true, each run is in a clean browser session.
+ *       if false, a run includes two iterations: clean + repeat with cache.
+ *   isCacheWarm false for first load of a page, true for repeat load(s).
+ *       False by default, to be set by callbacks e.g. Client.onStartJobRun.
+ *       Watch out for old values, always set on each run.
  *   resultFiles array of ResultFile objects.
+ *   zipResultFiles map of filenames to Buffer objects, to send as result.zip.
  *   error an error object if the job failed.
- * @this {Job}
  *
+ * The constructor does some input validation and throws an Error, but it
+ * would not report the error back to the WPT server, because Client.currentJob_
+ * is not yet set -- the error would only get logged.
+ *
+ * @this {Job}
  * @param {Object} client should submit this job's results when done.
  * @param {Object} task holds information about the task such as the script
  *                 and browser.
@@ -68,10 +86,27 @@ function Job(client, task) {
   this.client_ = client;
   this.task = task;
   this.id = task[JOB_TEST_ID];
+  if ('string' !== typeof this.id || !this.id) {
+    throw new Error('Task has invalid/missing id: ' + JSON.stringify(task));
+  }
   this.captureVideo = (1 === task[JOB_CAPTURE_VIDEO]);
-  this.runs = task[JOB_RUNS] || 1;
-  this.runNumber = 0;  // Switch to 1 once the first run starts
+  var runs = task[JOB_RUNS];
+  if ('number' !== typeof runs || runs <= 0 || runs > MAX_RUNS ||
+      0 !== (runs - Math.floor(runs))) {  // Make sure it's an integer.
+    throw new Error('Task has invalid/missing number of runs: ' +
+        JSON.stringify(task));
+  }
+  this.runs = runs;
+  this.runNumber = 1;
+  var firstViewOnly = task[JOB_FIRST_VIEW_ONLY];
+  if (undefined !== firstViewOnly &&  // Undefined means false.
+      0 !== firstViewOnly && 1 !== firstViewOnly) {
+    throw new Error('Task has invalid fvonly field: ' + JSON.stringify(task));
+  }
+  this.isFirstViewOnly = !!firstViewOnly;
+  this.isCacheWarm = false;
   this.resultFiles = [];
+  this.zipResultFiles = {};
   this.error = undefined;
 }
 exports.Job = Job;
@@ -79,9 +114,9 @@ exports.Job = Job;
 /**
  * Called to finish the current run of this job, submit results, start next run.
  */
-Job.prototype.runFinished = function() {
+Job.prototype.runFinished = function(isRunFinished) {
   'use strict';
-  this.client_.finishRun_(this);
+  this.client_.finishRun_(this, isRunFinished);
 };
 
 /**
@@ -89,7 +124,7 @@ Job.prototype.runFinished = function() {
  * result of running a job.
  * @this {ResultFile}
  *
- * @param {String} resultType a ResultType constant defining the file role.
+ * @param {String} [resultType] a ResultType constant defining the file role.
  * @param {String} fileName file will be sent to the server with this filename.
  * @param {String} contentType MIME content type.
  * @param {String|Buffer} content the content to send.
@@ -109,7 +144,6 @@ exports.ResultFile = ResultFile;
 ResultFile.ResultType = Object.freeze({
   // PCAP: 'pcap',
   HAR: 'har',
-  TIMELINE: 'timeline',
   IMAGE: 'image',
   IMAGE_ANNOTATIONS: 'image_annotations'
 });
@@ -206,7 +240,7 @@ Client.prototype.onUncaughtException_ = function(e) {
     // Prevent an infinite loop for an exception while submitting job results.
     this.handlingUncaughtException_ = e;
     this.currentJob_.error = e.message;
-    this.currentJob_.runFinished();
+    this.currentJob_.runFinished(/*isRunFinished=*/true);
   } else {
     logger.critical('Unhandled exception outside of job processing');
     // Not sure if we can do anything, maybe force-restart polling for jobs.
@@ -247,42 +281,43 @@ Client.prototype.requestNextJob_ = function() {
  */
 Client.prototype.processJobResponse_ = function(responseBody) {
   'use strict';
-  var job = new exports.Job(this, JSON.parse(responseBody));
+  // We don't do input validation -- don't explicitly catch JSON.parse errors,
+  // because we would not be able to sent a meaningful error report back to WPT,
+  // because we don't have the task ID if the parse fails.
+  // We rely on the unhandled exception handler and would just log it.
+  var job = new Job(this, JSON.parse(responseBody));
   logger.info('Got job: %j', job);
   this.startNextRun_(job);
 };
 
 Client.prototype.startNextRun_ = function(job) {
   'use strict';
-  if (job.runNumber < job.runs) {
-    job.runNumber += 1;
-    job.error = undefined;  // Reset previous run's error, if any.
-    // For comparison in finishRun_()
-    this.currentJob_ = job;
-    // Set up job timeout
-    this.timeoutTimer_ = global.setTimeout(function() {
-      logger.error('job timeout: %s', job.id);
-      job.error = 'timeout';
-      if (this.onJobTimeout) {
-        this.onJobTimeout(job);
-      } else {
-        job.runFinished();
-      }
-    }.bind(this), this.jobTimeout_);
-
-    if (this.onStartJobRun) {
-      try {
-        this.onStartJobRun(job);
-      } catch (e) {
-        logger.error('Exception while running the job: %s', e);
-        job.error = e.message;
-        job.runFinished();
-      }
+  job.error = undefined;  // Reset previous run's error, if any.
+  // For comparison in finishRun_()
+  this.currentJob_ = job;
+  // Set up job timeout
+  this.timeoutTimer_ = global.setTimeout(function() {
+    logger.error('job timeout: %s', job.id);
+    job.error = 'timeout';
+    if (this.onJobTimeout) {
+      this.onJobTimeout(job);
     } else {
-      logger.critical('Client.onStartJobRun must be set');
-      job.error = 'Agent is not configured to process jobs';
-      job.runFinished();
+      job.runFinished(/*isRunFinished=*/true);
     }
+  }.bind(this), this.jobTimeout_);
+
+  if (this.onStartJobRun) {
+    try {
+      this.onStartJobRun(job);
+    } catch (e) {
+      logger.error('Exception while running the job: %s', e);
+      job.error = e.message;
+      job.runFinished(/*isRunFinished=*/true);
+    }
+  } else {
+    logger.critical('Client.onStartJobRun must be set');
+    job.error = 'Agent is not configured to process jobs';
+    job.runFinished(/*isRunFinished=*/true);
   }
 };
 
@@ -295,23 +330,50 @@ Client.prototype.startNextRun_ = function(job) {
  *
  * @param {Object} job the job that supposedly finished.
  */
-Client.prototype.finishRun_ = function(job) {
+Client.prototype.finishRun_ = function(job, isRunFinished) {
   'use strict';
-  logger.alert('Finished run %s/%s of job %s', job.runNumber, job.runs, job.id);
+  logger.alert('Finished run %s/%s (isRunFinished=%s) of job %s',
+      job.runNumber, job.runs, isRunFinished, job.id);
   // Expected finish of the current job
   if (this.currentJob_ === job) {
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
     this.currentJob_ = undefined;
-    this.submitResult_(job, function() {
+    this.submitResult_(job, isRunFinished, function() {
       this.handlingUncaughtException_ = undefined;
-      this.startNextRun_(job);
+      // Run until we finish the last iteration.
+      // Do not increment job.runNumber past job.runs.
+      if (!(isRunFinished && job.runNumber === job.runs)) {
+        // Continue running
+        if (isRunFinished) {
+          job.runNumber += 1;
+          if (job.runNumber > job.runs) {  // Sanity check.
+            throw new Error('Internal error: job.runNumber > job.runs');
+          }
+        }
+        this.startNextRun_(job);
+      }
     }.bind(this));
   } else {  // Belated finish of an old already timed-out job
     logger.error('Timed-out job finished, but too late: %s', job.id);
     this.handlingUncaughtException_ = undefined;
   }
 };
+
+function createZip(zipFileMap, fileNamePrefix) {
+  'use strict';
+  var zip = new Zip();
+  Object.getOwnPropertyNames(zipFileMap).forEach(function(fileName) {
+    var content = zipFileMap[fileName];
+    logger.debug('Adding %s%s (%d bytes) to results zip',
+        fileNamePrefix, fileName, content.length);
+    zip.file(fileNamePrefix + fileName, content);
+  });
+  // Convert back and forth between base64, otherwise corrupts on long content.
+  // Unfortunately node-zip does not support passing/returning Buffer.
+  return new Buffer(
+      zip.generate({compression:'DEFLATE', base64: true}), 'base64');
+}
 
 /**
  * Submits one part of the job result, with an optional file.
@@ -344,11 +406,16 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
       // Images go to a different servlet and don't need the resultType part
       servlet = RESULT_IMAGE_SERVLET;
     } else {
-      mp.addPart(resultFile.resultType, '1');
+      if (resultFile.resultType) {
+        mp.addPart(resultFile.resultType, '1');
+      }
+      mp.addPart('_runNumber', String(job.runNumber));
+      mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
     }
+    var fileName = job.runNumber + (job.isCacheWarm ? '_Cached_' : '_') +
+        resultFile.fileName;
     mp.addFilePart(
-        'file',
-        resultFile.fileName, resultFile.contentType, resultFile.content);
+        'file', fileName, resultFile.contentType, resultFile.content);
   }
   // TODO(klm): change body to chunked request.write().
   // Only makes sense if done for file content, the rest is peanuts.
@@ -372,26 +439,34 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
  *
  * @param  {Object} job that should be completed.
  */
-Client.prototype.submitResult_ = function(job, callback) {
+Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
   'use strict';
   logger.debug('submitResult_: job=%s', job.id);
   var filesToSubmit = job.resultFiles.slice();
-  var fields;
+  // If there are job.zipResultFiles, add results.zip to job.resultFiles.
+  if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
+    var zipResultFiles = job.zipResultFiles;
+    job.zipResultFiles = {};
+    var fileNamePrefix = job.runNumber + (job.isCacheWarm ? '_Cached_' : '_');
+    filesToSubmit.push(new ResultFile(
+        /*resultType=*/undefined,
+        'results.zip',
+        'application/zip',
+        createZip(zipResultFiles, fileNamePrefix)));
+  }
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
   var submitNextResult = function() {
     var resultFile = filesToSubmit.shift();
+    var fields = [];
     if (resultFile) {
-      fields = [
-          ['_runNumber', String(job.runNumber)],
-          ['_cacheWarmed', '0']];
       if (job.error) {
         fields.push(['error', job.error]);
       }
       this.postResultFile_(job, resultFile, fields, submitNextResult);
     } else {
-      if (job.runNumber === job.runs) {
-        fields = [['done', '1']];
+      if (job.runNumber === job.runs && isRunFinished) {
+        fields.push(['done', '1']);
         if (job.error) {
           fields.push(['testerror', job.error]);
         }
@@ -402,7 +477,7 @@ Client.prototype.submitResult_ = function(job, callback) {
           this.emit('done', job);
         }.bind(this));
       } else if (callback) {
-         callback();
+        callback();
       }
     }
   }.bind(this);

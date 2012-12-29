@@ -27,6 +27,7 @@
  ******************************************************************************/
 /*jslint nomen:false*/
 
+var fs = require('fs');
 var logger = require('logger');
 
 var CRLF = '\r\n';
@@ -72,11 +73,12 @@ exports.Multipart.prototype.appendLine_ = function(text) {
  *
  * @param {String} name the name= attribute.
  * @param {String} body the body.
- * @param {Object} headers array of header lines, or undefined for no headers.
+ * @param {Array} [headers] array of header lines, or undefined for no headers.
  */
 exports.Multipart.prototype.addPart = function(name, body, headers) {
   'use strict';
-  logger.debug('addPart: name=' + name + ' headers=' + JSON.stringify(headers));
+  logger.debug('addPart: name=' + name + ' body=' + body +
+      ' headers=' + JSON.stringify(headers));
   this.appendBuffer_(this.partHeadBuffer_);
   this.appendLine_(name + '"');
   if (headers) {
@@ -98,7 +100,8 @@ exports.Multipart.prototype.addPart = function(name, body, headers) {
  */
 exports.Multipart.prototype.addFilePart = function(name, filename, type, body) {
   'use strict';
-  logger.debug('addFilePart: name=' + name + ' filename=' + filename);
+  logger.debug('addFilePart: name=' + name + ' filename=' + filename +
+      ' size=' + body.length);
   this.appendBuffer_(this.partHeadBuffer_);
   this.appendLine_(name + '"; filename="' + filename + '"');
   this.appendLine_('Content-Type: ' + type);
@@ -108,6 +111,10 @@ exports.Multipart.prototype.addFilePart = function(name, filename, type, body) {
   var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
   this.appendBuffer_(bodyBuffer, /*stubDebug=*/true);
   this.appendLine_();
+  if (logger.isLogging('debug')) {
+    logger.debug('Writing a local copy of %s', filename);
+    fs.writeFile(filename, bodyBuffer);
+  }
 };
 
 /**
@@ -122,7 +129,8 @@ exports.Multipart.prototype.getHeadersAndBody = function() {
   this.appendBuffer_(new Buffer('--' + this.boundary_ + '--' + CRLF));
   var bodyBuffer = Buffer.concat(this.buffers_, this.size_);
   if (bodyBuffer.length !== this.size_) {
-    throw new Error('size should be ' + bodyBuffer.length + ' but is ' + this.size_);
+    throw new Error(
+        'size should be ' + bodyBuffer.length + ' but is ' + this.size_);
   }
   var headers = {
     'Content-Type': 'multipart/form-data; boundary=' + this.boundary_,
