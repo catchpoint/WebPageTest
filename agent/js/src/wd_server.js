@@ -445,6 +445,7 @@ exports.WebDriverServer = {
     var sandbox = {
       console: console,
       setTimeout: global.setTimeout,
+      setInterval: global.setInterval,
       webdriver: wdSandbox
     };
     logger.info('Running user script');
