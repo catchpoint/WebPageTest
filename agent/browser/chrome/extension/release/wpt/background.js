@@ -14345,6 +14345,7 @@ var g_requesting_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
+var g_tabid = 0;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14414,6 +14415,7 @@ wpt.main.startMeasurements = function() {
     }
     // Use the first one even if the length is not the expected value.
     var tab = focusedTabs[0];
+    g_tabid = tab.id;
     wpt.LOG.info('Got tab id: ' + tab.id);
     g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
     wpt.chromeDebugger.Init(tab.id, window.chrome);
@@ -14534,7 +14536,7 @@ function wptSendEvent(event_name, query_string) {
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (g_active) {
+  if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');
@@ -14545,7 +14547,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
 });
 
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
-    if (g_active) {
+  // Chrome canary is generating spurious net:ERR_ABORTED errors
+  // right when navigation starts - we need to ignore them
+  if (g_active && 
+      details.tabId == g_tabid && 
+      details.error != "net::ERR_ABORTED") {
       var error_code =
           wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
       wpt.LOG.info(details.error + ' = ' + error_code);
@@ -14557,7 +14563,7 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
 );
 
 chrome.webRequest.onCompleted.addListener(function(details) {
-    if (g_active) {
+    if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
         g_active = false;
@@ -14569,7 +14575,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
 
 chrome.webRequest.onBeforeRequest.addListener(function(details) {
     var action = {};
-    if (g_active) {
+    if (g_active && details.tabId == g_tabid) {
       var urlParts = details.url.match(URL_REGEX);
       var scheme = urlParts[1].toString();
       var host = urlParts[2].toString();
@@ -14590,7 +14596,7 @@ chrome.webRequest.onBeforeRequest.addListener(function(details) {
 
 chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
     var response = {};
-    if (g_active) {
+    if (g_active && details.tabId == g_tabid) {
       var host = details.url.match(URL_REGEX)[2].toString();
       for (originalHost in g_overrideHosts) {
         if (g_overrideHosts[originalHost] == host) {
