@@ -1181,7 +1181,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
                 if( stripos($script, '%HOSTR%') !== false )
                 {
                     // do host substitution but also clone the command for a final redirected domain if there are redirects involved
-                    if( GetRedirectHost($url, $rhost) )
+                    if( GetRedirect($url, $rhost, $rurl) )
                     {
                         $lines = explode("\r\n", $script);
                         $script = '';
@@ -1347,43 +1347,46 @@ function SendToRelay(&$test, &$out)
 /**
 * Detect if the given URL redirects to another host
 */
-function GetRedirectHost($url, &$rhost)
+function GetRedirect($url, &$rhost, &$rurl)
 {
+    global $redirect_cache;
     $redirected = false;
-    $opts = array('http' =>
-        array('user_agent' => 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)',
-                'ignore_errors' => TRUE,
-                'protocol_version' => 1.1,
-                'timeout' => 20)
-    );
-    stream_context_get_default($opts);
-        
-    // fetch the actual content
-    $headers = get_headers($url,1);
+    $rhost = '';
+    $rurl = '';
+    
+    if (strlen($url)) {
+        if (array_key_exists($url, $redirect_cache)) {
+            $rhost = $redirect_cache[$url]['host'];
+            $rurl = $redirect_cache[$url]['url'];
+        } else {
+            $opts = array('http' =>
+                array('user_agent' => 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)',
+                        'ignore_errors' => TRUE,
+                        'protocol_version' => 1.1,
+                        'timeout' => 20)
+            );
+            stream_context_get_default($opts);
+            $headers = get_headers($url,1);
+            if( isset($headers['Location']) ) {
+                $parts = parse_url($url);
+                $original = $parts['host'];
 
-    if( isset($headers['Location']) )
-    {
-        $parts = parse_url($url);
-        $original = $parts['host'];
-
-        $location = $headers['Location'];
-        if( is_array($location) )
-        {
-            $parts = parse_url($location[count($location) - 1]);
-            $final = trim($parts['host']);
-        }
-        elseif( strlen($location) )
-        {
-            $parts = parse_url($location);
-            $final = trim($parts['host']);
-        }
-        
-        if( strlen($final) && $original !== $final )
-        {
-            $rhost = $final;
-            $redirected = true;
+                $location = $headers['Location'];
+                if( is_array($location) )
+                    $rurl = $location[count($location) - 1];
+                elseif( strlen($location) )
+                    $rurl = $location;
+                $parts = parse_url($rurl);
+                $host = trim($parts['host']);
+                
+                if( strlen($host) && $original !== $host )
+                    $rhost = $host;
+            }
+            $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
         }
     }
+    if (strlen($rhost))
+        $redirected = true;
     return $redirected;
 }
 
@@ -1464,13 +1467,17 @@ function CheckUrl($url)
 {
     $ok = true;
     $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach( $blockUrls as $block )
-    {
-        $block = trim($block);
-        if( strlen($block) && preg_match("/$block/i", $url) )
-        {
-            $ok = false;
-            break;
+    if ($blockUrls !== false && count($blockUrls)) {
+        GetRedirect($url, $rhost, $rurl);
+        foreach( $blockUrls as $block ) {
+            $block = trim($block);
+            if( strlen($block) && 
+                (preg_match("/$block/i", $url) ||
+                 (strlen($rurl) && 
+                  preg_match("/$block/i", $rurl)))) {
+                $ok = false;
+                break;
+            }
         }
     }
     
