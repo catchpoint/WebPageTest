@@ -209,14 +209,7 @@ describe('wpt_client small', function() {
     var shutdownSpy = sandbox.spy();
     client.on('shutdown', shutdownSpy);
 
-    var response = new Stream();
-    response.setEncoding = function() {};
-    sandbox.stub(http, 'get', function(url, responseCb) {
-      url.href.should.match(new RegExp('^' + WPT_SERVER));
-      responseCb(response);
-      response.emit('data', 'shutdown');
-      response.emit('end');
-    });
+    test_utils.stubHttpGet(sandbox, new RegExp('^' + WPT_SERVER), 'shutdown');
 
     client.run(/*forever=*/true);
     should.ok(shutdownSpy.calledOnce);
@@ -250,20 +243,12 @@ describe('wpt_client small', function() {
       }, 0);
     };
 
-    var getResponse = new Stream();
-    getResponse.setEncoding = function() {};
-    sandbox.stub(http, 'get', function(url, responseCb) {
-      logger.debug('Stub GET %s', url.href);
-      url.href.should.match(/\/work\/getwork/);
-      responseCb(getResponse);
-      getResponse.emit('data', JSON.stringify({
+    test_utils.stubHttpGet(sandbox, /\/work\/getwork/, JSON.stringify({
         'Test ID': '121106_WK_M',
         runs: 3
-      }));
-      getResponse.emit('end');
-    });
-    // Must use a different Stream object for the POST, because getResponse
-    // already has other completely unrelated event callbacks registered.
+    }));
+
+    // Stub a POST
     var postResponse = new Stream();
     postResponse.setEncoding = function() {};
     sandbox.stub(http, 'request',

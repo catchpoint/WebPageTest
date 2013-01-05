@@ -96,6 +96,7 @@ exports.WebDriverServer = {
       this.driver_ = undefined;
       this.driverBuildTime_ = undefined;
       this.devToolsPort_ = 1234;
+      this.devTools_ = undefined;
       this.seleniumJar_ = initMessage.seleniumJar;
       this.chromedriver_ = initMessage.chromedriver;
       this.chrome_ = initMessage.chrome;
@@ -196,30 +197,30 @@ exports.WebDriverServer = {
    */
   connectDevTools_: function(wdNamespace) {
     'use strict';
-    this.app_.scheduleWait('Connect DevTools', function() {
+    return this.app_.scheduleWait('Connect DevTools', function() {
       var isDevtoolsConnected = new wdNamespace.promise.Deferred();
-      var devTools = new devtools.DevTools(
+      function reject(e) {
+        isDevtoolsConnected.reject(e);
+      }
+
+      this.devTools_ = new devtools.DevTools(
           'http://localhost:' + this.devToolsPort_ + '/json');
 
-      devTools.on('connect', function() {
-        devTools.networkMethod('enable', function() {
+      this.devTools_.connect(function() {
+        this.devTools_.networkCommand('enable', function() {
           logger.info('DevTools Network events enabled');
-          devTools.pageMethod('enable', function() {
+          this.devTools_.pageCommand('enable', function() {
             logger.info('DevTools Page events enabled');
             // Timeline enable event never gets a response.
-            devTools.timelineMethod('start', function() {
+            this.devTools_.timelineCommand('start', function() {
               logger.info('DevTools Timeline events enabled');
+              this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
               isDevtoolsConnected.resolve(true);
-            }, process_utils.getLoggingErrback('DevTools Timeline start'));
-          });
-        });
-      });
+            }.bind(this), reject);
+          }.bind(this), reject);
+        }.bind(this), reject);
+      }.bind(this), reject);
 
-      devTools.on('message', function(message) {
-        this.onDevToolsMessage_(message);
-      }.bind(this));
-
-      devTools.connect();
       return isDevtoolsConnected.promise;
     }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
   },
@@ -232,6 +233,18 @@ exports.WebDriverServer = {
     } else {
       logger.extra('DevTools timeline message: %j', message);
       this.devToolsTimelineMessages_.push(message);
+    }
+  },
+
+  onAfterDriverBuild_: function() {
+    'use strict';
+    if (this.captureVideo_) {
+      this.takeScreenshot_('progress_0', 'after Builder.build()').then(
+          function() {
+            this.driverBuildTime_ = Date.now();
+          }.bind(this));
+    } else {
+      this.driverBuildTime_ = Date.now();
     }
   },
 
@@ -248,47 +261,43 @@ exports.WebDriverServer = {
     if (!this.driver_) {
       this.driver_ = driver;
       if (browserCaps.browserName.indexOf('chrome') !== -1) {
-        this.connectDevTools_(wdNamespace);
+        this.connectDevTools_(wdNamespace).then(
+            this.onAfterDriverBuild_.bind(this), this.onError_.bind(this));
+      } else {
+        this.onAfterDriverBuild_();
       }
     } else if (this.driver_ !== driver) {
       throw new Error('Internal error: repeat onDriverBuild with wrong driver');
-    }
-    if (this.captureVideo_) {
-      this.takeScreenshot_('progress_0', 'after Builder.build()').then(
-          function() {
-        this.driverBuildTime_ = Date.now();
-      }.bind(this));
-    } else {
-      this.driverBuildTime_ = Date.now();
     }
   },
 
   takeScreenshot_: function(fileNameNoExt, description) {
     'use strict';
-    if (this.actionCbRecurseGuard_) {
-      // Check the recursion guard in the calling function
-      logger.error('Recursion guard true in takeScreenshot_');
-    }
-    this.actionCbRecurseGuard_ = true;
-    // We operate in milliseconds, WPT wants "tens of seconds" units.
+    // DevTools screenshots were introduced in Chrome 26:
+    // http://trac.webkit.org/changeset/138236
+    //   /trunk/Source/WebCore/inspector/Inspector.json
     var result = null;
-    if (this.driver_) {
-      result = this.driver_.takeScreenshot().then(function(screenshot) {
-        this.actionCbRecurseGuard_ = false;
-        logger.info('Screenshot %s (%d bytes): %s',
-            fileNameNoExt, screenshot.length, description);
-        this.screenshots_.push({
+    if (this.devTools_) {
+      result = this.app_.schedule('Screenshot: ' + description, function() {
+        var done = new webdriver.promise.Deferred();
+        this.devTools_.pageCommand('captureScreenshot', function(result) {
+          var screenshot = result.data;
+          logger.info('Screenshot %s (%d bytes): %s',
+              fileNameNoExt, screenshot.length, description);
+          this.screenshots_.push({
             fileName: fileNameNoExt + '.png',
             contentType: 'image/png',
             base64: screenshot,
             description: description});
-        return screenshot;  // Allow following then()'s to reuse the screenshot.
-      }.bind(this), function(e) {
-        this.actionCbRecurseGuard_ = false;
-        logger.error('failed to take screenshot: %s', e.message);
+          // Allow following then()'s to reuse the screenshot.
+          done.resolve(screenshot);
+        }.bind(this), function(e) {
+          done.reject(e);
+        });
+        return done;
       }.bind(this));
     } else {
-      logger.error('Trying to take a screenshot while there is no driver');
+      logger.error('Trying to take a screenshot while there is no DevTools');
     }
     return result;
   },
@@ -305,6 +314,7 @@ exports.WebDriverServer = {
       logger.debug('Before WD quit: resetting driver, driverBuildTime');
       this.driver_ = undefined;
       this.driverBuildTime_ = undefined;
+      this.devTools_ = undefined;
     }
   },
 
@@ -413,7 +423,10 @@ exports.WebDriverServer = {
       platform: 'ANY',
       javascriptEnabled: true,
       // Only used when launching actual Chrome, ignored otherwise
-      'chrome.switches': ['-remote-debugging-port=' + this.devToolsPort_]
+      'chrome.switches': [
+          '-remote-debugging-port=' + this.devToolsPort_,
+          '--enable-benchmarking'  // Suppress randomized field trials.
+      ]
     };
     if (this.chrome_) {
       browserCaps['chrome.binary'] = this.chrome_;

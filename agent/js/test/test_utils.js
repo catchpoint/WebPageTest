@@ -26,8 +26,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var http = require('http');
 var logger = require('logger');
 var sinon = require('sinon');
+var Stream = require('stream');
 var timers = require('timers');
 
 
@@ -107,4 +109,27 @@ exports.unfakeTimers = function(sandbox) {
     // The Sinon fake_timers add it, and it trips Mocha global leak detection.
     delete global.timeouts;
   }
+};
+
+
+/**
+ * Stubs out http.get() to verify the URL and return specific content.
+ *
+ * @param {Object} sandbox Sinon.JS sandbox object.
+ * @param {RegExp} [urlRegExp] what the URL should be, or undefined.
+ * @param {String} data the content to return.
+ */
+exports.stubHttpGet = function(sandbox, urlRegExp, data) {
+  'use strict';
+  var response = new Stream();
+  response.setEncoding = function() {};
+  return sandbox.stub(http, 'get', function(url, responseCb) {
+    logger.debug('Stub http.get(%s)', url.href);
+    if (urlRegExp) {
+      url.href.should.match(urlRegExp);
+    }
+    responseCb(response);
+    response.emit('data', data);
+    response.emit('end');
+  });
 };
