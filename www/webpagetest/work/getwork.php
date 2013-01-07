@@ -20,7 +20,7 @@ $tester = null;
 if (@strlen($ec2)) {
     $tester = $ec2;
 } elseif (@strlen($pc)) {
-    $tester = $pc;
+    $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
 } else {
     $tester = trim($_SERVER['REMOTE_ADDR']);
 }
