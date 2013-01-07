@@ -178,6 +178,7 @@ public:
   
   // current state
   int     _run;
+  int     _specific_run;
   int     _index;
   bool    _clear_cache;
   bool    _upload_incremental_results;

@@ -102,6 +102,7 @@ void WptTest::Reset(void) {
   _basic_auth.Empty();
   _script.Empty();
   _run = 0;
+  _specific_run = 0;
   _index = 0;
   _clear_cache = true;
   _active = false;
@@ -156,6 +157,8 @@ bool WptTest::Load(CString& test) {
           _url = value.Trim();
         else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim()))
           _fv_only = true;
+        else if (!key.CompareNoCase(_T("run")))
+          _specific_run = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("runs")))
           _runs = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("discard")))
@@ -399,13 +402,6 @@ void WptTest::BuildScript() {
     command.target = _url;
     command.record = true;
     _script_commands.AddTail(command);
-  }
-
-  if (_clear_cache) {
-      ScriptCommand command;
-      command.command = _T("clearCache");
-      command.record = false;
-      _script_commands.AddHead(command);
   }
 
   if (_block.GetLength() ) {
