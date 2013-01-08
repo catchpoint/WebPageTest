@@ -21,7 +21,8 @@
         newrelic_add_custom_tracer('AddJobFile');
         newrelic_add_custom_tracer('LogTest');
     }
-     
+
+    $redirect_cache = array();     
     $error = NULL;
     $xml = false;
     if( !strcasecmp($req_f, 'xml') )
@@ -130,6 +131,7 @@
                 $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             }
             $test['pss_advanced'] = $req_pss_advanced;
+            $test['shard_test'] = $req_shard ? 1 : 0;
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -1355,33 +1357,47 @@ function GetRedirect($url, &$rhost, &$rurl)
     $rurl = '';
     
     if (strlen($url)) {
+        if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+            $url = 'http://' . $url;
         if (array_key_exists($url, $redirect_cache)) {
             $rhost = $redirect_cache[$url]['host'];
             $rurl = $redirect_cache[$url]['url'];
-        } else {
-            $opts = array('http' =>
-                array('user_agent' => 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)',
-                        'ignore_errors' => TRUE,
-                        'protocol_version' => 1.1,
-                        'timeout' => 20)
-            );
-            stream_context_get_default($opts);
-            $headers = get_headers($url,1);
-            if( isset($headers['Location']) ) {
-                $parts = parse_url($url);
-                $original = $parts['host'];
-
-                $location = $headers['Location'];
-                if( is_array($location) )
-                    $rurl = $location[count($location) - 1];
-                elseif( strlen($location) )
-                    $rurl = $location;
-                $parts = parse_url($rurl);
-                $host = trim($parts['host']);
-                
-                if( strlen($host) && $original !== $host )
-                    $rhost = $host;
+        } elseif (function_exists('curl_init')) {
+            $parts = parse_url($url);
+            $original = $parts['host'];
+            $host = '';
+            $curl = curl_init();
+            curl_setopt($curl, CURLOPT_URL, $url);
+            curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
+            curl_setopt($curl, CURLOPT_FILETIME, true);
+            curl_setopt($curl, CURLOPT_NOBODY, true);
+            curl_setopt($curl, CURLOPT_HEADER, true);
+            curl_setopt($curl, CURLOPT_FAILONERROR, true);
+            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
+            curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
+            curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+            curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+            curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            $headers = curl_exec($curl);
+            curl_close($curl);            
+            $lines = explode("\n", $headers);
+            foreach($lines as $line) {
+                $line = trim($line);
+                $split = strpos($line, ':');
+                if ($split > 0) {
+                    $key = trim(substr($line, 0, $split));
+                    $value = trim(substr($line, $split + 1));
+                    if (!strcasecmp($key, 'Location')) {
+                        $rurl = $value;
+                        $parts = parse_url($rurl);
+                        $host = trim($parts['host']);
+                    }
+                }
             }
+            if( strlen($host) && $original !== $host )
+                $rhost = $host;
             $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
         }
     }
@@ -1466,17 +1482,20 @@ function CheckIp(&$test)
 function CheckUrl($url)
 {
     $ok = true;
-    $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($blockUrls !== false && count($blockUrls)) {
-        GetRedirect($url, $rhost, $rurl);
-        foreach( $blockUrls as $block ) {
-            $block = trim($block);
-            if( strlen($block) && 
-                (preg_match("/$block/i", $url) ||
-                 (strlen($rurl) && 
-                  preg_match("/$block/i", $rurl)))) {
-                $ok = false;
-                break;
+    global $user;
+    if (!isset($user)) {
+        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($blockUrls !== false && count($blockUrls)) {
+            GetRedirect($url, $rhost, $rurl);
+            foreach( $blockUrls as $block ) {
+                $block = trim($block);
+                if( strlen($block) && 
+                    (preg_match("/$block/i", $url) ||
+                     (strlen($rurl) && 
+                      preg_match("/$block/i", $rurl)))) {
+                    $ok = false;
+                    break;
+                }
             }
         }
     }
