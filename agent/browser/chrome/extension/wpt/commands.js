@@ -95,7 +95,7 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
  * @param {Object} commandObject
  */
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
-    commandObject) {
+    commandObject, callback) {
 
   console.log('Delegate a command to the content script: ', commandObject);
 
@@ -103,7 +103,10 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
               JSON.stringify(commandObject),
               ');'].join('');
   this.chromeApi_.tabs.executeScript(
-      this.tabId_, {'code': code}, function() {});
+      this.tabId_, {'code': code}, function() {
+        if (callback != undefined)
+          callback();
+      });
 };
 
 /**
@@ -113,16 +116,22 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
  * an exception.
  * @param {string} script
  */
-wpt.commands.CommandRunner.prototype.doExec = function(script) {
-  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script});
+wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
+  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script}, function(results){
+    if (callback != undefined)
+      callback();
+  });
 };
 
 /**
  * Implement the navigate command.
  * @param {string} url
  */
-wpt.commands.CommandRunner.prototype.doNavigate = function(url) {
-  this.chromeApi_.tabs.update(this.tabId_, {'url': url});
+wpt.commands.CommandRunner.prototype.doNavigate = function(url, callback) {
+  this.chromeApi_.tabs.update(this.tabId_, {'url': url}, function(tab){
+    if (callback != undefined)
+      callback();
+  });
 };
 
 /**
@@ -271,11 +280,11 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
  * Implement the click command.
  * @param {string} target The DOM element to click, in attribute'value form.
  */
-wpt.commands.CommandRunner.prototype.doClick = function(target) {
+wpt.commands.CommandRunner.prototype.doClick = function(target, callback) {
   this.SendCommandToContentScript_({
       'command': 'click',
       'target': target
-  });
+  }, callback);
 };
 
 /**
@@ -283,12 +292,12 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
  * @param {string} target The DOM element to click, in attribute'value form.
  * @param {string} value The value to set.
  */
-wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setInnerHTML',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
@@ -296,12 +305,12 @@ wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
  * @param {string} target The DOM element to click, in attribute'value form.
  * @param {string} value The value to set.
  */
-wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setInnerText',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
@@ -309,34 +318,40 @@ wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
  * @param {string} target The DOM element to set, in attribute'value form.
  * @param {string} value The value to set the target to.
  */
-wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetValue = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setValue',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
  * Implement the submitForm command.
  * @param {string} target The DOM element to set, in attribute'value form.
  */
-wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
+wpt.commands.CommandRunner.prototype.doSubmitForm = function(target, callback) {
   this.SendCommandToContentScript_({
       'command': 'submitForm',
       'target': target
-  });
+  }, callback);
 };
 
 /**
  * Implement the clearcache command.
  * @param {string} options
  */
-wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
+wpt.commands.CommandRunner.prototype.doClearCache = function(options, callback) {
   if (this.chromeApi_['browsingData'] != undefined) {
-    this.chromeApi_.browsingData.removeCache({}, function() {});
+    this.chromeApi_.browsingData.removeCache({}, function() {
+      if (callback != undefined)
+        callback();
+    });
   } else if (this.chromeApi_.experimental['clear'] != undefined) {
-    this.chromeApi_.experimental.clear.cache(0, function() {});
+    this.chromeApi_.experimental.clear.cache(0, function() {
+      if (callback != undefined)
+        callback();
+    });
   }
 };
 

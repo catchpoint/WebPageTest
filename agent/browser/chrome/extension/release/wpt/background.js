@@ -13657,7 +13657,7 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
  * @param {Object} commandObject
  */
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
-    commandObject) {
+    commandObject, callback) {
 
   console.log('Delegate a command to the content script: ', commandObject);
 
@@ -13665,7 +13665,10 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
               JSON.stringify(commandObject),
               ');'].join('');
   this.chromeApi_.tabs.executeScript(
-      this.tabId_, {'code': code}, function() {});
+      this.tabId_, {'code': code}, function() {
+        if (callback != undefined)
+          callback();
+      });
 };
 
 /**
@@ -13675,16 +13678,22 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
  * an exception.
  * @param {string} script
  */
-wpt.commands.CommandRunner.prototype.doExec = function(script) {
-  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script});
+wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
+  this.chromeApi_.tabs.executeScript(this.tabId_, {'code': script}, function(results){
+    if (callback != undefined)
+      callback();
+  });
 };
 
 /**
  * Implement the navigate command.
  * @param {string} url
  */
-wpt.commands.CommandRunner.prototype.doNavigate = function(url) {
-  this.chromeApi_.tabs.update(this.tabId_, {'url': url});
+wpt.commands.CommandRunner.prototype.doNavigate = function(url, callback) {
+  this.chromeApi_.tabs.update(this.tabId_, {'url': url}, function(tab){
+    if (callback != undefined)
+      callback();
+  });
 };
 
 /**
@@ -13833,11 +13842,11 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
  * Implement the click command.
  * @param {string} target The DOM element to click, in attribute'value form.
  */
-wpt.commands.CommandRunner.prototype.doClick = function(target) {
+wpt.commands.CommandRunner.prototype.doClick = function(target, callback) {
   this.SendCommandToContentScript_({
       'command': 'click',
       'target': target
-  });
+  }, callback);
 };
 
 /**
@@ -13845,12 +13854,12 @@ wpt.commands.CommandRunner.prototype.doClick = function(target) {
  * @param {string} target The DOM element to click, in attribute'value form.
  * @param {string} value The value to set.
  */
-wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setInnerHTML',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
@@ -13858,12 +13867,12 @@ wpt.commands.CommandRunner.prototype.doSetInnerHTML = function(target, value) {
  * @param {string} target The DOM element to click, in attribute'value form.
  * @param {string} value The value to set.
  */
-wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setInnerText',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
@@ -13871,34 +13880,40 @@ wpt.commands.CommandRunner.prototype.doSetInnerText = function(target, value) {
  * @param {string} target The DOM element to set, in attribute'value form.
  * @param {string} value The value to set the target to.
  */
-wpt.commands.CommandRunner.prototype.doSetValue = function(target, value) {
+wpt.commands.CommandRunner.prototype.doSetValue = function(target, value, callback) {
   this.SendCommandToContentScript_({
       'command': 'setValue',
       'target': target,
       'value': value
-  });
+  }, callback);
 };
 
 /**
  * Implement the submitForm command.
  * @param {string} target The DOM element to set, in attribute'value form.
  */
-wpt.commands.CommandRunner.prototype.doSubmitForm = function(target) {
+wpt.commands.CommandRunner.prototype.doSubmitForm = function(target, callback) {
   this.SendCommandToContentScript_({
       'command': 'submitForm',
       'target': target
-  });
+  }, callback);
 };
 
 /**
  * Implement the clearcache command.
  * @param {string} options
  */
-wpt.commands.CommandRunner.prototype.doClearCache = function(options) {
+wpt.commands.CommandRunner.prototype.doClearCache = function(options, callback) {
   if (this.chromeApi_['browsingData'] != undefined) {
-    this.chromeApi_.browsingData.removeCache({}, function() {});
+    this.chromeApi_.browsingData.removeCache({}, function() {
+      if (callback != undefined)
+        callback();
+    });
   } else if (this.chromeApi_.experimental['clear'] != undefined) {
-    this.chromeApi_.experimental.clear.cache(0, function() {});
+    this.chromeApi_.experimental.clear.cache(0, function() {
+      if (callback != undefined)
+        callback();
+    });
   }
 };
 
@@ -14342,6 +14357,7 @@ var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
+var g_processing_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
@@ -14488,8 +14504,7 @@ function wptFeedFakeTasks() {
 
 // Get the next task from the wptdriver
 function wptGetTask() {
-  wpt.LOG.info('wptGetTask');
-  if (!g_requesting_task) {
+  if (!g_requesting_task && !g_processing_task) {
     g_requesting_task = true;
     try {
       var xhr = new XMLHttpRequest();
@@ -14499,27 +14514,31 @@ function wptGetTask() {
           return;
         if (xhr.status != 200) {
           wpt.LOG.warning('Got unexpected (not 200) XHR status: ' + xhr.status);
+          g_requesting_task = false;
           return;
         }
         var resp = JSON.parse(xhr.responseText);
         if (resp.statusCode != 200) {
           wpt.LOG.warning('Got unexpected status code ' + resp.statusCode);
+          g_requesting_task = false;
           return;
         }
         if (!resp.data) {
-          wpt.LOG.warning('No data?');
+          g_requesting_task = false;
           return;
         }
         wptExecuteTask(resp.data);
+        g_requesting_task = false;
       };
       xhr.onerror = function() {
         wpt.LOG.warning('Got an XHR error!');
+        g_requesting_task = false;
       };
       xhr.send();
     } catch (err) {
       wpt.LOG.warning('Error getting task: ' + err);
+      g_requesting_task = false;
     }
-    g_requesting_task = false;
   }
 }
 
@@ -14652,6 +14671,11 @@ chrome.extension.onRequest.addListener(
 /***********************************************************
                       Script Commands
 ***********************************************************/
+var wptTaskCallback = function() {
+  g_processing_task = false;
+  if (!g_active)
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+}
 
 // execute a single task/script command
 function wptExecuteTask(task) {
@@ -14660,16 +14684,17 @@ function wptExecuteTask(task) {
       g_active = true;
     else
       g_active = false;
-
     // Decode and execute the actual command.
     // Commands are all lowercase at this point.
     wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
     switch (task.action) {
       case 'navigate':
-        g_commandRunner.doNavigate(task.target);
+        g_processing_task = true;
+        g_commandRunner.doNavigate(task.target, wptTaskCallback);
         break;
       case 'exec':
-        g_commandRunner.doExec(task.target);
+        g_processing_task = true;
+        g_commandRunner.doExec(task.target, wptTaskCallback);
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
@@ -14684,22 +14709,28 @@ function wptExecuteTask(task) {
         wpt.commands.g_domElements.push(task.target);
         break;
       case 'click':
-        g_commandRunner.doClick(task.target);
+        g_processing_task = true;
+        g_commandRunner.doClick(task.target, wptTaskCallback);
         break;
       case 'setinnerhtml':
-        g_commandRunner.doSetInnerHTML(task.target, task.value);
+        g_processing_task = true;
+        g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
         break;
       case 'setinnertext':
-        g_commandRunner.doSetInnerText(task.target, task.value);
+        g_processing_task = true;
+        g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
         break;
       case 'setvalue':
-        g_commandRunner.doSetValue(task.target, task.value);
+        g_processing_task = true;
+        g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
         break;
       case 'submitform':
-        g_commandRunner.doSubmitForm(task.target);
+        g_processing_task = true;
+        g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
         break;
       case 'clearcache':
-        g_commandRunner.doClearCache(task.target);
+        g_processing_task = true;
+        g_commandRunner.doClearCache(task.target, wptTaskCallback);
         break;
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
@@ -14715,7 +14746,7 @@ function wptExecuteTask(task) {
         wpt.LOG.error('Unimplemented command: ', task);
     }
 
-    if (!g_active)
+    if (!g_active && !g_processing_task)
       window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 }
