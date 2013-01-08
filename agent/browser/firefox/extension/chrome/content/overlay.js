@@ -344,11 +344,7 @@ wpt.moz.main.exec = function(script) {
 
 // navigate
 wpt.moz.main.navigate = function(url) {
-  var where = 'current';  // current tab
-  var isThirdPartyFixupAllowed = false;
-  var postData = {};
-  var referrerUrl = '';
-  openUILink(url, where, isThirdPartyFixupAllowed, postData, referrerUrl);
+  gBrowser.loadURI(url);
 };
 
 wpt.moz.main.setCookie = function(cookie_path, data) {
