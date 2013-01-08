@@ -38,6 +38,7 @@ public:
   void Start(void);
   void Stop(void);
   void WorkThread(void);
+  void DoHouseKeeping();
 
 private:
   WptSettings _settings;
@@ -49,11 +50,13 @@ private:
   HANDLE      _work_thread;
   HANDLE      _testing_mutex;
   CIpfw       _ipfw;
+  HANDLE      housekeeping_timer_;
 
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);
+  void Cleanup(void);
   void FlushDNS(void);
   void FlushCertCaches(void);
   void ExtractZipFiles();
@@ -61,4 +64,5 @@ private:
   void KillBrowsers();
   void SetupScreen();
   void SetupDummynet();
+  void CloseDialogs();
 };

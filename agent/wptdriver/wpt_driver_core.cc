@@ -38,7 +38,16 @@ const TCHAR * BROWSERS[] = {
   _T("iexplore.exe")
 };
 
+const TCHAR * DIALOG_WHITELIST[] = { 
+  _T("urlblast")
+  , _T("url blast")
+  , _T("task manager")
+  , _T("aol pagetest")
+  , _T("shut down windows")
+};
+
 const DWORD SOFTWARE_INSTALL_RETRY_DELAY = 30000; // try every 30 seconds
+const DWORD HOUSEKEEPING_INTERVAL = 500;
 
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
@@ -50,7 +59,8 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_webpagetest(_settings, _status)
   ,_browser(NULL)
   ,_exit(false)
-  ,_work_thread(NULL) {
+  ,_work_thread(NULL)
+  ,housekeeping_timer_(NULL) {
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 }
@@ -72,6 +82,13 @@ static unsigned __stdcall WorkThreadProc(void* arg) {
     core->WorkThread();
     
   return 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void __stdcall DoHouseKeeping(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
+  if( lpParameter )
+    ((WptDriverCore *)lpParameter)->DoHouseKeeping();
 }
 
 /*-----------------------------------------------------------------------------
@@ -154,18 +171,23 @@ void WptDriverCore::WorkThread(void) {
             !TracerouteTest(test)) {
           test._index = 1;
           for (test._run = 1; test._run <= test._runs; test._run++) {
+            if (test._specific_run)
+              test._run = test._specific_run;
             test._clear_cache = true;
             BrowserTest(test, browser);
             if (!test._fv_only) {
               test._clear_cache = false;
               BrowserTest(test, browser);
             }
-            if (test._discard > 0) {
+            if (!test._specific_run && test._discard > 0) {
               test._discard--;
             } else {
               test._index++;
             }
+            if (test._specific_run)
+              break;
           }
+          test._run = test._specific_run ? test._specific_run : test._runs;
         }
 
         bool uploaded = false;
@@ -186,6 +208,7 @@ void WptDriverCore::WorkThread(void) {
       }
     }
   }
+  Cleanup();
 }
 
 /*-----------------------------------------------------------------------------
@@ -295,11 +318,25 @@ void WptDriverCore::Init(void){
 
   KillBrowsers();
 
+  // start the background timer that does our housekeeping
+  CreateTimerQueueTimer(&housekeeping_timer_, NULL, ::DoHouseKeeping, this, 
+      HOUSEKEEPING_INTERVAL, HOUSEKEEPING_INTERVAL, WT_EXECUTEDEFAULT);
+
   _status.Set(_T("Installing software..."));
   while( !_settings.UpdateSoftware() && !_exit ) {
     _status.Set(_T("Software install failed, waiting to try again..."));
     Sleep(SOFTWARE_INSTALL_RETRY_DELAY);
     _status.Set(_T("Installing software..."));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Do our cleanup on exit
+-----------------------------------------------------------------------------*/
+void WptDriverCore::Cleanup(void){
+  if (housekeeping_timer_) {
+    DeleteTimerQueueTimer(NULL, housekeeping_timer_, NULL);
+    housekeeping_timer_ = NULL;
   }
 }
 
@@ -543,4 +580,86 @@ void WptDriverCore::SetupScreen(void) {
 -----------------------------------------------------------------------------*/
 void WptDriverCore::SetupDummynet(void) {
   _status.Set(_T("Configuring dummynet..."));
+}
+
+/*-----------------------------------------------------------------------------
+  Take care of the periodic housekeeping tasks (closing dialogs,
+  terminating processes)
+-----------------------------------------------------------------------------*/
+void WptDriverCore::DoHouseKeeping(void) {
+  CloseDialogs();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::CloseDialogs(void) {
+  TCHAR szTitle[1025];
+  // make sure wptdriver isn't doing a software install
+  bool installing = false;
+  HWND hWptDriver = ::FindWindow(_T("wptdriver_wnd"), NULL);
+  if (hWptDriver) {
+    if (::GetWindowText(hWptDriver, szTitle, _countof(szTitle))) {
+      CString title = szTitle;
+      title.MakeLower();
+      if (title.Find(_T(" software")) >= 0)
+        installing = true;
+    }
+  }
+
+  // if there are any explorer windows open, disable this code
+  // (for local debugging and other work)
+  if (!installing && !::FindWindow(_T("CabinetWClass"), NULL )) {
+    HWND hDesktop = ::GetDesktopWindow();
+    HWND hWnd = ::GetWindow(hDesktop, GW_CHILD);
+    TCHAR szClass[100];
+    CAtlArray<HWND> hDlg;
+
+    // build a list of dialogs to close
+    while (hWnd) {
+      if (hWnd != _status._wnd) {
+        if (::IsWindowVisible(hWnd))
+          if (::GetClassName(hWnd, szClass, 100))
+            if (!lstrcmp(szClass,_T("#32770")) ||
+                !lstrcmp(szClass,_T("Internet Explorer_Server"))) {
+              bool bKill = true;
+
+              // make sure it is not in our list of windows to keep
+              if (::GetWindowText( hWnd, szTitle, 1024)) {
+                _tcslwr_s(szTitle, _countof(szTitle));
+                for (int i = 0; i < _countof(DIALOG_WHITELIST) && bKill; i++) {
+                  if(_tcsstr(szTitle, DIALOG_WHITELIST[i]))
+                    bKill = false;
+                }
+                
+                // do we have to terminate the process that owns it?
+                if (!lstrcmp(szTitle, _T("server busy"))) {
+                  DWORD pid;
+                  GetWindowThreadProcessId(hWnd, &pid);
+                  HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+                  if (hProcess) {
+                    TerminateProcess(hProcess, 0);
+                    CloseHandle(hProcess);
+                  }
+                }
+              }
+            
+              if(bKill)
+                hDlg.Add(hWnd);	
+            }
+      }
+      hWnd = ::GetWindow(hWnd, GW_HWNDNEXT);
+    }
+
+    // close all of the dialogs, preferably by clicking on OK
+    for (size_t i = 0; i < hDlg.GetCount(); i++) {
+      HWND hOk = ::FindWindowEx(hDlg[i], 0, 0, _T("OK"));
+      if (hOk) {
+        int id = ::GetDlgCtrlID(hOk);
+        if( !id )
+          id = IDOK;
+        ::PostMessage(hDlg[i],WM_COMMAND,id,0);
+      } else
+        ::PostMessage(hDlg[i],WM_CLOSE,0,0);
+    }
+  }
 }

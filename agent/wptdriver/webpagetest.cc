@@ -445,6 +445,7 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   footer = "";
   form_data = "";
 
+  CStringA buffA;
   CStringA boundary = "----------ThIs_Is_tHe_bouNdaRY";
   GUID guid;
   if (SUCCEEDED(CoCreateGuid(&guid)))
@@ -471,6 +472,18 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"id\"\r\n\r\n";
   form_data += CStringA(CT2A(test._id)) + "\r\n";
+
+  // run
+  form_data += CStringA("--") + boundary + "\r\n";
+  form_data += "Content-Disposition: form-data; name=\"run\"\r\n\r\n";
+  buffA.Format("%d", test._run);
+  form_data += buffA + "\r\n";
+
+  // cached state
+  form_data += CStringA("--") + boundary + "\r\n";
+  form_data += "Content-Disposition: form-data; name=\"cached\"\r\n\r\n";
+  form_data += test._clear_cache ? "0" : "1";
+  form_data += "\r\n";
 
   // done flag
   if (done) {

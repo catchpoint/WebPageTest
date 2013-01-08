@@ -38,9 +38,9 @@ public:
   void Set(const TCHAR * format, ...);
   void OnUpdateStatus(void);
   void OnPaint(HWND window);
+  HWND    _wnd;
 
 private:
-  HWND    _wnd;
   CString _status;
   TCHAR   _tmp_buffer[1024];
 };
