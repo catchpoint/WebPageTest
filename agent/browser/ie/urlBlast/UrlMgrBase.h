@@ -53,6 +53,7 @@ public:
     minimumDuration=0;
     clearShortTermCacheSecs=0;
     currentRun = 0;
+    cached = false;
     customRules.Empty();
 	}
 	
@@ -93,6 +94,7 @@ public:
   DWORD keepua;             // preserve the original User Agent string
   CString customRules;      // custom rule set (newline delimited)
   DWORD currentRun;
+  bool cached;              // are we testing a cached run?
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

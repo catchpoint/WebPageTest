@@ -12,6 +12,7 @@ public:
 		, runs(0)
 		, currentRun(0)
     , discard(0)
+    , specificRun(0)
 		{}
 	~CUrlMgrHttpContext(void){}
 	CString testId;
@@ -22,6 +23,7 @@ public:
 	DWORD	runs;
   DWORD discard;
 	DWORD	currentRun;
+  DWORD specificRun;
 };
 
 /*-----------------------------------------------------------------------------
@@ -270,6 +272,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								info.basicAuth = value;
 							else if( !key.CompareNoCase(_T("runs")) )
 								context->runs = _ttol(value);
+							else if( !key.CompareNoCase(_T("run")) )
+								context->specificRun = _ttol(value);
 							else if( !key.CompareNoCase(_T("Capture Video")) )
 								info.captureVideo = _ttol(value) != 0;
 							else if( !key.CompareNoCase(_T("aft")) )
@@ -340,9 +344,14 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 				{
 					ret = true;
 					info.context = context;
-					context->currentRun = 1;
-          info.currentRun = 1;
-          context->discard = __min(context->discard, context->runs - 1);
+          if (context->specificRun) {
+					  context->currentRun = context->specificRun;
+            info.currentRun = context->specificRun;
+          } else {
+					  context->currentRun = 1;
+            info.currentRun = 1;
+            context->discard = __min(context->discard, context->runs - 1);
+          }
 					
           if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
 						info.url = CString(_T("http://")) + info.url;
@@ -429,6 +438,7 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 			// delete the log file
 			DeleteFile(info.logFile);
 
+      info.cached = true;
 			info.logFile += _T("_Cached");
 
 			if( info.harvestLinks )
@@ -470,7 +480,7 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 		}
 		else
 		{
-			if( context->currentRun >= context->runs )
+			if( context->specificRun || context->currentRun >= context->runs )
 				info.done = true;
 			else
 				info.done = false;
@@ -512,12 +522,12 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 				  context->currentRun++;
         }
         info.currentRun++;  // increment the actual run count regardless of discard state
+        info.cached = false;
 				CString runText;
 				runText.Format(_T("%d"), context->currentRun);
 				context->fileRunBase = context->fileBase + CString(_T("-")) + runText;
 
 				info.logFile = workDir + context->fileRunBase;
-
 				info.eventText = CString(_T("Run_")) + runText;
 
 				if( info.harvestLinks )
@@ -989,6 +999,7 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 	bool ret = true;
 
 	CStringA id;
+  CStringA buff;
 	if( info.context )
 	{
 		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
@@ -1030,6 +1041,21 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 		body += "\r\n";
 	}
 
+	// run number
+	body += "--";
+	body += boundary + "\r\n";
+	body += "Content-Disposition: form-data; name=\"run\"\r\n\r\n";
+  buff.Format("%d", info.currentRun);
+  body += buff;
+	body += "\r\n";
+
+	// first/repeat view
+	body += "--";
+	body += boundary + "\r\n";
+	body += "Content-Disposition: form-data; name=\"cached\"\r\n\r\n";
+  body += info.cached ? "1" : "0";
+	body += "\r\n";
+
 	// if it is a video file
 	if( !info.zipFileDir.IsEmpty() )
 	{
@@ -1065,7 +1091,6 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 	footer += boundary + "--\r\n";
 	
 	requestLen = body.GetLength() + fileSize + footer.GetLength();
-	CStringA buff;
 	buff.Format("Content-Length: %u\r\n", requestLen);
 	headers += buff;
 	

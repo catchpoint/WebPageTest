@@ -13,7 +13,7 @@
 #ifdef _LINUX
  #include <jmorecfg.h>
 #else
- #include "../jpeg/jmorecfg.h"
+ #include "jmorecfg.h"
 #endif
 
 #include "ximaiter.h"

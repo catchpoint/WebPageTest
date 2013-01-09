@@ -27,9 +27,6 @@
     <Filter Include="Third-Party\CxImage\Source Files">
       <UniqueIdentifier>{09a1c042-901b-4a98-b21e-77130d309c0a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third-Party\jpeg">
-      <UniqueIdentifier>{6706f0ab-14f6-498e-a431-6378a95e592d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Third-Party\Mongoose">
       <UniqueIdentifier>{9f454a3f-2be3-4993-bba1-049bede3860c}</UniqueIdentifier>
     </Filter>
@@ -359,33 +356,6 @@
     <ClInclude Include="png\pngpriv.h">
       <Filter>Third-Party\png</Filter>
     </ClInclude>
-    <ClInclude Include="jpeg\jconfig.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jversion.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jdct.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jerror.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jinclude.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jmemsys.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jmorecfg.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jpegint.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="jpeg\jpeglib.h">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClInclude>
     <ClInclude Include="hook_wininet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -648,144 +618,6 @@
     </ClCompile>
     <ClCompile Include="png\pngwtran.c">
       <Filter>Third-Party\png</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jaricom.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jutils.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcapimin.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcapistd.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcarith.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jccoefct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jccolor.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcdctmgr.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jchuff.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcinit.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcmainct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcmarker.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcmaster.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcomapi.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcparam.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcprepct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jcsample.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jctrans.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdapimin.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdapistd.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdarith.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdatadst.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdatasrc.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdcoefct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdcolor.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jddctmgr.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdhuff.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdinput.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdmainct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdmarker.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdmaster.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdmerge.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdpostct.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdsample.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jdtrans.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jerror.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jfdctflt.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jfdctfst.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jfdctint.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jidctflt.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jidctfst.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jidctint.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jmemmgr.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jmemnobs.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jquant1.c">
-      <Filter>Third-Party\jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="jpeg\jquant2.c">
-      <Filter>Third-Party\jpeg</Filter>
     </ClCompile>
     <ClCompile Include="distorm\src\decoder.c">
       <Filter>Third-Party\distorm</Filter>

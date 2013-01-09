@@ -33,8 +33,8 @@ extern "C" {
  #include <jpeglib.h>
  #include <jerror.h>
 #else
- #include "../jpeg/jpeglib.h"
- #include "../jpeg/jerror.h"
+ #include "jpeglib.h"
+ #include "jerror.h"
 #endif
 }
 

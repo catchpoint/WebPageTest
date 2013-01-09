@@ -20,3 +20,6 @@ template=firefox
 
 [Safari]
 exe="%PROGRAM_FILES%\Safari\Safari.exe"
+
+[IE]
+exe="%PROGRAM_FILES%\Internet Explorer\iexplore.exe"
