@@ -88,10 +88,12 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
 
   DeleteDirectory(test._directory, false);
 
+  ATLTRACE(_T("WebPagetest::GetTest"));
+
   // build the url for the request
   CString buff;
-  CString url = _settings._server + _T("work/getwork.php?");
-  url += CString(_T("location=")) + _settings._location;
+  CString url = _settings._server + _T("work/getwork.php?shards=1");
+  url += CString(_T("&location=")) + _settings._location;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_version) {
@@ -112,10 +114,15 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {
     if (test_string.GetLength()) {
+      ATLTRACE(_T("WebPagetest::GetTest - Processing test"));
       ret = test.Load(test_string);
     } else if (zip_file.GetLength()) {
       ret = ProcessZipFile(zip_file, test);
+    } else {
+      ATLTRACE(_T("WebPagetest::GetTest - No test available"));
     }
+  } else {
+    ATLTRACE(_T("WebPagetest::GetTest - No test available"));
   }
 
   return ret;
@@ -476,7 +483,7 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   // run
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"run\"\r\n\r\n";
-  buffA.Format("%d", test._run);
+  buffA.Format("%d", test._index);
   form_data += buffA + "\r\n";
 
   // cached state

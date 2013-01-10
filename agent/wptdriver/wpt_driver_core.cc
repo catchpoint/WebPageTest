@@ -169,25 +169,21 @@ void WptDriverCore::WorkThread(void) {
                            _ipfw);
         if (SetupWebPageReplay(test, browser) &&
             !TracerouteTest(test)) {
-          test._index = 1;
+          test._index = test._specific_run ? test._specific_run : 1;
           for (test._run = 1; test._run <= test._runs; test._run++) {
-            if (test._specific_run)
-              test._run = test._specific_run;
             test._clear_cache = true;
             BrowserTest(test, browser);
             if (!test._fv_only) {
               test._clear_cache = false;
               BrowserTest(test, browser);
             }
-            if (!test._specific_run && test._discard > 0) {
-              test._discard--;
-            } else {
-              test._index++;
-            }
             if (test._specific_run)
               break;
+            else if (test._discard > 0)
+              test._discard--;
+            else
+              test._index++;
           }
-          test._run = test._specific_run ? test._specific_run : test._runs;
         }
 
         bool uploaded = false;

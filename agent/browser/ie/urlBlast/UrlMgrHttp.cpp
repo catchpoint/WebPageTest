@@ -137,13 +137,13 @@ void CUrlMgrHttp::Start()
 				port = 80;
 			CString videoStr;
 			if( videoSupported )
-				videoStr = _T("video=1&");
+				videoStr = _T("&video=1");
 			if( version && !noUpdate )
 				verString.Format(_T("&ver=%d"), version);
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;
-			getWork = CString(object) + CString(_T("getwork.php?")) + videoStr + CString(_T("location=")) + location + CString(_T("&key=")) + key + ec2;
+			getWork = CString(object) + CString(_T("getwork.php?shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
 			workDone = CString(object) + _T("workdone.php");
 			resultImage = CString(object) + _T("resultimage.php");
 
@@ -229,12 +229,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 							{
 								context->testId = value;
 								context->fileBase = value;
-								context->fileRunBase = context->fileBase;
-								if( context->fileBase.Find(_T('-')) == -1 )
-									context->fileRunBase += _T("-1");
-								info.logFile = workDir + context->fileRunBase;
-							}
-							else if( !key.CompareNoCase(_T("url")) )
+							} else if( !key.CompareNoCase(_T("url")) )
 								info.url = value;
 							else if( !key.CompareNoCase(_T("DOMElement")) )
 								info.domElement = value;
@@ -356,8 +351,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
           if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
 						info.url = CString(_T("http://")) + info.url;
 
+					context->fileRunBase.Format(_T("%s-%d"), (LPCTSTR)context->fileBase, info.currentRun);
+					info.logFile = workDir + context->fileRunBase;
+
 					if( info.eventText.IsEmpty() )						
-						info.eventText = _T("Run_1");
+            info.eventText.Format(_T("Run_%d"), info.currentRun);
 
 					if( info.harvestLinks )
 						info.linksFile = workDir + context->fileRunBase + _T("_links.txt");
