@@ -15,6 +15,7 @@ require_once('harTiming.inc');
 $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
+$testLock = null;
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
@@ -43,7 +44,9 @@ $useLatestPCap2Har =
 // see what the agent uploaded after the fact.  Consider writing them to a
 // file that gets uploaded.
 $runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, null);
+$runNumber     = arrayLookupWithDefault('run',            $_REQUEST, $runNumber);
 $cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, null);
+$cacheWarmed   = arrayLookupWithDefault('cached',         $_REQUEST, $cacheWarmed);
 $docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, null);
 $onFullyLoaded = arrayLookupWithDefault('_onFullyLoaded', $_REQUEST, null);
 $onRender      = arrayLookupWithDefault('_onRender',      $_REQUEST, null);
@@ -79,21 +82,14 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         }
     }
 } elseif (ValidateTestId($id)) {
-    // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
     BuildLocations($locations);
-    
     $settings = parse_ini_file('./settings/settings.ini');
-
     $locKey = arrayLookupWithDefault('key', $locations[$location], "");
-
     logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
-
-    if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") )
-    {
+    if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") ) {
         // update the location time
-        if( strlen($location) )
-        {
+        if( strlen($location) ) {
             if( !is_dir('./tmp') )
                 mkdir('./tmp');
             touch( "./tmp/$location.tm" );
@@ -105,6 +101,28 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         // Figure out the path to the results.
         $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
+        $time = time();
+        if( gz_is_file("$testPath/testinfo.json") ) {
+            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+            if( isset($testInfo) ) {
+                $testInfo['last_updated'] = $time;
+                $testInfo_dirty = true;
+                
+                if (array_key_exists('location', $testInfo) &&
+                    strlen($testInfo['location']) &&
+                    array_key_exists('tester', $testInfo) &&
+                    strlen($testInfo['tester'])) {
+                    $testerInfo = array();
+                    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+                    if ($done) {
+                        $testerInfo['test'] = '';
+                    }
+                    UpdateTester($testInfo['$location'], $testInfo['tester'], $testerInfo);
+                }
+            }
+        }
+        if (isset($testInfo) && array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
+            StartProcessingIncrementalResult();
 
         if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
             ProcessUploadedHAR($testPath);
@@ -160,28 +178,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
         }
-        
-        $time = time();
-        if( gz_is_file("$testPath/testinfo.json") )
-        {
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-            if( isset($testInfo) ) {
-                $testInfo['last_updated'] = $time;
-                $testInfo_dirty = true;
-                
-                if (array_key_exists('location', $testInfo) &&
-                    strlen($testInfo['location']) &&
-                    array_key_exists('tester', $testInfo) &&
-                    strlen($testInfo['tester'])) {
-                    $testerInfo = array();
-                    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-                    if ($done) {
-                        $testerInfo['test'] = '';
-                    }
-                    UpdateTester($testInfo['$location'], $testInfo['tester'], $testerInfo);
-                }
-            }
-        }
+        CheckForSpam();
         
         // make sure the test result is valid, otherwise re-run it
         if ($done && !$har && !$pcap && isset($testInfo) &&
@@ -411,6 +408,9 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 $testInfo_dirty = false;
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
             }
+            SecureDir($testPath);
+            FinishProcessingIncrementalResult();
+
             ArchiveTest($id);
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             
@@ -462,12 +462,13 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 @include('./work/beacon.inc');
                 @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
             }
-        }
-        
-        if( isset($testInfo) && $testInfo_dirty )
-            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+        } else {
+            if( isset($testInfo) && $testInfo_dirty )
+                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
 
-        SecureDir($testPath);
+            SecureDir($testPath);
+            FinishProcessingIncrementalResult();
+        }
     }
     else
         logMsg("location key incorrect\n");
@@ -1546,6 +1547,135 @@ function ResetTestDir($testPath) {
             elseif (is_dir("$testPath/$file"))
                 delTree("$testPath/$file");
         }
+    }
+}
+
+/**
+* Handle sharded test results where they come in individually
+* 
+*/
+function StartProcessingIncrementalResult() {
+    global $id;
+    global $testPath;
+    global $done;
+    global $testInfo;
+    global $testInfo_dirty;
+    global $runNumber;
+    global $cacheWarmed;
+    global $testLock;
+
+    if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
+        flock($testLock, LOCK_EX);
+
+    if ($done) {
+        if (!array_key_exists('test_runs', $testInfo)) {
+            $testInfo['test_runs'] = array();
+            for ($run = 1; $run <= $testInfo['runs']; $run++) {
+                $testInfo['test_runs'][$run] = array();
+            }
+        }
+        
+        // mark this test as done
+        $testInfo['test_runs'][$runNumber]['done'] = true;
+        $testInfo_dirty = true;
+        
+        // make sure all of the sharded tests are done
+        for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
+            if (!$testInfo['test_runs'][$run]['done'])
+                $done = false;
+        }
+    }
+}
+
+/**
+* Clean up the test lock that protects the sharded test result processing
+* 
+*/
+function FinishProcessingIncrementalResult() {
+    global $testPath;
+    global $testLock;
+    global $done;
+    if ($testLock)
+        fclose($testLock);
+    if ($done)
+        unlink("$testPath/test.lock");
+}
+
+/**
+* Check the given test against our block list to see if the test bypassed our blocks.
+* If it did, add the domain to the automatic blocked domains list
+* 
+*/
+function CheckForSpam() {
+    global $testPath;
+    global $id;
+    global $runNumber;
+    global $cacheWarmed;
+    global $testInfo;
+    global $testInfo_dirty;
+
+    if (isset($testInfo) && 
+        !array_key_exists('spam', $testInfo) &&
+        !strlen($testInfo['uid']) &&
+        !strlen($testInfo['key']) &&
+        is_file('./settings/blockurl.txt')) {
+        $blocked = false;
+        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if (count($blockUrls)) {
+            if (!isset($runNumber))
+                $runNumber = 1;
+            if (!isset($cacheWarmed))
+                $cacheWarmed = 0;
+
+            require_once('object_detail.inc');
+            $secure = false;
+            $haveLocations = false;
+            $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+            if (isset($requests) && is_array($requests) && count($requests)) {
+                foreach($requests as &$request) {
+                    if (array_key_exists('full_url', $request)) {
+                        $url = $request['full_url'];
+                        foreach( $blockUrls as $block ) {
+                            $block = trim($block);
+                            if (strlen($block) && (preg_match("/$block/i", $url))) {
+                                $date = gmdate("Ymd");
+                                // add the top-level page domain to the block list
+                                $pageUrl = $requests[0]['full_url'];
+                                $host = '';
+                                if (strlen($pageUrl)) {
+                                    $parts = parse_url($pageUrl);
+                                    $host = trim($parts['host']);
+                                    if (strlen($host)) {
+                                        // add it to the auto-block list if it isn't already there
+                                        if (is_file('./settings/blockdomainsauto.txt'))
+                                            $autoBlock = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                                        if (!isset($autoBlock) || !is_array($autoBlock))
+                                            $autoBlock = array();
+                                        $found = false;
+                                        foreach($autoBlock as $entry) {
+                                            if (!strcasecmp($entry, $host)) {
+                                                $found = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!$found) {
+                                            $autoBlock[] = $host;
+                                            file_put_contents('./settings/blockdomainsauto.txt', implode("\r\n", $autoBlock));
+                                        }
+                                    }
+                                }
+                                logMsg("[$id] $host: $pageUrl referenced $url which matched $block", "./log/{$date}-auto_blocked.log", true);
+                                
+                                $blocked = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $testInfo['spam'] = $blocked;
+        $testInfo_dirty = true;
     }
 }
 ?>
