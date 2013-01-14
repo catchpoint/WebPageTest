@@ -72,6 +72,7 @@ if (isset($archive_dir) && strlen($archive_dir)) {
         }
     }
 }
+CheckLocations();
 echo "\nDone\n\n";
 
 if( $log ) {
@@ -257,5 +258,49 @@ function ElapsedDays($year, $month, $day) {
     $daytime = $date->getTimestamp();
     $elapsed = max($now - $daytime, 0) / 86400;
     return $elapsed;
+}
+
+/**
+* For any locations that haven't connected in at least 2 hours, go through and delete any tests in the work queue
+* 
+*/
+function CheckLocations() {
+    $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
+    $deleted = false;
+    echo "\n";
+    for ($i = 1; array_key_exists($i, $locations['locations']); $i++) {
+        $group = &$locations[$locations['locations'][$i]];
+        for ($j = 1; array_key_exists($j, $group); $j++) {
+            if (!array_key_exists('relayServer', $loc[$group[$j]])) {
+                $name = $locations[$group[$j]]['location'];
+                $location = GetTesters($name);
+                $workdir = $locations[$name]['localDir'];
+                $elapsed = -1;
+                if (isset($location) &&  array_key_exists('elapsed', $location))
+                    $elapsed = $location['elapsed'];
+                if ($elapsed < 0 || $elapsed > 120) {
+                    if (strlen($workdir)){
+                        if (is_dir($workdir)) {
+                            echo "$elapsed minutes : $name - $workdir\n";
+                            delTree($workdir);
+                            rmdir($workdir);
+                            $deleted = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // nuke all of the queue files if we had to delete something
+    if ($deleted) {
+        $files = scandir('./tmp');
+        foreach ($files as $file) {
+            if (stripos($file, '.queue') !== false) {
+                unlink("./tmp/$file");
+            }
+        }
+    }
 }
 ?>

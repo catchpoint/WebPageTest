@@ -1379,19 +1379,17 @@ function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 /**
 * Add a job to the front of the work queue (assume it is locked)
 */
-function AddJobFileHead($workDir, $file, $priority, $queue_limit = 0)
+function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 {
     $ret = false;
     if (LoadJobQueue($workDir, $queue)) {
-        if( !$queue_limit || count($queue[$priority]) < $queue_limit ) {
-            // we actually want to insert it as the second test if there is already a queue
-            if (count($queue[$priority]))
-                $first = array_shift($queue[$priority]);
-            if (array_unshift($queue[$priority], $file)) {
-                if (isset($first))
-                    array_unshift($queue[$priority], $first);
-                $ret = SaveJobQueue($workDir, $queue);
-            }
+        // we actually want to insert it as the second test if there is already a queue
+        if (!$atFront && count($queue[$priority]))
+            $first = array_shift($queue[$priority]);
+        if (array_unshift($queue[$priority], $file)) {
+            if (!$atFront && isset($first) && strlen($first))
+                array_unshift($queue[$priority], $first);
+            $ret = SaveJobQueue($workDir, $queue);
         }
     }
     return $ret;
@@ -1400,31 +1398,24 @@ function AddJobFileHead($workDir, $file, $priority, $queue_limit = 0)
 /**
 * Get a job from the given work queue (assume it is locked)
 */
-function GetJobFile($workDir)
-{
+function GetJobFile($workDir, &$priority) {
     $file = null;
     $modified = false;
     
-    if( LoadJobQueue($workDir, $queue) )
-    {
+    if (LoadJobQueue($workDir, $queue)) {
         $priority = 0;
-        while( !isset($file) && $priority <= 9 )
-        {
+        while (!isset($file) && $priority <= 9) {
             $file = array_shift($queue[$priority]);
             if (isset($file)) {
                 $modified = true;
             }
             if (isset($file) && !is_file("$workDir/$file")) {
                 unset($file);
-            } else {
+            } else if (!isset($file)) {
                 $priority++;
             }
         }
 
-        if( isset($file) ) {
-            $file = "$workDir/$file";
-        }
-        
         if ($modified) {
             SaveJobQueue($workDir, $queue);
         }

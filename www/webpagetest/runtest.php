@@ -25,6 +25,7 @@
     $redirect_cache = array();     
     $error = NULL;
     $xml = false;
+    $usingAPI = false;
     if( !strcasecmp($req_f, 'xml') )
         $xml = true;
     $json = false;
@@ -265,14 +266,13 @@
         
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
-        if( !$error && CheckIp($test) && CheckUrl($test['url']) )
+        ValidateKey($test, $error);
+        if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
         {
-            ValidateKey($test, $error);
-        
             if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
               
-            if( !$error && !array_key_exists('id', $test) )
+            if( !strlen($error) && !array_key_exists('id', $test) )
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
                 // redirect to the comparison page
@@ -482,7 +482,7 @@
             }
                 
             // redirect the browser to the test results page
-            if( !$error )
+            if( !strlen($error) )
             {
                 if (array_key_exists('submit_callback', $test)) {
                     $test['submit_callback']($test);
@@ -583,50 +583,34 @@
                 }
                 else
                 {
-                    ?>
-                    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-                    <html>
-                        <head>
-                            <title>WebPagetest - Test Error</title>
-                            <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
-                        </head>
-                        <body>
-                            <div class="page">
-                                <?php
-                                include 'header.inc';
-
-                                echo "<p>$error</p>\n";
-                                ?>
-                
-                                <?php include('footer.inc'); ?>
-                            </div>
-                        </body>
-                    </html>
-                    <?php
+                    ErrorPage($error);
                 }
             }
         }
         else
         {
-            if( $xml )
-            {
+            if( $xml ) {
+                if (!strlen($error))
+                    $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
                 header ('Content-type: text/xml');
                 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
                 echo "<response>\n";
                 echo "<statusCode>400</statusCode>\n";
-                echo "<statusText>Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)</statusText>\n";
+                echo "<statusText>$error</statusText>\n";
                 echo "</response>\n";
-            }
-            elseif( $json )
-            {
+            } elseif( $json ) {
+                if (!strlen($error))
+                    $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
                 $ret = array();
                 $ret['statusCode'] = 400;
-                $ret['statusText'] = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
+                $ret['statusText'] = $error;
                 header ("Content-type: application/json");
                 echo json_encode($ret);
-            }
-            else
+            } elseif (strlen($error)) {
+                ErrorPage($error);
+            } else {
                 include 'blocked.php';
+            }
         }
     }
 
@@ -777,6 +761,10 @@ function ValidateKey(&$test, &$error, $key = null)
         }
       }else{
         $error = 'Invalid API Key';
+      }
+      if (!strlen($error)) {
+          global $usingAPI;
+          $usingAPI = true;
       }
     }else{
       $error = 'An error occurred processing your request.  Please reload the testing page and try submitting your test request again. (missing API key)';
@@ -1449,24 +1437,27 @@ function LogTest(&$test, $testId, $url)
 function CheckIp(&$test)
 {
     $ok = true;
-    $ip2 = @$test['ip'];
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach( $blockIps as $block )
-    {
-        $block = trim($block);
-        if( strlen($block) )
-        {
-            if( ereg($block, $ip) )
-            {
-                $ok = false;
-                break;
-            }
-            
-            if( $ip2 && strlen($ip2) && ereg($block, $ip) )
-            {
-                $ok = false;
-                break;
+    global $user;
+    global $usingAPI;
+    $date = gmdate("Ymd");
+    if (!isset($user) && !$usingAPI) {
+        $ip2 = @$test['ip'];
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach( $blockIps as $block ) {
+            $block = trim($block);
+            if( strlen($block) ) {
+                if( ereg($block, $ip) ) {
+                    logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+                    $ok = false;
+                    break;
+                }
+                
+                if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+                    logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+                    $ok = false;
+                    break;
+                }
             }
         }
     }
@@ -1483,18 +1474,49 @@ function CheckUrl($url)
 {
     $ok = true;
     global $user;
-    if (!isset($user)) {
+    global $usingAPI;
+    $date = gmdate("Ymd");
+    if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+        $url = 'http://' . $url;
+    if (!isset($user) && !$usingAPI) {
         $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($blockUrls !== false && count($blockUrls)) {
-            GetRedirect($url, $rhost, $rurl);
+        $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($blockUrls !== false && count($blockUrls) ||
+            $blockHosts !== false && count($blockHosts) ||
+            $blockAuto !== false && count($blockAuto)) {
             foreach( $blockUrls as $block ) {
                 $block = trim($block);
-                if( strlen($block) && 
-                    (preg_match("/$block/i", $url) ||
-                     (strlen($rurl) && 
-                      preg_match("/$block/i", $rurl)))) {
+                if( strlen($block) && preg_match("/$block/i", $url)) {
+                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
                     $ok = false;
                     break;
+                }
+            }
+            if ($ok) {
+                $parts = parse_url($url);
+                $host = trim($parts['host']);
+                foreach( $blockHosts as $block ) {
+                    $block = trim($block);
+                    if( strlen($block) && 
+                        (!strcasecmp($host, $block) ||
+                         !strcasecmp($host, "www.$block"))) {
+                         logMsg("{$_SERVER['REMOTE_ADDR']}: host $url matched $block", "./log/{$date}-blocked.log", true);
+                        $ok = false;
+                        break;
+                    }
+                }
+            }
+            if ($ok) {
+                $parts = parse_url($url);
+                $host = trim($parts['host']);
+                foreach( $blockAuto as $block ) {
+                    $block = trim($block);
+                    if( strlen($block) && !strcasecmp($host, $block)) {
+                         logMsg("{$_SERVER['REMOTE_ADDR']}: host $url matched auto-block $block", "./log/{$date}-blocked.log", true);
+                        $ok = false;
+                        break;
+                    }
                 }
             }
         }
@@ -2022,5 +2044,28 @@ function NumToString($num) {
         $str = '0';
     }
     return $str;
+}
+
+function ErrorPage($error) {
+    ?>
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+    <html>
+        <head>
+            <title>WebPagetest - Test Error</title>
+            <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
+        </head>
+        <body>
+            <div class="page">
+                <?php
+                include 'header.inc';
+
+                echo "<p>$error</p>\n";
+                ?>
+
+                <?php include('footer.inc'); ?>
+            </div>
+        </body>
+    </html>
+    <?php
 }
 ?>
