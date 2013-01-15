@@ -148,12 +148,14 @@ bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
-  CString directory = test._directory + CString(_T("\\"));
-  CAtlList<CString> image_files;
-  GetImageFiles(directory, image_files);
-  ret = UploadImages(test, image_files);
-  if (ret) {
-    ret = UploadData(test, false);
+  if (!test._discard_test) {
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+    if (ret) {
+      ret = UploadData(test, false);
+    }
   }
 
   return ret;
@@ -216,7 +218,8 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
   POSITION pos = image_files.GetHeadPosition();
   while (ret && pos) {
     CString file = image_files.GetNext(pos);
-    ret = UploadFile(url, false, test, file);
+    if (!test._discard_test)
+      ret = UploadFile(url, false, test, file);
     if (ret)
       DeleteFile(file);
   }
@@ -316,7 +319,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
   HANDLE file_handle = INVALID_HANDLE_VALUE;
 
   // build the file name and file size if the file exists
-  if (file.GetLength()) {
+  if (!test._discard_test && file.GetLength()) {
     file_handle = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, 0, 
                               OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE) {
@@ -483,6 +486,12 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   // run
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"run\"\r\n\r\n";
+  buffA.Format("%d", test._run);
+  form_data += buffA + "\r\n";
+
+  // index
+  form_data += CStringA("--") + boundary + "\r\n";
+  form_data += "Content-Disposition: form-data; name=\"index\"\r\n\r\n";
   buffA.Format("%d", test._index);
   form_data += buffA + "\r\n";
 

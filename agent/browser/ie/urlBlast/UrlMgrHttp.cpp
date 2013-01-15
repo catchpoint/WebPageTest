@@ -13,6 +13,8 @@ public:
 		, currentRun(0)
     , discard(0)
     , specificRun(0)
+    , specificIndex(0)
+    , discardTest(false)
 		{}
 	~CUrlMgrHttpContext(void){}
 	CString testId;
@@ -24,6 +26,8 @@ public:
   DWORD discard;
 	DWORD	currentRun;
   DWORD specificRun;
+  DWORD specificIndex;
+  bool  discardTest;
 };
 
 /*-----------------------------------------------------------------------------
@@ -269,6 +273,10 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 								context->runs = _ttol(value);
 							else if( !key.CompareNoCase(_T("run")) )
 								context->specificRun = _ttol(value);
+							else if( !key.CompareNoCase(_T("index")) )
+								context->specificIndex = _ttol(value);
+							else if( !key.CompareNoCase(_T("discardTest")) && _ttol(value) )
+								context->discardTest = true;
 							else if( !key.CompareNoCase(_T("Capture Video")) )
 								info.captureVideo = _ttol(value) != 0;
 							else if( !key.CompareNoCase(_T("aft")) )
@@ -309,7 +317,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 info.noImages = _ttol(value);
 							else if( !key.CompareNoCase(_T("noheaders")) )
                 info.noHeaders = _ttol(value);
-							else if( !key.CompareNoCase(_T("discard")) )
+							else if( !key.CompareNoCase(_T("discard")) && !context->specificRun )
                 context->discard = _ttol(value);
 							else if( !key.CompareNoCase(_T("imageQuality")) )
                 info.imageQuality = max(0, min(100, _ttol(value)));
@@ -342,16 +350,18 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
           if (context->specificRun) {
 					  context->currentRun = context->specificRun;
             info.currentRun = context->specificRun;
+            context->discard = 0;
           } else {
 					  context->currentRun = 1;
             info.currentRun = 1;
             context->discard = __min(context->discard, context->runs - 1);
           }
+          int index = context->specificIndex ? context->specificIndex : info.currentRun;
 					
           if( !info.testType.GetLength() && info.url.Find(_T("://")) == -1 )
 						info.url = CString(_T("http://")) + info.url;
 
-					context->fileRunBase.Format(_T("%s-%d"), (LPCTSTR)context->fileBase, info.currentRun);
+					context->fileRunBase.Format(_T("%s-%d"), (LPCTSTR)context->fileBase, index);
 					info.logFile = workDir + context->fileRunBase;
 
 					if( info.eventText.IsEmpty() )						
@@ -411,7 +421,7 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 		
 		if( ret )
 		{
-      if( context->discard )
+      if( context->discard || context->discardTest )
       {
         DeleteResults(info);
       }
@@ -478,7 +488,7 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 		}
 		else
 		{
-			if( context->specificRun || context->currentRun >= context->runs )
+			if( context->specificRun || context->specificIndex || context->currentRun >= context->runs )
 				info.done = true;
 			else
 				info.done = false;
@@ -883,7 +893,8 @@ bool CUrlMgrHttp::UploadFile(CString url, CTestInfo &info, CString& file, CStrin
 	bool ret = false;
 
 	// make sure we are configured to check
-	if( !host.IsEmpty() && !url.IsEmpty() )
+	CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
+	if( !host.IsEmpty() && !url.IsEmpty() && context )
 	{
 		// try to upload the file 5 time (in case there is a server problem)
 		int count = 0;
@@ -891,9 +902,12 @@ bool CUrlMgrHttp::UploadFile(CString url, CTestInfo &info, CString& file, CStrin
 		{
 			count++;
 			DWORD fileSize = 0;
-			HANDLE hFile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-			if( hFile != INVALID_HANDLE_VALUE )
-				fileSize = GetFileSize(hFile,0);
+			HANDLE hFile = INVALID_HANDLE_VALUE;
+      if (!context->discardTest) {
+        hFile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+			  if( hFile != INVALID_HANDLE_VALUE )
+				  fileSize = GetFileSize(hFile,0);
+      }
 			
       log.Trace(_T("Uploading %d byte file %s"), fileSize, (LPCTSTR)file);
 
@@ -998,9 +1012,9 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 
 	CStringA id;
   CStringA buff;
-	if( info.context )
+	CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
+	if( context )
 	{
-		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
 		id = CT2A(context->testId);
 
 		if( !fileName.GetLength() )
@@ -1046,6 +1060,16 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
   buff.Format("%d", info.currentRun);
   body += buff;
 	body += "\r\n";
+
+  // index
+  if (context && context->specificIndex) {
+	  body += "--";
+	  body += boundary + "\r\n";
+	  body += "Content-Disposition: form-data; name=\"index\"\r\n\r\n";
+    buff.Format("%d", context->specificIndex);
+    body += buff;
+	  body += "\r\n";
+  }
 
 	// first/repeat view
 	body += "--";
@@ -1100,7 +1124,8 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 -----------------------------------------------------------------------------*/
 void CUrlMgrHttp::UploadImages(CTestInfo &info)
 {
-	if( info.context )
+  CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
+  if( context && !context->discardTest )
 	{
     // go through the different file types we want to upload
     TCHAR * extensions[] = {_T("*.jpg"), _T("*.png"), _T("*.dtas"), _T("*.cap"), _T("*.gz"), _T("*.hist")};
@@ -1110,7 +1135,6 @@ void CUrlMgrHttp::UploadImages(CTestInfo &info)
       TCHAR * ext = extensions[i];
 
 		  // upload (and delete) all of the files that match the extenstion in the directory one at a time
-		  CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
 		  WIN32_FIND_DATA fd;
 		  HANDLE hFind = FindFirstFile( workDir + context->fileRunBase + ext, &fd);
 		  if( hFind != INVALID_HANDLE_VALUE )

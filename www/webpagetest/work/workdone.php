@@ -45,6 +45,7 @@ $useLatestPCap2Har =
 // file that gets uploaded.
 $runNumber     = arrayLookupWithDefault('_runNumber',     $_REQUEST, null);
 $runNumber     = arrayLookupWithDefault('run',            $_REQUEST, $runNumber);
+$runIndex      = arrayLookupWithDefault('index',          $_REQUEST, null);
 $cacheWarmed   = arrayLookupWithDefault('_cacheWarmed',   $_REQUEST, null);
 $cacheWarmed   = arrayLookupWithDefault('cached',         $_REQUEST, $cacheWarmed);
 $docComplete   = arrayLookupWithDefault('_docComplete',   $_REQUEST, null);
@@ -207,7 +208,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                     if (copy($testfile, $testInfo['job_file'])) {
                         ResetTestDir($testPath);
                         $testInfo['retries']++;
-                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], 0);
+                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
                         $done = false;
                         unset($testInfo['started']);
                         $testInfo_dirty = true;
@@ -1561,8 +1562,10 @@ function StartProcessingIncrementalResult() {
     global $testInfo;
     global $testInfo_dirty;
     global $runNumber;
+    global $runIndex;
     global $cacheWarmed;
     global $testLock;
+    global $location;
 
     if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
         flock($testLock, LOCK_EX);
@@ -1583,6 +1586,19 @@ function StartProcessingIncrementalResult() {
         for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
             if (!$testInfo['test_runs'][$run]['done'])
                 $done = false;
+        }
+
+        if (!$done &&
+            array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
+            $testInfo['test_runs'][$runNumber]['discarded']) {
+            if (is_file("$testPath/test.job")) {
+                if ($lock = LockLocation($location)) {
+                    if (copy("$testPath/test.job", $testInfo['job_file'])) {
+                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
+                    }
+                    UnlockLocation($lock);
+                }
+            }
         }
     }
 }

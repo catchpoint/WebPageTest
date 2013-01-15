@@ -463,12 +463,27 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
                 }
             }
             
-            // update the actual test script with the specific run
             if ($assigned_run) {
+                $append = "run=$assigned_run\r\n";
+
+                // Figure out if this test needs to be discarded
+                $index = $assigned_run;
+                if (array_key_exists('discard', $testInfo)) {
+                    if ($index <= $testInfo['discard']) {
+                        $append .= "discardTest=1\r\n";
+                        $index = 1;
+                        $done = true;
+                        $testInfo['test_runs'][$assigned_run]['discarded'] = true;
+                    } else {
+                        $index -= $testInfo['discard'];
+                    }
+                }
+                $append .= "index=$index\r\n";
+                
                 $insert = strpos($test, "\nurl");
                 if ($insert !== false) {
                     $test = substr($test, 0, $insert + 1) . 
-                            "run=$assigned_run\r\n" . 
+                            $append . 
                             substr($test, $insert + 1);
                 } else {
                     $test = "run=$assigned_run\r\n" + $test;
@@ -477,7 +492,7 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
 
             if (!$done)
                 $delete = false;
-
+                
             if ($testLock)
                 fclose($testLock);
         } else {

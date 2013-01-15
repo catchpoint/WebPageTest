@@ -103,6 +103,8 @@ void WptTest::Reset(void) {
   _script.Empty();
   _run = 0;
   _specific_run = 0;
+  _specific_index = 0;
+  _discard_test = false;
   _index = 0;
   _clear_cache = true;
   _active = false;
@@ -159,9 +161,13 @@ bool WptTest::Load(CString& test) {
           _fv_only = true;
         else if (!key.CompareNoCase(_T("run")))
           _specific_run = _ttoi(value.Trim());
+        else if (!key.CompareNoCase(_T("index")))
+          _specific_index = _ttoi(value.Trim());
+        else if (!key.CompareNoCase(_T("discardTest")) && _ttoi(value.Trim()))
+          _discard_test = true;
         else if (!key.CompareNoCase(_T("runs")))
           _runs = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("discard")))
+        else if (!key.CompareNoCase(_T("discard")) && !_specific_run)
           _discard = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim()))
           _doc_complete = true;
@@ -243,6 +249,10 @@ bool WptTest::Load(CString& test) {
     }
 
     line = test.Tokenize(_T("\r\n"), linePos);
+  }
+
+  if (_specific_run) {
+    _discard = 0;
   }
 
   if (_script.GetLength())
