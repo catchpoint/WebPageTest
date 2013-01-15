@@ -31,25 +31,32 @@ function UI_RunTest(){
 
 function RunNextTest() {
   if (currentTest < testUrls.length) {
-    wpt.RunTest({'url':testUrls[currentTest++], 
-                 'runs':runs}, TestDone);
+    var test = {'url':testUrls[currentTest++], 
+                'runs':runs};
+    chrome.extension.sendRequest({'msg':'RUN_TEST','test':test});
   }
 }
 
-function TestDone(result) {
-  var output = document.getElementById('results');
-  if (result != undefined && result['results'] != undefined) {
-    for (i = 0; i < result.results.length; i++) {
-      var out = CSVEncode(result.url) + ',';
-      if (result.results[i]['loadTime'] != undefined)
-        out += CSVEncode(result.results[i]['loadTime']);
-      if (result.results[i]['error'] != undefined)
-        out += ',' + CSVEncode(result.results[i]['error']);
-      output.value += out + "\n";
+/*********************************************************************************
+  Messages from the background testing engine
+**********************************************************************************/
+chrome.extension.onRequest.addListener(function(request, sender, sendResponse){
+  console.log('local: ' + request.msg);
+  if (request.msg == 'TEST_COMPLETE') {
+    var output = document.getElementById('results');
+    if (request['result'] != undefined && request.result['results'] != undefined) {
+      for (i = 0; i < request.result.results.length; i++) {
+        var out = CSVEncode(request.result.url) + ',';
+        if (request.result.results[i]['loadTime'] != undefined)
+          out += CSVEncode(request.result.results[i]['loadTime']);
+        if (request.result.results[i]['error'] != undefined)
+          out += ',' + CSVEncode(request.result.results[i]['error']);
+        output.value += out + "\n";
+      }
     }
+    setTimeout(RunNextTest(),1);
   }
-  RunNextTest();
-}
+});
 
 function UI_NewTest() {
   document.getElementById('test_status').style.display = 'none';

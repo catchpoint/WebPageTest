@@ -12,7 +12,7 @@ wpt.RunTest = function(test, callback) {
   wpt.callback = callback;
   wpt.Initialize(test);
   wpt.PrepareBrowser();
-}
+};
 
 /*********************************************************************************
   Clear out the test state
@@ -31,7 +31,7 @@ wpt.Initialize = function(test) {
     wpt.test.timeout = wpt.test['timeout'] || wpt.DEFAULT_TEST_TIMEOUT;
   }
   return ret;
-}
+};
 
 /*********************************************************************************
   Close the tab and re-open it to a blank page.
@@ -54,7 +54,7 @@ wpt.PrepareBrowser = function() {
       });
     });
   }
-}
+};
 
 /*********************************************************************************
   Run the next test
@@ -63,18 +63,26 @@ wpt.NextTest = function() {
   if (wpt.active) {
     wpt.navigating = true;
     wpt.ClearCache(function(){
-      wpt.timeoutEvent = setTimeout(wpt.TestTimeout, wpt.test.timeout * 1000);
-      var url = wpt.test.url;
-      if (url.substring(0,4) != 'http')
-        url = 'http://' + url;
-      chrome.tabs.update(wpt.tabid, {'active':true, 'url':url}, function(tab){});
+      devtools.Attach();
+      setTimeout(wpt.Navigate, 1);
     });
   }
-}
+};
+
+wpt.Navigate = function() {
+  devtools.Start();
+  wpt.timeoutEvent = setTimeout(wpt.TestTimeout, wpt.test.timeout * 1000);
+  var url = wpt.test.url;
+  if (url.substring(0,4) != 'http')
+    url = 'http://' + url;
+  chrome.tabs.update(wpt.tabid, {'active':true, 'url':url}, function(tab){});
+};
 
 /*********************************************************************************
 **********************************************************************************/
 wpt.TestDone = function() {
+  devtools.Stop();
+  devtools.Detach();
   chrome.tabs.remove(wpt.tabid);
   wpt.active = false;
   wpt.complete = true;
@@ -87,7 +95,7 @@ wpt.TestDone = function() {
 **********************************************************************************/
 wpt.TestTimeout = function() {
   wpt.TestError('Timeout');
-}
+};
 
 /*********************************************************************************
 **********************************************************************************/
@@ -95,7 +103,7 @@ wpt.TestError = function(msg) {
   var result = {'success':false,'error':msg};
   wpt.test.results.push(result);
   wpt.PageComplete();
-}
+};
 
 /*********************************************************************************
   Inject our content script into the page so we can extract the timing
@@ -138,34 +146,34 @@ wpt.ClearCache = function(callback) {
 };
 
 /*********************************************************************************
+  Dev Tools state callbacks
+**********************************************************************************/
+wpt.DevToolsPageLoaded = function() {
+  if (wpt.navigating) {
+    // inject the content script that will call us when the page is done
+    chrome.tabs.executeScript(wpt.tabid, {'file':wpt.CONTENT_SCRIPT});
+  };
+};
+
+/*********************************************************************************
   Messages from the content script with the timing data
 **********************************************************************************/
 chrome.extension.onRequest.addListener(function(request, sender, sendResponse){
-  var ok = false;
   if (request.msg == 'timing') {
     var result = {'success':true,'loadTime':request.time};
     wpt.test.results.push(result);
     wpt.PageComplete();
   }
-  sendResponse({'ok':ok});
 });
 
 /*********************************************************************************
   Handle the navigation events for the test tab
 **********************************************************************************/
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-  if (tabId == wpt.tabid) {
-    if (changeInfo['status'] == 'complete') {
-      if (wpt.navigating) {
-        // inject the content script that will call us when the page is done
-        chrome.tabs.executeScript(wpt.tabid, 
-                                  {'file':wpt.CONTENT_SCRIPT, 
-                                   'runAt':'document_end'}, 
-                                  function(){});
-      } else {
-        wpt.NextTest();
-      }
-    }
+  if (tabId == wpt.tabid && 
+      changeInfo['status'] == 'complete' && 
+      !wpt.navigating) {
+      wpt.NextTest();
   }
 });
 
