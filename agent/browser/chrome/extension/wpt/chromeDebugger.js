@@ -47,10 +47,11 @@ var g_instance = {connected: false, timeline: false, timelineConnected: false};
  *                           in an extension.  Tests may pass in a mock
  *                           object.
  */
-wpt.chromeDebugger.Init = function(tabId, chromeApi) {
+wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
   try {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
+    g_instance.startedCallback = callback;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger']) {
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -170,6 +171,7 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
     g_instance.timelineConnected = true;
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
   }
+  g_instance.startedCallback();
 }
 
 /**
@@ -191,6 +193,7 @@ wpt.chromeDebugger.OnAttachOld = function() {
     g_instance.timelineConnected = true;
     g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
   }
+  g_instance.startedCallback();
 }
 
 /**
@@ -212,6 +215,7 @@ wpt.chromeDebugger.OnAttachExperimental = function() {
     g_instance.timelineConnected = true;
     g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
   }
+  g_instance.startedCallback();
 }
 
 /**

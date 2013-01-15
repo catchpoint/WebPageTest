@@ -75,6 +75,8 @@ var UNWANTED_EXTENSIONS = [
 // regex to extract a host name from a URL
 var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
 
+var STARTUP_URL = 'http://127.0.0.1:8888/blank.html';
+
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
@@ -83,6 +85,7 @@ var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
 var g_tabid = 0;
+var g_started = false;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -121,47 +124,22 @@ wpt.main.uninstallUnwantedExtensions = function(idsToUninstall, onComplete) {
 };
 
 wpt.main.onStartup = function() {
-  // Before we start, remove any other extensions that could change our
-  // results.
-  window.setTimeout(function() {
-    wpt.main.uninstallUnwantedExtensions(UNWANTED_EXTENSIONS, function() {
-      // When uninstalls finish, kick off our testing.
-      wpt.main.startMeasurements();
-    });
-  }, STARTUP_DELAY);
+  wpt.main.uninstallUnwantedExtensions(UNWANTED_EXTENSIONS, function() {
+    // When uninstalls finish, kick off our testing.
+    wpt.main.startMeasurements();
+  });
 };
 
 wpt.main.startMeasurements = function() {
   wpt.LOG.info('Enter wptStartMeasurements');
 
-  // All measurements are done in a tab.  Get the foreground tab,
-  // and remember its ID.  This ID is used to open a connection to
-  // the content script running in the web page hosted within the tab.
-  // to the content script in a
-  var queryForFocusedTab = {
-    'active': true,
-    'windowId': chrome.windows.WINDOW_ID_CURRENT
-  };
-
-  chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
-    if (focusedTabs.length != 1) {
-      wpt.LOG.error('There should be exactly one focused tab, but ' +
-                    'chrome.tabs.query() returned ' + focusedTabs.length +
-                    '.  Is the query details object incorrect?  tabs = ' +
-                    JSON.stringify(focusedTabs, null, 2));
-    }
-    // Use the first one even if the length is not the expected value.
-    var tab = focusedTabs[0];
-    g_tabid = tab.id;
-    wpt.LOG.info('Got tab id: ' + tab.id);
-    g_commandRunner = new wpt.commands.CommandRunner(tab.id, window.chrome);
-    wpt.chromeDebugger.Init(tab.id, window.chrome);
-
+  g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
+  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
     if (RUN_FAKE_COMMAND_SEQUENCE) {
       // Run the tasks in FAKE_TASKS.
       window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
     } else {
-      // Fetch tasks from wptdriver.exe .
+      // Fetch tasks from wptdriver.exe.
       window.setInterval(wptGetTask, TASK_INTERVAL);
     }
   });
@@ -276,7 +254,12 @@ function wptSendEvent(event_name, query_string) {
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (g_active && tabId == g_tabid) {
+  if (!g_started && props.status == 'complete') {
+    // handle the startup sequencing (attach the debugger
+    // after the browser loads and then start testing).
+    g_started = true;
+    wpt.main.onStartup();
+  } else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');
@@ -472,6 +455,19 @@ function wptExecuteTask(task) {
   }
 }
 
-wpt.main.onStartup();
+// start out by grabbing the main tab and forcing a navigation to
+// the local blank page so we are guaranteed to see the navigation
+// event
+var queryForFocusedTab = {
+'active': true,
+'windowId': chrome.windows.WINDOW_ID_CURRENT
+};
+chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
+  // Use the first one even if the length is not the expected value.
+  var tab = focusedTabs[0];
+  g_tabid = tab.id;
+  wpt.LOG.info('Got tab id: ' + tab.id);
+  chrome.tabs.update(g_tabid, {'url': STARTUP_URL});
+});
 
 })());  // namespace
