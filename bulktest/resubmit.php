@@ -16,7 +16,8 @@ if (LoadResults($res)) {
                 !array_key_exists('result', $result) ||
                 !strlen($result['result']) || 
                 ($result['result'] != 0 && 
-                 $result['result'] != 99999)) {
+                 $result['result'] != 99999) ||
+                 !$result['bytes']) {
                 $entry = array();
                 $entry['url'] = $result['url'];
                 $entry['location'] = $result['location'];

@@ -34,7 +34,7 @@ if (LoadResults($results)) {
             if (array_key_exists('id', $result) && strlen($result['id'])) {
                 if (array_key_exists('result', $result) && strlen($result['result'])) {
                     $complete++;
-                    if ($result['result'] != 0 && $result['result'] != 99999) {
+                    if (($result['result'] != 0 && $result['result'] != 99999 ) || !$result['bytes']) {
                         $failed++;
                     }
                 } else {
