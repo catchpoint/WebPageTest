@@ -8,8 +8,6 @@
 function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
-    $debug = true;
-
     if ($debug || $force) {
         $file = fopen($logFile, 'a');
         if ($file) {

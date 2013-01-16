@@ -1,6 +1,6 @@
 #!/bin/sh
 
-server=http://localhost:8080
+server=http://localhost:8888
 location=Test
 export WPT_MAX_LOGLEVEL=debug
 export WPT_VERBOSE=true
