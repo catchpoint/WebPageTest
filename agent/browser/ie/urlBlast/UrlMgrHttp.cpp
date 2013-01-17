@@ -175,7 +175,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 {
 	bool ret = false;
 	
-	// wait 10 seconds between checks when we don't get tests back
+	// wait 1 second between checks when we don't get tests back
 	DWORD now = GetTickCount();
 	if( now >= nextCheck )
 	{
@@ -399,7 +399,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 			}
 		}
 		else
-			nextCheck = now + 15000;
+			nextCheck = now + 1000;
 	}
 			
 	return ret;
