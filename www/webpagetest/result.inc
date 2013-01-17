@@ -69,8 +69,13 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
                 </p>
                 <?php 
-                $runs = max(array_keys($pageData));
-                echo "<h3>Test is partially complete ($runs of {$test['test']['runs']} runs).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
+                $expected = $test['test']['runs'];
+                if (!$test['testinfo']['fvonly'])
+                    $expected *= 2;
+                $available = 0;
+                foreach($pageData as &$data)
+                    $available += count($data);
+                echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
             }
             else 
             { 
