@@ -167,7 +167,6 @@ public:
 
 	// internal helpers
 	virtual void	GenerateGUID(void);
-	void cdnLookupThread(DWORD index);
 
 protected:
 	CString	GenerateSummaryStats(void);
@@ -190,10 +189,7 @@ protected:
 	void SaveCookies(void);
 	void Log404s(void);
 	void PopulatePageSpeedInput(pagespeed::PagespeedInput* input);
-	void StartCDNLookups(void);
 	CRITICAL_SECTION csCDN;
-	CAtlArray<CWinInetRequest *> cdnRequests;
-	CAtlArray<HANDLE> hCDNThreads;
 
 	CAtlList<DWORD>	otherResponseCodes;
 	CStringA html;

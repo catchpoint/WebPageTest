@@ -127,7 +127,7 @@ int WSAAPI getaddrinfo_Hook(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA
 	int ret = WSAEINVAL;
 	__try{
 		if( pHook )
-			ret = pHook->getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
+			ret = pHook->getaddrinfo(pNodeName, pServiceName, (ADDRINFOA *)pHints, ppResult);
 	}__except(1){}
 	return ret;
 }
@@ -137,7 +137,7 @@ int WSAAPI GetAddrInfoW_Hook(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRIN
 	int ret = WSAEINVAL;
 	__try{
 		if( pHook )
-			ret = pHook->GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
+			ret = pHook->GetAddrInfoW(pNodeName, pServiceName, (ADDRINFOW *)pHints, ppResult);
 	}__except(1){}
 	return ret;
 }
@@ -351,7 +351,7 @@ typedef struct {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA * pHints, PADDRINFOA * ppResult)
+int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, ADDRINFOA * pHints, PADDRINFOA * ppResult)
 {
 	int ret = WSAEINVAL;
 	bool overrideDNS = false;
@@ -361,22 +361,21 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA * 
 	CAtlArray<DWORD> addresses;
 	if( dlg )
 		overrideDNS = dlg->DnsLookupStart( name, context, addresses );
+  if (pHints)
+    pHints->ai_flags |= AI_CANONNAME;
 
 	if( _getaddrinfo && !overrideDNS )
 		ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
-	else if( overrideDNS )
-	{
+	else if( overrideDNS ) {
 		if( addresses.IsEmpty() )
 			ret = EAI_NONAME;
-		else
-		{
+		else {
 			// build the response structure with the addresses we looked up
 			ret = 0;
 			DWORD count = addresses.GetCount();
 
 			ADDRINFOA_ADDR * result = (ADDRINFOA_ADDR *)malloc(sizeof(ADDRINFOA_ADDR) * count);
-			for( DWORD i = 0; i < count; i++ )
-			{
+			for (DWORD i = 0; i < count; i++) {
 				memset( &result[i], 0, sizeof(ADDRINFOA_ADDR) );
 				result->info.ai_family = AF_INET;
 				result->info.ai_addrlen = sizeof(struct sockaddr_in);
@@ -392,13 +391,15 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA * 
 		}
 	}
 
-	if( !ret && dlg && context )
-	{
+	if (!ret && dlg) {
 		PADDRINFOA addr = *ppResult;
-		while( addr )
-		{
-			if( addr->ai_addrlen >= sizeof(struct sockaddr_in) && addr->ai_family == AF_INET )
-			{
+		while (addr) {
+      if (addr->ai_canonname)
+        dlg->DnsLookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname));
+
+			if (context &&
+          addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+          addr->ai_family == AF_INET) {
 				struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
 				dlg->DnsLookupAddress(context, ipName->sin_addr);
 			}
@@ -419,7 +420,7 @@ typedef struct {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW * pHints, PADDRINFOW * ppResult)
+int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, ADDRINFOW * pHints, PADDRINFOW * ppResult)
 {
 	int ret = WSAEINVAL;
 	bool overrideDNS = false;
@@ -429,22 +430,21 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW
 	CAtlArray<DWORD> addresses;
 	if( dlg && pNodeName )
 		overrideDNS = dlg->DnsLookupStart( name, context, addresses );
+  if (pHints)
+    pHints->ai_flags |= AI_CANONNAME;
 
 	if( _GetAddrInfoW && !overrideDNS )
 		ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
-	else if( overrideDNS )
-	{
+	else if( overrideDNS ) {
 		if( addresses.IsEmpty() )
 			ret = EAI_NONAME;
-		else
-		{
+		else {
 			// build the response structure with the addresses we looked up
 			ret = 0;
 			DWORD count = addresses.GetCount();
 
 			ADDRINFOW_ADDR * result = (ADDRINFOW_ADDR *)malloc(sizeof(ADDRINFOW_ADDR) * count);
-			for( DWORD i = 0; i < count; i++ )
-			{
+			for (DWORD i = 0; i < count; i++) {
 				memset( &result[i], 0, sizeof(ADDRINFOW_ADDR) );
 				result->info.ai_family = AF_INET;
 				result->info.ai_addrlen = sizeof(struct sockaddr_in);
@@ -460,13 +460,15 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW
 		}
 	}
 
-	if( !ret && dlg && context )
-	{
+	if (!ret && dlg) {
 		PADDRINFOW addr = *ppResult;
-		while( addr )
-		{
-			if( addr->ai_addrlen >= sizeof(struct sockaddr_in) && addr->ai_family == AF_INET )
-			{
+		while (addr) {
+      if (addr->ai_canonname)
+        dlg->DnsLookupAlias(name, addr->ai_canonname);
+
+      if (context && 
+          addr->ai_addrlen >= sizeof(struct sockaddr_in) &&
+          addr->ai_family == AF_INET ) {
 				struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
 				dlg->DnsLookupAddress(context, ipName->sin_addr);
 			}

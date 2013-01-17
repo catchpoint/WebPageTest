@@ -69,4 +69,5 @@ typedef struct {
 
 CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "cloudflare", _T("Cloudflare")},
+  {"server", "NetDNA", _T("NetDNA")},
 };

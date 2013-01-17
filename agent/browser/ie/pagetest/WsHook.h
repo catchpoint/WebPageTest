@@ -48,8 +48,8 @@ public:
 	int		bind(SOCKET s, const struct sockaddr FAR * name, IN int namelen);
 	int		recv(SOCKET s, char FAR * buf, int len, int flags);
 	int		send(SOCKET s, const char FAR * buf, int len, int flags);
-	int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA * pHints, PADDRINFOA * ppResult);
-	int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW * pHints, PADDRINFOW * ppResult);
+	int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, ADDRINFOA * pHints, PADDRINFOA * ppResult);
+	int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, ADDRINFOW * pHints, PADDRINFOW * ppResult);
 	void	freeaddrinfo(PADDRINFOA pAddrInfo);
 	void	FreeAddrInfoW(PADDRINFOW pAddrInfo);
 	int		WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount, LPDWORD lpNumberOfBytesRecvd, LPDWORD lpFlags, LPWSAOVERLAPPED lpOverlapped, LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);

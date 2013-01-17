@@ -104,7 +104,7 @@ void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved && _test._log_data) {
     ProcessRequests();
-    OptimizationChecks checks(_requests, _test_state, _test);
+    OptimizationChecks checks(_requests, _test_state, _test, _dns);
     checks.Check();
     base_page_CDN_ = checks._base_page_CDN;
     if( _test._aft )

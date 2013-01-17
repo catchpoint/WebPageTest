@@ -88,6 +88,21 @@ public:
   CAtlList<DWORD>  addresses_;
 };
 
+class CDNEntry {
+public:
+  CDNEntry(void){}
+  CDNEntry(const CDNEntry& src){ *this = src; }
+  ~CDNEntry(void){}
+  const CDNEntry& operator =(const CDNEntry& src) {
+    _name = src._name;
+    _provider = src._provider;
+    return src;
+  }
+  
+  CStringA _name;
+  CStringA _provider;
+};
+
 class TrackDns {
 public:
   TrackDns(TestState& test_state, WptTest& test);
@@ -95,6 +110,7 @@ public:
 
   void * LookupStart(CString& name);
   void LookupAddress(void * context, ULONG &addr);
+  void LookupAlias(CString name, CString alias);
   void LookupDone(void * context, int result);
   void Reset();
   bool Claim(CString name, ULONG addr, LARGE_INTEGER before,
@@ -102,6 +118,7 @@ public:
   LONGLONG  GetEarliest(LONGLONG& after);
   void AddAddress(CString host, DWORD address);
   int GetAddressCount(CString host);
+  CStringA GetCDNProvider(CString host);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
   CAtlMap<ULONG, CString>     _dns_hosts;
@@ -109,7 +126,9 @@ public:
   TestState&                  _test_state;
   WptTest&                    _test;
   CAtlList<DnsHostAddresses>  _host_addresses;
+  CAtlList<CDNEntry>          _cdn_hosts;
 
 private:
+  void CheckCDN(CString host, CString name);
   CString GetHost(ULONG addr);
 };

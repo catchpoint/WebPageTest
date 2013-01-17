@@ -52,7 +52,9 @@ bool CDNSEvents::DnsLookupStart(CString &name, void *&context, CAtlArray<DWORD> 
 {
 	bool overrideDNS = false;
 	context = NULL;
-	
+
+  DnsCheckCDN(name, name);
+
 	// make sure we are timing something
 	if( active )
 	{
@@ -263,4 +265,49 @@ int CDNSEvents::GetAddressCount(CString host) {
     }
   }
   return count;
+}
+
+typedef struct {
+	char * pattern;
+	TCHAR * name;
+} CDN_PROVIDER;
+extern CDN_PROVIDER cdnList[];
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CDNSEvents::DnsLookupAlias(CString host, CString alias) {
+  DnsCheckCDN(host, alias);
+}
+
+/*-----------------------------------------------------------------------------
+  Check the given name to see if it is a known CDN and associate it with
+  the given host (handles both host name and CNAME resolutions
+-----------------------------------------------------------------------------*/
+void CDNSEvents::DnsCheckCDN(CString host, CString name) {
+  // see if it is a known CDN
+  CString provider;
+  CDN_PROVIDER * cdn = cdnList;
+  while (provider.IsEmpty() && cdn->pattern) {
+	  if (name.Find((LPCTSTR)CA2T(cdn->pattern)) > -1)
+		  provider = cdn->name;
+	  cdn++;
+  }
+  if (!provider.IsEmpty()) {
+    // add an entry for the host name if we don't already have one
+    bool found = false;
+		EnterCriticalSection(&csCDN);
+		POSITION pos = cdnLookups.GetHeadPosition();
+		while (pos && !found) {
+			CCDNEntry &entry = cdnLookups.GetNext(pos);
+			found = entry.name == host;
+		}
+    if (!found) {
+			CCDNEntry entry;
+			entry.name = host;
+			entry.isCDN = true;
+			entry.provider = provider;
+			cdnLookups.AddTail(entry);
+    }
+		LeaveCriticalSection(&csCDN);
+  }
 }

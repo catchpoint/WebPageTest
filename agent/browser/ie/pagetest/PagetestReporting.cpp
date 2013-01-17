@@ -534,8 +534,6 @@ void CPagetestReporting::ProcessResults(void)
 	firstByte = 0;
 	pageIP.sin_addr.S_un.S_addr = 0;
 	
-	OutputDebugString(_T("[Pagetest] - Processing Results\n"));
-	
 	// if it was just a single js file or something similar, treat it as successful
 	if( errorCode == 200 )
 		errorCode = 0;
@@ -1534,19 +1532,26 @@ void CPagetestReporting::CheckOptimization(void)
 {
 	if( checkOpt )
 	{
-		// spawn some background threads to do the DNS lookups for the CDN checks so we
-		// can have those going on while we do the CPU-intensive checks
-		StartCDNLookups();
-
+    OutputDebugString(_T("[Pagetest] - Starting optimization check"));
+    OutputDebugString(_T("[Pagetest] - Checking Keep Alive"));
 		CheckKeepAlive();
+    OutputDebugString(_T("[Pagetest] - Checking gzip"));
 		CheckGzip();
+    OutputDebugString(_T("[Pagetest] - Checking Image compression"));
 		CheckImageCompression();
+    OutputDebugString(_T("[Pagetest] - Checking caching"));
 		CheckCache();
+    OutputDebugString(_T("[Pagetest] - Checking combine"));
 		CheckCombine();
+    OutputDebugString(_T("[Pagetest] - Checking minify"));
 		CheckMinify();
+    OutputDebugString(_T("[Pagetest] - Checking cookies"));
 		CheckCookie();
+    OutputDebugString(_T("[Pagetest] - Checking etags"));
 		CheckEtags();
+    OutputDebugString(_T("[Pagetest] - Checking custom rules"));
     CheckCustomRules();
+    OutputDebugString(_T("[Pagetest] - Checking CDN"));
 		CheckCDN();
 
 		// Run all Page Speed checks.
@@ -1556,6 +1561,7 @@ void CPagetestReporting::CheckOptimization(void)
 			ProtectedCheckPageSpeed();
 
 		RepaintWaterfall();
+    OutputDebugString(_T("[Pagetest] - Optimization check complete"));
 	}
 }
 
@@ -1788,6 +1794,8 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::CheckPageSpeed()
 {
+  OutputDebugString(_T("[Pagetest] - Checking Page Speed"));
+
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed\n"));
 
 	// Instantiate an AtExitManager, which is required by some of the
@@ -1842,6 +1850,7 @@ void CPagetestReporting::CheckPageSpeed()
 	}
 
 	ATLTRACE(_T("[Pagetest] - CheckPageSpeed complete\n"));
+  OutputDebugString(_T("[Pagetest] - Page Speed check complete"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -2031,19 +2040,6 @@ void CPagetestReporting::CheckCDN()
 	int total = 0;
 	ATLTRACE(_T("[Pagetest] - CheckCDN\n"));
 
-	// wait for the parallel lookup threads to complete
-	count = hCDNThreads.GetCount();
-	if( count )
-	{
-		WaitForMultipleObjects(count, hCDNThreads.GetData(), TRUE, INFINITE);
-		for( DWORD i = 0; i < count; i++ )
-			if( hCDNThreads[i] )
-				CloseHandle(hCDNThreads[i]);
-
-		hCDNThreads.RemoveAll();
-	}
-	
-	// do the actual evaluation (all the host names should be looked up by now)
 	count = 0;
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -2086,8 +2082,7 @@ void CPagetestReporting::CheckCDN()
 			CString host = w->host;
 			host.MakeLower();
 
-			if( IsCDN(w, w->cdnProvider) && isStatic )
-			{
+			if (IsCDN(w, w->cdnProvider) && isStatic) {
 			  w->staticCdnScore = 100;
 			}
 
@@ -2686,9 +2681,10 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
   provider.Empty();
 	if( !host.IsEmpty() )
 	{
-		// make sure we haven't already identified it
+		// See if the host name or any CNAMEs were known CDN's
+    // these would have been added directly at the time of
+    // the DNS lookup
 		bool found = false;
-
 		EnterCriticalSection(&csCDN);
 		POSITION pos = cdnLookups.GetHeadPosition();
 		while( pos && !found )
@@ -2703,9 +2699,8 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
 		}
 		LeaveCriticalSection(&csCDN);
 		
-		if( !found )
-		{
-      // now check http headers for known CDNs (cheap check)
+		if( !found ) {
+      // now check http headers for known CDNs
       int cdn_header_count = _countof(cdnHeaderList);
       for (int i = 0; i < cdn_header_count && !found; i++) {
         CDN_PROVIDER_HEADER * cdn_header = &cdnHeaderList[i];
@@ -2720,71 +2715,6 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
             provider = cdn_header->name;
         }
       }
-      if (!found) {
-			  // look it up and look at the cname entries for the host
-			  hostent * dnsinfo = gethostbyname(CT2A(host));
-			  if( dnsinfo && !WSAGetLastError() )
-			  {
-				  // check all of the aliases
-				  CAtlList<CStringA> names;
-				  names.AddTail((LPCSTR)CT2A(host));
-				  names.AddTail(dnsinfo->h_name);
-				  char ** alias = dnsinfo->h_aliases;
-				  while( *alias )
-				  {
-					  names.AddTail(*alias);
-					  alias++;
-				  }
-
-				  // also try a reverse-lookup on the IP
-				  if( w->peer.sin_addr.S_un.S_addr )
-				  {
-					  //DWORD addr = htonl(server.sin_addr.S_un.S_addr);
-					  DWORD addr = w->peer.sin_addr.S_un.S_addr;
-					  dnsinfo = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET);
-					  if( dnsinfo && !WSAGetLastError() )
-					  {
-						  if( dnsinfo->h_name )
-							  names.AddTail(dnsinfo->h_name);
-
-						  alias = dnsinfo->h_aliases;
-						  while( *alias )
-						  {
-							  names.AddTail(*alias);
-							  alias++;
-						  }
-					  }
-				  }
-
-				  POSITION pos = names.GetHeadPosition();
-				  while( pos && !ret )
-				  {				
-					  CStringA name = names.GetNext(pos);
-					  name.MakeLower();
-
-					  CDN_PROVIDER * cdn = cdnList;
-					  while( !ret && cdn->pattern)
-					  {
-						  if( name.Find(cdn->pattern) > -1 )
-						  {
-							  ret = true;
-							  provider = cdn->name;
-						  }
-
-						  cdn++;
-					  }
-				  }
-			  }
-      }
-			
-			// add it to the list of resolved names
-			EnterCriticalSection(&csCDN);
-			CCDNEntry entry;
-			entry.name = host;
-			entry.isCDN = ret;
-			entry.provider = provider;
-			cdnLookups.AddHead(entry);
-			LeaveCriticalSection(&csCDN);
 		}
 	}
 
@@ -3369,70 +3299,6 @@ void CPagetestReporting::SortEvents()
 	}
 }
 
-unsigned __stdcall cdnLookupThread( void* arg )
-{
-	if( reporting )
-		((CPagetestReporting*)reporting)->cdnLookupThread((DWORD)arg);
-		
-	return 0;
-}
-
-/*-----------------------------------------------------------------------------
-	Kick off some background threads for the different host names to do 
-	all of the DNS lookups in parallel
------------------------------------------------------------------------------*/
-void CPagetestReporting::StartCDNLookups(void)
-{
-	// build a list of host names we care about
-	cdnRequests.RemoveAll();
-
-	POSITION pos = events.GetHeadPosition();
-	while( pos )
-	{
-		CTrackedEvent * e = events.GetNext(pos);
-		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
-		{
-			CWinInetRequest * w = (CWinInetRequest *)e;
-			bool found = false;
-			for( DWORD i = 0; i < cdnRequests.GetCount() && !found; i++ )
-				if( !w->host.CompareNoCase(cdnRequests[i]->host) )
-					found = true;
-
-			if( !found )
-				cdnRequests.Add(w);
-		}
-	}
-
-	// spawn threads to do each of the lookups
-	DWORD count = cdnRequests.GetCount();
-	if( count )
-	{
-		hCDNThreads.RemoveAll();
-		reporting = this;
-		for( DWORD i = 0; i < count; i++ )
-		{
-			unsigned int addr = 0;
-			HANDLE hThread = (HANDLE)_beginthreadex( 0, 0, ::cdnLookupThread, (void *)i, 0, &addr);
-			if( hThread )
-				hCDNThreads.Add(hThread);
-		}
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Thread doing the actual CDN lookups
------------------------------------------------------------------------------*/
-void CPagetestReporting::cdnLookupThread(DWORD index)
-{
-	// do a single lookup for the entry that is our responsibility
-	if( index < cdnRequests.GetCount() )
-	{
-		// we don't care about the result right now, it will get cached for later
-		CString provider;
-		IsCDN(cdnRequests[index], provider);
-	}
-}
-
 /*-----------------------------------------------------------------------------
 	Calculate the AFT
 -----------------------------------------------------------------------------*/
@@ -3492,6 +3358,7 @@ DWORD CPagetestReporting::CalculateAFT()
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveVideo()
 {
+  OutputDebugString(_T("[Pagetest] - Saving video"));
   screenCapture.Lock();
   DWORD width, height;
   CxImage * last_image = NULL;
@@ -3553,6 +3420,7 @@ void CPagetestReporting::SaveVideo()
   if (last_image)
     delete last_image;
   screenCapture.Unlock();
+  OutputDebugString(_T("[Pagetest] - Saving video complete"));
 }
 
 /*-----------------------------------------------------------------------------

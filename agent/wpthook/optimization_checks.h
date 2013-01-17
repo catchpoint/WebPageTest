@@ -31,38 +31,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Requests;
 class TestState;
 class Request;
-class TrackSockets;
+class TrackDns;
 class WptTest;
-
-class CDNEntry
-{
-public:
-  CDNEntry(void):_is_cdn(false){}
-  CDNEntry(const CDNEntry& src){ *this = src; }
-  ~CDNEntry(void){}
-  const CDNEntry& operator =(const CDNEntry& src)
-  {
-    _name = src._name;
-    _is_cdn = src._is_cdn;
-    _provider = src._provider;
-    return src;
-  }
-  
-  CStringA _name;
-  CStringA _provider;
-  bool  _is_cdn;
-};
-
 
 class OptimizationChecks {
 public:
-  OptimizationChecks(Requests& requests, TestState& test_state, WptTest& test);
+  OptimizationChecks(Requests& requests, TestState& test_state, WptTest& test,
+                    TrackDns& dns);
   ~OptimizationChecks(void);
 
   void Check(void);
-
-  // Internal helper thread.
-  void CdnLookupThread(DWORD index);
 
   // test information
   int   _keep_alive_score;
@@ -77,17 +55,11 @@ public:
   int   _static_cdn_score;
   bool  _checked;
   CStringA _base_page_CDN;
-  
-  // Helper member for CDN checking.
-  CAtlArray<Request*> _cdn_requests;
-  CAtlList<CDNEntry> _cdn_lookups;
-  CAtlArray<HANDLE> _h_cdn_threads;
-  CRITICAL_SECTION _cs_cdn;
     
   Requests&   _requests;
-  TestState&   _test_state;
+  TestState&  _test_state;
   WptTest&    _test;
-
+  TrackDns&   _dns;
 
 private:
   void CheckKeepAlive();
@@ -95,8 +67,9 @@ private:
   void CheckImageCompression();
   void CheckCacheStatic();
   void CheckCombine();
-  void StartCDNLookups();
   void CheckCDN();
   bool IsCDN(Request * request, CStringA &provider);
   void CheckCustomRules();
+
+  CRITICAL_SECTION _cs_cdn;
 };

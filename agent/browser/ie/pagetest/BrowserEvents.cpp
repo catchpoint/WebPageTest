@@ -244,8 +244,7 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 						CString script = testUrl.Right(testUrl.GetLength() - 9);
 						LoadScript(script);
 					}
-					OutputDebugString(_T("[Pagetest] - Browser loaded\n"));
-					StartTimer(2, 2500);
+					StartTimer(2, 100);
 				}
 			}
 
@@ -300,12 +299,8 @@ void CBrowserEvents::TitleChange(CString title)
 
 		EnterCriticalSection(&cs);
     if( !titleTime )
-    {
-      OutputDebugString(_T("First title change\n"));
       titleTime = now;
-    }
     title.Replace(_T('\t'), _T(' '));
-    OutputDebugString(title);
     pageTitle = title;
 		LeaveCriticalSection(&cs);
 	}

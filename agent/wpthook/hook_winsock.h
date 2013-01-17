@@ -80,25 +80,26 @@ public:
 
   // straight winsock hooks
   SOCKET	WSASocketW(int af, int type, int protocol, 
-                   LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags);
+                     LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g,
+                     DWORD dwFlags);
   int		closesocket(SOCKET s);
   int		connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namelen);
   int		recv(SOCKET s, char FAR * buf, int len, int flags);
   int		send(SOCKET s, const char FAR * buf, int len, int flags);
   int   select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
-                fd_set FAR * exceptfds, const struct timeval FAR * timeout);
+               fd_set FAR * exceptfds, const struct timeval FAR * timeout);
   int		getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, 
-                              const ADDRINFOA * pHints, PADDRINFOA * ppResult);
+                    ADDRINFOA * pHints, PADDRINFOA * ppResult);
   struct hostent * gethostbyname(const char * pNodeName);
   int		GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, 
-                              const ADDRINFOW * pHints, PADDRINFOW * ppResult);
+                     ADDRINFOW * pHints, PADDRINFOW * ppResult);
   int GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
-      LPGUID lpNspId, const ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
+      LPGUID lpNspId, ADDRINFOEXA *hints, PADDRINFOEXA *ppResult,
       struct timeval *timeout, LPOVERLAPPED lpOverlapped,
       LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
       LPHANDLE lpNameHandle);
   int GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace,
-      LPGUID lpNspId, const ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
+      LPGUID lpNspId, ADDRINFOEXW *hints, PADDRINFOEXW *ppResult,
       struct timeval *timeout, LPOVERLAPPED lpOverlapped,
       LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
       LPHANDLE lpHandle);
