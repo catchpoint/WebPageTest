@@ -48,6 +48,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="view" value="pss">
             <input type="hidden" name="label" value="">
             <input type="hidden" name="video" value="1">
+            <input type="hidden" name="shard" value="1">
             <input type="hidden" name="priority" value="0">
             <input type="hidden" name="mv" value="1">
             <?php
@@ -196,8 +197,8 @@ $page_description = "Comparison Test$testLabel.";
                         {
                         ?>
                         <li>
-                            <label for="shard">Shard Domains</label>
-                            <select name="shard" id="shard">
+                            <label for="shardDomains">Shard Domains</label>
+                            <select name="shardDomains" id="shardDomains">
                                 <option value="1" selected>1 domain (default)</option>
                                 <option value="2">2 domains</option>
                                 <option value="3">3 domains</option>
@@ -206,7 +207,7 @@ $page_description = "Comparison Test$testLabel.";
                         </li>
                         <?php
                         } else {
-                            echo "<input type=\"hidden\" name=\"shard\" value=\"1\">\n";
+                            echo "<input type=\"hidden\" name=\"shardDomains\" value=\"1\">\n";
                         }
                         ?>
                         <li>
@@ -357,7 +358,7 @@ $page_description = "Comparison Test$testLabel.";
 
                 form.bulkurls.value=batch;
                 
-                var shard = form.shard.value;
+                var shard = form.shardDomains.value;
                 var script = '';
                 if (shard != 1)
                 {

@@ -3,10 +3,10 @@
     <head>
         <title>WebPagetest - Running web page performance and optimization test...</title>
         <noscript>
-        <meta http-equiv="refresh" content="15" />
+        <meta http-equiv="refresh" content="5" />
         </noscript>
         <script language="JavaScript">
-        setTimeout( "window.location.reload(true)", 15000 );
+        setTimeout( "window.location.reload(true)", 5000 );
         </script>
         <?php 
             $autoRefresh = true;

@@ -118,10 +118,10 @@ else
             $autoRefresh = true;
             ?>
             <noscript>
-            <meta http-equiv="refresh" content="30" />
+            <meta http-equiv="refresh" content="5" />
             </noscript>
             <script language="JavaScript">
-            setTimeout( "window.location.reload(true)", 30000 );
+            setTimeout( "window.location.reload(true)", 5000 );
             </script>
             <?php
         }
@@ -989,7 +989,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             else
             {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
-                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 5000 );\n</script>";
             }
         }
     }
@@ -1601,10 +1601,9 @@ function CheckVideo($videoID, &$regenerate_video)
     $elapsed = 0;
 
     $dir = GetVideoPath($videoID, true);
-    if( is_dir("./$dir") && is_file("./$dir/video.ini") )
+    if( is_dir("./$dir") )
     {
-        $ini = parse_ini_file("./$dir/video.ini");
-        if (is_file("./$dir/video.mp4") || isset($ini['completed'])) {
+        if (is_file("./$dir/video.mp4")) {
             $done = true;
             GenerateVideoThumbnail("./$dir");
         } else {
