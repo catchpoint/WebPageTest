@@ -40,8 +40,6 @@ window.wpt.moz['main'] = window.wpt.moz['main'] || {};
 
 (function() {  // Begin closure
 
-var STARTUP_DELAY = 5000;
-
 // Running test commands slowly makes debugging easier.
 var TEST_TASK_INTERVAL = 5000;
 
@@ -52,6 +50,7 @@ var DOM_ELEMENT_POLL_INTERVAL = 100;
 var g_active = false;
 var g_tabId = -1;
 var g_requesting_task = false;
+var g_started = false;
 
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
@@ -110,9 +109,6 @@ wpt.moz.main.onStartup = function() {
     window.setInterval(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
   }
 };
-
-// Start loading tasks.
-setTimeout(function() {wpt.moz.main.onStartup();}, STARTUP_DELAY);
 
 // Monitor for page title changes
 // TODO: only track changes for the main browser window (alert boxes will
@@ -198,17 +194,22 @@ wpt.moz.main.onLoad = function(win) {
  * handlers.
  */
 function onPageLoad(event) {
-  // We only care about events aimed at the document.
-  if (!event.originalTarget instanceof HTMLDocument)
-    return;
+  if (!g_started) {
+    g_started = true;
+    wpt.moz.main.onStartup();
+  } else {
+    // We only care about events aimed at the document.
+    if (!event.originalTarget instanceof HTMLDocument)
+      return;
 
-  // Filter events from frames by checking that this event references the top
-  // window in the page.
-  var win = event.originalTarget.defaultView;
-  if (!win || win !== win.top)
-    return;
+    // Filter events from frames by checking that this event references the top
+    // window in the page.
+    var win = event.originalTarget.defaultView;
+    if (!win || win !== win.top)
+      return;
 
-  wptExtension.loadStop(win);
+    wptExtension.loadStop(win);
+  }
 }
 
 const STATE_START = Components.interfaces.nsIWebProgressListener.STATE_START;  
