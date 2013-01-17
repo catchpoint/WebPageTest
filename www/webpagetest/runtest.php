@@ -224,6 +224,7 @@
         else
         {
             // don't inherit some settings from the stored test
+            unset($test['id']);
             unset($test['ip']);
             unset($test['uid']);
             unset($test['user']);
