@@ -1532,26 +1532,15 @@ void CPagetestReporting::CheckOptimization(void)
 {
 	if( checkOpt )
 	{
-    OutputDebugString(_T("[Pagetest] - Starting optimization check"));
-    OutputDebugString(_T("[Pagetest] - Checking Keep Alive"));
 		CheckKeepAlive();
-    OutputDebugString(_T("[Pagetest] - Checking gzip"));
 		CheckGzip();
-    OutputDebugString(_T("[Pagetest] - Checking Image compression"));
 		CheckImageCompression();
-    OutputDebugString(_T("[Pagetest] - Checking caching"));
 		CheckCache();
-    OutputDebugString(_T("[Pagetest] - Checking combine"));
 		CheckCombine();
-    OutputDebugString(_T("[Pagetest] - Checking minify"));
 		CheckMinify();
-    OutputDebugString(_T("[Pagetest] - Checking cookies"));
 		CheckCookie();
-    OutputDebugString(_T("[Pagetest] - Checking etags"));
 		CheckEtags();
-    OutputDebugString(_T("[Pagetest] - Checking custom rules"));
     CheckCustomRules();
-    OutputDebugString(_T("[Pagetest] - Checking CDN"));
 		CheckCDN();
 
 		// Run all Page Speed checks.
@@ -1561,7 +1550,6 @@ void CPagetestReporting::CheckOptimization(void)
 			ProtectedCheckPageSpeed();
 
 		RepaintWaterfall();
-    OutputDebugString(_T("[Pagetest] - Optimization check complete"));
 	}
 }
 
@@ -3374,11 +3362,13 @@ void CPagetestReporting::SaveVideo()
     // we save the frames in increments of 100ms, round it to the closest interval
     image_time = ((image_time + 50) / 100);
     CxImage * img = new CxImage;
+    OutputDebugString(_T("[Pagetest] - Getting Image"));
     if (image.Get(*img)) 
     {
       // shrink it down to 400xX which is the size for a 2-video comparison
       int newWidth = min(400, img->GetWidth() / 2);
       int newHeight = (int)((double)img->GetHeight() * ((double)newWidth / (double)img->GetWidth()));
+      OutputDebugString(_T("[Pagetest] - Resampling Image"));
       img->Resample2(newWidth, newHeight);
       if (last_image) 
       {
@@ -3391,10 +3381,13 @@ void CPagetestReporting::SaveVideo()
           img->Expand(0, 0, width - img->GetWidth(), 0, black);
         if (img->GetHeight() < height)
           img->Expand(0, 0, 0, height - img->GetHeight(), black);
+        OutputDebugString(_T("[Pagetest] - Diffing Image"));
         if (ImagesAreDifferent(last_image, img)) {
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
+          OutputDebugString(_T("[Pagetest] - Saving Image"));
           SaveProgressImage(*img, file_name, false, imageQuality);
           file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)logFile, image_time);
+          OutputDebugString(_T("[Pagetest] - Saving Histogram"));
           SaveHistogram(*img, file_name);
           msVisualComplete = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
         }
@@ -3405,8 +3398,10 @@ void CPagetestReporting::SaveVideo()
         height = img->GetHeight();
         // always save the first image at time zero
         file_name = logFile + _T("_progress_0000.jpg");
+        OutputDebugString(_T("[Pagetest] - Saving Image"));
         SaveProgressImage(*img, file_name, false, imageQuality);
         file_name = logFile + _T("_progress_0000.hist");
+        OutputDebugString(_T("[Pagetest] - Saving Histogram"));
         SaveHistogram(*img, file_name);
       }
 
@@ -3416,6 +3411,7 @@ void CPagetestReporting::SaveVideo()
     }
     else
       delete img;
+    OutputDebugString(_T("[Pagetest] - Image done"));
   }
   if (last_image)
     delete last_image;

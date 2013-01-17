@@ -229,6 +229,7 @@ void CURLBlaster::ThreadProc(void)
       WaitForSingleObject(testingMutex, INFINITE);
 			if(	GetUrl() )
 			{
+        OutputDebugString(_T("[UrlBlast] - Got test"));
         if( info.testType.GetLength() )
         {
           // running a custom test
@@ -253,6 +254,7 @@ void CURLBlaster::ThreadProc(void)
 					// loop for as many runs as are needed for the current request
 					do
 					{
+            OutputDebugString(_T("[UrlBlast] - Clearing Cache"));
 						ClearCache();
 
 						if( Launch(preLaunch) )
@@ -270,6 +272,7 @@ void CURLBlaster::ThreadProc(void)
 					}while( !info.done );
 				}
         ReleaseMutex(testingMutex);
+        OutputDebugString(_T("[UrlBlast] - Test complete"));
 			}
 			else
       {
@@ -643,6 +646,7 @@ bool CURLBlaster::LaunchBrowser(void)
 	info.testResult = -1;
 
 	// flush the DNS cache
+  OutputDebugString(_T("[UrlBlast] - Flushing DNS"));
   if( !keepDNS )
 	  FlushDNS();
 	
@@ -652,6 +656,7 @@ bool CURLBlaster::LaunchBrowser(void)
 		memset(&si, 0, sizeof(si));
 		si.cb = sizeof(si);
 
+    OutputDebugString(_T("[UrlBlast] - Configuring IPFW"));
 		if( ConfigureIpfw() )
 		{
 			if( ConfigureIE() )
@@ -732,6 +737,8 @@ bool CURLBlaster::LaunchBrowser(void)
 				
 				log.Trace(_T("Launching... user='%s', path='%s', command line='%s'"), (LPCTSTR)userName, (LPCTSTR)exe, (LPCTSTR)commandLine);
 				
+        OutputDebugString(_T("[UrlBlast] - Launching Browser"));
+
 				// launch internet explorer as our user
         if( heartbeatEvent )
           ResetEvent(heartbeatEvent);
@@ -798,6 +805,7 @@ bool CURLBlaster::LaunchBrowser(void)
 						log.LogEvent(event_TerminatedBrowser, 0, (LPCTSTR)eventName.Left(1000));
 						TerminateProcess(pi.hProcess, 0);	// kill the browser if it didn't exit on it's own
 					}
+          OutputDebugString(_T("[UrlBlast] - Browser Finished"));
 					
 					EnterCriticalSection(&cs);
 					browserPID = 0;
@@ -861,6 +869,7 @@ bool CURLBlaster::LaunchBrowser(void)
 				CloseDynaTrace();
 			}
 
+      OutputDebugString(_T("[UrlBlast] - Resetting IPFW"));
 			ResetIpfw();
 		}
 	}
