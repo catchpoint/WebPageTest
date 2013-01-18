@@ -35,6 +35,9 @@ iq=75
 ;save png full-resolution screen shots
 ;pngss=1
 
+; Run tests concurrently across test machines
+;shard=1
+
 ;Log tests that take longer than X seconds
 ;slow_test_time=240
 

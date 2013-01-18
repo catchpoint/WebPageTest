@@ -14,14 +14,16 @@ function GetTestStatus($id, $includePosition = true) {
     $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
     $testPath = './' . GetTestPath($id);
     $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    if (isset($testInfoJson['relayId']))
+    if (isset($testInfoJson['relayId'])) {
         $ret = GetRelayStatus($id, $testPath, $testInfoJson);
-    else {
+        $ret['remote'] = true;
+    } else {
         $test = @parse_ini_file("$testPath/testinfo.ini",true);
         if (isset($test) && isset($test['test'])) {
             $ret['testId'] = $id;
             $ret['runs'] = (int)$test['test']['runs'];
             $ret['fvonly'] = (int)$test['test']['fvonly'];
+            $ret['remote'] = false;
             
             if( isset($test['test']['loc']) )
                 $ret['location'] = $test['test']['loc'];
@@ -107,8 +109,15 @@ function GetTestStatus($id, $includePosition = true) {
                                 $rvRuns++;
                         }
                         
+                        $ret['testsExpected'] = $testInfoJson['runs'];
+                        if (!$testInfoJson['fvonly'])
+                            $ret['testsExpected'] *= 2;
                         $ret['fvRunsCompleted'] = $fvRuns;
                         $ret['rvRunsCompleted'] = $rvRuns;
+                        $ret['testsCompleted'] = $fvRuns + $rvRuns;
+                        if ($ret['testsCompleted'] > 0 && $ret['testsExpected'] > 1) {
+                            $ret['statusText'] = "Completed {$ret['testsCompleted']} of {$ret['testsExpected']} tests";
+                        }
                         
                         // TODO: Add actual summary result information
                     }

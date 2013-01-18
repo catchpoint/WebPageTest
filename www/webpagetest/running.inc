@@ -3,11 +3,8 @@
     <head>
         <title>WebPagetest - Running web page performance and optimization test...</title>
         <noscript>
-        <meta http-equiv="refresh" content="5" />
+        <meta http-equiv="refresh" content="30" />
         </noscript>
-        <script language="JavaScript">
-        setTimeout( "window.location.reload(true)", 5000 );
-        </script>
         <?php 
             $autoRefresh = true;
             $noanalytics = true;
@@ -64,7 +61,7 @@
                     $img = "waiting";
                     if( $status['startTime'] )
                         $img = "testing";
-                    echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
+                    echo "<img id='statusImage' src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
                     echo "<div id=\"statusText\">$statusText</div>\n";
                 ?>
             </div>
@@ -82,12 +79,65 @@
             <p>You can either leave this page open in your browser until the test
              is complete or come back later and check on the status of the test (the browser does not need to remain open for testing to continue).</p>
             <br>
-            <?php include('./ads/test_progress_bottom.inc'); ?>
-            <br>
             <?php } include('footer.inc'); ?>
         </div>
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
+            var pollingInterval = 5000;
+            var pollingIntervalTesting = 1000;
+            var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
+            var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
+            var lastStatusCode = 0;
+            var lastStatusText = '';
+            function UpdateStatus(){
+                try {
+                  var xhr = new XMLHttpRequest();
+                  xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
+                  xhr.onreadystatechange = function() {
+                    if (xhr.readyState != 4)
+                      return;
+                    var reload = false;
+                    var interval = pollingInterval;
+                    if (xhr.status == 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response['statusCode'] != undefined &&
+                            response['statusCode'] != lastStatusCode) {
+                            lastStatusCode = response['statusCode'];
+                            if (lastStatusCode == 101)
+                                $("#statusImage").attr("src",waitingImage);
+                            else if (lastStatusCode == 100)
+                                $("#statusImage").attr("src",testingImage);
+                            else
+                                reload = true;
+                        }
+                        if (lastStatusCode == 100) {
+                            interval = pollingIntervalTesting;
+                            if (response['data'] != undefined &&
+                                !response.data['remote'] && 
+                                response.data['testsCompleted'] != undefined &&
+                                response.data['testsCompleted'] >= 1)
+                                reload = true;
+                        }
+                        if (response['statusText'] != undefined &&
+                            response['statusText'] != lastStatusText) {
+                            lastStatusText = response['statusText'];
+                            $('#statusText').text(lastStatusText);
+                        }
+                    }
+                    if (reload)
+                        window.location.reload(true);
+                    else
+                        setTimeout('UpdateStatus()', interval);
+                  };
+                  xhr.onerror = function() {
+                    setTimeout('UpdateStatus()', pollingInterval);
+                  };
+                  xhr.send();
+                } catch (err) {
+                    setTimeout('UpdateStatus()', pollingInterval);
+                }
+            }
+            setTimeout('UpdateStatus()', pollingInterval);
         </script>
     </body>
 </html>

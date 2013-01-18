@@ -38,9 +38,6 @@ $page_description = "Website performance test result$testLabel.";
         <noscript>
         <meta http-equiv="refresh" content="30" />
         </noscript>
-        <script language="JavaScript">
-        setTimeout( "window.location.reload(true)", 30000 );
-        </script>
         <?php } ?>
         <?php $gaTemplate = 'Test Result'; include ('head.inc'); ?>
     </head>
@@ -75,7 +72,10 @@ $page_description = "Website performance test result$testLabel.";
                 $available = 0;
                 foreach($pageData as &$data)
                     $available += count($data);
-                echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh every 30 seconds until the full test is complete.</h3>";
+                echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh as tests complete.</h3>";
+                echo "<script>\n";
+                echo "var availableTests=$available;\n";
+                echo "</script>\n";
             }
             else 
             { 
@@ -621,6 +621,50 @@ $page_description = "Website performance test result$testLabel.";
                 requestsChart.draw(requests, requestsOptions);
             }
           }
+        <?php
+        if( !$testComplete ) {
+            echo "testId = '$id';\n";
+        ?>
+            var pollingInterval = 15000;
+            function UpdateStatus(){
+                try {
+                  var xhr = new XMLHttpRequest();
+                  xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
+                  xhr.onreadystatechange = function() {
+                    if (xhr.readyState != 4)
+                      return;
+                    var reload = false;
+                    var interval = pollingInterval;
+                    if (xhr.status == 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response['statusCode'] != undefined) {
+                            if (response['statusCode'] == 100) {
+                                if (response['data'] != undefined &&
+                                    availableTests != undefined &&
+                                    response.data['testsCompleted'] != undefined &&
+                                    response.data['testsCompleted'] > availableTests)
+                                    reload = true;
+                            } else
+                                reload = true;
+                        }
+                    }
+                    if (reload)
+                        window.location.reload(true);
+                    else
+                        setTimeout('UpdateStatus()', pollingInterval);
+                  };
+                  xhr.onerror = function() {
+                    setTimeout('UpdateStatus()', pollingInterval);
+                  };
+                  xhr.send();
+                } catch (err) {
+                    setTimeout('UpdateStatus()', pollingInterval);
+                }
+            }
+            setTimeout('UpdateStatus()', pollingInterval);
+        <?php
+        }
+        ?>
         </script>
     </body>
 </html>
