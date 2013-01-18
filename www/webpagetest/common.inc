@@ -77,15 +77,14 @@ if (isset($req_embed)) {
 }
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
-if (!isset($settings) || !is_array($settings)) {
+if (!isset($settings) || !is_array($settings))
     $settings = array();
-}
-if (!array_key_exists('nogzip', $settings)) {
+if (!array_key_exists('nogzip', $settings))
     $settings['nogzip'] = false;
-}
-if (!array_key_exists('nolinks', $settings)) {
+if (!array_key_exists('nolinks', $settings))
     $settings['nolinks'] = 0;
-}
+if (!array_key_exists('shard', $settings))
+    $settings['shard'] = 0;
 
 // override some settings from the URI
 if (isset($req_bulk)) {

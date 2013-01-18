@@ -132,7 +132,7 @@
                 $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             }
             $test['pss_advanced'] = $req_pss_advanced;
-            $test['shard_test'] = 1;
+            $test['shard_test'] = $req_shard ? 1 : $settings['shard'];
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
