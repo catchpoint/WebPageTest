@@ -399,7 +399,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 			}
 		}
 		else
-			nextCheck = now + 1000;
+			nextCheck = now + 5000;
 	}
 			
 	return ret;
