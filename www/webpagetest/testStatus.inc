@@ -24,6 +24,11 @@ function GetTestStatus($id, $includePosition = true) {
             $ret['runs'] = (int)$test['test']['runs'];
             $ret['fvonly'] = (int)$test['test']['fvonly'];
             $ret['remote'] = false;
+            $ret['testsExpected'] = $testInfoJson['runs'];
+            if (array_key_exists('discard', $testInfoJson) && $testInfoJson['discard'] > 0)
+                $ret['testsExpected'] -= $testInfoJson['discard'];
+            if (!$testInfoJson['fvonly'])
+                $ret['testsExpected'] *= 2;
             
             if( isset($test['test']['loc']) )
                 $ret['location'] = $test['test']['loc'];
@@ -53,6 +58,7 @@ function GetTestStatus($id, $includePosition = true) {
                         $ret['statusCode'] = 200;
                         $ret['statusText'] = 'Test Complete';
                         $ret['completeTime'] = $test['test']['completeTime'];
+                        $ret['testsCompleted'] = $ret['testsExpected'];
                     } else {
                         $ret['statusCode'] = 100;
                         if( $elapsed == 0 )
@@ -109,9 +115,6 @@ function GetTestStatus($id, $includePosition = true) {
                                 $rvRuns++;
                         }
                         
-                        $ret['testsExpected'] = $testInfoJson['runs'];
-                        if (!$testInfoJson['fvonly'])
-                            $ret['testsExpected'] *= 2;
                         $ret['fvRunsCompleted'] = $fvRuns;
                         $ret['rvRunsCompleted'] = $rvRuns;
                         $ret['testsCompleted'] = $fvRuns + $rvRuns;

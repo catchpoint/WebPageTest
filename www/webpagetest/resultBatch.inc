@@ -66,7 +66,14 @@ $showSpeedIndex = false;
 if( $videoCaptured && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
     $showSpeedIndex = true;
 
-    
+
+$testIds = array();
+foreach( $tests['urls'] as &$testData ) {
+    $testIds[] = $testData['id'];
+    foreach( $test['v'] as $variationId )
+        $testIds[] = $variationId;
+}
+
 // run a quick check to see if the tests are complete
 $dirty = false;
 $complete = CheckTests($tests, $dirty);
@@ -120,9 +127,6 @@ else
             <noscript>
             <meta http-equiv="refresh" content="5" />
             </noscript>
-            <script language="JavaScript">
-            setTimeout( "window.location.reload(true)", 5000 );
-            </script>
             <?php
         }
         $gaTemplate = 'Bulk Result';
@@ -210,7 +214,7 @@ else
                     if( $view != 'bulk' )
                         DisplayProgress($tests);
                 }
-
+                
                 if( $view == 'bulk' )
                 {
                     if( count($tests['variations']) )
@@ -277,6 +281,79 @@ else
             </div>
             <?php include('footer.inc'); ?>
             <script type="text/javascript">
+                var tests = "<?php echo implode(',', $testIds); ?>";
+                var pollingInterval = 5000;
+                var pollingIntervalTesting = 1000;
+                var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
+                var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
+                var lastStatusCode = 0;
+                var lastStatusText = '';
+                function UpdateStatus(){
+                    try {
+                      var xhr = new XMLHttpRequest();
+                      xhr.open('GET', '/testStatus.php?f=json&pos=1&tests=' + tests, true);
+                      xhr.onreadystatechange = function() {
+                        if (xhr.readyState != 4)
+                          return;
+                        var reload = false;
+                        var interval = pollingInterval;
+                        if (xhr.status == 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response['statusCode'] != undefined &&
+                                response['statusCode'] != lastStatusCode) {
+                                lastStatusCode = response['statusCode'];
+                                if (lastStatusCode == 101)
+                                    $("#statusImage").attr("src",waitingImage);
+                                else if (lastStatusCode == 100)
+                                    $("#statusImage").attr("src",testingImage);
+                                else
+                                    reload = true;
+                            }
+                            if (lastStatusCode == 100) {
+                                interval = pollingIntervalTesting;
+                            }
+                            if (response['statusText'] != undefined &&
+                                response['statusText'] != lastStatusText) {
+                                lastStatusText = response['statusText'];
+                                $('#statusText').text(lastStatusText);
+                            }
+                        }
+                        if (reload)
+                            window.location.reload(true);
+                        else
+                            setTimeout('UpdateStatus()', interval);
+                      };
+                      xhr.onerror = function() {
+                        setTimeout('UpdateStatus()', pollingInterval);
+                      };
+                      xhr.send();
+                    } catch (err) {
+                        setTimeout('UpdateStatus()', pollingInterval);
+                    }
+                }
+                
+                function CheckVideo(id) {
+                    try {
+                      var xhr = new XMLHttpRequest();
+                      xhr.open('GET', '/video/videoStatus.php?id=' + id, true);
+                      xhr.onreadystatechange = function() {
+                        if (xhr.readyState != 4)
+                          return;
+                        var reload = false;
+                        var interval = pollingInterval;
+                        if (xhr.status == 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response['statusCode'] == 200) {
+                                window.location.reload(true);
+                            }
+                        }
+                      };
+                      xhr.onerror = function() {};
+                      xhr.send();
+                    } catch (err) {
+                    }
+                }
+                
                 /*
                  * jQuery Pimg (Preview image) 
                  * Written by Dave Earley ( http://Bitsntuts.com )
@@ -306,6 +383,10 @@ else
                     });
                 };
                 //pimg();
+                <?php
+                if (!$complete && $view != 'bulk')
+                    echo "setTimeout('UpdateStatus()', pollingInterval);\n";
+                ?>
             </script>
         </div>
     </body>
@@ -988,8 +1069,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
             }
             else
             {
+                $videoId = $videoInfo['vID' . $videoCustom];
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
-                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 5000 );\n</script>";
+                echo "<script language=\"JavaScript\">\nsetInterval( \"CheckVideo('$videoId')\", 1000 );\n</script>";
             }
         }
     }
@@ -1249,8 +1331,9 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
                 echo "<br><a href=\"/video/view.php?bare=1&id={$videoInfo['vPathID']}\" target=\"_blank\">view stand-alone video</a>";
                 echo "<br><a href=\"/video/compare.php?bare=1&tests={$testData['Path']['Original']['id']},{$testData['Path']['Optimized']['id']}\" target=\"_blank\">view filmstrip comparison</a>";
             } else {
+                $videoId = $videoInfo['vID'];
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
-                echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
+                echo "<script language=\"JavaScript\">\nsetInterval( \"CheckVideo('$videoId')\", 1000 );\n</script>";
             }
         }
     }
@@ -1324,8 +1407,11 @@ function DisplayBlink(&$tests, $video, &$dirty)
                 echo '<h2>Template Cached - Visual Comparison</h2>';
                 VideoHtml($tests['videoId']);
             }
-            else
+            else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+                $videoId = $tests['videoId'];
+                echo "<script language=\"JavaScript\">\nsetInterval( \"CheckVideo('$videoId')\", 1000 );\n</script>";
+            }
         }
     }
 
@@ -1356,14 +1442,13 @@ function DisplayBlink(&$tests, $video, &$dirty)
             {
                 echo '<h2>Template Not Cached - Visual Comparison</h2>';
                 VideoHtml($tests['NCvideoId']);
-            }
-            else
+            } else {
                 echo '<h2>Please wait while the video comparison is created<br><span class="small">(This page will automatically update when the video is ready)</span></h2>';
+                $videoId = $tests['NCvideoId'];
+                echo "<script language=\"JavaScript\">\nsetInterval( \"CheckVideo('$videoId')\", 1000 );\n</script>";
+            }
         }
     }
-
-    if( !$videoComplete )
-        echo "<script language=\"JavaScript\">\nsetTimeout( \"window.location.reload(true)\", 10000 );\n</script>";
 }
 
 /**
@@ -1812,7 +1897,7 @@ function DisplayProgress(&$tests)
         $json_response['statusText'] = $statusText;
     } else {
         echo '<br><div id="statusImg">';
-        echo "<img src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
+        echo "<img id='statusImage' src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
         echo "<div id=\"statusText\">$statusText</div>\n";
         echo '</div><br>';
     }    

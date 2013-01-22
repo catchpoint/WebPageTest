@@ -1,4 +1,8 @@
 <?php
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('RestoreTest');
+}
+
 // if any query parameter includes a .., exit right away - likely a hack attempt
 foreach($_REQUEST as $key => $val) {
     if (is_string($val) && strlen($val) && strpos($val, '/../') !== false) {
