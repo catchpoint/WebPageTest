@@ -127,7 +127,7 @@ int WSAAPI getaddrinfo_Hook(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA
 	int ret = WSAEINVAL;
 	__try{
 		if( pHook )
-			ret = pHook->getaddrinfo(pNodeName, pServiceName, (ADDRINFOA *)pHints, ppResult);
+			ret = pHook->getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
 	}__except(1){}
 	return ret;
 }
@@ -137,7 +137,7 @@ int WSAAPI GetAddrInfoW_Hook(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRIN
 	int ret = WSAEINVAL;
 	__try{
 		if( pHook )
-			ret = pHook->GetAddrInfoW(pNodeName, pServiceName, (ADDRINFOW *)pHints, ppResult);
+			ret = pHook->GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
 	}__except(1){}
 	return ret;
 }
@@ -351,7 +351,7 @@ typedef struct {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, ADDRINFOA * pHints, PADDRINFOA * ppResult)
+int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, const ADDRINFOA * pHints, PADDRINFOA * ppResult)
 {
 	int ret = WSAEINVAL;
 	bool overrideDNS = false;
@@ -361,8 +361,6 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, ADDRINFOA * pHints
 	CAtlArray<DWORD> addresses;
 	if( dlg )
 		overrideDNS = dlg->DnsLookupStart( name, context, addresses );
-  if (pHints)
-    pHints->ai_flags |= AI_CANONNAME;
 
 	if( _getaddrinfo && !overrideDNS )
 		ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
@@ -407,7 +405,8 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName, ADDRINFOA * pHints
 			addr = addr->ai_next;
 		}
 
-		dlg->DnsLookupDone(context);
+    if (context)
+		  dlg->DnsLookupDone(context);
 	}
 
 	return ret;
@@ -420,7 +419,7 @@ typedef struct {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, ADDRINFOW * pHints, PADDRINFOW * ppResult)
+int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, const ADDRINFOW * pHints, PADDRINFOW * ppResult)
 {
 	int ret = WSAEINVAL;
 	bool overrideDNS = false;
@@ -430,8 +429,6 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, ADDRINFOW * pHi
 	CAtlArray<DWORD> addresses;
 	if( dlg && pNodeName )
 		overrideDNS = dlg->DnsLookupStart( name, context, addresses );
-  if (pHints)
-    pHints->ai_flags |= AI_CANONNAME;
 
 	if( _GetAddrInfoW && !overrideDNS )
 		ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
@@ -475,8 +472,9 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName, ADDRINFOW * pHi
 
 			addr = addr->ai_next;
 		}
-
-		dlg->DnsLookupDone(context);
+    
+    if (context)
+		  dlg->DnsLookupDone(context);
 	}
 
 	return ret;
