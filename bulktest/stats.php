@@ -4,10 +4,9 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Canary:Canary.DSL'] = 'No Delay';
-$loc['EC2_East_Canary:Canary 100A.DSL'] = '100A';
-$loc['EC2_East_Canary:Canary 200A.DSL'] = '200A';
-$loc['EC2_East_Canary:Canary 400A.DSL'] = '400A';
+$loc['EC2_East_Chromium:Scheduler Webkit.DSL'] = 'Scheduler Webkit';
+$loc['EC2_East_Chromium:Scheduler Clone.DSL'] = 'Scheduler Clone';
+$loc['EC2_East_Chromium:Scheduler.DSL'] = 'Scheduler';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests');
 

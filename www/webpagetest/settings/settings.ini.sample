@@ -36,7 +36,7 @@ iq=75
 ;pngss=1
 
 ; Run tests concurrently across test machines
-;shard=1
+;shardTests=1
 
 ;Log tests that take longer than X seconds
 ;slow_test_time=240

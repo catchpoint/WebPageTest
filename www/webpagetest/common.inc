@@ -83,8 +83,8 @@ if (!array_key_exists('nogzip', $settings))
     $settings['nogzip'] = false;
 if (!array_key_exists('nolinks', $settings))
     $settings['nolinks'] = 0;
-if (!array_key_exists('shard', $settings))
-    $settings['shard'] = 0;
+if (!array_key_exists('shardTests', $settings))
+    $settings['shard_tests'] = 0;
 
 // override some settings from the URI
 if (isset($req_bulk)) {
