@@ -118,7 +118,7 @@ function GetTestStatus($id, $includePosition = true) {
                         $ret['fvRunsCompleted'] = $fvRuns;
                         $ret['rvRunsCompleted'] = $rvRuns;
                         $ret['testsCompleted'] = $fvRuns + $rvRuns;
-                        if ($ret['testsCompleted'] > 0 && $ret['testsExpected'] > 1) {
+                        if ($ret['testsCompleted'] > 0 && $ret['testsExpected'] > 1 && $ret['statusCode'] == 100) {
                             $ret['statusText'] = "Completed {$ret['testsCompleted']} of {$ret['testsExpected']} tests";
                         }
                         
