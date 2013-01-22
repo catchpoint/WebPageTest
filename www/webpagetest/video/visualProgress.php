@@ -18,7 +18,7 @@ if ($run) {
         $videoPath .= '_cached';
         $cachedText = '_cached';
     }
-    $frames = GetVisualProgress($testPath, $run, $cached);
+    $frames = GetVisualProgress($testPath, $run, $cached, array('nocache' => 1));
 }
 
 $colorSpace='RGB';

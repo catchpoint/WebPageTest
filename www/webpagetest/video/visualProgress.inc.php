@@ -1,4 +1,9 @@
 <?php
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('GetVisualProgress');
+    newrelic_add_custom_tracer('GetImageHistogram');
+}
+
 /**
 * Calculate the progress for all of the images in a given directory
 */
@@ -112,11 +117,16 @@ function GetImageHistogram($image_file, $options = null) {
             $width = imagesx($im);
             $height = imagesy($im);
             if ($width > 0 && $height > 0) {
-                if (isset($options) && array_key_exists('resample', $options) && $options['resample'] > 2) {
+                // default a resample to 1/4 in each direction which will significantly speed up processing with minimal impact to accuracy.
+                // This is only for calculations done on the server.  Histograms from the client look at every pixel
+                $resample = 8;
+                if (isset($options) && array_key_exists('resample', $options))
+                    $resample = $options['resample'];
+                if ($resample > 2) {
                     $oldWidth = $width;
                     $oldHeight = $height;
-                    $width = ($width * 2) / $options['resample'];
-                    $height = ($height * 2) / $options['resample'];
+                    $width = ($width * 2) / $resample;
+                    $height = ($height * 2) / $resample;
                     $tmp = imagecreatetruecolor($width, $height);
                     fastimagecopyresampled($tmp, $im, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight, 3);
                     imagedestroy($im);
