@@ -98,6 +98,7 @@ CDN_PROVIDER cdnList[] = {
   {".azioncdn.net", "Azion"},
   {".azioncdn.com", "Azion"},
   {".azion.net", "Azion"},
+  {".cdncloud.net.au", "MediaCloud"},
   {"END_MARKER", "END_MARKER"}
 };
 
