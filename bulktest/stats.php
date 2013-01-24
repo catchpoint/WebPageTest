@@ -4,9 +4,10 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Chromium:Scheduler Webkit.DSL'] = 'Scheduler Webkit';
-$loc['EC2_East_Chromium:Scheduler Clone.DSL'] = 'Scheduler Clone';
-$loc['EC2_East_Chromium:Scheduler.DSL'] = 'Scheduler';
+$loc['EC2_East_Chromium:Webkit.DSL'] = 'Webkit';
+$loc['EC2_East_Chromium:Clone.DSL'] = 'Clone Invalidate';
+$loc['EC2_East_Chromium:Invalidate.DSL'] = 'Invalidate';
+$loc['EC2_East_Chromium:iframes.DSL'] = 'Preload iframes';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests');
 
