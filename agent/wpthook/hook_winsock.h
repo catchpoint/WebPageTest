@@ -72,6 +72,18 @@ public:
   DWORD    _buffer_count;
 };
 
+// Function declarations for hook functions
+typedef VOID (WINAPI *PTP_WIN32_IO_CALLBACK_WPT)(
+    PTP_CALLBACK_INSTANCE Instance, PVOID Context, PVOID Overlapped,
+    ULONG IoResult, ULONG_PTR NumberOfBytesTransferred, PTP_IO Io);
+typedef PTP_IO(__stdcall *LPFN_CREATETHREADPOOLIO)(HANDLE fl,
+    PTP_WIN32_IO_CALLBACK_WPT pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
+typedef VOID(__stdcall *LPFN_CLOSETHREADPOOLIO)(PTP_IO pio);
+typedef VOID(__stdcall *LPFN_STARTTHREADPOOLIO)(PTP_IO pio);
+typedef BOOL(PASCAL FAR * LPFN_CONNECTEX_WPT) (SOCKET s,
+    const struct sockaddr FAR *name, int namelen, PVOID lpSendBuffer,
+    DWORD dwSendDataLength, LPDWORD lpdwBytesSent, LPOVERLAPPED lpOverlapped);
+
 class CWsHook {
 public:
   CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state);
@@ -84,6 +96,9 @@ public:
                      DWORD dwFlags);
   int		closesocket(SOCKET s);
   int		connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namelen);
+  BOOL  ConnectEx(SOCKET s, const struct sockaddr FAR *name, int namelen,
+                  PVOID lpSendBuffer, DWORD dwSendDataLength,
+                  LPDWORD lpdwBytesSent, LPOVERLAPPED lpOverlapped);
   int		recv(SOCKET s, char FAR * buf, int len, int flags);
   int		send(SOCKET s, const char FAR * buf, int len, int flags);
   int   select(int nfds, fd_set FAR * readfds, fd_set FAR * writefds,
@@ -116,6 +131,19 @@ public:
   int   WSAEventSelect(SOCKET s, WSAEVENT hEventObject, long lNetworkEvents);
   int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                              LPWSANETWORKEVENTS lpNetworkEvents);
+  void ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
+                           LPDWORD lpNumberOfBytesTransferred);
+  PTP_IO CreateThreadpoolIo(HANDLE fl, PTP_WIN32_IO_CALLBACK_WPT pfnio,
+                            PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
+  void CloseThreadpoolIo(PTP_IO pio);
+  void StartThreadpoolIo(PTP_IO pio);
+  void ThreadpoolCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context,
+    PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred,
+    PTP_IO Io);
+  int WSAIoctl(SOCKET s, DWORD dwIoControlCode, LPVOID lpvInBuffer,
+    DWORD cbInBuffer, LPVOID lpvOutBuffer, DWORD cbOutBuffer,
+    LPDWORD lpcbBytesReturned, LPWSAOVERLAPPED lpOverlapped,
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 private:
   TestState&        _test_state;
@@ -127,11 +155,14 @@ private:
 
   // sockets that are being connected asynchronously
   CAtlMap<SOCKET, SOCKET>	_connecting; 
+  CAtlMap<SOCKET, LPFN_CONNECTEX_WPT> _connectex_functions;
 
   // memory buffers for overlapped operations
   CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  _recv_buffers;
   CAtlMap<LPWSAOVERLAPPED, DataChunk>       _send_buffers;
   CAtlMap<LPWSAOVERLAPPED, DWORD>           _send_buffer_original_length;
+  CAtlMap<PTP_IO, PTP_WIN32_IO_CALLBACK_WPT> _threadpool_callbacks;
+  CAtlMap<PTP_IO, SOCKET>                   _threadpool_sockets;
 
   // winsock event tracking
   TrackDns&      _dns;
@@ -154,4 +185,8 @@ private:
   LPFN_WSAGETOVERLAPPEDRESULT _WSAGetOverlappedResult;
   LPFN_WSAEVENTSELECT _WSAEventSelect;
   LPFN_WSAENUMNETWORKEVENTS _WSAEnumNetworkEvents;
+  LPFN_CREATETHREADPOOLIO _CreateThreadpoolIo;
+  LPFN_CLOSETHREADPOOLIO _CloseThreadpoolIo;
+  LPFN_STARTTHREADPOOLIO _StartThreadpoolIo;
+  LPFN_WSAIOCTL _WSAIoctl;
 };
