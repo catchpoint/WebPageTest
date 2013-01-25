@@ -42,7 +42,8 @@ $UTC = new DateTimeZone('UTC');
 
 $now = time();
 
-if (isset($archive_dir) && strlen($archive_dir)) {
+if ((isset($archive_dir) && strlen($archive_dir)) ||
+    (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
     //CheckRelay();
     CheckOldDir('./results/old');
 
