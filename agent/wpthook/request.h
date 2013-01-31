@@ -267,6 +267,10 @@ public:
   bool _is_base_page;
   CStringA  rtt_;
 
+  // byte counts
+  DWORD _bytes_in;
+  DWORD _bytes_out;
+
   // performance counter times
   LARGE_INTEGER _start;
   LARGE_INTEGER _first_byte;

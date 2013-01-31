@@ -335,7 +335,9 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _data_sent(false)
   , _from_browser(false)
   , _is_base_page(false)
-  , requests_(requests) {
+  , requests_(requests)
+  , _bytes_in(0)
+  , _bytes_out(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -373,6 +375,7 @@ void Request::DataIn(DataChunk& chunk) {
       _first_byte.QuadPart = _end.QuadPart;
     }
     if (!_is_spdy) {
+      _bytes_in += chunk.GetLength();
       _response_data.AddChunk(chunk);
     }
   }
@@ -408,6 +411,7 @@ void Request::DataOut(DataChunk& chunk) {
   if (_is_active && !_is_spdy) {
     // Keep track of the data that was actually sent.
     unsigned long chunk_len = chunk.GetLength();
+    _bytes_out += chunk_len;
     if (chunk_len > 0) {
       if (!_are_headers_complete &&
           chunk_len >= 4 && strstr(chunk.GetData(), "\r\n\r\n")) {
@@ -480,14 +484,6 @@ bool Request::Process() {
         _ms_connect_end = _test_state.ElapsedMsFromStart(end);
         _ms_ssl_start = _test_state.ElapsedMsFromStart(ssl_start);
         _ms_ssl_end = _test_state.ElapsedMsFromStart(ssl_end);
-      }
-
-      // Update the overall stats.
-      _test_state._bytes_out += _request_data.GetDataSize();
-      _test_state._bytes_in += _response_data.GetDataSize();
-      if (_start.QuadPart <= _test_state._on_load.QuadPart) {
-        _test_state._doc_bytes_in += _response_data.GetDataSize();
-        _test_state._doc_bytes_out += _request_data.GetDataSize();
       }
     }
 

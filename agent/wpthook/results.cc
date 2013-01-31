@@ -878,7 +878,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_request_data.GetDataSize());
   result += buff;
   // Bytes In
-  buff.Format("%d\t", request->_response_data.GetDataSize());
+  buff.Format("%d\t", request->_bytes_in ? request->_bytes_in :
+              request->_response_data.GetDataSize());
   result += buff;
   // Object Size
   DWORD size = request->_response_data.GetBody().GetLength();

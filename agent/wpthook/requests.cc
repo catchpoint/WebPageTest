@@ -252,7 +252,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   long  dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
         ssl_start = -1, ssl_end = -1, send_start = -1, send_end = -1,
         headers_end = -1, connection = 0, error_code = 0, 
-        status = 0;
+        status = 0, bytes_in = 0;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
   bool processing_values = true;
@@ -290,6 +290,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               first_byte = _ttof(value) * 1000.0;
             } else if (!key.CompareNoCase(_T("endTime"))) {
               end_time = _ttof(value) * 1000.0;
+            } else if (!key.CompareNoCase(_T("bytesIn"))) {
+              bytes_in = _ttol(value);
             } else if (!key.CompareNoCase(_T("initiatorUrl"))) {
               initiator = value;
             } else if (!key.CompareNoCase(_T("initiatorLineNumber"))) {
@@ -338,6 +340,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     browser_request_data_.AddTail(data);
     LeaveCriticalSection(&cs);
   }
+  _test_state.ActivityDetected();
   if (!url.Left(6).Compare(_T("https:")) &&
       end_time > 0 && start_time > 0) {
     // Add SSL requests as native request objects
@@ -347,6 +350,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_ = initiator;
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
+    request->_bytes_in = bytes_in;
 
     bool already_connected = false;
     if (connection) {
