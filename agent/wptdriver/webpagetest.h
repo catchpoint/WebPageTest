@@ -63,4 +63,6 @@ private:
   bool UploadData(WptTestDriver& test, bool done);
   bool ProcessZipFile(CString zip_file, WptTestDriver& test);
   bool InstallUpdate(CString dir);
+  bool GetClient(WptTestDriver& test);
+  bool UnzipTo(CString zip_file, CString dest);
 };

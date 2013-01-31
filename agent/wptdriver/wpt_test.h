@@ -175,6 +175,7 @@ public:
   DWORD   _viewport_height;
   CAtlList<CustomRule> _custom_rules;
   DWORD   _activity_timeout;
+  CString _client;
   
   // current state
   int     _run;

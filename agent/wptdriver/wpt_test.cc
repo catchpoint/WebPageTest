@@ -131,6 +131,7 @@ void WptTest::Reset(void) {
   _viewport_height = 0;
   _no_run = 0;
   _custom_rules.RemoveAll();
+  _client.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -222,6 +223,8 @@ bool WptTest::Load(CString& test) {
           _save_response_bodies = true;
         else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
           _preserve_user_agent = true;
+        else if (!key.CompareNoCase(_T("client")))
+          _client = value.Trim();
         else if (!key.CompareNoCase(_T("customRule"))) {
           int separator = value.Find(_T('='));
           if (separator > 0) {

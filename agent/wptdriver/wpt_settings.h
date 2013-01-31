@@ -50,7 +50,7 @@ class BrowserSettings {
 public:
   BrowserSettings(){}
   ~BrowserSettings(){}
-  bool Load(const TCHAR * browser, const TCHAR * iniFile);
+  bool Load(const TCHAR * browser, const TCHAR * iniFile, CString client);
   void ResetProfile();
   void GetStandardDirectories();
   void ClearWinInetCache();
@@ -89,7 +89,7 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
-  bool SetBrowser(CString browser);
+  bool SetBrowser(CString browser, CString client);
   bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response);
   bool UpdateSoftware();
@@ -105,6 +105,7 @@ public:
   CString _web_page_replay_host;
   CString _ini_file;
   CString _ec2_instance;
+  CString _clients_directory;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;

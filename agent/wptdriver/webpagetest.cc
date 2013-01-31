@@ -115,7 +115,12 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   if (HttpGet(url, test, test_string, zip_file)) {
     if (test_string.GetLength()) {
       ATLTRACE(_T("WebPagetest::GetTest - Processing test"));
-      ret = test.Load(test_string);
+      if (test.Load(test_string)) {
+        if (!test._client.IsEmpty())
+          ret = GetClient(test);
+        else
+          ret = true;
+      }
     } else if (zip_file.GetLength()) {
       ret = ProcessZipFile(zip_file, test);
     } else {
@@ -720,5 +725,93 @@ bool WebPagetest::InstallUpdate(CString dir) {
       Sleep(100);
   }
 
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Download and install the custom browser for the requested test
+-----------------------------------------------------------------------------*/
+bool WebPagetest::GetClient(WptTestDriver& test) {
+  bool ret = false;
+
+  if (!_settings._clients_directory.IsEmpty()) {
+    CString client_dir = _settings._clients_directory + test._client;
+    SHCreateDirectoryEx(NULL, client_dir, NULL);
+    if (GetFileAttributes(client_dir + _T("\\client.ini")) != 
+        INVALID_FILE_ATTRIBUTES) {
+      ret = true;
+    } else {
+      // build the url for the request
+      CString buff;
+      CString url = _settings._server + _T("work/clients/");
+      url += test._client + _T(".zip");
+      CString test_string, zip_file;
+      if (HttpGet(url, test, test_string, zip_file) &&
+          zip_file.GetLength() &&
+          UnzipTo(zip_file, client_dir) &&
+          GetFileAttributes(client_dir + _T("\\client.ini")) != 
+            INVALID_FILE_ATTRIBUTES)
+        ret = true;
+
+      if (zip_file.GetLength())
+        DeleteFile(zip_file);
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Unzip the given zip to the provided directory
+-----------------------------------------------------------------------------*/
+bool WebPagetest::UnzipTo(CString zip_file, CString dest) {
+  bool ret = false;
+  unzFile zip_file_handle = unzOpen(CT2A(zip_file));
+  if (zip_file_handle) {
+    if (unzGoToFirstFile(zip_file_handle) == UNZ_OK) {
+      CStringA dir = CStringA(CT2A(dest)) + "\\";
+      DWORD len = 4096;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        ret = true;
+        do {
+          char file_name[MAX_PATH];
+          unz_file_info info;
+          if (unzGetCurrentFileInfo(zip_file_handle, &info, (char *)&file_name,
+              _countof(file_name), 0, 0, 0, 0) == UNZ_OK) {
+              CStringA dest_file_name = dir + file_name;
+
+            // make sure the directory exists
+            char szDir[MAX_PATH];
+            lstrcpyA(szDir, (LPCSTR)dest_file_name);
+            *PathFindFileNameA(szDir) = 0;
+            if( lstrlenA(szDir) > 3 )
+              SHCreateDirectoryExA(NULL, szDir, NULL);
+
+            HANDLE dest_file = CreateFileA(dest_file_name, GENERIC_WRITE, 0, 
+                                          NULL, CREATE_ALWAYS, 0, 0);
+            if (dest_file != INVALID_HANDLE_VALUE) {
+              if (unzOpenCurrentFile(zip_file_handle) == UNZ_OK) {
+                int bytes = 0;
+                DWORD written;
+                do {
+                  bytes = unzReadCurrentFile(zip_file_handle, buff, len);
+                  if( bytes > 0 )
+                    WriteFile(dest_file, buff, bytes, &written, 0);
+                } while( bytes > 0 );
+                unzCloseCurrentFile(zip_file_handle);
+              } else
+                ret = false;
+              CloseHandle( dest_file );
+            } else
+              ret = false;
+          }
+        } while (ret && unzGoToNextFile(zip_file_handle) == UNZ_OK);
+
+        free(buff);
+      }
+    }
+    unzClose(zip_file_handle);
+  }
   return ret;
 }

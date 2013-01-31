@@ -164,7 +164,7 @@ void WptDriverCore::WorkThread(void) {
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS);
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
-      if (_settings.SetBrowser(test._browser)) {
+      if (_settings.SetBrowser(test._browser, test._client)) {
         WebBrowser browser(_settings, test, _status, _settings._browser, 
                            _ipfw);
         if (SetupWebPageReplay(test, browser) &&

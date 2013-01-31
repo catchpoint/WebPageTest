@@ -61,6 +61,14 @@ bool WptSettings::Load(void) {
   lstrcpy( PathFindFileName(logFile), _T("wpt.log") );
   DeleteFile(logFile);
 
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                NULL, SHGFP_TYPE_CURRENT, buff))) {
+    PathAppend(buff, _T("webpagetest_clients"));
+    _clients_directory = buff;
+    SHCreateDirectoryEx(NULL, _clients_directory, NULL);
+    _clients_directory += _T("\\");
+  }
+
   // Load the server settings (WebPagetest Web Server)
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Url"), _T(""), buff, 
     _countof(buff), iniFile )) {
@@ -193,7 +201,7 @@ bool WptSettings::GetUrlText(CString url, CString &response)
   (this will be done on every test run in order to support 
   multi-browser testing)
 -----------------------------------------------------------------------------*/
-bool WptSettings::SetBrowser(CString browser) {
+bool WptSettings::SetBrowser(CString browser, CString client) {
   TCHAR buff[1024];
   if (!browser.GetLength()) {
     browser = _T("chrome");  // default to "chrome" to support older ini file
@@ -203,7 +211,7 @@ bool WptSettings::SetBrowser(CString browser) {
     }
   }
   // try loading the settings for the specified browser
-  bool ret = _browser.Load(browser, _ini_file);
+  bool ret = _browser.Load(browser, _ini_file, client);
   return ret;
 }
 
@@ -223,7 +231,8 @@ bool WptSettings::ReInstallBrowser() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
+bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
+                           CString client) {
   bool ret = false;
   TCHAR buff[4096];
   _browser = browser;
@@ -246,6 +255,8 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile) {
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
+  if (client.GetLength())
+    _profile_directory += client + _T("-client-");
   _profile_directory += browser;
   if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
     _countof(buff), iniFile )) {
