@@ -392,7 +392,16 @@ void CurlBlastDlg::DoStartup(void)
 		
 		RegCloseKey(hKey);
 	}
-	
+
+  // block IE10 automatic install
+	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\10.0"), 0, NULL, REG_OPTION_NON_VOLATILE, NULL, NULL, &hKey, NULL)) )
+	{
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DoNotAllowIE10"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+		
+		RegCloseKey(hKey);
+	}
+
 	// clear the caches on a background thread
 	HANDLE hThread = (HANDLE)_beginthreadex(0, 0, ::ClearCachesThreadProc, this, 0, 0);
 	if( hThread )
