@@ -90,6 +90,10 @@ if (!array_key_exists('nolinks', $settings))
 if (!array_key_exists('shardTests', $settings))
     $settings['shard_tests'] = 0;
 
+$privateInstall = true;
+if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+    $privateInstall = false;
+
 // override some settings from the URI
 if (isset($req_bulk)) {
     $settings['noBulk'] = 0;
@@ -1140,8 +1144,9 @@ function GetTestInfoHtml($includeScript = true)
     global $login;
     global $settings;
     global $admin;
+    global $privateInstall;
     $html = '';
-    if( $admin && isset($test['testinfo']['tester']) )
+    if( ($admin || $privateInstall) && isset($test['testinfo']['tester']) )
         $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom ) 
         $html .= 'DOM Element: <b>' . $dom . '</b><br>';
