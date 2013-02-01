@@ -310,16 +310,12 @@ $loc = ParseLocations($locations);
                                             Capture Network Log (Chrome Only)
                                         </label>
                                     </li>
-                                    <?php
-                                    /*
                                     <li>
                                         <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
                                         <label for="spdy3" class="auto_width">
                                             Force Spdy version 3 (Chrome Only)
                                         </label>
                                     </li>
-                                    */
-                                    ?>
                                     <li>
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
