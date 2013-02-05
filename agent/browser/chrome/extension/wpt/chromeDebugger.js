@@ -34,6 +34,7 @@ goog.provide('wpt.chromeDebugger');
 ((function() {  // namespace
 
 var g_instance = {connected: false, timeline: false, timelineConnected: false};
+var TIMELINE_AGGREGATION_INTERVAL = 250;
 
 /**
  * Construct an object that connectes to the Chrome debugger.
@@ -52,6 +53,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
+    g_instance.timelineData = '';
+    g_instance.timelineTimer = undefined;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger']) {
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -147,12 +150,24 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
 
   // Timeline
   else if (message === 'Timeline.eventRecorded') {
-    wpt.chromeDebugger.sendEvent('timeline', JSON.stringify(params.record));
+    if (g_instance.timelineData.length)
+      g_instance.timelineData += ',';
+    g_instance.timelineData += JSON.stringify(params.record);
+    if (g_instance.timelineTimer == undefined)
+      g_instance.timelineTimer = setTimeout(wpt.chromeDebugger.SendTimelineData, TIMELINE_AGGREGATION_INTERVAL);
   }
 
   // Page events
   else if (message === 'Page.loadEventFired') {
     wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
+  }
+}
+
+wpt.chromeDebugger.SendTimelineData = function() {
+  g_instance.timelineTimer = undefined;
+  if (g_instance.timelineData.length) {
+    wpt.chromeDebugger.sendEvent('timeline', g_instance.timelineData);
+    g_instance.timelineData = '';
   }
 }
 
