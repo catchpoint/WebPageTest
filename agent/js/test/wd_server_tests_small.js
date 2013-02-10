@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*global describe: true, before: true, beforeEach: true, afterEach: true,
   it: true*/
 
-var child_process = require('child_process');
 var devtools = require('devtools');
 var events = require('events');
 var http = require('http');
@@ -40,6 +39,7 @@ var test_utils = require('./test_utils.js');
 var timers = require('timers');
 var util = require('util');
 var webdriver = require('webdriver');
+var wd_launcher = require('wd_launcher_local_chrome');  // TODO(klm): generalize
 var wd_server = require('wd_server');
 var wd_sandbox = require('wd_sandbox');
 
@@ -88,8 +88,7 @@ describe('wd_server small', function() {
     wd_server.process.disconnect = function() {};
 
     app.reset();  // We reuse the app across tests, clean it up.
-    wd_server.WebDriverServer.initIpc();
-    wd_server.WebDriverServer.init({});  // Most tests start with the defaults.
+    wd_server.WebDriverServer.initIpc();  // Event listener on the fake process.
   });
 
   afterEach(function() {
@@ -121,13 +120,18 @@ describe('wd_server small', function() {
 
     // Stub out spawning chromedriver, verify at the end.
     var isFirstRun = true;
-    var fakeProcess = new events.EventEmitter();
-    fakeProcess.stdout = new events.EventEmitter();
-    fakeProcess.stderr = new events.EventEmitter();
-    fakeProcess.kill = sandbox.spy();
-    var processSpawnStub = sandbox.stub(child_process, 'spawn', function() {
+    var startStub  = sandbox.stub(wd_launcher.WdLauncherLocalChrome.prototype,
+        'start', function() {
       should.ok(isFirstRun);  // Only spawn WD on first run.
-      return fakeProcess;
+      this.serverUrl_ = 'http://localhost:4444';
+      this.devToolsUrl_ = 'http://localhost:1234/json';
+      this.serverProcess_ = 'process';
+    });
+    var killStub = sandbox.stub(wd_launcher.WdLauncherLocalChrome.prototype,
+        'kill', function() {
+      this.serverUrl_ = undefined;
+      this.devToolsUrl_ = undefined;
+      this.serverProcess_ = undefined;
     });
     // Stub out IPC, verify at the end.
     var sendStub = sandbox.stub(wd_server.process, 'send');
@@ -189,10 +193,8 @@ describe('wd_server small', function() {
 
     // * Verify after run 1, make sure we didn't quit/stop WD.
     // Should spawn the chromedriver process on port 4444.
-    should.equal(fakeProcess, wd_server.WebDriverServer.serverProcess_);
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+    should.ok(startStub.calledOnce);
+    should.equal('chrome', startStub.firstCall.args[0].browserName);
 
     should.ok(wdBuildStub.calledOnce);
     should.ok(stubWebSocket.calledOnce);
@@ -211,9 +213,9 @@ describe('wd_server small', function() {
     [timelineMessage].should.eql(doneIpcMsg.devToolsTimelineMessages);
 
     // We are not supposed to clean up on the first run.
-    should.ok(!driverQuitSpy.called);
-    should.ok(!fakeProcess.kill.called);
-    should.ok(!disconnectStub.called);
+    should.ok(driverQuitSpy.notCalled);
+    should.ok(killStub.notCalled);
+    should.ok(disconnectStub.notCalled);
 
     // * Run 2 -- exitWhenDone=true.
     logger.debug('Second run of WD server');
@@ -229,8 +231,7 @@ describe('wd_server small', function() {
 
     // * Verify after run 2, make sure we did quit+stop WD.
     // Make sure we did not spawn the WD server etc. for the second time.
-    should.equal(fakeProcess, wd_server.WebDriverServer.serverProcess_);
-    should.ok(processSpawnStub.calledOnce);
+    should.ok(startStub.calledOnce);
     should.ok(wdBuildStub.calledOnce);
     should.ok(stubWebSocket.calledOnce);
 
@@ -244,15 +245,12 @@ describe('wd_server small', function() {
 
     // The cleanup occurs only on the second run.
     should.ok(driverQuitSpy.calledOnce);
-    should.ok(fakeProcess.kill.calledOnce);
+    should.ok(killStub.calledOnce);
     should.ok(disconnectStub.calledOnce);
-
-    // Simulate server exit.
-    fakeProcess.emit('exit', /*code=*/0);
-    should.equal(undefined, wd_server.WebDriverServer.serverProcess_);
   });
 
   it('should fail to connect if the chromedriver/jar are not set', function() {
+    wd_server.WebDriverServer.init({});
     wd_server.WebDriverServer.connect.should.throwError();
   });
 
@@ -261,8 +259,10 @@ describe('wd_server small', function() {
     var failingScript =
         'webdriver.promise.Application.getInstance().schedule("#fail", ' +
         '    function() { throw new Error("' + error + '"); });';
-    var startServerStub = sandbox.stub(
-        wd_server.WebDriverServer, 'startServer_');
+    var startStub  = sandbox.stub(wd_launcher.WdLauncherLocalChrome.prototype,
+        'start');
+    var killStub = sandbox.stub(wd_launcher.WdLauncherLocalChrome.prototype,
+        'kill');
     var sendStub = sandbox.stub(wd_server.process, 'send');
     var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
     // WebDriverServer needs webdriver.promise in the sandboxed namespace.
@@ -284,17 +284,19 @@ describe('wd_server small', function() {
         webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 12);
 
     // Verify run sequence before sending the result
-    should.ok(startServerStub.calledOnce);
+    should.ok(startStub.calledOnce);
     should.ok(idleSpy.calledOnce);
 
     // Verify the result was sent
     should.ok(sendStub.calledOnce);
     should.equal(sendStub.firstCall.args[0].cmd, 'error');
     should.equal(sendStub.firstCall.args[0].e, error);
+    should.ok(killStub.calledOnce);
     should.ok(disconnectStub.calledOnce);
   });
 
   it('should stop and send error on uncaught exception', function() {
+    wd_server.WebDriverServer.init({});
     // connect() does this
     wd_server.process.once('uncaughtException',
         wd_server.WebDriverServer.uncaughtExceptionHandler_);

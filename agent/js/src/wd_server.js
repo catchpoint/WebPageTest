@@ -27,18 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 /*jslint nomen:false */
 
-var child_process = require('child_process');
 var events = require('events');
 var vm = require('vm');
 var devtools = require('devtools');
 var logger = require('logger');
 var process_utils = require('process_utils');
-var system_commands = require('system_commands');
 var util = require('util');
 var webdriver = require('webdriver');
+var wd_launcher = require('wd_launcher_local_chrome');  // TODO(klm): generalize
 var wd_sandbox = require('wd_sandbox');
 
-exports.process = process;  // Allow to stub out in tests
+exports.process = process;  // Allow to stub out in tests.
 
 var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
@@ -89,18 +88,12 @@ exports.WebDriverServer = {
     this.devToolsMessages_ = [];
     this.devToolsTimelineMessages_ = [];
     this.screenshots_ = [];
-    if (!this.serverProcess_) {  // First run
-      this.serverProcess_ = undefined;
-      this.serverPort_ = 4444;
-      this.serverUrl_ = undefined;
+    if (!this.wdLauncher_) {
+      this.wdLauncher_ = new wd_launcher.WdLauncherLocalChrome(
+          initMessage.chromedriver, initMessage.chrome);
       this.driver_ = undefined;
       this.driverBuildTime_ = undefined;
-      this.devToolsPort_ = 1234;
       this.devTools_ = undefined;
-      this.seleniumJar_ = initMessage.seleniumJar;
-      this.chromedriver_ = initMessage.chromedriver;
-      this.chrome_ = initMessage.chrome;
-      this.javaCommand_ = initMessage.javaCommand || 'java';
       // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
       // processing in these functions, if they call a WebDriver method.
       // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
@@ -112,7 +105,7 @@ exports.WebDriverServer = {
       process_utils.injectWdAppLogging('wd_server app', this.app_);
 
       this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
-      this.setSystemCommands_();
+      wd_launcher.setSystemCommands();
     }
   },
 
@@ -124,51 +117,13 @@ exports.WebDriverServer = {
    */
   startServer_: function(browserCaps) {
     'use strict';
-    if (this.serverProcess_) {
+    if (this.wdLauncher_.isRunning()) {
       throw new Error('Internal error: prior WD server running unexpectedly');
     }
-    var serverCommand, serverArgs, serverUrlPath;
-    if ('chrome' === browserCaps.browserName) {
-      if (!this.chromedriver_) {
-        throw new Error('Must set chromedriver before starting it');
-      }
-      // Run chromedriver directly.
-      serverCommand = this.chromedriver_;
-      serverArgs = ['-port=' + this.serverPort_];
-      serverUrlPath = '';
-    } else {
-      if (!this.seleniumJar_) {
-        throw new Error('Must set server jar before starting WebDriver server');
-      }
-      // Fall back to the universal Java server
-      serverCommand = this.javaCommand_;
-      serverArgs = [
-        '-jar', this.seleniumJar_,
-        '-port=' + this.serverPort_
-      ];
-      serverUrlPath = '/wd/hub';
-    }
-    logger.info('Starting WD server: %s %j', serverCommand, serverArgs);
-    var serverProcess = child_process.spawn(serverCommand, serverArgs);
-    serverProcess.on('exit', function(code, signal) {
-      logger.info('WD EXIT code %s signal %s', code, signal);
-      this.serverProcess_ = undefined;
-      this.serverUrl_ = undefined;
-    }.bind(this));
-    serverProcess.stdout.on('data', function(data) {
-      logger.info('WD STDOUT: %s', data);
-    });
-    // WD STDERR only gets log level warn because it outputs a lot of harmless
-    // information over STDERR
-    serverProcess.stderr.on('warn', function(data) {
-      logger.error('WD STDERR: %s', data);
-    });
-    this.serverProcess_ = serverProcess;
-    this.serverUrl_ = 'http://localhost:' + this.serverPort_ + serverUrlPath;
-    logger.info('WebDriver URL: %s', this.serverUrl_);
 
+    this.wdLauncher_.start(browserCaps);
     // Create an executor to simplify querying the server to see if it is ready.
-    var client = new webdriver.http.HttpClient(this.serverUrl_);
+    var client = new webdriver.http.HttpClient(this.wdLauncher_.getServerUrl());
     var executor = new webdriver.http.Executor(client);
     var command = new webdriver.command.Command(
         webdriver.command.CommandName.GET_SERVER_STATUS);
@@ -203,8 +158,7 @@ exports.WebDriverServer = {
         isDevtoolsConnected.reject(e);
       }
 
-      this.devTools_ = new devtools.DevTools(
-          'http://localhost:' + this.devToolsPort_ + '/json');
+      this.devTools_ = new devtools.DevTools(this.wdLauncher_.getDevToolsUrl());
 
       this.devTools_.connect(function() {
         this.devTools_.networkCommand('enable', function() {
@@ -369,7 +323,7 @@ exports.WebDriverServer = {
   onAfterDriverError: function(command, commandArgs, e) {
     'use strict';
     logger.error('Driver error: %s', e.message);
-    this.onAfterDriverAction(command, commandArgs, e);
+    this.onAfterDriverAction(command, commandArgs);
   },
 
   /**
@@ -390,7 +344,8 @@ exports.WebDriverServer = {
                   exports.WAIT_AFTER_ONLOAD_MS));
     } else {
       promise = wd_sandbox.createSandboxedWdNamespace(
-          this.serverUrl_, browserCaps, this).then(function(wdSandbox) {
+          this.wdLauncher_.getServerUrl(), browserCaps, this).then(
+              function(wdSandbox) {
         this.wdSandbox_ = wdSandbox;
         this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
         this.sandboxApp_.on(
@@ -421,20 +376,12 @@ exports.WebDriverServer = {
       browserName: (this.options_.browserName || 'chrome').toLowerCase(),
       version: this.options_.browserVersion || '',
       platform: 'ANY',
-      javascriptEnabled: true,
-      // Only used when launching actual Chrome, ignored otherwise
-      'chrome.switches': [
-          '-remote-debugging-port=' + this.devToolsPort_,
-          '--enable-benchmarking'  // Suppress randomized field trials.
-      ]
+      javascriptEnabled: true
     };
-    if (this.chrome_) {
-      browserCaps['chrome.binary'] = this.chrome_;
-    }
     exports.process.once('uncaughtException', this.uncaughtExceptionHandler_);
 
-    if (!this.serverProcess_) {
-      this.startServer_(browserCaps);  // TODO(klm): Handle process failure
+    if (!this.wdLauncher_.isRunning()) {
+      this.wdLauncher_.start(browserCaps);  // TODO(klm): Handle process failure
     }
 
     this.app_.schedule('Run sandboxed WD session',
@@ -564,37 +511,22 @@ exports.WebDriverServer = {
     exports.process.removeListener('uncaughtException',
         this.uncaughtExceptionHandler_);
     this.scheduleDriverQuit_();
-    this.app_.schedule('Kill WD server', this.killServerProcess_.bind(this));
+    this.app_.schedule('Kill WD server', this.killServer_.bind(this));
     // Disconnect parent IPC to exit gracefully without a process.exit() call.
     // This should be the last source of event queue events.
     this.app_.schedule('Disconnect IPC',
         exports.process.disconnect.bind(process));
   },
 
-  killServerProcess_: function() {
+  killServer_: function() {
     'use strict';
-    if (this.serverProcess_) {
-      logger.debug('Killing the WD server');
-      var killSignal;
-      try {
-        killSignal = system_commands.get('kill signal');
-      } catch (e) {
-        killSignal = undefined;
-      }
-      try {
-        this.serverProcess_.kill(killSignal);
-      } catch (killException) {
-        logger.error('WebDriver server kill failed: %s', killException);
-      }
-      this.serverUrl_ = undefined;
+    if (this.wdLauncher_) {
+      this.wdLauncher_.kill();
+      this.wdLauncher_ = undefined;
+      this.devTools_ = undefined;
     } else {
-      logger.warn('WD server process is already unset');
+      logger.warn('WD launcher is already unset');
     }
-  },
-
-  setSystemCommands_: function() {
-    'use strict';
-    system_commands.set('kill signal', 'SIGHUP', 'unix');
   }
 };
 
