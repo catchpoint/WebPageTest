@@ -1,5 +1,5 @@
 <?php
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetVisualProgress');
     newrelic_add_custom_tracer('GetImageHistogram');
 }
@@ -49,14 +49,14 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                                                 'file' => $file);
                     }
                 }
-            } 
+            }
         }
         if (count($frames['frames']) == 1) {
             foreach($frames['frames'] as $time => &$frame) {
                 $frame['progress'] = 100;
                 $frames['complete'] = $time;
             }
-        } elseif (  isset($first_file) && strlen($first_file) && 
+        } elseif (  isset($first_file) && strlen($first_file) &&
                     isset($last_file) && strlen($last_file) && count($frames['frames'])) {
             $start_histogram = GetImageHistogram("$video_directory/$first_file", $options);
             $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
@@ -82,6 +82,12 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             }
         }
     }
+    $devTools = GetDevToolsProgress($testPath, $run, $cached);
+    if (isset($devTools)){
+        if (!isset($frames))
+            $frames = array();
+        $frames['DevTools'] = $devTools;
+    }
     if (!isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
@@ -99,7 +105,7 @@ function GetImageHistogram($image_file, $options = null) {
     // first, see if we have a client-generated histogram
     if (!isset($options) && isset($histogram_file) && is_file($histogram_file)) {
         $histogram = json_decode(file_get_contents($histogram_file), true);
-        if (!is_array($histogram) || 
+        if (!is_array($histogram) ||
             !array_key_exists('r', $histogram) ||
             !array_key_exists('g', $histogram) ||
             !array_key_exists('b', $histogram) ||
@@ -109,7 +115,7 @@ function GetImageHistogram($image_file, $options = null) {
             unset($histogram);
         }
     }
-    
+
     // generate a histogram from the image itself
     if (!isset($histogram)) {
         $im = imagecreatefromjpeg($image_file);
@@ -130,7 +136,7 @@ function GetImageHistogram($image_file, $options = null) {
                     $tmp = imagecreatetruecolor($width, $height);
                     fastimagecopyresampled($tmp, $im, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight, 3);
                     imagedestroy($im);
-                    $im = $tmp;    
+                    $im = $tmp;
                     unset($tmp);
                 }
                 $histogram = array();
@@ -148,7 +154,7 @@ function GetImageHistogram($image_file, $options = null) {
                 }
                 for ($y = 0; $y < $height; $y++) {
                     for ($x = 0; $x < $width; $x++) {
-                        $rgb = ImageColorAt($im, $x, $y); 
+                        $rgb = ImageColorAt($im, $x, $y);
                         $r = ($rgb >> 16) & 0xFF;
                         $g = ($rgb >> 8) & 0xFF;
                         $b = $rgb & 0xFF;
@@ -232,14 +238,14 @@ function CalculateFeelsLikeIndex(&$frames) {
         }
     }
     $index = (int)($index);
-    
+
     return $index;
 }
 
 /**
 * Convert RGB values (0-255) into HSV values (and force it into a 0-255 range)
 * Return the values in-place (R = H, G = S, B = V)
-* 
+*
 * @param mixed $R
 * @param mixed $G
 * @param mixed $B
@@ -290,5 +296,15 @@ function RGB_TO_YUV(&$r, &$g, &$b) {
     $r = min(max((int)$Y, 0), 255);
     $g = min(max((int)$U, 0), 255);
     $b = min(max((int)$V, 0), 255);
+}
+
+function GetDevToolsProgress($testPath, $run, $cached) {
+    $cachedText = '';
+    if( $cached )
+        $cachedText = '_cached';
+    $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
+    if (gz_is_file($timelineFile)){
+
+    }
 }
 ?>

@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 CWatchDlg * dlg = NULL;
 DWORD refCount = 0;
+DWORD tlsIndex = TLS_OUT_OF_INDEXES;
 
 // Colors used for the UI
 const COLORREF colorPage			= RGB(255,220,220);
@@ -476,6 +477,7 @@ void CWatchDlg::CreateDlg(void)
 	{
 		ATLTRACE(_T("[Pagetest] - ***** CWatchDlg::CreateDlg - creating dlg\n"));
 		
+		tlsIndex = TlsAlloc();
 		CWatchDlg * tmp;
 		tmp = new CWatchDlg();
 		tmp->Create();

@@ -1693,11 +1693,6 @@ void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input
 				}
 			}
 
-      // fake a gzip header for secure resources so page speed doesn't ding them
-      // wininet removes this header so we can't see it
-      if (w->secure)
-					resource->AddResponseHeader("Content-Encoding", "gzip");
-
 			// Next, merge the cached response headers from wininet.
 			//
 			// Note that by default wininet removes certain headers. See 

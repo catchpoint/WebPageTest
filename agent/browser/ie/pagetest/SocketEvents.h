@@ -54,10 +54,18 @@ public:
 	virtual void UpdateRTT(CSocketConnect * c);
 	virtual void UpdateRTT(DWORD ipv4_address, long elapsed);
   virtual CString GetRTT(DWORD ipv4_address);
+  virtual void MapSchannelSocket(void * schannelId, SOCKET s);
+  virtual SOCKET GetSchannelSocket(void * schannelId);
+  virtual void * GetSchannelId(SOCKET s);
 
 	DWORD	nextSocketId;	// ID to assign to the next socket
 	DWORD	bwBytesIn;
 
 	CAtlMap<SOCKET, DWORD>	socketID;
 	CAtlMap<DWORD, long>	  rtt;
+
+protected:
+	CRITICAL_SECTION socket_cs;
+	CAtlMap<SOCKET, void *>	schannelIds;
+	CAtlMap<void *, SOCKET>	schannelSockets;
 };

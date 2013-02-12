@@ -18,35 +18,106 @@ if ($run) {
         $videoPath .= '_cached';
         $cachedText = '_cached';
     }
-    $frames = GetVisualProgress($testPath, $run, $cached, array('nocache' => 1));
+    $frames = GetVisualProgress($testPath, $run, $cached /*, array('nocache' => 1) */);
 }
 
-$colorSpace='RGB';
-if (array_key_exists('colorSpace', $_GET)) {
-    $colorSpace=$_GET['colorSpace'];
+// load the timeline data
+$timelineFile = "$testPath/$run{$cachedText}_timeline.json";
+$timelineText = gz_file_get_contents($timelineFile);
+$timeline = json_decode($timelineText, true);
+$startTime = 0;
+$fullScreen = 0;
+$paintEvents = array();
+$regions = array();
+foreach($timeline as &$entry) {
+    ParseEntry($entry);
 }
-$channels = array('R', 'G', 'B');
-if ($colorSpace == 'HSV') {
-    $channels = array('H', 'S', 'V');
-} elseif ($colorSpace == 'YUV') {
-    $channels = array('Y', 'U', 'V');
+function ParseEntry(&$entry) {
+    global $startTime;
+    global $fullScreen;
+    global $regions;
+    $ret = false;
+    $hadPaintChildren = false;
+    if (array_key_exists('startTime', $entry)) {
+        if ($entry['startTime'] && (!$startTime || $entry['startTime'] < $startTime)) {
+            $startTime = $entry['startTime'];
+        }
+    }
+    if(array_key_exists('children', $entry) &&
+       is_array($entry['children'])) {
+        foreach($entry['children'] as &$child) {
+            if (ParseEntry($child))
+                $hadPaintChildren = true;
+        }
+    }
+    if (!$hadPaintChildren &&
+        array_key_exists('type', $entry) &&
+        !strcasecmp($entry['type'], 'Paint') &&
+        array_key_exists('data', $entry) &&
+        array_key_exists('width', $entry['data']) &&
+        array_key_exists('height', $entry['data']) &&
+        array_key_exists('x', $entry['data']) &&
+        array_key_exists('y', $entry['data'])) {
+        $ret = true;
+        $paintEvent = $entry['data'];
+        $paintEvent['startTime'] = $entry['startTime'];
+        $area = $paintEvent['width'] * $paintEvent['height'];
+        if ($area > $fullScreen)
+            $fullScreen = $area;
+        $regionName = "{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
+        if (!array_key_exists($regionName, $regions)) {
+            $regions[$regionName] = $paintEvent;
+            $regions[$regionName]['times'] = array();
+        }
+        $regions[$regionName]['times'][] = $entry['startTime'];
+    }
+    return $ret;
 }
-$weights = array(1,1,1);
-for ($i = 0; $i < 3; $i++) {
-    if (array_key_exists("w$i", $_GET) && $_GET["w$i"] >= 0) {
-        $weights[$i] = $_GET["w$i"];
+$total = 0.0;
+$regionCount = count($regions);
+foreach($regions as $name => &$region) {
+    $elapsed = $event['startTime'] - $startTime;
+    $area = $region['width'] * $region['height'];
+    if ($area != $fullScreen && $regionCount > 1) {
+        $count = count($region['times']);
+        $impact = floatval($area / $count);
+        foreach($region['times'] as $time) {
+            $total += $impact;
+            $elapsed = (int)($time - $startTime);
+            if (!array_key_exists($elapsed, $paintEvents))
+                $paintEvents[$elapsed] = $impact;
+            else
+                $paintEvents[$elapsed] += $impact;
+        }
     }
 }
-$buckets = 256;
-if (array_key_exists('buckets', $_GET) && $_GET['buckets'] > 0 && $_GET['buckets'] <= 256) {
-    $buckets=$_GET['buckets'];
+ksort($paintEvents, SORT_NUMERIC);
+$current = 0.0;
+$lastTime = 0.0;
+$lastProgress = 0.0;
+$speedIndex = 0.0;
+$siProgress = array();
+foreach($paintEvents as $time => $increment) {
+    $current += $increment;
+    $progress = floatval(floatval($current) / floatval($total));
+    $elapsed = $time - $lastTime;
+    $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
+    $speedIndex += $siIncrement;
+    $lastProgress = $progress;
+    $lastTime = $time;
+    $siProgress[$time] = $progress;
 }
-$resample = 2;
-if (array_key_exists('resample', $_GET) && $_GET['resample'] >= 2) {
-    $resample=$_GET['resample'];
+function GetSIProgress($time) {
+    global $siProgress;
+    $progress = 0;
+    foreach($siProgress as $progressTime => $prog) {
+        if ($progressTime <= $time)
+            $progress = intval($prog * 100);
+        else
+            break;
+    }
+    return $progress;
 }
-$options = array('colorSpace' => $colorSpace, 'weights' => $weights, 'buckets' => $buckets, 'resample' => $resample);
-$customFrames = GetVisualProgress($testPath, $run, $cached, $options);
 ?>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -92,36 +163,8 @@ $customFrames = GetVisualProgress($testPath, $run, $cached, $options);
             $videoId = $id;
             $nosubheader = true;
             include 'header.inc';
-            echo '<div id="options">';
-            echo '<form id="optionsForm" name="options" method="get" action="visualProgress.php">';
-            echo "<input type=\"hidden\" name=\"test\" value=\"$id\">";
-            echo "<input type=\"hidden\" name=\"run\" value=\"$run\">";
-            echo "<input type=\"hidden\" name=\"cached\" value=\"$cached\">";
-            echo 'Color Space: ';
-            echo '<input type="radio" name="colorSpace" value="RGB"';
-            if ($colorSpace == 'RGB') {
-                echo ' checked';
-            }
-            echo '> RGB  <input type="radio" name="colorSpace" value="HSV"';
-            if ($colorSpace == 'HSV') {
-                echo ' checked';
-            }
-            echo '> HSV  <input type="radio" name="colorSpace" value="YUV"';
-            if ($colorSpace == 'YUV') {
-                echo ' checked';
-            }
-            echo '> YUV<br>';
-            echo 'Color Channel Weights: ';
-            for ($i = 0; $i < 3; $i++) {
-                echo "{$channels[$i]} <input type=\"input\" name=\"w$i\" value=\"{$weights[$i]}\" size=\"3\" /> ";
-            }
-            echo '<br>';
-            echo "Histogram Buckets (1-256): <input type=\"input\" name=\"buckets\" value=\"$buckets\" size=\"3\" /><br>";
-            echo "Resample Images (must be smaller than 1/2): 1 / <input type=\"input\" name=\"resample\" value=\"$resample\" size=\"3\" /><br>";
-            echo '<input id="SubmitBtn" type="submit" value="Update">';
-            echo '</form></div>';
             echo '<table class="frames">';
-            echo '<tr><th>Time</th><th>Video Frame</th><th>Baseline<br>Speed Index: ' . $frames['SpeedIndex'] . '</th><th>Customized<br>Speed Index: ' . $customFrames['SpeedIndex'] .'</th></tr>';
+            echo '<tr><th>Time</th><th>Video Frame</th><th>Baseline<br>Speed Index: ' . $frames['SpeedIndex'] . '</th><th>Dev Tools<br>Speed Index: ' . intval($speedIndex) .'</th></tr>';
             if (isset($frames) && array_key_exists('frames', $frames)) {
                 foreach ($frames['frames'] as $time => &$frame) {
                     echo '<tr><td>'. number_format($time / 1000.0, 3) . 's</td>';
@@ -129,7 +172,7 @@ $customFrames = GetVisualProgress($testPath, $run, $cached, $options);
                     $thumb = "/thumbnail.php?test=$id&width=200&file=video_$run$cachedText/{$frame['file']}";
                     echo "<td><a href=\"$img\"><img src=\"$thumb\"></a></td>";
                     echo "<td>{$frame['progress']}%</td>";
-                    echo "<td>{$customFrames['frames'][$time]['progress']}%</td>";
+                    echo "<td>" . GetSIProgress($time) . "%</td>";
                     echo "</tr>";
                 }
             }

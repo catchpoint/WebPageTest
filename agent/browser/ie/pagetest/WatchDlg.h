@@ -277,3 +277,4 @@ public:
 
 // global single instance of the dialog
 extern CWatchDlg * dlg;
+extern DWORD tlsIndex;

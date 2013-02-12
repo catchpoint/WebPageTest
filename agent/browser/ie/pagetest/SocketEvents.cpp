@@ -39,12 +39,17 @@ CSocketEvents::CSocketEvents(void):
 	, bwBytesIn(0)
 {
   rtt.InitHashTable(257);
+  socketID.InitHashTable(257);
+  schannelIds.InitHashTable(257);
+  schannelSockets.InitHashTable(257);
+  InitializeCriticalSection(&socket_cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CSocketEvents::~CSocketEvents(void)
 {
+  DeleteCriticalSection(&socket_cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -130,6 +135,13 @@ void CSocketEvents::CloseSocket(SOCKET s)
 	socketID.RemoveKey((UINT_PTR)s);
 	
 	LeaveCriticalSection(&cs);
+
+	void * schannelId = GetSchannelId(s);
+	EnterCriticalSection(&socket_cs);
+	if (schannelId)
+		schannelSockets.RemoveKey(schannelId);
+	schannelIds.RemoveKey(s);
+	LeaveCriticalSection(&socket_cs);
 }
 
 #pragma warning(pop)
@@ -710,4 +722,33 @@ CString CSocketEvents::GetRTT(DWORD ipv4_address)
     }
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CSocketEvents::MapSchannelSocket(void * schannelId, SOCKET s) {
+  EnterCriticalSection(&socket_cs);
+  schannelIds.SetAt(s, schannelId);
+  schannelSockets.SetAt(schannelId, s);
+  LeaveCriticalSection(&socket_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+SOCKET CSocketEvents::GetSchannelSocket(void * schannelId){
+  SOCKET s = INVALID_SOCKET;
+  EnterCriticalSection(&socket_cs);
+  schannelSockets.Lookup(schannelId, s);
+  LeaveCriticalSection(&socket_cs);
+  return s;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void * CSocketEvents::GetSchannelId(SOCKET s){
+  void * schannelId = NULL;
+  EnterCriticalSection(&socket_cs);
+  schannelIds.Lookup(s, schannelId);
+  LeaveCriticalSection(&socket_cs);
+  return schannelId;
 }
