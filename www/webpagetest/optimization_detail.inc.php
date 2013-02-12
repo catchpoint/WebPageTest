@@ -4,17 +4,17 @@ require_once('object_detail.inc');
 
 /**
 * Parse the page data and load the optimization-specific details
-* 
+*
 * @param mixed $pagedata
 */
 function getOptimizationGrades(&$pageData, &$test, $id, $run)
 {
     $opt = null;
-    
+
     if( $pageData )
     {
         $opt = array();
-        
+
         // put them in rank-order
         $opt['ttfb'] = array();
         $opt['keep-alive'] = array();
@@ -38,7 +38,7 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         $opt['cookies']['score'] = $pageData['score_cookies'];
         $opt['minify']['score'] = $pageData['score_minify'];
         $opt['e-tags']['score'] = $pageData['score_etags'];
-        
+
         // define the labels for all  of them
         $opt['ttfb']['label'] = 'First Byte Time';
         $opt['keep-alive']['label'] = 'Keep-alive Enabled';
@@ -46,11 +46,11 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         $opt['image_compression']['label'] = 'Compress Images';
         $opt['caching']['label'] = 'Cache static content';
         $opt['combine']['label'] = 'Combine js and css files';
-        $opt['cdn']['label'] = 'CDN detected';
+        $opt['cdn']['label'] = 'Effective use of CDN';
         $opt['cookies']['label'] = 'No cookies on static content';
         $opt['minify']['label'] = 'Minify javascript';
         $opt['e-tags']['label'] = 'Disable E-Tags';
-        
+
         // flag the important ones
         $opt['ttfb']['important'] = true;
         $opt['keep-alive']['important'] = true;
@@ -58,7 +58,7 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         $opt['image_compression']['important'] = true;
         $opt['caching']['important'] = true;
         $opt['cdn']['important'] = true;
-        
+
         // apply grades
         foreach( $opt as $check => &$item )
         {
@@ -104,20 +104,20 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
             $item['weight'] = $weight;
         }
     }
-    
+
     return $opt;
 }
 
 /**
 * Generate a grade for the TTFB
-* 
+*
 * @param mixed $id
 * @param mixed $run
 */
 function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
 {
     $score = null;
-    
+
     $ttfb = (int)$pageData['TTFB'];
     if( $ttfb )
     {
@@ -129,20 +129,20 @@ function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
             if( $ttfb > $worstCase )
                 $score = 0;
         }
-        
+
         if( !isset($score) )
         {
             $target = getTargetTTFB($pageData, $test, $id, $run, $cached);
             $score = (int)min(max(100 - (($ttfb - $target) / 10), 0), 100);
         }
     }
-    
+
     return $score;
 }
 
 /**
 * Determine the target TTFB for the given test
-* 
+*
 * @param mixed $pageData
 * @param mixed $test
 * @param mixed $id
@@ -155,7 +155,7 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
     $rtt = null;
     if( isset($test['testinfo']['latency']) )
         $rtt = (int)$test['testinfo']['latency'];
-    
+
     // load the object data (unavoidable, we need the socket connect time to the first host)
     require_once('object_detail.inc');
     $testPath = './' . GetTestPath($id);
@@ -176,12 +176,12 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
             $ssl_ms = 0;
             if( $requests[0]['is_secure'] && (int)$requests[0]['ssl_ms'] > 0 )
                 $ssl_ms = $requests[0]['ssl_ms'];
-            
+
             // RTT's: DNS + Socket Connect + HTTP Request
             $target =  ($rtt * 3) + $ssl_ms;
         }
     }
-    
+
     return $target;
 }
 ?>

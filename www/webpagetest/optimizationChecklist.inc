@@ -3,7 +3,7 @@ require_once('draw.inc');
 
 /**
 * Draw the waterfall view image
-* 
+*
 * @return resource
 */
 function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
@@ -14,19 +14,19 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
     $fontWidth = imagefontwidth($font);
     $height = 2 + (3 * $rowHeight) + ($rowHeight * count($requests));
     $totalHeight = $height;
-        
+
     $left = 250;
     $w = $width - 2 - $left;
     $maxChars = (int)(($left - 4) / $fontWidth);
 
-    // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart        
+    // draw a bunch of stuff that is only needed if we're ACTUALLY drawing the chart
     if( $imageMap )
     {
     }
     else
     {
         $im = imagecreatetruecolor($width, $totalHeight);
-    
+
         // allocate the colors we will need
         $white = GetColor($im, 255, 255, 255);
         $black = GetColor($im, 0, 0, 0);
@@ -34,11 +34,11 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
         $dkGrey = GetColor($im, 192, 192, 192);
         $error = GetColor($im, 255, 0, 0);
         $warning = GetColor($im, 255, 255, 0);
-        
+
         // give it a white background and black border
         imagefilledrectangle($im, 0, 0, $width, $totalHeight, $white);
         imagerectangle($im, 0, 0, $width - 1, $height - 1, $black);
-        
+
         // do the alternating row coloring (after a 2 row header)
         $y = 1 + ($rowHeight * 2);
         $i = 0;
@@ -55,18 +55,18 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $y += $rowHeight;
             $i++;
         }
-        
+
         // draw the optimization checks separators
         $standards = array( 'score_keep-alive' => 'Keep-Alive',
                             'score_gzip' => 'GZip',
                             'score_compress' => 'Compress Img',
-                            'score_cache' => 'Cache Static', 
+                            'score_cache' => 'Cache Static',
                             'score_combine' => 'Combine',
-                            'score_cdn' => 'CDN detected',
+                            'score_cdn' => 'Effective use of CDN',
                             'score_minify' => 'Minify JS',
                             'score_cookies' => 'Cookies');
         $stdCount = count($standards);
-        
+
         $x = $left;
         $inc = $w / $stdCount;
         foreach( $standards as $index => $standard )
@@ -76,7 +76,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $pos = $x + (($inc - $len) / 2);
             imagestring($im, $font, $pos, 2,  $standard, $black);
             imagestring($im, $font, $pos, $height - $rowHeight + 1,  $standard, $black);
-            
+
             // put in the score
             $score = $pageData[$index];
             $txt = 'N/A';
@@ -85,12 +85,12 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $len = $fontWidth * strlen($txt);
             $pos = $x + (($inc - $len) / 2);
             imagestring($im, $font, $pos, 2 + $rowHeight,  $txt, $black);
-            
+
             // draw the separator
             imageline($im, $x, 0, $x, $height - 1, $black);
             $x += $inc;
         }
-        
+
         // put the url label in
         $x = 4;
         $y = 2 + $rowHeight;
@@ -102,7 +102,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
         }
         imagestring($im, $font, $x, $y,  $label, $black);
     }
-    
+
     // load the image icons (and size them)
     $checkIcon = imagecreatefrompng('images/check.png');
     $warningIcon = imagecreatefrompng('images/warning.png');
@@ -115,7 +115,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
     {
         $i++;
         $x = 4;
-        
+
         if( !$imageMap )
         {
             // draw the label
@@ -126,7 +126,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
                 $object .= '/';
             $label = $i . ': ' . $request['host'] . ' - ' . $object;
             imagestring($im, $font, $x, $y,  FitText($label, $maxChars), $black);
-            
+
             // put in the optimization icons
             $x = $left;
             foreach( $standards as $index => $standard )
@@ -156,8 +156,8 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
                 $x += $inc;
             }
         }
-        
-        
+
+
         $y += $rowHeight;
     }
 
