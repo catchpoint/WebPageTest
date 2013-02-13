@@ -73,9 +73,9 @@ DevTools.prototype.onMessage = function(callback) {
   this.messageCallback_ = callback;
 };
 
-  DevTools.prototype.connect = function(callback, errback) {
+DevTools.prototype.connect = function(callback, errback) {
   'use strict';
-  http.get(url.parse(this.devToolsUrl_), function(response) {
+  var request = http.get(url.parse(this.devToolsUrl_), function(response) {
     exports.ProcessResponse(response, function(responseBody) {
       var devToolsJson = JSON.parse(responseBody);
       try {
@@ -87,6 +87,9 @@ DevTools.prototype.onMessage = function(callback) {
       this.connectDebugger_(callback, errback);
     }.bind(this));
   }.bind(this));
+  request.on('error', function(e) {
+    errback(e);
+  });
 };
 
 DevTools.prototype.connectDebugger_ = function(callback, errback) {

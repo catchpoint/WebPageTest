@@ -306,49 +306,48 @@ Agent.prototype.startJobRun_ = function(job) {
   job.isCacheWarm = !!this.wdServer_;
   logger.info('Running job %s run %d/%d cacheWarm=%s',
       job.id, job.runNumber, job.runs, job.isCacheWarm);
-  if (job.task.script) {
-    if (!this.wdServer_) {
-      this.scheduleIpfwStart_(
-          job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
-      this.startWdServer_();
-      this.wdServer_.on('message', function(ipcMsg) {
-        logger.debug('got IPC: %s', ipcMsg.cmd);
-        if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
-          var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
-          if ('error' === ipcMsg.cmd) {
-            job.error = ipcMsg.e;
-            // Error in a first-view run: can't do a repeat run.
-            isRunFinished = true;
-          }
-          this.scheduleProcessDone_(ipcMsg, job);
-          if (isRunFinished) {
-            this.scheduleCleanup_();
-          }
-          // Do this only at the very end, as it starts a new run of the job.
-          this.scheduleNoFault_('Job finished',
-              job.runFinished.bind(job, isRunFinished));
+  if (!this.wdServer_) {
+    this.scheduleIpfwStart_(
+        job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
+    this.startWdServer_();
+    this.wdServer_.on('message', function(ipcMsg) {
+      logger.debug('got IPC: %s', ipcMsg.cmd);
+      if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
+        var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+        if ('error' === ipcMsg.cmd) {
+          job.error = ipcMsg.e;
+          // Error in a first-view run: can't do a repeat run.
+          isRunFinished = true;
         }
-      }.bind(this));
-    }
-    this.scheduleNoFault_('Send IPC "run"', function() {
-      this.wdServer_.send({
-        cmd: 'run',
-        options: {browserName: job.task.browser},
-        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
-        captureVideo: job.captureVideo,
-        script: job.task.script,
-        seleniumJar: this.flags_.selenium_jar,
-        chromedriver: this.flags_.chromedriver,
-        chrome: this.flags_.chrome,
-        javaCommand: this.flags_.java
-      });
+        this.scheduleProcessDone_(ipcMsg, job);
+        if (isRunFinished) {
+          this.scheduleCleanup_();
+        }
+        // Do this only at the very end, as it starts a new run of the job.
+        this.scheduleNoFault_('Job finished',
+            job.runFinished.bind(job, isRunFinished));
+      }
     }.bind(this));
-  } else {
-    // TODO: generate a page-load script.
-    job.error = 'NodeJS agent currently only supports tasks with a script';
-    this.scheduleNoFault_('Job finished',
-        job.runFinished.bind(job, /*isRunFinished=*/true));
   }
+  var script = job.task.script;
+  var url;
+  if (!script) {
+    url = job.task.url;
+  }
+  this.scheduleNoFault_('Send IPC "run"', function() {
+    this.wdServer_.send({
+      cmd: 'run',
+      options: {browserName: job.task.browser},
+      exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
+      captureVideo: job.captureVideo,
+      script: script,
+      url: url,
+      seleniumJar: this.flags_.selenium_jar,
+      chromedriver: this.flags_.chromedriver,
+      chrome: this.flags_.chrome,
+      javaCommand: this.flags_.java
+    });
+  }.bind(this));
 };
 
 Agent.prototype.jobTimeout_ = function(job) {

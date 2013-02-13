@@ -32,7 +32,7 @@ var child_process = require('child_process');
 var events = require('events');
 var sinon = require('sinon');
 var should = require('should');
-var wd_launcher_local_chrome = require('wd_launcher_local_chrome');
+var browser_local_chrome = require('browser_local_chrome');
 
 
 /**
@@ -42,7 +42,7 @@ var wd_launcher_local_chrome = require('wd_launcher_local_chrome');
  * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
  * 2) stubbing out anything else with async callbacks, e.g. process or network.
  */
-describe('wd_launcher_local_chrome small', function() {
+describe('browser_local_chrome small', function() {
   'use strict';
 
   var sandbox;
@@ -66,40 +66,38 @@ describe('wd_launcher_local_chrome small', function() {
   });
 
   it('should start and get killed', function() {
-    var launcher =
-        new wd_launcher_local_chrome.WdLauncherLocalChrome(chromedriver);
-    should.ok(!launcher.isRunning());
-    launcher.start({browserName: 'chrome'});
-    should.ok(launcher.isRunning());
-    should.equal('http://localhost:4444', launcher.getServerUrl());
-    should.equal('http://localhost:1234/json', launcher.getDevToolsUrl());
+    var browser = new browser_local_chrome.BrowserLocalChrome(chromedriver);
+    should.ok(!browser.isRunning());
+    browser.startWdServer({browserName: 'chrome'});
+    should.ok(browser.isRunning());
+    should.equal('http://localhost:4444', browser.getServerUrl());
+    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
     should.ok(processSpawnStub.calledOnce);
     processSpawnStub.firstCall.args[0].should.equal(chromedriver);
     processSpawnStub.firstCall.args[1].should.include('-port=4444');
 
-    launcher.kill();
-    should.ok(!launcher.isRunning());
-    should.equal(undefined, launcher.getServerUrl());
-    should.equal(undefined, launcher.getDevToolsUrl());
+    browser.kill();
+    should.ok(!browser.isRunning());
+    should.equal(undefined, browser.getServerUrl());
+    should.equal(undefined, browser.getDevToolsUrl());
     should.ok(fakeProcess.kill.calledOnce);
   });
 
   it('should start and handle process self-exit', function() {
-    var launcher =
-        new wd_launcher_local_chrome.WdLauncherLocalChrome(chromedriver);
-    should.ok(!launcher.isRunning());
-    launcher.start({browserName: 'chrome'});
-    should.ok(launcher.isRunning());
-    should.equal('http://localhost:4444', launcher.getServerUrl());
-    should.equal('http://localhost:1234/json', launcher.getDevToolsUrl());
+    var browser = new browser_local_chrome.BrowserLocalChrome(chromedriver);
+    should.ok(!browser.isRunning());
+    browser.startWdServer({browserName: 'chrome'});
+    should.ok(browser.isRunning());
+    should.equal('http://localhost:4444', browser.getServerUrl());
+    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
     should.ok(processSpawnStub.calledOnce);
     processSpawnStub.firstCall.args[0].should.equal(chromedriver);
     processSpawnStub.firstCall.args[1].should.include('-port=4444');
 
     fakeProcess.emit('exit', /*code=*/0);
-    should.ok(!launcher.isRunning());
-    should.equal(undefined, launcher.getServerUrl());
-    should.equal(undefined, launcher.getDevToolsUrl());
+    should.ok(!browser.isRunning());
+    should.equal(undefined, browser.getServerUrl());
+    should.equal(undefined, browser.getDevToolsUrl());
     should.ok(fakeProcess.kill.notCalled);
   });
 });

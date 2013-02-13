@@ -131,5 +131,6 @@ exports.stubHttpGet = function(sandbox, urlRegExp, data) {
     responseCb(response);
     response.emit('data', data);
     response.emit('end');
+    return response;
   });
 };

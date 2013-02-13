@@ -34,7 +34,8 @@ var logger = require('logger');
 var process_utils = require('process_utils');
 var util = require('util');
 var webdriver = require('webdriver');
-var wd_launcher = require('wd_launcher_local_chrome');  // TODO(klm): generalize
+// TODO(klm): generalize
+var browser_local_chrome = require('browser_local_chrome');
 var wd_sandbox = require('wd_sandbox');
 
 exports.process = process;  // Allow to stub out in tests.
@@ -85,14 +86,16 @@ exports.WebDriverServer = {
     this.exitWhenDone_ = initMessage.exitWhenDone;
     this.captureVideo_ = initMessage.captureVideo;
     this.script_ = initMessage.script;
+    this.url_ = initMessage.url;
     this.devToolsMessages_ = [];
     this.devToolsTimelineMessages_ = [];
     this.screenshots_ = [];
-    if (!this.wdLauncher_) {
-      this.wdLauncher_ = new wd_launcher.WdLauncherLocalChrome(
+    this.driver_ = undefined;
+    this.testStartTime_ = undefined;
+    this.pageLoadDonePromise_ = undefined;
+    if (!this.browser_) {
+      this.browser_ = new browser_local_chrome.BrowserLocalChrome(
           initMessage.chromedriver, initMessage.chrome);
-      this.driver_ = undefined;
-      this.driverBuildTime_ = undefined;
       this.devTools_ = undefined;
       // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
       // processing in these functions, if they call a WebDriver method.
@@ -105,7 +108,6 @@ exports.WebDriverServer = {
       process_utils.injectWdAppLogging('wd_server app', this.app_);
 
       this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
-      wd_launcher.setSystemCommands();
     }
   },
 
@@ -115,19 +117,20 @@ exports.WebDriverServer = {
    * @this {WebDriverServer}
    * @param {Object} browserCaps capabilities to be passed to Builder.build().
    */
-  startServer_: function(browserCaps) {
+  startWdServer_: function(browserCaps) {
     'use strict';
-    if (this.wdLauncher_.isRunning()) {
+    if (this.browser_.isRunning()) {
       throw new Error('Internal error: prior WD server running unexpectedly');
     }
 
-    this.wdLauncher_.start(browserCaps);
+    this.browser_.startWdServer(browserCaps);
     // Create an executor to simplify querying the server to see if it is ready.
-    var client = new webdriver.http.HttpClient(this.wdLauncher_.getServerUrl());
+    var client = new webdriver.http.HttpClient(this.browser_.getServerUrl());
     var executor = new webdriver.http.Executor(client);
     var command = new webdriver.command.Command(
         webdriver.command.CommandName.GET_SERVER_STATUS);
-    this.app_.scheduleWait('Waiting for WD server to be ready', function() {
+    var wdReadyPromise = this.app_.scheduleWait('Waiting for WD server',
+        function() {
       var isReady = new webdriver.promise.Deferred();
       executor.execute(command, function(error /*, unused_response*/) {
         if (error) {
@@ -140,9 +143,20 @@ exports.WebDriverServer = {
     }, WD_CONNECT_TIMEOUT_MS_);
 
     logger.info('WD connect promise setup complete');
+    return wdReadyPromise;
   },
 
-  /**
+  startChrome_: function(browserCaps) {
+    'use strict';
+    if (this.browser_.isRunning()) {
+      throw new Error('Internal error: prior Chrome running unexpectedly');
+    }
+
+    this.browser_.startBrowser(browserCaps);
+    return this.connectDevTools_(webdriver);
+  },
+
+    /**
    * connectDevTools_ attempts to create a new devtools instance and attempts to
    * connect it to the webdriver server
    * @this {WebDriverServer}
@@ -154,26 +168,25 @@ exports.WebDriverServer = {
     'use strict';
     return this.app_.scheduleWait('Connect DevTools', function() {
       var isDevtoolsConnected = new wdNamespace.promise.Deferred();
-      function reject(e) {
-        isDevtoolsConnected.reject(e);
-      }
+      var fail = isDevtoolsConnected.resolve.bind(isDevtoolsConnected, false);
 
-      this.devTools_ = new devtools.DevTools(this.wdLauncher_.getDevToolsUrl());
+      var devTools = new devtools.DevTools(this.browser_.getDevToolsUrl());
 
-      this.devTools_.connect(function() {
-        this.devTools_.networkCommand('enable', function() {
+      devTools.connect(function() {
+        devTools.networkCommand('enable', function() {
           logger.info('DevTools Network events enabled');
-          this.devTools_.pageCommand('enable', function() {
+          devTools.pageCommand('enable', function() {
             logger.info('DevTools Page events enabled');
             // Timeline enable event never gets a response.
-            this.devTools_.timelineCommand('start', function() {
+            devTools.timelineCommand('start', function() {
               logger.info('DevTools Timeline events enabled');
+              this.devTools_ = devTools;
               this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
               isDevtoolsConnected.resolve(true);
-            }.bind(this), reject);
-          }.bind(this), reject);
-        }.bind(this), reject);
-      }.bind(this), reject);
+            }.bind(this), fail);
+          }.bind(this), fail);
+        }.bind(this), fail);
+      }.bind(this), fail);
 
       return isDevtoolsConnected.promise;
     }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
@@ -181,24 +194,31 @@ exports.WebDriverServer = {
 
   onDevToolsMessage_: function(message) {
     'use strict';
+    if (!this.testStartTime_) {  // Ignore messages outside of the test.
+      return;
+    }
     if (devtools.isNetworkMessage(message) || devtools.isPageMessage(message)) {
       logger.extra('DevTools message: %j', message);
       this.devToolsMessages_.push(message);
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending() &&
+          message.method === 'Page.loadEventFired') {
+        this.pageLoadDonePromise_.resolve();
+      }
     } else {
       logger.extra('DevTools timeline message: %j', message);
       this.devToolsTimelineMessages_.push(message);
     }
   },
 
-  onAfterDriverBuild_: function() {
+  onTestStarted_: function() {
     'use strict';
+    logger.info('Test starting');
     if (this.captureVideo_) {
-      this.takeScreenshot_('progress_0', 'after Builder.build()').then(
-          function() {
-            this.driverBuildTime_ = Date.now();
-          }.bind(this));
+      this.takeScreenshot_('progress_0', 'test started').then(function() {
+        this.testStartTime_ = Date.now();
+      }.bind(this));
     } else {
-      this.driverBuildTime_ = Date.now();
+      this.testStartTime_ = Date.now();
     }
   },
 
@@ -214,11 +234,10 @@ exports.WebDriverServer = {
     logger.extra('WD post-build callback, driver=%j', driver);
     if (!this.driver_) {
       this.driver_ = driver;
-      if (browserCaps.browserName.indexOf('chrome') !== -1) {
-        this.connectDevTools_(wdNamespace).then(
-            this.onAfterDriverBuild_.bind(this), this.onError_.bind(this));
+      if (!this.devTools_ && browserCaps.browserName.indexOf('chrome') !== -1) {
+        this.connectDevTools_(wdNamespace).then(this.onTestStarted_.bind(this));
       } else {
-        this.onAfterDriverBuild_();
+        this.onTestStarted_();
       }
     } else if (this.driver_ !== driver) {
       throw new Error('Internal error: repeat onDriverBuild with wrong driver');
@@ -265,9 +284,8 @@ exports.WebDriverServer = {
   onBeforeDriverAction: function(command/*, commandArgs*/) {
     'use strict';
     if (command.getName() === webdriver.command.CommandName.QUIT) {
-      logger.debug('Before WD quit: resetting driver, driverBuildTime');
+      logger.debug('Before WD quit: forget driver, devTools');
       this.driver_ = undefined;
-      this.driverBuildTime_ = undefined;
       this.devTools_ = undefined;
     }
   },
@@ -293,7 +311,7 @@ exports.WebDriverServer = {
     var commandStr = commandArgs[1];
     if (this.captureVideo_) {
       // We operate in milliseconds, WPT wants "tenths of a second" units.
-      var wptTimestamp = Math.round((Date.now() - this.driverBuildTime_) / 100);
+      var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
       logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
       this.takeScreenshot_('progress_' + wptTimestamp, 'After ' + commandStr)
           .then(function(screenshot) {
@@ -326,6 +344,38 @@ exports.WebDriverServer = {
     this.onAfterDriverAction(command, commandArgs);
   },
 
+  runTest_: function(browserCaps) {
+    'use strict';
+    if (this.script_) {
+      this.runSandboxedSession_(browserCaps);
+    } else {
+      this.runPageLoad_(browserCaps);
+    }
+  },
+
+  runPageLoad_: function(browserCaps) {
+    'use strict';
+    if (!this.devTools_) {
+      this.startChrome_(browserCaps);
+    }
+    this.sandboxApp_ = this.app_;
+    // No page load timeout here -- agent_main enforces run-level timeout.
+    this.app_.schedule('Run page load', function() {
+      // onDevToolsMessage_ resolves this promise when it detects on-load.
+      this.pageLoadDonePromise_ = new webdriver.promise.Deferred();
+      this.onTestStarted_();
+      this.devTools_.command(
+          {method: 'Page.navigate', params: {url: this.url_}}, function() {
+        logger.info('Page.navigate returned');
+      }, function(e) {
+        logger.error('Page.navigate errored out: %s', e);
+      });
+      return this.pageLoadDonePromise_.promise;
+    }.bind(this)).then(
+        this.waitForCoalesce_.bind(this, webdriver,
+            exports.WAIT_AFTER_ONLOAD_MS));
+  },
+
   /**
    * Runs the user script in a sandboxed environment.
    *
@@ -336,15 +386,20 @@ exports.WebDriverServer = {
     'use strict';
     var promise;
     if (this.sandboxApp_) {
+      if (!this.browser_.isRunning()) {
+        throw new Error('WD server not running on repeat load');
+      }
       // Repeat load with an already running WD server and driver.
       promise = this.sandboxApp_.schedule(
-              'Run Script',
-              this.runScript_.bind(this, this.wdSandbox_)).then(
-              this.waitForCoalesce_.bind(this, this.wdSandbox_,
-                  exports.WAIT_AFTER_ONLOAD_MS));
+          'Run Script',
+          this.runScript_.bind(this, this.wdSandbox_)).then(
+          this.waitForCoalesce_.bind(this, this.wdSandbox_,
+              exports.WAIT_AFTER_ONLOAD_MS));
     } else {
+      this.startWdServer_(browserCaps);
+
       promise = wd_sandbox.createSandboxedWdNamespace(
-          this.wdLauncher_.getServerUrl(), browserCaps, this).then(
+          this.browser_.getServerUrl(), browserCaps, this).then(
               function(wdSandbox) {
         this.wdSandbox_ = wdSandbox;
         this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
@@ -380,14 +435,11 @@ exports.WebDriverServer = {
     };
     exports.process.once('uncaughtException', this.uncaughtExceptionHandler_);
 
-    if (!this.wdLauncher_.isRunning()) {
-      this.wdLauncher_.start(browserCaps);  // TODO(klm): Handle process failure
-    }
-
-    this.app_.schedule('Run sandboxed WD session',
-        this.runSandboxedSession_.bind(this, browserCaps)).then(
-        this.done_.bind(this),
-        this.onError_.bind(this));
+    this.app_.schedule('Run the test',
+        this.runTest_.bind(this, browserCaps)).then(
+            this.done_.bind(this),
+            this.onError_.bind(this)).then(
+                this.tearDown_.bind(this));
     // When IDLE is emitted, the app no longer runs an event loop.
     this.app_.on(webdriver.promise.Application.EventType.IDLE, function() {
       logger.info('The main application has gone idle, history: %j',
@@ -423,21 +475,34 @@ exports.WebDriverServer = {
    */
   waitForCoalesce_: function(wdSandbox, timeout) {
     'use strict';
-    logger.info('Sandbox finished, waiting for browser to coalesce');
+    logger.info('Test finished, waiting for browser to coalesce');
     this.sandboxApp_.scheduleTimeout(
         'Waiting for browser to coalesce', timeout);
   },
 
+  /**
+   * Unsets per-run variables.
+   */
+  tearDown_: function() {
+    'use strict';
+    this.driver_ = undefined;
+    this.testStartTime_ = undefined;
+    if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+      this.pageLoadDonePromise_.cancel('Page load promise never resolved');
+    }
+    this.pageLoadDonePromise_ = undefined;
+  },
+
   done_: function() {
     'use strict';
-    logger.info('Sandboxed session succeeded');
+    logger.info('Test run succeeded');
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
     this.takeScreenshot_('screen', 'end of run').then(function(screenshot) {
       if (this.captureVideo_) {
         // Last video frame
         var wptTimestamp =
-            Math.round((Date.now() - this.driverBuildTime_) / 100);
+            Math.round((Date.now() - this.testStartTime_) / 100);
         this.screenshots_.push({
             fileName: 'progress_' + wptTimestamp + '.png',
             contentType: 'image/png',
@@ -489,13 +554,10 @@ exports.WebDriverServer = {
     'use strict';
     if (this.driver_) {
       logger.debug('scheduling driver.quit()');
-      // onAfterDriverAction resets this.driver_ and this.driverBuildTime_.
-      this.driver_.quit().addErrback(process_utils.getLoggingErrback('quit'))
-          .then(function() {
-        this.driverBuildTime_ = undefined;
-      }.bind(this));
+      // onAfterDriverAction resets this.driver_ and this.testStartTime_.
+      this.driver_.quit().addErrback(process_utils.getLoggingErrback('quit'));
     } else {
-      logger.warn('driver is already unset');
+      logger.warn('driver is unset, will not call quit()');
     }
   },
 
@@ -511,18 +573,18 @@ exports.WebDriverServer = {
     exports.process.removeListener('uncaughtException',
         this.uncaughtExceptionHandler_);
     this.scheduleDriverQuit_();
-    this.app_.schedule('Kill WD server', this.killServer_.bind(this));
+    this.app_.schedule('Kill server/browser', this.kill_.bind(this));
     // Disconnect parent IPC to exit gracefully without a process.exit() call.
     // This should be the last source of event queue events.
     this.app_.schedule('Disconnect IPC',
         exports.process.disconnect.bind(process));
   },
 
-  killServer_: function() {
+  kill_: function() {
     'use strict';
-    if (this.wdLauncher_) {
-      this.wdLauncher_.kill();
-      this.wdLauncher_ = undefined;
+    if (this.browser_) {
+      this.browser_.kill();
+      this.browser_ = undefined;
       this.devTools_ = undefined;
     } else {
       logger.warn('WD launcher is already unset');
@@ -530,4 +592,5 @@ exports.WebDriverServer = {
   }
 };
 
+browser_local_chrome.setSystemCommands();
 exports.WebDriverServer.initIpc();

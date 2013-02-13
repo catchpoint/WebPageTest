@@ -32,22 +32,23 @@ var logger = require('logger');
 var system_commands = require('system_commands');
 
 
-function WdLauncherLocalChrome(chromedriver, chrome) {
+function BrowserLocalChrome(chromedriver, chrome) {
   'use strict';
-  logger.info('WdLauncherLocalChrome(%s, %s)', chromedriver, chrome);
+  logger.info('BrowserLocalChrome(%s, %s)', chromedriver, chrome);
   this.chromedriver_ = chromedriver;
   this.chrome_ = chrome;
   this.serverPort_ = 4444;
   this.serverUrl_ = undefined;
   this.devToolsPort_ = 1234;
   this.devToolsUrl_ = undefined;
-  this.serverProcess_ = undefined;
+  this.childProcess_ = undefined;
+  this.childProcessName_ = undefined;
 }
-exports.WdLauncherLocalChrome = WdLauncherLocalChrome;
+exports.BrowserLocalChrome = BrowserLocalChrome;
 
-WdLauncherLocalChrome.prototype.start = function(browserCaps) {
+BrowserLocalChrome.prototype.startWdServer = function(browserCaps) {
   'use strict';
-  if (this.serverProcess_) {
+  if (this.wdServerProcess_) {
     throw new Error('Internal error: prior WD server running unexpectedly');
   }
   var serverCommand, serverArgs;
@@ -66,36 +67,54 @@ WdLauncherLocalChrome.prototype.start = function(browserCaps) {
       browserCaps['chrome.binary'] = this.chrome_;
     }
   } else {
-    throw new Error('WdLauncherLocalChrome called with unexpected browser '
+    throw new Error('BrowserLocalChrome called with unexpected browser '
         + browserCaps.browserName);
   }
-  logger.info('Starting WD server: %s %j', serverCommand, serverArgs);
-  var serverProcess = child_process.spawn(serverCommand, serverArgs);
-  serverProcess.on('exit', function(code, signal) {
+  this.startChildProcess_(serverCommand, serverArgs, 'WD server');
+};
+
+BrowserLocalChrome.prototype.startBrowser = function() {
+  'use strict';
+  this.startChildProcess_(
+      this.chrome_ || 'chrome',
+      [
+          '-remote-debugging-port=' + this.devToolsPort_,
+          '--enable-benchmarking'  // Suppress randomized field trials.
+      ],
+      'Chrome');
+  this.serverUrl_ = undefined;
+};
+
+BrowserLocalChrome.prototype.startChildProcess_ = function(
+    command, args, name) {
+  'use strict';
+  logger.info('Starting %s: %s %j', name, command, args);
+  this.childProcessName_ = name;
+  this.childProcess_ = child_process.spawn(command, args);
+  this.childProcess_.on('exit', function(code, signal) {
     logger.info('WD EXIT code %s signal %s', code, signal);
-    this.serverProcess_ = undefined;
+    this.childProcess_ = undefined;
     this.serverUrl_ = undefined;
     this.devToolsUrl_ = undefined;
   }.bind(this));
-  serverProcess.stdout.on('data', function(data) {
+  this.childProcess_.stdout.on('data', function(data) {
     logger.info('WD STDOUT: %s', data);
   });
   // WD STDERR only gets log level warn because it outputs a lot of harmless
   // information over STDERR
-  serverProcess.stderr.on('warn', function(data) {
+  this.childProcess_.stderr.on('warn', function(data) {
     logger.error('WD STDERR: %s', data);
   });
-  this.serverProcess_ = serverProcess;
   this.serverUrl_ = 'http://localhost:' + this.serverPort_;
   this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
   logger.info('WebDriver URL: %s, DevTools URL: %s',
       this.serverUrl_, this.devToolsUrl_);
 };
 
-WdLauncherLocalChrome.prototype.kill = function() {
+BrowserLocalChrome.prototype.kill = function() {
   'use strict';
-  if (this.serverProcess_) {
-    logger.debug('Killing the WD server');
+  if (this.childProcess_) {
+    logger.debug('Killing %s', this.childProcessName_);
     var killSignal;
     try {
       killSignal = system_commands.get('kill signal');
@@ -103,29 +122,29 @@ WdLauncherLocalChrome.prototype.kill = function() {
       killSignal = undefined;
     }
     try {
-      this.serverProcess_.kill(killSignal);
+      this.childProcess_.kill(killSignal);
     } catch (killException) {
-      logger.error('WebDriver server kill failed: %s', killException);
+      logger.error('%s kill failed: %s', this.childProcessName_, killException);
     }
-    this.serverUrl_ = undefined;
-    this.devToolsUrl_ = undefined;
-    this.serverProcess_ = undefined;
   } else {
-    logger.warn('WD server process is already unset');
+    logger.debug('%s process already unset', this.childProcessName_);
   }
+  this.childProcess_ = undefined;
+  this.serverUrl_ = undefined;
+  this.devToolsUrl_ = undefined;
 };
 
-WdLauncherLocalChrome.prototype.isRunning = function() {
+BrowserLocalChrome.prototype.isRunning = function() {
   'use strict';
-  return undefined !== this.serverProcess_;
+  return undefined !== this.childProcess_;
 };
 
-WdLauncherLocalChrome.prototype.getServerUrl = function() {
+BrowserLocalChrome.prototype.getServerUrl = function() {
   'use strict';
   return this.serverUrl_;
 };
 
-WdLauncherLocalChrome.prototype.getDevToolsUrl = function() {
+BrowserLocalChrome.prototype.getDevToolsUrl = function() {
   'use strict';
   return this.devToolsUrl_;
 };
