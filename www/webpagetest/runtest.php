@@ -228,6 +228,28 @@
             unset($test['ip']);
             unset($test['uid']);
             unset($test['user']);
+            if (array_key_exists('last_updated', $test))
+                unset($test['last_updated']);
+            if (array_key_exists('started', $test))
+                unset($test['started']);
+            if (array_key_exists('completed', $test))
+                unset($test['completed']);
+            if (array_key_exists('medianRun', $test))
+                unset($test['medianRun']);
+            if (array_key_exists('retries', $test))
+                unset($test['retries']);
+            if (array_key_exists('job_file', $test))
+                unset($test['job_file']);
+            if (array_key_exists('job', $test))
+                unset($test['job']);
+            if (array_key_exists('test_error', $test))
+                unset($test['test_error']);
+            if (array_key_exists('errors', $test))
+                unset($test['errors']);
+            if (array_key_exists('test_runs', $test))
+                unset($test['test_runs']);
+            if (array_key_exists('spam', $test))
+                unset($test['spam']);
         }
 
         // the API key requirements are for all test paths
