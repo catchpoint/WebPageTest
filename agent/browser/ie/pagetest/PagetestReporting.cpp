@@ -1862,8 +1862,7 @@ void CPagetestReporting::CheckGzip()
 			mime.MakeLower();
 			if( w->result == 200
 				&& w->linkedRequest
-				&& w->fromNet
-				&& !w->secure )
+				&& w->fromNet )
 			{
 				CString enc = w->response.contentEncoding;
 				enc.MakeLower();

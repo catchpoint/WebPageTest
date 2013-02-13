@@ -158,7 +158,7 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 		
 		if(!IsFakeSocket(s, len, buff) )
 		{
-      ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketSend - socket %d, currentDoc = %d\n"), GetCurrentThreadId(), s, currentDoc);
+      ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketSend - %d bytes socket %d, currentDoc = %d\n"), len, GetCurrentThreadId(), s, currentDoc);
 
       // last chance to override host headers (redirect case)
       ModifyDataOut(buff, len);
@@ -206,15 +206,6 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 				bool cont = false;
 				if( !request->in )
 					cont = true;
-				else if( ((request->linkedRequest && request->linkedRequest->secure) || request->port == 443) && request->connect )
-				{
-					// do some checking to see if we're past the SSL handshake
-					if( !(request->connect->state % 2) )
-						request->connect->state++;
-						
-					if( request->connect->state <= 3 )
-						cont = true;
-				}
 					
 				// Do we continue the existing request?
 				if( cont )
@@ -254,7 +245,10 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 					request->ipAddress[3] = soc->ipAddress[3];
 					request->port = soc->port;
 					request->socketId = soc->id;
-				}
+          ATLTRACE(_T("[%d] - CWatchDlg::SocketSend - New request to %d.%d.%d.%d:%d\n"), s, soc->ipAddress[0], soc->ipAddress[1], soc->ipAddress[2], soc->ipAddress[3], soc->port);
+        } else {
+          ATLTRACE(_T("[%d] - CWatchDlg::SocketSend - Failed to find matching socket info\n"), s);
+        }
 				
 				// find the connection this is tied to
 				POSITION pos = events.GetHeadPosition();
@@ -332,7 +326,7 @@ void CSocketEvents::SocketRecv(SOCKET s, DWORD len, LPBYTE buff)
 			__int64 now;
 			QueryPerformanceCounter((LARGE_INTEGER *)&now);
 
-	        ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketRecv - socket %d, %d bytes, open requests = %d\n"), GetCurrentThreadId(), s, len, openRequests);
+      ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketRecv - socket %d, %d bytes, open requests = %d\n"), GetCurrentThreadId(), s, len, openRequests);
 
 			bool repaint = false;
 			bwBytesIn += len;	// update the bandwidth info
@@ -356,10 +350,6 @@ void CSocketEvents::SocketRecv(SOCKET s, DWORD len, LPBYTE buff)
 					r->in += len;
 					r->response.AddData(len, buff);
 					
-					// toggle the ssl state
-					if( ((r->linkedRequest && r->linkedRequest->secure) || r->port == 443) && r->connect && r->connect->state % 2 )
-						r->connect->state++;
-
 					// update the end time of the linked request
 					if( r->linkedRequest )
 					{

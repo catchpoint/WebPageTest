@@ -131,26 +131,6 @@ void CWinInetRequest::Process(void)
 			// use the bytes from the socket
 			in = r->in;
 			out = r->out;
-
-      // if this is a secure request, see if it looks like it is gzipped
-      if( secure )
-      {
-        DWORD headerLen = inHeaders.GetLength();
-        if( in >= headerLen && bodyLen )
-        {
-          DWORD wireBodyLen = in - headerLen;
-          if( wireBodyLen < bodyLen )
-          {
-            // tack on a fake transfer-encoding header since wininet stripped it out
-            response.contentEncoding = _T("gzip");
-            int pos = inHeaders.Find(_T("\r\n\r\n"));
-            if( pos >= 0 )
-              inHeaders = inHeaders.Left(pos) + _T("\r\nContent-Encoding: gzip\r\n\r\n");
-            else
-              inHeaders += _T("Content-Encoding: gzip\r\n");
-          }
-        }
-      }
     }
   }
 

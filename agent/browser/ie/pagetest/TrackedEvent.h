@@ -338,7 +338,6 @@ public:
 		,socketId(0)
 		,dns(0)
 		,request(0)
-		,state(0)
 		,host(_T(""))
 		,linkedRequest(0)
 		,flaggedConnection(false)
@@ -363,7 +362,6 @@ public:
 	DWORD			socketId;
 	CDnsLookup *	dns;		// pointer to the DNS event that this came from (if there is one)
 	CTrackedEvent *	request;	// pointer to the first request that went over this socket
-	DWORD			state;		// odd = last action = send, even = last action = recv (mostly for https ssl handshake handling)
 	CString			host;		// host name from the DNS lookup (if available)
 	bool			flaggedConnection;	// is this a connection we're keeping track of (for parallel request counts)?
 	CWinInetRequest * linkedRequest;	// WinInet request that this socket connect belongs to

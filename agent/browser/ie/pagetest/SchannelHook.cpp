@@ -188,8 +188,8 @@ SECURITY_STATUS SchannelHook::EncryptMessage(PCtxtHandle phContext,
         if (pMessage->pBuffers[i].pvBuffer && len &&
             pMessage->pBuffers[i].BufferType == SECBUFFER_DATA) {
           dlg->ModifyDataOut((LPBYTE)pMessage->pBuffers[i].pvBuffer, pMessage->pBuffers[i].cbBuffer);
-		  if (s != INVALID_SOCKET)
-			  dlg->SocketSend(s, pMessage->pBuffers[i].cbBuffer, (LPBYTE)pMessage->pBuffers[i].pvBuffer );
+		    if (s != INVALID_SOCKET)
+			    dlg->SocketSend(s, pMessage->pBuffers[i].cbBuffer, (LPBYTE)pMessage->pBuffers[i].pvBuffer );
         }
       }
     }
@@ -207,15 +207,14 @@ SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext,
   if (dlg && phContext)
 	  s = dlg->GetSchannelSocket(phContext);
   if (_DecryptMessage) {
-    SOCKET s = INVALID_SOCKET;
     ret = _DecryptMessage(phContext, pMessage, MessageSeqNo, pfQOP);
     if (ret == SEC_E_OK && pMessage && dlg) {
       for (ULONG i = 0; i < pMessage->cBuffers; i++) {
         unsigned long len = pMessage->pBuffers[i].cbBuffer;
         if (pMessage->pBuffers[i].pvBuffer && len &&
             pMessage->pBuffers[i].BufferType == SECBUFFER_DATA &&
-			s != INVALID_SOCKET) {
-			dlg->SocketRecv(s, len, (LPBYTE)pMessage->pBuffers[i].pvBuffer );
+			      s != INVALID_SOCKET) {
+			      dlg->SocketRecv(s, len, (LPBYTE)pMessage->pBuffers[i].pvBuffer );
         }
       }
     }

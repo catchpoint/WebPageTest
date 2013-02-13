@@ -57,7 +57,7 @@ protected:
 	CAtlMap<HINTERNET, CString>	winInetConnections;
 	CAtlMap<HINTERNET, bool>	winInetAsync;
 	CAtlMap<DWORD, CWinInetRequest *>	winInetThreadConnects;
-	CAtlMap<DWORD, CWinInetRequest *>	winInetThreadSends;
+	CAtlMap<DWORD, CSocketRequest *>	winInetThreadSends;
 	bool	forceDone;
 	void AddAuthHeader(HINTERNET hRequest, CWinInetRequest * r );
   void OverrideHost(CWinInetRequest * r);
