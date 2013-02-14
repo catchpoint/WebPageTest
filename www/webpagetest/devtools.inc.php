@@ -7,56 +7,60 @@
 * @param mixed $cached
 */
 function GetDevToolsProgress($testPath, $run, $cached) {
-    $progress = null;
-    if (GetTimeline($testPath, $run, $cached, $timeline)) {
-        $startTime = 0;
-        $fullScreen = 0;
-        $regions = array();
-        foreach($timeline as &$entry) {
-            ProcessPaintEntry($entry, $startTime, $fullScreen, $regions);
-        }
-        $regionCount = count($regions);
-        if ($regionCount) {
-            $paintEvents = array();
-            $total = 0.0;
-            foreach($regions as $name => &$region) {
-                $elapsed = $event['startTime'] - $startTime;
-                $area = $region['width'] * $region['height'];
-                if ($regionCount == 1 || $area != $fullScreen) {
-                    $updateCount = floatval(count($region['times']));
-                    $incrementalImpact = floatval($area) / $updateCount;
-                    foreach($region['times'] as $time) {
-                        $total += $incrementalImpact;
-                        $elapsed = (int)($time - $startTime);
-                        if (!array_key_exists($elapsed, $paintEvents))
-                            $paintEvents[$elapsed] = $incrementalImpact;
-                        else
-                            $paintEvents[$elapsed] += $incrementalImpact;
+    $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
+    if (!isset($progress) || !is_array($progress)) {
+        if (GetTimeline($testPath, $run, $cached, $timeline)) {
+            $startTime = 0;
+            $fullScreen = 0;
+            $regions = array();
+            foreach($timeline as &$entry) {
+                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions);
+            }
+            $regionCount = count($regions);
+            if ($regionCount) {
+                $paintEvents = array();
+                $total = 0.0;
+                foreach($regions as $name => &$region) {
+                    $elapsed = $event['startTime'] - $startTime;
+                    $area = $region['width'] * $region['height'];
+                    if ($regionCount == 1 || $area != $fullScreen) {
+                        $updateCount = floatval(count($region['times']));
+                        $incrementalImpact = floatval($area) / $updateCount;
+                        foreach($region['times'] as $time) {
+                            $total += $incrementalImpact;
+                            $elapsed = (int)($time - $startTime);
+                            if (!array_key_exists($elapsed, $paintEvents))
+                                $paintEvents[$elapsed] = $incrementalImpact;
+                            else
+                                $paintEvents[$elapsed] += $incrementalImpact;
+                        }
+                    }
+                }
+                if (count($paintEvents)) {
+                    ksort($paintEvents, SORT_NUMERIC);
+                    $current = 0.0;
+                    $lastTime = 0.0;
+                    $lastProgress = 0.0;
+                    $progress = array('SpeedIndex' => 0.0, 'VisuallyComplete' => 0, 'VisualProgress' => array());
+                    foreach($paintEvents as $time => $increment) {
+                        $current += $increment;
+                        $currentProgress = floatval(floatval($current) / floatval($total));
+                        $currentProgress = floatval(round($currentProgress * 100) / 100.0);
+                        $elapsed = $time - $lastTime;
+                        $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
+                        $progress['SpeedIndex'] += $siIncrement;
+                        $progress['VisualProgress'][$time] = $currentProgress;
+                        $progress['VisuallyComplete'] = $time;
+                        $lastProgress = $currentProgress;
+                        $lastTime = $time;
+                        if ($currentProgress >= 1.0)
+                            break;
                     }
                 }
             }
-            if (count($paintEvents)) {
-                ksort($paintEvents, SORT_NUMERIC);
-                $current = 0.0;
-                $lastTime = 0.0;
-                $lastProgress = 0.0;
-                $progress = array('SpeedIndex' => 0.0, 'VisuallyComplete' => 0, 'VisualProgress' => array());
-                foreach($paintEvents as $time => $increment) {
-                    $current += $increment;
-                    $currentProgress = floatval(floatval($current) / floatval($total));
-                    $currentProgress = floatval(round($currentProgress * 100) / 100.0);
-                    $elapsed = $time - $lastTime;
-                    $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
-                    $progress['SpeedIndex'] += $siIncrement;
-                    $progress['VisualProgress'][$time] = $currentProgress;
-                    $progress['VisuallyComplete'] = $time;
-                    $lastProgress = $currentProgress;
-                    $lastTime = $time;
-                    if ($currentProgress >= 1.0)
-                        break;
-                }
-            }
         }
+        if (isset($progress) && is_array($progress))
+            SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
     }
     return $progress;
 }  
@@ -128,6 +132,43 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions) {
         $regions[$regionName]['times'][] = $entry['startTime'];
     }
     return $ret;
+}
+
+/**
+* Load a cached version of the calculated visual progress if it exists
+* 
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+*/
+function GetCachedDevToolsProgress($testPath, $run, $cached) {
+    $progress = null;
+    if (gz_is_file("$testPath/devToolsProgress.json")) {
+        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
+        $key = "$run.$cached";
+        if (isset($cache) && is_array($cache) && array_key_exists($key, $cache))
+            $progress = $cache[$key];
+    }
+    return $progress;
+}
+
+/**
+* Save the cached visual progress to disk
+* 
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+* @param mixed $progress
+*/
+function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
+    $key = "$run.$cached";
+    $cache = null;
+    if (gz_is_file("$testPath/devToolsProgress.json"))
+        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
+    if (!isset($cache) || !is_array($cache))
+        $cache = array();
+    $cache[$key] = $progress;
+    gz_file_put_contents("$testPath/devToolsProgress.json", json_encode($cache));
 }
 
 ?>
