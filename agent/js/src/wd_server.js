@@ -364,8 +364,7 @@ exports.WebDriverServer = {
     'use strict';
     return this.app_.schedule('Clear the page', function() {
       var donePromise = new webdriver.promise.Deferred();
-      this.devTools_.command(
-          {method: 'Page.getResourceTree'}, function(result) {
+      this.devTools_.pageCommand('getResourceTree', function(result) {
         logger.extra('Resource tree: %j, top frame id: %s',
             result, result.frameTree.frame.id);
         this.devTools_.command({method: 'Page.setDocumentContent', params: {
@@ -373,20 +372,13 @@ exports.WebDriverServer = {
           logger.info('Page.setDocumentContent blank returned');
           donePromise.resolve();
         }.bind(this), function(e) {
-          logger.error('Page.setDocumentContent blank errored out: %s', e);
+          logger.error('Page.setDocumentContent blank failed: %s', e);
           donePromise.reject(e);
         }.bind(this));
       }.bind(this), function(e) {
-        logger.error('Page.getResourceTree errored out: %s', e);
+        logger.error('Page.getResourceTree failed: %s', e);
         donePromise.reject(e);
       }.bind(this));
-/*
-          {method: 'Page.navigate', params: {url: 'about:blank'}}, function() {
-        logger.info('Page.navigate about:blank returned');
-      }, function(e) {
-        logger.error('Page.navigate about:blank errored out: %s', e);
-      });
-*/
       return donePromise.promise;
     }.bind(this));
   },
