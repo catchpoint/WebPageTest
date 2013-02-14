@@ -3,6 +3,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetVisualProgress');
     newrelic_add_custom_tracer('GetImageHistogram');
 }
+require_once('devtools.inc.php');
 
 /**
 * Calculate the progress for all of the images in a given directory
@@ -296,15 +297,5 @@ function RGB_TO_YUV(&$r, &$g, &$b) {
     $r = min(max((int)$Y, 0), 255);
     $g = min(max((int)$U, 0), 255);
     $b = min(max((int)$V, 0), 255);
-}
-
-function GetDevToolsProgress($testPath, $run, $cached) {
-    $cachedText = '';
-    if( $cached )
-        $cachedText = '_cached';
-    $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
-    if (gz_is_file($timelineFile)){
-
-    }
 }
 ?>

@@ -685,30 +685,51 @@ function WrapableString($in)
 function DisplayGraphs() {
     global $tests;
     global $filmstrip_end_frame;
-    $progress_end = 0;
     require_once('breakdown.inc');
     $mimeTypes = array('html', 'js', 'css', 'text', 'image', 'flash', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
+                        'VisuallyCompleteDT' => 'Visually Complete (Dev Tools)',
                         'docTime' => 'Load Time (onload)', 
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
                         'SpeedIndex' => 'Speed Index',
+                        'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                         'TTFB' => 'Time to First Byte', 
                         'titleTime' => 'Time to Title', 
                         'render' => 'Time to Start Render');
+    $progress_end = 0;
+    $progress_end_dt = 0;
+    $has_speed_index_dt = false;
     foreach($tests as &$test) {
         $requests;
         $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
         if (array_key_exists('progress', $test['video']) 
             && array_key_exists('frames', $test['video']['progress'])) {
-                foreach ($test['video']['progress']['frames'] as $ms => &$data) {
-                    if ($ms > $progress_end && array_key_exists('progress', $data)) {
-                        $progress_end = $ms;
-                    }
+            foreach ($test['video']['progress']['frames'] as $ms => &$data) {
+                if ($ms > $progress_end && array_key_exists('progress', $data)) {
+                    $progress_end = $ms;
                 }
             }
+        }
+        if (array_key_exists('progress', $test['video']) &&
+            array_key_exists('DevTools', $test['video']['progress']) &&
+            array_key_exists('VisualProgress', $test['video']['progress']['DevTools'])) {
+            $has_speed_index_dt = true;
+            foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $ms => &$data) {
+                if ($ms > $progress_end_dt) {
+                    $progress_end_dt = $ms;
+                }
+            }
+        }
+    }
+    if (!$has_speed_index_dt) {
+        unset($timeMetrics['VisuallyCompleteDT']);
+        unset($timeMetrics['SpeedIndexDT']);
     }
     if ($progress_end) {
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
+    }
+    if ($progress_end_dt) {
+        echo '<div id="compare_visual_progress_dt" class="compare-graph"></div>';
     }
     echo '<div id="compare_times" class="compare-graph"></div>';
     echo '<div id="compare_requests" class="compare-graph"></div>';
@@ -760,6 +781,29 @@ function DisplayGraphs() {
                 }
                 echo "]);\n";
             }
+            if ($progress_end_dt) {
+                if ($progress_end_dt % 100)
+                    $progress_end_dt = (($progress_end_dt / 100) + 1) * 100;
+                echo "var dataProgressDT = google.visualization.arrayToDataTable([\n";
+                echo "  ['Time (ms)'";
+                foreach($tests as &$test) {
+                    echo ", '{$test['name']}'";
+                }
+                echo " ]";
+                for ($ms = 0; $ms <= $progress_end_dt; $ms += 100) {
+                    echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
+                    foreach($tests as &$test) {
+                        $progress = 0;
+                        foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $time => $data) {
+                            if ($time <= $ms)
+                                $progress = $data * 100;
+                        }
+                        echo ", $progress";
+                    }
+                    echo "]";
+                }
+                echo "]);\n";
+            }
             $row = 0;
             foreach($timeMetrics as $metric => $label) {
                 echo "dataTimes.setValue($row, 0, '$label');\n";
@@ -793,6 +837,10 @@ function DisplayGraphs() {
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
+            }            
+            if ($progress_end_dt) {
+                echo "var progressChartDT = new google.visualization.LineChart(document.getElementById('compare_visual_progress_dt'));\n";
+                echo "progressChartDT.draw(dataProgressDT, {title: 'Visual Progress - Dev Tools (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }            
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));

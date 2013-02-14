@@ -164,6 +164,12 @@ function loadPageData($file, $options = null)
             if (array_key_exists('visualComplete', $progress)) {
                 $ret['visualComplete'] = $progress['visualComplete'];
             }
+            if (array_key_exists('DevTools', $progress) && is_array($progress['DevTools'])) {
+                if (array_key_exists('SpeedIndex', $progress['DevTools']))
+                    $ret['SpeedIndexDT'] = intval($progress['DevTools']['SpeedIndex']);
+                if (array_key_exists('VisuallyComplete', $progress['DevTools']))
+                    $ret['VisuallyCompleteDT'] = $progress['DevTools']['VisuallyComplete'];
+            }
         }
         // see if we need a custom Speed Index as well
         $end = null;
