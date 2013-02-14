@@ -202,7 +202,7 @@ exports.WebDriverServer = {
       this.devToolsMessages_.push(message);
       if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending() &&
           message.method === 'Page.loadEventFired') {
-        this.pageLoadDonePromise_.resolve();
+        this.pageLoadDonePromise_.resolve(true);  // true for scheduleWait.
       }
     } else {
       logger.extra('DevTools timeline message: %j', message);
@@ -344,6 +344,10 @@ exports.WebDriverServer = {
     this.onAfterDriverAction(command, commandArgs);
   },
 
+  /**
+   * Runs the test in a browser session with the given capabilities.
+   * @param {Object} browserCaps browser capabilities to build WebDriver.
+   */
   runTest_: function(browserCaps) {
     'use strict';
     if (this.script_) {
@@ -353,12 +357,47 @@ exports.WebDriverServer = {
     }
   },
 
+  /**
+   * Banks out the browser at the beginning of a test.
+   */
+  clearPage_: function() {
+    'use strict';
+    return this.app_.schedule('Clear the page', function() {
+      var donePromise = new webdriver.promise.Deferred();
+      this.devTools_.command(
+          {method: 'Page.getResourceTree'}, function(result) {
+        logger.extra('Resource tree: %j, top frame id: %s',
+            result, result.frameTree.frame.id);
+        this.devTools_.command({method: 'Page.setDocumentContent', params: {
+            frameId: result.frameTree.frame.id, html: ''}}, function() {
+          logger.info('Page.setDocumentContent blank returned');
+          donePromise.resolve();
+        }.bind(this), function(e) {
+          logger.error('Page.setDocumentContent blank errored out: %s', e);
+          donePromise.reject(e);
+        }.bind(this));
+      }.bind(this), function(e) {
+        logger.error('Page.getResourceTree errored out: %s', e);
+        donePromise.reject(e);
+      }.bind(this));
+/*
+          {method: 'Page.navigate', params: {url: 'about:blank'}}, function() {
+        logger.info('Page.navigate about:blank returned');
+      }, function(e) {
+        logger.error('Page.navigate about:blank errored out: %s', e);
+      });
+*/
+      return donePromise.promise;
+    }.bind(this));
+  },
+
   runPageLoad_: function(browserCaps) {
     'use strict';
     if (!this.devTools_) {
       this.startChrome_(browserCaps);
     }
     this.sandboxApp_ = this.app_;
+    this.clearPage_();
     // No page load timeout here -- agent_main enforces run-level timeout.
     this.app_.schedule('Run page load', function() {
       // onDevToolsMessage_ resolves this promise when it detects on-load.
@@ -516,6 +555,8 @@ exports.WebDriverServer = {
           cmd: 'done',
           devToolsMessages: this.devToolsMessages_,
           devToolsTimelineMessages: this.devToolsTimelineMessages_,
+          devToolsFullLog: (this.devToolsMessages_ || []).concat(
+              this.devToolsTimelineMessages_ || []),
           screenshots: this.screenshots_});
     }.bind(this));
     if (this.exitWhenDone_) {
@@ -525,7 +566,7 @@ exports.WebDriverServer = {
 
   onError_: function(e) {
     'use strict';
-    logger.error('Sandboxed session failed, stopping: %s', e.stack);
+    logger.error('Run failed, stopping: %s', e.stack);
     // Take the final screenshot (useful for debugging) and kill the browser.
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
@@ -537,6 +578,8 @@ exports.WebDriverServer = {
           e: e.message,
           devToolsMessages: this.devToolsMessages_,
           devToolsTimelineMessages: this.devToolsTimelineMessages_,
+          devToolsFullLog: (this.devToolsMessages_ || []).concat(
+              this.devToolsTimelineMessages_ || []),
           screenshots: this.screenshots_});
     }.bind(this));
     this.scheduleStop();

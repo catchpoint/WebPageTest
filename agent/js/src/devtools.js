@@ -126,7 +126,7 @@ DevTools.prototype.connectDebugger_ = function(callback, errback) {
         if (callbackErrback) {
           delete this.commandCallbacks_[message.id];
           if (callbackErrback.errback) {
-            callbackErrback.errback(message.result);
+            callbackErrback.errback(new Error(message.error.message));
           }
         }
       } else {

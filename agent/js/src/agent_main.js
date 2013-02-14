@@ -242,6 +242,10 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       job.zipResultFiles['timeline.json'] =
           JSON.stringify(ipcMsg.devToolsTimelineMessages);
     }
+    if (ipcMsg.devToolsFullLog) {
+      job.zipResultFiles['devtools.json'] =
+          JSON.stringify(ipcMsg.devToolsFullLog);
+    }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {

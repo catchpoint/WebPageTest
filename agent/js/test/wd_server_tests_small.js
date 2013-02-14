@@ -56,7 +56,11 @@ FakeWebSocket.prototype.send = function(messageStr) {
   logger.debug('Sending message: %s', messageStr);
   var message = JSON.parse(messageStr);
   this.commands.push(message.method);
-  message.result = {data: 'gaga'};
+  if ('Page.getResourceTree' === message.method) {
+    message.result = {frameTree: {frame: {id: 'test-frame-id'}}};
+  } else {
+    message.result = {data: 'gaga'};
+  }
   logger.debug('Emitting response message: %j', message);
   this.emit('message', JSON.stringify(message), {});
 };
@@ -243,6 +247,8 @@ describe('wd_server small', function() {
     should.equal(doneIpcMsg.cmd, 'done');
     [pageMessage, networkMessage].should.eql(doneIpcMsg.devToolsMessages);
     [timelineMessage].should.eql(doneIpcMsg.devToolsTimelineMessages);
+    [pageMessage, networkMessage, timelineMessage].should.eql(
+        doneIpcMsg.devToolsFullLog);
 
     // We are not supposed to clean up on the first run.
     should.ok(driverQuitSpy.notCalled);
@@ -274,6 +280,7 @@ describe('wd_server small', function() {
     should.equal(doneIpcMsg.cmd, 'done');
     [].should.eql(doneIpcMsg.devToolsMessages);
     [].should.eql(doneIpcMsg.devToolsTimelineMessages);
+    [].should.eql(doneIpcMsg.devToolsFullLog);
 
     // The cleanup occurs only on the second run.
     should.ok(driverQuitSpy.calledOnce);
@@ -336,14 +343,18 @@ describe('wd_server small', function() {
     var pageLoadedMessage = {method: 'Page.loadEventFired'};
     // Verify that messages get ignored before the page load starts
     fakeWs.emit('message', JSON.stringify(networkMessage), {});
-    fakeWs.once('message', function(message) {
+
+    // Emit DevTools events after the test has started -- Page.navigate fired.
+    function onPageNavigate(message) {
       if (message.indexOf('Page.navigate') !== -1) {
+        fakeWs.removeListener('message', onPageNavigate);  // Fire only once.
         fakeWs.emit('message', JSON.stringify(pageMessage), {});
         fakeWs.emit('message', JSON.stringify(networkMessage), {});
         fakeWs.emit('message', JSON.stringify(timelineMessage), {});
         fakeWs.emit('message', JSON.stringify(pageLoadedMessage), {});
       }
-    });
+    }
+    fakeWs.on('message', onPageNavigate);
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
         + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
 
@@ -357,6 +368,8 @@ describe('wd_server small', function() {
         'Network.enable',
         'Page.enable',
         'Timeline.start',
+        'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.navigate',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
@@ -367,6 +380,8 @@ describe('wd_server small', function() {
     [pageMessage, networkMessage, pageLoadedMessage].should.eql(
         doneIpcMsg.devToolsMessages);
     [timelineMessage].should.eql(doneIpcMsg.devToolsTimelineMessages);
+    [pageMessage, networkMessage, pageLoadedMessage, timelineMessage].
+        should.eql(doneIpcMsg.devToolsFullLog);
 
     // We are not supposed to clean up on the first run.
     should.ok(killStub.notCalled);
@@ -395,12 +410,18 @@ describe('wd_server small', function() {
     should.ok(stubWebSocket.calledOnce);
 
     // These things get called for the second time on the second run.
-    ['Page.navigate', 'Page.captureScreenshot'].should.eql(fakeWs.commands);
+    [
+        'Page.getResourceTree',
+        'Page.setDocumentContent',
+        'Page.navigate',
+        'Page.captureScreenshot'
+    ].should.eql(fakeWs.commands);
     should.ok(sendStub.calledTwice);
     doneIpcMsg = sendStub.secondCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
     [pageLoadedMessage].should.eql(doneIpcMsg.devToolsMessages);
     [].should.eql(doneIpcMsg.devToolsTimelineMessages);
+    [pageLoadedMessage].should.eql(doneIpcMsg.devToolsFullLog);
 
     // The cleanup occurs only on the second run.
     should.ok(killStub.calledOnce);
