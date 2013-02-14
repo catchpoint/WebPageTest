@@ -23,15 +23,15 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                 $elapsed = $event['startTime'] - $startTime;
                 $area = $region['width'] * $region['height'];
                 if ($regionCount == 1 || $area != $fullScreen) {
-                    $regionUpdates = count($region['times']);
-                    $impact = floatval($area / $regionUpdates);
+                    $updateCount = floatval(count($region['times']));
+                    $incrementalImpact = floatval($area) / $updateCount;
                     foreach($region['times'] as $time) {
-                        $total += $impact;
+                        $total += $incrementalImpact;
                         $elapsed = (int)($time - $startTime);
                         if (!array_key_exists($elapsed, $paintEvents))
-                            $paintEvents[$elapsed] = $impact;
+                            $paintEvents[$elapsed] = $incrementalImpact;
                         else
-                            $paintEvents[$elapsed] += $impact;
+                            $paintEvents[$elapsed] += $incrementalImpact;
                     }
                 }
             }
@@ -44,6 +44,7 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                 foreach($paintEvents as $time => $increment) {
                     $current += $increment;
                     $currentProgress = floatval(floatval($current) / floatval($total));
+                    $currentProgress = floatval(round($currentProgress * 100) / 100.0);
                     $elapsed = $time - $lastTime;
                     $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
                     $progress['SpeedIndex'] += $siIncrement;
@@ -51,6 +52,8 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                     $progress['VisuallyComplete'] = $time;
                     $lastProgress = $currentProgress;
                     $lastTime = $time;
+                    if ($currentProgress >= 1.0)
+                        break;
                 }
             }
         }

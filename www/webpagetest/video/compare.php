@@ -697,7 +697,6 @@ function DisplayGraphs() {
                         'titleTime' => 'Time to Title', 
                         'render' => 'Time to Start Render');
     $progress_end = 0;
-    $progress_end_dt = 0;
     $has_speed_index_dt = false;
     foreach($tests as &$test) {
         $requests;
@@ -715,8 +714,8 @@ function DisplayGraphs() {
             array_key_exists('VisualProgress', $test['video']['progress']['DevTools'])) {
             $has_speed_index_dt = true;
             foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $ms => &$data) {
-                if ($ms > $progress_end_dt) {
-                    $progress_end_dt = $ms;
+                if ($ms > $progress_end) {
+                    $progress_end = $ms;
                 }
             }
         }
@@ -726,10 +725,9 @@ function DisplayGraphs() {
         unset($timeMetrics['SpeedIndexDT']);
     }
     if ($progress_end) {
+        if ($progress_end % 100)
+            $progress_end = intval((intval($progress_end / 100) + 1) * 100);
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
-    }
-    if ($progress_end_dt) {
-        echo '<div id="compare_visual_progress_dt" class="compare-graph"></div>';
     }
     echo '<div id="compare_times" class="compare-graph"></div>';
     echo '<div id="compare_requests" class="compare-graph"></div>';
@@ -758,8 +756,11 @@ function DisplayGraphs() {
             if ($progress_end) {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
                 echo "  ['Time (ms)'";
-                foreach($tests as &$test) {
+                foreach($tests as &$test)
                     echo ", '{$test['name']}'";
+                if ($has_speed_index_dt) {
+                    foreach($tests as &$test)
+                        echo ", '{$test['name']} (Dev Tools)'";
                 }
                 echo " ]";
                 for ($ms = 0; $ms <= $progress_end; $ms += 100) {
@@ -777,28 +778,20 @@ function DisplayGraphs() {
                         $test['last_progress'] = $progress;
                         echo ", $progress";
                     }
-                    echo "]";
-                }
-                echo "]);\n";
-            }
-            if ($progress_end_dt) {
-                if ($progress_end_dt % 100)
-                    $progress_end_dt = (($progress_end_dt / 100) + 1) * 100;
-                echo "var dataProgressDT = google.visualization.arrayToDataTable([\n";
-                echo "  ['Time (ms)'";
-                foreach($tests as &$test) {
-                    echo ", '{$test['name']}'";
-                }
-                echo " ]";
-                for ($ms = 0; $ms <= $progress_end_dt; $ms += 100) {
-                    echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
-                    foreach($tests as &$test) {
-                        $progress = 0;
-                        foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $time => $data) {
-                            if ($time <= $ms)
-                                $progress = $data * 100;
+                    if ($has_speed_index_dt) {
+                        foreach($tests as &$test) {
+                            $progress = 0;
+                            if (array_key_exists('video', $test) &&
+                                array_key_exists('progress', $test['video']) &&
+                                array_key_exists('DevTools', $test['video']['progress']) &&
+                                array_key_exists('VisualProgress', $test['video']['progress']['DevTools'])) {
+                                foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $time => &$visualProgress) {
+                                    if ($time <= $ms)
+                                        $progress = floatval($visualProgress) * 100;
+                                }
+                            }
+                            echo ", $progress";
                         }
-                        echo ", $progress";
                     }
                     echo "]";
                 }
@@ -837,10 +830,6 @@ function DisplayGraphs() {
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
-            }            
-            if ($progress_end_dt) {
-                echo "var progressChartDT = new google.visualization.LineChart(document.getElementById('compare_visual_progress_dt'));\n";
-                echo "progressChartDT.draw(dataProgressDT, {title: 'Visual Progress - Dev Tools (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }            
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
