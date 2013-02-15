@@ -62,9 +62,9 @@ if( $test['test']['fvonly'] )
 $videoCaptured = false;
 if ($test['test']['video'])
     $videoCaptured = true;
-$showSpeedIndex = false;
+$showExperimental = false;
 if( $videoCaptured && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
-    $showSpeedIndex = true;
+    $showExperimental = true;
 
 
 $testIds = array();
@@ -413,7 +413,6 @@ if( $dirty )
 */
 function DisplayTests(&$tests)
 {
-    global $showSpeedIndex;
     global $fvonly;
     global $videoCaptured;
 
@@ -454,7 +453,6 @@ function DisplayTests(&$tests)
 */
 function DisplayTestsWithVariations(&$tests)
 {
-    global $showSpeedIndex;
     global $fvonly;
     global $videoCaptured;
 
@@ -470,9 +468,7 @@ function DisplayTestsWithVariations(&$tests)
             <th>Median load time<br>(First view)</th>';
     if( !$fvonly )
         echo '<th>Median load time<br>(Repeat view)</th>';
-    if( $showSpeedIndex ) {
-        echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
-    }
+    echo '<th>Median <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a><br>(First View)</th>';
     echo   '<th>Raw page data</th>
             <th>Raw object data</th>
             <th>Http archive (.har)</th>
@@ -501,7 +497,6 @@ function DisplayTestsWithVariations(&$tests)
 */
 function DisplayTest($id, $url, $label, $complete)
 {
-    global $showSpeedIndex;
     global $stats;
     global $fvonly;
     global $videoCaptured;
@@ -522,10 +517,7 @@ function DisplayTest($id, $url, $label, $complete)
         echo "<td><a href=\"/results.php?test=$id\" title=\"$safeUrl\" target=\"_blank\">$label</a></td>";
     if( $complete )
     {
-        $options = null;
-        if ($showSpeedIndex)
-            $options = array('SpeedIndex' => true);
-        $pageData = loadAllPageData($testPath, $options);
+        $pageData = loadAllPageData($testPath);
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);
         $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         $rvMedian_column = '';
@@ -540,12 +532,10 @@ function DisplayTest($id, $url, $label, $complete)
                 $stats['rv'][] = $pageData[$rvMedian][1]['loadTime'];
             echo "<td>$rvMedian_column</td>";
         }
-        if ($showSpeedIndex) {
-            echo '<td>';
-            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
-                echo $pageData[$fvMedian][0]['SpeedIndex'];
-            echo '</td>';
-        }
+        echo '<td>';
+        if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
+            echo $pageData[$fvMedian][0]['SpeedIndex'];
+        echo '</td>';
         if( FRIENDLY_URLS )
         {
             echo "<td><a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Download Page Data</a></td>";
@@ -592,7 +582,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $videoDirty;
     global $admin;
     global $median_metric;
-    global $showSpeedIndex;
+    global $showExperimental;
     require_once('object_detail.inc');
     $includeRender = false;
     if( $_REQUEST['norender'] )
@@ -603,6 +593,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $rvLoadTimes = array();
     $rvRenderTimes = array();
     $fvFLI = array();
+    if ($showExperimental)
+        $fvSpeedIndexDT = array();
     $rvFLI = array();
     $original = array();
     $optimized = array();
@@ -633,6 +625,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $rvLoadTime = null;
         $rvRenderTime = null;
         $fvFLIvalue = null;
+        $fvSpeedIndexDTValue = null;
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
         $testPath = './' . $test['path'];
@@ -642,19 +635,19 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
                 $started = $testInfo['started'];
-            $options = array('SpeedIndex' => true, 'end' => $test['end']);
+            $options = array('end' => $test['end']);
             $pageData = loadAllPageData($testPath, $options);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
             $visual = GetVisualProgress($testPath, $fvMedian, 0, null, $test['end']);
-            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
+            if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
                 $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndex'];
-            }
-            if (array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0])) {
+            if (array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))
                 $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndexCustom'];
-            }
+            if (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]))
+                $fvSpeedIndexDTValue = $pageData[$fvMedian][0]['SpeedIndexDT'];
             if (array_key_exists('visualComplete', $visual) && 
                 array_key_exists($visual['visualComplete'], $visual['frames']) &&
                 is_file('.' . $visual['frames'][$visual['visualComplete']]['path'])) {
@@ -764,6 +757,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $fvLoadTimes[$count] = $fvLoadTime;
         $fvRenderTimes[$count] = $fvRenderTime;
         $fvFLI[$count] = $fvFLIvalue;
+        if (isset($fvSpeedIndexDT) && isset($fvSpeedIndexDTValue))
+            $fvSpeedIndexDT[$count] = $fvSpeedIndexDTValue;
         if( !$fvonly )
         {
             $rvLoadTimes[$count] = $rvLoadTime;
@@ -960,7 +955,10 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if( $includeRender )
                     DisplayMetric('Start Render Time', $fvRenderTimes, $count);
                 DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
-                if( $showSpeedIndex && !$fvonly )
+                if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
+                    DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                    
+                if( !$fvonly )
                 {
                     DisplayMetric('Repeat View Page Load Time', $rvLoadTimes, $count);
                     if( $includeRender )

@@ -698,6 +698,7 @@ function DisplayGraphs() {
                         'render' => 'Time to Start Render');
     $progress_end = 0;
     $has_speed_index_dt = false;
+    $testCount = count($tests);
     foreach($tests as &$test) {
         $requests;
         $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
@@ -728,6 +729,8 @@ function DisplayGraphs() {
         if ($progress_end % 100)
             $progress_end = intval((intval($progress_end / 100) + 1) * 100);
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
+        if ($has_speed_index_dt && $testCount > 1)
+            echo '<div id="compare_visual_progress_dt" class="compare-graph"></div>';
     }
     echo '<div id="compare_times" class="compare-graph"></div>';
     echo '<div id="compare_requests" class="compare-graph"></div>';
@@ -758,7 +761,7 @@ function DisplayGraphs() {
                 echo "  ['Time (ms)'";
                 foreach($tests as &$test)
                     echo ", '{$test['name']}'";
-                if ($has_speed_index_dt) {
+                if ($has_speed_index_dt && $testCount == 1) {
                     foreach($tests as &$test)
                         echo ", '{$test['name']} (Dev Tools)'";
                 }
@@ -778,7 +781,7 @@ function DisplayGraphs() {
                         $test['last_progress'] = $progress;
                         echo ", $progress";
                     }
-                    if ($has_speed_index_dt) {
+                    if ($has_speed_index_dt && $testCount == 1) {
                         foreach($tests as &$test) {
                             $progress = 0;
                             if (array_key_exists('video', $test) &&
@@ -796,6 +799,31 @@ function DisplayGraphs() {
                     echo "]";
                 }
                 echo "]);\n";
+                if ($has_speed_index_dt && $testCount > 1) {
+                    echo "var dataProgressDT = google.visualization.arrayToDataTable([\n";
+                    echo "  ['Time (ms)'";
+                    foreach($tests as &$test)
+                        echo ", '{$test['name']}'";
+                    echo " ]";
+                    for ($ms = 0; $ms <= $progress_end; $ms += 100) {
+                        echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
+                        foreach($tests as &$test) {
+                            $progress = 0;
+                            if (array_key_exists('video', $test) &&
+                                array_key_exists('progress', $test['video']) &&
+                                array_key_exists('DevTools', $test['video']['progress']) &&
+                                array_key_exists('VisualProgress', $test['video']['progress']['DevTools'])) {
+                                foreach ($test['video']['progress']['DevTools']['VisualProgress'] as $time => &$visualProgress) {
+                                    if ($time <= $ms)
+                                        $progress = floatval($visualProgress) * 100;
+                                }
+                            }
+                            echo ", $progress";
+                        }
+                        echo "]";
+                    }
+                    echo "]);\n";
+                }
             }
             $row = 0;
             foreach($timeMetrics as $metric => $label) {
@@ -830,6 +858,10 @@ function DisplayGraphs() {
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
+                if ($has_speed_index_dt && $testCount > 1) {
+                    echo "var progressChartDT = new google.visualization.LineChart(document.getElementById('compare_visual_progress_dt'));\n";
+                    echo "progressChartDT.draw(dataProgressDT, {title: 'Visual Progress - Dev Tools (%)', hAxis: {title: 'Time (seconds)'}});\n";
+                }
             }            
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
