@@ -17,7 +17,8 @@ $logFile = 'benchmark.log';
 header ("Content-type: text/plain");
 
 $nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
-                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex');
+                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex', 
+                'VisuallyCompleteDT', 'SpeedIndexDT');
 
 // see if we need to actuall process the given benchmark
 if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
@@ -570,7 +571,8 @@ function AggregateResults($benchmark, &$state, $options) {
                                 'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete',
                                 'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
                                 'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
-                                'other_bytes', 'other_requests', 'SpeedIndex', 'responses_404', 'responses_other', 'browser_version', 'server_rtt');
+                                'other_bytes', 'other_requests', 'SpeedIndex', 'responses_404', 'responses_other', 'browser_version', 'server_rtt',
+                                'VisuallyCompleteDT', 'SpeedIndexDT');
 
     // loop through all of the runs and see which ones we don't have aggregates for
     foreach ($state['runs'] as $run_time) {

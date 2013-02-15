@@ -14,7 +14,7 @@ if ($lock) {
 
 include 'common.inc';
 ignore_user_abort(true);
-set_time_limit(86400);   // only allow it to run for 1 day
+set_time_limit(604800);   // only allow it to run for 7 days
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {

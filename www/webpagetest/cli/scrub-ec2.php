@@ -121,14 +121,14 @@ if( $ec2 )
             $counts["$region.$ami"] = $count - $termCount;
 
             // figure out what the target number of testers for this location is
-            // if we have any idle testers them plan to eliminate 50% of them
+            // if we have any idle testers them plan to eliminate them
             // otherwise, increase the number until we kit the expected backlog
             echo "Active: $activeCount\n";
             echo "Idle: $idleCount\n";
             echo "Offline: $offlineCount\n";
             $targetCount = $activeCount;
             if( $idleCount ) {
-                $targetCount = (int)($activeCount + ($idleCount / 4));
+                // $targetCount = (int)($activeCount + ($idleCount / 4));
             } elseif( $targetBacklog ) {
                 // get the current backlog
                 $backlog = GetPendingTests($location, $bk, $avgTime);
