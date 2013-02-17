@@ -26,11 +26,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var assert = require('assert');
 var http = require('http');
 var logger = require('logger');
 var sinon = require('sinon');
 var Stream = require('stream');
 var timers = require('timers');
+var util = require('util');
 
 
 /**
@@ -133,4 +135,24 @@ exports.stubHttpGet = function(sandbox, urlRegExp, data) {
     response.emit('end');
     return response;
   });
+};
+
+/**
+ * Validates an array of strings against expected strings and/or RegEx'es.
+ */
+exports.assertStringsMatch = function(expected, actual) {
+  'use strict';
+  if (!actual || expected.length !== actual.length) {
+    assert.fail(actual, expected,
+        util.format('[%s] does not match [%s]', actual, expected));
+  } else {
+    expected.forEach(function(expValue, i) {
+      if (!(expValue instanceof RegExp && expValue.test(actual[i])) &&
+          expValue !== actual[i]) {
+        assert.fail(actual[i], expected,
+            util.format('element #%d of [%s] does not match [%s]',
+                i, actual, expected));
+      }
+    });
+  }
 };

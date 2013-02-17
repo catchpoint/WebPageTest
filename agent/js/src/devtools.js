@@ -57,6 +57,12 @@ function processResponse(response, callback) {
 }
 exports.ProcessResponse = processResponse;
 
+/**
+ * WebKit Remote Debugger Protocol connection to a WebKit based browser.
+ *
+ * @param {string} devToolsUrl WKRDP endpoint.
+ * @constructor
+ */
 function DevTools(devToolsUrl) {
   'use strict';
   this.devToolsUrl_ = devToolsUrl;
@@ -73,6 +79,12 @@ DevTools.prototype.onMessage = function(callback) {
   this.messageCallback_ = callback;
 };
 
+/**
+ * Establishes connection to the WKRDP endpoint, first tab.
+ *
+ * @param {Function} [callback] invoked on success.
+ * @param {Function} [errback] invoked on failure with an Error object.
+ */
 DevTools.prototype.connect = function(callback, errback) {
   'use strict';
   var request = http.get(url.parse(this.devToolsUrl_), function(response) {
@@ -98,52 +110,79 @@ DevTools.prototype.connectDebugger_ = function(callback, errback) {
   var ws = new exports.WebSocket(this.debuggerUrl_, {'origin': 'WebPageTest'});
 
   ws.on('error', function(e) {
-    errback(e);
+    if (errback) {
+      errback(e);
+    } else {
+      logger.error('Ignoring unhaldled WKRDP connection failure: %s', e);
+    }
   });
 
   ws.on('open', function() {
     logger.extra('WebSocket connected: ' + JSON.stringify(ws));
     this.ws_ = ws;
-    callback(this);
-  }.bind(this));
-
-  ws.on('message', function(data, flags) {
-    // flags.binary will be set if a binary data is received
-    // flags.masked will be set if the data was masked
-    var callbackErrback;
-    if (!flags.binary) {
-      var message = JSON.parse(data);
-      if (message.result && message.id) {
-        callbackErrback = this.commandCallbacks_[message.id];
-        if (callbackErrback) {
-          delete this.commandCallbacks_[message.id];
-          if (callbackErrback.callback) {
-            callbackErrback.callback(message.result);
-          }
-        }
-      } else if (message.error && message.id) {
-        callbackErrback = this.commandCallbacks_[message.id];
-        if (callbackErrback) {
-          delete this.commandCallbacks_[message.id];
-          if (callbackErrback.errback) {
-            callbackErrback.errback(new Error(message.error.message));
-          }
-        }
-      } else {
-        this.messageCallback_(message);
-      }
-    } else {
-      throw new Error('Unexpected binary WebSocket message');
+    if (callback) {
+      callback();
     }
   }.bind(this));
+
+  ws.on('message', this.onMessage_.bind(this));
 };
 
+DevTools.prototype.onMessage_ = function(data, flags) {
+  'use strict';
+  // flags.binary will be set if a binary data is received
+  // flags.masked will be set if the data was masked
+  var callbackErrback;
+  if (!flags.binary) {
+    var message;
+    try {
+      message = JSON.parse(data);
+    } catch(e) {
+      logger.error('JSON parse error on DevTools data: %s', data);
+      return;
+    }
+    if (message.id) {
+      logger.debug('Command response: %s', data);
+      callbackErrback = this.commandCallbacks_[message.id];
+      if (callbackErrback) {
+        delete this.commandCallbacks_[message.id];
+        if (message.error) {
+          if (callbackErrback.errback) {
+            callbackErrback.errback(new Error(message.error.message));
+          } else {
+            logger.error('Ingoring unhandled WKRDP error for command %s: %s',
+                callbackErrback.method, message.error.message);
+          }
+        } else if (callbackErrback.callback) {
+          callbackErrback.callback(message.result);
+        }
+      } else {
+        logger.error('WKRDP response for command that we did not send: %s',
+            data);
+      }
+    } else {
+      this.messageCallback_(message);
+    }
+  } else {
+    logger.error('Unexpected binary WebSocket message');
+  }
+};
+
+  /**
+ * Sends WKRDP command and registers response handing callback/errback.
+ *
+ * @param {Object} command the WKRDP command object to send, except id field.
+ * @param {Function} [callback] invoked on success.
+ * @param {Function} [errback] invoked on failure with an Error object.
+ * @returns {string} Generated command id (from an incrementing counter).
+ */
 DevTools.prototype.command = function(command, callback, errback) {
   'use strict';
   this.commandId_ += 1;
   command.id = this.commandId_;
   if (callback || errback) {
     this.commandCallbacks_[command.id] = {
+        method: command.method,
         callback: callback,
         errback: errback
     };
@@ -152,21 +191,25 @@ DevTools.prototype.command = function(command, callback, errback) {
   return command.id;
 };
 
+/** Sends a WKRDP Network.<method> command with the given method. */
 DevTools.prototype.networkCommand = function(method, callback, errback) {
   'use strict';
   this.command({method: exports.PREFIX_NETWORK + method}, callback, errback);
 };
 
+/** Sends a WKRDP Page.<method> command with the given method. */
 DevTools.prototype.pageCommand = function(method, callback, errback) {
   'use strict';
   this.command({method: exports.PREFIX_PAGE + method}, callback, errback);
 };
 
+/** Sends a WKRDP Timeline.<method> command with the given method. */
 DevTools.prototype.timelineCommand = function(method, callback, errback) {
   'use strict';
   this.command({method: exports.PREFIX_TIMELINE + method}, callback, errback);
 };
 
+/** Checks if the message.method has 'Network.' prefix. */
 exports.isNetworkMessage = function(message) {
   'use strict';
   return (message.method &&
@@ -174,6 +217,7 @@ exports.isNetworkMessage = function(message) {
           exports.PREFIX_NETWORK);
 };
 
+/** Checks if the message.method has 'Page.' prefix. */
 exports.isPageMessage = function(message) {
   'use strict';
   return (message.method &&
@@ -181,6 +225,7 @@ exports.isPageMessage = function(message) {
           exports.PREFIX_PAGE);
 };
 
+/** Checks if the message.method has 'Timeline.' prefix. */
 exports.isTimelineMessage = function(message) {
   'use strict';
   return (message.method &&

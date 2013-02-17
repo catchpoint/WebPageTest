@@ -31,6 +31,7 @@ var child_process = require('child_process');
 var fs = require('fs');
 var logger = require('logger');
 var system_commands = require('system_commands');
+var util = require('util');
 var webdriver = require('webdriver');
 
 
@@ -217,6 +218,65 @@ exports.scheduleExitWaitOrKill = function(p, name, timeout) {
   var app = webdriver.promise.Application.getInstance();
   return app.schedule('Wait for ' + name + ' exit', function() {
     return exited.promise;
+  });
+};
+
+exports.stdoutStderrMessage = function(stdout, stderr) {
+  'use strict';
+  return (stdout ? ', stdout "' + stdout.trim() + '"': '') +
+      (stderr ? ', stderr "' + stderr.trim() + '"': '');
+};
+
+exports.scheduleExecWithTimeout = function(command, args, timeout) {
+  'use strict';
+  return webdriver.promise.Application.getInstance().schedule(
+      command + (args ? ' "' + args.join('", "') + '"' : ''), function() {
+    var done = new webdriver.promise.Deferred();
+    var stdout = '';
+    var stderr = '';
+    var proc = child_process.spawn(command, args);
+    var timerId = global.setTimeout(function() {
+      timerId = undefined;  // Reset it before the exit listener gets called.
+      try {
+        proc.kill();
+      } catch (e) {
+        logger.error('Error killing %s %j: %s', command, args, e);
+      }
+      // The kill() call normally triggers the exit listener, but we reject
+      // the promise here instead of the exit listener, because we don't really
+      // know if and when it's going to exit at OS level.
+      // In the future we may want to restart the adb server here as a recovery
+      // for wedged adb connections, or use a relay board for device recovery.
+      done.reject(new Error(util.format('%s %j timeout after %d seconds%s',
+          command, args, timeout / 1000)),
+          exports.stdoutStderrMessage(stdout, stderr));
+    }.bind(this), timeout);
+    proc.on('exit', function(code, signal) {
+      if (timerId) {  // Timer was still ticking: exit by natural causes.
+        global.clearTimeout(timerId);
+        if (code || signal) {
+          var e = new Error(
+              util.format('%s %j failed: code %s, signal %s%s',
+                  command, args, code, signal,
+                  exports.stdoutStderrMessage(stdout, stderr)));
+          done.reject(e, stdout, stderr);
+        } else {
+          done.resolve(stdout, stderr);
+        }
+      } else {
+        // timerId has already been reset, meaning we got killed,
+        // and the promise is already rejected.
+        logger.debug('%s %j exited on timeout kill%s', command, args,
+            exports.stdoutStderrMessage(stdout, stderr));
+      }
+    }.bind(this));
+    proc.stdout.on('data', function(data) {
+      stdout += data;
+    });
+    proc.stderr.on('data', function(data) {
+      stderr += data;
+    });
+    return done.promise;
   });
 };
 

@@ -45,6 +45,7 @@ var flagDefs = {
     java: [String, null],
     seleniumJar: [String, null],
     chrome: [String, null],
+    android_serial: [String, null],
     chromedriver: [String, null],
     devtools2harJar: [String, null],
     job_timeout: [Number, null],
@@ -342,6 +343,7 @@ Agent.prototype.startJobRun_ = function(job) {
     this.wdServer_.send({
       cmd: 'run',
       options: {browserName: job.task.browser},
+      runNumber: job.runNumber,
       exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
       captureVideo: job.captureVideo,
       script: script,
@@ -349,6 +351,7 @@ Agent.prototype.startJobRun_ = function(job) {
       seleniumJar: this.flags_.selenium_jar,
       chromedriver: this.flags_.chromedriver,
       chrome: this.flags_.chrome,
+      androidSerial: this.flags_.android_serial,
       javaCommand: this.flags_.java
     });
   }.bind(this));

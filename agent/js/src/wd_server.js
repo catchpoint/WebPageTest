@@ -36,6 +36,7 @@ var util = require('util');
 var webdriver = require('webdriver');
 // TODO(klm): generalize
 var browser_local_chrome = require('browser_local_chrome');
+var browser_android_chrome = require('browser_android_chrome');
 var wd_sandbox = require('wd_sandbox');
 
 exports.process = process;  // Allow to stub out in tests.
@@ -83,6 +84,7 @@ exports.WebDriverServer = {
   init: function(initMessage) {
     'use strict';
     this.options_ = initMessage.options || {};
+    this.runNumber_ = initMessage.runNumber;
     this.exitWhenDone_ = initMessage.exitWhenDone;
     this.captureVideo_ = initMessage.captureVideo;
     this.script_ = initMessage.script;
@@ -94,15 +96,21 @@ exports.WebDriverServer = {
     this.testStartTime_ = undefined;
     this.pageLoadDonePromise_ = undefined;
     if (!this.browser_) {
-      this.browser_ = new browser_local_chrome.BrowserLocalChrome(
-          initMessage.chromedriver, initMessage.chrome);
+      this.app_ = webdriver.promise.Application.getInstance();
+      if (initMessage.androidSerial) {
+        this.browser_ = new browser_android_chrome.BrowserAndroidChrome(
+            this.app_, initMessage.chromedriver, initMessage.chrome,
+            initMessage.androidSerial);
+      } else {
+        this.browser_ = new browser_local_chrome.BrowserLocalChrome(
+            this.app_, initMessage.chromedriver, initMessage.chrome);
+      }
       this.devTools_ = undefined;
       // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
       // processing in these functions, if they call a WebDriver method.
       // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
       // to false upon completion of that method.
       this.actionCbRecurseGuard_ = false;
-      this.app_ = webdriver.promise.Application.getInstance();
       this.wdSandbox_ = undefined;
       this.sandboxApp_ = undefined;
       process_utils.injectWdAppLogging('wd_server app', this.app_);
@@ -123,7 +131,7 @@ exports.WebDriverServer = {
       throw new Error('Internal error: prior WD server running unexpectedly');
     }
 
-    this.browser_.startWdServer(browserCaps);
+    this.browser_.startWdServer(browserCaps, this.runNumber_ === 1);
     // Create an executor to simplify querying the server to see if it is ready.
     var client = new webdriver.http.HttpClient(this.browser_.getServerUrl());
     var executor = new webdriver.http.Executor(client);
@@ -152,7 +160,7 @@ exports.WebDriverServer = {
       throw new Error('Internal error: prior Chrome running unexpectedly');
     }
 
-    this.browser_.startBrowser(browserCaps);
+    this.browser_.startBrowser(browserCaps, this.runNumber_ === 1);
     return this.connectDevTools_(webdriver);
   },
 
@@ -270,7 +278,9 @@ exports.WebDriverServer = {
         return done;
       }.bind(this));
     } else {
-      logger.error('Trying to take a screenshot while there is no DevTools');
+      result = this.app_.schedule(
+          'Trying to take a screenshot while there is no DevTools',
+          function() {});
     }
     return result;
   },
@@ -399,7 +409,7 @@ exports.WebDriverServer = {
           {method: 'Page.navigate', params: {url: this.url_}}, function() {
         logger.info('Page.navigate returned');
       }, function(e) {
-        logger.error('Page.navigate errored out: %s', e);
+        logger.error('Page.navigate failed: %s', e);
       });
       return this.pageLoadDonePromise_.promise;
     }.bind(this)).then(
@@ -530,7 +540,7 @@ exports.WebDriverServer = {
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
     this.takeScreenshot_('screen', 'end of run').then(function(screenshot) {
-      if (this.captureVideo_) {
+      if (screenshot && this.captureVideo_) {
         // Last video frame
         var wptTimestamp =
             Math.round((Date.now() - this.testStartTime_) / 100);

@@ -28,12 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*global describe: true, before: true, beforeEach: true, afterEach: true,
   it: true*/
 
-var browser_local_chrome = require('browser_local_chrome');
+var browser_android_chrome = require('browser_android_chrome');
 var child_process = require('child_process');
 var events = require('events');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
+var test_utils = require('./test_utils.js');
 var webdriver = require('webdriver');
 
 
@@ -44,67 +45,91 @@ var webdriver = require('webdriver');
  * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
  * 2) stubbing out anything else with async callbacks, e.g. process or network.
  */
-describe('browser_local_chrome small', function() {
+describe('browser_android_chrome small', function() {
   'use strict';
 
   var app = webdriver.promise.Application.getInstance();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
-  var fakeProcess, processSpawnStub;
-  var chromedriver = '/gaga/chromedriver';
+  var processSpawnStub;
+  var iVerifiedCall;
+  var chromeApk = '/gaga/Chrome.apk';
+  var serial = 'GAGA123';
+
+  function assertAdbCall() {
+    test_utils.assertStringsMatch(
+        ['-s', serial].concat(Array.prototype.slice.call(arguments)),
+        processSpawnStub.getCall(iVerifiedCall).args[1]);
+    iVerifiedCall += 1;
+  }
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
-    fakeProcess = new events.EventEmitter();
-    fakeProcess.stdout = new events.EventEmitter();
-    fakeProcess.stderr = new events.EventEmitter();
-    fakeProcess.kill = sandbox.spy();
+    test_utils.fakeTimers(sandbox);
+    app.reset();  // We reuse the app across tests, clean it up.
+
     processSpawnStub = sandbox.stub(child_process, 'spawn', function() {
+      var fakeProcess = new events.EventEmitter();
+      fakeProcess.stdout = new events.EventEmitter();
+      fakeProcess.stderr = new events.EventEmitter();
+      fakeProcess.kill = sandbox.spy();
+      global.setTimeout(function() {
+        fakeProcess.emit('exit');
+      }, 0);
       return fakeProcess;
     });
+    iVerifiedCall = 0;
   });
 
   afterEach(function() {
+    // Call unfakeTimers before verifyAndRestore, which may throw.
+    test_utils.unfakeTimers(sandbox);
     sandbox.verifyAndRestore();
   });
 
-  it('should start and get killed', function() {
-    var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
+  it('should install on first run, start, get killed', function() {
+    var browser = new browser_android_chrome.BrowserAndroidChrome(
+        app, /*chromedriver=*/undefined, chromeApk, serial);
     should.ok(!browser.isRunning());
-    browser.startWdServer({browserName: 'chrome'});
+    browser.startBrowser({browserName: 'chrome'}, /*isFirstRun*/true);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    assertAdbCall('uninstall', /com\.[\w\.]+/);
+    assertAdbCall('install', '-r', chromeApk);
+    assertAdbCall('shell', 'am', 'start', '-n', /^com\.[\.\w]+/);
+    assertAdbCall('forward', /tcp:\d+/, /^\w+/);
     should.ok(browser.isRunning());
-    should.equal('http://localhost:4444', browser.getServerUrl());
+    should.equal(undefined, browser.getServerUrl());
     should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+    should.equal(4, processSpawnStub.callCount);
 
     browser.kill();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     should.ok(!browser.isRunning());
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    should.ok(fakeProcess.kill.calledOnce);
   });
 
-  it('should start and handle process self-exit', function() {
-    var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
+  it('should not install on a non-first run, start, get killed', function() {
+    var browser = new browser_android_chrome.BrowserAndroidChrome(
+        app, /*chromedriver=*/undefined, chromeApk, serial);
     should.ok(!browser.isRunning());
-    browser.startWdServer({browserName: 'chrome'});
+    browser.startBrowser({browserName: 'chrome'}, /*isFirstRun*/false);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    assertAdbCall('shell', 'am', 'start', '-n', /^com\.[\.\w]+/);
+    assertAdbCall('forward', /tcp:\d+/, /^\w+/);
     should.ok(browser.isRunning());
-    should.equal('http://localhost:4444', browser.getServerUrl());
+    should.equal(undefined, browser.getServerUrl());
     should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+    should.equal(2, processSpawnStub.callCount);
 
-    fakeProcess.emit('exit', /*code=*/0);
+    browser.kill();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     should.ok(!browser.isRunning());
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    should.ok(fakeProcess.kill.notCalled);
   });
 });
