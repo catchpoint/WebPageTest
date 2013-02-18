@@ -87,21 +87,30 @@ DevTools.prototype.onMessage = function(callback) {
  */
 DevTools.prototype.connect = function(callback, errback) {
   'use strict';
-  var request = http.get(url.parse(this.devToolsUrl_), function(response) {
-    exports.ProcessResponse(response, function(responseBody) {
-      var devToolsJson = JSON.parse(responseBody);
-      try {
+  var retries = 0;  // ios_webkit_debug_proxy sometimes returns an empty array.
+  var listTabs = function() {
+    var request = http.get(url.parse(this.devToolsUrl_), function(response) {
+      exports.ProcessResponse(response, function(responseBody) {
+        var devToolsJson = JSON.parse(responseBody);
+        if (devToolsJson.length === 0 && retries < 10) {
+          retries += 1;
+          logger.debug('Retrying DevTools tab list, attempt %d', retries + 1);
+          global.setTimeout(listTabs, 1000);
+          return;
+        }
         this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
-      } catch (e) {
-        throw new Error('DevTools response at ' + this.devToolsUrl_ +
-            ' does not contain webSocketDebuggerUrl: ' + responseBody);
-      }
-      this.connectDebugger_(callback, errback);
+        if (!this.debuggerUrl_) {
+          throw new Error('DevTools response at ' + this.devToolsUrl_ +
+              ' does not contain webSocketDebuggerUrl: ' + responseBody);
+        }
+        this.connectDebugger_(callback, errback);
+      }.bind(this));
     }.bind(this));
-  }.bind(this));
-  request.on('error', function(e) {
-    errback(e);
-  });
+    request.on('error', function(e) {
+      errback(e);
+    });
+  }.bind(this);
+  listTabs();
 };
 
 DevTools.prototype.connectDebugger_ = function(callback, errback) {
@@ -187,6 +196,7 @@ DevTools.prototype.command = function(command, callback, errback) {
         errback: errback
     };
   }
+  logger.debug('Send command: %j', command);
   this.ws_.send(JSON.stringify(command));
   return command.id;
 };

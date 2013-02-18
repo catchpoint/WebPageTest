@@ -46,6 +46,8 @@ var flagDefs = {
     seleniumJar: [String, null],
     chrome: [String, null],
     android_serial: [String, null],
+    ios_serial: [String, null],
+    ios_webkit_debug_proxy: [String, null],
     chromedriver: [String, null],
     devtools2harJar: [String, null],
     job_timeout: [Number, null],
@@ -341,18 +343,20 @@ Agent.prototype.startJobRun_ = function(job) {
   }
   this.scheduleNoFault_('Send IPC "run"', function() {
     this.wdServer_.send({
-      cmd: 'run',
-      options: {browserName: job.task.browser},
-      runNumber: job.runNumber,
-      exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
-      captureVideo: job.captureVideo,
-      script: script,
-      url: url,
-      seleniumJar: this.flags_.selenium_jar,
-      chromedriver: this.flags_.chromedriver,
-      chrome: this.flags_.chrome,
-      androidSerial: this.flags_.android_serial,
-      javaCommand: this.flags_.java
+        cmd: 'run',
+        options: {browserName: job.task.browser},
+        runNumber: job.runNumber,
+        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
+        captureVideo: job.captureVideo,
+        script: script,
+        url: url,
+        seleniumJar: this.flags_.selenium_jar,
+        chromedriver: this.flags_.chromedriver,
+        chrome: this.flags_.chrome,
+        androidSerial: this.flags_.android_serial,
+        iosSerial: this.flags_.ios_serial,
+        iosWebkitDebugProxy: this.flags_.ios_webkit_debug_proxy,
+        javaCommand: this.flags_.java
     });
   }.bind(this));
 };

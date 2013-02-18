@@ -148,6 +148,13 @@ BrowserLocalChrome.prototype.getDevToolsUrl = function() {
   return this.devToolsUrl_;
 };
 
+BrowserLocalChrome.prototype.getDevToolsCapabilities = function() {
+  'use strict';
+  return {
+    'Page.captureScreenshot': true  // TODO(klm): check for before-26.
+  };
+};
+
 exports.setSystemCommands = function() {
   'use strict';
   system_commands.set('kill signal', 'SIGHUP', 'unix');

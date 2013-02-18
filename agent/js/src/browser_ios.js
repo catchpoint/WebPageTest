@@ -27,77 +27,85 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 /*jslint nomen:false */
 
-var adb = require('adb');
+var child_process = require('child_process');
 var logger = require('logger');
 
-var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 
-
-function BrowserAndroidChrome(app, chromedriver, chrome, deviceSerial) {
+function BrowserIos(app, iosWebkitDebugProxy, deviceSerial) {
   'use strict';
-  logger.info('BrowserAndroidChrome(%s, %s, %s)',
-      chromedriver, chrome, deviceSerial);
+  logger.info('BrowserIos(%s)', deviceSerial);
   this.app_ = app;
-  this.chromedriver_ = chromedriver;
-  this.chrome_ = chrome;  // Chrome.apk.
-  this.chromePackage_ = 'com.google.android.apps.chrome_dev';
-  this.chromeActivity_ = 'com.google.android.apps.chrome';
-  this.devToolsPort_ = 1234;
+  this.deviceSerial_ = deviceSerial;
+  this.iosWebkitDebugProxy_ = iosWebkitDebugProxy;
+  this.devToolsPort_ = 9222;
   this.devToolsUrl_ = undefined;
-  this.adb_ = new adb.Adb(this.app_, deviceSerial);
+  this.childProcess_ = undefined;
 }
-exports.BrowserAndroidChrome = BrowserAndroidChrome;
+exports.BrowserIos = BrowserIos;
 
-BrowserAndroidChrome.prototype.startWdServer =
-    function(/*browserCaps, isFirstRun*/) {
+BrowserIos.prototype.startWdServer = function(/*browserCaps, isFirstRun*/) {
   'use strict';
-  throw new Error('Soon: ' +
-      'http://madteam.co/forum/avatars/Android/android-80-domokun.png');
+  throw new Error('HA! HA! HA!');
 };
 
-BrowserAndroidChrome.prototype.startBrowser = function(
-    browserCaps, isFirstRun) {
+BrowserIos.prototype.startBrowser = function() {
   'use strict';
-  if (this.chrome_ && isFirstRun) {
-    // Explicitly uninstall, as "install -r" fails if the installed package
-    // was signed with different keys than the new apk being installed.
-    this.adb_.do(['uninstall', this.chromePackage_]).addErrback(function() {
-      logger.debug('Ignoring failed uninstall');
+  if (this.iosWebkitDebugProxy_) {
+    if (this.childProcess_) {
+      throw new Error('Internal error: proxy already running');
+    }
+    logger.info('Starting proxy');
+    this.childProcess_ = child_process.spawn(this.iosWebkitDebugProxy_,
+        ['-c', this.deviceSerial_ + ':' + this.devToolsPort_]);
+    this.childProcess_.on('exit', function(code, signal) {
+      logger.info('Proxy EXIT code %s signal %s', code, signal);
+      this.childProcess_ = undefined;
+      this.devToolsUrl_ = undefined;
     }.bind(this));
-    // Chrome install on an emulator takes a looong time.
-    this.adb_.do(['install', '-r', this.chrome_], /*timeout=*/120000);
+    this.childProcess_.stdout.on('data', function(data) {
+      logger.info('Proxy STDOUT: %s', data);
+    });
+    this.childProcess_.stderr.on('warn', function(data) {
+      logger.error('Proxy STDERR: %s', data);
+    });
   }
-  var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
-  this.adb_.shell(['am', 'start', '-n', activity]);
-  this.adb_.do(['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
   this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
 };
 
-BrowserAndroidChrome.prototype.kill = function() {
+BrowserIos.prototype.kill = function() {
   'use strict';
-  this.serverUrl_ = undefined;
+  if (this.childProcess_) {
+    logger.debug('Killing the proxy');
+    try {
+      this.childProcess_.kill();
+    } catch (killException) {
+      logger.error('Proxy kill failed: %s', killException);
+    }
+  } else {
+    logger.debug('Proxy process already unset');
+  }
+  this.childProcess_ = undefined;
   this.devToolsUrl_ = undefined;
-  this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
-BrowserAndroidChrome.prototype.isRunning = function() {
+BrowserIos.prototype.isRunning = function() {
   'use strict';
-  return undefined !== this.devToolsUrl_;
+  return undefined !== this.childProcess_;
 };
 
-BrowserAndroidChrome.prototype.getServerUrl = function() {
+BrowserIos.prototype.getServerUrl = function() {
   'use strict';
   return undefined;
 };
 
-BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
+BrowserIos.prototype.getDevToolsUrl = function() {
   'use strict';
   return this.devToolsUrl_;
 };
 
-BrowserAndroidChrome.prototype.getDevToolsCapabilities = function() {
+BrowserIos.prototype.getDevToolsCapabilities = function() {
   'use strict';
   return {
-    'Page.captureScreenshot': false  // TODO(klm): check for 26+.
+      'Page.captureScreenshot': false
   };
 };

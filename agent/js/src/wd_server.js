@@ -35,8 +35,9 @@ var process_utils = require('process_utils');
 var util = require('util');
 var webdriver = require('webdriver');
 // TODO(klm): generalize
-var browser_local_chrome = require('browser_local_chrome');
 var browser_android_chrome = require('browser_android_chrome');
+var browser_ios = require('browser_ios');
+var browser_local_chrome = require('browser_local_chrome');
 var wd_sandbox = require('wd_sandbox');
 
 exports.process = process;  // Allow to stub out in tests.
@@ -101,6 +102,9 @@ exports.WebDriverServer = {
         this.browser_ = new browser_android_chrome.BrowserAndroidChrome(
             this.app_, initMessage.chromedriver, initMessage.chrome,
             initMessage.androidSerial);
+      } else if (initMessage.iosSerial) {
+        this.browser_ = new browser_ios.BrowserIos(
+            this.app_, initMessage.iosWebkitDebugProxy, initMessage.iosSerial);
       } else {
         this.browser_ = new browser_local_chrome.BrowserLocalChrome(
             this.app_, initMessage.chromedriver, initMessage.chrome);
@@ -206,14 +210,14 @@ exports.WebDriverServer = {
       return;
     }
     if (devtools.isNetworkMessage(message) || devtools.isPageMessage(message)) {
-      logger.extra('DevTools message: %j', message);
+      logger.extra('DevTools message: %s', message.method);
       this.devToolsMessages_.push(message);
       if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending() &&
           message.method === 'Page.loadEventFired') {
         this.pageLoadDonePromise_.resolve(true);  // true for scheduleWait.
       }
     } else {
-      logger.extra('DevTools timeline message: %j', message);
+      logger.extra('DevTools timeline message: %s', message.method);
       this.devToolsTimelineMessages_.push(message);
     }
   },
@@ -243,7 +247,9 @@ exports.WebDriverServer = {
     if (!this.driver_) {
       this.driver_ = driver;
       if (!this.devTools_ && browserCaps.browserName.indexOf('chrome') !== -1) {
-        this.connectDevTools_(wdNamespace).then(this.onTestStarted_.bind(this));
+        this.connectDevTools_(wdNamespace);
+        this.clearPage_();
+        this.app_.schedule('Test started', this.onTestStarted_.bind(this));
       } else {
         this.onTestStarted_();
       }
@@ -258,7 +264,8 @@ exports.WebDriverServer = {
     // http://trac.webkit.org/changeset/138236
     //   /trunk/Source/WebCore/inspector/Inspector.json
     var result = null;
-    if (this.devTools_) {
+    if (this.devTools_ &&
+        this.browser_.getDevToolsCapabilities()['Page.captureScreenshot']) {
       result = this.app_.schedule('Screenshot: ' + description, function() {
         var done = new webdriver.promise.Deferred();
         this.devTools_.pageCommand('captureScreenshot', function(result) {
@@ -278,9 +285,13 @@ exports.WebDriverServer = {
         return done;
       }.bind(this));
     } else {
-      result = this.app_.schedule(
-          'Trying to take a screenshot while there is no DevTools',
-          function() {});
+      var message;
+      if (this.devTools_) {
+        message = 'DevTools in this browser does not support screenshots';
+      } else {
+        message = 'Trying to take a screenshot while DevTools is not connected';
+      }
+      result = this.app_.schedule(message, function() {});
     }
     return result;
   },
@@ -375,10 +386,10 @@ exports.WebDriverServer = {
     return this.app_.schedule('Clear the page', function() {
       var donePromise = new webdriver.promise.Deferred();
       this.devTools_.pageCommand('getResourceTree', function(result) {
-        logger.extra('Resource tree: %j, top frame id: %s',
-            result, result.frameTree.frame.id);
         this.devTools_.command({method: 'Page.setDocumentContent', params: {
-            frameId: result.frameTree.frame.id, html: ''}}, function() {
+            frameId: result.frameTree.frame.id,
+            html: '<body bgcolor="#DE640D"/>'
+        }}, function() {
           logger.info('Page.setDocumentContent blank returned');
           donePromise.resolve();
         }.bind(this), function(e) {

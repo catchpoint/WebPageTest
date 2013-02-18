@@ -187,6 +187,7 @@ describe('wd_server small', function() {
     test_utils.stubHttpGet(sandbox, /^http:\/\/localhost:\d+\/json$/,
         '[{"webSocketDebuggerUrl": "ws://gaga"}]');
     var stubWebSocket = sandbox.stub(devtools, 'WebSocket', FakeWebSocket);
+    var fakeWs;  // Assign later, after DevTools connection creates a WebSocket.
 
     // Fake a WebDriver instance, stub Builder.build() to return it.
     var driverQuitSpy = sinon.spy();
@@ -200,6 +201,24 @@ describe('wd_server small', function() {
       logger.debug('Stub Builder.build() called');
       return fakeDriver;
     });
+
+    // Simulate Chrome generating profiling messages as the page loads.
+    var pageMessage = {method: 'Page.gaga'};
+    var networkMessage = {method: 'Network.ulala'};
+    var timelineMessage = {method: 'Timeline.tutu'};
+    // wd_server ignores DevTools messages before onDriverBuild actions finish.
+    // Schedule our emission function after the onDriverBuild-scheduled stuff.
+    var realOnDriverBuild =
+        wd_server.WebDriverServer.onDriverBuild.bind(wd_server.WebDriverServer);
+    var onBuildStub = sandbox.stub(wd_server.WebDriverServer, 'onDriverBuild',
+        function(driver, browserCaps, wdNamespace) {
+          realOnDriverBuild.call(this, driver, browserCaps, wdNamespace);
+          this.app_.schedule('Emit test DevTools events', function() {
+            fakeWs.emit('message', JSON.stringify(pageMessage), {});
+            fakeWs.emit('message', JSON.stringify(networkMessage), {});
+            fakeWs.emit('message', JSON.stringify(timelineMessage), {});
+          });
+        });
 
     var idleSpy = sandbox.spy();
     app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
@@ -215,17 +234,12 @@ describe('wd_server small', function() {
     });
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
         + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
-    var fakeWs = stubWebSocket.firstCall.thisValue;  // The DevTools WebSocket.
+    fakeWs = stubWebSocket.firstCall.thisValue;  // The DevTools WebSocket.
     fakeWs.emit('open');  // DevTools WebSocket connected.
-    // Simulate Chrome generating profiling messages as the page loads.
-    var pageMessage = {method: 'Page.gaga'};
-    var networkMessage = {method: 'Network.ulala'};
-    var timelineMessage = {method: 'Timeline.tutu'};
-    fakeWs.emit('message', JSON.stringify(pageMessage), {});
-    fakeWs.emit('message', JSON.stringify(networkMessage), {});
-    fakeWs.emit('message', JSON.stringify(timelineMessage), {});
+
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
         + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    onBuildStub.restore();  // Remove fake DevTools event emission.
 
     // * Verify after run 1, make sure we didn't quit/stop WD.
     // Should spawn the chromedriver process on port 4444.
@@ -239,6 +253,8 @@ describe('wd_server small', function() {
         'Network.enable',
         'Page.enable',
         'Timeline.start',
+        'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
     fakeWs.commands = [];  // Reset for next run verification.
