@@ -263,12 +263,35 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 }
                 $request['server_rtt'] = null;
                 $request['headers'] = array('request' => array(), 'response' => array());
-                if (array_key_exists('headers', $rawRequest)) {
+                if (array_key_exists('response', $rawRequest) &&
+                    array_key_exists('requestHeadersText', $rawRequest['response'])) {
+                    $request['headers']['request'] = array();
+                    $headers = explode("\n", $rawRequest['response']['requestHeadersText']);
+                    foreach($headers as $header) {
+                        $header = trim($header);
+                        if (strlen($header))
+                            $request['headers']['request'][] = $header;
+                    }
+                } elseif (array_key_exists('response', $rawRequest) &&
+                    array_key_exists('requestHeaders', $rawRequest['response'])) {
+                    $request['headers']['request'] = array();
+                    foreach($rawRequest['response']['requestHeaders'] as $key => $value)
+                        $request['headers']['request'][] = "$key: $value";
+                } elseif (array_key_exists('headers', $rawRequest)) {
                     $request['headers']['request'] = array();
                     foreach($rawRequest['headers'] as $key => $value)
                         $request['headers']['request'][] = "$key: $value";
                 }
                 if (array_key_exists('response', $rawRequest) &&
+                    array_key_exists('headersText', $rawRequest['response'])) {
+                    $request['headers']['response'] = array();
+                    $headers = explode("\n", $rawRequest['response']['headersText']);
+                    foreach($headers as $header) {
+                        $header = trim($header);
+                        if (strlen($header))
+                            $request['headers']['response'][] = $header;
+                    }
+                } elseif (array_key_exists('response', $rawRequest) &&
                     array_key_exists('headers', $rawRequest['response'])) {
                     $request['headers']['response'] = array();
                     foreach($rawRequest['response']['headers'] as $key => $value)
