@@ -252,9 +252,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     $request['ssl_start'] = $rawRequest['response']['timing']['sslStart'];
                     $request['ssl_end'] = $rawRequest['response']['timing']['sslEnd'];
                 }
-                $request['initiator'] = null;
-                $request['initiator_line'] = null;
-                $request['initiator_column'] = null;
+                $request['initiator'] = '';
+                $request['initiator_line'] = '';
+                $request['initiator_column'] = '';
                 if (array_key_exists('initiator', $rawRequest)) {
                     if (array_key_exists('url', $rawRequest['initiator']))
                         $request['initiator'] = $rawRequest['initiator']['url'];
@@ -263,11 +263,17 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 }
                 $request['server_rtt'] = null;
                 $request['headers'] = array('request' => array(), 'response' => array());
-                if (array_key_exists('headers', $rawRequest))
-                    $request['headers']['request'] = $rawRequest['headers'];
+                if (array_key_exists('headers', $rawRequest)) {
+                    $request['headers']['request'] = array();
+                    foreach($rawRequest['headers'] as $key => $value)
+                        $request['headers']['request'][] = "$key: $value";
+                }
                 if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('headers', $rawRequest['response']))
-                    $request['headers']['response'] = $rawRequest['response']['headers'];
+                    array_key_exists('headers', $rawRequest['response'])) {
+                    $request['headers']['response'] = array();
+                    foreach($rawRequest['response']['headers'] as $key => $value)
+                        $request['headers']['response'][] = "$key: $value";
+                }
 
                 // unsupported fields
                 $request['score_cache'] = -1;

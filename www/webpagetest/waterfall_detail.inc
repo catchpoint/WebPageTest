@@ -224,14 +224,14 @@ foreach($requests as $reqNum => $request)
                 if (array_key_exists('headers', $request)) {
                     if (array_key_exists('request', $request['headers']) && is_array($request['headers']['request'])) {
                         echo '<p class="indented1"><b>Request Headers:</b></p><p class="indented2">' . "\n";
-                        foreach ($request['headers']['request'] as $key => $value)
-                            echo "<b>" . htmlspecialchars($key) . ":</b> " . htmlspecialchars($value) . "<br>\n";
+                        foreach ($request['headers']['request'] as $value)
+                            echo htmlspecialchars($value) . "<br>\n";
                         echo "</p>";
                     }
                     if (array_key_exists('response', $request['headers']) && is_array($request['headers']['response'])) {
                         echo '<p class="indented1"><b>Response Headers:</b></p><p class="indented2">' . "\n";
-                        foreach ($request['headers']['response'] as $key => $value)
-                            echo "<b>" . htmlspecialchars($key) . ":</b> " . htmlspecialchars($value) . "<br>\n";
+                        foreach ($request['headers']['response'] as $value)
+                            echo htmlspecialchars($value) . "<br>\n";
                         echo "</p>";
                     }
                 }
