@@ -134,7 +134,11 @@ $page_description = "Website performance test details$testLabel";
                             $cols++;
                         if($data['domElements'] > 0)
                             $cols++;
-                        if((float)$data['visualComplete'] > 0.0)
+                        if ((array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) || 
+                            (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0))
+                            $cols++;
+                        if ((array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) ||
+                            (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0.0))
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
@@ -148,7 +152,12 @@ $page_description = "Website performance test details$testLabel";
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
-                        <?php if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) { ?>
+                        <?php if( (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) || 
+                                  (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0.0)) { ?>
+                        <th align="center" valign="middle">Visually Complete</th>
+                        <?php } ?>
+                        <?php if( (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) || 
+                                  (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0)) { ?>
                         <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
                         <?php if( (float)$data['domTime'] > 0.0 ) { ?>
@@ -179,12 +188,17 @@ $page_description = "Website performance test details$testLabel";
                                 $aft = 'N/A';
                             echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
                         }
+                        if( array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0 )
+                            echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['visualComplete'], 3) . "</td>\n";
+                        elseif (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0 )
+                            echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['VisuallyCompleteDT'], 3) . "</td>\n";
                         if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
                             if (array_key_exists('SpeedIndexCustom', $data))
-                                echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
+                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
                             else
-                                echo "<td id=\"visualComplate\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
-                        }
+                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
+                        } elseif (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0 )
+                            echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexDT']}</td>\n";
                         if( (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
                         if( $data['domElements'] > 0 )

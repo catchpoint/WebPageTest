@@ -172,143 +172,71 @@ foreach($requests as $reqNum => $request)
 
 <div id="headers">
 <?php
-	// load the raw results
-	$cached='';
-	if((bool)@$_GET["cached"])
-		$cached='_Cached';
-	$fileName = $testPath . '/' . $run . $cached . '_report.txt';
-	$lines = gz_file($fileName);
-	if( $lines)
-	{
-		$requestNum = 1;
-		$match = 'Request ' . $requestNum . ':';
-		$needsClose = false;
-		$display = true;
-        $started = false;
-		$request = array();
-		
-		echo '<br><hr><h2>Request Headers</h2>';
-		
-		// loop through each line in the file
-		foreach($lines as $linenum => $line) 
-		{
-			$line = htmlspecialchars($line);
-			$len = strlen($line);
-			if( $len > 0 )
-			{
-				$line = trim($line);
-				if( !strcmp($line, $match))
-				{
-                    if( $started )
-                    {
-					    if( $needsClose )
-						    echo '</p>';
-					    echo '<br><h4><a name="request' . $requestNum . '">' . $line . '</a></h4><p class="indented2">' . "\n";
-					    $request = $requests[$requestNum - 1];
-					    if( $request )
-					    {
-						    if( $request['host'] || $request['url'] )
-						    {
-							    $protocol = 'http://';
-							    if((bool)@$request['is_secure'])
-								    $protocol = 'https://';
-							    $url = $protocol . $request['host'] . $request['url'];
-                                if ($settings['nolinks']) {
-                                    echo "<b>URL: </b>$url<br>\n";
-                                } else {
-							        echo "<b>URL: </b><a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
-                                }
-						    }
-						    echo '<b>Host: </b>' . $request['host'] . "<br>\n";
-						    echo '<b>IP: </b>' . $request['ip_addr'] . "<br>\n";
-						    if( $haveLocations)
-							    echo '<b>Location: </b>' . $request['location'] . "*<br>\n";
-						    echo '<b>Error/Status Code: </b>' . $request['responseCode'] . "<br>\n";
-                            if (array_key_exists('initiator', $request)) {
-                                echo '<b>Initiated By: </b>' . $request['initiator'] . "<br>\n";
-                            }
-                            if (array_key_exists('custom_rules', $request)) {
-                                foreach($request['custom_rules'] as $rule_name => &$rule) {
-                                    echo "<b>Custom Rule - $rule_name: </b>({$rule['count']} matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
-                                }
-                            }
-						    echo '<b>Start Offset: </b>' . $request['load_start'] / 1000.0 . " s<br>\n";
-						    if( $request['dns_ms'] && (int)$request['dns_ms'] !== -1 )
-							    echo '<b>DNS Lookup: </b>' . $request['dns_ms'] . " ms<br>\n";
-						    elseif( $request['dns_end'] > 0 )
-						    {
-							    $time = $request['dns_end'] - $request['dns_start'];
-							    echo '<b>DNS Lookup: </b>' . $time . " ms<br>\n";
-						    }
-						    if( $request['connect_ms'] && (int)$request['connect_ms'] !== -1 )
-						    {
-							    echo '<b>Initial Connection: </b>' . $request['connect_ms'] . " ms<br>\n";
-							    if( $request['is_secure'] )
-								    echo '<b>SSL Negotiation: </b>' . (int)$request['sslTime'] . " ms<br>\n";
-						    }
-						    elseif( $request['connect_end'] > 0 )
-						    {
-							    $time = $request['connect_end'] - $request['connect_start'];
-							    echo '<b>Initial Connection: </b>' . $time . " ms<br>\n";
-							    if( $request['ssl_end'] > 0 )
-							    {
-								    $time = $request['ssl_end'] - $request['ssl_start'];
-								    echo '<b>SSL Negotiation: </b>' . $time . " ms<br>\n";
-							    }
-						    }
-						    echo '<b>Time to First Byte: </b>' . $request['ttfb_ms'] . " ms<br>\n";
-						    if( $request['download_ms'] )
-							    echo '<b>Content Download: </b>' . $request['download_ms'] . " ms<br>\n";
-						    echo '<b>Bytes In (downloaded): </b>' . number_format($request['bytesIn'] / 1024, 1) . " KB<br>\n";
-						    echo '<b>Bytes Out (uploaded): </b>' . number_format($request['bytesOut'] / 1024, 1) . " KB<br>\n";
-                            if (@$request['body']) {
-                                $cached = (int)@$_GET["cached"];
-                                echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
-                            }
-					    }
-					    echo "</p>\n";
-					    
-					    $needsClose = false;
-					    $requestNum++;
-					    $match = 'Request ' . $requestNum . ':';
-					    $display = false;
+    if (isset($requests) &&
+        is_array($requests) &&
+        count($requests) &&
+        array_key_exists(0, $requests) &&
+        array_key_exists('headers', $requests[0])) {
+        echo '<br><hr><h2>Request Headers</h2>';
+        foreach($requests as $reqNum => $request) {
+            if($request) {
+                $requestNum = $reqNum + 1;
+                echo "<br><h4><a name=\"request$requestNum\">Request $requestNum:</a></h4><p class=\"indented2\">\n";
+                if ($settings['nolinks'])
+                    echo "<b>URL:</b> {$request['full_url']}<br>\n";
+                else
+                    echo "<b>URL:</b> <a rel=\"nofollow\" href=\"{$request['full_url']}\">{$request['full_url']}</a><br>\n";
+                echo "<b>Host:</b> {$request['host']}<br>\n";
+                if (array_key_exists('ip_addr', $request) && strlen($request['ip_addr']))
+                    echo "<b>IP:</b> {$request['ip_addr']}<br>\n";
+                if (array_key_exists('location', $request) && strlen($request['location']))
+                    echo "<b>Location:</b> {$request['location']}<br>\n";
+                echo "<b>Error/Status Code:</b> {$request['responseCode']}<br>\n";
+                if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
+                    echo "<b>Initiated By:</b> {$request['initiator']}";
+                    if (array_key_exists('initiator_line', $request) && strlen($request['initiator_line']))
+                        echo " line {$request['initiator_line']}";
+                    if (array_key_exists('initiator_column', $request) && strlen($request['initiator_column']))
+                        echo " column {$request['initiator_column']}";
+                    echo "<br>\n";
+                }
+                if (array_key_exists('custom_rules', $request)) {
+                    foreach($request['custom_rules'] as $rule_name => &$rule) {
+                        echo "<b>Custom Rule - $rule_name: </b>({$rule['count']} matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
                     }
-				}
-				elseif( !strcmp($line, 'Request details:'))
-				{
-                    $started = true;
-				}
-				elseif( $started )
-				{
-					$pos = strpos($line, ':');
-					if( $pos )
-						$line = '<b>' . substr_replace($line, ':</b>', $pos, 1);
-					
-					if( $requestNum == 1)
-					{
-						echo $line . "<br>\n";
-					}
-					else
-					{
-						if( !strcmp(substr($line, -5), ':</b>'))
-						{
-							if( $needsClose )
-								echo '</p>';
-							echo '<p class="indented1">' . $line . '</p><p class="indented2">' . "\n";
-							$needsClose = true;
-							$display = true;
-						}
-						elseif( $display )
-							echo $line . "<br>\n";
-					}
-				}
-			}
-			else
-				echo "<br>\n";
-		}
-		
-		if( $needsClose )
-			echo '</p>';
-	}
+                }
+                echo "<b>Start Offset:</b> " . number_format($request['load_start'] / 1000.0, 3) . " s<br>\n";
+                if (array_key_exists('dns_ms', $request) && $request['dns_ms'] > 0)
+                    echo "<b>DNS Lookup:</b> {$request['dns_ms']} ms<br>\n";
+                if (array_key_exists('connect_ms', $request) && $request['connect_ms'] > 0)
+                    echo "<b>Initial Connection:</b> {$request['connect_ms']} ms<br>\n";
+                if (array_key_exists('ttfb_ms', $request) && $request['ttfb_ms'] > 0)
+                    echo "<b>Time to First Byte:</b> {$request['ttfb_ms']} ms<br>\n";
+                if (array_key_exists('download_ms', $request) && $request['download_ms'] > 0)
+                    echo "<b>Content Download:</b> {$request['download_ms']} ms<br>\n";
+                echo "<b>Bytes In (downloaded):</b> " . number_format($request['bytesIn'] / 1024.0, 1) . " KB<br>\n";
+                echo "<b>Bytes Out (uploaded):</b> " . number_format($request['bytesOut'] / 1024.0, 1) . " KB<br>\n";
+                if (array_key_exists('body', $request) && $request['body']) {
+                    $cached = (int)@$_GET["cached"];
+                    echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
+                }
+                echo "</p>";
+                if (array_key_exists('headers', $request)) {
+                    if (array_key_exists('request', $request['headers']) && is_array($request['headers']['request'])) {
+                        echo '<p class="indented1"><b>Request Headers:</b></p><p class="indented2">' . "\n";
+                        foreach ($request['headers']['request'] as $key => $value)
+                            echo "<b>" . htmlspecialchars($key) . ":</b> " . htmlspecialchars($value) . "<br>\n";
+                        echo "</p>";
+                    }
+                    if (array_key_exists('response', $request['headers']) && is_array($request['headers']['response'])) {
+                        echo '<p class="indented1"><b>Response Headers:</b></p><p class="indented2">' . "\n";
+                        foreach ($request['headers']['response'] as $key => $value)
+                            echo "<b>" . htmlspecialchars($key) . ":</b> " . htmlspecialchars($value) . "<br>\n";
+                        echo "</p>";
+                    }
+                }
+            }
+        }
+    }
 ?>
 </div>

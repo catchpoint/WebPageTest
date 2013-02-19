@@ -1,4 +1,5 @@
 <?php
+require_once('devtools.inc.php');
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('LoadRequests');
     newrelic_add_custom_tracer('FixUpRequestTimes');
@@ -14,6 +15,8 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false) {
+    if (!isset($test_path) || !strlen($test_path))
+        $test_path = './' . GetTestPath($id);
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
     $file_prefix = $test_path . '/' . $run . $cached_text . '_';
     $request_file_name =  $file_prefix . 'IEWTR.txt';
@@ -21,7 +24,19 @@ function getRequests($id, $test_path, $run, $is_cached,
     $bodies_file_name = $file_prefix . 'bodies.zip';
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
-    $requests = LoadRequests($request_file_name);
+    if (!GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData)) {
+        $requests = LoadRequests($request_file_name);
+
+        if ($use_raw_headers)
+            AddHeaders($requests, $headers_file_name);
+
+        AddResponseBodyFlags($requests, $bodies_file_name);
+
+        // load any custom checks if they are available
+        $custom_rules = array();
+        if (gz_is_file($custom_rules_file_name))
+            $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+    }
     FixUpRequestTimes($requests);
 
     $has_locations = false;
@@ -29,31 +44,16 @@ function getRequests($id, $test_path, $run, $is_cached,
         $has_locations = AddLocationData($requests);
     }
 
-    if ($use_raw_headers) {
-        AddHeaders($requests, $headers_file_name);
-    }
-
-    AddResponseBodyFlags($requests, $bodies_file_name);
-
-    // load any custom checks if they are available
-    $custom_rules = array();
-    if (gz_is_file($custom_rules_file_name)) {
-        $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    }
-    
     $has_secure_requests = false;
     foreach ($requests as $index => &$request) {
         $request['index'] = $index;
         $request['number'] = $index + 1;
-        if (@$request['body']) {
+        if (@$request['body'])
             $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&request={$request['number']}";
-        }
-        if ($request['is_secure']) {
+        if ($request['is_secure'])
             $has_secure_requests = true;
-        }
-        if (array_key_exists($index + 1, $custom_rules)) {
+        if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
             $request['custom_rules'] = $custom_rules[$index + 1];
-        }
     }
     
     // this is disabled for right now - there were indications that it was

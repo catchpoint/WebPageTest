@@ -1154,7 +1154,7 @@ function GetTestInfoHtml($includeScript = true)
         $html .= '<b>First View only</b><br>';
     if( (int)$test['test']['runs'] > 1 ) 
         $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
-    if( (int)$test['test']['authenticated'] == 1) 
+    if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1) 
         $html .= '<b>Authenticated: ' . $login . '</b><br>';
     if( isset($test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
     {

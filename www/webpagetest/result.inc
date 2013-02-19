@@ -163,7 +163,8 @@ $page_description = "Website performance test result$testLabel.";
                             $cols++;
                         if($pageData[$fvMedian][0]['domElements'] > 0)
                             $cols++;
-                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0)
+                        if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) ||
+                           (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0))
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
@@ -181,7 +182,8 @@ $page_description = "Website performance test result$testLabel.";
                         <?php if( $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
-                        <?php if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) { ?>
+                        <?php if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) || 
+                                 (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0)){ ?>
                         <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
                         <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
@@ -218,6 +220,8 @@ $page_description = "Website performance test result$testLabel.";
                                 echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexCustom']}</td>\n";
                             else
                                 echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
+                        } elseif(array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0) {
+                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexDT']}</td>\n";
                         }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
@@ -252,6 +256,11 @@ $page_description = "Website performance test result$testLabel.";
                             $disp = '-';
                             if(array_key_exists('SpeedIndex', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndex'] > 0)
                                 $disp = $pageData[$rvMedian][1]['SpeedIndex'];
+                            echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
+                        } elseif (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0) {
+                            $disp = '-';
+                            if(array_key_exists('SpeedIndexDT', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndexDT'] > 0)
+                                $disp = $pageData[$rvMedian][1]['SpeedIndexDT'];
                             echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
                         }
                         if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)

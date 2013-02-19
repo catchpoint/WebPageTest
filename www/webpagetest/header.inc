@@ -189,7 +189,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             $pageData = loadAllPageData($testPath);
             
         $gradeRun = 1;
-        if( $_GET["run"] )
+        if( array_key_exists('run', $_GET) && $_GET["run"] )
             $gradeRun = $run;
         else
         {
@@ -251,11 +251,11 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
 
             if( $dom ) 
                 echo 'DOM Element: <b>' . $dom . '</b><br>';
-            if( (int)$test['test']['authenticated'] == 1)
+            if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
                 echo '<b>Authenticated: ' . $login . '</b><br>';
             if( (int)$test['test']['connections'] !== 0)
                  echo '<b>' . $test[test][connections] . ' Browser connections</b><br>';
-            if( $test['test']['script'] ) 
+            if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) ) 
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
                 echo "Blocked: <b>$blockString</b><br>";

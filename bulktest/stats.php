@@ -4,10 +4,10 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Chromium:Webkit.DSL'] = 'Webkit';
-$loc['EC2_East_Chromium:Clone.DSL'] = 'Clone Invalidate';
-$loc['EC2_East_Chromium:Invalidate.DSL'] = 'Invalidate';
-$loc['EC2_East_Chromium:iframes.DSL'] = 'Preload iframes';
+$loc['EC2_East_Chromium:Webkit2.DSL'] = 'Webkit2';
+$loc['EC2_East_Chromium:Webkit.DSL'] = 'Webkit Priorities';
+$loc['EC2_East_Chromium:superpatch.DSL'] = 'superpatch1';
+$loc['EC2_East_Chromium:css_preload.DSL'] = 'CSS Preload';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests');
 
@@ -16,28 +16,51 @@ if (LoadResults($results)) {
     // split them up by URL and location
     $data = array();
     $stats = array();
+    $invalid = 0;
+    $total = 0;
     foreach($results as &$result) {
-        $url = $result['url'];
-        $location = $loc[$result['location']];
-        if( !array_key_exists($url, $data) ) {
-            $data[$url] = array();
-        }
-        $data[$url][$location] = array();
-        $data[$url][$location]['id'] = $result['id'];
-        $data[$url][$location]['result'] = $result['result'];
-        if( $result['result'] == 0 || $result['result'] == 99999 ) {
-            if (!array_key_exists($location, $stats)) {
-                $stats[$location] = array();
-                foreach ($metrics as $metric) {
-                    $stats[$location][$metric] = array();
-                }
+        $valid = true;
+        $total++;
+        if (array_key_exists('bytes', $result) &&
+            $result['bytes'] &&
+            array_key_exists('docComplete', $result) &&
+            $result['docComplete'] &&
+            array_key_exists('ttfb', $result) &&
+            $result['ttfb'] &&
+            $result['docComplete'] > $result['ttfb']) {
+            $bw = ($result['bytes'] * 8) / ($result['docComplete'] - $result['ttfb']);
+            if ($bw > 2000) {
+                echo "bw: $bw\n";
+                $valid = false;
+                $invalid++;
             }
-            foreach ($metrics as $metric) {
-                $data[$url][$location][$metric] = $result[$metric];
-                $stats[$location][$metric][] = $result[$metric];
+        } else {
+            $valid = false;
+        }
+        if ($valid) {
+            $url = $result['url'];
+            $location = $loc[$result['location']];
+            if( !array_key_exists($url, $data) ) {
+                $data[$url] = array();
+            }
+            $data[$url][$location] = array();
+            $data[$url][$location]['id'] = $result['id'];
+            $data[$url][$location]['result'] = $result['result'];
+            if( $result['result'] == 0 || $result['result'] == 99999 ) {
+                if (!array_key_exists($location, $stats)) {
+                    $stats[$location] = array();
+                    foreach ($metrics as $metric) {
+                        $stats[$location][$metric] = array();
+                    }
+                }
+                foreach ($metrics as $metric) {
+                    $data[$url][$location][$metric] = $result[$metric];
+                    $stats[$location][$metric][] = $result[$metric];
+                }
             }
         }
     }
+    echo "$invalid of $total\n";
     ksort($data);
     foreach ($metrics as $metric) {
         $file = fopen("./$metric.csv", 'w+');
@@ -55,30 +78,38 @@ if (LoadResults($results)) {
             fwrite($file, "Test Comparison\r\n");
             foreach($data as $url => &$urlData) {
                 fwrite($file, "$url,");
-                $compare = "\"http://www.webpagetest.org/video/compare.php?thumbSize=200&ival=100&end=doc&tests=";
-                $first = true;
-                $baseline = null;
+                // check and make sure we have data for all of the configurations for this url
+                $valid = true;
                 foreach($loc as $label) {
-                    $value = '';
-                    if (array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
-                        $value = $urlData[$label][$metric];
-                    fwrite($file, "$value,");
-                    if ($first)
-                        $baseline = $value;
-                    else {
-                        $delta = '';
-                        if (strlen($value) && strlen($baseline))
-                            $delta = $value - $baseline;
-                        fwrite($file, "$delta,");
-                    }
-                    if (strlen($value))
-                        $metricData[$label][] = $value;
-                    if (array_key_exists($label, $urlData) && array_key_exists('id', $urlData[$label]))
-                        $compare .= $urlData[$label]['id'] . '-l:' . urlencode($label) . ',';
-                    $first = false;
+                    if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
+                        $valid = false;
                 }
-                $compare .= '"';
-                fwrite($file, $compare);
+                if ($valid) {
+                    $compare = "\"http://www.webpagetest.org/video/compare.php?thumbSize=200&ival=100&end=doc&tests=";
+                    $first = true;
+                    $baseline = null;
+                    foreach($loc as $label) {
+                        $value = '';
+                        if (array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
+                            $value = $urlData[$label][$metric];
+                        fwrite($file, "$value,");
+                        if ($first)
+                            $baseline = $value;
+                        else {
+                            $delta = '';
+                            if (strlen($value) && strlen($baseline))
+                                $delta = $value - $baseline;
+                            fwrite($file, "$delta,");
+                        }
+                        if (strlen($value))
+                            $metricData[$label][] = $value;
+                        if (array_key_exists($label, $urlData) && array_key_exists('id', $urlData[$label]))
+                            $compare .= $urlData[$label]['id'] . '-l:' . urlencode($label) . ',';
+                        $first = false;
+                    }
+                    $compare .= '"';
+                    fwrite($file, $compare);
+                }
                 fwrite($file, "\r\n");
             }
             fclose($file);

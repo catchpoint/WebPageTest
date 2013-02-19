@@ -645,8 +645,8 @@ class XScaler
     }
 
     public function __invoke($value) {
-        return $this->x_start + (int)((double)$this->x_width * (double)$value /
-                                      $this->value_max);
+        return $this->value_max ? $this->x_start + (int)((double)$this->x_width * (double)$value /
+                                      $this->value_max) : 0;
     }
 }
 
@@ -892,7 +892,7 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_option
     echo '<map name="waterfall_map">';
     $options = array(
         'id' => $id,
-        'path' => $testPath,
+        'path' => './' . GetTestPath($id),
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
