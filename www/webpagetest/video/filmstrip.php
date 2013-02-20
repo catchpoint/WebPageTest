@@ -11,6 +11,9 @@ include 'video/filmstrip.inc.php';  // include the commpn php shared across the 
 $colMargin = 5;
 $rowMargin = 5;
 $font = 4;
+if ($thumbSize > 400) {
+    $font = 5;
+}
 $fontWidth = imagefontwidth($font);
 $fontHeight = imagefontheight($font);
 $thumbTop = $fontHeight + $rowMargin;

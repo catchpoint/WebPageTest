@@ -1,4 +1,6 @@
 <?php
+$DevToolsCacheVersion = '0.3';
+
 /**
 * Calculate the visual progress and speed index from the dev tools timeline trace
 * 
@@ -14,14 +16,14 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             $fullScreen = 0;
             $regions = array();
             foreach($timeline as &$entry) {
-                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions);
+                $frame = '0';
+                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions, $frame);
             }
             $regionCount = count($regions);
             if ($regionCount) {
                 $paintEvents = array();
                 $total = 0.0;
                 foreach($regions as $name => &$region) {
-                    $elapsed = $event['startTime'] - $startTime;
                     $area = $region['width'] * $region['height'];
                     if ($regionCount == 1 || $area != $fullScreen) {
                         $updateCount = floatval(count($region['times']));
@@ -41,7 +43,10 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                     $current = 0.0;
                     $lastTime = 0.0;
                     $lastProgress = 0.0;
-                    $progress = array('SpeedIndex' => 0.0, 'VisuallyComplete' => 0, 'VisualProgress' => array());
+                    $progress = array('SpeedIndex' => 0.0, 
+                                      'VisuallyComplete' => 0,
+                                      'StartRender' => 0,
+                                      'VisualProgress' => array());
                     foreach($paintEvents as $time => $increment) {
                         $current += $increment;
                         $currentProgress = floatval(floatval($current) / floatval($total));
@@ -51,6 +56,8 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                         $progress['SpeedIndex'] += $siIncrement;
                         $progress['VisualProgress'][$time] = $currentProgress;
                         $progress['VisuallyComplete'] = $time;
+                        if (!$progress['StartRender'])
+                            $progress['StartRender'] = $time;
                         $lastProgress = $currentProgress;
                         $lastTime = $time;
                         if ($currentProgress >= 1.0)
@@ -78,7 +85,9 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
     $cachedText = '';
     if( $cached )
         $cachedText = '_cached';
-    $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
+    $timelineFile = "$testPath/$run{$cachedText}_devtools.json";
+    if (!gz_is_file($timelineFile))
+        $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
     if (gz_is_file($timelineFile)){
         $timeline = json_decode(gz_file_get_contents($timelineFile), true);
         if ($timeline)
@@ -95,23 +104,23 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
 * @param mixed $fullScreen
 * @param mixed $regions
 */
-function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions) {
+function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame) {
     $ret = false;
     $hadPaintChildren = false;
-    if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params'])) {
-        ProcessPaintEntry($entry['params']['record'], $startTime, $fullScreen, $regions);
-    }
-    if (array_key_exists('startTime', $entry)) {
-        if ($entry['startTime'] && (!$startTime || $entry['startTime'] < $startTime)) {
-            $startTime = $entry['startTime'];
-        }
-    }
+    if (array_key_exists('frameId', $entry))
+        $frame = $entry['frameId'];
+    if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
+        ProcessPaintEntry($entry['params']['record'], $startTime, $fullScreen, $regions, $frame);
+    if (array_key_exists('startTime', $entry) &&
+        $entry['startTime'] &&
+        (!$startTime ||
+         $entry['startTime'] < $startTime))
+        $startTime = $entry['startTime'];
     if(array_key_exists('children', $entry) &&
        is_array($entry['children'])) {
-        foreach($entry['children'] as &$child) {
-            if (ProcessPaintEntry($child, $startTime, $fullScreen, $regions))
+        foreach($entry['children'] as &$child)
+            if (ProcessPaintEntry($child, $startTime, $fullScreen, $regions, $frame))
                 $hadPaintChildren = true;
-        }
     }
     if (!$hadPaintChildren &&
         array_key_exists('type', $entry) &&
@@ -127,7 +136,7 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions) {
         $area = $paintEvent['width'] * $paintEvent['height'];
         if ($area > $fullScreen)
             $fullScreen = $area;
-        $regionName = "{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
+        $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
         if (!array_key_exists($regionName, $regions)) {
             $regions[$regionName] = $paintEvent;
             $regions[$regionName]['times'] = array();
@@ -145,12 +154,23 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions) {
 * @param mixed $cached
 */
 function GetCachedDevToolsProgress($testPath, $run, $cached) {
+    global $DevToolsCacheVersion;
     $progress = null;
     if (gz_is_file("$testPath/devToolsProgress.json")) {
         $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-        $key = "$run.$cached";
-        if (isset($cache) && is_array($cache) && array_key_exists($key, $cache))
-            $progress = $cache[$key];
+        if (isset($cache) && is_array($cache)) {
+            if (array_key_exists('version', $cache) &&
+                $cache['version'] == $DevToolsCacheVersion) {
+                $key = "$run.$cached";
+                if (array_key_exists($key, $cache))
+                    $progress = $cache[$key];
+            } else {
+                if (is_file("$testPath/devToolsProgress.json"))
+                    unlink("$testPath/devToolsProgress.json");
+                if (is_file("$testPath/devToolsProgress.json.gz"))
+                    unlink("$testPath/devToolsProgress.json.gz");
+            }
+        }
     }
     return $progress;
 }
@@ -166,10 +186,14 @@ function GetCachedDevToolsProgress($testPath, $run, $cached) {
 function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
     $key = "$run.$cached";
     $cache = null;
+    global $DevToolsCacheVersion;
     if (gz_is_file("$testPath/devToolsProgress.json"))
         $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-    if (!isset($cache) || !is_array($cache))
-        $cache = array();
+    if (!isset($cache) ||
+        !is_array($cache) ||
+        !array_key_exists('version', $cache) ||
+        $cache['version'] != $DevToolsCacheVersion)
+        $cache = array('version' => $DevToolsCacheVersion);
     $cache[$key] = $progress;
     gz_file_put_contents("$testPath/devToolsProgress.json", json_encode($cache));
 }
@@ -185,8 +209,29 @@ function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
 function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $ok = false;
     $requests = array();
+    $pageData = array();
     if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events)) {
         if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
+            // initialize the page data records
+            $pageData['loadTime'] = 0;
+            $pageData['docTime'] = 0;
+            $pageData['fullyLoaded'] = 0;
+            $pageData['bytesOut'] = 0;
+            $pageData['bytesOutDoc'] = 0;
+            $pageData['bytesIn'] = 0;
+            $pageData['bytesInDoc'] = 0;
+            $pageData['requests'] = 0;
+            $pageData['requestsDoc'] = 0;
+            $pageData['responses_200'] = 0;
+            $pageData['responses_404'] = 0;
+            $pageData['responses_other'] = 0;
+            $pageData['result'] = 0;
+            $pageData['cached'] = $cached;
+            $pageData['optimization_checked'] = 0;
+            if (array_key_exists('onload', $rawPageData))
+                $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']) * 1000);
+            
+            // go through and pull out the requests, calculating the page stats as we go
             $connections = array();
             foreach($rawRequests as &$rawRequest) {
                 $request = array();
@@ -209,7 +254,13 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
                 if (array_key_exists('errorCode', $rawRequest))
                     $request['responseCode'] = $rawRequest['errorCode'];
-                $request['load_ms'] = array_key_exists('endTime', $rawRequest) ? round(($rawRequest['endTime'] - $rawRequest['startTime']) * 1000) : -1;
+                $request['load_ms'] = -1;
+                if (array_key_exists('endTime', $rawRequest)) {
+                    $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']) * 1000);
+                    $endOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000);
+                    if ($endOffset > $pageData['fullyLoaded'])
+                        $pageData['fullyLoaded'] = $endOffset;
+                }
                 $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime']) * 1000) : -1;
                 $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000) : 0;
                 $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
@@ -320,8 +371,39 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 $request['cache_time'] = null;
                 $request['cdn_provider'] = null;
                 $request['server_count'] = null;
+                
+                // page-level stats
+                if (!array_key_exists('URL', $pageData) && strlen($request['full_url']))
+                    $pageData['URL'] = $request['full_url'];
+                if (array_key_exists('endTime', $rawRequest)) {
+                    $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
+                    if ($endOffset > $pageData['fullyLoaded'])
+                        $pageData['fullyLoaded'] = $endOffset;
+                }
+                if (!array_key_exists('TTFB', $pageData) &&
+                    $request['ttfb_ms'] >= 0 &&
+                    ($request['responseCode'] == 200 ||
+                     $request['responseCode'] == 304))
+                    $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
+                $pageData['bytesOut'] += $request['bytesOut'];
+                $pageData['bytesIn'] += $request['bytesIn'];
+                $pageData['requests']++;
+                if ($request['load_start'] < $pageData['docTime']) {
+                    $pageData['bytesOutDoc'] += $request['bytesOut'];
+                    $pageData['bytesInDoc'] += $request['bytesIn'];
+                    $pageData['requestsDoc']++;
+                }
+                if ($request['responseCode'] == 200)
+                    $pageData['responses_200']++;
+                elseif ($request['responseCode'] == 404) {
+                    $pageData['responses_404']++;
+                    $pageData['result'] = 99999;
+                } else
+                    $pageData['responses_other']++;
+                
                 $requests[] = $request;
             }
+            $pageData['connections'] = count($connections);
         }
     }
     if (count($requests))

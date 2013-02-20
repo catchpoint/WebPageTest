@@ -6,7 +6,9 @@ require_once('common.inc');
 
 $breakdown = array();
 $video = false;
-if( $test['test']['Capture Video'] || $test['test']['Video'] || $test['test']['video'] )
+if( (array_key_exists('Capture Video', $test['test']) && $test['test']['Capture Video']) ||
+    (array_key_exists('Video', $test['test']) && $test['test']['Video']) ||
+    (array_key_exists('video', $test['test']) && $test['test']['video']))
     $video = true;
 $testComplete = true;
 $status = GetTestStatus($id, false);
@@ -129,11 +131,11 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<a href=\"/csv.php?test=$id&requests=1\">Raw object data</a>";
                     }
                     echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
-                    if( $test['testinfo']['showslow'] && strlen($settings['showslow']) )
+                    if( array_key_exists('showslow', $test['testinfo']) && $test['testinfo']['showslow'] && strlen($settings['showslow']) )
                         echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
 		            if( is_dir('./google') && $settings['enable_google_csi'] )
 			            echo '<br><a href="/google/view_csi.php?test=' . $id . '">View CSI data</a>';
-                    if( $settings['publishTo'] )
+                    if( array_key_exists('publishTo', $settings) && $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>
             </div>
@@ -157,11 +159,11 @@ $page_description = "Website performance test result$testLabel.";
                     <tr>
                         <?php
                         $cols = 3;
-                        if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
+                        if (array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             $cols++;
-                        if( $test['test']['aft'] )
+                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
                             $cols++;
-                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                        if (array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
                             $cols++;
                         if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) ||
                            (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0))
@@ -186,10 +188,10 @@ $page_description = "Website performance test result$testLabel.";
                                  (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0)){ ?>
                         <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
-                        <?php if((float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
+                        <?php if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
                         <th align="center" valign="middle">DOM Element</th>
                         <?php } ?>
-                        <?php if($pageData[$fvMedian][0]['domElements'] > 0) { ?>
+                        <?php if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0) { ?>
                         <th align="center" valign="middle">DOM Elements</th>
                         <?php } ?>
 
@@ -223,9 +225,9 @@ $page_description = "Website performance test result$testLabel.";
                         } elseif(array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0) {
                             echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexDT']}</td>\n";
                         }
-                        if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
+                        if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
-                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                        if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
                             echo "<td id=\"fvDomElements\" valign=\"middle\">{$pageData[$fvMedian][0]['domElements']}</td>\n";
 
                         echo "<td id=\"fvDocComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['docTime'], 3) . "</td>\n";
@@ -263,9 +265,9 @@ $page_description = "Website performance test result$testLabel.";
                                 $disp = $pageData[$rvMedian][1]['SpeedIndexDT'];
                             echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
                         }
-                        if((float)$pageData[$fvMedian][0]['domTime'] > 0.0)
+                        if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             echo "<td id=\"rvDomElement\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['domTime'] / 1000.0, 3) . "s</td>\n";
-                        if($pageData[$fvMedian][0]['domElements'] > 0)
+                        if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
                             echo "<td id=\"rvDomElements\" class=\"even\" valign=\"middle\">{$pageData[$rvMedian][1]['domElements']}</td>\n";
 
                         echo "<td id=\"rvDocComplete\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['docTime'], 3) . "</td>\n";

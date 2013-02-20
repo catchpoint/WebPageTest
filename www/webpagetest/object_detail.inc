@@ -24,9 +24,8 @@ function getRequests($id, $test_path, $run, $is_cached,
     $bodies_file_name = $file_prefix . 'bodies.zip';
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
-    if (!GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData)) {
-        $requests = LoadRequests($request_file_name);
-
+    $requests = LoadRequests($request_file_name);
+    if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
             AddHeaders($requests, $headers_file_name);
 
@@ -36,7 +35,8 @@ function getRequests($id, $test_path, $run, $is_cached,
         $custom_rules = array();
         if (gz_is_file($custom_rules_file_name))
             $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    }
+    } else
+        GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
     FixUpRequestTimes($requests);
 
     $has_locations = false;

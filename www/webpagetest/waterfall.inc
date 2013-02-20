@@ -307,7 +307,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         // Draw performance backgrounds, labels, and borders.
         if (isset($perfs) && is_array($perfs)) {
             foreach ($perfs as $key => $p) {
-                if (array_key_exists('count', $p)) {
+                if (array_key_exists('count', $p) && $p['count'] > 0) {
                     if (!$is_thumbnail && $show_labels) {
                         DrawPerfLabel($im, $key, $p, $font, $black);
                     }
