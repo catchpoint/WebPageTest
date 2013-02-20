@@ -1872,7 +1872,7 @@ void CPagetestReporting::CheckGzip()
 				if( enc.Find(_T("gzip")) >= 0 || enc.Find(_T("deflate")) >= 0 )
 					w->gzipScore = 100;
 				else if( w->in < 1400 )	// if it's less than 1 packet anyway, give it a pass
-					w->gzipScore = 100;
+					w->gzipScore = -1;
 
 				if( !w->gzipScore )
 				{

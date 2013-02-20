@@ -180,7 +180,7 @@ void OptimizationChecks::CheckGzip()
       if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
         request->_scores._gzip_score = 100;
       else if (numRequestBytes < 1400)
-        request->_scores._gzip_score = 100;
+        request->_scores._gzip_score = -1;
 
       if( !request->_scores._gzip_score ) {
         // Try gzipping to see how smaller it will be.
