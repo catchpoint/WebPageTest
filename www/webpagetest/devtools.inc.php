@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.3';
+$DevToolsCacheVersion = '0.4';
 
 /**
 * Calculate the visual progress and speed index from the dev tools timeline trace
@@ -15,9 +15,10 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             $startTime = 0;
             $fullScreen = 0;
             $regions = array();
+            $didLayout = false;
             foreach($timeline as &$entry) {
                 $frame = '0';
-                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions, $frame);
+                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions, $frame, $didLayout);
             }
             $regionCount = count($regions);
             if ($regionCount) {
@@ -104,26 +105,30 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
 * @param mixed $fullScreen
 * @param mixed $regions
 */
-function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame) {
+function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame, &$didLayout) {
     $ret = false;
     $hadPaintChildren = false;
+    if (array_key_exists('type', $entry) &&
+        !strcasecmp($entry['type'], 'Layout')) {
+        $didLayout = true;
+    }
     if (array_key_exists('frameId', $entry))
         $frame = $entry['frameId'];
     if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-        ProcessPaintEntry($entry['params']['record'], $startTime, $fullScreen, $regions, $frame);
+        ProcessPaintEntry($entry['params']['record'], $startTime, $fullScreen, $regions, $frame, $didLayout);
     if (array_key_exists('startTime', $entry) &&
         $entry['startTime'] &&
         (!$startTime ||
          $entry['startTime'] < $startTime))
         $startTime = $entry['startTime'];
     if(array_key_exists('children', $entry) &&
-       is_array($entry['children'])) {
+       is_array($entry['children']) &&
+       count($entry['children'])) {
         foreach($entry['children'] as &$child)
-            if (ProcessPaintEntry($child, $startTime, $fullScreen, $regions, $frame))
+            if (ProcessPaintEntry($child, $startTime, $fullScreen, $regions, $frame, $didLayout))
                 $hadPaintChildren = true;
-    }
-    if (!$hadPaintChildren &&
-        array_key_exists('type', $entry) &&
+    } 
+    if (array_key_exists('type', $entry) &&
         !strcasecmp($entry['type'], 'Paint') &&
         array_key_exists('data', $entry) &&
         array_key_exists('width', $entry['data']) &&
@@ -131,17 +136,19 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame
         array_key_exists('x', $entry['data']) &&
         array_key_exists('y', $entry['data'])) {
         $ret = true;
-        $paintEvent = $entry['data'];
-        $paintEvent['startTime'] = $entry['startTime'];
-        $area = $paintEvent['width'] * $paintEvent['height'];
+        $area = $entry['data']['width'] * $entry['data']['height'];
         if ($area > $fullScreen)
             $fullScreen = $area;
-        $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
-        if (!array_key_exists($regionName, $regions)) {
-            $regions[$regionName] = $paintEvent;
-            $regions[$regionName]['times'] = array();
+        if ($didLayout && !$hadPaintChildren) {
+            $paintEvent = $entry['data'];
+            $paintEvent['startTime'] = $entry['startTime'];
+            $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
+            if (!array_key_exists($regionName, $regions)) {
+                $regions[$regionName] = $paintEvent;
+                $regions[$regionName]['times'] = array();
+            }
+            $regions[$regionName]['times'][] = $entry['startTime'];
         }
-        $regions[$regionName]['times'][] = $entry['startTime'];
     }
     return $ret;
 }
