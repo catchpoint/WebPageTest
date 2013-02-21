@@ -206,7 +206,6 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
         if (isset($options) && array_key_exists('weights', $options) && is_array($options['weights']) && array_key_exists($index, $options['weights'])) {
             $weight = $options['weights'][$index];
         }
-        $weightFactor += $weight;
         $total = 0;
         $achieved = 0;
         $buckets = count($final_histogram[$channel]);

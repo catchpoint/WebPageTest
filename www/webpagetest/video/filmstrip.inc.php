@@ -10,7 +10,7 @@ $fastest = null;
 $ready = true;
 $error = null;
 $endTime = 'visual';
-if( strlen($_REQUEST['end']) )
+if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
     $endTime = trim($_REQUEST['end']);
 
 $compTests = explode(',', $_REQUEST['tests']);
@@ -59,7 +59,7 @@ foreach($compTests as $t) {
                 if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
                     $test['done'] = true;
 
-                    if( !$test['run'] )
+                    if( !array_key_exists('run', $test) || !$test['run'] )
                         $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $median_metric);
                     $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
 
@@ -113,7 +113,8 @@ if( $count ) {
 else
     $error = "No valid tests selected.";
 
-$thumbSize = $_REQUEST['thumbSize'];
+if (array_key_exists('thumbSize', $_REQUEST))
+    $thumbSize = $_REQUEST['thumbSize'];
 if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 500 ) {
     if( $count > 6 )
         $thumbSize = 100;
@@ -123,7 +124,9 @@ if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 500 ) {
         $thumbSize = 200;
 }
 
-$interval = (int)$_REQUEST['ival'];
+$interval = 0;
+if (array_key_exists('ival', $_REQUEST))
+    $interval = (int)$_REQUEST['ival'];
 if( !$interval ) {
     if ($defaultInterval) {
         $interval = $defaultInterval;
@@ -158,7 +161,7 @@ function LoadTestData() {
             $test['url'] = $url;
         }
         
-        if( strlen($test['label']) )
+        if( array_key_exists('label', $test) && strlen($test['label']) )
             $test['name'] = $test['label'];
         else {
             $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
@@ -205,7 +208,10 @@ function LoadTestData() {
                                     $test['video']['end'] = $index;
                                 
                                 // figure out the dimensions of the source image
-                                if( !$test['video']['width'] || !$test['video']['height'] ) {
+                                if( !array_key_exists('width', $test['video']) ||
+                                    !$test['video']['width'] ||
+                                    !array_key_exists('height', $test['video']) ||
+                                    !$test['video']['height'] ) {
                                     $size = getimagesize($path);
                                     $test['video']['width'] = $size[0];
                                     $test['video']['height'] = $size[1];

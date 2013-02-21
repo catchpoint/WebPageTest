@@ -128,17 +128,15 @@ $page_description = "Website performance test details$testLabel";
                     <tr>
                         <?php
                         $cols = 4;
-                        if((float)$data['domTime'] > 0.0)
+                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
                             $cols++;
-                        if( $test['test']['aft'] )
+                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
                             $cols++;
-                        if($data['domElements'] > 0)
+                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0)
                             $cols++;
-                        if ((array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) || 
-                            (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0))
+                        if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0)
                             $cols++;
-                        if ((array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) ||
-                            (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0.0))
+                        if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0)
                             $cols++;
                         ?>
                         <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
@@ -149,21 +147,19 @@ $page_description = "Website performance test details$testLabel";
                         <th align="center" valign="middle">Load Time</th>
                         <th align="center" valign="middle">First Byte</th>
                         <th align="center" valign="middle">Start Render</th>
-                        <?php if( $test['test']['aft'] ) { ?>
+                        <?php if( array_key_exists('aft', $test['test']) && $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
-                        <?php if( (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) || 
-                                  (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0.0)) { ?>
+                        <?php if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) { ?>
                         <th align="center" valign="middle">Visually Complete</th>
                         <?php } ?>
-                        <?php if( (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) || 
-                                  (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0)) { ?>
+                        <?php if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) { ?>
                         <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
                         <?php } ?>
-                        <?php if( (float)$data['domTime'] > 0.0 ) { ?>
+                        <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <th align="center" valign="middle">DOM Element</th>
                         <?php } ?>
-                        <?php if( $data['domElements'] > 0 ) { ?>
+                        <?php if (array_key_exists('domElements', $data) && $data['domElements'] > 0 ) { ?>
                         <th align="center" valign="middle">DOM Elements</th>
                         <?php } ?>
                         <th align="center" valign="middle">Result (error code)</th>
@@ -182,7 +178,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
                         //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
-                        if( $test['test']['aft'] ) {
+                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] ) {
                             $aft = number_format($data['aft'] / 1000.0, 1) . 's';
                             if( !$data['aft'] )
                                 $aft = 'N/A';
@@ -190,18 +186,15 @@ $page_description = "Website performance test details$testLabel";
                         }
                         if( array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0 )
                             echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['visualComplete'], 3) . "</td>\n";
-                        elseif (array_key_exists('VisuallyCompleteDT', $data) && (float)$data['VisuallyCompleteDT'] > 0 )
-                            echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['VisuallyCompleteDT'], 3) . "</td>\n";
                         if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
                             if (array_key_exists('SpeedIndexCustom', $data))
                                 echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
                             else
                                 echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
-                        } elseif (array_key_exists('SpeedIndexDT', $data) && (int)$data['SpeedIndexDT'] > 0 )
-                            echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexDT']}</td>\n";
-                        if( (float)$data['domTime'] > 0.0 )
+                        }
+                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
                             echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
-                        if( $data['domElements'] > 0 )
+                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0 )
                             echo "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
                         echo "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
 
@@ -244,7 +237,8 @@ $page_description = "Website performance test details$testLabel";
 		            </table><br>
                 <?php 
                 }
-                if ($data['loadEventStart'] > 0 || $data['domContentLoadedEventStart'] > 0)
+                if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
+                    (array_key_exists('domContentLoadedEventStart', $data) && $data['domContentLoadedEventStart'] > 0))
                 {
                     echo '<h2><a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process" target="_blank">W3C Navigation Timing</a></h2>';
                     echo '<table id="tableNavTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
@@ -276,16 +270,16 @@ $page_description = "Website performance test details$testLabel";
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#00FF00"></div></td><td>Time to First Byte</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#007BFF"></div></td><td>Content Download</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php if( $data['aft'] ) { ?>
+                        <?php if (array_key_exists('aft', $data) && $data['aft'] ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>
                         <?php } ?>
-                        <?php if( (float)$data['domTime'] > 0.0 ) { ?>
+                        <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                         <td style="vertical-align:middle;"><div style="background-color:#FFFF00">3xx result</div></td>
                         <td style="vertical-align:middle;"><div style="background-color:#FF0000">4xx+ result</div></td>
-                        <?php if( $settings['enable_google_csi'] ) { ?>
+                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
                         <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
                         <?php } ?>
                     </tr>
@@ -330,7 +324,7 @@ $page_description = "Website performance test details$testLabel";
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php if( (float)$data['domTime'] > 0.0 ) { ?>
+                        <?php if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>

@@ -320,7 +320,7 @@ function ScreenShotTable()
     global $bgcolor;
     $aftAvailable = false;
     $endTime = 'visual';
-    if( strlen($_REQUEST['end']) )
+    if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = trim($_REQUEST['end']);
 
     $filmstrip_end_time = 0;
@@ -599,7 +599,7 @@ function ScreenShotTable()
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
-            InsertWaterfall($url, $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
+            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
         }
         ?>
         
