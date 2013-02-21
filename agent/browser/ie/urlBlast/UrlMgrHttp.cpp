@@ -39,8 +39,13 @@ CUrlMgrHttp::CUrlMgrHttp(CLog &logRef):
 	, lastSuccess(0)
 	, version(0)
 	, noUpdate(false)
+  , port(80)
+  , requestFlags(0)
 {
   SetErrorMode(SEM_FAILCRITICALERRORS);
+
+  requestFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE;
+
 	// see if video encoding is possible on this system
 
 	// check if x264.exe is in the same directory as urlblast
@@ -120,6 +125,7 @@ void CUrlMgrHttp::Start()
 		memset(&parts, 0, sizeof(parts));
 		TCHAR szHost[10000];
 		TCHAR object[10000];
+		TCHAR scheme[100];
 		
 		memset(szHost, 0, sizeof(szHost));
 		memset(object, 0, sizeof(object));
@@ -129,6 +135,8 @@ void CUrlMgrHttp::Start()
 		parts.lpszUrlPath = object;
 		parts.dwUrlPathLength = _countof(object);
 		parts.dwStructSize = sizeof(parts);
+    parts.lpszScheme = scheme;
+    parts.dwSchemeLength = sizeof(scheme);
 
 		if( InternetCrackUrl((LPCTSTR)urlFilesUrl, urlFilesUrl.GetLength(), 0, &parts) )
 		{
@@ -137,7 +145,13 @@ void CUrlMgrHttp::Start()
         host = _T("agent.webpagetest.org");
       }
 			port = parts.nPort;
-			if( !port )
+      if (!lstrcmpi(parts.lpszScheme, _T("https"))) {
+        requestFlags |= INTERNET_FLAG_SECURE |
+                        INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
+                        INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+        if (!port)
+          port = 443;
+      } else if( !port )
 				port = 80;
 			CString videoStr;
 			if( videoSupported )
@@ -614,7 +628,7 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 				CHttpConnection * connection = session->GetHttpConnection(host, port);
 				if( connection )
 				{
-					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
+					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer, 0, 1, 0, 0, requestFlags);
 					if( file )
 					{
 						if( file->SendRequest() )
@@ -914,7 +928,7 @@ bool CUrlMgrHttp::UploadFile(CString url, CTestInfo &info, CString& file, CStrin
 						CHttpConnection * connection = session->GetHttpConnection(host, port);
 						if( connection )
 						{
-							CHttpFile * httpFile = connection->OpenRequest(CHttpConnection::HTTP_VERB_POST, url, 0, 1, 0, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
+							CHttpFile * httpFile = connection->OpenRequest(CHttpConnection::HTTP_VERB_POST, url, 0, 1, 0, 0, requestFlags);
 							if( httpFile )
 							{
 								if( httpFile->AddRequestHeaders(CA2T(headers)) )

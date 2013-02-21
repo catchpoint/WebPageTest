@@ -45,15 +45,15 @@ private:
   CString       _computer_name;
 
   bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
-                CString& zip_file);
+               CString& zip_file);
   bool ParseTest(CString& test_string, WptTestDriver& test);
   bool CrackUrl(CString url, CString &host, unsigned short &port, 
-                    CString& object);
+                CString& object, DWORD &secure_flag);
   bool BuildFormData(WptSettings& settings, WptTestDriver& test, 
-                            bool done,
-                            CString file_name, DWORD file_size,
-                            CString& headers, CStringA& footer, 
-                            CStringA& form_data, DWORD& content_length);
+                     bool done,
+                     CString file_name, DWORD file_size,
+                     CString& headers, CStringA& footer, 
+                     CStringA& form_data, DWORD& content_length);
   bool UploadFile(CString url, bool done, WptTestDriver& test, CString file);
   bool CompressResults(CString directory, CString zip_file);
   void GetImageFiles(const CString& directory, CAtlList<CString>& files);

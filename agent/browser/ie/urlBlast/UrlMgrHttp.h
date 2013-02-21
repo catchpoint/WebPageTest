@@ -34,6 +34,7 @@ protected:
 	DWORD	lastSuccess;
 	DWORD	version;
 	CString verString;
+  DWORD requestFlags;
 	
 	bool	GetJob(CStringA &job, CStringA &script, bool& zip, bool& update);
 	void	UploadImages(CTestInfo &info);
