@@ -471,8 +471,14 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     $rawRequests[$id]['fromNet'] = false;
+                    // iOS incorrectly sets the fromNet flag to false for resources from cache
+                    // but it doesn't have any send headers for those requests
+                    // so use that as an indicator.
                     if (array_key_exists('fromDiskCache', $event['response']) &&
-                        !$event['response']['fromDiskCache'])
+                        !$event['response']['fromDiskCache'] &&
+                        array_key_exists('headers', $rawRequests[$id]) &&
+                        is_array($rawRequests[$id]['headers']) &&
+                        count($rawRequests[$id]['headers']))
                         $rawRequests[$id]['fromNet'] = true;
                     $rawRequests[$id]['response'] = $event['response'];
                 }
