@@ -279,6 +279,7 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
           wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
       wpt.LOG.info(details.error + ' = ' + error_code);
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
       wptSendEvent('navigate_error?error=' + error_code +
                    '&str=' + encodeURIComponent(details.error), '');
     }
@@ -290,6 +291,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
         g_active = false;
+        wpt.chromeDebugger.SetActive(g_active);
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
@@ -358,6 +360,7 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
       wptSendEvent(
           'window_timing',
           '?domContentLoadedEventStart=' +
@@ -384,10 +387,13 @@ var wptTaskCallback = function() {
 // execute a single task/script command
 function wptExecuteTask(task) {
   if (task.action.length) {
-    if (task.record)
+    if (task.record) {
       g_active = true;
-    else
+      wpt.chromeDebugger.SetActive(g_active);
+    } else {
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
+    }
     // Decode and execute the actual command.
     // Commands are all lowercase at this point.
     wpt.LOG.info('Running task ' + task.action + ' ' + task.target);

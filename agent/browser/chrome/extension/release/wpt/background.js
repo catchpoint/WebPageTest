@@ -13964,7 +13964,10 @@ goog.provide('wpt.chromeDebugger');
 
 ((function() {  // namespace
 
-var g_instance = {connected: false, timeline: false, timelineConnected: false};
+var g_instance = {connected: false,
+                  timeline: false,
+                  timelineConnected: false,
+                  active: false};
 var TIMELINE_AGGREGATION_INTERVAL = 250;
 
 /**
@@ -14003,6 +14006,12 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
   }
 };
 
+wpt.chromeDebugger.SetActive = function(active) {
+  g_instance.timelineData = '';
+  g_instance.requests = {};
+  g_instance.active = active;
+};
+
 /**
  * Capture the network timeline
  */
@@ -14026,71 +14035,73 @@ wpt.chromeDebugger.CaptureTimeline = function() {
  * Actual message callback
  */
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
-  // Network events
-  if (message === 'Network.requestWillBeSent') {
-    if (params.request.url.indexOf('http') == 0) {
-      var detail = {};
-      detail.url = params.request.url;
-      detail.initiator = params.initiator;
-      detail.startTime = params.timestamp;
-      if (params['request'] !== undefined) {
-        detail.request = params.request;
+  if (g_instance.active) {
+    // Network events
+    if (message === 'Network.requestWillBeSent') {
+      if (params.request.url.indexOf('http') == 0) {
+        var detail = {};
+        detail.url = params.request.url;
+        detail.initiator = params.initiator;
+        detail.startTime = params.timestamp;
+        if (params['request'] !== undefined) {
+          detail.request = params.request;
+        }
+        g_instance.requests[params.requestId] = detail;
       }
-      g_instance.requests[params.requestId] = detail;
-    }
-  } else if (message === 'Network.dataReceived') {
-    if (g_instance.requests[params.requestId] !== undefined) {
-      if (g_instance.requests[params.requestId]['firstByteTime'] === undefined)
-        g_instance.requests[params.requestId].firstByteTime = params.timestamp;
-      if (g_instance.requests[params.requestId]['bytesIn'] === undefined)
-        g_instance.requests[params.requestId]['bytesIn'] = 0;
-      if (params['encodedDataLength'] !== undefined && params.encodedDataLength > 0)
-        g_instance.requests[params.requestId]['bytesIn'] += params.encodedDataLength;
-    }
-  } else if (message === 'Network.responseReceived') {
-    if (!params.response.fromDiskCache &&
-        g_instance.requests[params.requestId] !== undefined) {
-      g_instance.requests[params.requestId].fromNet = true;
-      if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
-        g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+    } else if (message === 'Network.dataReceived') {
+      if (g_instance.requests[params.requestId] !== undefined) {
+        if (g_instance.requests[params.requestId]['firstByteTime'] === undefined)
+          g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+        if (g_instance.requests[params.requestId]['bytesIn'] === undefined)
+          g_instance.requests[params.requestId]['bytesIn'] = 0;
+        if (params['encodedDataLength'] !== undefined && params.encodedDataLength > 0)
+          g_instance.requests[params.requestId]['bytesIn'] += params.encodedDataLength;
       }
-      g_instance.requests[params.requestId].response = params.response;
+    } else if (message === 'Network.responseReceived') {
+      if (!params.response.fromDiskCache &&
+          g_instance.requests[params.requestId] !== undefined) {
+        g_instance.requests[params.requestId].fromNet = true;
+        if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
+          g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+        }
+        g_instance.requests[params.requestId].response = params.response;
+      }
+    } else if (message === 'Network.loadingFinished') {
+      if (g_instance.requests[params.requestId] !== undefined &&
+          g_instance.requests[params.requestId]['fromNet']) {
+        request = g_instance.requests[params.requestId];
+        request.endTime = params.timestamp;
+        wpt.chromeDebugger.sendRequestDetails(request);
+      }
+    } else if (message === 'Network.loadingFailed') {
+      if (g_instance.requests[params.requestId] !== undefined) {
+        request = g_instance.requests[params.requestId];
+        request.endTime = params.timestamp;
+        request.error = params.errorText;
+        request.errorCode =
+            wpt.chromeExtensionUtils.netErrorStringToWptCode(request.error);
+        wpt.chromeDebugger.sendRequestDetails(request);
+      }
     }
-  } else if (message === 'Network.loadingFinished') {
-    if (g_instance.requests[params.requestId] !== undefined &&
-        g_instance.requests[params.requestId]['fromNet']) {
-      request = g_instance.requests[params.requestId];
-      request.endTime = params.timestamp;
-      wpt.chromeDebugger.sendRequestDetails(request);
+
+    // console events
+    else if (message === 'Console.messageAdded') {
+      wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
     }
-  } else if (message === 'Network.loadingFailed') {
-    if (g_instance.requests[params.requestId] !== undefined) {
-      request = g_instance.requests[params.requestId];
-      request.endTime = params.timestamp;
-      request.error = params.errorText;
-      request.errorCode =
-          wpt.chromeExtensionUtils.netErrorStringToWptCode(request.error);
-      wpt.chromeDebugger.sendRequestDetails(request);
+
+    // Timeline
+    else if (message === 'Timeline.eventRecorded') {
+      if (g_instance.timelineData.length)
+        g_instance.timelineData += ',';
+      g_instance.timelineData += JSON.stringify(params.record);
+      if (g_instance.timelineTimer == undefined)
+        g_instance.timelineTimer = setTimeout(wpt.chromeDebugger.SendTimelineData, TIMELINE_AGGREGATION_INTERVAL);
     }
-  }
 
-  // console events
-  else if (message === 'Console.messageAdded') {
-    wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
-  }
-
-  // Timeline
-  else if (message === 'Timeline.eventRecorded') {
-    if (g_instance.timelineData.length)
-      g_instance.timelineData += ',';
-    g_instance.timelineData += JSON.stringify(params.record);
-    if (g_instance.timelineTimer == undefined)
-      g_instance.timelineTimer = setTimeout(wpt.chromeDebugger.SendTimelineData, TIMELINE_AGGREGATION_INTERVAL);
-  }
-
-  // Page events
-  else if (message === 'Page.loadEventFired') {
-    wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
+    // Page events
+    else if (message === 'Page.loadEventFired') {
+      wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
+    }
   }
 }
 
@@ -14583,6 +14594,7 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
           wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
       wpt.LOG.info(details.error + ' = ' + error_code);
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
       wptSendEvent('navigate_error?error=' + error_code +
                    '&str=' + encodeURIComponent(details.error), '');
     }
@@ -14594,6 +14606,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
         g_active = false;
+        wpt.chromeDebugger.SetActive(g_active);
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
@@ -14662,6 +14675,7 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
       wptSendEvent(
           'window_timing',
           '?domContentLoadedEventStart=' +
@@ -14688,10 +14702,13 @@ var wptTaskCallback = function() {
 // execute a single task/script command
 function wptExecuteTask(task) {
   if (task.action.length) {
-    if (task.record)
+    if (task.record) {
       g_active = true;
-    else
+      wpt.chromeDebugger.SetActive(g_active);
+    } else {
       g_active = false;
+      wpt.chromeDebugger.SetActive(g_active);
+    }
     // Decode and execute the actual command.
     // Commands are all lowercase at this point.
     wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
