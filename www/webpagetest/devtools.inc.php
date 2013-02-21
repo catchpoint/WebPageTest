@@ -243,10 +243,13 @@ function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
 */
 function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $ok = false;
-    $requests = array();
-    $pageData = array();
+    $requests = null;
+    $pageData = null;
     if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events)) {
         if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
+            $requests = array();
+            $pageData = array();
+
             // initialize the page data records
             $pageData['loadTime'] = 0;
             $pageData['docTime'] = 0;

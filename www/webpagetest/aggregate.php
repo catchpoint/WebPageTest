@@ -38,7 +38,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                             'bytesInDoc' => 'Bytes In (Doc)',
                             'requestsDoc' => 'Requests (Doc)',
                             'loadEventStart' => 'Load Event Start',
-                            'SpeedIndex' => 'Speed Index' );
+                            'SpeedIndex' => 'Speed Index',
+                            'SpeedIndexDT' => 'Speed IndexDT' );
         
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
