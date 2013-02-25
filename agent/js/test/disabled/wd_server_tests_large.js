@@ -30,12 +30,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var sinon = require('sinon');
 var should = require('should');
 var webdriver = require('webdriver');
-var devtools2har = require('devtools2har');
 var system_commands = require('system_commands');
 var agent_main = require('agent_main');
 var wd_server = require('wd_server');
 var wpt_client = require('wpt_client');
-var test_utils = require('./test_utils.js');
+var test_utils = require('../test_utils.js');
 var logger = require('logger');
 
 var stubs = [];
@@ -52,15 +51,6 @@ describe('wd_server large', function() {
   before(function(done) {
     agent_main.setSystemCommands();
     this.timeout(6000);
-
-    // paths are normally set by flags in the run script but it isn't
-    // in the test script so it needs to be set here
-    system_commands.set('devtools2har path',
-        '$0/webpagetest/lib/dt2har/target/' +
-        'dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar', 'linux');
-    system_commands.set('devtools2har path',
-        '$0\\webpagetest\\lib\\dt2har\\target\\' +
-        'dt2har-1.0-SNAPSHOT-jar-with-dependencies.jar', 'win32');
 
     system_commands.set('selenium jar', process.env.SELENIUM_JAR, 'linux');
     system_commands.set('selenium jar', process.env.SELENIUM_JAR, 'win32');
@@ -140,8 +130,6 @@ describe('wd_server large', function() {
         '\\r\\ndriver.findElement(webdriver.By.name(\'btnG\')).click();' +
         '\\r\\ndriver.wait(function()\\t{\\r\\nreturn\\tdriver.getTitle();' +
         '\\r\\n});"}';
-    var devtools2harJar = system_commands.get(
-        'devtools2har path', [process.env.PROJECT_ROOT]);
     var flags = {
         wpt_server: WPT_SERVER,
         location: LOCATION,
@@ -171,18 +159,17 @@ describe('wd_server large', function() {
     var client = new wpt_client.Client(
         flags.wpt_server, flags.location, undefined, flags.job_timeout);
 
-    var jobFinished_ = client.jobFinished_;
+    var jobFinished = client.jobFinished_;
     var jobFinishedStub = sinon.stub(client, 'jobFinished_',
         function(job, resultFile, isDone, callback) {
-      if (typeof job.error !== 'undefined') {
+      if (job.error !== undefined) {
         test_utils.failTest('Job failed with error: ' + job.error);
       }
-      jobFinished_.call(job.client_, job, resultFile, isDone, callback);
+      jobFinished.call(job.client_, job, resultFile, isDone, callback);
       jobCompleted = true;
     });
     test_utils.registerStub(jobFinishedStub);
 
-    devtools2har.setDevToolsToHarJar(devtools2harJar);
     agent_main.run(client);
   });
 

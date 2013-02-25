@@ -46,22 +46,21 @@ while true; do
 done
 
 agent="$wpt_root/agent/js"
-devtools2har_jar="$wpt_root/lib/dt2har/target/dt2har-1.1-SNAPSHOT-jar-with-dependencies.jar"
 
 # Find the latest version of WD server jar, WDJS, platform-specific chromedriver
 declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)
-selenium_jar="${selenium_jars[${#selenium_jars[@]}-1]}"
+declare -a selenium_jar=(--selenium_jar "${selenium_jars[${#selenium_jars[@]}-1]}")
+
+declare -a chromedrivers=("$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
+declare -a chromedriver=(--chromedriver "${chromedrivers[${#chromedrivers[@]}-1]}")
 
 declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)
 wdjs_dir="${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
 
-declare -a chromedrivers=("$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
-chromedriver="${chromedrivers[${#chromedrivers[@]}-1]}"
-
 export NODE_PATH="${agent}:${agent}/src:${wdjs_dir}"
 echo "NODE_PATH=$NODE_PATH"
 
-declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} --chromedriver "$chromedriver" "${chrome[@]}" --selenium_jar "$selenium_jar" --devtools2har_jar="$devtools2har_jar")
+declare -a cmd=(node src/agent_main --wpt_server ${server} --location ${location} "${chromedriver[@]}" "${chrome[@]}" "${selenium_jar[@]}")
 
 echo "${cmd[@]}"
 "${cmd[@]}"

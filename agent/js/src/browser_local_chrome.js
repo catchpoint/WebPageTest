@@ -151,7 +151,9 @@ BrowserLocalChrome.prototype.getDevToolsUrl = function() {
 BrowserLocalChrome.prototype.getDevToolsCapabilities = function() {
   'use strict';
   return {
-    'Page.captureScreenshot': true  // TODO(klm): check for before-26.
+      'Page.captureScreenshot': true,  // TODO(klm): check for before-26.
+      'Network.clearBrowserCache': true,
+      'Network.clearBrowserCookies': true
   };
 };
 

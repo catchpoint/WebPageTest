@@ -142,8 +142,6 @@ exports.ResultFile = ResultFile;
  * Constants to use for ResultFile.resultType.
  */
 ResultFile.ResultType = Object.freeze({
-  // PCAP: 'pcap',
-  HAR: 'har',
   IMAGE: 'image',
   IMAGE_ANNOTATIONS: 'image_annotations'
 });
