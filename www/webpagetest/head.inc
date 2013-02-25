@@ -10,7 +10,6 @@ if( strlen($page_description) )
 
 <link rel="shortcut icon" href="/images/favicon.ico" type="image/vnd.microsoft.icon">
 <link rel="icon" href="/images/favicon.png" type="image/png">
-<link rel="stylesheet" href="<?php echo $GLOBALS['cdnPath']; ?>/pagestyle.css?v=<?php echo VER_CSS;?>" type="text/css">
 
 <?php 
     if(extension_loaded('newrelic'))
@@ -19,6 +18,7 @@ if( strlen($page_description) )
         include('./settings/customhead.inc.php');
     }
         
+    echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
     echo "<style type=\"text/css\">\n";
     
     // switch to the private install logo if we're not running on webpagetest
