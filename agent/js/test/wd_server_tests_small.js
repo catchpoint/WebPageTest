@@ -255,16 +255,16 @@ describe('wd_server small', function() {
         'Timeline.start',
         'Page.getResourceTree',
         'Page.setDocumentContent',
+        'Network.clearBrowserCache',
+        'Network.clearBrowserCookies',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
     fakeWs.commands = [];  // Reset for next run verification.
     should.ok(sendStub.calledOnce);
     var doneIpcMsg = sendStub.firstCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
-    [pageMessage, networkMessage].should.eql(doneIpcMsg.devToolsMessages);
-    [timelineMessage].should.eql(doneIpcMsg.devToolsTimelineMessages);
-    [pageMessage, networkMessage, timelineMessage].should.eql(
-        doneIpcMsg.devToolsFullLog);
+    [pageMessage, networkMessage, timelineMessage]
+        .should.eql(doneIpcMsg.devToolsMessages);
 
     // We are not supposed to clean up on the first run.
     should.ok(driverQuitSpy.notCalled);
@@ -295,8 +295,6 @@ describe('wd_server small', function() {
     doneIpcMsg = sendStub.secondCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
     [].should.eql(doneIpcMsg.devToolsMessages);
-    [].should.eql(doneIpcMsg.devToolsTimelineMessages);
-    [].should.eql(doneIpcMsg.devToolsFullLog);
 
     // The cleanup occurs only on the second run.
     should.ok(driverQuitSpy.calledOnce);
@@ -386,6 +384,8 @@ describe('wd_server small', function() {
         'Timeline.start',
         'Page.getResourceTree',
         'Page.setDocumentContent',
+        'Network.clearBrowserCache',
+        'Network.clearBrowserCookies',
         'Page.navigate',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
@@ -393,11 +393,8 @@ describe('wd_server small', function() {
     should.ok(sendStub.calledOnce);
     var doneIpcMsg = sendStub.firstCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
-    [pageMessage, networkMessage, pageLoadedMessage].should.eql(
-        doneIpcMsg.devToolsMessages);
-    [timelineMessage].should.eql(doneIpcMsg.devToolsTimelineMessages);
-    [pageMessage, networkMessage, pageLoadedMessage, timelineMessage].
-        should.eql(doneIpcMsg.devToolsFullLog);
+    [pageMessage, networkMessage, timelineMessage, pageLoadedMessage]
+        .should.eql(doneIpcMsg.devToolsMessages);
 
     // We are not supposed to clean up on the first run.
     should.ok(killStub.notCalled);
@@ -436,8 +433,6 @@ describe('wd_server small', function() {
     doneIpcMsg = sendStub.secondCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
     [pageLoadedMessage].should.eql(doneIpcMsg.devToolsMessages);
-    [].should.eql(doneIpcMsg.devToolsTimelineMessages);
-    [pageLoadedMessage].should.eql(doneIpcMsg.devToolsFullLog);
 
     // The cleanup occurs only on the second run.
     should.ok(killStub.calledOnce);

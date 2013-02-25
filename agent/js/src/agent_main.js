@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*jslint nomen:false */
 
 var child_process = require('child_process');
-var devtools2har = require('devtools2har');
 var fs = require('fs');
 var logger = require('logger');
 var nopt = require('nopt');
@@ -37,6 +36,7 @@ var system_commands = require('system_commands');
 var util = require('util');
 var webdriver = require('webdriver');
 var wpt_client = require('wpt_client');
+
 
 var flagDefs = {
   knownOpts: {
@@ -49,7 +49,6 @@ var flagDefs = {
     ios_serial: [String, null],
     ios_webkit_debug_proxy: [String, null],
     chromedriver: [String, null],
-    devtools2harJar: [String, null],
     job_timeout: [Number, null],
     api_key: [String, null]
   },
@@ -57,86 +56,10 @@ var flagDefs = {
 };
 
 var WD_SERVER_EXIT_TIMEOUT = 5000;  // Wait for 5 seconds before force-killing
-var HAR_FILE_ = './results.har';
-var DEVTOOLS_EVENTS_FILE_ = './devtools_events.json';
 var IPFW_FLUSH_FILE_ = 'ipfw_flush.sh';
 
 exports.seleniumJar = undefined;
 exports.chromedriver = undefined;
-
-
-/**
- * Deletes temporary files used during a test.
- */
-function deleteHarTempFiles(callback) {
-  'use strict';
-  var files = [DEVTOOLS_EVENTS_FILE_, HAR_FILE_];
-  function unlink (prevFile, prevError) {
-    if (prevError && !(prevError.code && 'ENOENT' === prevError.code)) {
-      // There is an error other than 'file not found'
-      logger.error('Unlink error for %s: %s', prevFile, prevError);
-    }
-    var nextFile = files.pop();
-    if (nextFile) {
-      fs.unlink(nextFile, unlink.bind(undefined, nextFile));
-    } else if (callback) {
-      if (prevError && !(prevError.code && 'ENOENT' === prevError.code)) {
-        // There is an error other than 'file not found'
-        callback(prevError);
-      } else {
-        callback();
-      }
-    }
-  }
-  unlink();
-}
-
-/**
- * Takes devtools messages and creates an appropriate file body that it passes
- * to harCallback
- *
- * @param {Object[]} devToolsMessages an array of the developer tools messages.
- * @param {String} [pageId] the page ID string for (the only page) in the HAR.
- * @param {String} [browserName] browser name for the HAR.
- * @param {String} [browserVersion] browser version for the HAR.
- * @param {Function(String)} harCallback the callback to call upon completion:
- *     #param {String} harContent HAR content.
- *     #param {Error} [e] exception, if any.
- */
-function convertDevToolsToHar(
-    devToolsMessages, pageId, browserName, browserVersion, harCallback) {
-  'use strict';
-  deleteHarTempFiles(function(e) {
-    if (e) {
-      harCallback('', e);
-    } else {
-      fs.writeFile(
-          DEVTOOLS_EVENTS_FILE_, JSON.stringify(devToolsMessages), 'UTF-8',
-          function(e) {
-        if (e) {
-          harCallback('', e);
-        } else {
-          devtools2har.devToolsToHar(
-              DEVTOOLS_EVENTS_FILE_, HAR_FILE_,
-              pageId, browserName, browserVersion, function(e) {
-            if (e) {
-              deleteHarTempFiles(harCallback.bind(undefined, '', e));
-            } else {
-              fs.readFile(HAR_FILE_, 'UTF-8', function(e, data) {
-                if (e) {
-                  logger.error('Error reading results.har: %s', e);
-                  deleteHarTempFiles(harCallback.bind(undefined, data, e));
-                } else {
-                  deleteHarTempFiles(harCallback.bind(undefined, data));
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-  });
-}
 
 /**
  * Used as an errback for when we want to drop the error without logging.
@@ -239,15 +162,9 @@ Agent.prototype.startWdServer_ = function() {
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
   this.scheduleNoFault_('Process job results', function() {
-    // This promise ties regular callbacks into the promise manager.
-    var done = new webdriver.promise.Deferred();
-    if (ipcMsg.devToolsTimelineMessages) {
-      job.zipResultFiles['timeline.json'] =
-          JSON.stringify(ipcMsg.devToolsTimelineMessages);
-    }
-    if (ipcMsg.devToolsFullLog) {
+    if (ipcMsg.devToolsMessages) {
       job.zipResultFiles['devtools.json'] =
-          JSON.stringify(ipcMsg.devToolsFullLog);
+          JSON.stringify(ipcMsg.devToolsMessages);
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
@@ -270,34 +187,6 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
     }
-    if (ipcMsg.devToolsMessages) {
-      // For debugging devtools2har, preserve the original devtools messages.
-      job.zipResultFiles['network_page.json'] =
-          JSON.stringify(ipcMsg.devToolsMessages);
-      convertDevToolsToHar(
-          ipcMsg.devToolsMessages,
-          'page_' + job.runNumber + (job.isCacheWarm ? '1' : '0'),
-          job.task.browser,
-          /*browserVersion=*/undefined,
-          function(harContent, e) {
-        if (e) {
-          done.reject(e);
-        } else if (harContent) {
-          job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.HAR,
-              'results.har',
-              'application/json',
-              harContent));
-          done.resolve(job);
-        } else {
-          done.reject(new Error(
-              'HAR content empty after devtools2har succeeded'));
-        }
-      });
-    } else {
-      done.resolve();
-    }
-    return done.promise;
   });
 };
 
@@ -427,14 +316,6 @@ exports.setSystemCommands = function() {
 exports.main = function(flags) {
   'use strict';
   exports.setSystemCommands();
-  if (flags.devtools2har_jar) {
-    devtools2har.setDevToolsToHarJar(flags.devtools2har_jar);
-  } else {
-    throw new Error('Flag --devtools2har_jar is required');
-  }
-  if (!flags.selenium_jar && !flags.chromedriver) {
-    throw new Error('Either --selenium_jar or --chromedriver is required');
-  }
   var client = new wpt_client.Client(flags.wpt_server, flags.location,
       flags.api_key, flags.job_timeout);
   var agent = new Agent(client, flags);

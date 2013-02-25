@@ -102,30 +102,4 @@ describe('agent_main', function() {
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
     should.ok(runFinishedSpy.calledOnce);
   });
-
-  it('should require selenium jar and devtools2har jar', function() {
-    sandbox.stub(agent_main, 'Agent', FakeEmitterWithRun);
-    sandbox.spy(FakeEmitterWithRun.prototype, 'run');
-    sandbox.stub(wpt_client, 'Client', FakeEmitterWithRun);
-
-    var flags = {};
-    var runMainWithFlags = function() {
-      agent_main.main(flags);
-    };
-
-    runMainWithFlags.should.throwError();
-
-    flags.selenium_jar = 'jar';
-    runMainWithFlags.should.throwError();
-
-    flags.selenium_jar = undefined;
-    flags.devtools2har_jar = 'jar';
-    runMainWithFlags.should.throwError();
-
-    flags.selenium_jar = 'jar';
-
-    should.ok(!FakeEmitterWithRun.prototype.run.called);
-    agent_main.main(flags);
-    should.ok(FakeEmitterWithRun.prototype.run.calledOnce);
-  });
 });

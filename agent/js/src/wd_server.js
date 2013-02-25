@@ -91,7 +91,6 @@ exports.WebDriverServer = {
     this.script_ = initMessage.script;
     this.url_ = initMessage.url;
     this.devToolsMessages_ = [];
-    this.devToolsTimelineMessages_ = [];
     this.screenshots_ = [];
     this.driver_ = undefined;
     this.testStartTime_ = undefined;
@@ -110,6 +109,7 @@ exports.WebDriverServer = {
             this.app_, initMessage.chromedriver, initMessage.chrome);
       }
       this.devTools_ = undefined;
+      this.isCacheCleared_ = false;
       // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
       // processing in these functions, if they call a WebDriver method.
       // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
@@ -194,7 +194,7 @@ exports.WebDriverServer = {
               logger.info('DevTools Timeline events enabled');
               this.devTools_ = devTools;
               this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
-              isDevtoolsConnected.resolve(true);
+              isDevtoolsConnected.resolve(devTools);
             }.bind(this), fail);
           }.bind(this), fail);
         }.bind(this), fail);
@@ -209,16 +209,11 @@ exports.WebDriverServer = {
     if (!this.testStartTime_) {  // Ignore messages outside of the test.
       return;
     }
-    if (devtools.isNetworkMessage(message) || devtools.isPageMessage(message)) {
-      logger.extra('DevTools message: %s', message.method);
-      this.devToolsMessages_.push(message);
-      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending() &&
-          message.method === 'Page.loadEventFired') {
-        this.pageLoadDonePromise_.resolve(true);  // true for scheduleWait.
-      }
-    } else {
-      logger.extra('DevTools timeline message: %s', message.method);
-      this.devToolsTimelineMessages_.push(message);
+    logger.extra('DevTools message: %s', message.method);
+    this.devToolsMessages_.push(message);
+    if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending() &&
+        message.method === 'Page.loadEventFired') {
+      this.pageLoadDonePromise_.resolve(true);  // true for scheduleWait.
     }
   },
 
@@ -385,21 +380,31 @@ exports.WebDriverServer = {
     'use strict';
     return this.app_.schedule('Clear the page', function() {
       var donePromise = new webdriver.promise.Deferred();
+      function reject(description, e) {
+        logger.error('%s failed: %s', description, e);
+        donePromise.reject(e);
+      }
       this.devTools_.pageCommand('getResourceTree', function(result) {
         this.devTools_.command({method: 'Page.setDocumentContent', params: {
             frameId: result.frameTree.frame.id,
             html: '<body bgcolor="#DE640D"/>'
         }}, function() {
           logger.info('Page.setDocumentContent blank returned');
-          donePromise.resolve();
-        }.bind(this), function(e) {
-          logger.error('Page.setDocumentContent blank failed: %s', e);
-          donePromise.reject(e);
-        }.bind(this));
-      }.bind(this), function(e) {
-        logger.error('Page.getResourceTree failed: %s', e);
-        donePromise.reject(e);
-      }.bind(this));
+          var dtCaps = this.browser_.getDevToolsCapabilities();
+          if (!this.isCacheCleared_ &&
+              dtCaps['Network.clearBrowserCache'] &&
+              dtCaps['Network.clearBrowserCookies']) {
+            this.isCacheCleared_ = true;
+            this.devTools_.networkCommand('clearBrowserCache', function() {
+              this.devTools_.networkCommand('clearBrowserCookies', function() {
+                donePromise.resolve();
+              }.bind(this), reject.bind(this, 'Network.clearBrowserCookies'));
+            }.bind(this), reject.bind(this, 'Network.clearBrowserCache'));
+          } else {
+            donePromise.resolve();
+          }
+        }.bind(this), reject.bind(this, 'Page.setDocumentContent blank'));
+      }.bind(this), reject.bind(this, 'Page.getResourceTree'));
       return donePromise.promise;
     }.bind(this));
   },
@@ -567,9 +572,6 @@ exports.WebDriverServer = {
       exports.process.send({
           cmd: 'done',
           devToolsMessages: this.devToolsMessages_,
-          devToolsTimelineMessages: this.devToolsTimelineMessages_,
-          devToolsFullLog: (this.devToolsMessages_ || []).concat(
-              this.devToolsTimelineMessages_ || []),
           screenshots: this.screenshots_});
     }.bind(this));
     if (this.exitWhenDone_) {
@@ -590,9 +592,6 @@ exports.WebDriverServer = {
           cmd: 'error',
           e: e.message,
           devToolsMessages: this.devToolsMessages_,
-          devToolsTimelineMessages: this.devToolsTimelineMessages_,
-          devToolsFullLog: (this.devToolsMessages_ || []).concat(
-              this.devToolsTimelineMessages_ || []),
           screenshots: this.screenshots_});
     }.bind(this));
     this.scheduleStop();
