@@ -120,6 +120,8 @@ else
             xmlDomains($id, $testPath, $fvMedian, 0);
             xmlBreakdown($id, $testPath, $fvMedian, 0);
             xmlRequests($id, $testPath, $fvMedian, 0);
+            StatusMessages($id, $testPath, $fvMedian, 0);
+            ConsoleLog($id, $testPath, $fvMedian, 0);
             echo "</firstView>\n";
             
             if( isset($rv) )
@@ -144,6 +146,8 @@ else
                     xmlDomains($id, $testPath, $fvMedian, 1);
                     xmlBreakdown($id, $testPath, $fvMedian, 1);
                     xmlRequests($id, $testPath, $fvMedian, 1);
+                    StatusMessages($id, $testPath, $fvMedian, 1);
+                    ConsoleLog($id, $testPath, $fvMedian, 1);
                     echo "</repeatView>\n";
                 }
             }
@@ -248,6 +252,8 @@ else
                     xmlDomains($id, $testPath, $i, 0);
                     xmlBreakdown($id, $testPath, $i, 0);
                     xmlRequests($id, $testPath, $i, 0);
+                    StatusMessages($id, $testPath, $i, 0);
+                    ConsoleLog($id, $testPath, $i, 0);
                     echo "</firstView>\n";
                 }
 
@@ -329,6 +335,8 @@ else
                     xmlDomains($id, $testPath, $i, 1);
                     xmlBreakdown($id, $testPath, $i, 1);
                     xmlRequests($id, $testPath, $i, 1);
+                    StatusMessages($id, $testPath, $i, 1);
+                    ConsoleLog($id, $testPath, $i, 1);
                     echo "</repeatView>\n";
                 }
             }
@@ -438,6 +446,70 @@ function xmlRequests($id, $testPath, $run, $cached) {
             echo "</request>\n";
         }
         echo "</requests>\n";
+    }
+}
+
+/**
+* Dump any logged browser status messages
+* 
+* @param mixed $id
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+*/
+function StatusMessages($id, $testPath, $run, $cached) {
+    $cachedText = '';
+    if ($cached)
+        $cachedText = '_Cached';
+    $statusFile = "$testPath/$run{$cachedText}_status.txt";
+    if (gz_is_file($statusFile)) {
+        echo "<status>\n";
+        $messages = array();
+        $lines = gz_file($statusFile);
+        foreach($lines as $line) {
+            $line = trim($line);
+            if (strlen($line)) {
+                $parts = explode("\t", $line);
+                $time = xml_entities(trim($parts[0]));
+                $message = xml_entities(trim($parts[1]));
+                echo "<entry>\n";
+                echo "<time>$time</time>\n";
+                echo "<message>$message</message>\n";
+                echo "</entry>\n";
+            }
+        }
+        echo "</status>\n";
+    }
+}
+
+/**
+* Dump the console log if we have one
+* 
+* @param mixed $id
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+*/
+function ConsoleLog($id, $testPath, $run, $cached) {
+    $cachedText = '';
+    if ($cached)
+        $cachedText = '_Cached';
+    $consoleLogFile = "$testPath/$run{$cachedText}_console_log.json";
+    if (gz_is_file($consoleLogFile)) {
+        $consoleLog = json_decode(gz_file_get_contents($consoleLogFile), true);
+        if (isset($consoleLog) && is_array($consoleLog) && count($consoleLog)) {
+            echo "<consoleLog>\n";
+            foreach( $consoleLog as &$entry ) {
+                echo "<entry>\n";
+                echo "<source>" . xml_entities($entry['source']) . "</source>\n";
+                echo "<level>" . xml_entities($entry['level']) . "</level>\n";
+                echo "<message>" . xml_entities($entry['text']) . "</message>\n";
+                echo "<url>" . xml_entities($entry['url']) . "</url>\n";
+                echo "<line>" . xml_entities($entry['line']) . "</line>\n";
+                echo "</entry>\n";
+            }
+            echo "</consoleLog>\n";
+        }
     }
 }
 
