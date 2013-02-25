@@ -96,7 +96,7 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
     $ok = false;
     $cachedText = '';
     if( $cached )
-        $cachedText = '_cached';
+        $cachedText = '_Cached';
     $timelineFile = "$testPath/$run{$cachedText}_devtools.json";
     if (!gz_is_file($timelineFile))
         $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
@@ -556,7 +556,7 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
     $events = array();
     $cachedText = '';
     if( $cached )
-        $cachedText = '_cached';
+        $cachedText = '_Cached';
     $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
     if (gz_is_file($devToolsFile)){
         $messages = json_decode(gz_file_get_contents($devToolsFile), true);
