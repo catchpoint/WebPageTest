@@ -24,10 +24,11 @@ function getRequests($id, $test_path, $run, $is_cached,
     $bodies_file_name = $file_prefix . 'bodies.zip';
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
+    $needHeaders = false;
     $requests = LoadRequests($request_file_name);
     if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
-            AddHeaders($requests, $headers_file_name);
+            $needHeaders = true;
 
         AddResponseBodyFlags($requests, $bodies_file_name);
 
@@ -38,6 +39,8 @@ function getRequests($id, $test_path, $run, $is_cached,
     } else
         GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
     FixUpRequestTimes($requests);
+    if ($needHeaders)
+        AddHeaders($requests, $headers_file_name);
 
     $has_locations = false;
     if ($use_location_check) {
