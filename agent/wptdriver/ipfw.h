@@ -39,5 +39,7 @@ public:
 
 protected:
   bool Execute(CString cmd);
+  HANDLE hDriver;
   CString ipfw_dir_;
+  bool win32_;
 };
