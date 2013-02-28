@@ -57,7 +57,7 @@ exports.Adb = Adb;
 
 Adb.prototype.command_ = function(args, timeout) {
   'use strict';
-  return process_utils.scheduleExecWithTimeout(
+  return process_utils.scheduleExecWithTimeout(this.app_,
       this.adbCommand_, args, timeout || exports.DEFAULT_TIMEOUT).then(
       function(stdout, stderr) {
     logger.debug('succeeded%s',

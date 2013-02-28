@@ -103,7 +103,11 @@ exports.WebDriverServer = {
             initMessage.androidSerial);
       } else if (initMessage.iosSerial) {
         this.browser_ = new browser_ios.BrowserIos(
-            this.app_, initMessage.iosWebkitDebugProxy, initMessage.iosSerial);
+            this.app_, this.runNumber_, initMessage.iosSerial,
+            initMessage.iosIDeviceDir,
+            initMessage.iosPythonPortForwardDir,
+            initMessage.iosSshLocalPort, initMessage.iosSshCert,
+            initMessage.iosUrlOpenerApp);
       } else {
         this.browser_ = new browser_local_chrome.BrowserLocalChrome(
             this.app_, initMessage.chromedriver, initMessage.chrome);

@@ -27,70 +27,185 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 /*jslint nomen:false */
 
-var child_process = require('child_process');
 var logger = require('logger');
+var process_utils = require('process_utils');
 
 
-function BrowserIos(app, iosWebkitDebugProxy, deviceSerial) {
+function BrowserIos(app, runNumber, deviceSerial, iosIDeviceDir,
+    pythonPortForwardDir, sshLocalPort, sshCertPath, urlOpenerAppPath) {
   'use strict';
   logger.info('BrowserIos(%s)', deviceSerial);
   this.app_ = app;
+  this.runNumber_ = runNumber;
   this.deviceSerial_ = deviceSerial;
-  this.iosWebkitDebugProxy_ = iosWebkitDebugProxy;
+  this.iosWebkitDebugProxy_ = undefined;
+  this.iosWebkitDebugProxy_ = iosIDeviceDir ?
+      iosIDeviceDir + '/ios_webkit_debug_proxy' : undefined;
+  this.iDeviceInstaller_ = iosIDeviceDir ?
+      iosIDeviceDir + '/ideviceinstaller' : 'ideviceinstaller';
+  this.iDeviceAppRunner_ = iosIDeviceDir ?
+      iosIDeviceDir + '/idevice-app-runner' : 'idevice-app-runner';
   this.devToolsPort_ = 9222;
   this.devToolsUrl_ = undefined;
-  this.childProcess_ = undefined;
+  this.proxyProcess_ = undefined;
+  this.pythonPortForwardDir_ = pythonPortForwardDir;
+  this.usbPortForwardProcess_ = undefined;
+  this.sshLocalPort_ = sshLocalPort || 2222;
+  this.sshCertPath_ = sshCertPath || process.env.HOME + '/.ssh/id_dsa_ios';
+  this.urlOpenerAppPath_ = urlOpenerAppPath;
 }
 exports.BrowserIos = BrowserIos;
 
 BrowserIos.prototype.startWdServer = function(/*browserCaps, isFirstRun*/) {
   'use strict';
-  throw new Error('HA! HA! HA!');
+  throw new Error('LOL Applz');
 };
 
 BrowserIos.prototype.startBrowser = function() {
   'use strict';
-  if (this.iosWebkitDebugProxy_) {
-    if (this.childProcess_) {
-      throw new Error('Internal error: proxy already running');
-    }
-    logger.info('Starting proxy');
-    this.childProcess_ = child_process.spawn(this.iosWebkitDebugProxy_,
-        ['-c', this.deviceSerial_ + ':' + this.devToolsPort_]);
-    this.childProcess_.on('exit', function(code, signal) {
-      logger.info('Proxy EXIT code %s signal %s', code, signal);
-      this.childProcess_ = undefined;
-      this.devToolsUrl_ = undefined;
-    }.bind(this));
-    this.childProcess_.stdout.on('data', function(data) {
-      logger.info('Proxy STDOUT: %s', data);
-    });
-    this.childProcess_.stderr.on('warn', function(data) {
-      logger.error('Proxy STDERR: %s', data);
-    });
-  }
-  this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
+  this.scheduleStartUsbPortForward_();
+  this.scheduleInstallHelpersIfNeeded_();
+  this.scheduleClearCacheCookies_();
+  this.scheduleOpenUrl_('http://');
+  this.scheduleStartDevToolsProxy_();
+  this.app_.schedule('Browser start complete', function() {
+    this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
+  }.bind(this));
 };
 
-BrowserIos.prototype.kill = function() {
+BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
   'use strict';
-  if (this.childProcess_) {
+  if (1 === this.runNumber_ && this.urlOpenerAppPath_) {
+    process_utils.scheduleExecWithTimeout(this.app_, this.iDeviceInstaller_,
+        ['-U', this.deviceSerial_, '-i', this.urlOpenerAppPath_], 20000);
+  }
+};
+
+BrowserIos.prototype.scheduleStartUsbPortForward_ = function() {
+  'use strict';
+  if (this.pythonPortForwardDir_ && this.sshLocalPort_) {
+    var env = {PYTHONPATH: this.pythonPortForwardDir_};
+    Object.getOwnPropertyNames(process.env).forEach(function(e) {
+      env[e] = process.env[e];
+    });
+    process_utils.scheduleSpawn(this.app_,
+        'python', ['-m', 'tcprelay', '-t', '22:' + this.sshLocalPort_],
+        {env: env}).then(function(proc) {
+      this.usbPortForwardProcess_ = proc;
+      proc.on('exit', function(code, signal) {
+        logger.info('Port forward EXIT code %s signal %s', code, signal);
+        this.usbPortForwardProcess_ = undefined;
+      }.bind(this));
+    }.bind(this));
+  } else {
+    logger.warn('iOS ssh port forward Python proxy or port not specified, ' +
+        'hope already running');
+  }
+};
+
+BrowserIos.prototype.stopUsbPortForward_ = function() {
+  'use strict';
+  if (this.usbPortForwardProcess_) {
+    logger.debug('Killing port forward');
+    var proc = this.usbPortForwardProcess_;
+    this.usbPortForwardProcess_ = undefined;
+    try {
+      proc.kill();
+      logger.info('Killed port forward');
+    } catch(e) {
+      logger.error('Cannot kill port forward: %s', e);
+    }
+  }
+};
+
+BrowserIos.prototype.scheduleStartDevToolsProxy_ = function() {
+  'use strict';
+  if (this.iosWebkitDebugProxy_) {
+    if (this.proxyProcess_) {
+      throw new Error('Internal error: proxy already running');
+    }
+    process_utils.scheduleSpawn(this.app_, this.iosWebkitDebugProxy_,
+        ['-c', this.deviceSerial_ + ':' + this.devToolsPort_]).then(
+        function(proc) {
+      this.proxyProcess_ = proc;
+      this.proxyProcess_.on('exit', function(code, signal) {
+        logger.info('Proxy EXIT code %s signal %s', code, signal);
+        this.proxyProcess_ = undefined;
+        this.devToolsUrl_ = undefined;
+      }.bind(this));
+    }.bind(this));
+  } else {
+    logger.warn('ios_webkit_debug_proxy not specified, hope already running');
+  }
+};
+
+BrowserIos.prototype.stopDevToolsProxy_ = function() {
+  'use strict';
+  if (this.proxyProcess_) {
     logger.debug('Killing the proxy');
     try {
-      this.childProcess_.kill();
+      this.proxyProcess_.kill();
+      logger.info('Killed proxy');
     } catch (killException) {
       logger.error('Proxy kill failed: %s', killException);
     }
   } else {
     logger.debug('Proxy process already unset');
   }
-  this.childProcess_ = undefined;
+  this.proxyProcess_ = undefined;
   this.devToolsUrl_ = undefined;
+};
+
+BrowserIos.prototype.ssh_ = function() {
+  'use strict';
+  var result;
+  if (this.sshLocalPort_) {
+    var args = ['-p', String(this.sshLocalPort_)];
+    if (this.sshCertPath_) {
+      args = args.concat(['-i', this.sshCertPath_]);
+    }
+    args.push('root@localhost');
+    args = args.concat(Array.prototype.slice.call(arguments));
+    result = process_utils.scheduleExecWithTimeout(
+        this.app_, 'ssh', args, 10000, /*okExitCodes=*/[0, 1]);
+  } else {
+    logger.error('Trying to run ssh command [%s] when there is no SSH proxy',
+        Array.prototype.slice.call(arguments));
+    result = this.app_.schedule('Skip ssh command', function() {});
+  }
+  return result;
+};
+
+BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
+  'use strict';
+  var lib = '/private/var/mobile/Library/';
+  this.ssh_('killall', 'MobileSafari');
+  this.ssh_('rm', '-rf',
+      lib + 'Caches/com.apple.mobilesafari/Cache.db',
+      lib + 'Safari/SuspendState.plist',
+      lib + 'WebKit/LocalStorage',
+      lib + 'Caches/com.apple.WebAppCache/ApplicationCache.db',
+      lib + 'Cookies/Cookies.binarycookies');
+};
+
+BrowserIos.prototype.scheduleOpenUrl_ = function(url) {
+  'use strict';
+  return process_utils.scheduleExecWithTimeout(
+      this.app_, this.iDeviceAppRunner_,
+      ['-u', this.deviceSerial_, '-r', 'com.google.openURL', '--args', url],
+      20000);
+};
+
+BrowserIos.prototype.kill = function() {
+  'use strict';
+  this.devToolsUrl_ = undefined;
+  this.stopDevToolsProxy_();
+  this.stopUsbPortForward_();
 };
 
 BrowserIos.prototype.isRunning = function() {
   'use strict';
-  return undefined !== this.childProcess_;
+  return undefined !== this.devToolsUrl_;
 };
 
 BrowserIos.prototype.getServerUrl = function() {

@@ -227,9 +227,23 @@ exports.stdoutStderrMessage = function(stdout, stderr) {
       (stderr ? ', stderr "' + stderr.trim() + '"': '');
 };
 
-exports.scheduleExecWithTimeout = function(command, args, timeout) {
+/**
+ * Schedules a command execution, kills it after a timeout.
+ *
+ * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {String} command the command to run, as in process.spawn.
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Number} timeout the timeout after which to kill the process.
+ * @param {Array} [okExitCodes] array of success exit codes.
+ *     If not specified and the command exit code is nonzero,
+ *     or if specified and command exit code not in the array,
+ *     or if the command terminates with a signal, rejects the promise.
+ * @returns {webdriver.promise.Promise} The scheduled promise.
+ */
+exports.scheduleExecWithTimeout = function(
+    app, command, args, timeout, okExitCodes) {
   'use strict';
-  return webdriver.promise.Application.getInstance().schedule(
+  return (app || webdriver.promise.Application.getInstance()).schedule(
       command + (args ? ' "' + args.join('", "') + '"' : ''), function() {
     var done = new webdriver.promise.Deferred();
     var stdout = '';
@@ -254,7 +268,9 @@ exports.scheduleExecWithTimeout = function(command, args, timeout) {
     proc.on('exit', function(code, signal) {
       if (timerId) {  // Timer was still ticking: exit by natural causes.
         global.clearTimeout(timerId);
-        if (code || signal) {
+        if ((!okExitCodes && code) ||
+            (okExitCodes && -1 === okExitCodes.indexOf(code)) ||
+            signal) {
           var e = new Error(
               util.format('%s %j failed: code %s, signal %s%s',
                   command, args, code, signal,
@@ -277,6 +293,31 @@ exports.scheduleExecWithTimeout = function(command, args, timeout) {
       stderr += data;
     });
     return done.promise;
+  });
+};
+
+/**
+ * Spawns a command, logs output.
+ *
+ * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {String} command the command to run, as in process.spawn.
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Object} options spawn options, as in process.spawn.
+ * @returns {webdriver.promise.Promise} The scheduled promise,
+ *     resolves with the child process object.
+ */
+exports.scheduleSpawn = function(app, command, args, options,
+    logStdoutFunc, logStderrFunc) {
+  'use strict';
+  return app.schedule('Run ' + command, function() {
+    var proc = child_process.spawn(command, args, options);
+    proc.stdout.on('data', function(data) {
+      (logStdoutFunc || logger.info)('Port forward STDOUT: %s', data);
+    });
+    proc.stderr.on('warn', function(data) {
+      (logStderrFunc || logger.error)('Port forward STDERR: %s', data);
+    });
+    return proc;
   });
 };
 

@@ -34,6 +34,7 @@ var events = require('events');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
+var test_utils = require('./test_utils.js');
 var webdriver = require('webdriver');
 
 
@@ -51,39 +52,117 @@ describe('browser_ios small', function() {
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
-  var fakeProcess, processSpawnStub;
-  var proxy = '/gaga/ios-webkit-debug-proxy';
+  var spawnStub;
+  var ideviceDir = '/gaga/idevice/darwin';
   var serial = 'GAGA123';
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
-    fakeProcess = new events.EventEmitter();
-    fakeProcess.stdout = new events.EventEmitter();
-    fakeProcess.stderr = new events.EventEmitter();
-    fakeProcess.kill = sandbox.spy();
-    processSpawnStub = sandbox.stub(child_process, 'spawn', function() {
+    test_utils.fakeTimers(sandbox);
+    app.reset();  // We reuse the app across tests, clean it up.
+
+    spawnStub = sandbox.stub(child_process, 'spawn', function(cmd, args) {
+      var fakeProcess = new events.EventEmitter();
+      fakeProcess.stdout = new events.EventEmitter();
+      fakeProcess.stderr = new events.EventEmitter();
+      fakeProcess.kill = function() {};
+      sandbox.stub(fakeProcess, 'kill', function() {
+        if (args && -1 !== args.indexOf('killall')) {
+          fakeProcess.emit('exit', 1);  // Simulate ssh killall exit code 1.
+        } else {
+          fakeProcess.emit('exit', 0);
+        }
+      });
+      if (/ssh|ideviceinstaller|idevice-app-runner/.test(cmd)) {
+        // These commands exit by themselves
+        global.setTimeout(function() {
+          fakeProcess.kill();
+        }, 0);
+      }
       return fakeProcess;
     });
   });
 
   afterEach(function() {
+    // Call unfakeTimers before verifyAndRestore, which may throw.
+    test_utils.unfakeTimers(sandbox);
     sandbox.verifyAndRestore();
   });
 
-  it('should start and get killed', function() {
-    var browser = new browser_ios.BrowserIos(app, proxy, serial);
+  function verifyClearCacheAndUrlOpen(startCallNum, sshCertMatch) {
+    var sshMatch = ['-p', /^\d+$/, '-i', sshCertMatch, 'root@localhost'];
+    should.equal('ssh', spawnStub.getCall(startCallNum).args[0]);
+    test_utils.assertStringsMatch(
+        sshMatch.concat(['killall', 'MobileSafari']),
+        spawnStub.getCall(startCallNum).args[1]);
+    should.equal('ssh', spawnStub.getCall(startCallNum + 1).args[0]);
+    test_utils.assertStringsMatch(
+        sshMatch.concat(['rm', '-rf',
+          /\/Cache\.db$/, /\/SuspendState\.plist$/, /\/LocalStorage$/,
+          /\/ApplicationCache\.db$/, /\/Cookies\.binarycookies/]),
+        spawnStub.getCall(startCallNum + 1).args[1]);
+    spawnStub.getCall(startCallNum + 2).args[0]
+        .should.match(/idevice-app-runner$/);
+    test_utils.assertStringsMatch(
+        ['-u', serial, '-r', 'com.google.openURL', '--args', /^http:/],
+        spawnStub.getCall(startCallNum + 2).args[1]);
+    return startCallNum + 3;
+  }
+
+  it('should start and get killed with default environment', function() {
+    var browser = new browser_ios.BrowserIos(app, /*runNumber=*/1, serial);
     should.ok(!browser.isRunning());
     browser.startBrowser({browserName: 'safari'}, /*isFirstRun=*/true);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
     should.ok(browser.isRunning());
     should.equal('http://localhost:9222/json', browser.getDevToolsUrl());
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(proxy);
+
+    var nextCallNum = verifyClearCacheAndUrlOpen(/*startCallNum=*/0, /\/id_/);
+    // Ran no other child processes.
+    should.equal(nextCallNum, spawnStub.callCount);
 
     browser.kill();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
     should.ok(!browser.isRunning());
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    should.ok(fakeProcess.kill.calledOnce);
+    should.equal(nextCallNum, spawnStub.callCount);  // Kill is a no-op.
+  });
+
+  it('should start and get killed with full environment', function() {
+    var sshCert = '/home/user/.ssh/my_cert';
+    var appPath = '/apps/urlOpener.ipa';
+    var browser = new browser_ios.BrowserIos(app, /*runNumber=*/1, serial,
+        ideviceDir, '/python/proxy', /*sshLocalPort=*/1234, sshCert, appPath);
+    should.ok(!browser.isRunning());
+    browser.startBrowser({browserName: 'safari'}, /*isFirstRun=*/true);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    should.ok(browser.isRunning());
+    should.equal('http://localhost:9222/json', browser.getDevToolsUrl());
+
+    should.equal('python', spawnStub.getCall(0).args[0]);
+    test_utils.assertStringsMatch(
+        ['-m', 'tcprelay', '-t', '22:1234'], spawnStub.getCall(0).args[1]);
+    var forwardFakeProcess = spawnStub.getCall(0).returnValue;
+    spawnStub.getCall(1).args[0].should.match(/ideviceinstaller$/);
+    test_utils.assertStringsMatch(
+        ['-U', serial, '-i', appPath], spawnStub.getCall(1).args[1]);
+    var nextCallNum = verifyClearCacheAndUrlOpen(/*startCallNum=*/2, sshCert);
+    spawnStub.getCall(nextCallNum).args[0].should.match(/proxy$/);
+    var proxyFakeProcess = spawnStub.getCall(nextCallNum).returnValue;
+    should.ok(proxyFakeProcess.kill.notCalled);
+    should.ok(forwardFakeProcess.kill.notCalled);
+    // Ran no other child processes.
+    should.equal(nextCallNum + 1, spawnStub.callCount);
+
+    browser.kill();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    should.ok(!browser.isRunning());
+    should.equal(undefined, browser.getServerUrl());
+    should.equal(undefined, browser.getDevToolsUrl());
+    should.equal(nextCallNum + 1, spawnStub.callCount);
+    should.ok(forwardFakeProcess.kill.calledOnce);
+    should.ok(proxyFakeProcess.kill.calledOnce);
   });
 });

@@ -47,7 +47,11 @@ var flagDefs = {
     chrome: [String, null],
     android_serial: [String, null],
     ios_serial: [String, null],
-    ios_webkit_debug_proxy: [String, null],
+    ios_idevice_dir: [String, null],
+    ios_python_port_forward_dir: [String, null],
+    ios_ssh_local_port: [Number, 2222],
+    ios_ssh_cert: [String, null],
+    ios_urlopener_app: [String, null],
     chromedriver: [String, null],
     job_timeout: [Number, null],
     api_key: [String, null]
@@ -244,7 +248,11 @@ Agent.prototype.startJobRun_ = function(job) {
         chrome: this.flags_.chrome,
         androidSerial: this.flags_.android_serial,
         iosSerial: this.flags_.ios_serial,
-        iosWebkitDebugProxy: this.flags_.ios_webkit_debug_proxy,
+        iosIDeviceDir: this.flags_.ios_idevice_dir,
+        iosPythonPortForwardDir: this.flags_.ios_python_port_forward_dir,
+        iosSshLocalPort: this.flags_.ios_ssh_local_port,
+        iosSshCert: this.flags_.ios_ssh_cert,
+        iosUrlOpenerApp: this.flags_.ios_urlopener_app,
         javaCommand: this.flags_.java
     });
   }.bind(this));
