@@ -4,12 +4,11 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Chromium:Webkit2.DSL'] = 'Webkit2';
-$loc['EC2_East_Chromium:Webkit.DSL'] = 'Webkit Priorities';
-$loc['EC2_East_Chromium:superpatch.DSL'] = 'superpatch1';
-$loc['EC2_East_Chromium:css_preload.DSL'] = 'CSS Preload';
+$loc['EC2_East_Chromium:Webkit Scheduler.DSL'] = 'Webkit Scheduler';
+$loc['EC2_East_Chromium:Chrome Scheduler.DSL'] = 'Chrome Scheduler';
+$loc['EC2_East_Chromium:No False Start.DSL'] = 'No False Start';
 
-$metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests');
+$metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests', 'domContentReady', 'visualComplete');
 
 // Load the existing results
 if (LoadResults($results)) {
@@ -29,7 +28,7 @@ if (LoadResults($results)) {
             $result['ttfb'] &&
             $result['docComplete'] > $result['ttfb']) {
             $bw = ($result['bytes'] * 8) / ($result['docComplete'] - $result['ttfb']);
-            if ($bw > 2000) {
+            if (isset($maxBandwidth) && $maxBandwidth && $bw > $maxBandwidth) {
                 echo "bw: $bw\n";
                 $valid = false;
                 $invalid++;

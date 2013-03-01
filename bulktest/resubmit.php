@@ -17,7 +17,11 @@ if (LoadResults($res)) {
                 !strlen($result['result']) || 
                 ($result['result'] != 0 && 
                  $result['result'] != 99999) ||
-                 !$result['bytes']) {
+                 !$result['bytes'] ||
+                 !$result['docComplete'] ||
+                 !$result['ttfb'] ||
+                 $result['ttfb'] > $result['docComplete'] ||
+                 (isset($maxBandwidth) && $maxBandwidth && (($result['bytes'] * 8) / $result['docComplete']) > $maxBandwidth)) {
                 $entry = array();
                 $entry['url'] = $result['url'];
                 $entry['location'] = $result['location'];

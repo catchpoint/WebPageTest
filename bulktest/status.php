@@ -2,6 +2,7 @@
 include './settings.inc';
 
 $results = array();
+$errors = array();
 
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
@@ -34,7 +35,16 @@ if (LoadResults($results)) {
             if (array_key_exists('id', $result) && strlen($result['id'])) {
                 if (array_key_exists('result', $result) && strlen($result['result'])) {
                     $complete++;
-                    if (($result['result'] != 0 && $result['result'] != 99999 ) || !$result['bytes']) {
+                    if (($result['result'] != 0 && $result['result'] != 99999 ) ||
+                        !$result['bytes'] ||
+                        !$result['docComplete'] ||
+                        !$result['ttfb'] ||
+                        $result['ttfb'] > $result['docComplete'] ||
+                        (isset($maxBandwidth) && $maxBandwidth && (($result['bytes'] * 8) / $result['docComplete']) > $maxBandwidth)) {
+                        if (!array_key_exists($result['location'], $errors))
+                            $errors[$result['location']] = 1;
+                        else
+                            $errors[$result['location']]++;
                         $failed++;
                     }
                 } else {
@@ -52,8 +62,12 @@ if (LoadResults($results)) {
             echo "\t$failedSubmit were not submitted successfully and need to be re-submitted\r\n";
         if( $stillTesting )
             echo "\t$stillTesting are still waiting to be tested\r\n";
-        if( $failed )
-            echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n";
+        if( $failed ) {
+            echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n\n\n";
+            echo "Errors by location:\r\n";
+            foreach ($errors as $location => $count)
+                echo "  $location: $count\r\n";
+        }
     } else {
         echo "All tests have results available\r\n";
     }
@@ -121,6 +135,8 @@ function GetTestResult(&$data, &$result) {
         $result['speedIndex'] =(int)$data['median']['firstView']['SpeedIndex'];
         $result['bytes'] =(int)$data['median']['firstView']['bytesInDoc'];
         $result['requests'] =(int)$data['median']['firstView']['requestsDoc'];
+        $result['domContentReady'] = (int)$data['median']['firstView']['domContentLoadedEventStart'];
+        $result['visualComplete'] = (int)$data['median']['firstView']['visualComplete'];
         $result['successfulRuns'] =(int)$data['successfulFVRuns'];
         
         if (array_key_exists('repeatView', $data['median'])) {
@@ -131,6 +147,8 @@ function GetTestResult(&$data, &$result) {
             $result['rv_speedIndex'] =(int)$data['median']['repeatView']['SpeedIndex'];
             $result['rv_bytes'] =(int)$data['median']['repeatView']['bytesInDoc'];
             $result['rv_requests'] =(int)$data['median']['repeatView']['requestsDoc'];
+            $result['domContentReady'] = (int)$data['median']['repeatView']['domContentLoadedEventStart'];
+            $result['visualComplete'] = (int)$data['median']['repeatView']['visualComplete'];
             $result['rv_successfulRuns'] =(int)$data['successfulRVRuns'];
         }
     }
