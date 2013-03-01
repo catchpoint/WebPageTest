@@ -170,8 +170,10 @@ foreach($requests as $reqNum => $request)
 <?php include('./ads/details_bottom.inc'); ?>
 <br>
 
-<div id="headers">
 <?php
+echo '<div id="headers">';
+    if (array_key_exists('testinfo', $test) && array_key_exists('testerDNS', $test['testinfo']) && strlen($test['testinfo']['testerDNS']))
+        echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
     if (isset($requests) &&
         is_array($requests) &&
         count($requests) &&

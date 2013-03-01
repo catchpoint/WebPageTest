@@ -43,6 +43,7 @@ private:
   WptStatus&    _status;
   DWORD         _version;
   CString       _computer_name;
+  CString       _dns_servers;
 
   bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
                CString& zip_file);
@@ -65,4 +66,5 @@ private:
   bool InstallUpdate(CString dir);
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
+  void UpdateDNSServers();
 };

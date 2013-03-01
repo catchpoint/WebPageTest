@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wininet.h>
 #include <Wincrypt.h>
 #include <Shellapi.h>
+#include <IPHlpApi.h>
 #include "zlib/contrib/minizip/zip.h"
 #include "zlib/contrib/minizip/unzip.h"
 #include "util.h"
@@ -73,6 +74,7 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
                       URL_ESCAPE_PERCENT) == S_OK) && lstrlen(escaped))
       _computer_name = escaped;
   }
+  UpdateDNSServers();
 }
 
 /*-----------------------------------------------------------------------------
@@ -104,6 +106,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
     url += CString(_T("&ec2=")) + _settings._ec2_instance;
+  if (_dns_servers.GetLength())
+    url += CString(_T("&dns=")) + _dns_servers;
   ULARGE_INTEGER fd;
   if (GetDiskFreeSpaceEx(_T("C:\\"), NULL, NULL, &fd)) {
     double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
@@ -172,6 +176,7 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
 bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
+  UpdateDNSServers();
   CString directory = test._directory + CString(_T("\\"));
   CAtlList<CString> image_files;
   GetImageFiles(directory, image_files);
@@ -533,6 +538,13 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += "1\r\n";
   }
 
+  // DNS servers
+  if (!_dns_servers.IsEmpty()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"dns\"\r\n\r\n";
+    form_data += CStringA(CT2A(_dns_servers)) + "\r\n";
+  }
+
   // file
   if (file_name.GetLength() && file_size) {
     form_data += CStringA("--") + boundary + "\r\n";
@@ -834,4 +846,58 @@ bool WebPagetest::UnzipTo(CString zip_file, CString dest) {
     unzClose(zip_file_handle);
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Update our list of DNS servers
+-----------------------------------------------------------------------------*/
+void WebPagetest::UpdateDNSServers() {
+  DWORD len = 15000;
+  _dns_servers.Empty();
+  PIP_ADAPTER_ADDRESSES addresses = (PIP_ADAPTER_ADDRESSES)malloc(len);
+  if (addresses) {
+    DWORD ret = GetAdaptersAddresses(AF_INET,
+                                     GAA_FLAG_SKIP_ANYCAST |
+                                     GAA_FLAG_SKIP_FRIENDLY_NAME |
+                                     GAA_FLAG_SKIP_MULTICAST,
+                                     NULL, addresses, &len);
+    if (ret == ERROR_BUFFER_OVERFLOW) {
+      addresses = (PIP_ADAPTER_ADDRESSES)realloc(addresses, len);
+      if (addresses)
+        ret = GetAdaptersAddresses(AF_INET,
+                                   GAA_FLAG_SKIP_ANYCAST |
+                                   GAA_FLAG_SKIP_FRIENDLY_NAME |
+                                   GAA_FLAG_SKIP_MULTICAST,
+                                   NULL, addresses, &len);
+    }
+    if (ret == NO_ERROR) {
+      CString buff;
+      for (PIP_ADAPTER_ADDRESSES address = addresses;
+           address != NULL;
+           address = address->Next) {
+        if (address->OperStatus == IfOperStatusUp) {
+          for (PIP_ADAPTER_DNS_SERVER_ADDRESS_XP dns =
+              address->FirstDnsServerAddress;
+              dns != NULL;
+              dns = dns->Next) {
+            if (dns->Address.iSockaddrLength >= sizeof(struct sockaddr_in) &&
+                dns->Address.lpSockaddr->sa_family == AF_INET) {
+              struct sockaddr_in* addr = 
+                  (struct sockaddr_in *)dns->Address.lpSockaddr;
+              buff.Format(_T("%d.%d.%d.%d"),
+                          addr->sin_addr.S_un.S_un_b.s_b1,
+                          addr->sin_addr.S_un.S_un_b.s_b2,
+                          addr->sin_addr.S_un.S_un_b.s_b3,
+                          addr->sin_addr.S_un.S_un_b.s_b4);
+              if (!_dns_servers.IsEmpty())
+                _dns_servers += "-";
+              _dns_servers += buff;
+            }
+          }
+        }
+      }
+    }
+    if (addresses)
+      free(addresses);
+  }
 }

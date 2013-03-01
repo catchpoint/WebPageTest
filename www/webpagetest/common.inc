@@ -1580,7 +1580,7 @@ function GetTesters($locationId)
             {
                 if( !$tester['offline'] )
                 {
-                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver'], 'freedisk' => $tester['freedisk'], 'ie' => $tester['ie']);
+                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver'], 'freedisk' => $tester['freedisk'], 'ie' => $tester['ie'], 'dns' => $tester['dns']);
                     
                     // last time it checked in
                     if( isset($tester['updated']) )

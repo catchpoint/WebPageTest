@@ -91,7 +91,7 @@ CUrlMgrHttp::CUrlMgrHttp(CLog &logRef):
 			delete [] pVersion;
 		}
 	}
-
+  UpdateDNSServers();
 }
 
 /*-----------------------------------------------------------------------------
@@ -425,6 +425,7 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 {
 	bool ret = true;
 
+  UpdateDNSServers();
 	if( !info.zipFileDir.IsEmpty() )
 		ret = false;
 	else if( info.context )
@@ -481,6 +482,7 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 -----------------------------------------------------------------------------*/
 void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 {
+  UpdateDNSServers();
 	if( info.context )
 	{
 		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
@@ -609,6 +611,10 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
           double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
           diskSpace.Format(_T("&freedisk=%0.3f"), freeDisk);
         }
+        
+        CString dns = _T("");
+        if (!dnsServers.IsEmpty())
+          dns = CString(_T("&dns=")) + dnsServers;
 
         // IE Version
 	      CRegKey key;
@@ -628,7 +634,7 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 				CHttpConnection * connection = session->GetHttpConnection(host, port);
 				if( connection )
 				{
-					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer, 0, 1, 0, 0, requestFlags);
+					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer + dns, 0, 1, 0, 0, requestFlags);
 					if( file )
 					{
 						if( file->SendRequest() )
@@ -1080,7 +1086,17 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 		body += "1";
 		body += "\r\n";
 	}
-	
+
+	// DNS Servers
+	if( !dnsServers.IsEmpty() )
+	{
+		body += "--";
+		body += boundary + "\r\n";
+		body += "Content-Disposition: form-data; name=\"dns\"\r\n\r\n";
+		body += CStringA(CT2A(dnsServers));
+		body += "\r\n";
+	}
+
 	// if we're done
 	if( info.done )
 	{
@@ -1285,5 +1301,59 @@ void CUrlMgrHttp::DeleteResults(CTestInfo &info)
       }while( FindNextFile(hFind, &fd));
       FindClose(hFind);
     }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Update our list of DNS servers
+-----------------------------------------------------------------------------*/
+void CUrlMgrHttp::UpdateDNSServers() {
+  DWORD len = 15000;
+  dnsServers.Empty();
+  PIP_ADAPTER_ADDRESSES addresses = (PIP_ADAPTER_ADDRESSES)malloc(len);
+  if (addresses) {
+    DWORD ret = GetAdaptersAddresses(AF_INET,
+                                     GAA_FLAG_SKIP_ANYCAST |
+                                     GAA_FLAG_SKIP_FRIENDLY_NAME |
+                                     GAA_FLAG_SKIP_MULTICAST,
+                                     NULL, addresses, &len);
+    if (ret == ERROR_BUFFER_OVERFLOW) {
+      addresses = (PIP_ADAPTER_ADDRESSES)realloc(addresses, len);
+      if (addresses)
+        ret = GetAdaptersAddresses(AF_INET,
+                                   GAA_FLAG_SKIP_ANYCAST |
+                                   GAA_FLAG_SKIP_FRIENDLY_NAME |
+                                   GAA_FLAG_SKIP_MULTICAST,
+                                   NULL, addresses, &len);
+    }
+    if (ret == NO_ERROR) {
+      CString buff;
+      for (PIP_ADAPTER_ADDRESSES address = addresses;
+           address != NULL;
+           address = address->Next) {
+        if (address->OperStatus == IfOperStatusUp) {
+          for (PIP_ADAPTER_DNS_SERVER_ADDRESS_XP dns =
+              address->FirstDnsServerAddress;
+              dns != NULL;
+              dns = dns->Next) {
+            if (dns->Address.iSockaddrLength >= sizeof(struct sockaddr_in) &&
+                dns->Address.lpSockaddr->sa_family == AF_INET) {
+              struct sockaddr_in* addr = 
+                  (struct sockaddr_in *)dns->Address.lpSockaddr;
+              buff.Format(_T("%d.%d.%d.%d"),
+                          addr->sin_addr.S_un.S_un_b.s_b1,
+                          addr->sin_addr.S_un.S_un_b.s_b2,
+                          addr->sin_addr.S_un.S_un_b.s_b3,
+                          addr->sin_addr.S_un.S_un_b.s_b4);
+              if (!dnsServers.IsEmpty())
+                dnsServers += "-";
+              dnsServers += buff;
+            }
+          }
+        }
+      }
+    }
+    if (addresses)
+      free(addresses);
   }
 }

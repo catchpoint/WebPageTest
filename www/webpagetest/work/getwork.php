@@ -24,6 +24,9 @@ if (@strlen($ec2)) {
 } else {
     $tester = trim($_SERVER['REMOTE_ADDR']);
 }
+$dnsServers = '';
+if (array_key_exists('dns', $_REQUEST))
+    $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
 $supports_sharding = false;
 if (array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
     $supports_sharding = true;
@@ -70,6 +73,7 @@ function GetJob() {
     global $tester;
     global $recover;
     global $is_json;
+    global $dnsServers;
 
     // load all of the locations
     $locations = parse_ini_file('./settings/locations.ini', true);
@@ -139,6 +143,8 @@ function GetJob() {
                             $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
                             if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
                                 $testInfoJson['tester'] = $tester;
+                            if (isset($dnsServers) && strlen($dnsServers))
+                                $testInfoJson['testerDNS'] = $dnsServers;
                             if (!array_key_exists('started', $testInfoJson) || !strlen($testInfoJson['started']))
                                 $testInfoJson['started'] = $time;
                             $testInfoJson['id'] = $testId;
@@ -210,6 +216,7 @@ function GetJob() {
             $testerInfo['ver'] = $_GET['ver'];
             $testerInfo['freedisk'] = @$_GET['freedisk'];
             $testerInfo['ie'] = @$_GET['ie'];
+            $testerInfo['dns'] = $dnsServers;
             $testerInfo['video'] = @$_GET['video'];
             $testerInfo['test'] = '';
             if (isset($testId)) {
