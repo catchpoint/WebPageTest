@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$GTMArchive</key>
+	<string>GTMUnitTestingArchive</string>
+	<key>$GTMVersion</key>
+	<integer>1</integer>
+	<key>WindowContent</key>
+	<dict>
+		<key>ViewIsHidden</key>
+		<false/>
+		<key>ViewSubView 0</key>
+		<dict>
+			<key>ButtonAlternateTitle</key>
+			<string></string>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Button</string>
+				<key>CellValue</key>
+				<string>0</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSButton</string>
+			<key>ControlValue</key>
+			<string>0</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 1</key>
+		<dict>
+			<key>ButtonAlternateTitle</key>
+			<string></string>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>^Button2</string>
+				<key>CellValue</key>
+				<string>0</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSButton</string>
+			<key>ControlValue</key>
+			<string>0</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 2</key>
+		<dict>
+			<key>TabItem 0</key>
+			<dict>
+				<key>TabLabel</key>
+				<string>Localized Tab</string>
+				<key>TabView</key>
+				<dict>
+					<key>ViewIsHidden</key>
+					<false/>
+				</dict>
+			</dict>
+			<key>TabItem 1</key>
+			<dict>
+				<key>TabLabel</key>
+				<string>^Tab2</string>
+				<key>TabView</key>
+				<dict>
+					<key>ViewIsHidden</key>
+					<false/>
+				</dict>
+			</dict>
+			<key>ViewIsHidden</key>
+			<false/>
+			<key>ViewSubView 0</key>
+			<dict>
+				<key>ViewIsHidden</key>
+				<false/>
+			</dict>
+		</dict>
+		<key>ViewSubView 3</key>
+		<dict>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Label</string>
+				<key>CellValue</key>
+				<string>Localized Label</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSTextField</string>
+			<key>ControlValue</key>
+			<string>Localized Label</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 4</key>
+		<dict>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>^Label2</string>
+				<key>CellValue</key>
+				<string>^Label2</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSTextField</string>
+			<key>ControlValue</key>
+			<string>^Label2</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 5</key>
+		<dict>
+			<key>ButtonAlternateTitle</key>
+			<string></string>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>1</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Item 2</string>
+				<key>CellValue</key>
+				<string>1</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSPopUpButton</string>
+			<key>ControlValue</key>
+			<string>1</string>
+			<key>ViewIsHidden</key>
+			<false/>
+			<key>ViewMenu</key>
+			<dict>
+				<key>MenuItem 0</key>
+				<dict>
+					<key>MenuItemIndentationLevel</key>
+					<integer>0</integer>
+					<key>MenuItemIsAlternate</key>
+					<false/>
+					<key>MenuItemIsEnabled</key>
+					<true/>
+					<key>MenuItemIsSeparator</key>
+					<false/>
+					<key>MenuItemKeyEquivalent</key>
+					<string></string>
+					<key>MenuItemState</key>
+					<integer>0</integer>
+					<key>MenuItemTag</key>
+					<integer>0</integer>
+					<key>MenuItemTitle</key>
+					<string>Localized Item 1</string>
+				</dict>
+				<key>MenuItem 1</key>
+				<dict>
+					<key>MenuItemIndentationLevel</key>
+					<integer>0</integer>
+					<key>MenuItemIsAlternate</key>
+					<false/>
+					<key>MenuItemIsEnabled</key>
+					<true/>
+					<key>MenuItemIsSeparator</key>
+					<false/>
+					<key>MenuItemKeyEquivalent</key>
+					<string></string>
+					<key>MenuItemState</key>
+					<integer>1</integer>
+					<key>MenuItemTag</key>
+					<integer>0</integer>
+					<key>MenuItemTitle</key>
+					<string>Localized Item 2</string>
+				</dict>
+				<key>MenuTitle</key>
+				<string>OtherViews</string>
+			</dict>
+		</dict>
+		<key>ViewSubView 6</key>
+		<dict>
+			<key>ButtonAlternateTitle</key>
+			<string></string>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>1</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Checkbox 1</string>
+				<key>CellValue</key>
+				<string>1</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSButton</string>
+			<key>ControlValue</key>
+			<string>1</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 7</key>
+		<dict>
+			<key>ButtonAlternateTitle</key>
+			<string></string>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>1</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Checkbox 2</string>
+				<key>CellValue</key>
+				<string>1</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSButton</string>
+			<key>ControlValue</key>
+			<string>1</string>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 8</key>
+		<dict>
+			<key>ControlIsEnabled</key>
+			<true/>
+			<key>ControlSelectedCell</key>
+			<dict>
+				<key>CellState</key>
+				<integer>1</integer>
+				<key>CellTag</key>
+				<integer>1</integer>
+				<key>CellTitle</key>
+				<string>Localized Radio 1</string>
+				<key>CellValue</key>
+				<string>1</string>
+			</dict>
+			<key>ControlTag</key>
+			<integer>0</integer>
+			<key>ControlType</key>
+			<string>NSMatrix</string>
+			<key>ControlValue</key>
+			<string>1</string>
+			<key>MatrixAllowEmptySelection</key>
+			<false/>
+			<key>MatrixAutosizesCells</key>
+			<true/>
+			<key>MatrixCell 0</key>
+			<dict>
+				<key>CellState</key>
+				<integer>1</integer>
+				<key>CellTag</key>
+				<integer>1</integer>
+				<key>CellTitle</key>
+				<string>Localized Radio 1</string>
+				<key>CellValue</key>
+				<string>1</string>
+			</dict>
+			<key>MatrixCell 1</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Localized Radio 2</string>
+				<key>CellValue</key>
+				<string>0</string>
+			</dict>
+			<key>MatrixCellPrototype</key>
+			<dict>
+				<key>CellState</key>
+				<integer>0</integer>
+				<key>CellTag</key>
+				<integer>0</integer>
+				<key>CellTitle</key>
+				<string>Radio</string>
+				<key>CellValue</key>
+				<string>0</string>
+			</dict>
+			<key>MatrixColumnCount</key>
+			<integer>1</integer>
+			<key>MatrixIntercellSpacing</key>
+			<string>{4, 2}</string>
+			<key>MatrixMode</key>
+			<integer>0</integer>
+			<key>MatrixRowCount</key>
+			<integer>2</integer>
+			<key>MatrixSelectionByRect</key>
+			<true/>
+			<key>ViewIsHidden</key>
+			<false/>
+		</dict>
+		<key>ViewSubView 9</key>
+		<dict>
+			<key>BoxBorderType</key>
+			<integer>1</integer>
+			<key>BoxTitle</key>
+			<string>Bindings Tests</string>
+			<key>BoxTitlePosition</key>
+			<integer>2</integer>
+			<key>BoxType</key>
+			<integer>0</integer>
+			<key>ViewIsHidden</key>
+			<false/>
+			<key>ViewSubView 0</key>
+			<dict>
+				<key>ViewIsHidden</key>
+				<false/>
+				<key>ViewSubView 0</key>
+				<dict>
+					<key>ControlIsEnabled</key>
+					<true/>
+					<key>ControlSelectedCell</key>
+					<dict>
+						<key>CellState</key>
+						<integer>1</integer>
+						<key>CellTag</key>
+						<integer>0</integer>
+						<key>CellTitle</key>
+						<string>DisplayPattern</string>
+						<key>CellValue</key>
+						<string>DisplayPattern</string>
+					</dict>
+					<key>ControlTag</key>
+					<integer>0</integer>
+					<key>ControlType</key>
+					<string>NSTextField</string>
+					<key>ControlValue</key>
+					<string>DisplayPattern</string>
+					<key>ViewIsHidden</key>
+					<false/>
+				</dict>
+				<key>ViewSubView 1</key>
+				<dict>
+					<key>ControlIsEnabled</key>
+					<true/>
+					<key>ControlSelectedCell</key>
+					<dict>
+						<key>CellState</key>
+						<integer>0</integer>
+						<key>CellTag</key>
+						<integer>0</integer>
+						<key>CellTitle</key>
+						<string></string>
+					</dict>
+					<key>ControlTag</key>
+					<integer>0</integer>
+					<key>ControlType</key>
+					<string>NSSearchField</string>
+					<key>ViewIsHidden</key>
+					<false/>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+	<key>WindowIsMain</key>
+	<false/>
+	<key>WindowIsVisible</key>
+	<false/>
+	<key>WindowTitle</key>
+	<string>Window</string>
+</dict>
+</plist>

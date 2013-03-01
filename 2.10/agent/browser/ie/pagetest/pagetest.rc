@@ -1,0 +1,259 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,10,0,349
+ PRODUCTVERSION 2,10,0,349
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "WPO Foundation, Inc."
+            VALUE "FileDescription", "IE Diagnostic Browser Plugin"
+            VALUE "FileVersion", "2.10.0.349"
+            VALUE "InternalName", "Pagetest.dll"
+            VALUE "LegalCopyright", "(c) 2012 WPO Foundation, Inc.,  All rights reserved."
+            VALUE "OriginalFilename", "Pagetest.dll"
+            VALUE "ProductVersion", "2.10.0.349"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_PAGETEST            REGISTRY                "Pagetest.rgs"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WATCHDLG DIALOGEX 0, 0, 426, 302
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "AOL Pagetest"
+MENU IDR_MENU1
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_WATERFALL,"SysTreeView32",TVS_HASBUTTONS | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | TVS_FULLROWSELECT | TVS_INFOTIP | WS_BORDER | WS_HSCROLL | WS_TABSTOP,222,74,197,221,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_RICHEDIT,"RichEdit20W",NOT WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP | 0x2884,7,74,159,210
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,7,316,61
+END
+
+IDD_ABOUTDLG DIALOGEX 0, 0, 175, 98
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "About AOL Pagetest"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,62,75,50,16
+    ICON            IDI_ACTIVE,IDC_STATIC,7,7,21,20
+    LTEXT           "AOL Pagetest\nCopyright (c) 2007, AOL LLC.",IDC_STATIC,36,7,132,18
+    LTEXT           "Version:",IDC_STATIC,52,32,26,8
+    LTEXT           "0.0.0.0",IDC_VERSION,81,32,52,8
+    LTEXT           "This software is based in part on the work of the Independent JPEG Group.",IDC_STATIC,7,49,161,22
+END
+
+IDD_DETAILSDLG DIALOGEX 0, 0, 414, 241
+STYLE DS_SETFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Request Details"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         "",IDC_TABS,"SysTabControl32",0x0,7,7,400,227
+    EDITTEXT        IDC_DETAILS,7,21,400,213,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_WATCHDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 419
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 295
+        HORZGUIDE, 27
+    END
+
+    IDD_ABOUTDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 168
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
+
+    IDD_DETAILSDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 407
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 234
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ACTIVE              ICON                    "Pagetest.ico"
+IDI_INACTIVE            ICON                    "inactive.ico"
+IDI_CROSS               ICON                    "error.ico"
+IDI_WARN                ICON                    "warning.ico"
+IDI_CHECK               ICON                    "Check.ico"
+IDI_LOCK                ICON                    "lock.ico"
+IDI_STAR                ICON                    "Favorites.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU1 MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New",                        ID_FILE_NEW, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Save &Load Details...",       ID_FILE_SAVEREPORT, GRAYED
+        MENUITEM "Save &Optimization Report...", ID_FILE_SAVEOPTIMIZATIONREPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Export Waterfall...",        ID_FILE_EXPORTWATERFALL, GRAYED
+        MENUITEM "Export &Checklist...",        ID_FILE_EXPORTOPTIMIZATIONCHART
+        MENUITEM SEPARATOR
+        MENUITEM "&Run Script...",              ID_FILE_RUNSCRIPT
+    END
+    POPUP "&View"
+    BEGIN
+        POPUP "&Font"
+        BEGIN
+            MENUITEM "&Small",                      ID_FONT_SMALL
+            MENUITEM "&Normal",                     ID_FONT_NORMAL, CHECKED
+        END
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Stop Measurement",           ID_TOOLS_STOPMEASUREMENT, GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Quick Start Guide",          ID_HELP_QUICKSTARTGUIDE
+        MENUITEM "&Pagetest on the web",        ID_HELP_PAGETESTONTHEWEB
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                      ID_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_TOOLBAR             BITMAP                  "toolbar1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_PROJNAME            "Pagetest"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

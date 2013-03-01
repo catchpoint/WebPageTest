@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>$GTMArchive</key>
+	<string>GTMUnitTestingArchive</string>
+	<key>$GTMVersion</key>
+	<integer>1</integer>
+	<key>BoolTest</key>
+	<true/>
+	<key>BytesTest</key>
+	<data>
+	Qnl0ZXNUZXN0
+	</data>
+	<key>DoubleTest</key>
+	<real>1</real>
+	<key>FloatTest</key>
+	<real>1</real>
+	<key>ImageName</key>
+	<string>NSApplicationIcon</string>
+	<key>ImageSize</key>
+	<string>{128, 128}</string>
+	<key>Int32Test</key>
+	<integer>1</integer>
+	<key>Int64Test</key>
+	<integer>1</integer>
+	<key>IntTest</key>
+	<integer>1</integer>
+</dict>
+</plist>

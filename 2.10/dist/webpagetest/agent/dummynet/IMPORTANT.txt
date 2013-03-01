@@ -1,0 +1,1 @@
+You need to copy the files from either the 32bit or 64bit directory into this directory when you install dummynet, otherwise the traffic shaping will not work.

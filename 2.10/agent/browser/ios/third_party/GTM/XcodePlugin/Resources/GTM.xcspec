@@ -1,0 +1,8 @@
+(
+	{
+		Identifier = "com.google.gtm.gtmxcodeplugin";
+		Name = GTMXcodePlugin;
+		Type = Generic;
+		InstallsPreferences = yes;
+	},
+)
