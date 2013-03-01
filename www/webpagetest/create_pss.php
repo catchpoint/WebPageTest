@@ -11,7 +11,7 @@ if (array_key_exists('original', $_REQUEST) && array_key_exists('optimized', $_R
             $test['id'] = $today->format('ymd') . '_PSS_' . md5(uniqid(rand(), true));
             $test['path'] = './' . GetTestPath($test['id']);
             $test['batch'] = 1;
-            $test['label'] = 'Page Speed Service Comparison';
+            $test['label'] = 'PageSpeed Service Comparison';
             if (array_key_exists('url', $test) && strlen($test['url']))
                 $test['label'] .= ' for ' . $test['url'];
             $test['view'] = 'pss';

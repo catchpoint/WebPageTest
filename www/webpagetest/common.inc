@@ -54,7 +54,7 @@ else
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 59);           // version of the sitewide css file
-define('VER_JS', 22);            // version of the sitewide javascript file
+define('VER_JS', 28);            // version of the sitewide javascript file
 define('VER_JS_TEST', 21);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('VER_TIMELINE', 1);       // version of the timeline javascript
@@ -1004,7 +1004,9 @@ function ParseLocations(&$locations) {
     }
 
     // see if they have a saved location from their cookie
-    $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
+    $currentLoc = null;
+    if (array_key_exists('cfg', $_COOKIE))
+        $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
     if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
         // nope, try thee default
         $currentLoc = $locations['locations']['default'];
@@ -1037,7 +1039,7 @@ function ParseLocations(&$locations) {
 
     // default to the browser from their saved cookie
     $currentBrowser = '';
-    if ($_COOKIE["cfg"] && isset($locations[$_COOKIE["cfg"]])) {
+    if (array_key_exists('cfg', $_COOKIE) && array_key_exists($_COOKIE["cfg"], $locations)) {
         $currentBrowser = str_replace(' ', '', $locations[$_COOKIE["cfg"]]['browser']);
         $currentConfig = $_COOKIE["cfg"];
     }

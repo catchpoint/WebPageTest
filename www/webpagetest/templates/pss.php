@@ -17,7 +17,7 @@ $test['web10'] = 1;
 $test['discard'] = 3;
 $test['script'] = "setDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%";
 $req_bulkurls = "Original=$req_url noscript\nOptimized=$req_url";
-$test['label'] = "Page Speed Service Comparison for $req_url";
+$test['label'] = "PageSpeed Service Comparison for $req_url";
 
 // see if we have a cached test already
 if (array_key_exists('url', $test) && strlen($test['url']) && (!array_key_exists('force', $_REQUEST) || $_REQUEST['force'] == 0)) {

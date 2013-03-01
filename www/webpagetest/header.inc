@@ -207,7 +207,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 if( strlen($score) )
                 {
                     $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
-                    echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">Page Speed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
+                    echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
                 }
             }
             
@@ -295,7 +295,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         if( $cached )
             $cTxt2 = '_Cached';
         if( gz_is_file("$testPath/$gradeRun{$cTxt2}_pagespeed.txt") )
-            $tabs['Page Speed'] = "/pagespeed.php?test=$id&run=$gradeRun&cached=$cached$end";
+            $tabs['PageSpeed'] = "/pagespeed.php?test=$id&run=$gradeRun&cached=$cached$end";
         $tabs['Content Breakdown'] = "/breakdown.php?test=$id&run=$gradeRun&cached=$cached$end";
         $tabs['Domains'] = "/domains.php?test=$id&run=$gradeRun&cached=$cached$end";
         

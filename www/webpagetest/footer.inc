@@ -129,16 +129,23 @@
     <div class="cleared"></div>
     
     <?php
-    if (!isset($site_js_loaded) || !$site_js_loaded)
+    if (!isset($site_js_loaded) || !$site_js_loaded) {
         echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
-    
-    if (array_key_exists('slow', $_REQUEST) && $_REQUEST['slow'] == 'bottom') {
-        $delay = 10;
-        if (array_key_exists('delay', $_REQUEST)) {
-            $delay = $_REQUEST['delay'];
-        }
-        echo "<script type=\"text/javascript\" src=\"/slowtweet.php?delay=$delay\"></script>";
     }
+    if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
+        is_file('./js/experiment.js')) {
+        $headers = $_SERVER;
+        preg_match_all('%(?P<browser>Camino|Kindle(\ Fire\ Build)?|Firefox|Safari|MSIE|Chrome|IEMobile|Opera|Silk|Lynx|Version|Wget|curl|NintendoBrowser|PLAYSTATION|AppleWebKit\ \d+)(?:;?)(?:(?:[/ ])(?P<version>[0-9]+)|/(?:[A-Z]*))%x', 
+                        $_SERVER['HTTP_USER_AGENT'], $result, PREG_PATTERN_ORDER);
+        $browser = "{$result['browser'][0]} {$result['version'][0]}";
+        echo "<script>\n";
+        echo "wptJSVer = '" . VER_JS . "';\n";
+        echo "wptBrowser = '$browser';\n";
+        include ('./js/experiment.js');
+        echo "</script>\n";
+        //echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/experiment.js?v=" . VER_JS . "\"></script>\n";
+    }
+    
     ?>
     <script type="text/javascript">
         function showFeeds(column)

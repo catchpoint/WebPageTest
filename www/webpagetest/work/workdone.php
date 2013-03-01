@@ -2,8 +2,10 @@
 chdir('..');
 //$debug = true;
 include('common.inc');
+error_reporting(E_ERROR | E_PARSE);
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
+require_once 'page_data.inc';
 header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -234,6 +236,10 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
             $testInfo_dirty = true;
         }
+        // pre-process any background processing we need to do for this run
+        if (isset($runNumber) && isset($cacheWarmed)) {
+            loadPageRunData($testPath, $runNumber, $cacheWarmed);
+        }
             
         // see if the test is complete
         if( $done )
@@ -269,11 +275,10 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
 
             // do pre-complete post-processing
             require_once('video.inc');
-            require_once('video/visualProgress.inc.php');
+            require_once('./video/visualProgress.inc.php');
             MoveVideoFiles($testPath);
             BuildVideoScripts($testPath);
             
-            require_once 'page_data.inc';
             if (!isset($pageData)) {
                 $pageData = loadAllPageData($testPath);
             }

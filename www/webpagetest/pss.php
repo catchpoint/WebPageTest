@@ -36,7 +36,7 @@ $page_description = "Comparison Test$testLabel.";
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
             if( strlen($_GET['pssid']) )
                 $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
-            $navTabs += array(  'Page Speed Service Home' => 'http://code.google.com/speed/pss', 
+            $navTabs += array(  'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
                                 'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                 'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
             $tab = 'New Comparison';
@@ -96,11 +96,11 @@ $page_description = "Comparison Test$testLabel.";
               if ($mps) {
                 echo '<h2 class="cufon-dincond_black"><small>Compare your currently optimized site to it\'s unoptimized version</a></small></h2>';
               } elseif ($preview) {
-                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
               } elseif( strlen($_GET['origin']) )
-                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
               else
-                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">Page Speed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
             }
             ?>
 
@@ -347,7 +347,7 @@ $page_description = "Comparison Test$testLabel.";
                     return false;
                 }
                 
-                form.label.value = 'Page Speed Service Comparison for ' + url;
+                form.label.value = 'PageSpeed Service Comparison for ' + url;
                 
                 <?php
                 // build the psuedo batch-url list

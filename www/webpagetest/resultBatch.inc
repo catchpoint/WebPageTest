@@ -159,7 +159,7 @@ else
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
                                     'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
-                                    'Page Speed Service Home' => 'http://code.google.com/speed/pss', 
+                                    'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
                                     'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
                                     'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
                 if (array_key_exists('testinfo', $test) && array_key_exists('pss_advanced', $test['testinfo']) && $test['testinfo']['pss_advanced']) {                
@@ -197,7 +197,7 @@ else
                     if (strlen($test['testinfo']['label']))
                     {
                         $label = $test['testinfo']['label'];
-                        $label = str_replace('PSS Comparison for', 'Page Speed Service Comparison for', $label);
+                        $label = str_replace('PSS Comparison for', 'PageSpeed Service Comparison for', $label);
                         echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
                     }
 
@@ -268,8 +268,8 @@ else
                         <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
                         <p>Here are some resources you can browse while you wait for testing to complete (all open in new browser tabs):</p>
                         <ul class="bullet_list">
-                        <li><a href="http://code.google.com/speed/pss" target="_blank">Page Speed Service home page</a> - information about the service</li>
-                        <li><a href="http://code.google.com/speed/pss/gallery.html" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the Page Speed Service</li>
+                        <li><a href="http://code.google.com/speed/pss" target="_blank">PageSpeed Service home page</a> - information about the service</li>
+                        <li><a href="http://code.google.com/speed/pss/gallery.html" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the PageSpeed Service</li>
                         </ul>
                         </div>
                         <?php
@@ -917,7 +917,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         {
             echo '<div class="alert">';
             echo '<h1>HTTPS Content Detected</h1>';
-            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
+            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(PageSpeed Service does not support serving HTTPS content from the base domain)";
             echo '</div>';
         }
         
@@ -1202,7 +1202,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
         {
             echo '<div class="alert">';
             echo '<h1>HTTPS Content Detected</h1>';
-            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Page Speed Service does not support serving HTTPS content from the base domain)";
+            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(PageSpeed Service does not support serving HTTPS content from the base domain)";
             echo '</div>';
         }
 /*        

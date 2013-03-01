@@ -6,7 +6,7 @@ if( strlen($page_description) )
     echo "<meta name=\"description\" content=\"$page_description\">\n";
 ?>
 <meta name="author" content="Patrick Meenan">
-<meta http-equiv="X-UA-Compatible" content="IE=8"> 
+<meta http-equiv="X-UA-Compatible" content="IE=Edge"> 
 
 <link rel="shortcut icon" href="/images/favicon.ico" type="image/vnd.microsoft.icon">
 <link rel="icon" href="/images/favicon.png" type="image/png">

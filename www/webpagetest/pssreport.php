@@ -23,7 +23,8 @@ for($offset = 0; $offset <= $days; $offset++)
         $entry['Other'] = 0;
         while( ($line = fgets($file)) !== false )
         {
-            if( strpos($line, 'Page Speed Service') !== false &&
+            if( (strpos($line, 'Page Speed Service') !== false ||
+                 strpos($line, 'PageSpeed Service') !== false) &&
                 strpos($line, 'edb046ff09404e1b90887827e1b37b06') === false )
             {
                 $entry['Total']++;

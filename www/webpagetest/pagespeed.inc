@@ -37,7 +37,7 @@ function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
             if( $count )
                 $score = ceil($total / $count);
         }
-        $html .= "Page Speed $ver Score: <b>" . $score . '/100</b>*<br>';
+        $html .= "PageSpeed $ver Score: <b>" . $score . '/100</b>*<br>';
 
         $html .= '<ul id="pagespeed_tree" class="pagespeed_treeview">';
         
@@ -108,7 +108,7 @@ function PageSpeedTreeHTML($file, $docRoot = '', $ver = '') {
                 
             $html .= '</li>';
         }
-        $html .= '</ul><br>* Page Speed scores can only be compared to scores from the same version of the Page Speed library.</div>';
+        $html .= '</ul><br>* PageSpeed scores can only be compared to scores from the same version of the PageSpeed library.</div>';
     }
     
     return $html;

@@ -10,7 +10,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
             if( strlen($tests) )
                 $tests .= ',';
             $tests .= trim($parts[0]);
-            if( $parts[1] )
+            if( array_key_exists(1, $parts) && strlen($parts[1]) )
                 $tests .= "-r:{$parts[1]}";
         }
     }
