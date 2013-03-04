@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var assert = require('assert');
+var child_process = require('child_process');
+var events = require('events');
 var http = require('http');
 var logger = require('logger');
 var sinon = require('sinon');
@@ -155,4 +157,42 @@ exports.assertStringsMatch = function(expected, actual) {
       }
     });
   }
+};
+
+/**
+ * Stubs out child_process.spawn, allows a callback to inject behavior.
+ *
+ * On the returned stub object, optionally set the property "callback",
+ * with the function that takes the fake process object, command, args.
+ * The callback should return a "keep running" value:
+ * false (default with no explicit return) for the stub to emit 'exit'
+ * after 5 (fake) milliseconds, true to suppress emitting 'exit', in which case
+ * the caller is responsible for emitting 'exit' as it wishes.
+ *
+ * @param {Object} sandbox a SinonJS sandbox object.
+ * @returns {Object} a SinonJS stub.
+ */
+exports.stubOutProcessSpawn = function(sandbox) {
+  'use strict';
+
+  var stub = sandbox.stub(child_process, 'spawn', function() {
+    var fakeProcess = new events.EventEmitter();
+    fakeProcess.stdout = new events.EventEmitter();
+    fakeProcess.stderr = new events.EventEmitter();
+    fakeProcess.kill = sandbox.spy();
+    var keepRunning = false;
+    var args = Array.prototype.slice.call(arguments);
+    if (stub.callback) {
+      args.unshift(fakeProcess);
+      keepRunning = stub.callback.apply(undefined, args);  // undefined: no
+    }
+    if (!keepRunning) {
+      global.setTimeout(function() {
+        fakeProcess.emit('exit', /*code=*/0, /*signal=*/undefined);
+      }, 5);
+    }
+    return fakeProcess;
+  });
+  stub.callback = undefined;
+  return stub;
 };

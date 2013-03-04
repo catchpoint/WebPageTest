@@ -233,7 +233,7 @@ exports.stdoutStderrMessage = function(stdout, stderr) {
  * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {String} command the command to run, as in process.spawn.
  * @param {Array} args command args, as in process.spawn.
- * @param {Number} timeout the timeout after which to kill the process.
+ * @param {Number} [timeout] kill the process after timeout, default 10 seconds.
  * @param {Array} [okExitCodes] array of success exit codes.
  *     If not specified and the command exit code is nonzero,
  *     or if specified and command exit code not in the array,
@@ -243,6 +243,7 @@ exports.stdoutStderrMessage = function(stdout, stderr) {
 exports.scheduleExecWithTimeout = function(
     app, command, args, timeout, okExitCodes) {
   'use strict';
+  timeout = timeout || 10000;
   return (app || webdriver.promise.Application.getInstance()).schedule(
       command + (args ? ' "' + args.join('", "') + '"' : ''), function() {
     var done = new webdriver.promise.Deferred();
@@ -261,7 +262,7 @@ exports.scheduleExecWithTimeout = function(
       // know if and when it's going to exit at OS level.
       // In the future we may want to restart the adb server here as a recovery
       // for wedged adb connections, or use a relay board for device recovery.
-      done.reject(new Error(util.format('%s %j timeout after %d seconds%s',
+      done.reject(new Error(util.format('%s %j timeout after %d seconds',
           command, args, timeout / 1000)),
           exports.stdoutStderrMessage(stdout, stderr));
     }.bind(this), timeout);
@@ -302,20 +303,24 @@ exports.scheduleExecWithTimeout = function(
  * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {String} command the command to run, as in process.spawn.
  * @param {Array} args command args, as in process.spawn.
- * @param {Object} options spawn options, as in process.spawn.
+ * @param {Object} [options] spawn options, as in process.spawn.
+ * @param {Function} [logStdoutFunc] function to log stdout, or logger.info.
+ * @param {Function} [logStderrFunc] function to log stderr, or logger.error.
  * @returns {webdriver.promise.Promise} The scheduled promise,
  *     resolves with the child process object.
  */
 exports.scheduleSpawn = function(app, command, args, options,
     logStdoutFunc, logStderrFunc) {
   'use strict';
-  return app.schedule('Run ' + command, function() {
+  return app.schedule(command + (args ? ' "' + args.join('", "') + '"' : ''),
+      function() {
+    logger.debug('Spawning: %s %j', command, args);
     var proc = child_process.spawn(command, args, options);
     proc.stdout.on('data', function(data) {
-      (logStdoutFunc || logger.info)('Port forward STDOUT: %s', data);
+      (logStdoutFunc || logger.info)('%s STDOUT: %s', command, data);
     });
     proc.stderr.on('warn', function(data) {
-      (logStderrFunc || logger.error)('Port forward STDERR: %s', data);
+      (logStderrFunc || logger.error)('%s STDERR: %s', command, data);
     });
     return proc;
   });

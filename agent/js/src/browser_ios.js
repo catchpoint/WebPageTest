@@ -29,22 +29,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var logger = require('logger');
 var process_utils = require('process_utils');
+var video_hdmi = require('video_hdmi');
 
 
-function BrowserIos(app, runNumber, deviceSerial, iosIDeviceDir,
+/**
+ * Represents Mobile Safari on iOS.
+ *
+ * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {Number} runNumber test run number. Install helpers on run 1.
+ * @param {String} deviceSerial the device to drive.
+ * @param {String} [iDeviceDir] where to find libimobiledevice based commands.
+ * @param {String} [pythonPortForwardDir] SSH USB proxy for jailbroken iOS.
+ * @param {Number} [sshLocalPort] local port for SSH USB proxy, default 2222.
+ * @param {String} [sshCertPath] SSH cert to use for iOS commands.
+ *     Add the corresponding .pub to /var/root/.ssh/authorized_keys2 on device.
+ * @param {String} [urlOpenerAppPath] ipa file for the openURL app.
+ * @constructor
+ */
+function BrowserIos(app, runNumber, deviceSerial, iDeviceDir,
     pythonPortForwardDir, sshLocalPort, sshCertPath, urlOpenerAppPath) {
   'use strict';
   logger.info('BrowserIos(%s)', deviceSerial);
   this.app_ = app;
   this.runNumber_ = runNumber;
   this.deviceSerial_ = deviceSerial;
-  this.iosWebkitDebugProxy_ = undefined;
-  this.iosWebkitDebugProxy_ = iosIDeviceDir ?
-      iosIDeviceDir + '/ios_webkit_debug_proxy' : undefined;
-  this.iDeviceInstaller_ = iosIDeviceDir ?
-      iosIDeviceDir + '/ideviceinstaller' : 'ideviceinstaller';
-  this.iDeviceAppRunner_ = iosIDeviceDir ?
-      iosIDeviceDir + '/idevice-app-runner' : 'idevice-app-runner';
+  if (iDeviceDir) {
+    if ('/' !== iDeviceDir[iDeviceDir.length]) {
+      iDeviceDir += '/';
+    }
+  } else {
+    iDeviceDir = '';
+  }
+  this.iosWebkitDebugProxy_ = iDeviceDir + 'ios_webkit_debug_proxy';
+  this.iDeviceInstaller_ = iDeviceDir + 'ideviceinstaller';
+  this.iDeviceAppRunner_ = iDeviceDir + 'idevice-app-runner';
+  this.iDeviceInfo_ = iDeviceDir + 'ideviceinfo';
   this.devToolsPort_ = 9222;
   this.devToolsUrl_ = undefined;
   this.proxyProcess_ = undefined;
@@ -53,10 +72,11 @@ function BrowserIos(app, runNumber, deviceSerial, iosIDeviceDir,
   this.sshLocalPort_ = sshLocalPort || 2222;
   this.sshCertPath_ = sshCertPath || process.env.HOME + '/.ssh/id_dsa_ios';
   this.urlOpenerAppPath_ = urlOpenerAppPath;
+  this.video_ = new video_hdmi.VideoHdmi(this.app_);
 }
 exports.BrowserIos = BrowserIos;
 
-BrowserIos.prototype.startWdServer = function(/*browserCaps, isFirstRun*/) {
+BrowserIos.prototype.startWdServer = function(/*browserCaps*/) {
   'use strict';
   throw new Error('LOL Applz');
 };
@@ -76,6 +96,8 @@ BrowserIos.prototype.startBrowser = function() {
 BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
   'use strict';
   if (1 === this.runNumber_ && this.urlOpenerAppPath_) {
+    // TODO(klm): handle install failure due to no dev image,
+    // mount the dev image if needed -- add a flag for dev image root dir.
     process_utils.scheduleExecWithTimeout(this.app_, this.iDeviceInstaller_,
         ['-U', this.deviceSerial_, '-i', this.urlOpenerAppPath_], 20000);
   }
@@ -89,7 +111,9 @@ BrowserIos.prototype.scheduleStartUsbPortForward_ = function() {
       env[e] = process.env[e];
     });
     process_utils.scheduleSpawn(this.app_,
-        'python', ['-m', 'tcprelay', '-t', '22:' + this.sshLocalPort_],
+        'python',
+        ['-B', '-OO', '-m', 'tcprelay', '-t',
+            '22:' + this.deviceSerial_ + ':' + this.sshLocalPort_],
         {env: env}).then(function(proc) {
       this.usbPortForwardProcess_ = proc;
       proc.on('exit', function(code, signal) {
@@ -201,6 +225,9 @@ BrowserIos.prototype.kill = function() {
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.stopUsbPortForward_();
+  if (this.video_) {
+    this.video_.stopVideoRecording();
+  }
 };
 
 BrowserIos.prototype.isRunning = function() {
@@ -218,9 +245,24 @@ BrowserIos.prototype.getDevToolsUrl = function() {
   return this.devToolsUrl_;
 };
 
-BrowserIos.prototype.getDevToolsCapabilities = function() {
+BrowserIos.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return {
-      'Page.captureScreenshot': false
-  };
+  return this.video_.scheduleIsSupported().then(function(isSupported) {
+    return {videoRecording: isSupported};
+  }.bind(this));
+};
+
+BrowserIos.prototype.scheduleStartVideoRecording = function(file) {
+  'use strict';
+  // The video record command needs to know device type for cropping etc.
+  return process_utils.scheduleExecWithTimeout(this.app_, this.iDeviceInfo_,
+      ['-k', 'ProductType', '-u', this.deviceSerial_]).then(function(stdout) {
+    logger.info('ProductType: %j', stdout);
+    this.video_.scheduleStartVideoRecording(file, stdout.trim());
+  }.bind(this));
+};
+
+BrowserIos.prototype.stopVideoRecording = function() {
+  'use strict';
+  this.video_.stopVideoRecording();
 };

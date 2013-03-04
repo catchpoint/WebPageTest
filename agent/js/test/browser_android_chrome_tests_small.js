@@ -29,12 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   it: true*/
 
 var browser_android_chrome = require('browser_android_chrome');
-var child_process = require('child_process');
-var events = require('events');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
+var video_hdmi = require('video_hdmi');
 var webdriver = require('webdriver');
 
 
@@ -70,16 +69,7 @@ describe('browser_android_chrome small', function() {
     test_utils.fakeTimers(sandbox);
     app.reset();  // We reuse the app across tests, clean it up.
 
-    processSpawnStub = sandbox.stub(child_process, 'spawn', function() {
-      var fakeProcess = new events.EventEmitter();
-      fakeProcess.stdout = new events.EventEmitter();
-      fakeProcess.stderr = new events.EventEmitter();
-      fakeProcess.kill = sandbox.spy();
-      global.setTimeout(function() {
-        fakeProcess.emit('exit');
-      }, 0);
-      return fakeProcess;
-    });
+    processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
     iVerifiedCall = 0;
   });
 
@@ -91,9 +81,9 @@ describe('browser_android_chrome small', function() {
 
   it('should install on first run, start, get killed', function() {
     var browser = new browser_android_chrome.BrowserAndroidChrome(
-        app, /*chromedriver=*/undefined, chromeApk, serial);
+        app, /*runNumber=*/1, serial, /*chromedriver=*/undefined, chromeApk);
     should.ok(!browser.isRunning());
-    browser.startBrowser({browserName: 'chrome'}, /*isFirstRun*/true);
+    browser.startBrowser();
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
     assertAdbCall('uninstall', /com\.[\w\.]+/);
     assertAdbCall('install', '-r', chromeApk);
@@ -114,7 +104,7 @@ describe('browser_android_chrome small', function() {
 
   it('should not install on a non-first run, start, get killed', function() {
     var browser = new browser_android_chrome.BrowserAndroidChrome(
-        app, /*chromedriver=*/undefined, chromeApk, serial);
+        app, /*runNumber=*/2, serial, /*chromedriver=*/undefined, chromeApk);
     should.ok(!browser.isRunning());
     browser.startBrowser({browserName: 'chrome'}, /*isFirstRun*/false);
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
@@ -131,5 +121,35 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
+  });
+
+  it('should record video with the correct device type', function() {
+    // Simulate adb shell getprop ro.product.device -> shmantra
+    processSpawnStub.callback = function(proc, command, args) {
+      if (/adb$/.test(command) && -1 !== args.indexOf('ro.product.device')) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', 'shmantra');
+        }, 1);
+      }
+    };
+    var videoStart = sandbox.stub(
+        video_hdmi.VideoHdmi.prototype, 'scheduleStartVideoRecording');
+    var videoStop = sandbox.stub(
+        video_hdmi.VideoHdmi.prototype, 'stopVideoRecording');
+    var browser = new browser_android_chrome.BrowserAndroidChrome(
+        app, /*runNumber=*/1, serial, /*chromedriver=*/undefined, chromeApk);
+    browser.scheduleStartVideoRecording('test.avi');
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.ok(processSpawnStub.calledOnce);
+    should.ok(videoStart.calledOnce);
+    test_utils.assertStringsMatch(
+        ['test.avi', 'shmantra'], videoStart.firstCall.args);
+    should.ok(videoStop.notCalled);
+
+    browser.stopVideoRecording();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.ok(processSpawnStub.calledOnce);
+    should.ok(videoStart.calledOnce);
+    should.ok(videoStop.calledOnce);
   });
 });

@@ -238,7 +238,7 @@ describe('wd_server small', function() {
     fakeWs.emit('open');  // DevTools WebSocket connected.
 
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
-        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20 + 1000);
     onBuildStub.restore();  // Remove fake DevTools event emission.
 
     // * Verify after run 1, make sure we didn't quit/stop WD.
@@ -254,6 +254,7 @@ describe('wd_server small', function() {
         'Page.enable',
         'Timeline.start',
         'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.setDocumentContent',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
@@ -370,7 +371,7 @@ describe('wd_server small', function() {
     }
     fakeWs.on('message', onPageNavigate);
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
-        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
+        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30 + 1000);
 
     // * Verify after run 1, make sure we didn't quit/stop Chrome.
     should.ok(startChromeStub.calledOnce);
@@ -383,6 +384,7 @@ describe('wd_server small', function() {
         'Page.enable',
         'Timeline.start',
         'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.setDocumentContent',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
@@ -412,7 +414,7 @@ describe('wd_server small', function() {
     // Verify that messages get ignored between runs
     fakeWs.emit('message', JSON.stringify(networkMessage), {});
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS
-        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+        + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20 + 1000);
     // Simulate page load finish.
     fakeWs.emit('message', JSON.stringify(pageLoadedMessage), {});
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
@@ -425,6 +427,7 @@ describe('wd_server small', function() {
     // These things get called for the second time on the second run.
     [
         'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.setDocumentContent',
         'Page.navigate',
         'Page.captureScreenshot'

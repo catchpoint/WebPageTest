@@ -151,7 +151,7 @@ DevTools.prototype.onMessage_ = function(data, flags) {
       return;
     }
     if (message.id) {
-      logger.debug('Command response: %s', data);
+      logger.debug('Command response id: %s', message.id);
       callbackErrback = this.commandCallbacks_[message.id];
       if (callbackErrback) {
         delete this.commandCallbacks_[message.id];

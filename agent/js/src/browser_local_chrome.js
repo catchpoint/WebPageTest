@@ -148,13 +148,15 @@ BrowserLocalChrome.prototype.getDevToolsUrl = function() {
   return this.devToolsUrl_;
 };
 
-BrowserLocalChrome.prototype.getDevToolsCapabilities = function() {
+BrowserLocalChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return {
-      'Page.captureScreenshot': true,  // TODO(klm): check for before-26.
-      'Network.clearBrowserCache': true,
-      'Network.clearBrowserCookies': true
-  };
+  return this.app_.schedule('get capabilities', function() {
+    return {
+        'wkrdp.Page.captureScreenshot': true,  // TODO(klm): check before-26.
+        'wkrdp.Network.clearBrowserCache': true,
+        'wkrdp.Network.clearBrowserCookies': true
+    };
+  }.bind(this));
 };
 
 exports.setSystemCommands = function() {

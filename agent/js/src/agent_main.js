@@ -191,7 +191,23 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
     }
-  });
+    if (ipcMsg.videoFile) {
+      this.app_.schedule('Read video file', function() {
+        var videoDone = new webdriver.promise.Deferred();
+        fs.readFile(ipcMsg.videoFile, function(e, buffer) {
+          if (e) {
+            videoDone.reject(e);
+          } else {
+            job.resultFiles.push(new wpt_client.ResultFile(
+                wpt_client.ResultFile.ResultType.IMAGE,
+                'video.avi', 'video/avi', buffer));
+          }
+          videoDone.resolve();
+        });
+        return videoDone;
+      }.bind(this));
+    }
+  }.bind(this));
 };
 
 /**

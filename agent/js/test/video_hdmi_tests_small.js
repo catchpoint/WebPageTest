@@ -28,12 +28,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*global describe: true, before: true, beforeEach: true, afterEach: true,
   it: true*/
 
-var browser_local_chrome = require('browser_local_chrome');
+var fs = require('fs');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var webdriver = require('webdriver');
+var video_hdmi = require('video_hdmi');
 
 
 /**
@@ -43,61 +44,58 @@ var webdriver = require('webdriver');
  * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
  * 2) stubbing out anything else with async callbacks, e.g. process or network.
  */
-describe('browser_local_chrome small', function() {
+describe('video_hdmi small', function() {
   'use strict';
 
   var app = webdriver.promise.Application.getInstance();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
-  var processSpawnStub;
-  var chromedriver = '/gaga/chromedriver';
+  var videoCommand = '/video/record';
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
-    processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
+
+    test_utils.fakeTimers(sandbox);
+    app.reset();  // We reuse the app across tests, clean it up.
   });
 
   afterEach(function() {
+    // Call unfakeTimers before verifyAndRestore, which may throw.
+    test_utils.unfakeTimers(sandbox);
     sandbox.verifyAndRestore();
   });
 
-  it('should start and get killed', function() {
-    var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
-    should.ok(!browser.isRunning());
-    browser.startWdServer({browserName: 'chrome'});
-    should.ok(browser.isRunning());
-    should.equal('http://localhost:4444', browser.getServerUrl());
-    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+  it('should start and stop video recording', function() {
+    var processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    processSpawnStub.callback = function(proc, command) {
+      return videoCommand === command;  // true: keep running, do not exit.
+    };
+    // Check for existence of the video record script
+    var fsExistsStub = sandbox.stub(fs, 'exists', function(path, cb) {
+      global.setTimeout(function() {
+        cb(videoCommand === path);
+      }, 1);
+    });
 
-    browser.kill();
-    should.ok(!browser.isRunning());
-    should.equal(undefined, browser.getServerUrl());
-    should.equal(undefined, browser.getDevToolsUrl());
-    should.ok(processSpawnStub.firstCall.returnValue.kill.calledOnce);
-  });
+    var video = new video_hdmi.VideoHdmi(app, videoCommand);
+    video.scheduleStartVideoRecording('test.avi', 'shmantra');
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('killall', processSpawnStub.firstCall.args[0]);
+    should.equal(videoCommand, processSpawnStub.secondCall.args[0]);
+    test_utils.assertStringsMatch(['-f', 'test.avi', '-c', '-d', 'shmantra'],
+        processSpawnStub.secondCall.args[1]);
+    should.equal(2, processSpawnStub.callCount);
+    should.ok(fsExistsStub.calledOnce);
 
-  it('should start and handle process self-exit', function() {
-    var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
-    should.ok(!browser.isRunning());
-    browser.startWdServer({browserName: 'chrome'});
-    should.ok(browser.isRunning());
-    should.equal('http://localhost:4444', browser.getServerUrl());
-    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
-    should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
-    var chromedriverProc = processSpawnStub.firstCall.returnValue;
-
-    chromedriverProc.emit('exit', /*code=*/0);
-    should.ok(!browser.isRunning());
-    should.equal(undefined, browser.getServerUrl());
-    should.equal(undefined, browser.getDevToolsUrl());
-    should.ok(chromedriverProc.kill.notCalled);
+    // Watch for IDLE -- make sure the wait for recording exit has finished.
+    var idleSpy = sandbox.spy();
+    app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
+    video.stopVideoRecording();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.ok(processSpawnStub.secondCall.returnValue.kill.calledOnce);
+    processSpawnStub.secondCall.returnValue.emit('exit', undefined, 'SIGAGA');
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
+    should.ok(idleSpy.calledOnce);
   });
 });

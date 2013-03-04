@@ -33,14 +33,6 @@ var process_utils = require('process_utils');
 exports.DEFAULT_TIMEOUT = 60000;
 
 
-exports.getLoggingErrback = function(description) {
-  'use strict';
-  return function(e, stdout, stderr) {
-    logger.error('%s filed: %s, stdout "%s", stderr "%s"',
-        description, e, stdout, stderr);
-  };
-};
-
 /**
  * Creates an adb runner for a given device serial.
  * @param {String} serial the device serial.
@@ -55,6 +47,10 @@ function Adb(app, serial, adbCommand) {
 }
 exports.Adb = Adb;
 
+/**
+ * Schedules an adb command, resolves with its stdout.
+ * @private
+ */
 Adb.prototype.command_ = function(args, timeout) {
   'use strict';
   return process_utils.scheduleExecWithTimeout(this.app_,
@@ -62,17 +58,25 @@ Adb.prototype.command_ = function(args, timeout) {
       function(stdout, stderr) {
     logger.debug('succeeded%s',
         process_utils.stdoutStderrMessage(stdout, stderr));
-  }, function(e) {
-    logger.error('failed: %s', e);
+    return stdout;
+  }, function(e, stdout, stderr) {
+    logger.error('filed: %s%s',
+        e, process_utils.stdoutStderrMessage(stdout, stderr));
     throw e;
   });
 };
 
+/**
+ * Schedules an adb command on the device, resolves with its stdout.
+ */
 Adb.prototype.do = function(args, timeout) {
   'use strict';
   return this.command_(['-s', this.serial].concat(args), timeout);
 };
 
+/**
+ * Schedules an adb shell command on the device, resolves with its stdout.
+ */
 Adb.prototype.shell = function(args, timeout) {
   'use strict';
   return this.do(['shell'].concat(args), timeout);

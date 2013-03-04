@@ -1,11 +1,26 @@
 A Node.js based agent that allows WebDriverJS scripts.
 
+Tested with NodeJS 0.8.16 and 0.8.21 on OSX 10.8 and Ubuntu 12.10 Quantal.
+Does not work with NodeJS 0.6.x.
+
+On Linux use https://launchpad.net/~chris-lea/+archive/node.js/+packages,
+ones that come with distros tend to be too old (e.g. 0.6 with Ubuntu Quantal).
+
+Works even on BSD with some caveats, mainly replace #!/bin/bash with #!/bin/sh
+in wptdriver.sh and wpttest.sh scripts.
+
+Should work just fine on Windows, but testing on Windows is sporadic.
+
 = Running the agent
 
 ./wptdriver.sh (or .bat)
 
 All the runtime dependencies are cross platform and checked in under lib and
 node_modules.
+
+If filing a bug, run wptdriver.sh (or .bat) -m 10 -v to produce a verbose log
+and attach full output, debug.log, and preferably a zip of the WPT results
+directory from the server.
 
 = Sources layout
 
@@ -18,9 +33,8 @@ wpttest.{sh,bat} -- *nix/win32 script to run the unit and BDD tests
 = Current state of affairs and missing features
 
 Node.js agent can successfully complete an entire job.
-However, it currently only works with Chrome and instead of entering the url
-in the "Website Url" text field on WebPagetest, you have to enter a webdriver
-script in the script tab. The most basic script looks like this:
+However, it currently only works with Chrome. Supports a URL and WD script.
+The most basic script looks like this:
 
 driver = new webdriver.Builder().build();
 driver.get('http://www.google.com');
@@ -28,18 +42,21 @@ driver.wait(function()  {
   return driver.getTitle();
 });
 
-Integrate with Dummynet: done (gpeal@), untested.
-
 = Running tests
 
 ./wpttest.sh (or .bat) -v -m 10
 
 See the script source for various options.
 
+In the tests, timers are faked out, and tests *must not* use the async "done"
+callback variation that Mocha allows. Everything is deterministic,
+with the test responsible for explicitly advancing the fake clock.
+
 The tests use Mocha (http://visionmedia.github.com/mocha/) for running
 tests, including code coverage collection;
 Should.js (https://github.com/visionmedia/should.js) for assertions;
 Sinon (https://github.com/cjohansen/sinon.js) for mocking/stubbing.
+
 All of these are checked in under node_modules, plain non-coverage tests
 can run from the repo itself, with no external dependencies and nothing
 to build.

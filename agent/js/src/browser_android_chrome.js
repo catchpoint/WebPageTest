@@ -29,36 +29,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var adb = require('adb');
 var logger = require('logger');
+var video_hdmi = require('video_hdmi');
 
 var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 
 
-function BrowserAndroidChrome(app, chromedriver, chrome, deviceSerial) {
+/**
+ * Represents Chrome Mobile on Android.
+ *
+ * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {Number} runNumber test run number. Install helpers on run 1.
+ * @param {String} deviceSerial the device to drive.
+ * @param {String} [chromedriver] chromedriver binary, or none.
+ * @param {String} [chrome] Chrome.apk to install, or none.
+ * @param {String} [videoRecordCommand] Command to get HDMI video of the device.
+ * @constructor
+ */
+function BrowserAndroidChrome(app, runNumber, deviceSerial,
+    chromedriver, chrome, videoRecordCommand) {
   'use strict';
   logger.info('BrowserAndroidChrome(%s, %s, %s)',
       chromedriver, chrome, deviceSerial);
   this.app_ = app;
+  this.runNumber_ = runNumber;
+  this.adb_ = new adb.Adb(this.app_, deviceSerial);
   this.chromedriver_ = chromedriver;
   this.chrome_ = chrome;  // Chrome.apk.
   this.chromePackage_ = 'com.google.android.apps.chrome_dev';
   this.chromeActivity_ = 'com.google.android.apps.chrome';
   this.devToolsPort_ = 1234;
   this.devToolsUrl_ = undefined;
-  this.adb_ = new adb.Adb(this.app_, deviceSerial);
+  this.video_ = new video_hdmi.VideoHdmi(this.app_, videoRecordCommand);
 }
 exports.BrowserAndroidChrome = BrowserAndroidChrome;
 
-BrowserAndroidChrome.prototype.startWdServer =
-    function(/*browserCaps, isFirstRun*/) {
+BrowserAndroidChrome.prototype.startWdServer = function(/*browserCaps*/) {
   'use strict';
   throw new Error('Soon: ' +
       'http://madteam.co/forum/avatars/Android/android-80-domokun.png');
 };
 
-BrowserAndroidChrome.prototype.startBrowser = function(
-    browserCaps, isFirstRun) {
+BrowserAndroidChrome.prototype.startBrowser = function() {
   'use strict';
-  if (this.chrome_ && isFirstRun) {
+  if (this.chrome_ && 1 === this.runNumber_) {
     // Explicitly uninstall, as "install -r" fails if the installed package
     // was signed with different keys than the new apk being installed.
     this.adb_.do(['uninstall', this.chromePackage_]).addErrback(function() {
@@ -95,9 +108,27 @@ BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
   return this.devToolsUrl_;
 };
 
-BrowserAndroidChrome.prototype.getDevToolsCapabilities = function() {
+BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return {
-    'Page.captureScreenshot': false  // TODO(klm): check for 26+.
-  };
+  return this.video_.scheduleIsSupported().then(function(isSupported) {
+    return {
+        'wkrdp.Page.captureScreenshot': false,  // TODO(klm): check for 26+.
+        'wkrdp.Network.clearBrowserCache': true,
+        'wkrdp.Network.clearBrowserCookies': true,
+        videoRecording: isSupported};
+  }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(file) {
+  'use strict';
+  // The video record command needs to know device type for cropping etc.
+  return this.adb_.shell(['getprop', 'ro.product.device'])
+      .then(function(stdout) {
+    this.video_.scheduleStartVideoRecording(file, stdout.trim());
+  }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.stopVideoRecording = function() {
+  'use strict';
+  this.video_.stopVideoRecording();
 };

@@ -27,18 +27,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 /*jslint nomen:false */
 
-var events = require('events');
-var vm = require('vm');
-var devtools = require('devtools');
-var logger = require('logger');
-var process_utils = require('process_utils');
-var util = require('util');
-var webdriver = require('webdriver');
-// TODO(klm): generalize
 var browser_android_chrome = require('browser_android_chrome');
 var browser_ios = require('browser_ios');
 var browser_local_chrome = require('browser_local_chrome');
+var devtools = require('devtools');
+var events = require('events');
+var logger = require('logger');
+var process_utils = require('process_utils');
+var util = require('util');
+var vm = require('vm');
 var wd_sandbox = require('wd_sandbox');
+var webdriver = require('webdriver');
 
 exports.process = process;  // Allow to stub out in tests.
 
@@ -92,15 +91,17 @@ exports.WebDriverServer = {
     this.url_ = initMessage.url;
     this.devToolsMessages_ = [];
     this.screenshots_ = [];
+    this.videoFile_ = undefined;
     this.driver_ = undefined;
     this.testStartTime_ = undefined;
     this.pageLoadDonePromise_ = undefined;
     if (!this.browser_) {
       this.app_ = webdriver.promise.Application.getInstance();
+      process_utils.injectWdAppLogging('wd_server app', this.app_);
       if (initMessage.androidSerial) {
         this.browser_ = new browser_android_chrome.BrowserAndroidChrome(
-            this.app_, initMessage.chromedriver, initMessage.chrome,
-            initMessage.androidSerial);
+            this.app_, this.runNumber_, initMessage.androidSerial,
+            initMessage.chromedriver, initMessage.chrome);
       } else if (initMessage.iosSerial) {
         this.browser_ = new browser_ios.BrowserIos(
             this.app_, this.runNumber_, initMessage.iosSerial,
@@ -113,6 +114,7 @@ exports.WebDriverServer = {
             this.app_, initMessage.chromedriver, initMessage.chrome);
       }
       this.devTools_ = undefined;
+      this.browserCapabilities_ = undefined;
       this.isCacheCleared_ = false;
       // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
       // processing in these functions, if they call a WebDriver method.
@@ -121,7 +123,6 @@ exports.WebDriverServer = {
       this.actionCbRecurseGuard_ = false;
       this.wdSandbox_ = undefined;
       this.sandboxApp_ = undefined;
-      process_utils.injectWdAppLogging('wd_server app', this.app_);
 
       this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
     }
@@ -224,7 +225,7 @@ exports.WebDriverServer = {
   onTestStarted_: function() {
     'use strict';
     logger.info('Test starting');
-    if (this.captureVideo_) {
+    if (this.captureVideo_ && !this.videoFile_) {
       this.takeScreenshot_('progress_0', 'test started').then(function() {
         this.testStartTime_ = Date.now();
       }.bind(this));
@@ -264,7 +265,7 @@ exports.WebDriverServer = {
     //   /trunk/Source/WebCore/inspector/Inspector.json
     var result = null;
     if (this.devTools_ &&
-        this.browser_.getDevToolsCapabilities()['Page.captureScreenshot']) {
+        this.browserCapabilities_['wkrdp.Page.captureScreenshot']) {
       result = this.app_.schedule('Screenshot: ' + description, function() {
         var done = new webdriver.promise.Deferred();
         this.devTools_.pageCommand('captureScreenshot', function(result) {
@@ -329,7 +330,7 @@ exports.WebDriverServer = {
       return;  // Cannot do anything after quitting the browser
     }
     var commandStr = commandArgs[1];
-    if (this.captureVideo_) {
+    if (this.captureVideo_ && !this.videoFile_) {
       // We operate in milliseconds, WPT wants "tenths of a second" units.
       var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
       logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
@@ -382,6 +383,25 @@ exports.WebDriverServer = {
    */
   clearPage_: function() {
     'use strict';
+    if (!this.browserCapabilities_) {
+      this.browser_.scheduleGetCapabilities().then(function(capabilities) {
+        this.browserCapabilities_ = capabilities;
+      }.bind(this));
+    }
+    if (this.captureVideo_) {
+      // Must do this via schedule, because browserCapabilities_ are scheduled.
+      this.app_.schedule('Start video recording if we can', function() {
+        if (this.browserCapabilities_.videoRecording) {
+          var videoFile = 'video.avi';
+          logger.debug('Will record video');
+          this.browser_.scheduleStartVideoRecording(videoFile)
+              .then(function() {
+            logger.debug('Video record start succeeded');
+            this.videoFile_ = videoFile;
+          }.bind(this));
+        }
+      }.bind(this));
+    }
     return this.app_.schedule('Clear the page', function() {
       var donePromise = new webdriver.promise.Deferred();
       function reject(description, e) {
@@ -393,21 +413,29 @@ exports.WebDriverServer = {
             frameId: result.frameTree.frame.id,
             html: '<body bgcolor="#DE640D"/>'
         }}, function() {
-          logger.info('Page.setDocumentContent blank returned');
-          var dtCaps = this.browser_.getDevToolsCapabilities();
-          if (!this.isCacheCleared_ &&
-              dtCaps['Network.clearBrowserCache'] &&
-              dtCaps['Network.clearBrowserCookies']) {
-            this.isCacheCleared_ = true;
-            this.devTools_.networkCommand('clearBrowserCache', function() {
-              this.devTools_.networkCommand('clearBrowserCookies', function() {
+          logger.info('Page.setDocumentContent orange returned');
+          global.setTimeout(function() {
+            this.devTools_.command({method: 'Page.setDocumentContent', params: {
+              frameId: result.frameTree.frame.id,
+              html: '<body/>'
+            }}, function() {
+              logger.info('Page.setDocumentContent blank returned');
+              var caps = this.browserCapabilities_;
+              if (!this.isCacheCleared_ &&
+                  caps['wkrdp.Network.clearBrowserCache'] &&
+                  caps['wkrdp.Network.clearBrowserCookies']) {
+                this.isCacheCleared_ = true;
+                this.devTools_.networkCommand('clearBrowserCache', function() {
+                  this.devTools_.networkCommand('clearBrowserCookies',
+                      donePromise.resolve.bind(donePromise),
+                      reject.bind(this, 'Network.clearBrowserCookies'));
+                }.bind(this), reject.bind(this, 'Network.clearBrowserCache'));
+              } else {
                 donePromise.resolve();
-              }.bind(this), reject.bind(this, 'Network.clearBrowserCookies'));
-            }.bind(this), reject.bind(this, 'Network.clearBrowserCache'));
-          } else {
-            donePromise.resolve();
-          }
-        }.bind(this), reject.bind(this, 'Page.setDocumentContent blank'));
+              }
+            }.bind(this), reject.bind(this, 'Page.setDocumentContent blank'));
+          }.bind(this), 500);
+        }.bind(this), reject.bind(this, 'Page.setDocumentContent orange'));
       }.bind(this), reject.bind(this, 'Page.getResourceTree'));
       return donePromise.promise;
     }.bind(this));
@@ -560,7 +588,7 @@ exports.WebDriverServer = {
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
     this.takeScreenshot_('screen', 'end of run').then(function(screenshot) {
-      if (screenshot && this.captureVideo_) {
+      if (screenshot && this.captureVideo_ && !this.videoFile_) {
         // Last video frame
         var wptTimestamp =
             Math.round((Date.now() - this.testStartTime_) / 100);
@@ -571,12 +599,16 @@ exports.WebDriverServer = {
             description: 'end of run'});
       }
     }.bind(this));
+    if (this.videoFile_) {
+      this.browser_.stopVideoRecording();
+    }
     this.app_.schedule('Send IPC done', function() {
       logger.debug('sending IPC done');
       exports.process.send({
           cmd: 'done',
           devToolsMessages: this.devToolsMessages_,
-          screenshots: this.screenshots_});
+          screenshots: this.screenshots_,
+          videoFile: this.videoFile_});
     }.bind(this));
     if (this.exitWhenDone_) {
       this.scheduleStop();
@@ -590,13 +622,17 @@ exports.WebDriverServer = {
     // We must schedule/run a driver quit before we emit 'done', to make sure
     // we take the final screenshot and send it in the 'done' IPC message.
     this.takeScreenshot_('screen', 'run error');
+    if (this.videoFile_) {
+      this.browser_.stopVideoRecording();
+    }
     this.app_.schedule('Send IPC error', function() {
       logger.error('Sending IPC error: %j', e);
       exports.process.send({
           cmd: 'error',
           e: e.message,
           devToolsMessages: this.devToolsMessages_,
-          screenshots: this.screenshots_});
+          screenshots: this.screenshots_,
+          videoFile: this.videoFile_});
     }.bind(this));
     this.scheduleStop();
   },

@@ -29,12 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   it: true*/
 
 var browser_ios = require('browser_ios');
-var child_process = require('child_process');
-var events = require('events');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
+var video_hdmi = require('video_hdmi');
 var webdriver = require('webdriver');
 
 
@@ -53,7 +52,7 @@ describe('browser_ios small', function() {
 
   var sandbox;
   var spawnStub;
-  var ideviceDir = '/gaga/idevice/darwin';
+  var ideviceDir = '/gaga/ios/darwin';
   var serial = 'GAGA123';
 
   beforeEach(function() {
@@ -62,26 +61,21 @@ describe('browser_ios small', function() {
     test_utils.fakeTimers(sandbox);
     app.reset();  // We reuse the app across tests, clean it up.
 
-    spawnStub = sandbox.stub(child_process, 'spawn', function(cmd, args) {
-      var fakeProcess = new events.EventEmitter();
-      fakeProcess.stdout = new events.EventEmitter();
-      fakeProcess.stderr = new events.EventEmitter();
-      fakeProcess.kill = function() {};
-      sandbox.stub(fakeProcess, 'kill', function() {
-        if (args && -1 !== args.indexOf('killall')) {
-          fakeProcess.emit('exit', 1);  // Simulate ssh killall exit code 1.
-        } else {
-          fakeProcess.emit('exit', 0);
-        }
-      });
-      if (/ssh|ideviceinstaller|idevice-app-runner/.test(cmd)) {
-        // These commands exit by themselves
+    spawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    spawnStub.callback = function(proc, cmd, args) {
+      var keepRunning = !/^ssh|idevice/.test(cmd);
+      if (args && -1 !== args.indexOf('killall')) {
         global.setTimeout(function() {
-          fakeProcess.kill();
-        }, 0);
+          proc.emit('exit', 1);  // Simulate ssh killall exit code 1.
+        }, 5);
+        keepRunning = true;  // Suppress the stub's own emit('exit').
+      } else if (args && -1 !== args.indexOf('ProductType')) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', 'iPhone666\n');
+        }, 1);
       }
-      return fakeProcess;
-    });
+      return keepRunning;
+    };
   });
 
   afterEach(function() {
@@ -119,6 +113,10 @@ describe('browser_ios small', function() {
     should.equal('http://localhost:9222/json', browser.getDevToolsUrl());
 
     var nextCallNum = verifyClearCacheAndUrlOpen(/*startCallNum=*/0, /\/id_/);
+    spawnStub.getCall(nextCallNum).args[0].should.match(/proxy$/);
+    var proxyFakeProcess = spawnStub.getCall(nextCallNum).returnValue;
+    should.ok(proxyFakeProcess.kill.notCalled);
+    nextCallNum += 1;
     // Ran no other child processes.
     should.equal(nextCallNum, spawnStub.callCount);
 
@@ -128,6 +126,7 @@ describe('browser_ios small', function() {
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
     should.equal(nextCallNum, spawnStub.callCount);  // Kill is a no-op.
+    should.ok(proxyFakeProcess.kill.calledOnce);
   });
 
   it('should start and get killed with full environment', function() {
@@ -143,7 +142,8 @@ describe('browser_ios small', function() {
 
     should.equal('python', spawnStub.getCall(0).args[0]);
     test_utils.assertStringsMatch(
-        ['-m', 'tcprelay', '-t', '22:1234'], spawnStub.getCall(0).args[1]);
+        ['-B', '-OO', '-m', 'tcprelay', '-t', '22:GAGA123:1234'],
+        spawnStub.getCall(0).args[1]);
     var forwardFakeProcess = spawnStub.getCall(0).returnValue;
     spawnStub.getCall(1).args[0].should.match(/ideviceinstaller$/);
     test_utils.assertStringsMatch(
@@ -153,16 +153,38 @@ describe('browser_ios small', function() {
     var proxyFakeProcess = spawnStub.getCall(nextCallNum).returnValue;
     should.ok(proxyFakeProcess.kill.notCalled);
     should.ok(forwardFakeProcess.kill.notCalled);
+    nextCallNum += 1;
     // Ran no other child processes.
-    should.equal(nextCallNum + 1, spawnStub.callCount);
+    should.equal(nextCallNum, spawnStub.callCount);
 
     browser.kill();
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
     should.ok(!browser.isRunning());
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    should.equal(nextCallNum + 1, spawnStub.callCount);
+    should.equal(nextCallNum, spawnStub.callCount);
     should.ok(forwardFakeProcess.kill.calledOnce);
     should.ok(proxyFakeProcess.kill.calledOnce);
+  });
+
+  it('should record video with the correct device type', function() {
+    var videoStart = sandbox.stub(
+        video_hdmi.VideoHdmi.prototype, 'scheduleStartVideoRecording');
+    var videoStop = sandbox.stub(
+        video_hdmi.VideoHdmi.prototype, 'stopVideoRecording');
+    var browser = new browser_ios.BrowserIos(app, /*runNumber=*/1, serial);
+    browser.scheduleStartVideoRecording('test.avi');
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.ok(spawnStub.calledOnce);
+    should.ok(videoStart.calledOnce);
+    test_utils.assertStringsMatch(
+        ['test.avi', 'iPhone666'], videoStart.firstCall.args);
+    should.ok(videoStop.notCalled);
+
+    browser.stopVideoRecording();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.ok(spawnStub.calledOnce);
+    should.ok(videoStart.calledOnce);
+    should.ok(videoStop.calledOnce);
   });
 });
