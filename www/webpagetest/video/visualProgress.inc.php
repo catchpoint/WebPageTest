@@ -132,8 +132,8 @@ function GetImageHistogram($image_file, $options = null) {
                 if ($resample > 2) {
                     $oldWidth = $width;
                     $oldHeight = $height;
-                    $width = ($width * 2) / $resample;
-                    $height = ($height * 2) / $resample;
+                    $width = intval(($width * 2) / $resample);
+                    $height = intval(($height * 2) / $resample);
                     $tmp = imagecreatetruecolor($width, $height);
                     fastimagecopyresampled($tmp, $im, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight, 3);
                     imagedestroy($im);

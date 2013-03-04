@@ -230,7 +230,7 @@ else
                     // video frames
                     if( $test['test']['video'] || $test['testinfo']['video'] )
                     {
-                        $frames = loadVideo("$testPath/video_{$i}");
+                        loadVideo("$testPath/video_{$i}", $frames);
                         if( $frames && count($frames) )
                         {
                             $progress = GetVisualProgress($testPath, $i, 0);
@@ -313,7 +313,7 @@ else
                     // video frames
                     if( $test['test']['video'] || $test['testinfo']['video']  )
                     {
-                        $frames = loadVideo("$testPath/video_{$i}_cached");
+                        loadVideo("$testPath/video_{$i}_cached", $frames);
                         if( $frames && count($frames) )
                         {
                             $progress = GetVisualProgress($testPath, $i, 1);

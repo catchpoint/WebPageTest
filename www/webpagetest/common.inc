@@ -1158,7 +1158,7 @@ function GetTestInfoHtml($includeScript = true)
         $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
     if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1) 
         $html .= '<b>Authenticated: ' . $login . '</b><br>';
-    if( isset($test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
+    if( array_key_exists('testinfo', $test) && array_key_exists('connectivity', $test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
     {
         $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
         if( $test['testinfo']['plr'] )
@@ -1262,8 +1262,12 @@ function RestoreTest($id)
         }
         else
             $ret = true;
+
+        // Handle AVI processing here if necessary
+        require_once('./video/avi2frames.inc.php');
+        ProcessAllAVIVideos($testPath);
     }
-        
+    
     return $ret;
 }
 
@@ -1649,34 +1653,30 @@ function UnlockLocation($lock)
 * 
 * @param mixed $path
 */
-function loadVideo($path)
+function loadVideo($path, &$frames)
 {
+    $ret = false;
     $frames = null;
-    
-    if( is_dir($path) )
-    {
+    if (is_dir($path)) {
         $files = glob( $path . '/frame_*.jpg', GLOB_NOSORT );
-        if( $files && count($files) )
-        {
+        if ($files && count($files)) {
+            $ret = true;
             $frames = array();
-            foreach( $files as $file )
-            {
+            foreach ($files as $file) {
                 $file = basename($file);
                 $parts = explode('_', $file);
-                if( count($parts) >= 2 )
-                {
+                if (count($parts) >= 2) {
                     $index = (int)$parts[1];
                     $frames[$index] = $file;
                 }
             }
-            
             
             // sort the frames in order
             ksort($frames, SORT_NUMERIC);
         }
     }
     
-    return $frames;
+    return $ret;
 }
 
 /**

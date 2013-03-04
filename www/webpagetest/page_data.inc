@@ -62,11 +62,17 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
         if ($cached)
             $video_dir .= '_cached';
         if( is_dir($video_dir) && (!array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'])) {
-            $frames = loadVideo($video_dir);
-            if( $frames && count($frames) ) {
-                $last = end(array_keys($frames));
-                if( $last )
+            $frames = null;
+            loadVideo($video_dir, $frames);
+            if( isset($frames) && is_array($frames) && count($frames) ) {
+                end($frames);
+                $last = key($frames);
+                reset($frames);
+                if( $last ) {
                     $ret['lastVisualChange'] = $last * 100;
+                    if (!array_key_exists('visualComplete', $ret))
+                        $ret['visualComplete'] = $ret['lastVisualChange'];
+                }
             }
         }
         require_once('./video/visualProgress.inc.php');

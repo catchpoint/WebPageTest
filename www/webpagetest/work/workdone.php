@@ -12,6 +12,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 ignore_user_abort(true);
 set_time_limit(60*5*10);
 require_once('harTiming.inc');
+require_once('./video/avi2frames.inc.php');
 
 
 $location = $_REQUEST['location'];
@@ -239,6 +240,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         // pre-process any background processing we need to do for this run
         if (isset($runNumber) && isset($cacheWarmed)) {
             loadPageRunData($testPath, $runNumber, $cacheWarmed);
+            ProcessAVIVideo($testPath, $runNumber, $cacheWarmed);
         }
             
         // see if the test is complete

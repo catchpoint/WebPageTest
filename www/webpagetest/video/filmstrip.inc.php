@@ -61,7 +61,7 @@ foreach($compTests as $t) {
 
                     if( !array_key_exists('run', $test) || !$test['run'] )
                         $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $median_metric);
-                    $test['aft'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+                    $test['aft'] = array_key_exists('aft', $test['pageData'][$test['run']][$test['cached']]) ? $test['pageData'][$test['run']][$test['cached']]['aft'] : 0;
 
                     $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
                     if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )

@@ -661,7 +661,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if ($json) {
                     $optimized[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
                     $optimized[0]['video_frames'] = array();
-                    $frames = loadVideo("$testPath/video_{$fvMedian}");
+                    loadVideo("$testPath/video_{$fvMedian}", $frames);
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
@@ -684,7 +684,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if ($json) {
                     $original[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
                     $original[0]['video_frames'] = array();
-                    $frames = loadVideo("$testPath/video_{$fvMedian}");
+                    loadVideo("$testPath/video_{$fvMedian}", $frames);
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
@@ -713,7 +713,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if ($json) {
                     $optimized[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                     $optimized[1]['video_frames'] = array();
-                    $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
+                    loadVideo("$testPath/video_{$rvMedian}_cached", $frames);
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
@@ -735,7 +735,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 if ($json) {
                     $original[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                     $original[1]['video_frames'] = array();
-                    $frames = loadVideo("$testPath/video_{$rvMedian}_cached");
+                    loadVideo("$testPath/video_{$rvMedian}_cached", $frames);
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
