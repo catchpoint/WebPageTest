@@ -1954,7 +1954,8 @@ void CPagetestReporting::CheckKeepAlive()
 
 				CString conn = w->response.connection;
 				conn.MakeLower();
-				if( conn.Find(_T("keep-alive")) > -1 )
+				if( conn.Find(_T("keep-alive")) > -1 &&
+            conn.Find(_T("close")) == -1)
 					w->keepAliveScore = 100;
 				else
 				{
