@@ -140,7 +140,10 @@ void WptSettings::LoadFromEC2(void) {
           if (key.GetLength() && value.GetLength()) {
             if (!key.CompareNoCase(_T("wpt_server")))
               _server = CString(_T("http://")) + value + _T("/");
-            else if (!key.CompareNoCase(_T("wpt_location")))
+            else if (!key.CompareNoCase(_T("wpt_loc")))
+              _location = value; 
+            else if (_location.IsEmpty() &&
+                     !key.CompareNoCase(_T("wpt_location")))
               _location = value + _T("_wptdriver"); 
             else if (!key.CompareNoCase(_T("wpt_key")) )
               _key = value; 
@@ -150,6 +153,18 @@ void WptSettings::LoadFromEC2(void) {
         }
       }
     } while (pos > 0);
+    if (_location.IsEmpty()) {
+      CString zone;
+      if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
+                     _T("/placement/availability-zone"), zone)) {
+        int pos = zone.Find('-');
+        if (pos > 0) {
+          pos = zone.Find('-', pos + 1);
+          if (pos > 0)
+            _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
+        }
+      }
+    }
   }
 
   GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
