@@ -146,11 +146,8 @@ public:
   bool    _netlog;
   bool    _trace;
   bool    _video;
-  bool    _aft;
   bool    _spdy3;
   bool    _noscript;
-  DWORD   _aft_early_cutoff;
-  DWORD   _aft_min_changes;
   CString _test_type;
   CString _block;
   DWORD   _bwIn;

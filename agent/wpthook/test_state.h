@@ -119,7 +119,6 @@ public:
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
   LARGE_INTEGER _title_time;
-  DWORD _aft_time_ms;
   SYSTEMTIME    _start_time;
 
   LARGE_INTEGER _first_byte;
@@ -138,7 +137,6 @@ public:
   CString _user_agent;
 
   bool  _active;
-  bool _capturing_aft;
   int   _current_document;
   bool  _exit;
   bool  _navigated;

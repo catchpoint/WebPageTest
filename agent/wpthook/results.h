@@ -70,7 +70,6 @@ private:
   bool          adult_site_;
 
   void ProcessRequests(void);
-  void CalculateAFT(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);

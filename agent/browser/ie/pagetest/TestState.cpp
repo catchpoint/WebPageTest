@@ -263,12 +263,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.QueryDWORDValue(_T("minimumDuration"), minimumDuration);
 					clearShortTermCacheSecs = 0;
 					key.QueryDWORDValue(_T("clearShortTermCacheSecs"), clearShortTermCacheSecs);
-			        aft = 0;
-					key.QueryDWORDValue(_T("AFT"), aft);
-					aftEarlyCutoff = 25;
-					key.QueryDWORDValue(_T("aftEarlyCutoff"), aftEarlyCutoff);
-					aftMinChanges = 25;
-					key.QueryDWORDValue(_T("aftMinChanges"), aftMinChanges);
 					noHeaders = 0;
 					key.QueryDWORDValue(_T("No Headers"), noHeaders);
 					noImages = 0;
@@ -546,9 +540,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			EnterCriticalSection(&cs);
 			active = true;
 			available = false;
-      capturingAFT = false;
-      if( aft )
-        capturingAFT = true;
 			reportSt = NONE;
 			
 			// collect the starting TCP stats
@@ -583,7 +574,7 @@ void CTestState::CheckComplete()
   if( heartbeatEvent )
     SetEvent(heartbeatEvent);
 
-	if( active || capturingAFT )
+	if( active )
 	{
 		CString buff;
 		bool expired = false;
@@ -691,93 +682,67 @@ void CTestState::CheckComplete()
 			  }
       }
     }
-    else
-    {
-      // check to see if we are done capturing AFT video
-		  DWORD elapsed = (DWORD)((now - end) / (freq / 1000));
-		  if( elapsed > AFT_TIMEOUT )
-        done = true;
-    }
 			
 		if ( !keepOpen && (expired || done) )
 		{
-      if( active && capturingAFT )
-      {
-        OutputDebugString(_T("[Pagetest] ***************** Data collection complete, continuing to capture video for AFT\n"));
+		  CString buff;
+		  buff.Format(_T("[Pagetest] ***** Page Done\n")
+					  _T("[Pagetest]          Document ended: %0.3f sec\n")
+					  _T("[Pagetest]          Last Activity:  %0.3f sec\n")
+					  _T("[Pagetest]          DOM Element:  %0.3f sec\n"),
+					  !endDoc ? 0.0 : (double)(endDoc-start) / (double)freq,
+					  !lastRequest ? 0.0 : (double)(lastRequest-start) / (double)freq,
+					  !domElement ? 0.0 : (double)(domElement-start) / (double)freq);
+		  OutputDebugString(buff);
 
-        // turn off regular data capture but keep capturing video
-        active = false;
+      // see if we are combining multiple script steps (in which case we need to start again)
+      if( runningScript && script_combineSteps && script_combineSteps != 1 && !script.IsEmpty() )
+      {
+        if( script_combineSteps > 1 )
+          script_combineSteps--;
+
+        // do some basic resetting
+        end = 0;
+        lastRequest = 0;
+        lastActivity = 0;
+        endDoc = 0;
+
+        ContinueScript(false);
+      }
+      else
+      {
+		    // keep track of the end time in case there wasn't a document
 		    if( !end || abm )
 			    end = lastRequest;
+
+		    // put some text on the browser window to indicate we're done
+		    double sec = (start && end > start) ? (double)(end - start) / (double)freq: 0;
+		    if( !expired )
+			    reportSt = TIMER;
+		    else
+			    reportSt = QUIT_NOEND;
+
+		    RepaintWaterfall();
+
+		    // kill the background timer
+		    if( hTimer )
+		    {
+			    DeleteTimerQueueTimer(NULL, hTimer, NULL);
+			    hTimer = 0;
+			    timeEndPeriod(1);
+		    }
 
 		    // get a screen shot of the fully loaded page
 		    if( saveEverything )
         {
           FindBrowserWindow();
-          screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
+			    screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
         }
+
+		    // write out any results (this will also kill the timer)
+		    FlushResults();
       }
-      else
-      {
-			  CString buff;
-			  buff.Format(_T("[Pagetest] ***** Page Done\n")
-						  _T("[Pagetest]          Document ended: %0.3f sec\n")
-						  _T("[Pagetest]          Last Activity:  %0.3f sec\n")
-						  _T("[Pagetest]          DOM Element:  %0.3f sec\n"),
-						  !endDoc ? 0.0 : (double)(endDoc-start) / (double)freq,
-						  !lastRequest ? 0.0 : (double)(lastRequest-start) / (double)freq,
-						  !domElement ? 0.0 : (double)(domElement-start) / (double)freq);
-			  OutputDebugString(buff);
-
-        // see if we are combining multiple script steps (in which case we need to start again)
-        if( runningScript && script_combineSteps && script_combineSteps != 1 && !script.IsEmpty() )
-        {
-          if( script_combineSteps > 1 )
-            script_combineSteps--;
-
-          // do some basic resetting
-          end = 0;
-          lastRequest = 0;
-          lastActivity = 0;
-          endDoc = 0;
-
-          ContinueScript(false);
-        }
-        else
-        {
-			    // keep track of the end time in case there wasn't a document
-			    if( !end || abm )
-				    end = lastRequest;
-
-			    // put some text on the browser window to indicate we're done
-			    double sec = (start && end > start) ? (double)(end - start) / (double)freq: 0;
-			    if( !expired )
-				    reportSt = TIMER;
-			    else
-				    reportSt = QUIT_NOEND;
-
-			    RepaintWaterfall();
-
-			    // kill the background timer
-			    if( hTimer )
-			    {
-				    DeleteTimerQueueTimer(NULL, hTimer, NULL);
-				    hTimer = 0;
-				    timeEndPeriod(1);
-			    }
-
-			    // get a screen shot of the fully loaded page
-			    if( saveEverything )
-          {
-            FindBrowserWindow();
-				    screenCapture.Capture(hBrowserWnd, CapturedImage::FULLY_LOADED);
-          }
-
-			    // write out any results (this will also kill the timer)
-			    FlushResults();
-        }
-      }
-		}
+    }
 	}
 }
 
@@ -1092,7 +1057,7 @@ void CTestState::BackgroundTimer(void)
 
 	__int64 now;
 	QueryPerformanceCounter((LARGE_INTEGER *)&now);
-	if( active || capturingAFT )
+	if( active )
 	{
 		CProgressData data;
     data.sampleTime = now;

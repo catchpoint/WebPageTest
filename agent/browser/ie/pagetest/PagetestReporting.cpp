@@ -54,7 +54,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <sstream>
 using namespace std::tr1;
-#include "AFT.h"
 #include "../urlblast/zip/zip.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -173,7 +172,6 @@ void CPagetestReporting::Reset(void)
 		tmStartRender = 0;
 		tmDOMElement = 0;
 		tmBasePage = 0;
-    msAFT = 0;
     msVisualComplete = 0;
 		reportSt = NONE;
 		
@@ -276,10 +274,9 @@ void CPagetestReporting::FlushResults(void)
 	StopTimers();
 
 	EnterCriticalSection(&cs);
-	if( active || capturingAFT )
+	if( active )
 	{
 		active = false;
-    capturingAFT = false;
 		LeaveCriticalSection(&cs);
 		
 		// make sure we got at least one document complete, otherwise we really have no data
@@ -403,9 +400,6 @@ void CPagetestReporting::FlushResults(void)
 
             SaveBodies(logFile+step+_T("_bodies.zip"));
             SaveCustomMatches(logFile+step+_T("_custom_rules.json"));
-
-            if( aft )
-              msAFT = CalculateAFT();
 
             if( captureVideo )
             {
@@ -1043,7 +1037,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc,
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
-      msAFT, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
+      0, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
       _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite);
 	buff += result;
 }
@@ -3280,60 +3274,6 @@ void CPagetestReporting::SortEvents()
 			}
 		}
 	}
-}
-
-/*-----------------------------------------------------------------------------
-	Calculate the AFT
------------------------------------------------------------------------------*/
-DWORD CPagetestReporting::CalculateAFT()
-{
-  DWORD msAFT = 0;
-  ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Calculating AFT\n"));
-  CAFT aftEngine(aftMinChanges, aftEarlyCutoff);
-  aftEngine.SetCrop(0, 12, 12, 0);
-
-  screenCapture.Lock();
-  CxImage * last_image = NULL;
-  CString file_name;
-  POSITION pos = screenCapture._captured_images.GetHeadPosition();
-  while (pos) 
-  {
-    CapturedImage& image = screenCapture._captured_images.GetNext(pos);
-    DWORD image_time = 0;
-    if (image._capture_time.QuadPart > start)
-      image_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
-    CxImage * img = new CxImage;
-    if (image.Get(*img)) 
-    {
-      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
-      if (last_image) 
-      {
-        if (ImagesAreDifferent(last_image, img)) 
-        {
-          aftEngine.AddImage( img, image_time );
-        }
-      } 
-      else 
-        aftEngine.AddImage( img, image_time );
-
-      if (last_image)
-        delete last_image;
-      last_image = img;
-    }
-    else
-      delete img;
-  }
-
-  bool confidence;
-  CxImage imgAft;
-  aftEngine.Calculate(msAFT, confidence, &imgAft);
-  imgAft.Save(logFile + _T("_aft.png"), CXIMAGE_FORMAT_PNG);
-
-  if (last_image)
-    delete last_image;
-  screenCapture.Unlock();
-
-  return msAFT;
 }
 
 /*-----------------------------------------------------------------------------

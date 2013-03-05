@@ -69,27 +69,6 @@ function ValidateInput(form)
             ConnectionChanged();
         });
         
-        if( $('#aftCheck').attr('checked') )
-            $('#aftSettings').removeClass('hidden');
-            
-        $("#aftCheck").change(function(){
-            if( $('#aftCheck').attr('checked') )
-            {
-                $('#videoCheck').attr('checked', true);
-                $('#aftSettings').removeClass('hidden');
-            }
-            else
-                $('#aftSettings').addClass('hidden');
-        });
-
-        $("#videoCheck").change(function(){
-            if( !$('#videoCheck').attr('checked') )
-            {
-                $('#aftCheck').attr('checked', false);
-                $('#aftSettings').addClass('hidden');
-            }
-        });
-
         // make sure to select an intelligent default (in case the back button was hit)
         LocationChanged();
         
@@ -276,7 +255,6 @@ function ConnectionChanged()
         var down = locations[config]['down'] / 1000;
         var latency = locations[config]['latency'];
         var plr = 0;
-        var aftCutoff = $('#aftec').val();
         if( connection != undefined && connection.length )
         {
             if( connectivity[connection] != undefined )
@@ -286,8 +264,6 @@ function ConnectionChanged()
                 latency = connectivity[connection]['latency'];
                 if( connectivity[connection]['plr'] != undefined )
                     plr = connectivity[connection]['plr'];
-                if( connectivity[connection]['aftCutoff'] != undefined )
-                    aftCutoff = connectivity[connection]['aftCutoff'];
             }
             else
             {
@@ -301,7 +277,6 @@ function ConnectionChanged()
             $('#bwUp').val(up);
             $('#latency').val(latency);
             $('#plr').val(plr);
-            $('#aftec').val(aftCutoff);
         }
         
         // enable/disable the fields as necessary

@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
-#include "aft.h"
 #include "optimization_checks.h"
 #include "results.h"
 #include "shared_mem.h"
@@ -107,8 +106,6 @@ void Results::Save(void) {
     OptimizationChecks checks(_requests, _test_state, _test, _dns);
     checks.Check();
     base_page_CDN_ = checks._base_page_CDN;
-    if( _test._aft )
-      CalculateAFT();
     SaveRequests(checks);
     SaveImages();
     SaveProgressData();
@@ -121,58 +118,6 @@ void Results::Save(void) {
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
-
-
-/*-----------------------------------------------------------------------------
-  Save the cpu, memory and bandwidth progress data during the test.
------------------------------------------------------------------------------*/
-void Results::CalculateAFT(void) {
-  DWORD msAFT = 0;
-  ATLTRACE(_T("[wpthook] - Results - CalculateAFT\n"));
-  AFT aftEngine(_test._aft_min_changes, _test._aft_early_cutoff);
-  aftEngine.SetCrop(0, 12, 12, 0);
-
-  _screen_capture.Lock();
-  CxImage * last_image = NULL;
-  CString file_name;
-  POSITION pos = _screen_capture._captured_images.GetHeadPosition();
-  while( pos ) {
-    CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
-    DWORD image_time = _test_state.ElapsedMsFromStart(image._capture_time);
-    CxImage * img = new CxImage;
-    if( image.Get(*img) ) {
-      img->Resample2(img->GetWidth() / 2, img->GetHeight() / 2);
-      if( last_image ) {
-        if( ImagesAreDifferent(last_image, img) ) {
-          aftEngine.AddImage( img, image_time );
-        }
-      } 
-      else 
-        aftEngine.AddImage( img, image_time );
-
-      if (last_image)
-        delete last_image;
-      last_image = img;
-    }
-    else
-      delete img;
-  }
-
-  bool confidence;
-  CxImage imgAft;
-  aftEngine.Calculate(msAFT, confidence, &imgAft);
-  imgAft.Save(_test._file_base + IMAGE_AFT, CXIMAGE_FORMAT_PNG);
-
-  if (last_image)
-    delete last_image;
-  _screen_capture.Unlock();
-
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - Results::CalculateAFT() %d ms\n"),
-    msAFT);
-  _test_state._aft_time_ms = msAFT;
-}
-
 
 /*-----------------------------------------------------------------------------
   Save the cpu, memory and bandwidth progress data during the test.
@@ -613,11 +558,8 @@ void Results::SavePageData(OptimizationChecks& checks){
       result += "1\t";
     else
       result += "0\t";
-    // AFT (ms)
-    // TODO: Calc the AFT timestamp and calculate it while writing instead of
-    // calculate the ms value directly.
-    buff.Format("%d\t", _test_state._aft_time_ms);
-    result += buff;
+    // AFT (ms) (no longer supported)
+    result += "\t";
     // DOM Element Count
     result += "\t";
     // Page Speed Version

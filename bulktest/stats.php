@@ -4,9 +4,9 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Chromium:Webkit Scheduler.DSL'] = 'Webkit Scheduler';
-$loc['EC2_East_Chromium:Chrome Scheduler.DSL'] = 'Chrome Scheduler';
-$loc['EC2_East_Chromium:No False Start.DSL'] = 'No False Start';
+$loc['EC2_East_Chromium:Webkit Scheduler.3G'] = 'Webkit Scheduler';
+$loc['EC2_East_Chromium:Chrome Scheduler.3G'] = 'Chrome Scheduler';
+$loc['EC2_East_Chromium:No False Start.3G'] = 'No False Start';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests', 'domContentReady', 'visualComplete');
 
@@ -20,21 +20,14 @@ if (LoadResults($results)) {
     foreach($results as &$result) {
         $valid = true;
         $total++;
-        if (array_key_exists('bytes', $result) &&
-            $result['bytes'] &&
-            array_key_exists('docComplete', $result) &&
-            $result['docComplete'] &&
-            array_key_exists('ttfb', $result) &&
-            $result['ttfb'] &&
-            $result['docComplete'] > $result['ttfb']) {
-            $bw = ($result['bytes'] * 8) / ($result['docComplete'] - $result['ttfb']);
-            if (isset($maxBandwidth) && $maxBandwidth && $bw > $maxBandwidth) {
-                echo "bw: $bw\n";
-                $valid = false;
-                $invalid++;
-            }
-        } else {
+        if (($result['result'] != 0 && $result['result'] != 99999 ) ||
+            !$result['bytes'] ||
+            !$result['docComplete'] ||
+            !$result['ttfb'] ||
+            $result['ttfb'] > $result['docComplete'] ||
+            (isset($maxBandwidth) && $maxBandwidth && (($result['bytes'] * 8) / $result['docComplete']) > $maxBandwidth)) {
             $valid = false;
+            $invalid++;
         }
         if ($valid) {
             $url = $result['url'];

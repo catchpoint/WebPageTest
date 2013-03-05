@@ -99,7 +99,6 @@
                 $test['callback'] = $req_callback;
             }
             $test['agent'] = $req_agent;
-            $test['aft'] = $req_aft;
             $test['aftEarlyCutoff'] = (int)$req_aftec;
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
@@ -861,14 +860,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['bodies'] = $test['bodies'] ? 1 : 0;
             $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
             $test['noheaders'] = $test['noheaders'] ? 1 : 0;
-                
-            if( $test['aft'] )
-            {
-                $test['aft'] = 1;
-                $test['video'] = 1;
-            }
-            else
-                $test['aft'] = 0;
+            $test['aft'] = 0;
 
             if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
                 $test['aftMinChanges'] = $settings['aftMinChanges'];
@@ -942,9 +934,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
-            
-            if( $test['aft'] && $test['runs'] > 1 )
-                $error = "Above the Fold Time testing is currently limited to 1 test at a time because it is extremely resource intensive.";
         }
     }
     elseif( !strlen($error) )
@@ -1594,7 +1583,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $testInfo .= "id=$testId\r\n";
         $testInfo .= "batch=$batch\r\n";
         $testInfo .= "batch_locations=$batch_locations\r\n";
-        $testInfo .= "aft={$test['aft']}\r\n";
         $testInfo .= "sensitive={$test['sensitive']}\r\n";
         if( strlen($test['login']) )
             $testInfo .= "authenticated=1\r\n";
@@ -1663,12 +1651,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nblockads=1";
             if( $test['video'] )
                 $testFile .= "\r\nCapture Video=1";
-            if( $test['aft'] )
-            {
-                $testFile .= "\r\naft=1";
-                $testFile .= "\r\naftMinChanges={$test['aftMinChanges']}";
-                $testFile .= "\r\naftEarlyCutoff={$test['aftEarlyCutoff']}";
-            }
             if( strlen($test['type']) )
                 $testFile .= "\r\ntype={$test['type']}";
             if( $test['block'] )

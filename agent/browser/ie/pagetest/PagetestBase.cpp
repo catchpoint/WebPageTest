@@ -62,7 +62,6 @@ CPagetestBase::CPagetestBase(void):
   , _GDIWindowUpdated(NULL)
   , windowUpdated(false)
   , hGDINotifyWindow(NULL)
-  , aft(0)
   , titleTime(0)
   , currentRun(0)
 {
@@ -190,7 +189,6 @@ void CPagetestBase::Reset(void)
     pageTitle.Empty();
 		layoutChanged.RemoveAll();
 		active = false;
-    capturingAFT = false;
 		url.Empty();
 		
 		gzipScore = -1;

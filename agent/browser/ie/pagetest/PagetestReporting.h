@@ -85,7 +85,6 @@ public:
   CString   basePageCDN;    // CDN used by the base page (if any)
   CString   basePageRTT;    // RTT for the base page
   DWORD     basePageAddressCount;
-  DWORD     msAFT;      // AFT Time (if we're capturing it)
   DWORD     msVisualComplete; // Visually complete time (only available with video capture)
 
 	DWORD			nDns;			// number of DNS lookups
@@ -205,7 +204,6 @@ private:
   void SaveBodies(CString file);
   void SaveCustomMatches(CString file);
 	void SortEvents();
-  DWORD CalculateAFT();
   void SaveVideo();
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   void SaveHistogram(CxImage& image, CString file);

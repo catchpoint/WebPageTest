@@ -335,10 +335,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\pagetest\aft.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\pagetest\BrowserEvents.cpp"
 					>
 				</File>
@@ -404,10 +400,6 @@
 				>
 				<File
 					RelativePath="..\pagetest\AboutDlg.h"
-					>
-				</File>
-				<File
-					RelativePath="..\pagetest\aft.h"
 					>
 				</File>
 				<File

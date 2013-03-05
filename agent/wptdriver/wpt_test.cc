@@ -33,9 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wpthook/shared_mem.h"
 #include "wpt_settings.h"
 
-static const DWORD AFT_EARLY_CUTOFF_SECS = 25;
-static const DWORD AFT_MIN_CHANGES_THRESHOLD = 100;
-static const DWORD AFT_TIMEOUT = 240000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
@@ -87,11 +84,8 @@ void WptTest::Reset(void) {
   _trace = false;
   _netlog = false;
   _video = false;
-  _aft = false;
   _spdy3 = false;
   _noscript = false;
-  _aft_early_cutoff = AFT_EARLY_CUTOFF_SECS;
-  _aft_min_changes = AFT_MIN_CHANGES_THRESHOLD;
   _test_type.Empty();
   _block.Empty();
   _bwIn = 0;
@@ -188,13 +182,6 @@ bool WptTest::Load(CString& test) {
           _noscript = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
-        else if (!key.CompareNoCase(_T("aft")) && _ttoi(value.Trim())) {
-          _test_timeout = AFT_TIMEOUT;
-          _aft = true;
-        } else if (!key.CompareNoCase(_T("aftEarlyCutoff")))
-          _aft_early_cutoff = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("aftMinChanges")))
-          _aft_min_changes = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("type")))
           _test_type = value.Trim();
         else if (!key.CompareNoCase(_T("block")))

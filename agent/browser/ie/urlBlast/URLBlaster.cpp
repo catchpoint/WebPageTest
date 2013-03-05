@@ -769,7 +769,7 @@ bool CURLBlaster::LaunchBrowser(void)
 					// wait for it to exit - give it up to double the timeout value
 					// TODO:  have urlManager specify the timeout
 				  int multiple = 2;
-          if( info.runningScript || info.aft )
+          if( info.runningScript )
 					  multiple = 10;
           if( heartbeatEvent )
           {
@@ -1019,9 +1019,6 @@ void CURLBlaster::ConfigurePagetest(void)
 				val = 1;
 			RegSetValueEx(hKey, _T("Capture Video"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
-		  RegSetValueEx(hKey, _T("AFT"), 0, REG_DWORD, (const LPBYTE)&info.aft, sizeof(info.aft));
-		  RegSetValueEx(hKey, _T("aftMinChanges"), 0, REG_DWORD, (const LPBYTE)&info.aftMinChanges, sizeof(info.aftMinChanges));
-		  RegSetValueEx(hKey, _T("aftEarlyCutoff"), 0, REG_DWORD, (const LPBYTE)&info.aftEarlyCutoff, sizeof(info.aftEarlyCutoff));
 		  RegSetValueEx(hKey, _T("pngScreenShot"), 0, REG_DWORD, (const LPBYTE)&info.pngScreenShot, sizeof(info.pngScreenShot));
 		  RegSetValueEx(hKey, _T("imageQuality"), 0, REG_DWORD, (const LPBYTE)&info.imageQuality, sizeof(info.imageQuality));
       RegSetValueEx(hKey, _T("bodies"), 0, REG_DWORD, (const LPBYTE)&info.bodies, sizeof(info.bodies));

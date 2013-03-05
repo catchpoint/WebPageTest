@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Mmsystem.h>
 #include "wpt_test_hook.h"
 
-// TODO: Keep the test running till aft timeout.
-static const DWORD AFT_TIMEOUT = 10 * 1000;
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
@@ -96,7 +94,6 @@ void TestState::Reset(bool cascade) {
     _last_activity.QuadPart = now.QuadPart;
   } else {
     _active = false;
-    _capturing_aft = false;
     _next_document = 1;
     _current_document = 0;
     _doc_requests = 0;
@@ -129,7 +126,6 @@ void TestState::Reset(bool cascade) {
     _progress_data.RemoveAll();
     _test_result = 0;
     _title_time.QuadPart = 0;
-    _aft_time_ms = 0;
     _title.Empty();
     _user_agent = _T("WebPagetest");
     _timeline_events.RemoveAll();
@@ -170,8 +166,6 @@ void TestState::Start() {
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
   _active = true;
-  if( _test._aft )
-    _capturing_aft = true;
   UpdateBrowserWindow();  // the document window may not be available yet
 
   if (!_render_check_thread) {
@@ -330,26 +324,12 @@ bool TestState::IsDone() {
       }
     }
     if (is_page_done) {
-      if (_capturing_aft && !_test_result) {
-        // Continue AFT video capture by only marking the test as inactive.
-        WptTrace(loglevel::kFrequentEvent,
-                 _T("[wpthook] - TestState::IsDone() -> false (capturing AFT);")
-                 _T(" page done: %s"), done_reason);
-        _active = false;
-      } else {
-        WptTrace(loglevel::kFrequentEvent,
-                 _T("[wpthook] - TestState::IsDone() -> true; %s"),
-                 done_reason);
-        Done();
-        is_done = true;
-      }
+      WptTrace(loglevel::kFrequentEvent,
+                _T("[wpthook] - TestState::IsDone() -> true; %s"),
+                done_reason);
+      Done();
+      is_done = true;
     }
-  } else if (_capturing_aft && test_ms > AFT_TIMEOUT) {
-    WptTrace(loglevel::kFrequentEvent,
-             _T("[wpthook] - TestState::IsDone() -> true; ")
-             _T("AFT timed out."));
-    Done();
-    is_done = true;
   }
   return is_done;
 }
@@ -358,7 +338,7 @@ bool TestState::IsDone() {
 -----------------------------------------------------------------------------*/
 void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
-  if (_active || _capturing_aft) {
+  if (_active) {
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
@@ -380,7 +360,6 @@ void TestState::Done(bool force) {
     }
 
     _active = false;
-    _capturing_aft = false;
   }
 }
 
@@ -473,7 +452,7 @@ void TestState::SetDocument(HWND wnd) {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if ((_active || _capturing_aft) && _document_window && _test._video) {
+  if (_active && _document_window && _test._video) {
     if (force || (_screen_updated && _render_start.QuadPart)) {
       // use a falloff on the resolution with which we capture video
       bool grab_video = false;

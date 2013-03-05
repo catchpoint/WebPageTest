@@ -54,7 +54,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REQUEST_ACTIVITY_TIMEOUT 30000
 #define FORCE_ACTIVITY_TIMEOUT 240000
 #define DOC_TIMEOUT 1000
-#define AFT_TIMEOUT 240000
 
 typedef void (__stdcall * SETGDIWINDOW)(HWND hWnd, HWND hNotify, UINT msgNotify);
 typedef void (__stdcall * SETGDIWINDOWUPDATED)(bool);
@@ -170,7 +169,6 @@ public:
 	CRITICAL_SECTION			csBackground;
 	bool						active;			// are we currently timing anything
 	bool						available;		// Are we available to time?  Don't if the user hasn't closed the UI
-  bool            capturingAFT; // are we capturing AFT (if so we need to artifically extend the time)?
 	bool						processed;		// have the results been processed?
 	DWORD						abm;			// Activity measurement mode (0 = none, 1 = web 2.0, 2 = auto)
 	DWORD						currentDoc;		// what is the ID of the current document (to assign to objects)?
@@ -201,9 +199,6 @@ public:
   DWORD           keepua;
   DWORD           minimumDuration;
   CAtlList<CString>	adPatterns;
-  DWORD           aft;          // above-the fold measurement enabled?
-  DWORD           aftMinChanges;
-  DWORD           aftEarlyCutoff;
 	HWND						hMainWindow;	// main app window
 	HWND		        hBrowserWnd;
 	CString						userAgent;		// custom user agent string

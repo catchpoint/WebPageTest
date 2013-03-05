@@ -38,9 +38,6 @@ public:
     standards = 0;
     noscript = 0;
 	  blockads = 0;
-    aft = 0;
-    aftMinChanges = 0;
-    aftEarlyCutoff = 25;
     tcpdumpFile.Empty();
     testType.Empty();
     noOpt = 0;
@@ -106,9 +103,6 @@ public:
   DWORD noscript;
   DWORD  blockads;
   CString tcpdumpFile;
-  DWORD aft;            // above-the-fold time
-  DWORD aftEarlyCutoff;
-  DWORD aftMinChanges;
 
 	DWORD	reserved;			  // reserved for internal use
 	void *	context;			// contect information for internal use
