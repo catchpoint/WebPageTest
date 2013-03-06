@@ -460,14 +460,6 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $requests = array();
     $rawRequests = array();
     foreach ($events as $event) {
-        if (array_key_exists('timestamp', $event) &&
-            (!$pageData['startTime'] ||
-             $event['timestamp'] < $pageData['startTime']))
-            $pageData['startTime'] = $event['timestamp'];
-        if (array_key_exists('timestamp', $event) &&
-            (!$pageData['endTime'] ||
-             $event['timestamp'] > $pageData['endTime']))
-            $pageData['endTime'] = $event['timestamp'];
         if ($event['method'] == 'Page.loadEventFired' &&
             array_key_exists('timestamp', $event) &&
             $event['timestamp'] > $pageData['onload'])
@@ -482,6 +474,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 $request = $event['request'];
                 $request['id'] = $id;
                 $request['startTime'] = $event['timestamp'];
+                $request['endTime'] = $event['timestamp'];
                 if (array_key_exists('initiator', $event))
                     $request['initiator'] = $event['initiator'];
                 $rawRequests[$id] = $request;
@@ -532,6 +525,14 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     }
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as $request) {
+        if (array_key_exists('startTime', $request) &&
+            (!$pageData['startTime'] ||
+             $request['startTime'] < $pageData['startTime']))
+            $pageData['startTime'] = $request['startTime'];
+        if (array_key_exists('endTime', $request) &&
+            (!$pageData['endTime'] ||
+             $request['endTime'] > $pageData['endTime']))
+            $pageData['endTime'] = $request['endTime'];
         if (array_key_exists('fromNet', $request) &&
             $request['fromNet'])
             $requests[] = $request;
