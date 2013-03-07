@@ -107,6 +107,8 @@ function ProcessVideoFrames($videoDir) {
                             unset($crop);
                             $startFrame = 0;
                             unlink($file);
+                            if (isset($lastImage))
+                                unlink($lastImage);
                             continue;
                         }
                     }
@@ -143,19 +145,20 @@ function GetCropRect($im, &$crop) {
     if ($width && $height) {
         $midX = intval($width / 2);
         $midY = intval($height / 2);
-        $background = ImageColorAt($im, $midX, $midY) & 0xFFFFFF;
-        if ($background == 0xFFFFFF) {
+        $background = ImageColorAt($im, $midX, $midY) & 0xF0F0F0;
+        $white = 0xF0F0F0;
+        if ($background == $white) {
             $crop = array('left' => 0, 'top' => 0, 'right' => $width - 1, 'bottom' => $height - 1);
             $y = $midY;
             for ($x = $midX; $x >= 0; $x--) {
-                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                 if ($rgb !== $background) {
                     $crop['left'] = $x + 1;
                     break;
                 }
             }
             for ($x = $midX; $x < $width; $x++) {
-                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                 if ($rgb !== $background) {
                     $crop['right'] = $x - 1;
                     break;
@@ -163,14 +166,14 @@ function GetCropRect($im, &$crop) {
             }
             $x = $midX;
             for ($y = $midY; $y >= 0; $y--) {
-                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                 if ($rgb !== $background) {
                     $crop['top'] = $y + 1;
                     break;
                 }
             }
             for ($y = $midY; $y < $height; $y++) {
-                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                 if ($rgb !== $background) {
                     $crop['bottom'] = $y - 1;
                     break;
@@ -183,7 +186,7 @@ function GetCropRect($im, &$crop) {
             $blank = true;
             for ($y = $crop['top']; $y <= $crop['bottom']; $y++) {
                 for ($x = $crop['left']; $x <= $crop['right']; $x++) {
-                    $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                    $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                     if ($rgb != $background) {
                         $blank = false;
                         break(2);
@@ -194,8 +197,9 @@ function GetCropRect($im, &$crop) {
                 ($cropWidth / $width) > 0.9 &&
                 ($cropHeight / $height) > 0.5) {
                 $valid = true;
-            } else
+            } else {
                 unset($crop);
+            }
         }
     }
     return $valid;
@@ -217,8 +221,8 @@ function ImagesMatch($im1, $im2) {
         $h1 && $h1 == $h2) {
         for ($y = 0; $y < $h1; $y++) {
             for ($x = 0; $x < $w1; $x++) {
-                $rgb1 = ImageColorAt($im1, $x, $y) & 0xFFFFFF;
-                $rgb2 = ImageColorAt($im2, $x, $y) & 0xFFFFFF;
+                $rgb1 = ImageColorAt($im1, $x, $y) & 0xF0F0F0;
+                $rgb2 = ImageColorAt($im2, $x, $y) & 0xF0F0F0;
                 if ($rgb1 != $rgb2) {
                     $match = false;
                     break 2;
@@ -294,12 +298,13 @@ function IsOrangeAVIFrame($im) {
     $height = imagesy($im);
     $left = intval($width * 0.1);
     $top = intval($height * 0.1);
-    $background = ImageColorAt($im, $left, $top) & 0xFFFFFF;
-    if ($background == 0xD05C12) {
+    $background = ImageColorAt($im, $left, $top) & 0xF0F0F0;
+    $check = 0xD05010;
+    if ($background == $check) {
         $orange = true;
         for ($y = $top; $y < $height - $top && $orange; $y++) {
             for ($x = $left; $x < $width - $left && $orange; $x++) {
-                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                $rgb = ImageColorAt($im, $x, $y) & 0xF0F0F0;
                 if ($rgb != $background) {
                     $orange = false;
                 }
