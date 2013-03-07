@@ -5,6 +5,7 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
 chdir('..');
 include 'common.inc';
+require_once('./video/avi2frames.inc.php');
 $location = $_REQUEST['location'];
 $key = $_REQUEST['key'];
 $id = $_REQUEST['id'];
@@ -25,6 +26,7 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
             strpos($fileName, '/') === false &&
             strpos($fileName, '\\') === false) {
             $path = './' . GetTestPath($id);
+            $testPath = $path;
             
             // make sure the file is an acceptable type
             $parts = pathinfo($fileName);
@@ -63,6 +65,16 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
                 logMsg(" Moving uploaded image '{$_FILES['file']['tmp_name']}' to '$path/$fileName'\n");
                 move_uploaded_file($_FILES['file']['tmp_name'], "$path/$fileName");
                 @chmod("$path/$fileName", 0666);
+                if (strpos($fileName, 'video.avi')) {
+                    $parts = explode('_', $fileName);
+                    if( count($parts) ) {
+                        $runNum = $parts[0];
+                        $cached = 0;
+                        if( strpos($fileName, '_Cached') )
+                            $cached = 1;
+                        ProcessAVIVideo($testPath, $runNum, $cached);
+                    }
+                }
             }
         }
     }
