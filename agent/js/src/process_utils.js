@@ -379,6 +379,32 @@ exports.scheduleNoFault = function(app, description, f) {
 };
 
 /**
+ * Schedules a function that takes a callback and errback.
+ *
+ * Resolves or rejects the scheduled promise with the same args that
+ * the callback or errback get, respectively.
+ *
+ * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {String} description action description.
+ * @param {Function} f a function that takes callback and errback arguments.
+ * @returns {webdriver.promise.Promise} the scheduled promise.
+ */
+exports.scheduleCbEb = function(app, description, f) {
+  'use strict';
+  return app.schedule(description, function() {
+    var done = new webdriver.promise.Deferred();
+    f(function() {
+      logger.debug('Callback for %s', description);
+      done.resolve.apply(done, arguments);
+    }, function() {
+      logger.debug('Errback for %s', description);
+      done.reject.apply(done, arguments);
+    });
+    return done.promise;
+  });
+};
+
+/**
  * Node.js is a multiplatform framework, however because we are making native
  * system calls, it becomes platform dependent. To reduce dependencies
  * throughout the code, all native commands are set here and when a command is
@@ -416,4 +442,3 @@ exports.setSystemCommands = function() {
   system_commands.set('kill', 'kill -9 $0', 'unix');
   system_commands.set('kill', 'taskkill /F /PID $0 /T', 'win32');
 };
-

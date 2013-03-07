@@ -33,10 +33,6 @@ var url = require('url');
 var logger = require('logger');
 exports.WebSocket = require('ws');  // Allow to stub out in tests.
 
-exports.PREFIX_NETWORK = 'Network.';
-exports.PREFIX_PAGE = 'Page.';
-exports.PREFIX_TIMELINE = 'Timeline.';
-
 
 function processResponse(response, callback) {
   'use strict';
@@ -199,46 +195,4 @@ DevTools.prototype.command = function(command, callback, errback) {
   logger.debug('Send command: %j', command);
   this.ws_.send(JSON.stringify(command));
   return command.id;
-};
-
-/** Sends a WKRDP Network.<method> command with the given method. */
-DevTools.prototype.networkCommand = function(method, callback, errback) {
-  'use strict';
-  this.command({method: exports.PREFIX_NETWORK + method}, callback, errback);
-};
-
-/** Sends a WKRDP Page.<method> command with the given method. */
-DevTools.prototype.pageCommand = function(method, callback, errback) {
-  'use strict';
-  this.command({method: exports.PREFIX_PAGE + method}, callback, errback);
-};
-
-/** Sends a WKRDP Timeline.<method> command with the given method. */
-DevTools.prototype.timelineCommand = function(method, callback, errback) {
-  'use strict';
-  this.command({method: exports.PREFIX_TIMELINE + method}, callback, errback);
-};
-
-/** Checks if the message.method has 'Network.' prefix. */
-exports.isNetworkMessage = function(message) {
-  'use strict';
-  return (message.method &&
-      message.method.slice(0, exports.PREFIX_NETWORK.length) ===
-          exports.PREFIX_NETWORK);
-};
-
-/** Checks if the message.method has 'Page.' prefix. */
-exports.isPageMessage = function(message) {
-  'use strict';
-  return (message.method &&
-      message.method.slice(0, exports.PREFIX_PAGE.length) ===
-          exports.PREFIX_PAGE);
-};
-
-/** Checks if the message.method has 'Timeline.' prefix. */
-exports.isTimelineMessage = function(message) {
-  'use strict';
-  return (message.method &&
-      message.method.slice(0, exports.PREFIX_TIMELINE.length) ===
-          exports.PREFIX_TIMELINE);
 };

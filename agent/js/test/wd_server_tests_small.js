@@ -36,7 +36,6 @@ var process_utils = require('process_utils');
 var sinon = require('sinon');
 var should = require('should');
 var test_utils = require('./test_utils.js');
-var timers = require('timers');
 var util = require('util');
 var webdriver = require('webdriver');
 var browser_local_chrome = require('browser_local_chrome');
@@ -253,11 +252,10 @@ describe('wd_server small', function() {
         'Network.enable',
         'Page.enable',
         'Timeline.start',
-        'Page.getResourceTree',
-        'Page.setDocumentContent',
-        'Page.setDocumentContent',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
+        'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
     fakeWs.commands = [];  // Reset for next run verification.
@@ -383,11 +381,10 @@ describe('wd_server small', function() {
         'Network.enable',
         'Page.enable',
         'Timeline.start',
-        'Page.getResourceTree',
-        'Page.setDocumentContent',
-        'Page.setDocumentContent',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
+        'Page.getResourceTree',
+        'Page.setDocumentContent',
         'Page.navigate',
         'Page.captureScreenshot'
     ].should.eql(fakeWs.commands);
@@ -417,7 +414,7 @@ describe('wd_server small', function() {
         + webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20 + 1000);
     // Simulate page load finish.
     fakeWs.emit('message', JSON.stringify(pageLoadedMessage), {});
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
 
     // * Verify after run 2, make sure we did quit+stop Chrome.
     // Make sure we did not spawn Chrome or connect DevTools repeatedly.
@@ -427,7 +424,6 @@ describe('wd_server small', function() {
     // These things get called for the second time on the second run.
     [
         'Page.getResourceTree',
-        'Page.setDocumentContent',
         'Page.setDocumentContent',
         'Page.navigate',
         'Page.captureScreenshot'

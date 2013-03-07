@@ -95,6 +95,7 @@ exports.WebDriverServer = {
     this.driver_ = undefined;
     this.testStartTime_ = undefined;
     this.pageLoadDonePromise_ = undefined;
+    this.isRecordingDevTools_ = false;
     if (!this.browser_) {
       this.app_ = webdriver.promise.Application.getInstance();
       process_utils.injectWdAppLogging('wd_server app', this.app_);
@@ -184,34 +185,26 @@ exports.WebDriverServer = {
   connectDevTools_: function(wdNamespace) {
     'use strict';
     return this.app_.scheduleWait('Connect DevTools', function() {
-      var isDevtoolsConnected = new wdNamespace.promise.Deferred();
-      var fail = isDevtoolsConnected.resolve.bind(isDevtoolsConnected, false);
-
+      var connected = new webdriver.promise.Deferred();
       var devTools = new devtools.DevTools(this.browser_.getDevToolsUrl());
-
       devTools.connect(function() {
-        devTools.networkCommand('enable', function() {
-          logger.info('DevTools Network events enabled');
-          devTools.pageCommand('enable', function() {
-            logger.info('DevTools Page events enabled');
-            // Timeline enable event never gets a response.
-            devTools.timelineCommand('start', function() {
-              logger.info('DevTools Timeline events enabled');
-              this.devTools_ = devTools;
-              this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
-              isDevtoolsConnected.resolve(devTools);
-            }.bind(this), fail);
-          }.bind(this), fail);
-        }.bind(this), fail);
-      }.bind(this), fail);
-
-      return isDevtoolsConnected.promise;
-    }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
+        connected.resolve(devTools);
+      }, function() {
+        connected.resolve(false);
+      });
+      return connected.promise;
+    }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_).then(function(devTools) {
+      this.devTools_ = devTools;
+      this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
+      this.networkCommand_('enable');
+      this.pageCommand_('enable');
+      this.timelineCommand_('start');
+    }.bind(this));
   },
 
   onDevToolsMessage_: function(message) {
     'use strict';
-    if (!this.testStartTime_) {  // Ignore messages outside of the test.
+    if (!this.isRecordingDevTools_) {  // Ignore messages outside of the test.
       return;
     }
     logger.extra('DevTools message: %s', message.method);
@@ -225,6 +218,7 @@ exports.WebDriverServer = {
   onTestStarted_: function() {
     'use strict';
     logger.info('Test starting');
+    this.isRecordingDevTools_ = true;
     if (this.captureVideo_ && !this.videoFile_) {
       this.takeScreenshot_('progress_0', 'test started').then(function() {
         this.testStartTime_ = Date.now();
@@ -268,7 +262,7 @@ exports.WebDriverServer = {
         this.browserCapabilities_['wkrdp.Page.captureScreenshot']) {
       result = this.app_.schedule('Screenshot: ' + description, function() {
         var done = new webdriver.promise.Deferred();
-        this.devTools_.pageCommand('captureScreenshot', function(result) {
+        this.pageCommand_('captureScreenshot').then(function(result) {
           var screenshot = result.data;
           logger.info('Screenshot %s (%d bytes): %s',
               fileNameNoExt, screenshot.length, description);
@@ -378,66 +372,77 @@ exports.WebDriverServer = {
     }
   },
 
+  devToolsCommand_: function(command) {
+    'use strict';
+    return process_utils.scheduleCbEb(this.app_, command.method,
+        function(callback, errback) {
+      this.devTools_.command(command, callback, errback);
+    }.bind(this));
+  },
+
+  pageCommand_: function(method, params) {
+    'use strict';
+    return this.devToolsCommand_({method: 'Page.' + method, params: params});
+  },
+
+  networkCommand_: function(method, params) {
+    'use strict';
+    return this.devToolsCommand_({method: 'Network.' + method, params: params});
+  },
+
+  timelineCommand_: function(method) {
+    'use strict';
+    return this.devToolsCommand_({method: 'Timeline.' + method});
+  },
+
+  setPageBackground_: function(frameId, color) {
+    'use strict';
+    this.pageCommand_('setDocumentContent', {
+      frameId: frameId, html: color ? '<body bgcolor="' + color + '"/>' : ''});
+  },
+
   /**
    * Banks out the browser at the beginning of a test.
    */
   clearPage_: function() {
     'use strict';
+    // Query browser caps, clear cache&cookies via DevTools if supported.
     if (!this.browserCapabilities_) {
       this.browser_.scheduleGetCapabilities().then(function(capabilities) {
         this.browserCapabilities_ = capabilities;
-      }.bind(this));
-    }
-    if (this.captureVideo_) {
-      // Must do this via schedule, because browserCapabilities_ are scheduled.
-      this.app_.schedule('Start video recording if we can', function() {
-        if (this.browserCapabilities_.videoRecording) {
-          var videoFile = 'video.avi';
-          logger.debug('Will record video');
-          this.browser_.scheduleStartVideoRecording(videoFile)
-              .then(function() {
-            logger.debug('Video record start succeeded');
-            this.videoFile_ = videoFile;
-          }.bind(this));
+        if (!this.isCacheCleared_) {
+          if (capabilities['wkrdp.Network.clearBrowserCache']) {
+            this.networkCommand_('clearBrowserCache').then(function() {
+              this.isCacheCleared_ = true;
+            }.bind(this));
+          }
+          if (capabilities['wkrdp.Network.clearBrowserCookies']) {
+            this.networkCommand_('clearBrowserCookies');
+          }
         }
       }.bind(this));
     }
-    return this.app_.schedule('Clear the page', function() {
-      var donePromise = new webdriver.promise.Deferred();
-      function reject(description, e) {
-        logger.error('%s failed: %s', description, e);
-        donePromise.reject(e);
+    this.pageCommand_('getResourceTree').then(function(result) {
+      var frameId = result.frameTree.frame.id;
+      this.setPageBackground_(frameId);  // White
+      if (this.captureVideo_ && this.browserCapabilities_.videoRecording) {
+        var videoFile = 'video.avi';
+        logger.debug('Will record video');
+        this.browser_.scheduleStartVideoRecording(videoFile).then(function() {
+          logger.debug('Video record start succeeded');
+          this.videoFile_ = videoFile;
+          // Hold white(500ms)->orange(500ms)->white: anchor video to DevTools.
+          this.app_.scheduleTimeout('Hold white background', 500);
+          this.setPageBackground_(frameId, '#DE640D');  // Ghastly orange.
+          this.app_.scheduleTimeout('Hold orange background', 500);
+          // Begin recording DevTools before onTestStarted_ fires,
+          // to make sure we get the paint event from the below switch to white.
+          // This allows us to match the DevTools event timestamp to the
+          // video frame where the background changed from orange to white.
+          this.isRecordingDevTools_ = true;
+          this.setPageBackground_(frameId);  // White
+        }.bind(this));
       }
-      this.devTools_.pageCommand('getResourceTree', function(result) {
-        this.devTools_.command({method: 'Page.setDocumentContent', params: {
-            frameId: result.frameTree.frame.id,
-            html: '<body bgcolor="#DE640D"/>'
-        }}, function() {
-          logger.info('Page.setDocumentContent orange returned');
-          global.setTimeout(function() {
-            this.devTools_.command({method: 'Page.setDocumentContent', params: {
-              frameId: result.frameTree.frame.id,
-              html: '<body/>'
-            }}, function() {
-              logger.info('Page.setDocumentContent blank returned');
-              var caps = this.browserCapabilities_;
-              if (!this.isCacheCleared_ &&
-                  caps['wkrdp.Network.clearBrowserCache'] &&
-                  caps['wkrdp.Network.clearBrowserCookies']) {
-                this.isCacheCleared_ = true;
-                this.devTools_.networkCommand('clearBrowserCache', function() {
-                  this.devTools_.networkCommand('clearBrowserCookies',
-                      donePromise.resolve.bind(donePromise),
-                      reject.bind(this, 'Network.clearBrowserCookies'));
-                }.bind(this), reject.bind(this, 'Network.clearBrowserCache'));
-              } else {
-                donePromise.resolve();
-              }
-            }.bind(this), reject.bind(this, 'Page.setDocumentContent blank'));
-          }.bind(this), 500);
-        }.bind(this), reject.bind(this, 'Page.setDocumentContent orange'));
-      }.bind(this), reject.bind(this, 'Page.getResourceTree'));
-      return donePromise.promise;
     }.bind(this));
   },
 
