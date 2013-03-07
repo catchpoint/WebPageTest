@@ -38,6 +38,7 @@ function ProcessAVIVideo($testPath, $run, $cached) {
             $videoDir = realpath($videoDir);
             if (strlen($videoFile) && strlen($videoDir)) {
                 if (Video2PNG($videoFile, $videoDir)) {
+                    EliminateDuplicateAVIFiles($videoDir);
                     $lastImage = ProcessVideoFrames($videoDir);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
                     if (isset($lastImage) &&
@@ -73,13 +74,13 @@ function Video2PNG($infile, $outdir) {
 * @param mixed $videoDir
 */
 function ProcessVideoFrames($videoDir) {
+    $startFrame = 0;
+    $lastFrame = 0;
     $lastImage = null;
-    $previousMD5 = null;
     $files = glob("$videoDir/image*.png");
-    $time = 0;
     foreach ($files as $file) {
-        $currentMD5 = md5_file($file);
-        if ($currentMD5 === false || $currentMD5 != $previousMD5) {
+        if (preg_match('/image-(?P<frame>[0-9]+).png$/', $file, $matches)) {
+            $currentFrame = $matches['frame'];
             $current = imagecreatefrompng($file);
             if ($current !== false) {
                 $dupe = false;
@@ -87,34 +88,42 @@ function ProcessVideoFrames($videoDir) {
                 $height = imagesy($current);
                 // See if we are processing the virst video frame
                 if (!isset($previous)) {
-                    // make sure it isn't an orange placeholder
-                    $rgb = ImageColorAt($current, intval($width / 2), intval($height / 2));
-                    $r = ($rgb >> 16) & 0xFF;
-                    $g = ($rgb >> 8) & 0xFF;
-                    $b = $rgb & 0xFF;
-                    if ($r == 208 && $g == 92 && $b == 18) {
+                    if (GetCropRect($current, $crop)) {
+                        $startFrame = $currentFrame;
+                    } else {
                         imagedestroy($current);
                         unlink($file);
                         continue;
-                    } else
-                        $crop = GetCropRect($current);
+                    }
                 }
                 CropAVIImage($current, $crop);
-                if (isset($previous))
-                    $dupe = ImagesMatch($current, $previous, $crop);
+                if (isset($previous)) {
+                    // check for the blank->orange->blank sequence
+                    if ($lastFrame == $startFrame) {
+                        if (IsOrangeAVIFrame($current)) {
+                            imagedestroy($current);
+                            imagedestroy($previous);
+                            unset($previous);
+                            unset($crop);
+                            $startFrame = 0;
+                            unlink($file);
+                            continue;
+                        }
+                    }
+                    $dupe = ImagesMatch($current, $previous);
+                }
                 if (!$dupe) {
-                    $lastImage = "$videoDir/frame_" . sprintf('%04d', $time) . '.jpg';
+                    $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $startFrame) . '.jpg';
                     imageinterlace($current, 1);
                     imagejpeg($current, $lastImage, 75);
                 }
                 if (isset($previous))
                     imagedestroy($previous);
                 $previous = $current;
+                $lastFrame = $currentFrame;
             }
-            $previousMD5 = $currentMD5;
+            unlink($file);
         }
-        $time++;
-        unlink($file);
     }
     if (isset($previous))
         imagedestroy($previous);
@@ -126,50 +135,79 @@ function ProcessVideoFrames($videoDir) {
 * 
 * @param mixed $im
 */
-function GetCropRect($im) {
+function GetCropRect($im, &$crop) {
+    $valid = false;
     $crop = null;
     $width = imagesx($im);
     $height = imagesy($im);
     if ($width && $height) {
-        $crop = array('left' => 0, 'top' => 0, 'right' => $width - 1, 'bottom' => $height - 1);
         $midX = intval($width / 2);
         $midY = intval($height / 2);
-        $background = ImageColorAt($im, $midX, $midY);
-        $y = $midY;
-        for ($x = $midX; $x >= 0; $x--) {
-            $rgb = ImageColorAt($im, $x, $y);
-            if ($rgb !== $background) {
-                $crop['left'] = $x + 1;
-                break;
+        $background = ImageColorAt($im, $midX, $midY) & 0xFFFFFF;
+        if ($background == 0xFFFFFF) {
+            $crop = array('left' => 0, 'top' => 0, 'right' => $width - 1, 'bottom' => $height - 1);
+            $y = $midY;
+            for ($x = $midX; $x >= 0; $x--) {
+                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                if ($rgb !== $background) {
+                    $crop['left'] = $x + 1;
+                    break;
+                }
             }
-        }
-        for ($x = $midX; $x < $width; $x++) {
-            $rgb = ImageColorAt($im, $x, $y);
-            if ($rgb !== $background) {
-                $crop['right'] = $x - 1;
-                break;
+            for ($x = $midX; $x < $width; $x++) {
+                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                if ($rgb !== $background) {
+                    $crop['right'] = $x - 1;
+                    break;
+                }
             }
-        }
-        $x = $midX;
-        for ($y = $midY; $y >= 0; $y--) {
-            $rgb = ImageColorAt($im, $x, $y);
-            if ($rgb !== $background) {
-                $crop['top'] = $y + 1;
-                break;
+            $x = $midX;
+            for ($y = $midY; $y >= 0; $y--) {
+                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                if ($rgb !== $background) {
+                    $crop['top'] = $y + 1;
+                    break;
+                }
             }
-        }
-        for ($y = $midY; $y < $height; $y++) {
-            $rgb = ImageColorAt($im, $x, $y);
-            if ($rgb !== $background) {
-                $crop['bottom'] = $y - 1;
-                break;
+            for ($y = $midY; $y < $height; $y++) {
+                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                if ($rgb !== $background) {
+                    $crop['bottom'] = $y - 1;
+                    break;
+                }
             }
+            $cropWidth = $crop['right'] - $crop['left'] + 1;
+            $cropHeight = $crop['bottom'] - $crop['top'] + 1;
+            // make sure it is fully white and at least 90% of the 
+            // width and 50% of the height of the original image.
+            $blank = true;
+            for ($y = $crop['top']; $y <= $crop['bottom']; $y++) {
+                for ($x = $crop['left']; $x <= $crop['right']; $x++) {
+                    $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                    if ($rgb != $background) {
+                        $blank = false;
+                        break(2);
+                    }
+                }
+            }
+            if ($blank &&
+                ($cropWidth / $width) > 0.9 &&
+                ($cropHeight / $height) > 0.5) {
+                $valid = true;
+            } else
+                unset($crop);
         }
     }
-    return $crop;
+    return $valid;
 }
 
-function ImagesMatch($im1, $im2, $crop) {
+/**
+* See if the two given images are identical
+* 
+* @param mixed $im1
+* @param mixed $im2
+*/
+function ImagesMatch($im1, $im2) {
     $match = true;
     $w1 = imagesx($im1);
     $h1 = imagesy($im1);
@@ -177,32 +215,10 @@ function ImagesMatch($im1, $im2, $crop) {
     $h2 = imagesy($im2);
     if ($w1 && $w1 == $w2 &&
         $h1 && $h1 == $h2) {
-        $left = 0;
-        $top = 0;
-        $right = $w1 - 1;
-        $bottom = $h1 - 1;
-        if (isset($crop)) {
-            if (array_key_exists('left', $crop) &&
-                $crop['left'] > $left &&
-                $crop['left'] < $right)
-                $left = $crop['left'];
-            if (array_key_exists('right', $crop) &&
-                $crop['right'] > $left &&
-                $crop['right'] < $right)
-                $right = $crop['right'];
-            if (array_key_exists('top', $crop) &&
-                $crop['top'] > $top &&
-                $crop['top'] < $bottom)
-                $top = $crop['top'];
-            if (array_key_exists('bottom', $crop) &&
-                $crop['bottom'] > $top &&
-                $crop['bottom'] < $bottom)
-                $bottom = $crop['bottom'];
-        }
-        for ($y = $top; $y <= $bottom; $y++) {
-            for ($x = $left; $x <= $right; $x++) {
-                $rgb1 = ImageColorAt($im1, $x, $y);
-                $rgb2 = ImageColorAt($im2, $x, $y);
+        for ($y = 0; $y < $h1; $y++) {
+            for ($x = 0; $x < $w1; $x++) {
+                $rgb1 = ImageColorAt($im1, $x, $y) & 0xFFFFFF;
+                $rgb2 = ImageColorAt($im2, $x, $y) & 0xFFFFFF;
                 if ($rgb1 != $rgb2) {
                     $match = false;
                     break 2;
@@ -249,5 +265,47 @@ function CropAVIImage(&$im, $crop) {
              }
         }
     }
+}
+
+/**
+* Go through the video files and delete the ones that have identical md5 hashes
+* (in a series)
+* 
+* @param mixed $videoDir
+*/
+function EliminateDuplicateAVIFiles($videoDir) {
+    $previousMD5 = null;
+    $files = glob("$videoDir/image*.png");
+    foreach ($files as $file) {
+        $currentMD5 = md5_file($file);
+        if ($currentMD5 !== false && $currentMD5 == $previousMD5)
+            unlink($file);
+        $previousMD5 = $currentMD5;
+    }
+}
+
+// Detect the solid-orange video frames in case of
+// a blank -> orange -> blank sequence.
+// Need to crop-down a bit to deal with the shading
+// that the browser adds.
+function IsOrangeAVIFrame($im) {
+    $orange = false;
+    $width = imagesx($im);
+    $height = imagesy($im);
+    $left = intval($width * 0.1);
+    $top = intval($height * 0.1);
+    $background = ImageColorAt($im, $left, $top) & 0xFFFFFF;
+    if ($background == 0xD05C12) {
+        $orange = true;
+        for ($y = $top; $y < $height - $top && $orange; $y++) {
+            for ($x = $left; $x < $width - $left && $orange; $x++) {
+                $rgb = ImageColorAt($im, $x, $y) & 0xFFFFFF;
+                if ($rgb != $background) {
+                    $orange = false;
+                }
+            }
+        }
+    }
+    return $orange;
 }
 ?>
