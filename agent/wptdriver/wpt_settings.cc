@@ -363,6 +363,24 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
   DeleteDirectory(windows_dir_ + _T("\\temp"), false);
   ClearWinInetCache();
   ClearWebCache();
+
+  // delete any .tmp files in our directory or the root directory of the drive.
+  // Not sure where they are coming from but they collect over time.
+  WIN32_FIND_DATA fd;
+  HANDLE find = FindFirstFile(_wpt_directory + _T("\\*.tmp"), &fd);
+  if (find != INVALID_HANDLE_VALUE) {
+    do {
+      DeleteFile(_wpt_directory + CString(_T("\\")) + fd.cFileName);
+    } while(FindNextFile(find, &fd));
+    FindClose(find);
+  }
+  find = FindFirstFile(_T("C:\\*.tmp"), &fd);
+  if (find != INVALID_HANDLE_VALUE) {
+    do {
+      DeleteFile(CString(_T("C:\\")) + fd.cFileName);
+    } while(FindNextFile(find, &fd));
+    FindClose(find);
+  }
 }
 
 /*-----------------------------------------------------------------------------

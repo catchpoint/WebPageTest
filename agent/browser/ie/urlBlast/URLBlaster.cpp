@@ -636,6 +636,29 @@ void CURLBlaster::ClearCache(void)
 	    free(info);
   }
 
+  // delete any .tmp files in our directory or the root directory of the drive.
+  // Not sure where they are coming from but they collect over time.
+	TCHAR path[MAX_PATH];
+  if (GetModuleFileName(NULL, path, _countof(path))) {
+		*PathFindFileName(path) = NULL;
+    CString dir = path;
+    WIN32_FIND_DATA fd;
+    HANDLE find = FindFirstFile(dir + _T("\\*.tmp"), &fd);
+    if (find != INVALID_HANDLE_VALUE) {
+      do {
+        DeleteFile(dir + CString(_T("\\")) + fd.cFileName);
+      } while(FindNextFile(find, &fd));
+      FindClose(find);
+    }
+    find = FindFirstFile(_T("C:\\*.tmp"), &fd);
+    if (find != INVALID_HANDLE_VALUE) {
+      do {
+        DeleteFile(CString(_T("C:\\")) + fd.cFileName);
+      } while(FindNextFile(find, &fd));
+      FindClose(find);
+    }
+  }
+
 	cached = false;
 }
 
