@@ -1604,59 +1604,66 @@ LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::SetupScreen(void)
 {
-	DEVMODE mode;
-	memset(&mode, 0, sizeof(mode));
-	mode.dmSize = sizeof(mode);
-	CStringA settings;
-	DWORD x = 0, y = 0, bpp = 0;
+  DEVMODE mode;
+  memset(&mode, 0, sizeof(mode));
+  mode.dmSize = sizeof(mode);
+  CStringA settings;
+  DWORD x = 0, y = 0, bpp = 0;
 
-	// Go through the possible modes to find the best candidate (>=1024x768 with the highest bpp)
-	int index = 0;
+  int index = 0;
   DWORD targetWidth = 1920;
   DWORD targetHeight = 1200;
-	while( EnumDisplaySettings( NULL, index, &mode) ) {
-		index++;
-
+  DWORD min_bpp = 15;
+  while( EnumDisplaySettings( NULL, index, &mode) ) {
+    index++;
+    bool use_mode = false;
     log.Trace(_T("Available desktop resolution: %dx%d - %d bpp"), mode.dmPelsWidth, mode.dmPelsHeight, mode.dmBitsPerPel);
-
     if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
       // we already have at least one suitable resolution.  
       // Make sure we didn't overshoot and pick too high of a resolution
       // or see if a higher bpp is available
       if (mode.dmPelsWidth >= targetWidth && mode.dmPelsWidth <= x &&
           mode.dmPelsHeight >= targetHeight && mode.dmPelsHeight <= y &&
-          mode.dmBitsPerPel >= bpp) {
-			  x = mode.dmPelsWidth;
-			  y = mode.dmPelsHeight;
-			  bpp = mode.dmBitsPerPel;
-      }
+          mode.dmBitsPerPel >= bpp)
+        use_mode = true;
     } else {
-		  if( (mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
-          (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
-           mode.dmBitsPerPel >= 24 ) {
-			  x = mode.dmPelsWidth;
-			  y = mode.dmPelsHeight;
-			  bpp = mode.dmBitsPerPel;
-		  }
+      if (mode.dmPelsWidth == x && mode.dmPelsHeight == y) {
+        if (mode.dmBitsPerPel >= bpp)
+          use_mode = true;
+      } else if ((mode.dmPelsWidth >= targetWidth ||
+                  mode.dmPelsWidth >= x) &&
+                 (mode.dmPelsHeight >= targetHeight ||
+                  mode.dmPelsHeight >= y) && 
+                 mode.dmBitsPerPel >= min_bpp) {
+          use_mode = true;
+      }
     }
-	}
+    if (use_mode) {
+        x = mode.dmPelsWidth;
+        y = mode.dmPelsHeight;
+        bpp = mode.dmBitsPerPel;
+    }
+  }
 
   log.Trace(_T("Preferred desktop resolution: %dx%d - %d bpp"), x, y, bpp);
 
-	// get the current settings
-	if( x && y && bpp && EnumDisplaySettings( NULL, ENUM_CURRENT_SETTINGS, &mode) ) {
-		if( mode.dmPelsWidth < x || mode.dmPelsHeight < y || mode.dmBitsPerPel < bpp ) {
-			DEVMODE newMode;
-			memcpy(&newMode, &mode, sizeof(mode));
-			
-			newMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-			newMode.dmBitsPerPel = bpp;
-			newMode.dmPelsWidth = x;
-			newMode.dmPelsHeight = y;
-			ChangeDisplaySettings( &newMode, CDS_UPDATEREGISTRY | CDS_GLOBAL );
+  // get the current settings
+  if (x && y && bpp && 
+    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &mode)) {
+    if (mode.dmPelsWidth < x || 
+        mode.dmPelsHeight < y || 
+        mode.dmBitsPerPel < bpp) {
+      DEVMODE newMode;
+      memcpy(&newMode, &mode, sizeof(mode));
+      
+      newMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+      newMode.dmBitsPerPel = bpp;
+      newMode.dmPelsWidth = x;
+      newMode.dmPelsHeight = y;
+      ChangeDisplaySettings( &newMode, CDS_UPDATEREGISTRY | CDS_GLOBAL );
       log.Trace(_T("Changed desktop resolution: %dx%d - %d bpp"), x, y, bpp);
-		}
-	}
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
