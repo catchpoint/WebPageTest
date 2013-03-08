@@ -516,8 +516,10 @@ void CURLBlaster::ClearCache(void)
   DeleteRegKey((HKEY)hProfile, _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"), false);
 
   // flush the certificate revocation caches
-  Launch(_T("certutil.exe -urlcache * delete"));
-  Launch(_T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
+  if (info.clearCerts) {
+    Launch(_T("certutil.exe -urlcache * delete"));
+    Launch(_T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
+  }
 
   // clear the wininet cache if we are running as the current user
   if (hProfile == HKEY_CURRENT_USER) {

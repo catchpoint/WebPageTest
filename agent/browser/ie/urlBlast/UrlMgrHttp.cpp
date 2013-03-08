@@ -344,6 +344,8 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                   info.customRules += _T("\n");
                 info.customRules += value;
               }
+							else if( !key.CompareNoCase(_T("clearcerts")) && _ttol(value) )
+                info.clearCerts = true;
 						}
 					}
 
