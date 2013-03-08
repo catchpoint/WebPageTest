@@ -254,6 +254,10 @@ $page_description = "Comparison Test$testLabel.";
                             ?>
                         </li>
                         <li>
+                            <label for="mobile">Test Mobile Page<br><small>Chrome Only</small></label>
+                            <input type="checkbox" name="mobile" id="mobile" class="mobile">
+                        </li>
+                        <li>
                             <label for="wait">Expected Wait</label>
                             <span id="wait"></span>
                         </li>
@@ -348,6 +352,16 @@ $page_description = "Comparison Test$testLabel.";
                 }
                 
                 form.label.value = 'PageSpeed Service Comparison for ' + url;
+                
+                if (form['mobile'] && !$("#morelocs").is(":visible")) {
+                    if (form.mobile.checked) {
+                        var loc = $('#connection').val();
+                        if (loc.indexOf('.DSL') > 0) {
+                            loc = loc.replace('.DSL', '.3G');
+                            $('#connection').val(loc); 
+                        }
+                    }
+                }
                 
                 <?php
                 // build the psuedo batch-url list
