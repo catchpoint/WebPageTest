@@ -40,9 +40,12 @@ static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
-                                 _T(" --trace-startup-duration=240")
-                                 _T(" --trace-startup-file=\"%s_trace.json\"");
+    _T(" --trace-startup-duration=240 --trace-startup-file=\"%s_trace.json\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
+static const TCHAR * CHROME_MOBILE = 
+    _T(" --enable-viewport")
+    _T(" --enable-fixed-layout")
+    _T(" --force-device-scale-factor=2");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--ignore-certificate-errors"),
@@ -103,7 +106,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
     if (_browser._exe.GetLength()) {
       bool hook = true;
       bool hook_child = false;
-      TCHAR cmdLine[4096];
+      TCHAR cmdLine[32768];
       lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
       if (_browser._options.GetLength() )
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
@@ -128,9 +131,10 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           trace.Format(CHROME_TRACE, (LPCTSTR)_test._file_base);
           lstrcat(cmdLine, trace);
         }
-        if (_test._spdy3) {
+        if (_test._spdy3)
           lstrcat(cmdLine, CHROME_SPDY3);
-        }
+        if (_test._emulate_mobile)
+          lstrcat(cmdLine, CHROME_MOBILE);
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
@@ -167,8 +171,8 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       _browser_process = NULL;
       HANDLE additional_process = NULL;
       bool ok = true;
-      if (CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, CREATE_SUSPENDED, 
-                        NULL, NULL, &si, &pi)) {
+      if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+                        CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
         _browser_process = pi.hProcess;
 
         ResumeThread(pi.hThread);
@@ -296,7 +300,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
   Delete the user profile as well as the flash and silverlight caches
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
-  _browser.ResetProfile();
+  _browser.ResetProfile(_test._clear_certs);
   TCHAR path[MAX_PATH];
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 
                     SHGFP_TYPE_CURRENT, path))) {

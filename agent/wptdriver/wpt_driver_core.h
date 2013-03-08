@@ -58,7 +58,6 @@ private:
   void Init(void);
   void Cleanup(void);
   void FlushDNS(void);
-  void FlushCertCaches(void);
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
   void KillBrowsers();

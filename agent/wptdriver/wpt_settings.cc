@@ -50,7 +50,7 @@ WptSettings::~WptSettings(void) {
 bool WptSettings::Load(void) {
   bool ret = false;
 
-  TCHAR buff[1024];
+  TCHAR buff[10240];
   TCHAR iniFile[MAX_PATH];
   TCHAR logFile[MAX_PATH];
   iniFile[0] = 0;
@@ -249,7 +249,7 @@ bool WptSettings::ReInstallBrowser() {
 bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
                            CString client) {
   bool ret = false;
-  TCHAR buff[4096];
+  TCHAR buff[10240];
   _browser = browser;
   _template = _browser;
   _exe.Empty();
@@ -326,7 +326,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
 /*-----------------------------------------------------------------------------
   Reset the browser user profile (nuke the directory, copy the template over)
 -----------------------------------------------------------------------------*/
-void BrowserSettings::ResetProfile() {
+void BrowserSettings::ResetProfile(bool clear_certs) {
   // clear the browser-specific profile directory
   if (_cache_directory.GetLength()) {
     DeleteDirectory(_cache_directory, false);
@@ -339,9 +339,11 @@ void BrowserSettings::ResetProfile() {
   }
 
   // flush the certificate revocation caches
-  LaunchProcess(_T("certutil.exe -urlcache * delete"));
-  LaunchProcess(
-      _T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
+  if (clear_certs) {
+    LaunchProcess(_T("certutil.exe -urlcache * delete"));
+    LaunchProcess(
+        _T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
+  }
 
   // Clear the various IE caches that we know about
   DeleteRegKey(HKEY_CURRENT_USER, 

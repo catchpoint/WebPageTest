@@ -183,6 +183,7 @@ $loc = ParseLocations($locations);
                             <ul class="ui-tabs-nav">
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
+                                <li><a href="#advanced-chrome">Chrome</a></li>
                                 <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
@@ -279,6 +280,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
+                                        <label for="clearcerts" class="auto_width">
+                                            Clear SSL Certificate Caches
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="ignoreSSL" id="ignore_ssl_cerificate_errors" class="checkbox" style="float: left;width: auto;">
                                         <label for="ignore_ssl_cerificate_errors" class="auto_width">
                                             Ignore SSL Certificate Errors<br>
@@ -296,24 +303,6 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="tcpdump" id="tcpdump" class="checkbox" style="float: left;width: auto;">
                                         <label for="tcpdump" class="auto_width">
                                             Capture network packet trace (tcpdump)
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
-                                        <label for="timeline" class="auto_width">
-                                            Capture Dev Tools Timeline (Chrome Only)
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
-                                        <label for="netlog" class="auto_width">
-                                            Capture Network Log (Chrome Only)
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
-                                        <label for="spdy3" class="auto_width">
-                                            Force Spdy version 3 (Chrome Only)
                                         </label>
                                     </li>
                                     <li>
@@ -352,6 +341,36 @@ $loc = ParseLocations($locations);
                                             <small>Capture data for at least...</small>
                                         </label>
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                    </li>
+                                </ul>
+                            </div>
+                            <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
+                                <p>Chrome-specific advanced settings:</p>
+                                <ul class="input_fields">
+                                    <li>
+                                        <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="mobile" class="auto_width">
+                                            Emulate Mobile Browser (Experimental)<br>
+                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
+                                        <label for="timeline" class="auto_width">
+                                            Capture Dev Tools Timeline
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
+                                        <label for="netlog" class="auto_width">
+                                            Capture Network Log
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
+                                        <label for="spdy3" class="auto_width">
+                                            Force Spdy version 3
+                                        </label>
                                     </li>
                                 </ul>
                             </div>

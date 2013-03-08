@@ -4,9 +4,10 @@ include './settings.inc';
 $results = array();
 
 $loc = array();
-$loc['EC2_East_Chromium:Webkit Scheduler.3G'] = 'Webkit Scheduler';
-$loc['EC2_East_Chromium:Chrome Scheduler.3G'] = 'Chrome Scheduler';
-$loc['EC2_East_Chromium:No False Start.3G'] = 'No False Start';
+$loc['EC2_East_Chromium:NoSocket.DSL'] = 'Stock';
+$loc['EC2_East_Chromium:Socket0.DSL'] = 'Strategy 0';
+$loc['EC2_East_Chromium:Socket1.DSL'] = 'Strategy 1';
+$loc['EC2_East_Chromium:Socket2.DSL'] = 'Strategy 2';
 
 $metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests', 'domContentReady', 'visualComplete');
 
@@ -77,7 +78,7 @@ if (LoadResults($results)) {
                         $valid = false;
                 }
                 if ($valid) {
-                    $compare = "\"http://www.webpagetest.org/video/compare.php?thumbSize=200&ival=100&end=doc&tests=";
+                    $compare = "\"http://www.webpagetest.org/video/compare.php?tests=";
                     $first = true;
                     $baseline = null;
                     foreach($loc as $label) {

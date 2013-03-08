@@ -242,9 +242,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     attempt++;
     test.SetFileBase();
     if (test._clear_cache) {
-      browser.ClearUserData();
       FlushDNS();
-      FlushCertCaches();
+      browser.ClearUserData();
     }
     if (test._tcpdump)
       _winpcap.StartCapture( test._file_base + _T(".cap") );
@@ -369,17 +368,6 @@ void WptDriverCore::FlushDNS(void) {
 
   if (!flushed)
     LaunchProcess(_T("ipconfig.exe /flushdns"));
-}
-
-/*-----------------------------------------------------------------------------
-  Empty the OS CRL and OCSP caches
------------------------------------------------------------------------------*/
-void WptDriverCore::FlushCertCaches(void) {
-  _status.Set(_T("Flushing Certificate caches..."));
-
-  LaunchProcess(_T("certutil.exe -urlcache * delete"));
-  LaunchProcess(
-    _T("certutil.exe -setreg chain\\ChainCacheResyncFiletime @now"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -530,28 +518,34 @@ void WptDriverCore::SetupScreen(void) {
   int index = 0;
   DWORD targetWidth = 1920;
   DWORD targetHeight = 1200;
+  DWORD min_bpp = 15;
   while( EnumDisplaySettings( NULL, index, &mode) ) {
     index++;
-
+    bool use_mode = false;
     if (x >= targetWidth && y >= targetHeight && bpp >= 24) {
       // we already have at least one suitable resolution.  
       // Make sure we didn't overshoot and pick too high of a resolution
       // or see if a higher bpp is available
       if (mode.dmPelsWidth >= targetWidth && mode.dmPelsWidth <= x &&
           mode.dmPelsHeight >= targetHeight && mode.dmPelsHeight <= y &&
-          mode.dmBitsPerPel >= bpp) {
-        x = mode.dmPelsWidth;
-        y = mode.dmPelsHeight;
-        bpp = mode.dmBitsPerPel;
-      }
+          mode.dmBitsPerPel >= bpp)
+        use_mode = true;
     } else {
-      if( (mode.dmPelsWidth >= targetWidth || mode.dmPelsWidth >= x) && 
-          (mode.dmPelsHeight >= targetHeight || mode.dmPelsHeight >= y) && 
-           mode.dmBitsPerPel >= 24 ) {
+      if (mode.dmPelsWidth == x && mode.dmPelsHeight == y) {
+        if (mode.dmBitsPerPel >= bpp)
+          use_mode = true;
+      } else if ((mode.dmPelsWidth >= targetWidth ||
+                  mode.dmPelsWidth >= x) &&
+                 (mode.dmPelsHeight >= targetHeight ||
+                  mode.dmPelsHeight >= y) && 
+                 mode.dmBitsPerPel >= min_bpp) {
+          use_mode = true;
+      }
+    }
+    if (use_mode) {
         x = mode.dmPelsWidth;
         y = mode.dmPelsHeight;
         bpp = mode.dmBitsPerPel;
-      }
     }
   }
 

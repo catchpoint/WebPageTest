@@ -148,6 +148,8 @@ public:
   bool    _video;
   bool    _spdy3;
   bool    _noscript;
+  bool    _clear_certs;
+  bool    _emulate_mobile;
   CString _test_type;
   CString _block;
   DWORD   _bwIn;

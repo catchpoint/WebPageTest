@@ -49,7 +49,6 @@ static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
-static const TCHAR * IMAGE_AFT = _T("_aft.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");

@@ -51,7 +51,7 @@ public:
   BrowserSettings(){}
   ~BrowserSettings(){}
   bool Load(const TCHAR * browser, const TCHAR * iniFile, CString client);
-  void ResetProfile();
+  void ResetProfile(bool clear_certs);
   void GetStandardDirectories();
   void ClearWinInetCache();
   void ClearWebCache();

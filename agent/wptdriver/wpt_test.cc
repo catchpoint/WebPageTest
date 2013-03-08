@@ -86,6 +86,8 @@ void WptTest::Reset(void) {
   _video = false;
   _spdy3 = false;
   _noscript = false;
+  _clear_certs = false;
+  _emulate_mobile = false;
   _test_type.Empty();
   _block.Empty();
   _bwIn = 0;
@@ -182,6 +184,10 @@ bool WptTest::Load(CString& test) {
           _noscript = true;
         else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
           _video = true;
+        else if (!key.CompareNoCase(_T("clearcerts")) &&_ttoi(value.Trim()))
+          _clear_certs = true;
+        else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim()))
+          _emulate_mobile = true;
         else if (!key.CompareNoCase(_T("type")))
           _test_type = value.Trim();
         else if (!key.CompareNoCase(_T("block")))
@@ -420,6 +426,17 @@ void WptTest::BuildScript() {
     command.command = _T("noscript");
     command.record = false;
     _script_commands.AddHead(command);
+  }
+
+  if (_emulate_mobile) {
+    if (!_viewport_width && !_viewport_height) {
+      _viewport_width = 640;
+      _viewport_height = 960;
+    }
+    if (_user_agent.IsEmpty())
+      _user_agent = "Mozilla/5.0 (Linux; Android 4.2.2; Nexus 4 Build/JDQ39)"
+                    " AppleWebKit/537.31 (KHTML, like Gecko)"
+                    " Chrome/26.0.1408.0 Mobile Safari/537.31";
   }
 }
 
