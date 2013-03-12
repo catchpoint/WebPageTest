@@ -93,7 +93,7 @@
                 $test['bwOut'] = (int)$req_bwUp;
             $test['latency'] = (int)$req_latency;
             $test['testLatency'] = (int)$req_latency;
-            $test['plr'] = trim($req_plr);
+            $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
             $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback)) {
                 $test['callback'] = $req_callback;
