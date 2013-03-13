@@ -507,6 +507,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     $rawRequests[$id]['response'] = $event['response'];
                 }
                 if ($event['method'] == 'Network.loadingFinished') {
+                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
+                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     if (!array_key_exists('endTime', $rawRequests[$id]) || 
                         $event['timestamp'] > $rawRequests[$id]['endTime'])
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
@@ -514,6 +516,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 if ($event['method'] == 'Network.loadingFailed') {
                     $rawRequests[$id]['fromNet'] = true;
                     $rawRequests[$id]['errorCode'] = 12999;
+                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
+                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     if (!array_key_exists('endTime', $rawRequests[$id]) || 
                         $event['timestamp'] > $rawRequests[$id]['endTime'])
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
