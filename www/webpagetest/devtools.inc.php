@@ -512,6 +512,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
+                    $rawRequests[$id]['fromNet'] = true;
+                    $rawRequests[$id]['errorCode'] = 12999;
                     if (!array_key_exists('endTime', $rawRequests[$id]) || 
                         $event['timestamp'] > $rawRequests[$id]['endTime'])
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
