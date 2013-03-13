@@ -134,6 +134,7 @@
             $test['shard_test'] = $req_shard ? 1 : $settings['shard_tests'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
+            $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -1697,6 +1698,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "mobile=1\r\n";
             if( $test['clearcerts'] )
                 $testFile .= "clearcerts=1\r\n";
+            if( $test['orientation'] )
+                $testFile .= "orientation={$test['orientation']}\r\n";
             
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

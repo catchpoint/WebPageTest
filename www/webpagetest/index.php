@@ -342,6 +342,15 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
                                     </li>
+                                    <li>
+                                        <label for="orientationDefault">
+                                            Mobile Orientation<br>
+                                            <small>Experimental</small>
+                                        </label>
+                                        <input id="orientationDefault" type="radio" name="orientation" checked=checked value="default">Device Default
+                                        <input id="orientationPortrait" type="radio" name="orientation" value="portrait">Portrait
+                                        <input id="orientationPortrait" type="radio" name="orientation" value="landscape">Landscape
+                                    </li>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
