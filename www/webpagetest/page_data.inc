@@ -217,52 +217,47 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
     $rvCount = 0;
     
     // calculate the averages
-    if( count($pageData) )
-    {
-        foreach( $pageData as $run => $data )
-        {
-            if( isset($data[0]) && $data[0]['cached'] === 0 )
-            {
+    if( count($pageData) ) {
+        foreach( $pageData as $run => $data ) {
+            if( isset($data[0]) && $data[0]['cached'] === 0 ) {
+                if (!isset($metrics)) {
+                    $metrics = array();
+                    foreach ($data[0] as $metric => $value)
+                        $metrics[] = $metric;
+                }
                 // only look at non-error runs
                 if( $data[0]['result'] === 0 || $data[0]['result'] === 99999 )
                 {
                     if( !isset($fv) )
                         $fv = array();
-
-                    $fv['loadTime'] += $data[0]['loadTime'];
-                    $fv['TTFB'] += $data[0]['TTFB'];
-                    $fv['bytesIn'] += $data[0]['bytesIn'];
-                    $fv['bytesInDoc'] += $data[0]['bytesInDoc'];
-                    $fv['requests'] += $data[0]['requests'];
-                    $fv['requestsDoc'] += $data[0]['requestsDoc'];
-                    $fv['render'] += $data[0]['render'];
-                    $fv['fullyLoaded'] += $data[0]['fullyLoaded'];
-                    $fv['docTime'] += $data[0]['docTime'];
-                    $fv['domTime'] += $data[0]['domTime'];
-                    $fv['titleTime'] += $data[0]['titleTime'];
+                    foreach ($metrics as $metric) {
+                        if (array_key_exists($metric, $fv))
+                            $fv[$metric] += $data[0][$metric];
+                        else
+                            $fv[$metric] = $data[0][$metric];
+                    }
                     $fvCount++;
                 }
             }
 
             if( isset($data[1]) && $data[1]['cached'] )
             {
+                if (!isset($metrics)) {
+                    $metrics = array();
+                    foreach ($data[0] as $metric => $value)
+                        $metrics[] = $metric;
+                }
                 // only look at non-error runs
                 if( $data[1]['result'] === 0 || $data[1]['result'] === 99999 )
                 {
                     if( !isset($rv) )
                         $rv = array();
-                    
-                    $rv['loadTime'] += $data[1]['loadTime'];
-                    $rv['TTFB'] += $data[1]['TTFB'];
-                    $rv['bytesIn'] += $data[1]['bytesIn'];
-                    $rv['bytesInDoc'] += $data[1]['bytesInDoc'];
-                    $rv['requests'] += $data[1]['requests'];
-                    $rv['requestsDoc'] += $data[1]['requestsDoc'];
-                    $rv['render'] += $data[1]['render'];
-                    $rv['fullyLoaded'] += $data[1]['fullyLoaded'];
-                    $rv['docTime'] += $data[1]['docTime'];
-                    $rv['domTime'] += $data[1]['domTime'];
-                    $rv['titleTime'] += $data[1]['titleTime'];
+                    foreach ($metrics as $metric) {
+                        if (array_key_exists($metric, $rv))
+                            $rv[$metric] += $data[1][$metric];
+                        else
+                            $rv[$metric] = $data[1][$metric];
+                    }
                     $rvCount++;
                 }
             }
@@ -270,19 +265,10 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
     }
 
     // calculate the first view stats    
-    if( isset($fv) )
+    if( isset($fv) && isset($metrics) && $fvCount > 0 )
     {
-        $fv['loadTime'] /= (double)$fvCount;
-        $fv['TTFB'] /= (double)$fvCount;
-        $fv['bytesIn'] /= (double)$fvCount;
-        $fv['bytesInDoc'] /= (double)$fvCount;
-        $fv['requests'] /= (double)$fvCount;
-        $fv['requestsDoc'] /= (double)$fvCount;
-        $fv['render'] /= (double)$fvCount;
-        $fv['fullyLoaded'] /= (double)$fvCount;
-        $fv['docTime'] /= (double)$fvCount;
-        $fv['domTime'] /= (double)$fvCount;
-        $fv['titleTime'] /= (double)$fvCount;
+        foreach ($metrics as $metric)
+            $fv[$metric] /= (double)$fvCount;
         
         // go through and find the run closest to the average
         $closest = -1;
@@ -306,19 +292,10 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
     }
 
     // calculate the repeat view stats    
-    if( isset($rv) )
+    if( isset($rv) && isset($metrics) && $rvCount > 0 )
     {
-        $rv['loadTime'] /= (double)$rvCount;
-        $rv['TTFB'] /= (double)$rvCount;
-        $rv['bytesIn'] /= (double)$rvCount;
-        $rv['bytesInDoc'] /= (double)$rvCount;
-        $rv['requests'] /= (double)$rvCount;
-        $rv['requestsDoc'] /= (double)$rvCount;
-        $rv['render'] /= (double)$rvCount;
-        $rv['fullyLoaded'] /= (double)$rvCount;
-        $rv['docTime'] /= (double)$rvCount;
-        $rv['domTime'] /= (double)$rvCount;
-        $rv['titleTime'] /= (double)$rvCount;
+        foreach ($metrics as $metric)
+            $rv[$metric] /= (double)$rvCount;
         
         // go through and find the run closest to the average
         $closest = -1;
@@ -461,5 +438,36 @@ function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, 
     }
     
     return $count;
+}
+
+/**
+* Calculate the standard deviation for the provided metric
+* 
+*/
+function PageDataStandardDeviation($pageData, $metric, $cached) {
+    $ret = null;
+    $values = array();
+    if( count($pageData) ) {
+        foreach( $pageData as $run => $data ) {
+            if( array_key_exists($cached, $data) &&
+                array_key_exists($metric,$data[$cached]) &&
+                array_key_exists('result', $data[$cached]) &&
+                ($data[$cached]['result'] === 0 ||
+                 $data[$cached]['result'] === 99999))
+                $values[] = $data[$cached][$metric];
+        }
+    }
+    $count = count($values);
+    if ($count) {
+        $sum = 0;
+        foreach ($values as $value)
+            $sum += $value;
+        $avg = $sum / $count;
+        $sum = 0;
+        foreach ($values as $value)
+            $sum += pow($value - $avg, 2);
+        $ret = (int)sqrt($sum / $count);
+    }
+    return $ret;
 }
 ?>

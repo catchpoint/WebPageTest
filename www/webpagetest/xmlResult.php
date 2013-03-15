@@ -99,6 +99,19 @@ else
             echo "</repeatView>\n";
         }
         echo "</average>\n";
+        echo "<standardDeviation>\n";
+        echo "<firstView>\n";
+        foreach( $fv as $key => $val )
+            echo "<$key>" . PageDataStandardDeviation($pageData, $key, 0) . "</$key>\n";
+        echo "</firstView>\n";
+        if( isset($rv) )
+        {
+            echo "<repeatView>\n";
+            foreach( $rv as $key => $val )
+                echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+            echo "</repeatView>\n";
+        }
+        echo "</standardDeviation>\n";
 
         // output the median run data
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);
