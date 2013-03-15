@@ -3,14 +3,6 @@ include './settings.inc';
 
 $results = array();
 
-$loc = array();
-$loc['EC2_East_Chromium:NoSocket.DSL'] = 'Stock';
-$loc['EC2_East_Chromium:Socket0.DSL'] = 'Strategy 0';
-$loc['EC2_East_Chromium:Socket1.DSL'] = 'Strategy 1';
-$loc['EC2_East_Chromium:Socket2.DSL'] = 'Strategy 2';
-
-$metrics = array('ttfb', 'startRender', 'docComplete', 'fullyLoaded', 'speedIndex', 'bytes', 'requests', 'domContentReady', 'visualComplete');
-
 // Load the existing results
 if (LoadResults($results)) {
     // split them up by URL and location
@@ -22,17 +14,17 @@ if (LoadResults($results)) {
         $valid = true;
         $total++;
         if (($result['result'] != 0 && $result['result'] != 99999 ) ||
-            !$result['bytes'] ||
-            !$result['docComplete'] ||
-            !$result['ttfb'] ||
-            $result['ttfb'] > $result['docComplete'] ||
-            (isset($maxBandwidth) && $maxBandwidth && (($result['bytes'] * 8) / $result['docComplete']) > $maxBandwidth)) {
+            !$result['bytesInDoc'] ||
+            !$result['docTime'] ||
+            !$result['TTFB'] ||
+            $result['TTFB'] > $result['docTime'] ||
+            (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
             $valid = false;
             $invalid++;
         }
         if ($valid) {
             $url = $result['url'];
-            $location = $loc[$result['location']];
+            $location = $locations[$result['location']];
             if( !array_key_exists($url, $data) ) {
                 $data[$url] = array();
             }
@@ -48,6 +40,7 @@ if (LoadResults($results)) {
                 }
                 foreach ($metrics as $metric) {
                     $data[$url][$location][$metric] = $result[$metric];
+                    $data[$url][$location]["$metric.stddev"] = $result["$metric.stddev"];
                     $stats[$location][$metric][] = $result[$metric];
                 }
             }
@@ -61,8 +54,9 @@ if (LoadResults($results)) {
             fwrite($file, 'URL,');
             $metricData = array();
             $first = true;
-            foreach($loc as $label) {
+            foreach($locations as $loc => $label) {
                 fwrite($file, "$label,");
+                fwrite($file, "$label stddev,");
                 if (!$first)
                     fwrite($file, "$label Delta,");
                 $metricData[$label] = array();
@@ -73,7 +67,7 @@ if (LoadResults($results)) {
                 fwrite($file, "$url,");
                 // check and make sure we have data for all of the configurations for this url
                 $valid = true;
-                foreach($loc as $label) {
+                foreach($locations as $loc => $label) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
@@ -81,11 +75,15 @@ if (LoadResults($results)) {
                     $compare = "\"http://www.webpagetest.org/video/compare.php?tests=";
                     $first = true;
                     $baseline = null;
-                    foreach($loc as $label) {
+                    foreach($locations as $loc => $label) {
                         $value = '';
                         if (array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
                             $value = $urlData[$label][$metric];
                         fwrite($file, "$value,");
+                        $stddev = '';
+                        if (array_key_exists($label, $urlData) && array_key_exists("$metric.stddev", $urlData[$label]))
+                            $stddev = $urlData[$label]["$metric.stddev"];
+                        fwrite($file, "$stddev,");
                         if ($first)
                             $baseline = $value;
                         else {
@@ -110,7 +108,7 @@ if (LoadResults($results)) {
             if ($summary) {
                 fwrite($summary, ',');
                 $first = true;
-                foreach($loc as $label) {
+                foreach($locations as $loc => $label) {
                     sort($metricData[$label]);
                     fwrite($summary, "$label,");
                     if (!$first)
@@ -122,7 +120,7 @@ if (LoadResults($results)) {
                 $first = true;
                 $baseline = null;
                 $testCount = 0;
-                foreach($loc as $label) {
+                foreach($locations as $loc => $label) {
                     $value = '';
                     if (array_key_exists($label, $metricData))
                         $value = Avg($metricData[$label]);
@@ -149,7 +147,7 @@ if (LoadResults($results)) {
                     fwrite($summary, "{$percentile}th Percentile,");
                     $first = true;
                     $baseline = null;
-                    foreach($loc as $label) {
+                    foreach($locations as $loc => $label) {
                         $value = '';
                         if (array_key_exists($label, $metricData))
                             $value = Percentile($metricData[$label], $percentile);
@@ -200,47 +198,6 @@ function Percentile(&$data, $percentile) {
         $val = $data[$pos];
     }
     return $val;
-}
-
-/**
-* Dump the data of a particular type to a tab-delimited report
-* 
-* @param mixed $data
-* @param mixed $type
-*/
-function ReportData(&$data, $type)
-{
-    global $locations;
-    $file = fopen("./report_$type.txt", 'wb');
-    if($file)
-    {
-        fwrite($file, "URL\t");
-        foreach($locations as $location)
-            fwrite($file, "$location $type avg\t");
-        foreach($locations as $location)
-            fwrite($file, "$location $type stddev\t");
-        foreach($locations as $location)
-            fwrite($file, "$location $type stddev/avg\t");
-        fwrite($file, "\r\n");
-        foreach($data as $urlhash => &$urlentry)
-        {
-            fwrite($file, "{$urlentry['url']}\t");
-            foreach($locations as $location){
-                $value = $urlentry['data'][$location]["{$type}_avg"];
-                fwrite($file, "$value\t");
-            }
-            foreach($locations as $location){
-                $value = $urlentry['data'][$location]["{$type}_stddev"];
-                fwrite($file, "$value\t");
-            }
-            foreach($locations as $location){
-                $value = $urlentry['data'][$location]["{$type}_ratio"];
-                fwrite($file, "$value\t");
-            }
-            fwrite($file, "\r\n");
-        }
-        fclose($file);
-    }
 }
 
 /**

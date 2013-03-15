@@ -36,11 +36,11 @@ if (LoadResults($results)) {
                 if (array_key_exists('result', $result) && strlen($result['result'])) {
                     $complete++;
                     if (($result['result'] != 0 && $result['result'] != 99999 ) ||
-                        !$result['bytes'] ||
-                        !$result['docComplete'] ||
-                        !$result['ttfb'] ||
-                        $result['ttfb'] > $result['docComplete'] ||
-                        (isset($maxBandwidth) && $maxBandwidth && (($result['bytes'] * 8) / $result['docComplete']) > $maxBandwidth)) {
+                        !$result['bytesInDoc'] ||
+                        !$result['docTime'] ||
+                        !$result['TTFB'] ||
+                        $result['TTFB'] > $result['docTime'] ||
+                        (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
                         if (!array_key_exists($result['location'], $errors))
                             $errors[$result['location']] = 1;
                         else
@@ -126,29 +126,31 @@ function UpdateResults(&$results, $testCount) {
 * @param mixed $result
 */
 function GetTestResult(&$data, &$result) {
+    global $metrics;
     if (array_key_exists('median', $data) && array_key_exists('firstView', $data['median'])) {
         $result['result'] = (int)$data['median']['firstView']['result'];
-        $result['ttfb'] = (int)$data['median']['firstView']['TTFB'];
-        $result['startRender'] = (int)$data['median']['firstView']['render'];
-        $result['docComplete'] = (int)$data['median']['firstView']['docTime'];
-        $result['fullyLoaded'] =(int)$data['median']['firstView']['fullyLoaded'];
-        $result['speedIndex'] =(int)$data['median']['firstView']['SpeedIndex'];
-        $result['bytes'] =(int)$data['median']['firstView']['bytesInDoc'];
-        $result['requests'] =(int)$data['median']['firstView']['requestsDoc'];
-        $result['domContentReady'] = (int)$data['median']['firstView']['domContentLoadedEventStart'];
-        $result['visualComplete'] = (int)$data['median']['firstView']['visualComplete'];
         $result['successfulRuns'] =(int)$data['successfulFVRuns'];
+        foreach ($metrics as $metric) {
+            $result[$metric] = (int)$data['median']['firstView'][$metric];
+            if (array_key_exists('standardDeviation', $data) &&
+                is_array($data['standardDeviation']) &&
+                array_key_exists('firstView', $data['standardDeviation']) &&
+                is_array($data['standardDeviation']['firstView']) &&
+                array_key_exists($metric, $data['standardDeviation']['firstView']))
+                $result["$metric.stddev"] = (int)$data['standardDeviation']['firstView'][$metric];
+        }
         
         if (array_key_exists('repeatView', $data['median'])) {
-            $result['rv_ttfb'] = (int)$data['median']['repeatView']['TTFB'];
-            $result['rv_startRender'] = (int)$data['median']['repeatView']['render'];
-            $result['rv_docComplete'] = (int)$data['median']['repeatView']['docTime'];
-            $result['rv_fullyLoaded'] =(int)$data['median']['repeatView']['fullyLoaded'];
-            $result['rv_speedIndex'] =(int)$data['median']['repeatView']['SpeedIndex'];
-            $result['rv_bytes'] =(int)$data['median']['repeatView']['bytesInDoc'];
-            $result['rv_requests'] =(int)$data['median']['repeatView']['requestsDoc'];
-            $result['domContentReady'] = (int)$data['median']['repeatView']['domContentLoadedEventStart'];
-            $result['visualComplete'] = (int)$data['median']['repeatView']['visualComplete'];
+            $result['rv_result'] = (int)$data['median']['repeatView']['result'];
+            foreach ($metrics as $metric) {
+                $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
+                if (array_key_exists('standardDeviation', $data) &&
+                    is_array($data['standardDeviation']) &&
+                    array_key_exists('repeatView', $data['standardDeviation']) &&
+                    is_array($data['standardDeviation']['repeatView']) &&
+                    array_key_exists($metric, $data['standardDeviation']['repeatView']))
+                    $result["rv_$metric.stddev"] = (int)$data['standardDeviation']['repeatView'][$metric];
+            }
             $result['rv_successfulRuns'] =(int)$data['successfulRVRuns'];
         }
     }

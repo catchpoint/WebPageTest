@@ -13,7 +13,7 @@ if (LoadResults($results)) {
         foreach ($urls as $url) {
             $url = trim($url);
             if (strlen($url)) {
-                foreach( $locations as $location )
+                foreach( $locations as $location => $label )
                     $results[] = array( 'url' => $url, 'location' => $location );
             }
         }
