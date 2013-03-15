@@ -169,7 +169,7 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
     }
     // fix any spikiness in the bandwidth data
     if ($max_bw && $use_bw && count($perfs['bw']['data'])) {
-        $max_bw *= 1024;
+        $max_bw *= 1000;
         // figure out the real max
         $measured_max = max($perfs['bw']['data']);
         if ($measured_max > $max_bw) {

@@ -164,7 +164,7 @@ if (!defined('EMBED')) {
 </div>
 
 <?php
-if (isset($settings['alert']) && strlen($settings['alert'])) {
+if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'])) {
     echo '<div class="alert bold">';
     echo $settings['alert'];
     echo '</div>';

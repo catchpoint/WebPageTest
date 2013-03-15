@@ -115,7 +115,7 @@ $page_description = "Comparison Test$testLabel.";
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
                         <li>
-                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on DSL)</small></label>
+                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on Cable)</small></label>
                             <select name="pssloc" id="pssloc">
                                 <option value="US_East" selected>US East (Virginia)</option>
                                 <option value="US_West">US West (California)</option>
@@ -356,8 +356,8 @@ $page_description = "Comparison Test$testLabel.";
                 if (form['mobile'] && !$("#morelocs").is(":visible")) {
                     if (form.mobile.checked) {
                         var loc = $('#connection').val();
-                        if (loc.indexOf('.DSL') > 0) {
-                            loc = loc.replace('.DSL', '.3G');
+                        if (loc.indexOf('.Cable') > 0) {
+                            loc = loc.replace('.Cable', '.3G');
                             $('#connection').val(loc); 
                         }
                     }

@@ -667,7 +667,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   // see if we need to pick the default connectivity
   if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-      $test['connectivity'] = 'DSL';
+      $test['connectivity'] = 'Cable';
 
   if( isset($test['browser']) && strlen($test['browser']) )
       $test['locationText'] .= " - <b>{$test['browser']}</b>";
@@ -909,7 +909,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             {                
                 // see if we need to pick the default connectivity
                 if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-                    $test['connectivity'] = 'DSL';
+                    $test['connectivity'] = 'Cable';
                     
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";

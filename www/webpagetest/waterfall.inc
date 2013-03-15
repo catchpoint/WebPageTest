@@ -700,7 +700,7 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
   if ($key == 'cpu') {
       $label = 'CPU Utilization';
   } elseif ($key == 'bw') {
-      $max_kbps = number_format($perf['max'] / 1024);
+      $max_kbps = number_format($perf['max'] / 1000);
       $label = "BandwidthIn (0 - $max_kbps Kbps)";
   }
   $font_height = imagefontheight($font);
