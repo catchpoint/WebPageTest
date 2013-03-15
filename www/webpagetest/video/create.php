@@ -116,6 +116,7 @@ else
                     }
                 }
                 
+                RestoreTest($test['id']);
                 $test['path'] = GetTestPath($test['id']);
                 $test['pageData'] = loadAllPageData($test['path']);
                 
