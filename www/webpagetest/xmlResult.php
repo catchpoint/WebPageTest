@@ -2,16 +2,12 @@
 $msStart = microtime(true);
 
 //$debug=true;
-include 'common.inc';
+require_once('common.inc');
 require_once('page_data.inc');
 require_once('testStatus.inc');
 require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
-
-// stub-out requests from M4_SpeedTestService
-//if( strpos($_SERVER['HTTP_USER_AGENT'], 'M4_SpeedTestService') !== false )
-//    exit();
 
 // see if we are sending abbreviated results
 $pagespeed = (int)$_REQUEST['pagespeed'];

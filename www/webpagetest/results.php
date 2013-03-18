@@ -2,9 +2,10 @@
 include 'common.inc';
 require_once('page_data.inc');
 
-if( !isset($test) && array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
-    $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
-    json_response($ret);
+if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
+    include 'jsonResult.php';
+} elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'xml') {
+    include 'xmlResult.php';
 } else {
     $options = null;
     if (array_key_exists('end', $_REQUEST))

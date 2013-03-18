@@ -541,6 +541,7 @@
                         echo "<summaryCSV>http://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
                         echo "<detailCSV>http://$host$uri/csv.php?test={$test['id']}&amp;requests=1</detailCSV>\n";
                     }
+                    echo "<jsonUrl>http://$host$uri/jsonResult.php?test={$test['id']}/</jsonUrl>\n";
                     echo "</data>\n";
                     echo "</response>\n";
                     
@@ -568,6 +569,7 @@
                         $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
                         $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
                     }
+                    $ret['data']['jsonUrl'] = "http://$host$uri/jsonUrl.php?test={$test['id']}";
                     json_response($ret);
                 }
                 else
