@@ -33,13 +33,14 @@ public:
   CIpfw(void);
   ~CIpfw(void){};
 
-  bool Init();
   bool SetPipe(unsigned int num, unsigned long bandwidth, 
                unsigned long delay, double plr = 0.0);
 
 protected:
+  bool Init();
   bool Execute(CString cmd);
   HANDLE hDriver;
   CString ipfw_dir_;
   bool win32_;
+  bool initialized_;
 };

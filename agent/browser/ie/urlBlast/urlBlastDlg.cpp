@@ -168,8 +168,6 @@ BOOL CurlBlastDlg::OnInitDialog()
 
   WaitForSingleObject(testingMutex, INFINITE);
 	SetupScreen();
-	status.SetWindowText(_T("Configuring Dummynet..."));
-  ipfw.Init();
   ReleaseMutex(testingMutex);
 	
 	rebooting.SetWindowText(_T(""));
