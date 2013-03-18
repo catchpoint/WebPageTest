@@ -87,7 +87,7 @@ if (!array_key_exists('nogzip', $settings))
     $settings['nogzip'] = false;
 if (!array_key_exists('nolinks', $settings))
     $settings['nolinks'] = 0;
-if (!array_key_exists('shardTests', $settings))
+if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 
 $privateInstall = true;
