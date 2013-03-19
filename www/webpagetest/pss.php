@@ -249,11 +249,11 @@ $page_description = "Comparison Test$testLabel.";
                         <li>
                             <?php
                             if (!$mps && !$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
-                                $prodSelected = ' selected';
-                                $aggressiveSelected = '';
-                                if (array_key_exists('aggressive', $_REQUEST) && $_REQUEST['aggressive']) {
-                                    $prodSelected = '';
-                                    $aggressiveSelected = ' selected';
+                                $prodSelected = '';
+                                $aggressiveSelected = ' selected';
+                                if (array_key_exists('aggressive', $_REQUEST) && !$_REQUEST['aggressive']) {
+                                    $prodSelected = ' selected';
+                                    $aggressiveSelected = '';
                                 }
                                 echo '<label for="backend">Optimization Settings</label>';
                                 echo '<select name="backend" id="backend">';
