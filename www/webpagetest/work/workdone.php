@@ -1573,9 +1573,17 @@ function StartProcessingIncrementalResult() {
     global $cacheWarmed;
     global $testLock;
     global $location;
+    global $admin;
 
     if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
         flock($testLock, LOCK_EX);
+
+    // re-load the testinfo from disk so we don't write stale data acquired from outside the lock
+    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if( isset($testInfo) ) {
+        $testInfo['last_updated'] = $time;
+        $testInfo_dirty = true;
+    }
 
     if ($done) {
         if (!array_key_exists('test_runs', $testInfo)) {
@@ -1594,7 +1602,7 @@ function StartProcessingIncrementalResult() {
             if (!$testInfo['test_runs'][$run]['done'])
                 $done = false;
         }
-
+        
         if (!$done &&
             array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
             $testInfo['test_runs'][$runNumber]['discarded']) {
