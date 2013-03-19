@@ -21,6 +21,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 <form style="margin-left:2em;" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                     Chart Type: <input type="radio" name="type" value="waterfall" checked="checked"> Waterfall
                      &nbsp; <input type="radio" name="type" value="connection"> Connection View<br>
+                    Chart Coloring: <input type="radio" name="coloring" value="classic" checked="checked"> Classic
+                     &nbsp; <input type="radio" name="coloring" value="mime"> By MIME Type<br>
                      Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)<br>
                      Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)<br>
                      Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
@@ -57,6 +59,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     UpdateWaterfall();
                 });
                 
+                $("input[name=coloring]").click(function(){
+                    UpdateWaterfall();
+                });
+
                 $("input[type=checkbox]").click(function(){
                     UpdateWaterfall();
                 });
@@ -71,6 +77,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
             {
                 $('body').css('cursor', 'wait'); 
                 var type = $('input[name=type]:checked').val();
+                var coloring = $('input[name=coloring]:checked').val();
+                var mime = 0;
+                if (coloring == 'mime')
+                    mime = 1;
                 var width = $('#width').val();
                 var max = $('#max').val();
                 var requests = $('#requests').val();
@@ -93,7 +103,18 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var extension='$extension';\n";
                 ?>
                 
-                var src = '/waterfall.' + extension + '?test=' + testId + '&run=' + testRun + '&cached=' + cached + '&max=' + max + '&width=' + width + '&type=' + type + '&cpu=' + showCPU + '&bw=' + showBW + '&dots=' + showDots + '&labels=' + showLabels + '&requests=' + requests;
+                var src = '/waterfall.' + extension + '?test=' + testId + 
+                          '&run=' + testRun + 
+                          '&cached=' + cached + 
+                          '&max=' + max + 
+                          '&width=' + width + 
+                          '&type=' + type + 
+                          '&mime=' + mime + 
+                          '&cpu=' + showCPU + 
+                          '&bw=' + showBW + 
+                          '&dots=' + showDots + 
+                          '&labels=' + showLabels + 
+                          '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };
         </script>
