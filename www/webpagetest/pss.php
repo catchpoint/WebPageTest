@@ -132,14 +132,27 @@ $page_description = "Comparison Test$testLabel.";
                             <label for="location">Location</label>
                             <select name="where" id="location">
                                 <?php
+                                $lastGroup = null;
                                 foreach($loc['locations'] as &$location)
                                 {
                                     $selected = '';
                                     if( $location['checked'] )
                                         $selected = 'selected';
                                         
+                                    if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
+                                        if (isset($lastGroup))
+                                            echo "</optgroup>";
+                                        if (strlen($location['group'])) {
+                                            $lastGroup = $location['group'];
+                                            echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
+                                        } else
+                                            $lastGroup = null;
+                                    }
+
                                     echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                                 }
+                                if (isset($lastGroup))
+                                    echo "</optgroup>";
                                 ?>
                             </select>
                             <?php if( $settings['map'] ) { ?>
@@ -298,14 +311,26 @@ $page_description = "Comparison Test$testLabel.";
                 <p>
                     <select id="location2">
                         <?php
+                        $lastGroup = null;
                         foreach($loc['locations'] as &$location)
                         {
                             $selected = '';
                             if( $location['checked'] )
                                 $selected = 'SELECTED';
+                            if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
+                                if (isset($lastGroup))
+                                    echo "</optgroup>";
+                                if (strlen($location['group'])) {
+                                    $lastGroup = $location['group'];
+                                    echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
+                                } else
+                                    $lastGroup = null;
+                            }
                                 
                             echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                         }
+                        if (isset($lastGroup))
+                            echo "</optgroup>";
                         ?>
                     </select>
                     <input id="location-ok" type=button class="simplemodal-close" value="OK">

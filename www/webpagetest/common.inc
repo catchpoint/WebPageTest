@@ -998,6 +998,8 @@ function ParseLocations(&$locations) {
                 $location['comment'] = str_replace(
                     "'", '"', $locations[$name]['comment']);  // "
             }
+            if (array_key_exists('group', $locations[$name]))
+                $location['group'] = $locations[$name]['group'];
             $location['name'] = $name;
             $loc['locations'][$name] = $location;
         }
