@@ -236,26 +236,32 @@ $page_description = "Comparison Test$testLabel.";
                         <li>
                             <?php
                             if (!$mps && !$preview && (!array_key_exists('origin', $_GET) || !strlen($_GET['origin']))) {
-                            ?>
-                            <label for="backend">Optimization Settings</label>
-                            <select name="backend" id="backend">
-                                <option value="prod" selected>Default (Safe)</option>
-                                <option value="aggressive">Aggressive</option>
-                                <?php
-                                if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
+                                $prodSelected = ' selected';
+                                $aggressiveSelected = '';
+                                if (array_key_exists('aggressive', $_REQUEST) && $_REQUEST['aggressive']) {
+                                    $prodSelected = '';
+                                    $aggressiveSelected = ' selected';
+                                }
+                                echo '<label for="backend">Optimization Settings</label>';
+                                echo '<select name="backend" id="backend">';
+                                echo "<option value=\"prod\"$prodSelected>Default (Safe)</option>";
+                                echo "<option value=\"aggressive\"$aggressiveSelected>Aggressive</option>";
+                                if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
                                     echo '<option value="staging">Staging</option>';
-                                }                                    
-                                ?>
-                            </select>
-                            <?php
+                                echo '</select>';
                             } else {
-                            echo "<input type=\"hidden\" name=\"backend\" id=\"backend\" value=\"prod\">\n";
+                                echo "<input type=\"hidden\" name=\"backend\" id=\"backend\" value=\"prod\">\n";
                             }
                             ?>
                         </li>
                         <li>
                             <label for="mobile">Test Mobile Page<br><small>Chrome Only</small></label>
-                            <input type="checkbox" name="mobile" id="mobile" class="mobile">
+                            <?php
+                            $checked = '';
+                            if (array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'])
+                                $checked = ' checked="checked"';
+                            echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"mobile\"$checked>";
+                            ?>
                         </li>
                         <li>
                             <label for="wait">Expected Wait</label>
