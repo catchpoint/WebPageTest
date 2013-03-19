@@ -383,7 +383,7 @@ void CurlBlastDlg::DoStartup(void)
 	}
 
   // block IE9 automatic install
-	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\9.0"), 0, NULL, REG_OPTION_NON_VOLATILE, NULL, NULL, &hKey, NULL)) )
+	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\9.0"), 0, 0, 0, KEY_READ | KEY_WRITE, NULL, &hKey, NULL)) )
 	{
 		DWORD val = 1;
 		RegSetValueEx(hKey, _T("DoNotAllowIE90"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
@@ -392,7 +392,7 @@ void CurlBlastDlg::DoStartup(void)
 	}
 
   // block IE10 automatic install
-	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\10.0"), 0, NULL, REG_OPTION_NON_VOLATILE, NULL, NULL, &hKey, NULL)) )
+	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\10.0"), 0, 0, 0, KEY_READ | KEY_WRITE, NULL, &hKey, NULL)) )
 	{
 		DWORD val = 1;
 		RegSetValueEx(hKey, _T("DoNotAllowIE10"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
