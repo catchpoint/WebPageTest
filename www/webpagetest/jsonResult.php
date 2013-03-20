@@ -6,39 +6,17 @@ require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
 
-$ret = array('data' => GetTestStatus($id));
-$ret['statusCode'] = $ret['data']['statusCode'];
-$ret['statusText'] = $ret['data']['statusText'];
+if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
+    include 'resultBatch.inc';
+} else {
+    $ret = array('data' => GetTestStatus($id));
+    $ret['statusCode'] = $ret['data']['statusCode'];
+    $ret['statusText'] = $ret['data']['statusText'];
 
-if ($ret['statusCode'] == 200) {
-    if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
-        $tests = null;
-        if( gz_is_file("$testPath/bulk.json") )
-            $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
-        elseif( gz_is_file("$testPath/tests.json") ) {
-            $legacyData = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
-            $tests = array();
-            $tests['variations'] = array();
-            $tests['urls'] = array();
-            foreach( $legacyData as &$legacyTest )
-                $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
-        }
-            
-        if (count($tests['urls'])) {
-            $ret['data'] = array('multiple' => true);
-            foreach ($tests['urls'] as &$test) {
-                $ret['data'][$test['id']] = GetTestResult($id);
-                if (array_key_exists('v', $test) && is_array($test['v'])) {
-                    foreach ($test['v'] as $variationIndex => $variationId)
-                        $ret['data'][$variationId] = GetTestResult($id);
-                }
-            }
-        }
-    } else {
+    if ($ret['statusCode'] == 200)
         $ret['data'] = GetTestResult($id);
-    }
+    json_response($ret);
 }
-json_response($ret);
 
 /**
 * Gather all of the data for a given test and return it as an array
