@@ -137,14 +137,12 @@ function GetBacklog($dir, $locationId)
     for($i = 1; $i <= 9; $i++)
         $backlog["p$i"] = 0;
 
-    if (LoadJobQueue($dir, $queue))
-    {
-        $userCount = count($queue[0]);
-        for( $i = 1; $i <= 9; $i++ )
-        {
-            $count = count($queue[$i]);
-            $backlog["p$i"] = $count;
-            $lowCount += $count;
+    $queue = GetQueueLengths($locationId);
+    if (count($queue)) {
+        $userCount = $queue[0];
+        for( $i = 1; $i <= 9; $i++ ) {
+            $backlog["p$i"] = $queue[$i];
+            $lowCount += $queue[$i];
         }
     }
 
