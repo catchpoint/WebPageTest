@@ -7,7 +7,9 @@ chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
+require_once('archive.inc');
 set_time_limit(36000);
+error_reporting(E_ERROR | E_PARSE);
 $debug=true;
 if (!is_dir('./log')) {
     mkdir('./log', 0777, true);
@@ -248,20 +250,18 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 $now = time();
                 if ($status['statusCode'] >= 400) {
                     logMsg("Test {$test['id']} : Failed", "./log/$logFile", true);
-                    if (!array_key_exists('resubmitted', $test) && 
-                        ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
+                    if (ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
+                        logMsg("Test {$test['id']} : Resubmit succeeded, marking benchmark as not done", "./log/$logFile", true);
                         $done = false;
                     } else {
+                        logMsg("Test {$test['id']} : Resubmit failed, marking as completed", "./log/$logFile", true);
                         $test['completed'] = $now;
                     }
-                    $test['resubmitted'] = true;
                 } elseif( $status['statusCode'] == 200 ) {
                     logMsg("Test {$test['id']} : Completed", "./log/$logFile", true);
                     if (!IsTestValid($test['id']) && 
-                        !array_key_exists('resubmitted', $test) && 
                         ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
                         $done = false;
-                        $test['resubmitted'] = true;
                     } else {
                         if (array_key_exists('completeTime', $status) && $status['completeTime']) {
                             $test['completed'] = $status['completeTime'];
@@ -462,6 +462,8 @@ function ResubmitBenchmarkTest($benchmark, $id, &$state) {
                         } else {
                             logMsg("Test $id from $benchmark resubmit failed", "./log/$logFile", true);
                         }
+                    } else {
+                        logMsg("Test $id exceeded retry limit, already retried {$testData['retry']} times", "./log/$logFile", true);
                     }
                     break;
                 }
