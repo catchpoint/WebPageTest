@@ -47,3 +47,6 @@ iq=75
 ;archive_s3_secret=<secret>
 ;archive_s3_bucket=<bucket>
 ;archive_s3_url=http://s3.amazonaws.com/<bucket>/
+
+; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
+;beanstalkd=127.0.0.1

@@ -39,17 +39,21 @@ for($offset = 0; $offset <= $days; $offset++)
                 $ip = trim($parts[1]);
                 if( strlen($ip) ) {
                     $key = trim($parts[13]);
+                    $count = 1;
+                    if (array_key_exists(14, $parts))
+                        $count = intval(trim($parts[14]));
+                    $count = max(1, $count);
                     if( strlen($key) )
                         $ip_keys[$ip] = $key;
                     if( isset($counts[$ip]) )
-                        $counts[$ip]++;
+                        $counts[$ip] += $count;
                     else
-                        $counts[$ip] = 1;
+                        $counts[$ip] = $count;
 
                     if( isset($dayCount[$ip]) )
-                        $dayCount[$ip]++;
+                        $dayCount[$ip] += $count;
                     else
-                        $dayCount[$ip] = 1;
+                        $dayCount[$ip] = $count;
                 }
             }
         }

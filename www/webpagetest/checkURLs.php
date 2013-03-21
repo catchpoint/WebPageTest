@@ -27,19 +27,23 @@ for($offset = 0; $offset <= $days; $offset++)
             {
                 $url = trim($parts[5]);
                 if( strlen($url) ) {
-                    $parts = parse_url($url);
-                    $host = trim($parts['host']);
+                    $urlParts = parse_url($url);
+                    $host = trim($urlParts['host']);
                     if (!strlen($host))
                         $host = $url;
+                    $count = 1;
+                    if (array_key_exists(14, $parts))
+                        $count = intval(trim($parts[14]));
+                    $count = max(1, $count);
                     if( isset($counts[$host]) )
-                        $counts[$host]++;
+                        $counts[$host] += $count;
                     else
-                        $counts[$host] = 1;
+                        $counts[$host] = $count;
 
                     if( isset($dayCount[$host]) )
-                        $dayCount[$host]++;
+                        $dayCount[$host] += $count;
                     else
-                        $dayCount[$host] = 1;
+                        $dayCount[$host] = $count;
                 }
             }
         }

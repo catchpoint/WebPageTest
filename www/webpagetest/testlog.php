@@ -107,8 +107,10 @@ else
                         <?php
                         if( $includeip )
                             echo '<th>Requested By</th>';
-                        if( $admin )
+                        if( $admin ) {
                             echo '<th>User</th>';
+                            echo '<th>Page Loads</th>';
+                        }
                         ?>
                         <th>Label</th>
 				        <th>Url</th>
@@ -157,6 +159,7 @@ else
                                     $private = false;
                                     $video = false;
                                     $label = NULL;
+                                    $count = '';
 						            
 						            // tokenize the line
 						            $parseLine = str_replace("\t", "\t ", $line);
@@ -181,6 +184,7 @@ else
                                                 case 11: $video = ($token == '1'); break;
                                                 case 12: $label = htmlspecialchars($token); break;
                                                 case 13: $o = $token; break;
+                                                case 15: $count = $token; break;
 								            }
 							            }
 							            
@@ -266,6 +270,7 @@ else
                                                         echo '<td class="uid">' . "$testUser ($testUID)" . '</td>';
                                                     else
                                                         echo '<td class="uid"></td>';
+                                                    echo "<td class=\"count\">$count</td>";
                                                 }
                                                 $link = "/results.php?test=$guid";
                                                 if( FRIENDLY_URLS )

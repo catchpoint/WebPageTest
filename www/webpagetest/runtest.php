@@ -955,6 +955,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 */
 function ValidateScript(&$script, &$error)
 {
+    global $test;
     $url = null;
     if (stripos($script, 'webdriver.Builder(') === false) {
         global $test;
@@ -982,6 +983,8 @@ function ValidateScript(&$script, &$error)
             elseif( !strcasecmp($command, 'fileDialog') )
                 $error = "fileDialog is not a supported command for uploaded scripts.";
         }
+        
+        $test['navigateCount'] = $navigateCount;
         
         if( !$ok )
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
@@ -1432,11 +1435,16 @@ function LogTest(&$test, $testId, $url)
         $ip = $_SERVER['REMOTE_ADDR'];
         if( array_key_exists('ip',$test) && strlen($test['ip']) )
             $ip = $test['ip'];
+        $pageLoads = $test['runs'];
+        if (!$test['fvonly'])
+            $pageLoads *= 2;
+        if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+            $pageLoads *= $test['navigateCount'];
         
         $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
         $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
         $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
-        $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\r\n";
+        $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\t$pageLoads" . "\r\n";
 
         // flock will block until we acquire the lock or the script times out and is killed
         if( flock($file, LOCK_EX) )
