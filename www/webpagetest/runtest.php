@@ -1895,10 +1895,10 @@ function RelayTest()
         $test['job'] = $rkey . '.' . $test['job'];
         $testPath = './' . GetTestPath($id);
         @mkdir($testPath, 0777, true);
-        file_put_contents("$testPath/testinfo.ini", $ini);
-        gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
         $job = str_replace($test['id'], $id, $job);
-        WriteJob($location, $test, $job);
+        file_put_contents("$testPath/testinfo.ini", $ini);
+        WriteJob($location, $test, $job, $id);
+        gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
     }
     
     if( isset($error) )
