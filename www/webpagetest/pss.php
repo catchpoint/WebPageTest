@@ -435,7 +435,7 @@ $page_description = "Comparison Test$testLabel.";
                     script = script.replace(/pss_blocking_rewrite/g, 'pss_staging');
                     form.script.value = script;
                     form.web10.value = 0;
-                    form.runs.value = 10;
+                    form.runs.value = 8;
                     form.discard.value = 1;
                 }
                 <?php
