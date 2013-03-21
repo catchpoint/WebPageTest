@@ -38,6 +38,8 @@ function ValidateInput(form)
     document.cookie = 'd=' + $('#bwDown').val() + expires +  '; path=/';
     document.cookie = 'l=' + $('#latency').val() + expires +  '; path=/';
     document.cookie = 'p=' + $('#plr').val() + expires +  '; path=/';
+    
+    SaveSettings();
 
     return true;
 }
@@ -71,17 +73,20 @@ function ValidateInput(form)
             ConnectionChanged();
         });
         
-        // make sure to select an intelligent default (in case the back button was hit)
-        SelectDefaultLocation();
-        
-        //$('#url').focus();
+        RestoreSettings();
     });
 })(jQuery);
 
-function SelectDefaultLocation() {
+function RestoreSettings() {
+    if (wptStorage['testVideo'] != undefined && wptStorage['testVideo'])
+        $('#videoCheck').prop('checked', true);
     if (wptStorage['testLoc'] != undefined)
         $('#location').val(wptStorage['testLoc']); 
     LocationChanged();
+}
+
+function SaveSettings() {
+    wptStorage['testVideo'] = $('#videoCheck').is(':checked');
 }
 
 /*
