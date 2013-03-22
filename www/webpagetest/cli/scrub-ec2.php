@@ -4,6 +4,7 @@ include 'common.inc';
 include './cli/ec2-keys.inc.php';
 include './ec2/sdk.class.php';
 set_time_limit(0);
+error_reporting(E_ERROR | E_PARSE);
 $minimum = true;
 ob_start();
 
