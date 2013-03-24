@@ -305,6 +305,8 @@ else
                     echo "<connectionView>http://$host$uri$path/{$i}_Cached_connection.png</connectionView>\n";
                     echo "<checklist>http://$host$uri$path/{$i}_Cached_optimization.png</checklist>\n";
                     echo "<screenShot>http://$host$uri$path/{$i}_Cached_screen.jpg</screenShot>\n";
+                    if( is_file("$testPath/{$i}_Cached_screen.png") )
+                        echo "<screenShotPng>http://$host$uri$path/{$i}_Cached_screen.png</screenShotPng>\n";
                     echo "</images>\n";
 
                     // raw results

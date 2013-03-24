@@ -1765,7 +1765,7 @@ function VideoHtml($id)
                                     }\n
                                 ); \n
                 </script>\n
-                <br>* The video may extend past the measured load time if the page was still updating after it was technically loaded\n
+                <br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n
                 <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
