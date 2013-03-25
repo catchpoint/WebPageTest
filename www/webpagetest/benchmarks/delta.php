@@ -67,9 +67,18 @@ if (!$info['video']) {
     unset($metrics['SpeedIndex']);
     $metric = 'docTime';
 }
-if (array_key_exists('metric', $_REQUEST)) {
+if (array_key_exists('metric', $_REQUEST))
     $metric = $_REQUEST['metric'];
+$ref = null;
+if (array_key_exists('ref', $_REQUEST) && array_key_exists($_REQUEST['ref'], $info['configurations']))
+    $ref = $_REQUEST['ref'];
+if (!isset($ref)) {
+    foreach ($info['configurations'] as $config => &$configData) {
+        $ref = $config;
+        break;
+    }
 }
+
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -136,6 +145,14 @@ if (array_key_exists('metric', $_REQUEST)) {
                                 $selected = ' selected';
                             }
                             echo "<option value=\"$m\"$selected>$metricLabel</option>\n";
+                        }
+                        echo '</select><br>Compare To <select name="ref" size="1" onchange="this.form.submit();">';
+                        foreach ($info['configurations'] as $config => &$configData) {
+                            $selected = '';
+                            if ($config == $ref) {
+                                $selected = ' selected';
+                            }
+                            echo "<option value=\"$config\"$selected>{$configData['title']}</option>\n";
                         }
                         ?>
                         </select>
@@ -230,15 +247,12 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
     global $count;
     global $aggregate;
     global $test_time;
+    global $ref;
     $annotations = null;
-    $ref = null;
     $compare = array();
     foreach ($benchmark['configurations'] as $config => &$configData) {
-        if (isset($ref)) {
+        if ($config != $ref)
             $compare[] = $config;
-        } else {
-            $ref = $config;
-        }
     }
     foreach( $compare as $config ) {
         $refLabel = $ref;
