@@ -48,6 +48,7 @@ bool WptTestDriver::Load(CString& test) {
     DeleteDirectory(_directory, false);
 
   if (ret) {
+    BuildScript();
     HANDLE file = CreateFile(_test_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
                               0, 0);
     if (file != INVALID_HANDLE_VALUE) {
