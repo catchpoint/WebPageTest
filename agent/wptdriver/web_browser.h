@@ -44,7 +44,8 @@ private:
   void InjectDll();
   bool ConfigureIpfw(WptTestDriver& test);
   void ResetIpfw(void);
-  bool FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi);
+  bool FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,
+                        LPCTSTR browser_exe);
   void ConfigureFirefoxPrefs();
   HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 

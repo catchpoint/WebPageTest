@@ -429,6 +429,8 @@ void WptTest::BuildScript() {
   }
 
   if (_emulate_mobile) {
+    if (_device_scale_factor.IsEmpty())
+      _device_scale_factor = _T("2");
     if (!_viewport_width && !_viewport_height) {
       _viewport_width = 640;
       _viewport_height = 960;
@@ -637,6 +639,19 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
         _viewport_width = (DWORD)width;
         _viewport_height = (DWORD)height;
       }
+    } else if (cmd == _T("setdevicescalefactor")) {
+      _device_scale_factor = _T("");
+      for (int i = 0; i < command.target.GetLength(); i++) {
+        TCHAR ch = command.target.GetAt(i);
+        if (ch == _T('0') || ch == _T('1') || ch == _T('2') || ch == _T('3') ||
+            ch == _T('4') || ch == _T('5') || ch == _T('6') || ch == _T('7') ||
+            ch == _T('8') || ch == _T('9') || ch == _T('.'))
+          _device_scale_factor += ch;
+        else
+          break;
+      }
+      if (!_device_scale_factor.GetLength())
+        _device_scale_factor.Empty();
     } else {
       processed = false;
     }

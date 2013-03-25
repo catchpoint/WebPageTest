@@ -175,6 +175,7 @@ public:
   CAtlList<CustomRule> _custom_rules;
   DWORD   _activity_timeout;
   CString _client;
+  CString _device_scale_factor;
   
   // current state
   int     _run;

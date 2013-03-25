@@ -44,8 +44,9 @@ static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
 static const TCHAR * CHROME_MOBILE = 
     _T(" --enable-viewport")
-    _T(" --enable-fixed-layout")
-    _T(" --force-device-scale-factor=2");
+    _T(" --enable-fixed-layout");
+static const TCHAR * CHROME_SCALE_FACTOR =
+    _T(" --force-device-scale-factor=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--ignore-certificate-errors"),
@@ -102,7 +103,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
 
-  if (_test.Start()) {
+  if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser._exe.GetLength()) {
       bool hook = true;
       bool hook_child = false;
@@ -135,6 +136,12 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           lstrcat(cmdLine, CHROME_SPDY3);
         if (_test._emulate_mobile)
           lstrcat(cmdLine, CHROME_MOBILE);
+        if (_test._device_scale_factor.GetLength()) {
+          lstrcat(cmdLine, CHROME_SCALE_FACTOR);
+          lstrcat(cmdLine, _test._device_scale_factor);
+          OutputDebugString(_test._device_scale_factor);
+          OutputDebugString(cmdLine);
+        }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
@@ -170,10 +177,12 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       EnterCriticalSection(&cs);
       _browser_process = NULL;
       HANDLE additional_process = NULL;
+      CAtlArray<HANDLE> browser_processes;
       bool ok = true;
       if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                         CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
         _browser_process = pi.hProcess;
+        browser_processes.Add(pi.hProcess);
 
         ResumeThread(pi.hThread);
         if (WaitForInputIdle(pi.hProcess, 120000) != 0) {
@@ -193,22 +202,20 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
               Sleep(100);
           }
         }
-        SuspendThread(pi.hThread);
 
-        if (ok && hook && !InstallHook(pi.hProcess)) {
-          ok = false;
-          critical_error = true;
-          _status.Set(_T("Error instrumenting browser\n"));
+        if (hook) {
+          SuspendThread(pi.hThread);
+          if (ok && !InstallHook(pi.hProcess)) {
+            ok = false;
+            critical_error = true;
+            _status.Set(_T("Error instrumenting browser\n"));
+          }
+          if (additional_process)
+            InstallHook(additional_process);
+          ResumeThread(pi.hThread);
         }
-
-        if (additional_process)
-          InstallHook(additional_process);
-
-        SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
-        if (!ConfigureIpfw(_test))
-          ok = false;
-        ResumeThread(pi.hThread);
         CloseHandle(pi.hThread);
+        SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
       } else {
         _status.Set(_T("Error Launching: %s\n"), cmdLine);
         critical_error = true;
@@ -230,18 +237,22 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           DWORD result = WaitForMultipleObjects(2, handles, TRUE, wait_time);
           if (result == WAIT_OBJECT_0 || result == WAIT_OBJECT_0 + 1)
             ret = true;
-        } else if (WaitForSingleObject(_browser_process, wait_time) == 
-            WAIT_OBJECT_0 ) {
+        } else if (WaitForSingleObject(_browser_process, wait_time) != 
+                   WAIT_TIMEOUT ) {
           ret = true;
         }
 
         // see if we need to attach to a child firefox process 
         // < 4.x spawns a child process after initializing a new profile
-        if (ret && exe.Find(_T("firefox.exe")) >= 0) {
-          ok = false;
+        CString browser_exe;
+        exe.MakeLower();
+        if (exe.Find(_T("firefox.exe")) >= 0)
+          browser_exe = _T("firefox.exe");
+        else if (exe.Find(_T("iexplore.exe")) >= 0)
+          browser_exe = _T("iexplore.exe");
+        if (ret && browser_exe.GetLength()) {
           EnterCriticalSection(&cs);
-          if (FindFirefoxChild(pi.dwProcessId, pi)) {
-            ok = true;
+          if (FindBrowserChild(pi.dwProcessId, pi, browser_exe)) {
             CloseHandle(_browser_process);
             _browser_process = pi.hProcess;
             if (WaitForInputIdle(pi.hProcess, 120000) == 0) {
@@ -259,11 +270,13 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           if (ok) {
             ret = false;
             #ifdef DEBUG
-            if (WaitForSingleObject(_browser_process, INFINITE )==WAIT_OBJECT_0 ) {
+            if (WaitForSingleObject(_browser_process, INFINITE ) ==
+                WAIT_OBJECT_0 ) {
               ret = true;
             }
             #else
-            if (WaitForSingleObject(_browser_process, _test._test_timeout * 2) == 
+            if (WaitForSingleObject(_browser_process,
+                                    _test._test_timeout * 2) == 
                 WAIT_OBJECT_0 ) {
               ret = true;
             }
@@ -364,7 +377,8 @@ void WebBrowser::ResetIpfw(void) {
 /*-----------------------------------------------------------------------------
   Find a child process that is firefox.exe (for 3.6 hooking)
 -----------------------------------------------------------------------------*/
-bool WebBrowser::FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi) {
+bool WebBrowser::FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,
+                                  LPCTSTR browser_exe) {
   bool found = false;
   if (pid) {
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -376,7 +390,7 @@ bool WebBrowser::FindFirefoxChild(DWORD pid, PROCESS_INFORMATION& pi) {
           if (proc.th32ParentProcessID == pid) {
             CString exe(proc.szExeFile);
             exe.MakeLower();
-            if (exe.Find(_T("firefox.exe") >= 0)) {
+            if (exe.Find(browser_exe >= 0)) {
               pi.hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | 
                                         PROCESS_CREATE_THREAD |
                                         PROCESS_SET_INFORMATION |
