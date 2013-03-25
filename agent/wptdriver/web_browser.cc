@@ -139,8 +139,6 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         if (_test._device_scale_factor.GetLength()) {
           lstrcat(cmdLine, CHROME_SCALE_FACTOR);
           lstrcat(cmdLine, _test._device_scale_factor);
-          OutputDebugString(_test._device_scale_factor);
-          OutputDebugString(cmdLine);
         }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
