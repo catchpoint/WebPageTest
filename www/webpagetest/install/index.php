@@ -88,6 +88,7 @@ function CheckPHP() {
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
     ShowCheck('APC Installed', extension_loaded('apc'), false);
+    ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg($ffmpegVer));
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
     ShowCheck('php.ini post_max_size > 10MB', return_bytes(ini_get('post_max_size')) > 10000000, false, ini_get('post_max_size'));
     if (array_key_exists('beanstalkd', $settings))
@@ -282,4 +283,22 @@ function CheckBeanstalkd() {
     return $ret;
 }
 
+/**
+* Check to make sure ffmpeg is installed and working
+* 
+*/
+function CheckFfmpeg() {
+    $ret = false;
+    $command = "ffmpeg -version";
+    $retStr = exec($command, $output, $result);
+    if (count($output)) {
+        foreach($output as $line) {
+            if (stripos($line, 'ffmpeg ') !== false) {
+                $ret = true;
+                break;
+            }
+        }
+    }
+    return $ret;
+}
 ?>
