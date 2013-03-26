@@ -246,7 +246,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         $done = true;
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
-                $status = GetTestStatus($test['id'], false);
+                $status = GetTestStatus($test['id'], true);
                 $now = time();
                 if ($status['statusCode'] >= 400) {
                     logMsg("Test {$test['id']} : Failed", "./log/$logFile", true);
