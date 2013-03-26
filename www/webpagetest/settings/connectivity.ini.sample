@@ -27,10 +27,10 @@ latency=120
 plr=0
 
 [3G]
-label="Mobile 3G (USA) (2/1 Mbps 150ms RTT)"
-bwIn=2000000
-bwOut=1000000
-latency=150
+label="Mobile 3G (1.6 Mbps/768 Kbps 300ms RTT)"
+bwIn=1600000
+bwOut=768000
+latency=300
 plr=0
 
 [Native]
