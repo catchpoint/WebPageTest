@@ -2,7 +2,7 @@
 $page_keywords = array('Access Denied','Blocked','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website speed test blocked.";
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest - Test Blocked</title>

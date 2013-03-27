@@ -5,6 +5,9 @@ set_time_limit(0);
 $page_keywords = array('Log','History','Webpagetest','Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPagetest.";
 
+if ($supportsAuth && ((array_key_exists('google_email', $_COOKIE) && strpos($_COOKIE['google_email'], '@google.com') !== false)))
+    $admin = true;
+
 // shared initializiation/loading code
 error_reporting(0);
 $days = (int)$_GET["days"];
@@ -43,7 +46,7 @@ if( $csv )
 else
 {
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest - Test Log</title>

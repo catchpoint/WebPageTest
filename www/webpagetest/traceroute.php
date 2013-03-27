@@ -13,8 +13,7 @@ $loc = ParseLocations($locations);
 $page_keywords = array('Traceroute','Webpagetest','Website Speed Test','Test');
 $page_description = "Test network path from multiple locations around the world (traceroute).";
 ?>
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest - Traceroute diagnostic</title>

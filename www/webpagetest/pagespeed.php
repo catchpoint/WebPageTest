@@ -4,7 +4,7 @@ require_once('./lib/json.php');
 $page_keywords = array('PageSpeed','Webpagetest','Website Speed Test','Analysis');
 $page_description = "Google PageSpeed results$testLabel.";
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest PageSpeed analysis<?php echo $testLabel; ?></title>

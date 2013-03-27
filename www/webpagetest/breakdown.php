@@ -20,7 +20,7 @@ $requestsRv = array();
 if( (int)$test[test][fvonly] == 0 )
     $breakdownRv = getBreakdown($id, $testPath, $run, 1, $requestsRv);
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>

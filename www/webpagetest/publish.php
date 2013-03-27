@@ -18,7 +18,7 @@ if (array_key_exists('test', $_REQUEST) && strlen($_REQUEST['test'])) {
 $page_keywords = array('Publish','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Publish test results to WebPagetest.";
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
     <head>
         <title>WebPagetest - Publish</title>
