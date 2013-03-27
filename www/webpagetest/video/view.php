@@ -232,7 +232,7 @@ else
 
                 echo "<script>\n";
                 echo "_V_.options.techOrder = ['flash', 'html5'];\n";
-                echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.7.swf';\n";
+                echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
                 echo "_V_.options.flash.flashVars = {config:\"{";
                 echo "'clip':{'scaling':'fit'},";
                 echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
