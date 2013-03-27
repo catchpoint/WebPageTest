@@ -48,33 +48,30 @@ function ValidateInput(form)
     Do any populating of the input form based on the loaded location information
 */
 (function($) {
-    $(document).ready(function() {
-
-        // enable tooltips
-        $("#DOMElement").tooltip({ position: "top center", offset: [-5, 0]  });  
+    // enable tooltips
+    $("#DOMElement").tooltip({ position: "top center", offset: [-5, 0]  });  
+    
+    // enable tab-input in the script field
+    $("#enter_script").tabby();
         
-        // enable tab-input in the script field
-        $("#enter_script").tabby();
-            
-       // handle when the selection changes for the location
-        $("#location").change(function(){
-            LocationChanged();
-        });
-        $("#location2").change(function(){
-            $("#location").val($("#location2").val());
-            LocationChanged();
-        });
-
-        $("#browser").change(function(){
-            BrowserChanged();
-        });
-
-        $("#connection").change(function(){
-            ConnectionChanged();
-        });
-        
-        RestoreSettings();
+   // handle when the selection changes for the location
+    $("#location").change(function(){
+        LocationChanged();
     });
+    $("#location2").change(function(){
+        $("#location").val($("#location2").val());
+        LocationChanged();
+    });
+
+    $("#browser").change(function(){
+        BrowserChanged();
+    });
+
+    $("#connection").change(function(){
+        ConnectionChanged();
+    });
+    
+    RestoreSettings();
 })(jQuery);
 
 function RestoreSettings() {

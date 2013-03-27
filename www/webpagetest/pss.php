@@ -367,6 +367,7 @@ $page_description = "Comparison Test$testLabel.";
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
         <script type="text/javascript">
+            wptStorage['testBrowser'] = 'Chrome';
             function PreparePSSTest(form)
             {
                 var url = form.testurl.value;
