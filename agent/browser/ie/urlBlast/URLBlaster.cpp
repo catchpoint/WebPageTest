@@ -1365,7 +1365,7 @@ void CURLBlaster::EncodeVideo(void)
 	{
 		lstrcpy(PathFindFileName(path), _T("x264.exe"));
 		CString exe(path);
-		CString cmd = CString(_T("\"")) + exe + _T("\" --crf 24 --threads 1 --keyint 10 --min-keyint 1 -o video.mp4 video.avs");
+		CString cmd = CString(_T("\"")) + exe + _T("\" --crf 24 --profile baseline --preset slow --threads 1 --keyint 10 --min-keyint 1 -o video.mp4 video.avs");
 
 		PROCESS_INFORMATION pi;
 		STARTUPINFO si;

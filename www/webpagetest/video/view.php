@@ -167,6 +167,7 @@ else
                 include ('head.inc'); 
             }
         ?>
+        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             div.content
             {
@@ -190,12 +191,14 @@ else
                 padding: 5px;
                 width: 100%;
             }
+            .vjs-default-skin .vjs-controls {height: 0;}
+            .vjs-default-skin .vjs-mute-control {display: none;}
+            .vjs-default-skin .vjs-volume-control {display: none;}
             <?php
             if( $embed )
                 echo "body {background-color: $bgcolor; margin:0; padding: 0;}";
             ?>
         </style>
-        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
     </head>
     <body>
@@ -231,7 +234,10 @@ else
                     $height = (int)$_REQUEST['height'];
 
                 echo "<script>\n";
-                echo "_V_.options.techOrder = ['flash', 'html5'];\n";
+                if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
+                    echo "_V_.options.techOrder = ['html5', 'flash'];\n";
+                else
+                    echo "_V_.options.techOrder = ['flash', 'html5'];\n";
                 echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
                 echo "_V_.options.flash.flashVars = {config:\"{";
                 echo "'clip':{'scaling':'fit'},";

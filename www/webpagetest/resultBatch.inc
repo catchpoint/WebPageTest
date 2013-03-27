@@ -114,7 +114,6 @@ elseif($json && $view == 'pss')
 else
 {
 ?>
-
 <!DOCTYPE html>
 <html>
     <head>
@@ -149,7 +148,7 @@ else
             }
         </style>
         </style>
-        <script type="text/javascript" src="/video/player/flowplayer-3.2.6.min.js"></script>
+        <script type="text/javascript" src="/video/player/flowplayer-3.2.12.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -1730,7 +1729,7 @@ function VideoHtml($id)
     echo "<script>\n
                     flowplayer(\"player$videoCount\", \n
                                     {\n
-                                        src: \"/video/player/flowplayer-3.2.7.swf\",\n
+                                        src: \"/video/player/flowplayer-3.2.16.swf\",\n
                                         cachebusting: true,\n
                                         version: [9, 115]\n
                                     } , \n
