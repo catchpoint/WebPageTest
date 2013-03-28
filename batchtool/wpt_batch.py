@@ -168,13 +168,13 @@ def main():
 
   # Test parameter settings
   help_txt = 'set the connectivity to pre-defined type: '
-  help_txt += 'DSL, Dial, Fios and custom (case sensitive). '
+  help_txt += 'Cable, DSL, Dial, 3G, Fios and custom (case sensitive). '
   help_txt += 'When it is custom, you can set the customized connectivity '
   help_txt += 'using options -u/d/l/p.'
   option_parser.add_option('-k', '--key', action='store', default='',
                            help='API Key')
   option_parser.add_option('-y', '--connectivity', action='store',
-                           default='DSL', help=help_txt)
+                           default='Cable', help=help_txt)
   option_parser.add_option('-u', '--bwup', action='store', default=384,
                            help='upload bandwidth of the test')
   option_parser.add_option('-d', '--bwdown', action='store', default=1500,
