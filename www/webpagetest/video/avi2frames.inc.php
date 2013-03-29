@@ -107,7 +107,9 @@ function ProcessVideoFrames($videoDir) {
 }
 
 /**
-* Check to see if the given frame is an "orange" marker frame
+* Check to see if the given frame is an "orange" marker frame.
+* We need to be kind of loose for the definition of orange since
+* it varies a bit from capture to capture.
 * 
 * @param mixed $im
 */
@@ -116,10 +118,15 @@ function IsOrangeAVIFrame($im) {
   $width = imagesx($im);
   $height = imagesy($im);
   if ($width && $height) {
-    $midX = intval($width / 2);
-    $midY = intval($height / 2);
-    $blue = ImageColorAt($im, $midX, $midY) & 0x0000FF;
-    if ($blue < 0x50)
+    $rgb = ImageColorAt($im, intval($width / 2), intval($height / 2));
+    $r = ($rgb >> 16) & 0xFF;
+    $g = ($rgb >> 8) & 0xFF;
+    $b = $rgb & 0xFF;
+    if ($r > 200 &&
+        $r < 250 &&
+        $g > 50 &&
+        $g < 115 &&
+        $b < 25)
       $ret = true;
   }
   return $ret;

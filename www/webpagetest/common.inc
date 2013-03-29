@@ -350,10 +350,13 @@ function SetLocaleFromBrowser()
   $langs = generate_languages();
   foreach ($langs as $lang)
   {
-    if (strlen($lang > 2))
-      $lang = substr($lang['lang'], 0, 3) . strtoupper(substr($lang['lang'], 3, 2));
-    if (setlocale(LC_TIME, $lang['lang']) !== FALSE)
-      break;   // it worked!
+    if (array_key_exists('lang', $lang)) {
+      $language = $lang['lang'];
+      if (strlen($language > 2))
+        $language = substr($language, 0, 3) . strtoupper(substr($language, 3, 2));
+      if (setlocale(LC_TIME, $language) !== FALSE)
+        break;   // it worked!
+    }
   }
 }
 
