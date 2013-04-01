@@ -1356,9 +1356,9 @@ function GetPendingTests($loc, &$count, &$avgTime)
                 $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
                 try {
                     $stats = $pheanstalk->statsTube($tube);
-                    $total += intval($stats['total-jobs']);
+                    $total += intval($stats['current-jobs-ready']);
                     if (!$priority)
-                        $count = intval($stats['total-jobs']);
+                        $count = intval($stats['current-jobs-ready']);
                 } catch(Exception $e) {
                 }
             }
@@ -1389,7 +1389,7 @@ function GetQueueLengths($location) {
             $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
             try {
                 $stats = $pheanstalk->statsTube($tube);
-                $queues[$priority] = intval($stats['total-jobs']);
+                $queues[$priority] = intval($stats['current-jobs-ready']);
             } catch(Exception $e) {
             }
         }
