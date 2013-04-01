@@ -569,7 +569,7 @@
                         $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
                         $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
                     }
-                    $ret['data']['jsonUrl'] = "http://$host$uri/jsonUrl.php?test={$test['id']}";
+                    $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
                     json_response($ret);
                 }
                 else
