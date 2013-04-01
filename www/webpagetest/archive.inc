@@ -152,7 +152,7 @@ function RestoreArchive($id) {
                     $separator = strrpos($id, '_');
                     if ($separator !== false) {
                         $bucket = $settings['archive_s3_bucket'];
-                        $file = "$id.zip";
+                        $file = "$id";
                         if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
                             // special-case Internet Archive storage
                             $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
