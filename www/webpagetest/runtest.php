@@ -72,7 +72,6 @@
             $test['ignoreSSL'] = $req_ignoreSSL;
             $test['script'] = trim($req_script);
             $test['block'] = $req_block;
-            $test['authType'] = (int)$req_authType;
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
             $test['label'] = htmlspecialchars(trim($req_label));
@@ -253,7 +252,7 @@
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
         }
-
+        
         // the API key requirements are for all test paths
         $test['vd'] = $req_vd;
         $test['vh'] = $req_vh;
@@ -1125,33 +1124,6 @@ function ValidateURL(&$url, &$error, &$settings)
 }
 
 /**
-* Generate a SNS authentication script for the given URL
-* 
-* @param mixed $test
-*/
-function GenerateSNSScript($test)
-{
-    $script = "logdata\t0\n\n";
-    
-    $script .= "setEventName\tLaunch\n";
-    $script .= "setDOMElement\tname=loginId\n";
-    $script .= "navigate\t" . 'https://my.screenname.aol.com/_cqr/login/login.psp?mcState=initialized&sitedomain=search.aol.com&authLev=1&siteState=OrigUrl%3Dhttp%253A%252F%252Fsearch.aol.com%252Faol%252Fwebhome&lang=en&locale=us&seamless=y' . "\n\n";
-
-    $script .= "setValue\tname=loginId\t{$test['login']}\n";
-    $script .= "setValue\tname=password\t{$test['password']}\n";
-    $script .= "setEventName\tLogin\n";
-    $script .= "submitForm\tname=AOLLoginForm\n\n";
-    
-    $script .= "logData\t1\n\n";
-    
-    if( strlen($test['domElement']) )
-        $script .= "setDOMElement\t{$test['domElement']}\n";
-    $script .= "navigate\t{$test['url']}\n";
-    
-    return $script;
-}    
-
-/**
 * Submit the test request file to the server
 * 
 * @param mixed $run
@@ -1164,56 +1136,20 @@ function SubmitUrl($testId, $testData, &$test, $url)
     global $error;
     global $locations;
     
+    $script = ProcessTestScript($url, $test);
+    
     $out = "Test ID=$testId\r\nurl=";
-    if( !strlen($test['script']) )
-        $out .= $url;
-    else
+    if (isset($script) && strlen($script))
         $out .= "script://$testId.pts";
+    else
+        $out .= $url;
 
     // add the actual test configuration
     $out .= $testData;
+
+    if (isset($script) && strlen($script))
+      $out .= "\r\n[Script]\r\n" . $script;
     
-    // add the script data (if we're running a script)
-    if( strlen($test['script']) )
-    {
-        $script = trim($test['script']);
-        if (strlen($url))
-        {
-            if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-                $url = 'http://' . $url;
-            $script = str_ireplace('%URL%', $url, $script);
-            $parts = parse_url($url);
-            $host = $parts['host'];
-            if( strlen($host) )
-            {
-                $script = str_ireplace('%HOST%', $host, $script);
-                $script = str_ireplace('%HOST_REGEX%', str_replace('.', '\\.', $host), $script);
-                if( stripos($script, '%HOSTR%') !== false )
-                {
-                    // do host substitution but also clone the command for a final redirected domain if there are redirects involved
-                    if( GetRedirect($url, $rhost, $rurl) )
-                    {
-                        $lines = explode("\r\n", $script);
-                        $script = '';
-                        foreach( $lines as $line )
-                        {
-                            if( stripos($line, '%HOSTR%') !== false )
-                            {
-                                $script .= str_ireplace('%HOSTR%', $host, $line) . "\r\n";
-                                $script .= str_ireplace('%HOSTR%', $rhost, $line) . "\r\n";
-                            }
-                            else
-                                $script .= $line . "\r\n";
-                        }
-                    }
-                    else
-                        $script = str_ireplace('%HOSTR%', $host, $script);
-                }
-            }
-        }
-        $out .= "\r\n[Script]\r\n" . $script;
-    }
-        
     // write out the actual test file
     $ext = 'url';
     if( $test['priority'] )
@@ -1721,15 +1657,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 }
             }
 
-            // see if we need to generate a SNS authentication script
-            if( strlen($test['login']) && strlen($test['password']) )
-            {
-                if( $test['authType'] == 1 )
-                    $test['script'] = GenerateSNSScript($test);
-                else
-                    $testFile .= "\r\nBasic Auth={$test['login']}:{$test['password']}\r\n";
-            }
-                
             if( !SubmitUrl($testId, $testFile, $test, $url) )
                 $testId = null;
         }
@@ -2092,4 +2019,55 @@ function ErrorPage($error) {
     </html>
     <?php
 }
+
+/**
+* Automatically create a script if we have test options that need to be translated
+* 
+* @param mixed $test
+*/
+function ProcessTestScript($url, &$test) {
+  $script = null;
+  // add the script data (if we're running a script)
+  if (strlen($test['script'])) {
+    $script = trim($test['script']);
+    if (strlen($url)) {
+      if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+        $url = 'http://' . $url;
+      $script = str_ireplace('%URL%', $url, $script);
+      $parts = parse_url($url);
+      $host = $parts['host'];
+      if (strlen($host)) {
+        $script = str_ireplace('%HOST%', $host, $script);
+        $script = str_ireplace('%HOST_REGEX%', str_replace('.', '\\.', $host), $script);
+        if (stripos($script, '%HOSTR%') !== false) {
+          if (GetRedirect($url, $rhost, $rurl)) {
+            $lines = explode("\r\n", $script);
+            $script = '';
+            foreach ($lines as $line) {
+              if (stripos($line, '%HOSTR%') !== false) {
+                $script .= str_ireplace('%HOSTR%', $host, $line) . "\r\n";
+                $script .= str_ireplace('%HOSTR%', $rhost, $line) . "\r\n";
+              }
+              else
+                $script .= $line . "\r\n";
+            }
+          }
+          else
+            $script = str_ireplace('%HOSTR%', $host, $script);
+        }
+      }
+    }
+  }
+  
+  // Handle HTTP Basic Auth
+  if (strlen($test['login']) && strlen($test['password'])) {
+    $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
+    $testFile .= "Basic Auth={$test['login']}:{$test['password']}\r\n";
+    if (!isset($script) || !strlen($script))
+      $script = "navigate\t$url";
+    $script = "addHeader\t$header\r\n" . $script;
+  }
+  return $script;
+}
+
 ?>

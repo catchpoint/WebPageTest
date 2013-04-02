@@ -405,14 +405,7 @@ $loc = ParseLocations($locations);
                                 
                                 <ul class="input_fields">
                                     <li>
-                                        <?php if($settings['enableSNS']) { ?>
-                                        <input type="radio" name="authType" id="auth_type-aol_sns" value="1" class="radio" checked=checked>
-                                        <label for="auth_type-aol_sns" class="inline">AOL SNS</label>
-                                        <input type="radio" name="authType" id="auth_type-http_basic_auth" value="0" class="radio">
-                                        <label for="auth_type-http_basic_auth" class="inline">HTTP Basic Auth</label>
-                                        <?php } else { ?>
                                         HTTP Basic Authentication
-                                        <?php } ?>
                                     </li>
                                     <li>
                                         <label for="username" style="width: auto;">Username</label>

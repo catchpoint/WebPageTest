@@ -15,7 +15,6 @@ publishTo=www.webpagetest.org
 ;map=1
 
 ; test options available
-enableSNS=0
 enableVideo=1
 
 ; disable gzip compressing the result text files
@@ -31,7 +30,7 @@ showslow_key=<your showslow API key>
 tcpdump_view="http://cloudshark.org/view?url="
 
 ; image quality (defaults to 30)
-iq=75
+;iq=75
 ;save png full-resolution screen shots
 ;pngss=1
 
