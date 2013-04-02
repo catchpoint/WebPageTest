@@ -35,7 +35,7 @@ tcpdump_view="http://cloudshark.org/view?url="
 ;pngss=1
 
 ; Run tests concurrently across test machines
-;shardTests=1
+;shard_tests=1
 
 ;Log tests that take longer than X seconds
 ;slow_test_time=240
