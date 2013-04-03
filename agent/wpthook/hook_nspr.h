@@ -36,6 +36,16 @@ typedef struct TRANSMIT_FILE_BUFFERS TRANSMIT_FILE_BUFFERS;
 
 typedef PRFileDesc* (*PFN_SSL_ImportFD)(PRFileDesc *model, PRFileDesc *fd);
 typedef PROsfd (*PFN_PR_FileDesc2NativeHandle)(PRFileDesc *fd);
+typedef enum _SECStatus {
+  SECWouldBlock = -2,
+  SECFailure = -1,
+  SECSuccess = 0
+} SECStatus;
+typedef SECStatus (PR_CALLBACK *SSLAuthCertificate)(void *arg,
+    PRFileDesc *fd, PRBool checkSig, PRBool isServer);
+typedef SECStatus (*PFN_SSL_AuthCertificateHook)(PRFileDesc *fd,
+    SSLAuthCertificate f, void *arg);
+typedef SECStatus (*PFN_SSL_SetURL)(PRFileDesc *fd, const char *url);
 
 class TestState;
 class TrackSockets;
@@ -54,6 +64,8 @@ public:
   PRStatus PR_Close(PRFileDesc *fd);
   PRInt32 PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount);
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
+  SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
+  SECStatus SSL_SetURL(PRFileDesc *fd, const char *url);
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
@@ -66,6 +78,8 @@ private:
   PRCloseFN  _PR_Close;
   PRReadFN   _PR_Read;
   PRWriteFN  _PR_Write;
+  PFN_SSL_AuthCertificateHook _SSL_AuthCertificateHook;
+  PFN_SSL_SetURL _SSL_SetURL;
   
   PFN_PR_FileDesc2NativeHandle _PR_FileDesc2NativeHandle;
 };

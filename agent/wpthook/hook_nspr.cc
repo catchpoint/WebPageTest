@@ -38,21 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static NsprHook* g_hook = NULL;
 
-// Save trampolined SSL_ImportFD for Chrome_SSL_ImportFD_Hook.
-typedef PRFileDesc* (*PFN_Chrome_SSL_ImportFD)(void);
-static PFN_Chrome_SSL_ImportFD g_ssl_importfd = NULL;
-
 // Stub Functions
-
-PRFileDesc* Chrome_SSL_ImportFD_Hook() {
-  // This is a special hook for Chrome-only. Chrome optimizes the parameter
-  // passing such that is it non-standard. Leave the parameters untouched.
-  // We only care about the return value.
-  PRFileDesc* fd = g_ssl_importfd();
-  g_hook->SetSslFd(fd);
-  return fd;
-}
-
 PRFileDesc* SSL_ImportFD_Hook(PRFileDesc *model, PRFileDesc *fd) {
   return g_hook->SSL_ImportFD(model, fd);
 }
@@ -69,6 +55,19 @@ PRInt32 PR_Read_Hook(PRFileDesc *fd, void *buf, PRInt32 amount) {
   return g_hook->PR_Read(fd, buf, amount);
 }
 
+SECStatus SSL_SetURL_Hook(PRFileDesc *fd, const char *url) {
+  return g_hook->SSL_SetURL(fd, url);
+}
+
+/*-----------------------------------------------------------------------------
+  Ignore all certificate errors by forcing all certificate validations
+  to succeed.
+-----------------------------------------------------------------------------*/
+SECStatus PR_CALLBACK AuthenticateCertificate(void *arg,
+    PRFileDesc *fd, PRBool checkSig, PRBool isServer) {
+  return SECSuccess;
+}
+
 // end of C hook functions
 
 
@@ -80,7 +79,9 @@ NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state) :
     _PR_Close(NULL),
     _PR_Read(NULL),
     _PR_Write(NULL),
-    _PR_FileDesc2NativeHandle(NULL) {
+    _PR_FileDesc2NativeHandle(NULL),
+    _SSL_AuthCertificateHook(NULL),
+    _SSL_SetURL(NULL) {
 }
 
 NsprHook::~NsprHook() {
@@ -109,6 +110,10 @@ void NsprHook::Init() {
         "nspr4.dll", "PR_Write", PR_Write_Hook);
     _PR_Read = _hook->createHookByName(
         "nspr4.dll", "PR_Read", PR_Read_Hook);
+    GetFunctionByName(
+        "ssl3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+    _SSL_SetURL = _hook->createHookByName(
+      "ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook);
   }
 }
 
@@ -123,9 +128,8 @@ PRFileDesc* NsprHook::SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd) {
     ret = _SSL_ImportFD(model, fd);
     if (ret != NULL) {
       _sockets.SetSslFd(ret);
-      if (_PR_FileDesc2NativeHandle) {
+      if (_PR_FileDesc2NativeHandle)
         _sockets.SetSslSocket(_PR_FileDesc2NativeHandle(ret));
-      }
     }
   }
   return ret;
@@ -188,4 +192,16 @@ void NsprHook::GetFunctionByName(
   } else {
     function_ptr = NULL;
   }
+}
+
+SECStatus NsprHook::SSL_SetURL(PRFileDesc *fd, const char *url) {
+  SECStatus ret = SECFailure;
+  // Force our own certificate validator in the path.
+  // This call is made after Firefox sets their auth hook so we
+  // just override theirs
+  if (_SSL_AuthCertificateHook != NULL)
+    _SSL_AuthCertificateHook(fd, AuthenticateCertificate, NULL);
+  if (_SSL_SetURL)
+    ret = _SSL_SetURL(fd, url);
+  return ret;
 }
