@@ -112,6 +112,7 @@ protected:
   CString domStorage;
 	CString desktopPath;
 	CString windir;
+	CString webCache;
 
   bool Launch(CString cmd, HANDLE * phProc = NULL);
 	void LaunchDynaTrace();
