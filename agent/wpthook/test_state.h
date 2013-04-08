@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class Results;
 class ScreenCapture;
 class WptTestHook;
+class DevTools;
 
 const int TEST_RESULT_NO_ERROR = 0;
 const int TEST_RESULT_TIMEOUT = 99997;
@@ -76,7 +77,8 @@ public:
 
 class TestState {
 public:
-  TestState(Results& results,ScreenCapture& screen_capture, WptTestHook &test);
+  TestState(Results& results, ScreenCapture& screen_capture,
+            WptTestHook &test, DevTools& dev_tools);
   ~TestState(void);
 
   void Start();
@@ -89,6 +91,7 @@ public:
   void OnStatusMessage(CString status);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
+  void PaintEvent(int x, int y, int width, int height);
   void CheckStartRender();
   void RenderCheckThread();
   void CollectData();
@@ -157,6 +160,7 @@ private:
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;
+  DevTools &_dev_tools;
   HANDLE  _render_check_thread;
   HANDLE  _check_render_event;
   HANDLE  _data_timer;
@@ -170,6 +174,7 @@ private:
   ULARGE_INTEGER _last_cpu_user;
   DWORD _video_capture_count;
   LARGE_INTEGER     _last_video_time;
+  RECT           _last_paint;
 
   CRITICAL_SECTION  _data_cs;
 

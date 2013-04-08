@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
 #include "wpt_test_hook.h"
+#include "dev_tools.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
@@ -46,7 +47,7 @@ static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test):
+                      WptTestHook &test, DevTools& dev_tools):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
@@ -55,6 +56,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
+  ,_dev_tools(dev_tools)
   ,no_gdi_(false)
   ,gdi_only_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
@@ -483,6 +485,39 @@ void TestState::GrabVideoFrame(bool force) {
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::PaintEvent(int x, int y, int width, int height) {
+    _screen_updated = true;
+    if (_render_start.QuadPart) {
+      bool valid = true;
+      if (_screen_capture.IsViewportSet()) {
+        int left = max(x - _screen_capture._viewport.left, 0);
+        int top = max(y - _screen_capture._viewport.top, 0);
+        int right = max(min(x + width, _screen_capture._viewport.right)
+                        - _screen_capture._viewport.left, 0);
+        int bottom = max(min(y + height, _screen_capture._viewport.bottom)
+                         - _screen_capture._viewport.top, 0);
+        x = left;
+        y = top;
+        width = right - left;
+        height = bottom - top;
+        if (width <= 0 || height <= 0)
+          valid = false;
+      }
+      if (valid) {
+        _dev_tools.AddPaintEvent(x, y, width, height);
+      }
+    } else {
+      // remember the last paint event before render start was detected
+      _last_paint.left = x;
+      _last_paint.top = y;
+      _last_paint.right = x + width;
+      _last_paint.bottom = y + height;
+    }
+    CheckStartRender();
+}
+
+/*-----------------------------------------------------------------------------
     See if anything has been rendered to the screen
 -----------------------------------------------------------------------------*/
 void TestState::CheckStartRender() {
@@ -552,6 +587,9 @@ void TestState::RenderCheckThread() {
 
       if (found) {
         _render_start.QuadPart = now.QuadPart;
+        PaintEvent(_last_paint.left, _last_paint.top,
+                   _last_paint.right - _last_paint.left,
+                   _last_paint.bottom - _last_paint.top);
         _screen_capture._captured_images.AddTail(captured_img);
       }
       else

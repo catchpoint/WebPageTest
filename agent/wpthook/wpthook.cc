@@ -44,24 +44,25 @@ static const DWORD INIT_TIMEOUT = 30000;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
-  _background_thread(NULL)
-  ,_background_thread_started(NULL)
-  ,_message_window(NULL)
-  ,_test_state(_results, _screen_capture, _test)
-  ,_winsock_hook(_dns, _sockets, _test_state)
-  ,_nspr_hook(_sockets, _test_state)
-  ,_schannel_hook(_sockets, _test_state)
-  ,_wininet_hook(_sockets, _test_state, _test)
-  ,_gdi_hook(_test_state)
-  ,_sockets(_requests, _test_state)
-  ,_requests(_test_state, _sockets, _dns, _test)
-  ,_results(_test_state, _test, _requests, _sockets, _dns, _screen_capture)
-  ,_dns(_test_state, _test)
-  ,_done(false)
-  ,_test_server(*this, _test, _test_state, _requests)
-  ,_test(shared_test_timeout) {
-  _file_base = shared_results_file_base;
-  _background_thread_started = CreateEvent(NULL, TRUE, FALSE, NULL);
+  background_thread_(NULL)
+  ,background_thread_started_(NULL)
+  ,message_window_(NULL)
+  ,test_state_(results_, screen_capture_, test_, dev_tools_)
+  ,winsock_hook_(dns_, sockets_, test_state_)
+  ,nspr_hook_(sockets_, test_state_)
+  ,schannel_hook_(sockets_, test_state_)
+  ,wininet_hook_(sockets_, test_state_, test_)
+  ,gdi_hook_(test_state_)
+  ,sockets_(requests_, test_state_)
+  ,requests_(test_state_, sockets_, dns_, test_)
+  ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
+            dev_tools_)
+  ,dns_(test_state_, test_)
+  ,done_(false)
+  ,test_server_(*this, test_, test_state_, requests_)
+  ,test_(shared_test_timeout) {
+  file_base_ = shared_results_file_base;
+  background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
   // grab the version number of the dll
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(global_dll_handle, file, _countof(file))) {
@@ -76,7 +77,7 @@ WptHook::WptHook(void):
         UINT size = 0;
         if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
           if( info ) {
-            _test._version = LOWORD(info->dwFileVersionLS);
+            test_._version = LOWORD(info->dwFileVersionLS);
           }
         }
       }
@@ -88,8 +89,8 @@ WptHook::WptHook(void):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::~WptHook(void) {
-  if (_background_thread_started) {
-    CloseHandle(_background_thread_started);
+  if (background_thread_started_) {
+    CloseHandle(background_thread_started_);
   }
 }
 
@@ -110,20 +111,20 @@ void WptHook::Init(){
 #ifdef DEBUG
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
-  if (!_test_state.gdi_only_) {
-    _winsock_hook.Init();
-    _nspr_hook.Init();
-    _schannel_hook.Init();
-    _wininet_hook.Init();
+  if (!test_state_.gdi_only_) {
+    winsock_hook_.Init();
+    nspr_hook_.Init();
+    schannel_hook_.Init();
+    wininet_hook_.Init();
   }
-  _gdi_hook.Init();
-  _test_state.Init();
-  _test.LoadFromFile();
-  ResetEvent(_background_thread_started);
-  _background_thread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
-  if (_background_thread_started &&
-    WaitForSingleObject(_background_thread_started, INIT_TIMEOUT) 
-    == WAIT_OBJECT_0) {
+  gdi_hook_.Init();
+  test_state_.Init();
+  test_.LoadFromFile();
+  ResetEvent(background_thread_started_);
+  background_thread_ = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+  if (background_thread_started_ &&
+      WaitForSingleObject(background_thread_started_, INIT_TIMEOUT) 
+      == WAIT_OBJECT_0) {
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Completed\n"));
   } else {
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Timed out\n"));
@@ -133,39 +134,39 @@ void WptHook::Init(){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Start() {
-  _test_state.Start();
-  SetTimer(_message_window, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
+  test_state_.Start();
+  SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::SetDomContentLoadedEvent(DWORD start, DWORD end) {
-  _test_state.SetDomContentLoadedEvent(start, end);
+  test_state_.SetDomContentLoadedEvent(start, end);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::SetLoadEvent(DWORD start, DWORD end) {
-  _test_state.SetLoadEvent(start, end);
+  test_state_.SetLoadEvent(start, end);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::OnLoad() {
-  _test_state.OnLoad();
+  test_state_.OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::OnAllDOMElementsLoaded(DWORD load_time) {
-  _test_state.OnAllDOMElementsLoaded(load_time);
+  test_state_.OnAllDOMElementsLoaded(load_time);
 }
 
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::OnNavigate() {
-  _test_state.OnNavigate();
+  test_state_.OnNavigate();
 }
 
 
@@ -176,27 +177,27 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 
   switch (message){
     case WM_TIMER:
-        if (_test_state.IsDone()) {
-          KillTimer(_message_window, TIMER_DONE);
-          if (!_test._combine_steps)
-            _results.Save();
-          if (_test.Done() ) {
-            _test_server.Stop();
-            _results.Save();
-            _done = true;
-            if (_test_state._frame_window) {
+        if (test_state_.IsDone()) {
+          KillTimer(message_window_, TIMER_DONE);
+          if (!test_._combine_steps)
+            results_.Save();
+          if (test_.Done() ) {
+            test_server_.Stop();
+            results_.Save();
+            done_ = true;
+            if (test_state_._frame_window) {
               WptTrace(loglevel::kTrace, 
-                          _T("[wpthook] - **** Exiting Hooked Browser\n"));
-              ::SendMessage(_test_state._frame_window,WM_CLOSE,0,0);
+                       _T("[wpthook] - **** Exiting Hooked Browser\n"));
+              ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
             }
           }
         }
 
     default:
-        if (message == _test_state.paint_msg_) {
-          if (!_test_state._exit && _test_state._active) {
-            _test_state._screen_updated = true;
-            _test_state.CheckStartRender();
+        if (message == test_state_.paint_msg_) {
+          if (!test_state_._exit && test_state_._active) {
+            test_state_.PaintEvent(LOWORD(wParam), HIWORD(wParam),
+                                   LOWORD(lParam), HIWORD(lParam));
           }
         } else {
           ret = false;
@@ -226,8 +227,8 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 void WptHook::BackgroundThread() {
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
 
-  if (!_test_state.gdi_only_)
-    _test_server.Start();
+  if (!test_state_.gdi_only_)
+    test_server_.Start();
 
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;
@@ -236,14 +237,14 @@ void WptHook::BackgroundThread() {
   wndClass.lpfnWndProc = WptHookWindowProc;
   wndClass.hInstance = global_dll_handle;
   if (RegisterClass(&wndClass)) {
-    _message_window = CreateWindow(wpthook_window_class, wpthook_window_class, 
+    message_window_ = CreateWindow(wpthook_window_class, wpthook_window_class, 
                                     WS_POPUP, 0, 0, 0, 
                                     0, NULL, NULL, global_dll_handle, NULL);
-    if (_message_window) {
-      SetEvent(_background_thread_started);
+    if (message_window_) {
+      SetEvent(background_thread_started_);
       MSG msg;
       BOOL bRet;
-      while (!_done && (bRet = GetMessage(&msg, _message_window, 0, 0)) != 0) {
+      while (!done_ && (bRet = GetMessage(&msg, message_window_, 0, 0)) != 0) {
         if (bRet != -1) {
           TranslateMessage(&msg);
           DispatchMessage(&msg);
@@ -252,6 +253,6 @@ void WptHook::BackgroundThread() {
     }
   }
 
-  _test_server.Stop();
+  test_server_.Stop();
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread() Stopped\n"));
 }

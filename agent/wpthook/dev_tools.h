@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2010, Google Inc.
+Copyright (c) 2013, Google Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -25,66 +25,26 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-
 #pragma once
-
-class Requests;
-class Request;
-class TestState;
-class TrackSockets;
-class TrackDns;
-class ScreenCapture;
-class CxImage;
-class WptTest;
-class OptimizationChecks;
-class DevTools;
-
-class Results {
+class DevTools {
 public:
-  Results(TestState& test_state, WptTest& test, Requests& requests, 
-          TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture,
-          DevTools &dev_tools);
-  ~Results(void);
+  DevTools(void);
+  ~DevTools(void);
 
-  void Reset(void);
-  void Save(void);
-
-  // test information
-  CString _url;
+  void Reset();
+  bool Write(CString file);
+  void SetStartTime(LARGE_INTEGER &start_time);
+  void AddEvent(LPCSTR method, CStringA data, bool at_head = false);
+  void AddPaintEvent(int x, int y, int width, int height);
+  void RequestStart(double id, CStringA pageUrl, CStringA url, CStringA method,
+                    CAtlArray<CString> &headers);
 
 private:
-  CString       _file_base;
-  Requests&     _requests;
-  TestState&    _test_state;
-  TrackSockets& _sockets;
-  TrackDns&     _dns;
-  ScreenCapture& _screen_capture;
-  WptTest&      _test;
-  DevTools      &_dev_tools;
-  bool          _saved;
-  LARGE_INTEGER _visually_complete;
+  CStringA GetTime();
+  CStringA GetUsedHeap();
 
-  CStringA      base_page_CDN_;
-  int           base_page_redirects_;
-  int           base_page_result_;
-  LARGE_INTEGER base_page_complete_;
-  CStringA      base_page_server_rtt_;
-  int           base_page_address_count_;
-  bool          adult_site_;
-
-  void ProcessRequests(void);
-  void SavePageData(OptimizationChecks&);
-  void SaveRequests(OptimizationChecks&);
-  void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
-  void SaveImages(void);
-  void SaveVideo(void);
-  void SaveProgressData(void);
-  void SaveStatusMessages(void);
-  void SaveImage(CxImage& image, CString file, bool shrink, BYTE quality);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
-  CStringA FormatTime(LARGE_INTEGER t);
-  void SaveResponseBodies(void);
-  void SaveConsoleLog(void);
-  void SaveTimeline(void);
-  void SaveHistogram(CxImage& image, CString file);
+  CRITICAL_SECTION cs_;
+  CAtlList<CStringA> events_;
+  LARGE_INTEGER start_time_;
+  long double counters_per_ms_;
 };

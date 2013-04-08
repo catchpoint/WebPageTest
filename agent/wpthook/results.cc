@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "test_state.h"
 #include "screen_capture.h"
+#include "dev_tools.h"
 #include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
 #include <zlib.h>
@@ -52,6 +53,7 @@ static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
+static const TCHAR * DEV_TOOLS_FILE = _T("_devtools.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 
@@ -59,14 +61,15 @@ static const DWORD BOTTOM_MARGIN = 25;
 -----------------------------------------------------------------------------*/
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, TrackDns& dns, 
-                  ScreenCapture& screen_capture):
+                  ScreenCapture& screen_capture, DevTools &dev_tools):
   _requests(requests)
   , _test_state(test_state)
   , _test(test)
   , _sockets(sockets)
   , _dns(dns)
   , _screen_capture(screen_capture)
-  , _saved(false) {
+  , _saved(false)
+  , _dev_tools(dev_tools) {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
@@ -113,6 +116,8 @@ void Results::Save(void) {
     SaveResponseBodies();
     SaveConsoleLog();
     SaveTimeline();
+    _dev_tools.SetStartTime(_test_state._start);
+    _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));

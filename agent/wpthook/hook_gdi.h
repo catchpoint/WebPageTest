@@ -44,6 +44,21 @@ typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 typedef int (__stdcall * LPRELEASEDC)(HWND hWnd, HDC hDC);
 typedef BOOL(__stdcall * LPSETWINDOWTEXTA)(HWND hWnd, LPCSTR text);
 typedef BOOL(__stdcall * LPSETWINDOWTEXTW)(HWND hWnd, LPCWSTR text);
+typedef BOOL(__stdcall * LPINVALIDATERECT)(HWND hWnd, const RECT *lpRect,
+                                           BOOL bErase);
+typedef BOOL(__stdcall * LPINVALIDATERGN)(HWND hWnd, HRGN hRgn, BOOL bErase);
+typedef int(__stdcall * LPDRAWTEXTA)(HDC hDC, LPCSTR lpchText, int nCount,
+                                     LPRECT lpRect, UINT uFormat);
+typedef int(__stdcall * LPDRAWTEXTW)(HDC hDC, LPCWSTR lpchText, int nCount,
+                                     LPRECT lpRect, UINT uFormat);
+typedef int(__stdcall * LPDRAWTEXTEXA)(HDC hdc, LPSTR lpchText, int cchText,
+                                       LPRECT lpRect, UINT dwDTFormat,
+                                       LPDRAWTEXTPARAMS lpDTParams);
+typedef int(__stdcall * LPDRAWTEXTEXW)(HDC hdc, LPWSTR lpchText, int cchText,
+                                       LPRECT lpRect, UINT dwDTFormat,
+                                       LPDRAWTEXTPARAMS lpDTParams);
+typedef BOOL(__stdcall * LPBITBLT)(HDC hdcDest, int nXDest, int nYDest,
+    int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
 
 /******************************************************************************
 *******************************************************************************
@@ -62,15 +77,34 @@ public:
   int   ReleaseDC(HWND hWnd, HDC hDC);
   BOOL  SetWindowTextA(HWND hWnd, LPCSTR text);
   BOOL  SetWindowTextW(HWND hWnd, LPCWSTR text);
+  BOOL  InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase);
+  BOOL  InvalidateRgn(HWND hWnd, HRGN hRgn, BOOL bErase);
+  int   DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
+                  UINT uFormat);
+  int   DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
+                  UINT uFormat);
+  int   DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
+                    UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
+  int   DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
+                    UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
+  BOOL  BitBlt(HDC hdcDest, int nXDest, int nYDest,
+    int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
 
 private:
   NCodeHookIA32	hook;
-  TestState&  _test_state;
+  TestState&  test_state_;
   CRITICAL_SECTION	cs;
-  CAtlMap<HWND, bool>	_document_windows;
+  CAtlMap<HWND, bool>	document_windows_;
 
-  LPENDPAINT		    _EndPaint;
-  LPRELEASEDC       _ReleaseDC;
-  LPSETWINDOWTEXTA  _SetWindowTextA;
-  LPSETWINDOWTEXTW  _SetWindowTextW;
+  LPENDPAINT		    EndPaint_;
+  LPRELEASEDC       ReleaseDC_;
+  LPSETWINDOWTEXTA  SetWindowTextA_;
+  LPSETWINDOWTEXTW  SetWindowTextW_;
+  LPINVALIDATERECT  InvalidateRect_;
+  LPINVALIDATERGN   InvalidateRgn_;
+  LPDRAWTEXTA       DrawTextA_;
+  LPDRAWTEXTW       DrawTextW_;
+  LPDRAWTEXTEXA     DrawTextExA_;
+  LPDRAWTEXTEXW     DrawTextExW_;
+  LPBITBLT          BitBlt_;
 };

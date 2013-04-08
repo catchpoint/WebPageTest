@@ -120,15 +120,6 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame
     $ret = false;
     if (isset($entry) && is_array($entry)) {
         $hadPaintChildren = false;
-/*
-        if (array_key_exists('type', $entry) && array_key_exists('startTime', $entry)) {
-            global $eventList;
-            $key = "{$entry['startTime']}";
-            while (array_key_exists($key, $eventList))
-                $key .= '0';
-            $eventList[$key] = $entry;
-        }
-*/
         if (!$didReceiveResponse &&
             array_key_exists('type', $entry) &&
             !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {

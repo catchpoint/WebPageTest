@@ -71,6 +71,63 @@ BOOL __stdcall SetWindowTextW_Hook(HWND hWnd, LPCWSTR text)
   return ret;
 }
 
+BOOL __stdcall InvalidateRect_Hook(HWND hWnd, const RECT *lpRect, BOOL bErase) {
+  BOOL ret = false;
+  if(pHook)
+    ret = pHook->InvalidateRect(hWnd, lpRect, bErase);
+  return ret;
+}
+
+BOOL __stdcall InvalidateRgn_Hook(HWND hWnd, HRGN hRgn, BOOL bErase) {
+  BOOL ret = false;
+  if(pHook)
+    ret = pHook->InvalidateRgn(hWnd, hRgn, bErase);
+  return ret;
+}
+
+int __stdcall DrawTextA_Hook(HDC hDC, LPCSTR lpchText, int nCount,
+                             LPRECT lpRect, UINT uFormat) {
+  int height = 0;
+  if(pHook)
+    height = pHook->DrawTextA(hDC, lpchText, nCount, lpRect, uFormat);
+  return height;
+}
+
+int __stdcall DrawTextW_Hook(HDC hDC, LPCWSTR lpchText, int nCount,
+                             LPRECT lpRect, UINT uFormat) {
+  int height = 0;
+  if(pHook)
+    height = pHook->DrawTextW(hDC, lpchText, nCount, lpRect, uFormat);
+  return height;
+}
+
+int __stdcall DrawTextExA_Hook(HDC hdc, LPSTR lpchText, int cchText, 
+    LPRECT lpRect, UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
+  int height = 0;
+  if(pHook)
+    height = pHook->DrawTextExA(hdc, lpchText, cchText, lpRect, dwDTFormat,
+                                lpDTParams);
+  return height;
+}
+
+int __stdcall DrawTextExW_Hook(HDC hdc, LPWSTR lpchText, int cchText, 
+    LPRECT lpRect, UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
+  int height = 0;
+  if(pHook)
+    height = pHook->DrawTextExW(hdc, lpchText, cchText, lpRect, dwDTFormat,
+                                lpDTParams);
+  return height;
+}
+
+BOOL __stdcall BitBlt_Hook(HDC hdcDest, int nXDest, int nYDest, int nWidth,
+    int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop) {
+  BOOL ret = false;
+  if(pHook)
+    ret = pHook->BitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc,
+                        nXSrc, nYSrc, dwRop);
+  return ret;
+}
+
 /******************************************************************************
 *******************************************************************************
 **																		                                    	 **
@@ -82,8 +139,8 @@ BOOL __stdcall SetWindowTextW_Hook(HWND hWnd, LPCWSTR text)
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CGDIHook::CGDIHook(TestState& test_state):
-  _test_state(test_state) {
-  _document_windows.InitHashTable(257);
+  test_state_(test_state) {
+  document_windows_.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
 
@@ -93,19 +150,34 @@ void CGDIHook::Init() {
   if (!pHook)
     pHook = this;
 
-  _EndPaint = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
-  _ReleaseDC = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
-  _SetWindowTextA = hook.createHookByName("user32.dll", "SetWindowTextA", 
-                                            SetWindowTextA_Hook);
-  _SetWindowTextW = hook.createHookByName("user32.dll", "SetWindowTextW", 
-                                            SetWindowTextW_Hook);
+  EndPaint_ = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+  ReleaseDC_ = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
+  SetWindowTextA_ = hook.createHookByName("user32.dll", "SetWindowTextA", 
+                                          SetWindowTextA_Hook);
+  SetWindowTextW_ = hook.createHookByName("user32.dll", "SetWindowTextW", 
+                                          SetWindowTextW_Hook);
+/*
+  InvalidateRect_ = hook.createHookByName("user32.dll", "InvalidateRect", 
+                                          InvalidateRect_Hook);
+  InvalidateRgn_ = hook.createHookByName("user32.dll", "InvalidateRgn", 
+                                         InvalidateRgn_Hook);
+  DrawTextA_ = hook.createHookByName("user32.dll", "DrawTextA", 
+                                     DrawTextA_Hook);
+  DrawTextW_ = hook.createHookByName("user32.dll", "DrawTextW", 
+                                     DrawTextW_Hook);
+  DrawTextExA_ = hook.createHookByName("user32.dll", "DrawTextExA", 
+                                       DrawTextExA_Hook);
+  DrawTextExW_ = hook.createHookByName("user32.dll", "DrawTextExW", 
+                                       DrawTextExW_Hook);
+  BitBlt_ = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
+*/
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CGDIHook::~CGDIHook(void) {
   DeleteCriticalSection(&cs);
-  if( pHook == this )
+  if (pHook == this)
     pHook = NULL;
 }
 
@@ -114,28 +186,35 @@ CGDIHook::~CGDIHook(void) {
 BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
   BOOL ret = FALSE;
 
-  if( _EndPaint )
-    ret = _EndPaint(hWnd, lpPaint);
+  if (EndPaint_)
+    ret = EndPaint_(hWnd, lpPaint);
 
   bool is_document = false;
-  if (!_document_windows.Lookup(hWnd, is_document)) {
+  if (!document_windows_.Lookup(hWnd, is_document)) {
     is_document = IsBrowserDocument(hWnd);
-    _document_windows.SetAt(hWnd, is_document);
+    document_windows_.SetAt(hWnd, is_document);
   }
 
-  if (hWnd && hWnd != _test_state._document_window && 
-      !_test_state._exit && _test_state._active && is_document) {
-    _test_state.SetDocument(hWnd);
+  if (hWnd && hWnd != test_state_._document_window && 
+      !test_state_._exit && test_state_._active && is_document) {
+    test_state_.SetDocument(hWnd);
   }
 
-  if (!_test_state._exit && _test_state._active && 
-        hWnd == _test_state._document_window) {
-    _test_state._screen_updated = true;
-    _test_state.CheckStartRender();
+  WORD x = 0, y = 0, width = 0, height = 0;
+  if (lpPaint) {
+    x = (WORD)lpPaint->rcPaint.left;
+    y = (WORD)lpPaint->rcPaint.top;
+    width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
+    height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
+  }
+  if (!test_state_._exit && test_state_._active && 
+      hWnd == test_state_._document_window) {
+    test_state_.PaintEvent(x, y, width, height);
   }
 
-  if (is_document && _test_state.gdi_only_) {
-    PostMessage(HWND_BROADCAST, _test_state.paint_msg_, 0, 0);
+  if (is_document && test_state_.gdi_only_) {
+    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
+                MAKEWPARAM(x,y), MAKELPARAM(width, height));
   }
 
   return ret;
@@ -147,24 +226,24 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
 {
   int ret = 0;
 
-  if( _ReleaseDC )
-    ret = _ReleaseDC(hWnd, hDC);
+  if( ReleaseDC_ )
+    ret = ReleaseDC_(hWnd, hDC);
 
   bool is_document = false;
-  if (!_document_windows.Lookup(hWnd, is_document)) {
+  if (!document_windows_.Lookup(hWnd, is_document)) {
     is_document = IsBrowserDocument(hWnd);
-    _document_windows.SetAt(hWnd, is_document);
+    document_windows_.SetAt(hWnd, is_document);
   }
 
-  if (hWnd && hWnd != _test_state._document_window && 
-      !_test_state._exit && _test_state._active && is_document) {
-    _test_state.SetDocument(hWnd);
+  if (hWnd && hWnd != test_state_._document_window && 
+      !test_state_._exit && test_state_._active && is_document) {
+    test_state_.SetDocument(hWnd);
   }
 
-  if (!wpt_capturing_screen && !_test_state._exit && _test_state._active && 
-        hWnd == _test_state._document_window) {
-    _test_state._screen_updated = true;
-    _test_state.CheckStartRender();
+  if (!wpt_capturing_screen && !test_state_._exit && test_state_._active && 
+      hWnd == test_state_._document_window) {
+    test_state_._screen_updated = true;
+    test_state_.CheckStartRender();
   }
 
   return ret;
@@ -176,15 +255,15 @@ BOOL CGDIHook::SetWindowTextA(HWND hWnd, LPCSTR text)
 {
   BOOL ret = false;
 
-  if (_SetWindowTextA)
-    ret = _SetWindowTextA(hWnd, text);
+  if (SetWindowTextA_)
+    ret = SetWindowTextA_(hWnd, text);
 
-  if (!_test_state._exit && _test_state._active && 
-        hWnd == _test_state._frame_window) {
+  if (!test_state_._exit && test_state_._active && 
+        hWnd == test_state_._frame_window) {
     CString title((LPCTSTR)CA2T(text));
     if( title.Left(11) != _T("about:blank") && 
         title.Compare(_T("Blank")) )
-      _test_state.TitleSet(title);
+      test_state_.TitleSet(title);
   }
 
   return ret;
@@ -196,15 +275,113 @@ BOOL CGDIHook::SetWindowTextW(HWND hWnd, LPCWSTR text)
 {
   BOOL ret = false;
 
-  if (_SetWindowTextW)
-    ret = _SetWindowTextW(hWnd, text);
+  if (SetWindowTextW_)
+    ret = SetWindowTextW_(hWnd, text);
 
-  if (!_test_state._exit && _test_state._active && 
-        hWnd == _test_state._frame_window) {
+  if (!test_state_._exit && test_state_._active && 
+        hWnd == test_state_._frame_window) {
     CString title((LPCTSTR)CW2T(text));
     if( title.Left(11) != _T("about:blank") )
-      _test_state.TitleSet(title);
+      test_state_.TitleSet(title);
   }
 
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase) {
+  BOOL ret = false;
+  if (lpRect) {
+    AtlTrace(_T("InvalidateRect (%d): %d,%d,%d,%d\n"), hWnd, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+  } else {
+    AtlTrace(_T("InvalidateRect (%d): NULL Rect\n"), hWnd);
+  }
+  if (InvalidateRect_)
+    ret = InvalidateRect_(hWnd, lpRect, bErase);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::InvalidateRgn(HWND hWnd, HRGN hRgn, BOOL bErase) {
+  BOOL ret = false;
+  AtlTrace(_T("InvalidateRgn (%d)\n"), hWnd);
+  if (InvalidateRgn_)
+    ret = InvalidateRgn_(hWnd, hRgn, bErase);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
+                        UINT uFormat) {
+  int height = 0;
+  if (lpRect) {
+    AtlTrace(_T("DrawTextA (%d): %d,%d,%d,%d\n"), hDC, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+  } else {
+    AtlTrace(_T("DrawTextA (%d): NULL Rect\n"), hDC);
+  }
+  if (DrawTextA_)
+    height = DrawTextA_(hDC, lpchText, nCount, lpRect, uFormat);
+  return height;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
+                        UINT uFormat) {
+  int height = 0;
+  if (lpRect) {
+    AtlTrace(_T("DrawTextW (%d): %d,%d,%d,%d\n"), hDC, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+  } else {
+    AtlTrace(_T("DrawTextW (%d): NULL Rect\n"), hDC);
+  }
+  if (DrawTextW_)
+    height = DrawTextW_(hDC, lpchText, nCount, lpRect, uFormat);
+  return height;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
+                          UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
+  int height = 0;
+  if (lpRect) {
+    AtlTrace(_T("DrawTextExA (%d): %d,%d,%d,%d\n"), hdc, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+  } else {
+    AtlTrace(_T("DrawTextExA (%d): NULL Rect\n"), hdc);
+  }
+  if (DrawTextExA_)
+    height = DrawTextExA_(hdc, lpchText, cchText, lpRect, dwDTFormat,
+                          lpDTParams);
+  return height;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
+                          UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
+  int height = 0;
+  if (lpRect) {
+    AtlTrace(_T("DrawTextExW (%d): %d,%d,%d,%d\n"), hdc, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
+  } else {
+    AtlTrace(_T("DrawTextExW (%d): NULL Rect\n"), hdc);
+  }
+  if (DrawTextExW_)
+    height = DrawTextExW_(hdc, lpchText, cchText, lpRect, dwDTFormat,
+                          lpDTParams);
+  return height;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::BitBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth,
+    int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop) {
+  BOOL ret = false;
+  AtlTrace(_T("BitBlt (%d): %d,%d %dx%d\n"), hdcDest, nXDest, nYDest, nWidth, nHeight);
+  if (BitBlt_)
+    ret = BitBlt_(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc,
+                  nYSrc, dwRop);
   return ret;
 }
