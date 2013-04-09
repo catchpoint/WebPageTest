@@ -155,10 +155,6 @@ void DevTools::SetStartTime(LARGE_INTEGER &start_time) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void DevTools::AddPaintEvent(int x, int y, int width, int height) {
-  CString buff;
-  buff.Format(_T("Paint Event: %d,%d - %dx%d"), x, y, width, height);
-  OutputDebugString(buff);
-
   CStringA timestamp = GetTime();
   CStringA position;
   position.Format("\"x\":%d,\"y\":%d,\"width\":%d,\"height\":%d",

@@ -16,8 +16,13 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             $startTime = 0;
             $fullScreen = 0;
             $regions = array();
-            $didLayout = false;
-            $didReceiveResponse = false;
+            if (DevToolsHasLayout($timeline)) {
+              $didLayout = false;
+              $didReceiveResponse = false;
+            } else {
+              $didLayout = true;
+              $didReceiveResponse = true;
+            }
             global $eventList;
             $eventList = array();
             foreach($timeline as &$entry) {
@@ -590,5 +595,52 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
     if (count($events))
         $ok = true;
     return $ok;
+}
+
+/**
+* See if there are layout and network events in the trace
+* 
+* @param mixed $timeline
+*/
+function DevToolsHasLayout(&$timeline) {
+  $hasLayout = false;
+  $hasResponse = false;
+  $ret = false;
+  foreach ($timeline as &$entry) {
+    DevToolsEventHasLayout($entry, $hasLayout, $hasResponse);
+    if ($hasLayout && $hasResponse) {
+      $ret = true;
+      break;
+    }
+  }
+  return $ret;
+}
+
+/**
+* Recursively check the given event for layout or response
+* 
+* @param mixed $event
+*/
+function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse) {
+  if (isset($entry) && is_array($entry)) {
+      if (!$hasResponse &&
+          array_key_exists('type', $entry) &&
+          !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {
+          $hasResponse = true;
+      }
+      if ($hasResponse &&
+          !$hasLayout &&
+          array_key_exists('type', $entry) &&
+          !strcasecmp($entry['type'], 'Layout')) {
+          $hasLayout = true;
+      }
+      if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
+          DevToolsEventHasLayout($entry['params']['record'], $hasLayout, $hasResponse);
+      if(array_key_exists('children', $entry) &&
+         is_array($entry['children'])) {
+          foreach($entry['children'] as &$child)
+              DevToolsEventHasLayout($child, $hasLayout, $hasResponse);
+      } 
+  }
 }
 ?>

@@ -87,6 +87,7 @@ Results::~Results(void) {
 void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
+  _dev_tools.Reset();
   _saved = false;
   _visually_complete.QuadPart = 0;
   base_page_CDN_.Empty();

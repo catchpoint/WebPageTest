@@ -11,11 +11,22 @@ $test['runs'] = 8;
 $test['private'] = 1;
 $test['view'] = 'pss';
 $test['video'] = 1;
+$test['shard'] = 1;
 $req_priority = 0;
 $test['median_video'] = 1;
 $test['web10'] = 1;
-$test['discard'] = 3;
-$test['script'] = "setDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%";
+$test['discard'] = 1;
+$test['fvonly'] = 1;
+//$test['script'] = "setDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%";
+$test['script'] = "addHeader\tModPagespeedFilters:combine_css,rewrite_css,inline_import_to_link,extend_cache,combine_javascript,rewrite_javascript,resize_images,move_css_to_head,rewrite_style_attributes_with_url,convert_png_to_jpeg,convert_jpeg_to_webp,recompress_images,convert_jpeg_to_progressive,convert_meta_tags,inline_css,inline_images,inline_javascript,lazyload_images,flatten_css_imports,inline_preview_images,defer_javascript,defer_iframe,add_instrumentation,flush_subresources,fallback_rewrite_css_urls,insert_dns_prefetch,split_html,prioritize_critical_css,convert_to_webp_lossless,convert_gif_to_png\t%HOST_REGEX%\n" . 
+                  "if\trun\t1\n" .
+                  "if\tcached\t0\n" .
+                  "addHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\n" .
+                  "endif\n" .
+                  "endif\n" .
+                  "setDnsName\t%HOSTR%\tghs.google.com\n" .
+                  "overrideHost\t%HOSTR%\tpsa.pssdemos.com\n" .
+                  "navigate\t%URL%";
 $req_bulkurls = "Original=$req_url noscript\nOptimized=$req_url";
 $test['label'] = "PageSpeed Service Comparison for $req_url";
 

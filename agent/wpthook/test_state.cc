@@ -133,6 +133,7 @@ void TestState::Reset(bool cascade) {
     _timeline_events.RemoveAll();
     _console_log_messages.RemoveAll();
     _navigated = false;
+    _pre_render_paints.RemoveAll();
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -508,11 +509,14 @@ void TestState::PaintEvent(int x, int y, int width, int height) {
         _dev_tools.AddPaintEvent(x, y, width, height);
       }
     } else {
-      // remember the last paint event before render start was detected
-      _last_paint.left = x;
-      _last_paint.top = y;
-      _last_paint.right = x + width;
-      _last_paint.bottom = y + height;
+      RECT paint_rect;
+      paint_rect.left = x;
+      paint_rect.top = y;
+      paint_rect.right = x + width;
+      paint_rect.bottom = y + height;
+      EnterCriticalSection(&_data_cs);
+      _pre_render_paints.AddTail(paint_rect);
+      LeaveCriticalSection(&_data_cs);
     }
     CheckStartRender();
 }
@@ -587,13 +591,21 @@ void TestState::RenderCheckThread() {
 
       if (found) {
         _render_start.QuadPart = now.QuadPart;
-        PaintEvent(_last_paint.left, _last_paint.top,
-                   _last_paint.right - _last_paint.left,
-                   _last_paint.bottom - _last_paint.top);
+        EnterCriticalSection(&_data_cs);
+        while (!_pre_render_paints.IsEmpty()) {
+          RECT rect = _pre_render_paints.RemoveHead();
+          PaintEvent(rect.left, rect.top,
+                     rect.right - rect.left,
+                     rect.bottom - rect.top);
+        }
+        LeaveCriticalSection(&_data_cs);
         _screen_capture._captured_images.AddTail(captured_img);
-      }
-      else
+      } else {
         captured_img.Free();
+        EnterCriticalSection(&_data_cs);
+        _pre_render_paints.RemoveAll();
+        LeaveCriticalSection(&_data_cs);
+      }
 
       _screen_capture.Unlock();
     }

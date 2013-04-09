@@ -173,8 +173,8 @@ private:
   ULARGE_INTEGER _last_cpu_kernel;
   ULARGE_INTEGER _last_cpu_user;
   DWORD _video_capture_count;
-  LARGE_INTEGER     _last_video_time;
-  RECT           _last_paint;
+  LARGE_INTEGER  _last_video_time;
+  CAtlList<RECT> _pre_render_paints;
 
   CRITICAL_SECTION  _data_cs;
 

@@ -156,11 +156,10 @@ void CGDIHook::Init() {
                                           SetWindowTextA_Hook);
   SetWindowTextW_ = hook.createHookByName("user32.dll", "SetWindowTextW", 
                                           SetWindowTextW_Hook);
-/*
   InvalidateRect_ = hook.createHookByName("user32.dll", "InvalidateRect", 
                                           InvalidateRect_Hook);
-  InvalidateRgn_ = hook.createHookByName("user32.dll", "InvalidateRgn", 
-                                         InvalidateRgn_Hook);
+//  InvalidateRgn_ = hook.createHookByName("user32.dll", "InvalidateRgn", 
+//                                         InvalidateRgn_Hook);
   DrawTextA_ = hook.createHookByName("user32.dll", "DrawTextA", 
                                      DrawTextA_Hook);
   DrawTextW_ = hook.createHookByName("user32.dll", "DrawTextW", 
@@ -170,7 +169,6 @@ void CGDIHook::Init() {
   DrawTextExW_ = hook.createHookByName("user32.dll", "DrawTextExW", 
                                        DrawTextExW_Hook);
   BitBlt_ = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
-*/
 }
 
 /*-----------------------------------------------------------------------------
@@ -183,12 +181,22 @@ CGDIHook::~CGDIHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
-  BOOL ret = FALSE;
+void CGDIHook::SendPaintEvent(int x, int y, int width, int height) {
+  x = max(x,0);
+  y = max(y,0);
+  height = max(height,0);
+  width = max(width,0);
+  if (!test_state_._exit && test_state_._active)
+    test_state_.PaintEvent(x, y, width, height);
 
-  if (EndPaint_)
-    ret = EndPaint_(hWnd, lpPaint);
+  if (test_state_.gdi_only_)
+    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
+                MAKEWPARAM(x,y), MAKELPARAM(width, height));
+}
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CGDIHook::IsDocumentWindow(HWND hWnd) {
   bool is_document = false;
   if (!document_windows_.Lookup(hWnd, is_document)) {
     is_document = IsBrowserDocument(hWnd);
@@ -200,21 +208,36 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     test_state_.SetDocument(hWnd);
   }
 
-  WORD x = 0, y = 0, width = 0, height = 0;
-  if (lpPaint) {
-    x = (WORD)lpPaint->rcPaint.left;
-    y = (WORD)lpPaint->rcPaint.top;
-    width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
-    height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
-  }
-  if (!test_state_._exit && test_state_._active && 
-      hWnd == test_state_._document_window) {
-    test_state_.PaintEvent(x, y, width, height);
-  }
+  return is_document;
+}
 
-  if (is_document && test_state_.gdi_only_) {
-    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
-                MAKEWPARAM(x,y), MAKELPARAM(width, height));
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CGDIHook::IsDocumentDC(HDC hdc) {
+  bool is_document = false;
+  HWND hWnd = WindowFromDC(hdc);
+  if (hWnd)
+    is_document = IsDocumentWindow(hWnd);
+  return is_document;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
+  BOOL ret = FALSE;
+
+  if (EndPaint_)
+    ret = EndPaint_(hWnd, lpPaint);
+
+  if (IsDocumentWindow(hWnd)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpPaint) {
+      x = (WORD)lpPaint->rcPaint.left;
+      y = (WORD)lpPaint->rcPaint.top;
+      width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
+      height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
+    }
+    SendPaintEvent(x, y, width, height);
   }
 
   return ret;
@@ -292,13 +315,18 @@ BOOL CGDIHook::SetWindowTextW(HWND hWnd, LPCWSTR text)
 -----------------------------------------------------------------------------*/
 BOOL CGDIHook::InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase) {
   BOOL ret = false;
-  if (lpRect) {
-    AtlTrace(_T("InvalidateRect (%d): %d,%d,%d,%d\n"), hWnd, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-  } else {
-    AtlTrace(_T("InvalidateRect (%d): NULL Rect\n"), hWnd);
-  }
   if (InvalidateRect_)
     ret = InvalidateRect_(hWnd, lpRect, bErase);
+  if (IsDocumentWindow(hWnd)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpRect) {
+      x = (WORD)lpRect->left;
+      y = (WORD)lpRect->top;
+      width = (WORD)abs(lpRect->right - lpRect->left);
+      height = (WORD)abs(lpRect->bottom - lpRect->top);
+    }
+    SendPaintEvent(x, y, width, height);
+  }
   return ret;
 }
 
@@ -317,13 +345,18 @@ BOOL CGDIHook::InvalidateRgn(HWND hWnd, HRGN hRgn, BOOL bErase) {
 int CGDIHook::DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
                         UINT uFormat) {
   int height = 0;
-  if (lpRect) {
-    AtlTrace(_T("DrawTextA (%d): %d,%d,%d,%d\n"), hDC, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-  } else {
-    AtlTrace(_T("DrawTextA (%d): NULL Rect\n"), hDC);
-  }
   if (DrawTextA_)
     height = DrawTextA_(hDC, lpchText, nCount, lpRect, uFormat);
+  if (IsDocumentDC(hDC)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpRect) {
+      x = (WORD)lpRect->left;
+      y = (WORD)lpRect->top;
+      width = (WORD)abs(lpRect->right - lpRect->left);
+      height = (WORD)abs(lpRect->bottom - lpRect->top);
+    }
+    SendPaintEvent(x, y, width, height);
+  }
   return height;
 }
 
@@ -332,13 +365,18 @@ int CGDIHook::DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
 int CGDIHook::DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
                         UINT uFormat) {
   int height = 0;
-  if (lpRect) {
-    AtlTrace(_T("DrawTextW (%d): %d,%d,%d,%d\n"), hDC, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-  } else {
-    AtlTrace(_T("DrawTextW (%d): NULL Rect\n"), hDC);
-  }
   if (DrawTextW_)
     height = DrawTextW_(hDC, lpchText, nCount, lpRect, uFormat);
+  if (IsDocumentDC(hDC)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpRect) {
+      x = (WORD)lpRect->left;
+      y = (WORD)lpRect->top;
+      width = (WORD)abs(lpRect->right - lpRect->left);
+      height = (WORD)abs(lpRect->bottom - lpRect->top);
+    }
+    SendPaintEvent(x, y, width, height);
+  }
   return height;
 }
 
@@ -347,14 +385,19 @@ int CGDIHook::DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
 int CGDIHook::DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
                           UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
   int height = 0;
-  if (lpRect) {
-    AtlTrace(_T("DrawTextExA (%d): %d,%d,%d,%d\n"), hdc, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-  } else {
-    AtlTrace(_T("DrawTextExA (%d): NULL Rect\n"), hdc);
-  }
   if (DrawTextExA_)
     height = DrawTextExA_(hdc, lpchText, cchText, lpRect, dwDTFormat,
                           lpDTParams);
+  if (IsDocumentDC(hdc)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpRect) {
+      x = (WORD)lpRect->left;
+      y = (WORD)lpRect->top;
+      width = (WORD)abs(lpRect->right - lpRect->left);
+      height = (WORD)abs(lpRect->bottom - lpRect->top);
+    }
+    SendPaintEvent(x, y, width, height);
+  }
   return height;
 }
 
@@ -363,14 +406,19 @@ int CGDIHook::DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
 int CGDIHook::DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
                           UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams) {
   int height = 0;
-  if (lpRect) {
-    AtlTrace(_T("DrawTextExW (%d): %d,%d,%d,%d\n"), hdc, lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-  } else {
-    AtlTrace(_T("DrawTextExW (%d): NULL Rect\n"), hdc);
-  }
   if (DrawTextExW_)
     height = DrawTextExW_(hdc, lpchText, cchText, lpRect, dwDTFormat,
                           lpDTParams);
+  if (IsDocumentDC(hdc)) {
+    WORD x = 0, y = 0, width = 0, height = 0;
+    if (lpRect) {
+      x = (WORD)lpRect->left;
+      y = (WORD)lpRect->top;
+      width = (WORD)abs(lpRect->right - lpRect->left);
+      height = (WORD)abs(lpRect->bottom - lpRect->top);
+    }
+    SendPaintEvent(x, y, width, height);
+  }
   return height;
 }
 
@@ -379,9 +427,10 @@ int CGDIHook::DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
 BOOL CGDIHook::BitBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth,
     int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop) {
   BOOL ret = false;
-  AtlTrace(_T("BitBlt (%d): %d,%d %dx%d\n"), hdcDest, nXDest, nYDest, nWidth, nHeight);
   if (BitBlt_)
     ret = BitBlt_(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc,
                   nYSrc, dwRop);
+  if (IsDocumentDC(hdcDest))
+    SendPaintEvent(nXDest, nYDest, nWidth, nHeight);
   return ret;
 }

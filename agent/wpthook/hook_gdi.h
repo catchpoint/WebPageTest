@@ -72,6 +72,9 @@ public:
   CGDIHook(TestState& test_state);
   ~CGDIHook(void);
   void Init();
+  void SendPaintEvent(int x, int y, int width, int height);
+  bool IsDocumentWindow(HWND hWnd);
+  bool IsDocumentDC(HDC hdc);
   
   BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
   int   ReleaseDC(HWND hWnd, HDC hDC);
