@@ -166,11 +166,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       if (g_instance.timelineTimer == undefined)
         g_instance.timelineTimer = setTimeout(wpt.chromeDebugger.SendTimelineData, TIMELINE_AGGREGATION_INTERVAL);
     }
-
-    // Page events
-    else if (message === 'Page.loadEventFired') {
-      wpt.chromeDebugger.sendEvent('load?timestamp=' + params.timestamp, '');
-    }
   }
 }
 
