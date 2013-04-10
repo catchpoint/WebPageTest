@@ -5,16 +5,20 @@
     and does some validation to prevent abuse
     TODO: add support for caching tests
 */  
-$json = true;
+if (isset($req_f) && !strcasecmp($req_f, 'xml'))
+  $xml = true;
+else
+  $json = true;
 $req_location = 'closest';
 $test['runs'] = 8;
 $test['private'] = 1;
 $test['view'] = 'pss';
 $test['video'] = 1;
 $test['shard'] = 1;
-$req_priority = 0;
+if (!array_key_exists('priority', $_REQUEST))
+  $req_priority = 0;
 $test['median_video'] = 1;
-$test['web10'] = 1;
+$test['web10'] = 0;
 $test['discard'] = 1;
 $test['fvonly'] = 1;
 //$test['script'] = "setDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%";
