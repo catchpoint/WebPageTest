@@ -41,6 +41,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef BOOL(__stdcall * LPENDPAINT)(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 typedef int (__stdcall * LPRELEASEDC)(HWND hWnd, HDC hDC);
+typedef BOOL(__stdcall * LPINVALIDATERECT)(HWND hWnd, const RECT *lpRect,
+                                           BOOL bErase);
+typedef BOOL(__stdcall * LPINVALIDATERGN)(HWND hWnd, HRGN hRgn, BOOL bErase);
+typedef int(__stdcall * LPDRAWTEXTA)(HDC hDC, LPCSTR lpchText, int nCount,
+                                     LPRECT lpRect, UINT uFormat);
+typedef int(__stdcall * LPDRAWTEXTW)(HDC hDC, LPCWSTR lpchText, int nCount,
+                                     LPRECT lpRect, UINT uFormat);
+typedef int(__stdcall * LPDRAWTEXTEXA)(HDC hdc, LPSTR lpchText, int cchText,
+                                       LPRECT lpRect, UINT dwDTFormat,
+                                       LPDRAWTEXTPARAMS lpDTParams);
+typedef int(__stdcall * LPDRAWTEXTEXW)(HDC hdc, LPWSTR lpchText, int cchText,
+                                       LPRECT lpRect, UINT dwDTFormat,
+                                       LPDRAWTEXTPARAMS lpDTParams);
+typedef BOOL(__stdcall * LPBITBLT)(HDC hdcDest, int nXDest, int nYDest,
+    int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
 
 /******************************************************************************
 *******************************************************************************
@@ -60,10 +75,33 @@ public:
 	
 	BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
   int   ReleaseDC(HWND hWnd, HDC hDC);
+  BOOL  InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase);
+  BOOL  InvalidateRgn(HWND hWnd, HRGN hRgn, BOOL bErase);
+  int   DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
+                  UINT uFormat);
+  int   DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
+                  UINT uFormat);
+  int   DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
+                    UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
+  int   DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
+                    UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
+  BOOL  BitBlt(HDC hdcDest, int nXDest, int nYDest,
+    int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
 
 private:
+  void SendPaintEvent(int x, int y, int width, int height);
+  bool IsDocumentWindow(HWND hWnd);
+  bool IsDocumentDC(HDC hdc);
+
 	NCodeHookIA32	hook;
 
-	LPENDPAINT  _EndPaint;
-  LPRELEASEDC _ReleaseDC;
+	LPENDPAINT        EndPaint_;
+  LPRELEASEDC       ReleaseDC_;
+  LPINVALIDATERECT  InvalidateRect_;
+  LPINVALIDATERGN   InvalidateRgn_;
+  LPDRAWTEXTA       DrawTextA_;
+  LPDRAWTEXTW       DrawTextW_;
+  LPDRAWTEXTEXA     DrawTextExA_;
+  LPDRAWTEXTEXW     DrawTextExW_;
+  LPBITBLT          BitBlt_;
 };

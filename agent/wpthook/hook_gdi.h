@@ -72,9 +72,6 @@ public:
   CGDIHook(TestState& test_state);
   ~CGDIHook(void);
   void Init();
-  void SendPaintEvent(int x, int y, int width, int height);
-  bool IsDocumentWindow(HWND hWnd);
-  bool IsDocumentDC(HDC hdc);
   
   BOOL	EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
   int   ReleaseDC(HWND hWnd, HDC hDC);
@@ -94,6 +91,10 @@ public:
     int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
 
 private:
+  void SendPaintEvent(int x, int y, int width, int height);
+  bool IsDocumentWindow(HWND hWnd);
+  bool IsDocumentDC(HDC hdc);
+
   NCodeHookIA32	hook;
   TestState&  test_state_;
   CRITICAL_SECTION	cs;

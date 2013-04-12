@@ -80,8 +80,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <comutil.h>
 #include <time.h>
 #include <DispEx.h>
+#include <Psapi.h>
 
 #include "CxImage/ximage.h"
 #include "zlib/zlib.h"
 
 using namespace ATL;
+#include "util.h"

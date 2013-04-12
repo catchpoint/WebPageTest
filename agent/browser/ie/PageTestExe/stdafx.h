@@ -54,6 +54,7 @@
 #include <comutil.h>
 #include <time.h>
 #include <mmsystem.h>
+#include <Psapi.h>
 
 #include "../pagetest/CxImage/ximage.h"
 #include "../pagetest/zlib/zlib.h"
@@ -72,3 +73,4 @@
 #endif
 
 
+#include "../pagetest/util.h"

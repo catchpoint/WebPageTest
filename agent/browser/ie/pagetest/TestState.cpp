@@ -379,6 +379,9 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					key.Close();
 				}		
 			}
+			#ifdef _DEBUG
+			timeout = timeout * 10;
+			#endif
 		}
 
     // Delete short lifetime cache elements if configured (Blaze patch)
@@ -841,6 +844,18 @@ void CTestState::CheckDOM(void)
       }
 		}
 	}
+}
+
+/*-----------------------------------------------------------------------------
+	Check to see if anything was drawn to the screen
+-----------------------------------------------------------------------------*/
+void CTestState::PaintEvent(int x, int y, int width, int height) {
+  if (active) {
+    SetBrowserWindowUpdated(true);
+    CheckWindowPainted();
+    if (painted && (x || y || width || height))
+      dev_tools_.AddPaintEvent(x, y, width, height);
+  }
 }
 
 /*-----------------------------------------------------------------------------

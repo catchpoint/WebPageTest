@@ -38,6 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "WebPagetestDOM.h"
 #endif
 #include "chrome_tab_h.h"
+#include "../../../wpthook/dev_tools.h"
 
 #define UWM_UPDATE_WATERFALL	(WM_APP + 2)
 #define UWM_REPAINT_WATERFALL	(WM_APP + 3)
@@ -227,6 +228,7 @@ public:
 	CString						basePageHost;
 	DWORD						ieMajorVer;		// version of IE that is running
   CString         pageTitle;    // title of the page
+  DevTools        dev_tools_;
 
 	// URLBlast support
 	CString	testUrl;

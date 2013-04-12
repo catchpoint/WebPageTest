@@ -52,6 +52,10 @@ elseif ($view == 'blink')
     $view = 'blink';
 else
     $view = 'bulk';
+$mod_pagespeed = false;
+if (array_key_exists('script', $test['testinfo']) &&
+    stripos($test['testinfo']['script'], "addHeader\tModPagespeed:off\t%HOST_REGEX%") !== false)
+  $mod_pagespeed = true;
 
 $stats = array();
 $stats['fv'] = array();
@@ -769,27 +773,30 @@ function DisplayPSS(&$tests, $video, &$dirty)
 
     $baseDomainRedirect = false;
     $baseDomainSSL = false;
-    $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
-    if( count($requests) )
-    {
-        if($basePage = GetBasePage($requests))
-        {
-            // see if there was a domain redirect for the base page
-            $testedHost = $requests[0]['host'];
-            $basePageHost = $basePage['host'];
-            if( $testedHost != $basePageHost )
-                $baseDomainRedirect = true;
-            
-            // see if any of the requests served from the base page were over ssl
-            foreach( $requests as &$request )
-            {
-                if( $request['host'] == $basePageHost && $request['is_secure'] )
-                {
-                    $baseDomainSSL = true;
-                    break;
-                }
-            }
-        }
+    global $mod_pagespeed;
+    if (!$mod_pagespeed) {
+      $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
+      if( count($requests) )
+      {
+          if($basePage = GetBasePage($requests))
+          {
+              // see if there was a domain redirect for the base page
+              $testedHost = $requests[0]['host'];
+              $basePageHost = $basePage['host'];
+              if( $testedHost != $basePageHost )
+                  $baseDomainRedirect = true;
+              
+              // see if any of the requests served from the base page were over ssl
+              foreach( $requests as &$request )
+              {
+                  if( $request['host'] == $basePageHost && $request['is_secure'] )
+                  {
+                      $baseDomainSSL = true;
+                      break;
+                  }
+              }
+          }
+      }
     }
 
     if( $json || $csv )

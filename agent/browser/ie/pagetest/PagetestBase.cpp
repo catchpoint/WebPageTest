@@ -219,6 +219,7 @@ void CPagetestBase::Reset(void)
 		DeleteImages();
 
     m_spChromeFrame.Release();
+    dev_tools_.Reset();
 
 	}__except(EXCEPTION_EXECUTE_HANDLER)
 	{

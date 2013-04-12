@@ -343,6 +343,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\wpthook\dev_tools.cc"
+					>
+				</File>
+				<File
 					RelativePath="..\pagetest\DNSEvents.cpp"
 					>
 				</File>
@@ -376,6 +380,10 @@
 				</File>
 				<File
 					RelativePath="..\pagetest\TrackedEvent.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\pagetest\util.cpp"
 					>
 				</File>
 				<File

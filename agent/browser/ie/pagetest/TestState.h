@@ -42,6 +42,7 @@ public:
 	virtual void CheckComplete();
 	virtual void CheckReadyState(void);
 	virtual void CheckWindowPainted();			// check to see if anything was drawn to the screen
+	virtual void PaintEvent(int x, int y, int width, int height);
 	virtual void StartMeasuring(void);
 	virtual void BackgroundTimer(void);
 	

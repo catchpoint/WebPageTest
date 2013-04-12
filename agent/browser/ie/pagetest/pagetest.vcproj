@@ -238,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\wpthook\dev_tools.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\DNSEvents.cpp"
 				>
 			</File>
@@ -310,6 +314,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\util.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\WatchDlg.cpp"
 				>
 			</File>
@@ -349,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\DetailsDlg.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\wpthook\dev_tools.h"
 				>
 			</File>
 			<File
@@ -409,6 +421,10 @@
 			</File>
 			<File
 				RelativePath=".\TrackedEvent.h"
+				>
+			</File>
+			<File
+				RelativePath=".\util.h"
 				>
 			</File>
 			<File

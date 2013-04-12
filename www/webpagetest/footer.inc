@@ -167,3 +167,4 @@
         echo @newrelic_get_browser_timing_footer();
     ?>
     
+    <div id="experiment-timing" style="color: #77A;"></div>
