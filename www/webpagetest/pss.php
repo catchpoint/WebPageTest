@@ -14,7 +14,7 @@ $locations = LoadLocations();
 $loc = ParseLocations($locations);
 
 $preview = false;
-if( strlen($_GET['preview']) && $_GET['preview'] )
+if( array_key_exists('preview', $_GET) && strlen($_GET['preview']) && $_GET['preview'] )
     $preview = true;
 $mps = false;
 if (array_key_exists('mps', $_REQUEST))
@@ -34,7 +34,7 @@ $page_description = "Comparison Test$testLabel.";
         <div class="page">
             <?php
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
-            if( strlen($_GET['pssid']) )
+            if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) )
                 $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
             $navTabs += array(  'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
                                 'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
@@ -63,20 +63,25 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="sensitive" value="1">
             <?php
             if ($mps) {
-                echo "<input type=\"hidden\" name=\"script\" value=\"addHeader&#09;ModPagespeed:off&#09;%HOST_REGEX%&#10;navigate&#09;%URL%\">\n";
+                $script = 'addHeader\tModPagespeed:off\t%HOST_REGEX%\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"addHeader&#09;ModPagespeed:off&#09;%HOST_REGEX%&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"7\">\n";
             } elseif ($preview) {
-                echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setCookie&#09;http://%HOSTR%&#09;_GPSSPRVW=1&#10;navigate&#09;%URL%\">\n";
+                $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetCookie\thttp://%HOSTR%\t_GPSSPRVW=1\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setCookie&#09;http://%HOSTR%&#09;_GPSSPRVW=1&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
-            } elseif( strlen($_GET['origin']) ) {
-                echo "<input type=\"hidden\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+            } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) ) {
+                $script = 'setDnsName\t%HOSTR%\t' . htmlspecialchars($_GET['origin']) . '\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
             } else {
-                echo "<input type=\"hidden\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
+                $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"if&#09;run&#09;1&#10;if&#09;cached&#09;0&#10;addHeader&#09;X-PSA-Blocking-Rewrite: pss_blocking_rewrite&#09;%HOST_REGEX%&#10;endif&#10;endif&#10;setDnsName&#09;%HOSTR%&#09;ghs.google.com&#10;overrideHost&#09;%HOSTR%&#09;psa.pssdemos.com&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
             }
+            echo "<script>\nvar originalScript = \"$script\";\n</script>";
             ?>
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
@@ -97,7 +102,7 @@ $page_description = "Comparison Test$testLabel.";
                 echo '<h2 class="cufon-dincond_black"><small>Compare your currently optimized site to it\'s unoptimized version</a></small></h2>';
               } elseif ($preview) {
                 echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
-              } elseif( strlen($_GET['origin']) )
+              } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) )
                 echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
               else
                 echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
@@ -397,7 +402,7 @@ $page_description = "Comparison Test$testLabel.";
                 
                 <?php
                 // build the psuedo batch-url list
-                if( $mps || strlen($_GET['origin']) )
+                if( $mps || (array_key_exists('origin', $_GET) && strlen($_GET['origin'])) )
                     echo 'var batch = "Original=" + url + "\nOptimized=" + url + " noscript";' . "\n";
                 else
                     echo 'var batch = "Original=" + url + " noscript\nOptimized=" + url;' . "\n";
@@ -466,6 +471,8 @@ $page_description = "Comparison Test$testLabel.";
             $("#pssloc").change(function(){
                 PSSLocChanged();
             });
+            
+            $('#script').val(originalScript);
         </script>
     </body>
 </html>

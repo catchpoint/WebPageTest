@@ -1335,8 +1335,9 @@ function GetPendingTests($loc, &$count, &$avgTime)
         $location = $parts[0];
         $count = 0;
         $avgTime = 0;
-        $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-        if( $tests )
+        if (is_file("./tmp/$location.tests"))
+          $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+        if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
         {
             $count = (int)$tests['tests'];
             $timeCount = count($tests['times']);
@@ -1408,13 +1409,17 @@ function GetTesterCount($location)
     $parts = explode(':', $location);
     $location = $parts[0];
     $count = 0;
-    $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-    if( count($testers) )
+    if (is_file("./tmp/$location.tm"))
+      $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+    if( isset($testers) && is_array($testers) && count($testers) )
     {
         $now = time();
         foreach( $testers as &$tester )
         {
-            if( !$tester['offline'] && $tester['updated'] && $now - $tester['updated'] < 3600 )
+            if( (!array_key_exists('offline', $tester) ||
+                 !$tester['offline']) &&
+                $tester['updated'] &&
+                $now - $tester['updated'] < 3600 )
                 $count++;
         }
     }
