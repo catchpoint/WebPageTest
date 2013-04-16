@@ -161,8 +161,6 @@ $page_description = "Website performance test result$testLabel.";
                         $cols = 3;
                         if (array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
                             $cols++;
-                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
-                            $cols++;
                         if (array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
                             $cols++;
                         if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) ||
@@ -181,9 +179,6 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" valign="middle">Load Time</th>
                         <th align="center" valign="middle">First Byte</th>
                         <th align="center" valign="middle">Start Render</th>
-                        <?php if( $test['test']['aft'] ) { ?>
-                        <th align="center" valign="middle">Above the Fold</th>
-                        <?php } ?>
                         <?php if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) || 
                                  (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0)){ ?>
                         <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
@@ -211,12 +206,6 @@ $page_description = "Website performance test result$testLabel.";
                         echo "</td><td id=\"fvLoadTime\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['loadTime'], 3) . "</td>\n";
                         echo "<td id=\"fvTTFB\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['TTFB'], 3) . "</td>\n";
                         echo "<td id=\"fvStartRender\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['render'], 3) . "</td>\n";
-                        if( $test['test']['aft'] ) {
-                            $aft = number_format($pageData[$fvMedian][0]['aft'] / 1000.0, 1) . 's';
-                            if( !$pageData[$fvMedian][0]['aft'] )
-                                $aft = 'N/A';
-                            echo "<td id=\"fvAFT\" valign=\"middle\">$aft</th>";
-                        }
                         if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
                             if(array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))
                                 echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexCustom']}</td>\n";
@@ -248,12 +237,6 @@ $page_description = "Website performance test result$testLabel.";
                         echo "</td><td id=\"rvLoadTime\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['loadTime'], 3) . "</td>\n";
                         echo "<td id=\"rvTTFB\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['TTFB'], 3) . "</td>\n";
                         echo "<td id=\"rvStartRender\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['render'], 3) . "</td>\n";
-                        if( $test['test']['aft'] ) {
-                            $aft = number_format($pageData[$rvMedian][1]['aft'] / 1000.0, 1);
-                            if( !$pageData[$rvMedian][1]['aft'] )
-                                $aft = 'N/A';
-                            echo "<td id=\"rvAFT\" class=\"even\" valign=\"middle\">$aft</th>";
-                        }
                         if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
                             $disp = '-';
                             if(array_key_exists('SpeedIndex', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndex'] > 0)
@@ -433,9 +416,9 @@ $page_description = "Website performance test result$testLabel.";
                                 echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
                             }
                         }
-                        if( gz_is_file("$testPath/{$run}_timeline.json") ) {
-                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "/timeline.html?url=%2Fgetgzip.php%3Ftest%3D{$id}%26file%3D{$run}_timeline.json\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                        if( gz_is_file("$testPath/{$run}_timeline.json") || gz_is_file("$testPath/{$run}_devtools.json") ) {
+                            echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.html?url=%2FgetTimeline.php%3Ftest%3D{$id}%26run%3D{$run}\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
                         }
                         if( gz_is_file("$testPath/{$run}_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
@@ -502,9 +485,9 @@ $page_description = "Website performance test result$testLabel.";
                                 echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
                             }
                         }
-                        if( gz_is_file("$testPath/{$run}_Cached_timeline.json") ) {
-                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_timeline.json\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "/timeline.html?url=%2Fgetgzip.php%3Ftest%3D{$id}%26file%3D{$run}_Cached_timeline.json\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                        if( gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json") ) {
+                            echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.html?url=%2FgetTimeline.php%3Ftest%3D{$id}%26run%3D{$run}%26cached%3D1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
                         }
                         if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";

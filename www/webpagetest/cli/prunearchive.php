@@ -98,7 +98,7 @@ function PruneArchives($dir) {
             else {
                 $elapsed = max($now - filemtime($file), 0)/ 86400;
                 if ($elapsed > $MIN_DAYS) {
-                    $delete = false;
+/*                    $delete = false;
                     $zip = new ZipArchive;
                     if ($zip->open($file) === TRUE) {
                         $delete = true;
@@ -125,6 +125,8 @@ function PruneArchives($dir) {
                     if ($delete) {
                         unlink($file);
                     }
+*/
+                  unlink($file);
                 }
             }
         }

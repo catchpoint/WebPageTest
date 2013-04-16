@@ -46,10 +46,13 @@ if (function_exists('apache_request_headers')) {
         $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
     }
 }
-if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On')
+if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
     define('FRIENDLY_URLS', true);
-else
+    define('VER_TIMELINE', '1/');       // version of the timeline javascript
+} else {
     define('FRIENDLY_URLS', false);
+    define('VER_TIMELINE', '');       // Leave the timeline version empty
+}
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
@@ -57,7 +60,6 @@ define('VER_CSS', 59);           // version of the sitewide css file
 define('VER_JS', 28);            // version of the sitewide javascript file
 define('VER_JS_TEST', 25);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
-define('VER_TIMELINE', 1);       // version of the timeline javascript
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
                                  // is unknown, change this constant to a large
@@ -297,6 +299,8 @@ function ShortenUrl($url) {
 function GetFileUrl($url)
 {
   $parts = parse_url($url);
+  if (!array_key_exists('path', $parts))
+    $parts['path'] = '';
   return trim(preg_replace( '/[^\w.]/', '_', substr("{$parts['host']}/{$parts['path']}", 0, 50)), '_');
 }
 
@@ -1174,7 +1178,7 @@ function GetTestInfoHtml($includeScript = true)
     {
         $show = false;
         if ($includeScript) {
-            if ($admin || $settings['show_script_in_results']) {
+            if ($admin || (array_key_exists('show_script_in_results', $settings) && $settings['show_script_in_results'])) {
                 $show = true;
             } elseif ($isOwner && !$test['testinfo']['sensitive']) {
                 $show = true;

@@ -49,10 +49,13 @@ foreach( $files as $file )
                     $subject = "$loc WebPagetest ALERT";
                     $body = "The $loc location has not checked for new jobs in $minutes minutes.";
                     SendMessage($to, $subject, $body);
+                    echo "$loc: $elapsed sec (notified $to)\r\n";
+                } else {
+                  echo "$loc: $elapsed sec (nobody to notify)\r\n";
                 }
+            } else {
+              echo "$loc: $elapsed sec (silent)\r\n";
             }
-            
-            echo "$loc: $elapsed sec\r\n";
         }
     }
 }
