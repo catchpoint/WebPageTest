@@ -469,7 +469,6 @@ bool Request::Process() {
         }
       }
     } else {
-
       // Find the matching socket connect and DNS lookup (if they exist).
       LARGE_INTEGER before = _start;
       LARGE_INTEGER start, end, ssl_start, ssl_end;
@@ -488,14 +487,12 @@ bool Request::Process() {
     }
 
     _test_state._requests++;
-    if (_start.QuadPart <= _test_state._on_load.QuadPart) {
+    if (_start.QuadPart <= _test_state._on_load.QuadPart)
       _test_state._doc_requests++;
-    }
     int result = GetResult();
     if (!_test_state._first_byte.QuadPart && result == 200 && 
-        _first_byte.QuadPart ) {
+        _first_byte.QuadPart )
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-    }
     if (result >= 400 || result < 0) {
       if (_test_state._test_result == TEST_RESULT_NO_ERROR)
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
@@ -504,9 +501,8 @@ bool Request::Process() {
     }
 
     CStringA user_agent = GetRequestHeader("User-Agent");
-    if (user_agent.GetLength()) {
+    if (user_agent.GetLength())
       _test_state._user_agent = CA2T(user_agent);
-    }
 
     // see if we have a matching request with browser data
     CString url = _T("http://");

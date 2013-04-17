@@ -87,4 +87,5 @@ private:
   void SaveConsoleLog(void);
   void SaveTimeline(void);
   void SaveHistogram(CxImage& image, CString file);
+  bool NativeRequestExists(Request * browser_request);
 };

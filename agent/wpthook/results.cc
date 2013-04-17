@@ -635,7 +635,8 @@ void Results::ProcessRequests(void) {
     LONGLONG earliest_dns = _dns.GetEarliest(_test_state._start.QuadPart);
     if (earliest_dns && (!new_start || earliest_dns < new_start))
       new_start = earliest_dns;
-    LONGLONG earliest_socket = _sockets.GetEarliest(_test_state._start.QuadPart);
+    LONGLONG earliest_socket =
+      _sockets.GetEarliest(_test_state._start.QuadPart);
     if (earliest_socket && (!new_start || earliest_socket < new_start))
       new_start = earliest_socket;
     if (new_start)
@@ -651,7 +652,8 @@ void Results::ProcessRequests(void) {
   adult_site_ = false;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
-    if (request) {
+    if (request && 
+        (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
       if (base_page) { 
         int result_code = request->GetResult();
@@ -1078,4 +1080,28 @@ void Results::SaveTimeline(void) {
       CloseHandle(file);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  See if a version of the same request exists but not from the browser.
+  This is so we can fall-back to using browser-reported requests just for
+  any that we didn't catch at the socket level.
+-----------------------------------------------------------------------------*/
+bool Results::NativeRequestExists(Request * browser_request) {
+  bool ret = false;
+  POSITION pos = _requests._requests.GetHeadPosition();
+  CStringA browser_host = browser_request->GetHost();
+  if (browser_host.GetLength()) {
+    CStringA browser_object = browser_request->_request_data.GetObject();
+    while (pos && !ret) {
+      Request * request = _requests._requests.GetNext(pos);
+      if (request && 
+          !request->_from_browser &&
+          !browser_host.CompareNoCase(request->GetHost()) &&
+          !browser_object.CompareNoCase(request->_request_data.GetObject()))
+          ret = true;
+    }
+  } else
+    ret = true;
+  return ret;
 }

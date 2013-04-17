@@ -267,60 +267,58 @@ void Requests::ProcessBrowserRequest(CString request_data) {
         processing_values = false;
         processing_request = false;
         processing_response = false;
-        if (!line.Compare(_T("[Request Headers]"))) {
+        if (!line.Compare(_T("[Request Headers]")))
           processing_request = true;
-        } else if (!line.Compare(_T("[Response Headers]"))) {
+        else if (!line.Compare(_T("[Response Headers]")))
           processing_response = true;
-        }
       } else if (processing_values) {
         int separator = line.Find(_T('='));
         if (separator > 0) {
           CString key = line.Left(separator).Trim();
           CString value = line.Mid(separator + 1).Trim();
           if (key.GetLength() && value.GetLength()) {
-            if (!key.CompareNoCase(_T("browser"))) {
+            if (!key.CompareNoCase(_T("browser")))
               browser = value;
-            } else if (!key.CompareNoCase(_T("url"))) {
+            else if (!key.CompareNoCase(_T("url")))
               url = value;
-            } else if (!key.CompareNoCase(_T("errorCode"))) {
+            else if (!key.CompareNoCase(_T("errorCode")))
               error_code = _ttol(value);
-            } else if (!key.CompareNoCase(_T("startTime"))) {
+            else if (!key.CompareNoCase(_T("startTime")))
               start_time = _ttof(value) * 1000.0;
-            } else if (!key.CompareNoCase(_T("firstByteTime"))) {
+            else if (!key.CompareNoCase(_T("firstByteTime")))
               first_byte = _ttof(value) * 1000.0;
-            } else if (!key.CompareNoCase(_T("endTime"))) {
+            else if (!key.CompareNoCase(_T("endTime")))
               end_time = _ttof(value) * 1000.0;
-            } else if (!key.CompareNoCase(_T("bytesIn"))) {
+            else if (!key.CompareNoCase(_T("bytesIn")))
               bytes_in = _ttol(value);
-            } else if (!key.CompareNoCase(_T("initiatorUrl"))) {
+            else if (!key.CompareNoCase(_T("initiatorUrl")))
               initiator = value;
-            } else if (!key.CompareNoCase(_T("initiatorLineNumber"))) {
+            else if (!key.CompareNoCase(_T("initiatorLineNumber")))
               initiator_line = value;
-            } else if (!key.CompareNoCase(_T("initiatorColumnNumber"))) {
+            else if (!key.CompareNoCase(_T("initiatorColumnNumber")))
               initiator_column = value;
-            } else if (!key.CompareNoCase(_T("status"))) {
+            else if (!key.CompareNoCase(_T("status")))
               status = _ttol(value);
-            } else if (!key.CompareNoCase(_T("connectionId"))) {
+            else if (!key.CompareNoCase(_T("connectionId")))
               connection = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.dnsStart"))) {
+            else if (!key.CompareNoCase(_T("timing.dnsStart")))
               dns_start = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.dnsEnd"))) {
+            else if (!key.CompareNoCase(_T("timing.dnsEnd")))
               dns_end = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.connectStart"))) {
+            else if (!key.CompareNoCase(_T("timing.connectStart")))
               connect_start = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.connectEnd"))) {
+            else if (!key.CompareNoCase(_T("timing.connectEnd")))
               connect_end = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.sslStart"))) {
+            else if (!key.CompareNoCase(_T("timing.sslStart")))
               ssl_start = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.sslEnd"))) {
+            else if (!key.CompareNoCase(_T("timing.sslEnd")))
               ssl_end = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.sendStart"))) {
+            else if (!key.CompareNoCase(_T("timing.sendStart")))
               send_start = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.sendEnd"))) {
+            else if (!key.CompareNoCase(_T("timing.sendEnd")))
               send_end = _ttol(value);
-            } else if (!key.CompareNoCase(_T("timing.receiveHeadersEnd"))) {
+            else if (!key.CompareNoCase(_T("timing.receiveHeadersEnd")))
               headers_end = _ttol(value);
-            }
           }
         }
       } else if (processing_request) {
@@ -341,9 +339,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     LeaveCriticalSection(&cs);
   }
   _test_state.ActivityDetected();
-  if (!url.Left(6).Compare(_T("https:")) &&
-      end_time > 0 && start_time > 0) {
-    // Add SSL requests as native request objects
+  if (end_time > 0 && start_time > 0) {
     Request * request = new Request(_test_state, connection, _sockets, _dns,
                                     _test, false, *this);
     request->_from_browser = true;
@@ -357,8 +353,11 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       connections_.Lookup(connection, already_connected);
       connections_.SetAt(connection, true);
     }
+    if (!url.Left(6).Compare(_T("https:")))
+      request->_is_ssl = true;
+    else
+      request->_is_ssl = false;
     // figure out the conversion from browser time to perf counter
-    request->_is_ssl = true;
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
     request->_end.QuadPart = now.QuadPart;
     request->_start.QuadPart = now.QuadPart - 

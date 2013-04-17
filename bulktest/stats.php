@@ -48,6 +48,26 @@ if (LoadResults($results)) {
     }
     echo "$invalid of $total\n";
     ksort($data);
+    $file = fopen("./tests.csv", 'w');
+    if ($file) {
+      fwrite($file, 'URL');
+      foreach($locations as $loc => $label)
+          fwrite($file, ",$label");
+      fwrite($file, "\r\n");
+      foreach($data as $url => &$urlData) {
+        fwrite($file, "\"$url\"");
+        foreach($locations as $loc => $label) {
+          $test = '';
+          if (array_key_exists($label, $urlData) &&
+              is_array($urlData[$label]) &&
+              array_key_exists('id', $urlData[$label]))
+              $test = "{$server}result/{$urlData[$label]['id']}/";
+          fwrite($file, ",\"$test\"");
+        }
+        fwrite($file, "\r\n");
+      }
+      fclose($file);
+    }
     foreach ($metrics as $metric) {
         $file = fopen("./$metric.csv", 'w+');
         if ($file) {
@@ -64,7 +84,7 @@ if (LoadResults($results)) {
             }
             fwrite($file, "Test Comparison\r\n");
             foreach($data as $url => &$urlData) {
-                fwrite($file, "$url,");
+                fwrite($file, "\"$url\",");
                 // check and make sure we have data for all of the configurations for this url
                 $valid = true;
                 foreach($locations as $loc => $label) {
