@@ -10,7 +10,9 @@ require_once('domains.inc');
 require_once('breakdown.inc');
 
 // see if we are sending abbreviated results
-$pagespeed = (int)$_REQUEST['pagespeed'];
+$pagespeed = 0;
+if (array_key_exists('pagespeed', $_REQUEST))
+  $pagespeed = (int)$_REQUEST['pagespeed'];
 
 if( isset($test['test']) && $test['test']['batch'] )
     BatchResult($id, $testPath);
@@ -37,7 +39,7 @@ else
         echo "<response>\n";
         echo "<statusCode>200</statusCode>\n";
         echo "<statusText>Ok</statusText>\n";
-        if( strlen($_REQUEST['r']) )
+        if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
             echo "<requestId>{$_REQUEST['r']}</requestId>\n";
         echo "<data>\n";
         
@@ -61,6 +63,8 @@ else
                     $locstring .= ':' . $test['testinfo']['browser'];
                 echo "<location>$locstring</location>\n";
             }
+            if ( @strlen($test['test']['location']) )
+                echo "<from>" . xml_entities($test['test']['location']) . "</from>\n";
             if( @strlen($test['testinfo']['connectivity']) )
             {
                 echo "<connectivity>{$test['testinfo']['connectivity']}</connectivity>\n";
@@ -237,7 +241,8 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    if( $test['test']['video'] || $test['testinfo']['video'] )
+                    if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
+                        (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}", $frames);
                         if( $frames && count($frames) )
@@ -322,7 +327,8 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    if( $test['test']['video'] || $test['testinfo']['video']  )
+                    if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
+                        (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}_cached", $frames);
                         if( $frames && count($frames) )
@@ -449,12 +455,28 @@ function xmlRequests($id, $testPath, $run, $cached) {
         echo "<requests>\n";
         $secure = false;
         $haveLocations = false;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
         foreach ($requests as &$request) {
-            $domain = strrev($domain);
             echo "<request number=\"{$request['number']}\">\n";
             foreach ($request as $field => $value) {
-                echo "<$field>" . xml_entities($value) . "</$field>\n";
+                if (!is_array($value))
+                  echo "<$field>" . xml_entities($value) . "</$field>\n";
+            }
+            if (array_key_exists('headers', $request) && is_array($request['headers'])) {
+              echo "<headers>\n";
+              if (array_key_exists('request', $request['headers']) && is_array($request['headers']['request'])) {
+                echo "<request>\n";
+                foreach ($request['headers']['request'] as $value)
+                  echo "<header>" . xml_entities($value) . "</header>\n";
+                echo "</request>\n";
+              }
+              if (array_key_exists('response', $request['headers']) && is_array($request['headers']['response'])) {
+                echo "<response>\n";
+                foreach ($request['headers']['response'] as $value)
+                  echo "<header>" . xml_entities($value) . "</header>\n";
+                echo "</response>\n";
+              }
+              echo "</headers>\n";
             }
             echo "</request>\n";
         }

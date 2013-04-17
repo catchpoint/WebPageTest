@@ -24,15 +24,14 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
         $object = strtolower($request['url']);
         if( strlen($domain) && (strstr($object, 'favicon.ico') === FALSE) )
         {
-            if( !array_key_exists($domain, $breakdown)) {
-                $breakdown["$domain"] = array();
-            }
-            if( !array_key_exists($domain, $connections)) {
+            if( !array_key_exists($domain, $breakdown))
+                $breakdown["$domain"] = array('bytes' => 0, 'requests' => 0);
+            if( !array_key_exists($domain, $connections))
                 $connections["$domain"] = array();
-            }
             $connections["$domain"][$request['socket']] = 1;
                         
-            $breakdown["$domain"]['bytes'] += $request['bytesIn'];
+            if (array_key_exists('bytesIn', $request))
+              $breakdown["$domain"]['bytes'] += $request['bytesIn'];
             $breakdown["$domain"]['requests']++;
         }
     }
