@@ -1,0 +1,466 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXAppleScriptBuildPhase section */
+		F40639D50DAAAD8700082204 /* AppleScript */ = {
+			isa = PBXAppleScriptBuildPhase;
+			buildActionMask = 2147483647;
+			contextName = "";
+			files = (
+				F40639C40DAAAD7600082204 /* CleanCovAndBuild.applescript in AppleScript */,
+				F40639C60DAAAD7600082204 /* CreateUnitTestExecutable.applescript in AppleScript */,
+				F40639C70DAAAD7600082204 /* EnableGCov.applescript in AppleScript */,
+				F40639C80DAAAD7600082204 /* opencoverage.applescript in AppleScript */,
+				F40639C90DAAAD7600082204 /* ResetGCov.applescript in AppleScript */,
+			);
+			isSharedContext = 0;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXAppleScriptBuildPhase section */
+
+/* Begin PBXBuildFile section */
+		8BAB3AF210BDAAB5002E1AC9 /* GTMXcodePreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8BAB3AF010BDAAB5002E1AC9 /* GTMXcodePreferences.xib */; };
+		8BB2ADE10DD0BC0B00A9BDBD /* GTMMethodCheck.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BB2964B0DD0BC0500A9BDBD /* GTMMethodCheck.m */; };
+		8BB2ADF40DD0BC0B00A9BDBD /* GTMNSEnumerator+Filter.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BB296690DD0BC0500A9BDBD /* GTMNSEnumerator+Filter.m */; };
+		8BB2ADFC0DD0BC0B00A9BDBD /* GTMObjC2Runtime.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BB296750DD0BC0500A9BDBD /* GTMObjC2Runtime.m */; };
+		8BE55E8210B606E600FF0A61 /* GTMXcodeCorrectWhiteSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BE55E8010B606E600FF0A61 /* GTMXcodeCorrectWhiteSpace.m */; };
+		8BF59C970CD83C12002537F0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
+		8BF59C980CD83C12002537F0 /* GTM.xcspec in Resources */ = {isa = PBXBuildFile; fileRef = 8B780F5D0B6A5F6B00AE0B76 /* GTM.xcspec */; };
+		8BF59C990CD83C12002537F0 /* GTM.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8B57115C0B8214120085059B /* GTM.icns */; };
+		8BF59CA00CD83C12002537F0 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 8B076EB40B9F47B10021F171 /* Credits.rtf */; };
+		8BF59CA20CD83C12002537F0 /* GTMXcodePlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BC7D7BB0B68574C008442D0 /* GTMXcodePlugin.m */; };
+		8BF59CA30CD83C12002537F0 /* GTMXcodeAboutItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B07C2100B690E5300827344 /* GTMXcodeAboutItem.m */; };
+		8BF59CA40CD83C12002537F0 /* GTMXcodeMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B07C2150B690EB800827344 /* GTMXcodeMenuItem.m */; };
+		8BF59CA50CD83C12002537F0 /* GTMXcodeQuickLinks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B780D130B69CF4100AE0B76 /* GTMXcodeQuickLinks.m */; };
+		8BF59CA60CD83C12002537F0 /* GTMXcodePreferences.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B78107F0B6A91C800AE0B76 /* GTMXcodePreferences.m */; };
+		8BF59CA70CD83C12002537F0 /* GTMXcodeCreateUnitTextExecutable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B5711550B815A9D0085059B /* GTMXcodeCreateUnitTextExecutable.m */; };
+		8BF59CA90CD83C12002537F0 /* GTMXcodeGCovItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BFB91B50B8A502700953506 /* GTMXcodeGCovItem.m */; };
+		8BF59CAC0CD83C12002537F0 /* NSTask+Script.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BD785180B8BE78A009EF861 /* NSTask+Script.m */; };
+		8BF59CFA0CD8C9EC002537F0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BF59CF80CD8C9EC002537F0 /* Cocoa.framework */; };
+		F40639C40DAAAD7600082204 /* CleanCovAndBuild.applescript in AppleScript */ = {isa = PBXBuildFile; fileRef = F40639BB0DAAAD3100082204 /* CleanCovAndBuild.applescript */; settings = {ATTRIBUTES = (Debug, ); }; };
+		F40639C60DAAAD7600082204 /* CreateUnitTestExecutable.applescript in AppleScript */ = {isa = PBXBuildFile; fileRef = F40639BD0DAAAD3100082204 /* CreateUnitTestExecutable.applescript */; settings = {ATTRIBUTES = (Debug, ); }; };
+		F40639C70DAAAD7600082204 /* EnableGCov.applescript in AppleScript */ = {isa = PBXBuildFile; fileRef = F40639BE0DAAAD3100082204 /* EnableGCov.applescript */; settings = {ATTRIBUTES = (Debug, ); }; };
+		F40639C80DAAAD7600082204 /* opencoverage.applescript in AppleScript */ = {isa = PBXBuildFile; fileRef = F40639BF0DAAAD3100082204 /* opencoverage.applescript */; settings = {ATTRIBUTES = (Debug, ); }; };
+		F40639C90DAAAD7600082204 /* ResetGCov.applescript in AppleScript */ = {isa = PBXBuildFile; fileRef = F40639C00DAAAD3100082204 /* ResetGCov.applescript */; settings = {ATTRIBUTES = (Debug, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		32DBCF630370AF2F00C91783 /* GTMXcodePlugin.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMXcodePlugin.pch; sourceTree = "<group>"; };
+		8B076EB40B9F47B10021F171 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = Credits.rtf; path = Resources/Credits.rtf; sourceTree = "<group>"; };
+		8B07C2100B690E5300827344 /* GTMXcodeAboutItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeAboutItem.m; sourceTree = "<group>"; };
+		8B07C2140B690EB800827344 /* GTMXcodeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMXcodeMenuItem.h; sourceTree = "<group>"; };
+		8B07C2150B690EB800827344 /* GTMXcodeMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeMenuItem.m; sourceTree = "<group>"; };
+		8B5711550B815A9D0085059B /* GTMXcodeCreateUnitTextExecutable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeCreateUnitTextExecutable.m; sourceTree = "<group>"; };
+		8B57115C0B8214120085059B /* GTM.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = GTM.icns; path = Resources/GTM.icns; sourceTree = "<group>"; };
+		8B780D130B69CF4100AE0B76 /* GTMXcodeQuickLinks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeQuickLinks.m; sourceTree = "<group>"; };
+		8B780F5D0B6A5F6B00AE0B76 /* GTM.xcspec */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xcspec; name = GTM.xcspec; path = Resources/GTM.xcspec; sourceTree = "<group>"; };
+		8B78107E0B6A91C800AE0B76 /* GTMXcodePreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMXcodePreferences.h; sourceTree = "<group>"; };
+		8B78107F0B6A91C800AE0B76 /* GTMXcodePreferences.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodePreferences.m; sourceTree = "<group>"; };
+		8BAB3AF010BDAAB5002E1AC9 /* GTMXcodePreferences.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = GTMXcodePreferences.xib; path = Resources/GTMXcodePreferences.xib; sourceTree = "<group>"; };
+		8BB2964A0DD0BC0500A9BDBD /* GTMMethodCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMMethodCheck.h; sourceTree = "<group>"; };
+		8BB2964B0DD0BC0500A9BDBD /* GTMMethodCheck.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMMethodCheck.m; sourceTree = "<group>"; };
+		8BB296540DD0BC0500A9BDBD /* GTMGarbageCollection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMGarbageCollection.h; sourceTree = "<group>"; };
+		8BB296680DD0BC0500A9BDBD /* GTMNSEnumerator+Filter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSEnumerator+Filter.h"; sourceTree = "<group>"; };
+		8BB296690DD0BC0500A9BDBD /* GTMNSEnumerator+Filter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSEnumerator+Filter.m"; sourceTree = "<group>"; };
+		8BB296740DD0BC0500A9BDBD /* GTMObjC2Runtime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMObjC2Runtime.h; sourceTree = "<group>"; };
+		8BB296750DD0BC0500A9BDBD /* GTMObjC2Runtime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMObjC2Runtime.m; sourceTree = "<group>"; };
+		8BB2968B0DD0BC0500A9BDBD /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
+		8BB296C20DD0BC0500A9BDBD /* DebugLeopardOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = DebugLeopardOrLater.xcconfig; sourceTree = "<group>"; };
+		8BB296C50DD0BC0500A9BDBD /* ReleaseLeopardOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = ReleaseLeopardOrLater.xcconfig; sourceTree = "<group>"; };
+		8BB296D50DD0BC0500A9BDBD /* LoadableBundle.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = LoadableBundle.xcconfig; sourceTree = "<group>"; };
+		8BB296D60DD0BC0500A9BDBD /* LoadableBundleGCSupported.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = LoadableBundleGCSupported.xcconfig; sourceTree = "<group>"; };
+		8BB2AE830DD0BD2F00A9BDBD /* GTMDebugSelectorValidation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDebugSelectorValidation.h; sourceTree = "<group>"; };
+		8BC7D7BA0B68574C008442D0 /* GTMXcodePlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMXcodePlugin.h; sourceTree = "<group>"; };
+		8BC7D7BB0B68574C008442D0 /* GTMXcodePlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodePlugin.m; sourceTree = "<group>"; };
+		8BD785170B8BE78A009EF861 /* NSTask+Script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSTask+Script.h"; sourceTree = "<group>"; };
+		8BD785180B8BE78A009EF861 /* NSTask+Script.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSTask+Script.m"; sourceTree = "<group>"; };
+		8BE55E8010B606E600FF0A61 /* GTMXcodeCorrectWhiteSpace.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeCorrectWhiteSpace.m; sourceTree = "<group>"; };
+		8BF07EB40B92140700CCC8D7 /* PBXAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXAppDelegate.h; sourceTree = "<group>"; };
+		8BF07EB50B92140700CCC8D7 /* PBXChangeNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXChangeNotification.h; sourceTree = "<group>"; };
+		8BF07EB60B92140700CCC8D7 /* PBXContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXContainer.h; sourceTree = "<group>"; };
+		8BF07EB70B92140700CCC8D7 /* PBXContainerItemChangeNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXContainerItemChangeNotification.h; sourceTree = "<group>"; };
+		8BF07EB80B92140700CCC8D7 /* PBXDocumentController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXDocumentController.h; sourceTree = "<group>"; };
+		8BF07EB90B92140700CCC8D7 /* PBXExtendedApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXExtendedApplication.h; sourceTree = "<group>"; };
+		8BF07EBA0B92140700CCC8D7 /* PBXLSPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXLSPlugin.h; sourceTree = "<group>"; };
+		8BF07EBB0B92140700CCC8D7 /* PBXModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXModule.h; sourceTree = "<group>"; };
+		8BF07EBC0B92140700CCC8D7 /* PBXObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXObject.h; sourceTree = "<group>"; };
+		8BF07EBD0B92140700CCC8D7 /* PBXPreferencesModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXPreferencesModule.h; sourceTree = "<group>"; };
+		8BF07EBE0B92140700CCC8D7 /* PBXPreferencesPaneModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXPreferencesPaneModule.h; sourceTree = "<group>"; };
+		8BF07EBF0B92140700CCC8D7 /* PBXProject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXProject.h; sourceTree = "<group>"; };
+		8BF07EC00B92140700CCC8D7 /* PBXProjectDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXProjectDocument.h; sourceTree = "<group>"; };
+		8BF07EC10B92140700CCC8D7 /* PBXSelection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXSelection.h; sourceTree = "<group>"; };
+		8BF07EC20B92140700CCC8D7 /* PBXTarget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBXTarget.h; sourceTree = "<group>"; };
+		8BF07EC30B92140700CCC8D7 /* XcodeClasses.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XcodeClasses.h; sourceTree = "<group>"; };
+		8BF59CB40CD83C12002537F0 /* GTM Xcode Plugin.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "GTM Xcode Plugin.xcplugin"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8BF59CF80CD8C9EC002537F0 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		8BFB91B50B8A502700953506 /* GTMXcodeGCovItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GTMXcodeGCovItem.m; sourceTree = "<group>"; };
+		8D5B49B7048680CD000E48DA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resources/Info.plist; sourceTree = "<group>"; };
+		F40639BB0DAAAD3100082204 /* CleanCovAndBuild.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; name = CleanCovAndBuild.applescript; path = Resources/CleanCovAndBuild.applescript; sourceTree = "<group>"; };
+		F40639BD0DAAAD3100082204 /* CreateUnitTestExecutable.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; name = CreateUnitTestExecutable.applescript; path = Resources/CreateUnitTestExecutable.applescript; sourceTree = "<group>"; };
+		F40639BE0DAAAD3100082204 /* EnableGCov.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; name = EnableGCov.applescript; path = Resources/EnableGCov.applescript; sourceTree = "<group>"; };
+		F40639BF0DAAAD3100082204 /* opencoverage.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; name = opencoverage.applescript; path = Resources/opencoverage.applescript; sourceTree = "<group>"; };
+		F40639C00DAAAD3100082204 /* ResetGCov.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; name = ResetGCov.applescript; path = Resources/ResetGCov.applescript; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8BF59CAD0CD83C12002537F0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8BF59CFA0CD8C9EC002537F0 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		089C166AFE841209C02AAC07 /* GoogleBundle */ = {
+			isa = PBXGroup;
+			children = (
+				8BB289D30DD0BBC800A9BDBD /* google-toolbox-for-mac */,
+				8BF07EB10B92140700CCC8D7 /* XcodeHeaders */,
+				32C88E010371C26100C91783 /* Sources */,
+				089C167CFE841241C02AAC07 /* Resources */,
+				8BF59CFD0CD8C9F2002537F0 /* Frameworks */,
+				19C28FB8FE9D52D311CA2CBB /* Products */,
+			);
+			name = GoogleBundle;
+			sourceTree = "<group>";
+		};
+		089C167CFE841241C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F40639BB0DAAAD3100082204 /* CleanCovAndBuild.applescript */,
+				F40639BD0DAAAD3100082204 /* CreateUnitTestExecutable.applescript */,
+				F40639BE0DAAAD3100082204 /* EnableGCov.applescript */,
+				F40639BF0DAAAD3100082204 /* opencoverage.applescript */,
+				F40639C00DAAAD3100082204 /* ResetGCov.applescript */,
+				8B076EB40B9F47B10021F171 /* Credits.rtf */,
+				8BAB3AF010BDAAB5002E1AC9 /* GTMXcodePreferences.xib */,
+				8B57115C0B8214120085059B /* GTM.icns */,
+				8B780F5D0B6A5F6B00AE0B76 /* GTM.xcspec */,
+				8D5B49B7048680CD000E48DA /* Info.plist */,
+				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		19C28FB8FE9D52D311CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8BF59CB40CD83C12002537F0 /* GTM Xcode Plugin.xcplugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		32C88E010371C26100C91783 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				8B78107E0B6A91C800AE0B76 /* GTMXcodePreferences.h */,
+				8B78107F0B6A91C800AE0B76 /* GTMXcodePreferences.m */,
+				8BFB91B50B8A502700953506 /* GTMXcodeGCovItem.m */,
+				8BE55E8010B606E600FF0A61 /* GTMXcodeCorrectWhiteSpace.m */,
+				8B5711550B815A9D0085059B /* GTMXcodeCreateUnitTextExecutable.m */,
+				8B07C2140B690EB800827344 /* GTMXcodeMenuItem.h */,
+				8B07C2150B690EB800827344 /* GTMXcodeMenuItem.m */,
+				8B07C2100B690E5300827344 /* GTMXcodeAboutItem.m */,
+				8B780D130B69CF4100AE0B76 /* GTMXcodeQuickLinks.m */,
+				8BC7D7BA0B68574C008442D0 /* GTMXcodePlugin.h */,
+				8BC7D7BB0B68574C008442D0 /* GTMXcodePlugin.m */,
+				32DBCF630370AF2F00C91783 /* GTMXcodePlugin.pch */,
+				8BD785170B8BE78A009EF861 /* NSTask+Script.h */,
+				8BD785180B8BE78A009EF861 /* NSTask+Script.m */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		8BB289D30DD0BBC800A9BDBD /* google-toolbox-for-mac */ = {
+			isa = PBXGroup;
+			children = (
+				8BB296480DD0BC0500A9BDBD /* DebugUtils */,
+				8BB2964D0DD0BC0500A9BDBD /* Foundation */,
+				8BB2968B0DD0BC0500A9BDBD /* GTMDefines.h */,
+				8BB296BF0DD0BC0500A9BDBD /* XcodeConfig */,
+			);
+			name = "google-toolbox-for-mac";
+			path = ..;
+			sourceTree = SOURCE_ROOT;
+		};
+		8BB296480DD0BC0500A9BDBD /* DebugUtils */ = {
+			isa = PBXGroup;
+			children = (
+				8BB2AE830DD0BD2F00A9BDBD /* GTMDebugSelectorValidation.h */,
+				8BB2964A0DD0BC0500A9BDBD /* GTMMethodCheck.h */,
+				8BB2964B0DD0BC0500A9BDBD /* GTMMethodCheck.m */,
+			);
+			path = DebugUtils;
+			sourceTree = "<group>";
+		};
+		8BB2964D0DD0BC0500A9BDBD /* Foundation */ = {
+			isa = PBXGroup;
+			children = (
+				8BB296540DD0BC0500A9BDBD /* GTMGarbageCollection.h */,
+				8BB296680DD0BC0500A9BDBD /* GTMNSEnumerator+Filter.h */,
+				8BB296690DD0BC0500A9BDBD /* GTMNSEnumerator+Filter.m */,
+				8BB296740DD0BC0500A9BDBD /* GTMObjC2Runtime.h */,
+				8BB296750DD0BC0500A9BDBD /* GTMObjC2Runtime.m */,
+			);
+			path = Foundation;
+			sourceTree = "<group>";
+		};
+		8BB296BF0DD0BC0500A9BDBD /* XcodeConfig */ = {
+			isa = PBXGroup;
+			children = (
+				8BB296C00DD0BC0500A9BDBD /* Project */,
+				8BB296D30DD0BC0500A9BDBD /* Target */,
+			);
+			path = XcodeConfig;
+			sourceTree = "<group>";
+		};
+		8BB296C00DD0BC0500A9BDBD /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				8BB296C20DD0BC0500A9BDBD /* DebugLeopardOrLater.xcconfig */,
+				8BB296C50DD0BC0500A9BDBD /* ReleaseLeopardOrLater.xcconfig */,
+			);
+			path = Project;
+			sourceTree = "<group>";
+		};
+		8BB296D30DD0BC0500A9BDBD /* Target */ = {
+			isa = PBXGroup;
+			children = (
+				8BB296D50DD0BC0500A9BDBD /* LoadableBundle.xcconfig */,
+				8BB296D60DD0BC0500A9BDBD /* LoadableBundleGCSupported.xcconfig */,
+			);
+			path = Target;
+			sourceTree = "<group>";
+		};
+		8BF07EB10B92140700CCC8D7 /* XcodeHeaders */ = {
+			isa = PBXGroup;
+			children = (
+				8BF07EB40B92140700CCC8D7 /* PBXAppDelegate.h */,
+				8BF07EB50B92140700CCC8D7 /* PBXChangeNotification.h */,
+				8BF07EB60B92140700CCC8D7 /* PBXContainer.h */,
+				8BF07EB70B92140700CCC8D7 /* PBXContainerItemChangeNotification.h */,
+				8BF07EB80B92140700CCC8D7 /* PBXDocumentController.h */,
+				8BF07EB90B92140700CCC8D7 /* PBXExtendedApplication.h */,
+				8BF07EBA0B92140700CCC8D7 /* PBXLSPlugin.h */,
+				8BF07EBB0B92140700CCC8D7 /* PBXModule.h */,
+				8BF07EBC0B92140700CCC8D7 /* PBXObject.h */,
+				8BF07EBD0B92140700CCC8D7 /* PBXPreferencesModule.h */,
+				8BF07EBE0B92140700CCC8D7 /* PBXPreferencesPaneModule.h */,
+				8BF07EBF0B92140700CCC8D7 /* PBXProject.h */,
+				8BF07EC00B92140700CCC8D7 /* PBXProjectDocument.h */,
+				8BF07EC10B92140700CCC8D7 /* PBXSelection.h */,
+				8BF07EC20B92140700CCC8D7 /* PBXTarget.h */,
+				8BF07EC30B92140700CCC8D7 /* XcodeClasses.h */,
+			);
+			path = XcodeHeaders;
+			sourceTree = "<group>";
+		};
+		8BF59CFD0CD8C9F2002537F0 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8BF59CF80CD8C9EC002537F0 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8BF59C950CD83C12002537F0 /* GTMXcodePlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8BF59CB10CD83C12002537F0 /* Build configuration list for PBXNativeTarget "GTMXcodePlugin" */;
+			buildPhases = (
+				8BF59C960CD83C12002537F0 /* Resources */,
+				F40639D50DAAAD8700082204 /* AppleScript */,
+				8BF59CA10CD83C12002537F0 /* Sources */,
+				8BF59CAD0CD83C12002537F0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GTMXcodePlugin;
+			productInstallPath = "$(HOME)/Library/Bundles";
+			productName = GoogleBundle;
+			productReference = 8BF59CB40CD83C12002537F0 /* GTM Xcode Plugin.xcplugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		089C1669FE841209C02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = NO;
+			};
+			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "GTMXcodePlugin" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 089C166AFE841209C02AAC07 /* GoogleBundle */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8BF59C950CD83C12002537F0 /* GTMXcodePlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8BF59C960CD83C12002537F0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8BF59C970CD83C12002537F0 /* InfoPlist.strings in Resources */,
+				8BF59C980CD83C12002537F0 /* GTM.xcspec in Resources */,
+				8BF59C990CD83C12002537F0 /* GTM.icns in Resources */,
+				8BF59CA00CD83C12002537F0 /* Credits.rtf in Resources */,
+				8BAB3AF210BDAAB5002E1AC9 /* GTMXcodePreferences.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8BF59CA10CD83C12002537F0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8BF59CA20CD83C12002537F0 /* GTMXcodePlugin.m in Sources */,
+				8BF59CA30CD83C12002537F0 /* GTMXcodeAboutItem.m in Sources */,
+				8BF59CA40CD83C12002537F0 /* GTMXcodeMenuItem.m in Sources */,
+				8BF59CA50CD83C12002537F0 /* GTMXcodeQuickLinks.m in Sources */,
+				8BF59CA60CD83C12002537F0 /* GTMXcodePreferences.m in Sources */,
+				8BF59CA70CD83C12002537F0 /* GTMXcodeCreateUnitTextExecutable.m in Sources */,
+				8BF59CA90CD83C12002537F0 /* GTMXcodeGCovItem.m in Sources */,
+				8BF59CAC0CD83C12002537F0 /* NSTask+Script.m in Sources */,
+				8BB2ADE10DD0BC0B00A9BDBD /* GTMMethodCheck.m in Sources */,
+				8BB2ADF40DD0BC0B00A9BDBD /* GTMNSEnumerator+Filter.m in Sources */,
+				8BB2ADFC0DD0BC0B00A9BDBD /* GTMObjC2Runtime.m in Sources */,
+				8BE55E8210B606E600FF0A61 /* GTMXcodeCorrectWhiteSpace.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C167EFE841241C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB913F08733D840010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8BB296C20DD0BC0500A9BDBD /* DebugLeopardOrLater.xcconfig */;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GTM_PRODUCT_NAME = "$(PROJECT_NAME)";
+				GTM_VERSIONINFO_ABOUT = "© $(GTM_VERSION_COPYRIGHT) Google Inc.";
+				GTM_VERSIONINFO_FINDER = "$(GTM_PRODUCT_NAME) $(GTM_VERSIONINFO_LONG)$(GTM_VERSION_EXTRAINFO)$(GTM_VERSION_DEBUG_FLAG), © $(GTM_VERSION_COPYRIGHT) Google Inc.";
+				GTM_VERSIONINFO_HUMAN = "$(GTM_VERSIONINFO_SHORT)$(GTM_VERSION_EXTRAINFO)";
+				GTM_VERSIONINFO_LONG = "$(GTM_VERSIONINFO_SHORT).$(GTM_VERSION_BUILDNUMBER)";
+				GTM_VERSIONINFO_SHORT = "$(GTM_VERSION_MAJOR).$(GTM_VERSION_MINOR).$(GTM_VERSION_FIXLEVEL)";
+				GTM_VERSION_BUILDNUMBER = 0;
+				GTM_VERSION_COPYRIGHT = "2005-2010";
+				GTM_VERSION_FIXLEVEL = 6;
+				GTM_VERSION_MAJOR = 10;
+				GTM_VERSION_MINOR = 0;
+				INFOPLIST_FILE = Resources/Info.plist;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lcrypto",
+					"-undefined",
+					dynamic_lookup,
+				);
+				PRODUCT_NAME = "GTM Xcode Plugin";
+				WRAPPER_EXTENSION = xcplugin;
+			};
+			name = Debug;
+		};
+		1DEB914008733D840010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8BB296C50DD0BC0500A9BDBD /* ReleaseLeopardOrLater.xcconfig */;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GTM_PRODUCT_NAME = "$(PROJECT_NAME)";
+				GTM_VERSIONINFO_ABOUT = "© $(GTM_VERSION_COPYRIGHT) Google Inc.";
+				GTM_VERSIONINFO_FINDER = "$(GTM_PRODUCT_NAME) $(GTM_VERSIONINFO_LONG)$(GTM_VERSION_EXTRAINFO)$(GTM_VERSION_DEBUG_FLAG), © $(GTM_VERSION_COPYRIGHT) Google Inc.";
+				GTM_VERSIONINFO_HUMAN = "$(GTM_VERSIONINFO_SHORT)$(GTM_VERSION_EXTRAINFO)";
+				GTM_VERSIONINFO_LONG = "$(GTM_VERSIONINFO_SHORT).$(GTM_VERSION_BUILDNUMBER)";
+				GTM_VERSIONINFO_SHORT = "$(GTM_VERSION_MAJOR).$(GTM_VERSION_MINOR).$(GTM_VERSION_FIXLEVEL)";
+				GTM_VERSION_BUILDNUMBER = 0;
+				GTM_VERSION_COPYRIGHT = "2005-2010";
+				GTM_VERSION_FIXLEVEL = 6;
+				GTM_VERSION_MAJOR = 10;
+				GTM_VERSION_MINOR = 0;
+				INFOPLIST_FILE = Resources/Info.plist;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lcrypto",
+					"-undefined",
+					dynamic_lookup,
+				);
+				PRODUCT_NAME = "GTM Xcode Plugin";
+				WRAPPER_EXTENSION = xcplugin;
+			};
+			name = Release;
+		};
+		8BF59CB20CD83C12002537F0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8BB296D60DD0BC0500A9BDBD /* LoadableBundleGCSupported.xcconfig */;
+			buildSettings = {
+				GOOGLE_VERSION_EXTRAINFO = "(XCode 3.0)";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				SDKROOT = "${DEVELOPER_SDK_DIR}/MacOSX10.5.sdk";
+			};
+			name = Debug;
+		};
+		8BF59CB30CD83C12002537F0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8BB296D60DD0BC0500A9BDBD /* LoadableBundleGCSupported.xcconfig */;
+			buildSettings = {
+				GOOGLE_VERSION_EXTRAINFO = "(XCode 3.0)";
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				SDKROOT = "${DEVELOPER_SDK_DIR}/MacOSX10.5.sdk";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "GTMXcodePlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB913F08733D840010E9CD /* Debug */,
+				1DEB914008733D840010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8BF59CB10CD83C12002537F0 /* Build configuration list for PBXNativeTarget "GTMXcodePlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8BF59CB20CD83C12002537F0 /* Debug */,
+				8BF59CB30CD83C12002537F0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 089C1669FE841209C02AAC07 /* Project object */;
+}

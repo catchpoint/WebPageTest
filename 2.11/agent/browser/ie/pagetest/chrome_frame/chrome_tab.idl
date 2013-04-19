@@ -1,0 +1,189 @@
+// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// This file will be processed by the MIDL tool to
+// produce the type library (chrome_tab.tlb) and marshalling code.
+
+#include "olectl.h"
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+  object,
+  uuid(FB243E4B-8AC2-4840-95F2-91B9AF9CFF10),
+  dual,
+  nonextensible,
+  helpstring("IChromeFrame Interface"),
+  pointer_default(unique)
+]
+interface IChromeFrame : IDispatch {
+  [propget, id(1)]
+  HRESULT src([out, retval] BSTR* src);
+  [propput, id(1)]
+  HRESULT src([in] BSTR src);
+
+  [id(3)]
+  HRESULT postMessage([in] BSTR message, [in, optional] VARIANT target);
+
+  [id(4), propget]
+  HRESULT onload([out, retval] VARIANT* onload_handler);
+  [id(4), propput]
+  HRESULT onload([in] VARIANT onload_handler);
+
+  [propget, id(5)]
+  HRESULT onloaderror([out, retval] VARIANT* onerror_handler);
+  [propput, id(5)]
+  HRESULT onloaderror([in] VARIANT onerror_handler);
+
+  [propget, id(6)]
+  HRESULT onmessage([out, retval] VARIANT* onmessage_handler);
+  [propput, id(6)]
+  HRESULT onmessage([in] VARIANT onmessage_handler);
+
+  [propget, id(DISPID_READYSTATE)]
+  HRESULT readyState([out, retval] long* ready_state);
+
+  [id(7)]
+  HRESULT addEventListener([in] BSTR event_type, [in] IDispatch* listener,
+                           [in, optional] VARIANT use_capture);
+
+  [id(8)]
+  HRESULT removeEventListener([in] BSTR event_type, [in] IDispatch* listener,
+                              [in, optional] VARIANT use_capture);
+
+  [propget, id(9)]
+  HRESULT version([out, retval] BSTR* version);
+
+  [id(10), hidden]
+  // This method is available only when the control is in privileged mode.
+  HRESULT postPrivateMessage([in] BSTR message,
+                             [in] BSTR origin,
+                             [in] BSTR target);
+
+  [propget, id(11)]
+  HRESULT useChromeNetwork([out, retval] VARIANT_BOOL* pVal);
+  [propput, id(11)]
+  HRESULT useChromeNetwork([in] VARIANT_BOOL newVal);
+
+  [id(12), hidden]
+  // Deprecated. Returns E_NOTIMPL.
+  HRESULT installExtension([in] BSTR crx_path);
+
+  [id(13), hidden]
+  // Deprecated. Returns E_NOTIMPL.
+  HRESULT loadExtension([in] BSTR extension_path);
+
+  [id(14), hidden]
+  // Deprecated. Returns E_NOTIMPL.
+  HRESULT getEnabledExtensions();
+
+  [id(15)]
+  // This method bootstraps the BHO if it is not already loaded.
+  HRESULT registerBhoIfNeeded();
+};
+
+[
+  object,
+  uuid(E98FDFD9-312B-444a-A640-8E88F3CC08B8),
+  oleautomation,
+  nonextensible,
+  hidden,
+]
+// Internal implementation interface. Not intended as an API. May change
+// frequently, don't treat this as frozen.
+interface IChromeFramePrivileged : IUnknown {
+  // If the host returns false for wants_privileged, the control
+  // won't enable privileged mode.
+  HRESULT GetWantsPrivileged([out] boolean *wants_privileged);
+  // The profile name we want to use.
+  HRESULT GetChromeProfileName([out] BSTR *profile_name);
+  // Called when an automation version mismatch occurs. Returns S_OK if
+  // a dialog should be showed to the user by this CF instance, S_FALSE if
+  // not.
+  HRESULT ShouldShowVersionMismatchDialog();
+};
+
+// Expose this service to the ChromeFrame control to trigger privileged
+// mode. If the control is in privileged mode, it will forward messages
+// to the onmessage handler irrespective of origin.
+cpp_quote("#define SID_ChromeFramePrivileged __uuidof(IChromeFramePrivileged)")
+
+typedef enum {
+  CF_EVENT_DISPID_ONLOAD = 1,
+  CF_EVENT_DISPID_ONLOADERROR,
+  CF_EVENT_DISPID_ONMESSAGE,
+  CF_EVENT_DISPID_ONPRIVATEMESSAGE,
+  CF_EVENT_DISPID_ONCHANNELERROR,
+  CF_EVENT_DISPID_ONCLOSE,
+  CF_EVENT_DISPID_ONREADYSTATECHANGED = DISPID_READYSTATECHANGE,
+} ChromeFrameEventDispId;
+
+[
+  uuid(6F2664E1-FF6E-488A-BCD1-F4CA6001DFCC),
+  version(1.0),
+  helpstring("ChromeTab 1.0 Type Library")
+]
+library ChromeTabLib {
+  importlib("stdole2.tlb");
+
+  [uuid(388B5D64-CE67-415b-9B0F-745C56E868E7)]
+  dispinterface DIChromeFrameEvents {
+   properties:
+    // None.
+
+   methods:
+    [id(CF_EVENT_DISPID_ONLOAD)]
+    void onload();
+    
+    [id(CF_EVENT_DISPID_ONLOADERROR)]
+    void onloaderror();
+    
+    [id(CF_EVENT_DISPID_ONMESSAGE)]
+    void onmessage([in] IDispatch* event);
+    
+    [id(CF_EVENT_DISPID_ONREADYSTATECHANGED)]
+    void onreadystatechanged();
+    
+    [id(CF_EVENT_DISPID_ONPRIVATEMESSAGE)]
+    // This event is only fired when the control is in privileged mode.
+    void onprivatemessage([in] IDispatch* event, [in] BSTR target);
+
+    [id(CF_EVENT_DISPID_ONCHANNELERROR)]
+    // This event is fired when there is an error in communication channel with
+    // Chrome and Automation must be reconnected to continue.
+    void onchannelerror();
+
+    [id(CF_EVENT_DISPID_ONCLOSE)]
+    // This event is fired when the script inside the page wants to close it.
+    // This is just a notification, there is no way to prevent the script from
+    // closing.
+    void onclose();
+  };
+
+  [uuid(BB1176EE-20DD-41DC-9D1E-AC1335C7BBB0)]
+  coclass HtmlFilter {
+    [default] interface IUnknown;
+  };
+
+  [uuid(9875BFAF-B04D-445E-8A69-BE36838CDE3E)]
+  coclass ChromeProtocol {
+    [default] interface IUnknown;
+  };
+
+  [uuid(3E1D0E7F-F5E3-44CC-AA6A-C0A637619AB8), control]
+  coclass ChromeActiveDocument {
+    [default] interface IChromeFrame;
+  };
+
+  [uuid(E0A900DF-9611-4446-86BD-4B1D47E7DB2A), control]
+  coclass ChromeFrame {
+    [default] interface IChromeFrame;
+    [default, source] dispinterface DIChromeFrameEvents;
+  };
+
+  [uuid(ECB3C477-1A0A-44bd-BB57-78F9EFE34FA7)]
+  coclass ChromeFrameBHO {
+    [default] interface IUnknown;
+  };
+};

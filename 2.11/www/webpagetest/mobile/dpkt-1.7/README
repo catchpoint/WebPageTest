@@ -1,0 +1,10 @@
+
+dpkt
+----
+
+Fast, simple packet creation and parsing.
+
+We have no docs, but only sample code (see examples/) for now.
+
+---
+http://dpkt.googlecode.com/

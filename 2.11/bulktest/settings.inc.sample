@@ -1,0 +1,75 @@
+<?php
+set_time_limit(0);
+//error_reporting(0);
+
+// global options
+$video = true;
+$private = false;
+$docComplete = true;
+$runs = 9;
+$iterations = 1;
+$fvonly = true;
+$options = 'tcpdump=1&bodies=1';
+$server = 'http://www.webpagetest.org/';
+$key='';	// insert API key here
+
+// list of locations to use
+$locations = array();
+$locations[] = 'Dulles_IE8';
+$locations[] = 'Dulles:Chrome.DSL';
+
+/**
+* shared function to load the results file
+* 
+* @param mixed $results
+*/
+function LoadResults(&$results)
+{
+    $ret = false;
+
+    if( is_file('./results.json') ) {
+        $results = json_decode(file_get_contents('./results.json'), true);
+        if (is_array($results) && count($results)) {
+            $ret = true;
+        }
+    }
+    
+    return $ret;
+}  
+
+/**
+* shared function to write out the results file
+*/
+function StoreResults(&$results) {
+    file_put_contents('./results.json', json_encode($results));
+    
+    // store a tab-delimited file as well
+    $fields = array();
+    if (count($results)) {
+        foreach($results[0] as $field => $value) {
+            $fields[] = $field;
+        }
+        
+        if (count($fields)) {
+            $file = fopen('./results.txt', 'w+');
+            if ($file) {
+                foreach($fields as $field) {
+                    fwrite($file, "$field\t");
+                }
+                fwrite($file, "\n");
+                foreach($results as &$result) {
+                    foreach($fields as $field) {
+                        if (array_key_exists($field, $result)) {
+                            fwrite($file, $result[$field]);
+                        }
+                        fwrite($file, "\t");
+                    }
+                    fwrite($file, "\n");
+                }
+                fclose($file);
+            }
+        }
+    }
+}
+
+?>
