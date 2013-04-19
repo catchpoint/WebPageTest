@@ -25,12 +25,18 @@ if (LoadResults($results)) {
         if ($valid) {
             $url = $result['url'];
             $location = $locations[$result['location']];
-            if( !array_key_exists($url, $data) ) {
-                $data[$url] = array();
+            $index = 1;
+            $key = $url;
+            while (array_key_exists($key, $data) && array_key_exists($location, $data[$key])) {
+              $index++;
+              $key = "$url ($index)";
             }
-            $data[$url][$location] = array();
-            $data[$url][$location]['id'] = $result['id'];
-            $data[$url][$location]['result'] = $result['result'];
+            if( !array_key_exists($key, $data) )
+                $data[$key] = array();
+            $data[$key]['url'] = $url;
+            $data[$key][$location] = array();
+            $data[$key][$location]['id'] = $result['id'];
+            $data[$key][$location]['result'] = $result['result'];
             if( $result['result'] == 0 || $result['result'] == 99999 ) {
                 if (!array_key_exists($location, $stats)) {
                     $stats[$location] = array();
@@ -39,8 +45,8 @@ if (LoadResults($results)) {
                     }
                 }
                 foreach ($metrics as $metric) {
-                    $data[$url][$location][$metric] = $result[$metric];
-                    $data[$url][$location]["$metric.stddev"] = $result["$metric.stddev"];
+                    $data[$key][$location][$metric] = $result[$metric];
+                    $data[$key][$location]["$metric.stddev"] = $result["$metric.stddev"];
                     $stats[$location][$metric][] = $result[$metric];
                 }
             }
@@ -54,8 +60,8 @@ if (LoadResults($results)) {
       foreach($locations as $loc => $label)
           fwrite($file, ",$label");
       fwrite($file, "\r\n");
-      foreach($data as $url => &$urlData) {
-        fwrite($file, "\"$url\"");
+      foreach($data as $key => &$urlData) {
+        fwrite($file, "\"{$urlData['url']}\"");
         foreach($locations as $loc => $label) {
           $test = '';
           if (array_key_exists($label, $urlData) &&
@@ -83,8 +89,8 @@ if (LoadResults($results)) {
                 $first = false;
             }
             fwrite($file, "Test Comparison\r\n");
-            foreach($data as $url => &$urlData) {
-                fwrite($file, "\"$url\",");
+            foreach($data as $key => &$urlData) {
+                fwrite($file, "\"{$urlData['url']}\",");
                 // check and make sure we have data for all of the configurations for this url
                 $valid = true;
                 foreach($locations as $loc => $label) {
