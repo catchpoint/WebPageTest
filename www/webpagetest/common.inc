@@ -1779,8 +1779,11 @@ function loadVideo($path, &$frames)
 */
 function xml_entities($text, $charset = 'UTF-8')
 {
-    // First we encode html characters that are also invalid in xml
-    $text = htmlentities($text, ENT_COMPAT, $charset, false);
+    // strip out any unprintable characters
+    $text = preg_replace('/[\x00-\x1F\x80-\x9F]/u', '', $text);
+    
+    // encode html characters that are also invalid in xml
+    $text = htmlentities($text, ENT_COMPAT | ENT_SUBSTITUTE, $charset, false);
    
     // XML character entity array from Wiki
     // Note: &apos; is useless in UTF-8 or in UTF-16
@@ -1788,13 +1791,12 @@ function xml_entities($text, $charset = 'UTF-8')
    
     // Building the regex string to exclude all strings with xml special char
     $arr_xml_special_char_regex = "(?";
-    foreach($arr_xml_special_char as $key => $value){
+    foreach($arr_xml_special_char as $key => $value)
         $arr_xml_special_char_regex .= "(?!$value)";
-    }
     $arr_xml_special_char_regex .= ")";
    
     // Scan the array for &something_not_xml; syntax
-    $pattern = "/$arr_xml_special_char_regex&([a-zA-Z0-9]+;)/";
+    $pattern = "/$arr_xml_special_char_regex&([a-zA-Z0-9]*;)/";
    
     // Replace the &something_not_xml; with &amp;something_not_xml;
     $replacement = '&amp;${1}';
