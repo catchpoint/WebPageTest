@@ -572,6 +572,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       WptTrace(loglevel::kFrequentEvent, 
         _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
     }
+    continue_processing = false;
     consumed = false;
   } else if(cmd == _T("addcustomrule")) {
     int separator = command.target.Find(_T('='));
