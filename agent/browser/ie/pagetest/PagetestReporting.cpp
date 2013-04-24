@@ -2688,8 +2688,9 @@ bool CPagetestReporting::IsCDN(CWinInetRequest * w, CString &provider)
         header.MakeLower();
         CString pattern = CA2T(cdn_header->pattern);
         pattern.MakeLower();
-        if (pattern.GetLength() && header.GetLength() && 
-          header.Find(pattern) >= 0) {
+        if (header.GetLength() &&
+            (!pattern.GetLength() ||
+             header.Find(pattern) >= 0)) {
             found = true;
             ret = true;
             provider = cdn_header->name;

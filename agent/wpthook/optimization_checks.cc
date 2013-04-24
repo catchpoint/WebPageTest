@@ -533,30 +533,14 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
       header.MakeLower();
       CStringA pattern = cdn_header->pattern;
       pattern.MakeLower();
-      if (pattern.GetLength() && header.GetLength() && 
-        header.Find(pattern) >= 0) {
+      if (header.GetLength() &&
+          (!pattern.GetLength() ||
+           header.Find(pattern) >= 0)) {
           ret = true;
           provider = cdn_header->name;
       }
     }
 
-  }
-
-  if( !ret )  {
-    // now check http headers for known CDNs (cheap check)
-    int cdn_header_count = _countof(cdnHeaderList);
-    for (int i = 0; i < cdn_header_count && !ret; i++) {
-      CDN_PROVIDER_HEADER * cdn_header = &cdnHeaderList[i];
-      CStringA header = request->GetResponseHeader(cdn_header->response_field);
-      header.MakeLower();
-      CStringA pattern = cdn_header->pattern;
-      pattern.MakeLower();
-      if (pattern.GetLength() && header.GetLength() && 
-        header.Find(pattern) >= 0) {
-          ret = true;
-          provider = cdn_header->name;
-      }
-    }
   }
 
   return ret;
