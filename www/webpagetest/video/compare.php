@@ -830,7 +830,14 @@ function DisplayGraphs() {
                 echo "dataTimes.setValue($row, 0, '$label');\n";
                 $column = 1;
                 foreach($tests as &$test) {
-                    echo "dataTimes.setValue($row, $column, {$test['pageData'][$test['run']][$test['cached']][$metric]});\n";
+                    if (array_key_exists('pageData', $test) &&
+                        array_key_exists('run', $test) &&
+                        array_key_exists($test['run'], $test['pageData']) &&
+                        array_key_exists('cached', $test) &&
+                        array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
+                        array_key_exists($metric, $test['pageData'][$test['run']][$test['cached']]) &&
+                        strlen($test['pageData'][$test['run']][$test['cached']][$metric]))
+                      echo "dataTimes.setValue($row, $column, {$test['pageData'][$test['run']][$test['cached']][$metric]});\n";
                     $column++;
                 }
                 $row++;
@@ -839,8 +846,18 @@ function DisplayGraphs() {
             echo "dataBytes.setValue(0, 0, 'Total');\n";
             $column = 1;
             foreach($tests as &$test) {
-                echo "dataRequests.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['requests']});\n";
-                echo "dataBytes.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['bytesIn']});\n";
+                if (array_key_exists('pageData', $test) &&
+                    array_key_exists('run', $test) &&
+                    array_key_exists($test['run'], $test['pageData']) &&
+                    array_key_exists('cached', $test) &&
+                    array_key_exists($test['cached'], $test['pageData'][$test['run']])) {
+                    if (array_key_exists('requests', $test['pageData'][$test['run']][$test['cached']]) &&
+                        strlen($test['pageData'][$test['run']][$test['cached']]['requests']))
+                        echo "dataRequests.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['requests']});\n";
+                    if (array_key_exists('bytesIn', $test['pageData'][$test['run']][$test['cached']]) &&
+                        strlen($test['pageData'][$test['run']][$test['cached']]['bytesIn']))
+                        echo "dataBytes.setValue(0, $column, {$test['pageData'][$test['run']][$test['cached']]['bytesIn']});\n";
+                }
                 $column++;
             }
             $row = 1;
