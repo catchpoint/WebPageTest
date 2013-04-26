@@ -33,92 +33,46 @@
 
 #elements-content > ol {
     display: inline-block;
+    min-height: 100%;
 }
 
 #elements-content .editing {
     margin-left: 8px;
 }
 
+#elements-content .elements-gutter-decoration {
+    position: absolute;
+    left: 1px;
+    margin-top: 2px;
+    height: 8px;
+    width: 8px;
+    border-radius: 4px;
+    border: 1px solid orange;
+    background-color: orange;
+}
+
+#elements-content .elements-gutter-decoration.elements-has-decorated-children {
+    opacity: 0.5;
+}
+
+#elements-content .CodeMirror {
+    /* Consistent with the .editing class in inspector.css */
+    -webkit-box-shadow: rgba(0, 0, 0, .5) 3px 3px 4px;
+    outline: 1px solid rgb(66%, 66%, 66%) !important;
+    background-color: white;
+}
+
+#elements-content .CodeMirror pre {
+    padding: 0;
+}
+
+#elements-content .CodeMirror-lines {
+    padding: 0;
+}
+
 .elements-tree-editor {
     -webkit-user-select: text;
     -webkit-user-modify: read-write-plaintext-only;
-}
-
-.crumbs {
-    display: inline-block;
-    font-size: 11px;
-    line-height: 19px;
-    text-shadow: rgba(255, 255, 255, 0.75) 0 1px 0;
-    color: rgb(20, 20, 20);
-    margin-left: -1px;
-    padding-right: 12px;
-}
-
-.crumbs .crumb {
-    height: 24px;
-    border-width: 0 12px 0 2px;
-    -webkit-border-image: url(Images/segment.png) 0 12 0 2;
-    margin-right: -12px;
-    padding-left: 18px;
-    padding-right: 2px;
-    white-space: nowrap;
-    line-height: 23px;
-    float: right;
-}
-
-.crumbs .crumb.collapsed > * {
-    display: none;
-}
-
-.crumbs .crumb.collapsed::before {
-    content: "\2026";
-    font-weight: bold;
-}
-
-.crumbs .crumb.compact .extra {
-    display: none;
-}
-
-.crumbs .crumb.dimmed {
-    color: rgba(0, 0, 0, 0.45);
-}
-
-.crumbs .crumb.start {
-    padding-left: 7px;
-}
-
-.crumbs .crumb.end {
-    border-width: 0 2px 0 2px;
-    padding-right: 6px;
-    -webkit-border-image: url(Images/segmentEnd.png) 0 2 0 2;
-}
-
-.crumbs .crumb.selected {
-    -webkit-border-image: url(Images/segmentSelected.png) 0 12 0 2;
-    color: black;
-    text-shadow: rgba(255, 255, 255, 0.5) 0 1px 0;
-}
-
-.crumbs .crumb.selected:hover {
-    -webkit-border-image: url(Images/segmentSelected.png) 0 12 0 2;
-}
-
-.crumbs .crumb.selected.end, .crumbs .crumb.selected.end:hover {
-    -webkit-border-image: url(Images/segmentSelectedEnd.png) 0 2 0 2;
-}
-
-.crumbs .crumb:hover {
-    -webkit-border-image: url(Images/segmentHover.png) 0 12 0 2;
-    color: black;
-}
-
-.crumbs .crumb.dimmed:hover {
-    -webkit-border-image: url(Images/segmentHover.png) 0 12 0 2;
-    color: rgba(0, 0, 0, 0.75);
-}
-
-.crumbs .crumb.end:hover {
-    -webkit-border-image: url(Images/segmentHoverEnd.png) 0 2 0 2;
 }
 
 .metrics {
@@ -131,7 +85,6 @@
 .metrics .label {
     position: absolute;
     font-size: 10px;
-    color: black;
     margin-left: 3px;
     padding-left: 2px;
     padding-right: 2px;
@@ -239,6 +192,10 @@
     margin-left: 0px;
 }
 
+.styles-section.computed-style .properties li.not-parsed-ok {
+    margin-left: -6px;
+}
+
 .styles-section .properties li.not-parsed-ok img.exclamation-mark {
     content: url(Images/warningIcon.png);
     opacity: 0.75;
@@ -253,6 +210,10 @@
     -webkit-user-select: none;
     cursor: default;
     z-index: 1;
+}
+
+.styles-section.computed-style .properties li.not-parsed-ok img.exclamation-mark {
+    left: 0;
 }
 
 .styles-section .header {
@@ -285,6 +246,14 @@
     color: inherit;
 }
 
+.styles-section .selector {
+    color: #888;
+}
+
+.styles-section .selector-matches {
+    color: #222;
+}
+
 .styles-section a[data-uncopyable] {
     display: inline-block;
 }
@@ -297,7 +266,7 @@
 .styles-section .properties {
     display: none;
     margin: 0;
-    padding: 2px 4px 0 6px;
+    padding: 2px 4px 0 0;
     list-style: none;
     clear: both;
 }
@@ -321,6 +290,7 @@
 .styles-section .properties li {
     margin-left: 12px;
     padding-left: 22px;
+    padding-top: 0;
     white-space: normal;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -352,7 +322,7 @@
 }
 
 .styles-section .properties > li.child-editing .webkit-css-property {
-    margin-left: -8px;
+    margin-left: 0;
 }
 
 .styles-section.matched-styles .properties li {
@@ -362,6 +332,7 @@
 .styles-section .properties li.child-editing {
     word-wrap: break-word !important;
     white-space: normal !important;
+    padding-left: 0;
 }
 
 .styles-section .properties ol {
@@ -375,40 +346,30 @@
     display: block;
 }
 
-.styles-section .properties li.parent::before {
-    content: none;
+.styles-section.matched-styles .properties li.parent .expand-element {
+    -webkit-user-select: none;
+    background-image: url(Images/statusbarButtonGlyphs.png);
+    background-size: 320px 120px;
+    margin-right: 2px;
+    margin-left: -6px;
+    opacity: 0.55;
+    width: 8px;
+    height: 10px;
+    display: inline-block;
 }
 
-.styles-section .properties li.parent.expanded::before {
-    content: none;
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.styles-section.matched-styles .properties li.parent .expand-element {
+    background-image: url(Images/statusbarButtonGlyphs2x.png);
+}
 }
 
 .styles-section.matched-styles .properties li.parent .expand-element {
-    content: url(Images/treeRightTriangleBlack.png);
-    margin-right: 1px;
-    margin-left: -5px;
-    opacity: 0.6;
+    background-position: -4px -96px;
 }
 
 .styles-section.matched-styles .properties li.parent.expanded .expand-element {
-    content: url(Images/treeDownTriangleBlack.png);
-}
-
-.styles-section.computed-style .properties li.parent::before {
-    content: url(Images/treeRightTriangleBlack.png);
-    opacity: 0.75;
-    float: left;
-    width: 8px;
-    height: 8px;
-    margin-top: 0;
-    padding-right: 3px;
-    -webkit-user-select: none;
-    cursor: default;
-}
-
-.styles-section.computed-style .properties li.parent.expanded::before {
-    content: url(Images/treeDownTriangleBlack.png);
-    margin-top: 1px;
+    background-position: -20px -96px;
 }
 
 .styles-section .properties li .info {
@@ -440,7 +401,10 @@
     margin-left: 16px;
 }
 
-.styles-section .properties .overloaded, .styles-section .properties .inactive, .styles-section .properties .disabled {
+.styles-section .properties .overloaded,
+.styles-section .properties .inactive,
+.styles-section .properties .disabled,
+.styles-section .properties .not-parsed-ok {
     text-decoration: line-through;
 }
 
@@ -512,7 +476,7 @@
 }
 
 .event-bars .event-bar .header {
-    padding: 0 8px 0 18px;
+    padding: 0 8px 0 6px;
     min-height: 16px;
     opacity: 1.0;
     white-space: nowrap;
@@ -522,7 +486,6 @@
 
 .event-bars .event-bar .header .title {
     font-weight: normal;
-    color: black;
     text-shadow: white 0 1px 0;
 }
 
@@ -531,143 +494,109 @@
 }
 
 .event-bars .event-bar .header::before {
-    position: absolute;
-    top: 2px;
-    left: 7px;
+    -webkit-user-select: none;
+    background-image: url(Images/statusbarButtonGlyphs.png);
+    background-size: 320px 120px;
+    opacity: 0.5;
+    content: "a";
+    color: transparent;
+    text-shadow: none;
+    float: left;
     width: 8px;
-    height: 8px;
-    opacity: 0.75;
-    content: url(Images/treeRightTriangleBlack.png) !important;
+    margin-right: 4px;
+    margin-top: 2px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.event-bars .event-bar .header::before {
+    background-image: url(Images/statusbarButtonGlyphs2x.png);
+}
+}
+
+.event-bars .event-bar .header::before {
+    background-position: -4px -96px;
 }
 
 .event-bars .event-bar.expanded .header::before {
-    content: url(Images/treeDownTriangleBlack.png) !important;
+    background-position: -20px -96px;
 }
 
 .image-preview-container {
     background: transparent;
     text-align: center;
-    padding-left: 11px;
 }
 
 .image-preview-container img {
     margin: 2px auto;
+    max-width: 100px;
+    max-height: 100px;
     background-image: url(Images/checker.png);
     -webkit-user-select: text;
     -webkit-user-drag: auto;
 }
 
-/* https://github.com/bgrins/spectrum */
-.spectrum-container {
+
+.sidebar-pane.composite {
+    overflow: hidden;
     position: absolute;
-    top: 0;
-    left: 0;
-    display: inline-block;
-    background: rgba(230, 230, 230, 1) !important;
-    border: 1px solid #646464;
-    padding: 10px;
-    width: 220px;
-    z-index: 10;
-    -webkit-user-select: none;
 }
 
-.spectrum-top {
+.sidebar-pane.composite > .body {
+    height: 100%;
+}
+
+.sidebar-pane.composite .metrics {
+    border-bottom: 1px solid rgb(64%, 64%, 64%);
+    height: 206px;
+    display: -webkit-flex;
+    -webkit-flex-direction: column;
+    -webkit-align-items: center;
+    -webkit-justify-content: center;
+}
+
+.sidebar-pane.composite .metrics-and-computed .sidebar-pane-toolbar {
+    margin-top: 4px;
+    margin-bottom: -4px;
     position: relative;
-    width: 100%;
-    display: inline-block;
 }
 
-.spectrum-color {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 40px;
+.sidebar-pane.composite .sidebar-pane-toolbar > .sidebar-pane-subtitle {
+    left: 8px;
 }
 
-.spectrum-display-value {
-    -webkit-user-select: text;
-    position: relative;
-    left: 2px;
-    top: -6px;
+.sidebar-pane.composite .styles-section.read-only {
+    background-color: inherit;
 }
 
-.spectrum-hue {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 170px;
-    -webkit-box-reflect: right -28px;
+.panel.elements .sidebar-pane-toolbar > select {
+    float: right;
+    width: 23px;
+    height: 17px;
+    color: transparent;
+    background-color: transparent;
+    border: none;
+    background-repeat: no-repeat;
+    margin: 1px 0 0 0;
+    padding: 0;
+    -webkit-border-radius: 0;
+    -webkit-appearance: none;
 }
 
-.spectrum-fill {
-    /* Same as spectrum-color width to force aspect ratio. */
-    margin-top: 150px;
+.panel.elements .sidebar-pane-toolbar > select:hover {
+    background-position: -23px 0px;
 }
 
-.spectrum-range-container {
-    position: relative;
-    padding-bottom: 5px;
+.panel.elements .sidebar-pane-toolbar > select:active {
+    background-position: -46px 0px;
 }
 
-.spectrum-range-container * {
-    font-size: 11px;
-    vertical-align: middle;
+.panel.elements .sidebar-pane-toolbar > select.select-settings {
+    background-image: url(Images/paneSettingsButtons.png);
 }
 
-.spectrum-range-container label {
-    display: inline-block;
-    padding-right: 4px;
+.panel.elements .sidebar-pane-toolbar > select.select-filter {
+    background-image: url(Images/paneFilterButtons.png);
 }
-
-.spectrum-range-container input {
-    position: absolute;
-    left: 15px;
-    right: 40px;
-    margin: 3px 0 0 0;
-}
-
-.swatch, .spectrum-dragger, .spectrum-slider {
-    -webkit-user-select: none;
-}
-
-.spectrum-sat {
-    background-image: -webkit-linear-gradient(left, white, rgba(204, 154, 129, 0));
-}
-
-.spectrum-val {
-    background-image: -webkit-linear-gradient(bottom, black, rgba(204, 154, 129, 0));
-}
-
-.spectrum-hue {
-    background: -webkit-linear-gradient(top, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-}
-
-.spectrum-dragger {
-    border-radius: 5px;
-    height: 5px;
-    width: 5px;
-    border: 1px solid white;
-    cursor: pointer;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: black;
-}
-
-.spectrum-slider {
-    position: absolute;
-    top: 0;
-    cursor: pointer;
-    border: 1px solid black;
-    height: 4px;
-    left: -1px;
-    right: -1px;
-}
-
-.spectrum-container .swatch {
-    width: 20px;
-    height:20px;
-    margin: 0;
+.panel.elements .sidebar-pane-toolbar > select > option, .panel.elements .sidebar-pane-toolbar > select > hr {
+    color: black;
 }

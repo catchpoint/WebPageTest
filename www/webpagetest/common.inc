@@ -48,7 +48,7 @@ if (function_exists('apache_request_headers')) {
 }
 if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
     define('FRIENDLY_URLS', true);
-    define('VER_TIMELINE', '1/');       // version of the timeline javascript
+    define('VER_TIMELINE', '28/');       // version of the timeline javascript
 } else {
     define('FRIENDLY_URLS', false);
     define('VER_TIMELINE', '');       // Leave the timeline version empty

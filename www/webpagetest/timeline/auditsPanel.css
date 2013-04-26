@@ -63,13 +63,14 @@
     bottom: 0;
     padding: 0 0 0 16px;
     white-space: nowrap;
-    display: -webkit-box;
+    display: -webkit-flex;
     text-align: left;
-    -webkit-box-orient: vertical;
+    -webkit-flex-direction: column;
 }
 
 .audit-launcher-view h1 {
     padding-top: 15px;
+    -webkit-flex: none;
 }
 
 .audit-launcher-view h1.no-audits {
@@ -80,18 +81,23 @@
 }
 
 .audit-launcher-view div.button-container {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
     width: 100%;
     padding: 16px 0;
+    -webkit-flex: none;
 }
 
-.audit-launcher-view div.audit-categories-container {
+.audit-launcher-view div.button-container > button {
+    -webkit-align-self: flex-start;
+}
+
+.audit-launcher-view fieldset.audit-categories-container {
     position: relative;
     top: 11px;
     left: 0;
     width: 100%;
     overflow-y: auto;
+    border: 0 none;
+    -webkit-flex: none;
 }
 
 .audit-launcher-view button {
@@ -106,6 +112,7 @@
 .panel-enabler-view.audit-launcher-view label {
     padding: 0 0 5px 0;
     margin: 0;
+    -webkit-flex: none;
 }
 
 .panel-enabler-view.audit-launcher-view label.disabled {
@@ -114,12 +121,6 @@
 
 .audit-launcher-view input[type="checkbox"] {
     margin-left: 0;
-}
-
-.audit-launcher-view .resource-progress > img {
-    content: url(Images/spinner.gif);
-    vertical-align: text-top;
-    margin: 0 4px 0 8px;
 }
 
 .audit-result-view {
@@ -149,17 +150,37 @@
 }
 
 .audit-result-tree li.parent::before {
-    content: url(Images/treeRightTriangleBlack.png);
+    -webkit-user-select: none;
+    background-image: url(Images/statusbarButtonGlyphs.png);
+    background-size: 320px 120px;
+    opacity: 0.5;
     float: left;
     width: 8px;
-    height: 8px;
-    margin-top: 1px;
-    padding-right: 2px;
+    height: 10px;
+    content: "a";
+    color: transparent;
+    margin-left: 3px;
+    margin-right: 4px;
+    position: relative;
+    top: 1px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.audit-result-tree li.parent::before {
+    background-image: url(Images/statusbarButtonGlyphs2x.png);
+}
+}
+
+.audit-result-tree li.parent::before {
+    background-position: -4px -96px;
+}
+
+.audit-result-tree li.parent.expanded::before {
+    background-position: -20px -96px;
 }
 
 .audit-result-tree {
-    font-size: 11px;
-    line-height: 14px;
+    line-height: 16px;
     -webkit-user-select: text;
 }
 
@@ -167,7 +188,6 @@
     position: relative;
     padding: 2px 6px !important;
     margin: 0;
-    color: rgb(84, 84, 84);
     cursor: default;
     min-width: 100%;
 }
@@ -202,19 +222,6 @@
     margin-left: -12px
 }
 
-.audit-result-tree li.parent::before {
-    content: url(Images/treeRightTriangleBlack.png);
-    float: left;
-    width: 8px;
-    height: 8px;
-    margin-top: 0;
-    padding-right: 2px;
-}
-
-.audit-result-tree li.parent.expanded::before {
-    content: url(Images/treeDownTriangleBlack.png);
-}
-
 .audit-result-tree ol.children {
     display: none;
 }
@@ -225,11 +232,18 @@
 
 .audit-result {
     font-weight: bold;
-    color: black;
 }
 
 .audit-result img {
     float: left;
     margin-left: -28px;
     margin-top: -1px;
+}
+
+.audit-launcher-view .progress-bar-container {
+    display: inline-block;
+}
+
+.audit-launcher-view .progress-bar-container .progress-bar-stop-button {
+    display: none;
 }

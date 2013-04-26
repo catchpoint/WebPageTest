@@ -5,13 +5,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    font-size: 11px;
 }
 
 .network-log-grid.data-grid table.data {
     -webkit-background-size: 1px 82px;
     background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0)), color-stop(0.5, rgba(0, 0, 0, 0)), color-stop(0.5, rgba(0, 0, 0, 0.05)), to(rgba(0, 0, 0, 0.05)));
-    font-size: 11px;
 }
 
 .network-log-grid.data-grid.small table.data {
@@ -20,20 +18,18 @@
 
 .network-log-grid.data-grid td {
     line-height: 17px;
-    height: 37px;
+    height: 41px;
     border-right: 1px solid rgb(210, 210, 210);
     vertical-align: middle;
 }
 
 .network-log-grid.data-grid.small td {
-    height: 17px;
+    height: 21px;
 }
 
 .network-log-grid.data-grid th {
     border-bottom: 1px solid rgb(64%, 64%, 64%);
     height: 30px;
-    font-size: 11px;
-    font-weight: bold;
 }
 
 .network-log-grid.data-grid.small th {
@@ -57,8 +53,8 @@
     background-color: transparent;
     border: none;
     width: 100%;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: inherit;
+    color: inherit;
 }
 
 .network-log-grid.data-grid.small tr.offscreen {
@@ -69,7 +65,7 @@
     height: 41px;
 }
 
-.network-log-grid.data-grid tr.offscreen td {
+.network-log-grid.data-grid tr.offscreen > td > div {
     display: none;
 }
 
@@ -78,26 +74,11 @@
 }
 
 .network-log-grid.data-grid tr:not(.filler) td.name-column {
-    font-weight: bold;
     cursor: pointer;
 }
 
 #network-container:not(.brief-mode) .network-log-grid.data-grid td.name-column:hover {
     text-decoration: underline;
-}
-
-.network-log-grid.data-grid td.method-column,
-.network-log-grid.data-grid td.status-column,
-.network-log-grid.data-grid td.type-column,
-.network-log-grid.data-grid td.initiator-column,
-.network-log-grid.data-grid td.size-column,
-.network-log-grid.data-grid td.time-column {
-    background-color: rgba(0, 0, 0, 0.07);
-}
-
-.network-log-grid.data-grid td.size-column,
-.network-log-grid.data-grid td.time-column {
-    text-align: right;
 }
 
 .network-log-grid.data-grid.small .network-graph-side {
@@ -230,7 +211,7 @@
 .network-graph-side {
     position: relative;
     height: 36px;
-    padding: 0 5px;
+    padding: 0;
     white-space: nowrap;
     margin-top: 1px;
     border-top: 1px solid transparent;
@@ -241,8 +222,14 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    right: 8px;
-    left: 9px;
+}
+
+.network-graph-bar-area,
+.network-timeline-grid .resources-dividers,
+.network-timeline-grid .resources-event-dividers,
+.network-timeline-grid .resources-dividers-label-bar {
+    right: 12px;
+    left: 12px;
 }
 
 .network-graph-label {
@@ -252,13 +239,12 @@
     margin: auto -7px;
     height: 13px;
     line-height: 13px;
-    font-size: 9px;
+    font-size: 90%;
     color: rgba(0, 0, 0, 0.75);
     text-shadow: rgba(255, 255, 255, 0.25) 1px 0 0, rgba(255, 255, 255, 0.25) -1px 0 0, rgba(255, 255, 255, 0.333) 0 1px 0, rgba(255, 255, 255, 0.25) 0 -1px 0;
     z-index: 150;
     overflow: hidden;
     text-align: center;
-    font-weight: bold;
     opacity: 0;
     -webkit-transition: opacity 250ms ease-in-out;
 }
@@ -395,8 +381,18 @@
     top: 0;
     bottom: 0;
     left: 0;
-    right: 0;
+    right: 14px; /* Keep in sync with td.corner width */
     pointer-events: none;
+}
+
+.network-log-grid.data-grid .timeline-column,
+.network.panel .data-grid th.timeline-column {
+    border-right: none;
+}
+
+.data-grid td.timeline-column {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .network-event-divider-padding {
@@ -443,9 +439,8 @@
 }
 
 .network-timeline-grid .resources-divider-label {
-    top: 0px;
-    margin-top: -4px;
-    color: black;
+    top: 0;
+    margin-top: -5px;
 }
 
 .network-timeline-grid .resources-dividers-label-bar .resources-divider {
@@ -456,33 +451,18 @@
     top: 15px;
 }
 
-.network-timeline-grid .resources-divider.first .resources-divider-label {
+.network-timeline-grid .resources-divider:first-child .resources-divider-label {
     display: none;
 }
 
-.network-timeline-grid .resources-dividers-label-bar .resources-divider.first {
+.network-timeline-grid .resources-dividers-label-bar .resources-divider:first-child {
     background-color: transparent;
 }
 
 /* Filters */
-#network-filter {
-    margin-top: 1px;
-}
 
 .network-log-grid.data-grid table.data tr.revealed.network-item {
     display: none;
-}
-
-.network-log-grid.data-grid.filter-all table.data tr.revealed.network-item,
-.network-log-grid.data-grid.filter-document table.data tr.revealed.network-type-document,
-.network-log-grid.data-grid.filter-stylesheet table.data tr.revealed.network-type-stylesheet,
-.network-log-grid.data-grid.filter-image table.data tr.revealed.network-type-image,
-.network-log-grid.data-grid.filter-script table.data tr.revealed.network-type-script,
-.network-log-grid.data-grid.filter-xhr table.data tr.revealed.network-type-xhr,
-.network-log-grid.data-grid.filter-font table.data tr.revealed.network-type-font,
-.network-log-grid.data-grid.filter-websocket table.data tr.revealed.network-type-websocket,
-.network-log-grid.data-grid.filter-other table.data tr.revealed.network-type-other {
-    display: table-row;
 }
 
 /* Summary */
@@ -496,7 +476,6 @@
     left: 0;
     right: 0;
     bottom: 0;
-    margin-right: -14px;
     background-color: rgb(101, 111, 130);
 }
 
@@ -504,8 +483,7 @@
     color: white;
     height: 20px !important;
     border: none;
-    font-size: 11px;
-    font-weight: bold;
+    font-size: 110%;
     padding: 0 0 0 8px;
     white-space: pre;
     overflow : hidden;
@@ -554,7 +532,7 @@
 
 #network-container:not(.brief-mode) .data-grid tr.selected {
     background-color: transparent;
-    color: black;
+    color: #222;
 }
 
 #network-container.brief-mode .data-grid .data-container {

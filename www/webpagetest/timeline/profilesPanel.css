@@ -142,16 +142,17 @@
     -webkit-mask-position: 0 0;
 }
 
+.garbage-collect-status-bar-item .glyph {
+    -webkit-mask-position: -128px -24px;
+}
+
 .profile-launcher-view-content {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    padding: 0 0 0 16px;
-    display: -webkit-box;
+    padding: 0 16px;
     text-align: left;
-    -webkit-box-orient: vertical;
+}
+
+.control-profiling {
+    -webkit-align-self: flex-start;
 }
 
 .profile-launcher-view-content h1 {
@@ -176,7 +177,7 @@
 
 .panel-enabler-view.profile-launcher-view button:not(.status-bar-item) {
     color: rgb(6, 6, 6);
-    margin: 16px 0;
+    margin: 0 0 16px;
 }
 
 .profile-launcher-view-content button.running:not(.status-bar-item) {
@@ -194,4 +195,15 @@ body.inactive .profile-launcher-view-content button.running:not(.status-bar-item
 @-webkit-keyframes row_highlight {
     from {background-color: rgba(255, 255, 120, 1); }
     to { background-color: rgba(255, 255, 120, 0); }
+}
+
+.profile-canvas-decoration {
+    color: red;
+    margin: -14px 0 13px 22px;
+    padding-left: 14px;
+    background: 0 7px url(Images/warningIcon.png) no-repeat;
+}
+
+.profile-canvas-decoration button {
+    margin: 0 0 0 10px !important;
 }

@@ -1,6 +1,8 @@
 .data-grid {
     position: relative;
     border: 1px solid #aaa;
+    font-size: 11px;
+    line-height: 120%;
 }
 
 .data-grid .highlight {
@@ -16,8 +18,6 @@
     border-spacing: 0;
     border-collapse: collapse;
     width: 100%;
-    font-size: 10px;
-    font-family: Lucida Grande, sans-serif;
 }
 
 .data-grid .data-container {
@@ -26,13 +26,21 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding-right: 14px;
     overflow-x: hidden;
     overflow-y: overlay;
 }
 
+.data-grid.inline {
+    border-right: none;
+}
+
 .data-grid.inline .data-container {
     position: static;
+}
+
+.data-grid.inline th.corner,
+.data-grid.inline td.corner {
+    display: none;
 }
 
 .data-grid th {
@@ -48,11 +56,13 @@
     white-space: nowrap;
 }
 
-.data-grid th.corner {
+.data-grid th.corner,
+.data-grid td.corner,
+.data-grid col.corner {
     width: 14px;
     padding-right: 0px;
     padding-left: 0px;
-    border-right: 0 none transparent;
+    border-right: 0 none transparent !important;
 }
 
 .data-grid tr.filler {
@@ -69,7 +79,7 @@
     position: absolute;
     left: 0;
     top: 0;
-    right: 16px;
+    right: 0;
     bottom: 0;
     height: 100%;
     border-top: 0 none transparent;
@@ -92,9 +102,9 @@
 
 .data-grid td {
     vertical-align: top;
-    height: 12px;
-    line-height: 12px;
-    padding: 2px 4px;
+    height: 16px; /* Keep in sync with .data-grid table.data @ -webkit-background-size */
+    line-height: 13px;
+    padding: 1px 4px;
     white-space: nowrap;
     overflow: hidden;
     border-right: 1px solid #aaa;
@@ -107,7 +117,11 @@
     overflow: hidden;
 }
 
-.data-grid .centered div {
+.data-grid td.editing > div {
+    text-overflow: clip;
+}
+
+.data-grid .center div {
     text-align: center;
 }
 
@@ -133,32 +147,38 @@
     background-image: url(Images/glossyHeaderSelectedPressed.png);
 }
 
-.data-grid th.sort-ascending > div::after {
+.data-grid th.sort-ascending > div::after,
+.data-grid th.sort-descending > div::after {
     position: absolute;
-    top: 0;
-    bottom: 0;
+    top: 1px;
     right: 0;
-    height: 12px;
-    margin-bottom: auto;
-    margin-top: auto;
+    background-image: url(Images/statusbarButtonGlyphs.png);
+    background-size: 320px 120px;
+    opacity: 0.5;
     width: 8px;
-    content: url(Images/treeUpTriangleBlack.png);
+    height: 10px;
+    content: "a";
+    color: transparent;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.data-grid th.sort-ascending > div::after,
+.data-grid th.sort-descending > div::after {
+    background-image: url(Images/statusbarButtonGlyphs2x.png);
+}
+}
+
+.data-grid th.sort-ascending > div::after {
+    background-position: -4px -108px;
 }
 
 .data-grid th.sort-descending > div::after {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    height: 8px;
-    margin-bottom: auto;
-    margin-top: auto;
-    width: 8px;
-    content: url(Images/treeDownTriangleBlack.png);
+    background-position: -20px -96px;
 }
 
 .data-grid button {
     line-height: 18px;
+    color: inherit;
 }
 
 body.inactive .data-grid th.sort-ascending, body.inactive .data-grid th.sort-descending {
@@ -168,19 +188,31 @@ body.inactive .data-grid th.sort-ascending, body.inactive .data-grid th.sort-des
 }
 
 .data-grid tr.parent td.disclosure::before {
-    float: left;
-    content: url(Images/treeRightTriangleBlack.png);
-    width: 8px;
-    height: 8px;
-    margin-right: 2px;
     -webkit-user-select: none;
+    -webkit-mask-image: url(Images/statusbarButtonGlyphs.png);
+    -webkit-mask-size: 320px 120px;
+    float: left;
+    width: 8px;
+    margin-right: 2px;
+    content: "a";
+    color: transparent;
+    position: relative;
+    top: 1px;
+}
+
+.data-grid tr.parent td.disclosure::before {
+    background-color: rgb(110, 110, 110);
+    -webkit-mask-position: -4px -96px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.data-grid tr.parent td.disclosure::before {
+    -webkit-mask-image: url(Images/statusbarButtonGlyphs2x.png);
+}
 }
 
 .data-grid tr.expanded td.disclosure::before {
-    content: url(Images/treeDownTriangleBlack.png);
-    width: 8px;
-    height: 8px;
-    margin-top: 1px;
+    -webkit-mask-position: -20px -96px;
 }
 
 .data-grid tr.selected {
@@ -198,11 +230,13 @@ body.inactive .data-grid th.sort-ascending, body.inactive .data-grid th.sort-des
 }
 
 .data-grid:focus tr.parent.selected td.disclosure::before {
-    content: url(Images/treeRightTriangleWhite.png);
+    background-color: white;
+    -webkit-mask-position: -4px -96px;
 }
 
 .data-grid:focus tr.expanded.selected td.disclosure::before {
-    content: url(Images/treeDownTriangleWhite.png);
+    background-color: white;
+    -webkit-mask-position: -20px -96px;
 }
 
 .data-grid tr:not(.parent) td.disclosure {

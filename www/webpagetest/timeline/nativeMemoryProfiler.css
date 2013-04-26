@@ -29,12 +29,12 @@
  */
 
 .memory-pie-chart-container {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+    display: -webkit-flex;
+    -webkit-flex-direction: column;
 }
 
 .memory-pie-chart {
-    -webkit-box-flex: 1;
+    -webkit-flex: 1;
 }
 
 .memory-blocks-list .swatch {
@@ -50,37 +50,56 @@
     margin: 10px;
 }
 
-.memory-bar-chart-name {
-    text-align: right;
-    white-space: nowrap;
-}
-
-.memory-bar-chart-bar {
-    border: 1px solid #bbb;
-    border-radius: 2px;
-    float: left;
-    height: 20px;
+.native-snapshot-view {
+    display: none;
     overflow: hidden;
-    position: relative;
-}
-
-.memory-bar-chart-unused {
-    background-color: rgba(255, 255, 255, 0.5);
-    float: right;
-    height: 100%;
-}
-
-.memory-bar-chart-percent {
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.native-snapshot-view.visible {
+    display: block;
+}
+
+.native-snapshot-view .data-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: none;
+}
+
+.native-snapshot-view .data-grid td {
+    height: 14px;
+    padding: 1px 4px;
+}
+
+.native-snapshot-view .data-grid div.size-text {
+    float: left;
+    text-align: right;
+    width: 70px;
+    padding-right: 5px;
+}
+
+.native-snapshot-view .data-grid .dimmed div.size-bar {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(hsla(0, 100%, 100%, 0.7)), to(hsla(0, 100%, 100%, 0.5)));
+    color: hsla(0, 0%, 0%, 0.5);
+}
+
+.native-snapshot-view .data-grid div.size-bar {
     text-align: center;
-    width: 100%;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0.5)), to(rgba(192, 192, 192, 0)));
+    height: 14px;
+    border-radius: 2px;
+    color: #222;
+    white-space: normal;
+    min-width: 1px;
 }
 
-.memory-bar-chart-size {
-    text-indent: 6px;
-    white-space: nowrap;
-}
-
-.memory-bar-chart-total {
-    font-weight: bold;
+.native-snapshot-view .data-grid div.percent-text {
+    display: inline-block;
 }
