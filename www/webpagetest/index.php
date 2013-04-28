@@ -87,12 +87,14 @@ $loc = ParseLocations($locations);
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
-            if (array_key_exists('iq', $_REQUEST)) {
+            if (array_key_exists('iq', $_REQUEST))
               echo "<input type=\"hidden\" name=\"iq\" value=\"{$_REQUEST['iq']}\">\n";
-            }
-            if (array_key_exists('pngss', $_REQUEST)) {
+            if (array_key_exists('pngss', $_REQUEST))
               echo "<input type=\"hidden\" name=\"pngss\" value=\"{$_REQUEST['pngss']}\">\n";
-            }
+            if (array_key_exists('shard', $_REQUEST))
+              echo "<input type=\"hidden\" name=\"shard\" value=\"{$_REQUEST['shard']}\">\n";
+            if (array_key_exists('discard', $_REQUEST))
+              echo "<input type=\"hidden\" name=\"discard\" value=\"{$_REQUEST['discard']}\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -246,7 +248,7 @@ $loc = ParseLocations($locations);
                                             <small>Up to <?php echo $settings['maxruns']; ?></small>
                                         </label>
                                         <?php
-                                        $runs = (int)$_COOKIE["runs"];
+                                        $runs = (int)@$_COOKIE["runs"];
                                         if( isset($req_runs) )
                                             $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
@@ -258,7 +260,7 @@ $loc = ParseLocations($locations);
                                             Repeat View
                                         </label>
                                         <?php
-                                        $fvOnly = (int)$_COOKIE["testOptions"] & 2;
+                                        $fvOnly = (int)@$_COOKIE["testOptions"] & 2;
                                         if (array_key_exists('fvonly', $_REQUEST)) {
                                             $fvOnly = (int)$_REQUEST['fvonly'];
                                         }
@@ -268,11 +270,16 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="keep_test_private">Keep Test Private</label>
-                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)$_COOKIE["testOptions"] & 1) || isset($_REQUEST['hidden'])) echo " checked=checked"; ?>>
+                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST)) echo " checked=checked"; ?>>
                                     </li>
                                     <li>
                                         <label for="label">Label</label>
-                                        <input type="text" name="label" id="label">
+                                        <?php
+                                        $label = '';
+                                        if (array_key_exists('label', $_REQUEST))
+                                          $label = htmlspecialchars($_REQUEST['label']);
+                                        echo "<input type=\"text\" name=\"label\" id=\"label\" value=\"$label\">\n";
+                                        ?>
                                     </li>
                                 </ul>
                             </div>
@@ -426,12 +433,17 @@ $loc = ParseLocations($locations);
                                 <div>
                                     <div class="notification-container">
                                         <div class="notification"><div class="message">
-                                            Check out <a href="http://www.webperformancecentral.com/wiki/WebPagetest/Hosted_Scripting">Hosted Scripting</a> for more information on this feature
+                                            Check out <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/scripting">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
                                     
                                     <p><label for="enter_script" class="full_width">Enter Script</label></p>
-                                    <textarea name="script" id="enter_script" cols="0" rows="0"></textarea>
+                                    <?php
+                                      $script = '';
+                                      if (array_key_exists('script', $_REQUEST))
+                                        $script = htmlspecialchars($_REQUEST['script']);
+                                      echo "<textarea name=\"script\" id=\"enter_script\" cols=\"0\" rows=\"0\">$script</textarea>\n";
+                                    ?>
                                 </div>
                                 <br>
                                 <ul class="input_fields">

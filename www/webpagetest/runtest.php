@@ -130,7 +130,9 @@
                 $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             }
             $test['pss_advanced'] = $req_pss_advanced;
-            $test['shard_test'] = $req_shard ? 1 : $settings['shard_tests'];
+            $test['shard_test'] = $settings['shard_tests'];
+            if (array_key_exists('shard', $_REQUEST))
+              $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
