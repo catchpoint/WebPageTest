@@ -125,6 +125,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
+  fContextReq |= ISC_REQ_MANUAL_CRED_VALIDATION;
   if (_InitializeSecurityContextW) {
     ret = _InitializeSecurityContextW(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
@@ -149,6 +150,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
+  fContextReq |= ISC_REQ_MANUAL_CRED_VALIDATION;
   if (_InitializeSecurityContextA) {
     ret = _InitializeSecurityContextA(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,

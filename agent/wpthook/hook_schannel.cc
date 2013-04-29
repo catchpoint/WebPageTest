@@ -17,6 +17,7 @@ SECURITY_STATUS SEC_ENTRY InitializeSecurityContextW_Hook(
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
+  fContextReq |= ISC_REQ_MANUAL_CRED_VALIDATION;
   if (g_hook)
     ret = g_hook->InitializeSecurityContextW(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
@@ -33,6 +34,7 @@ SECURITY_STATUS SEC_ENTRY InitializeSecurityContextA_Hook(
     PSecBufferDesc pOutput, unsigned long * pfContextAttr,
     PTimeStamp ptsExpiry) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
+  fContextReq |= ISC_REQ_MANUAL_CRED_VALIDATION;
   if (g_hook)
     ret = g_hook->InitializeSecurityContextA(phCredential, phContext,
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
