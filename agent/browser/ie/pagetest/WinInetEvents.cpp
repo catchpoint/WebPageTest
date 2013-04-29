@@ -624,9 +624,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 								CSocketInfo * soc = NULL;
 								openSockets.Lookup(r->s, soc);
 								if( soc )
-								{
 									memcpy( &r->peer, &soc->address, sizeof(SOCKADDR_IN) );
-								}
 							}
 							LeaveCriticalSection(&cs);
 						}

@@ -202,6 +202,8 @@ echo '<div id="headers">';
                         echo " column {$request['initiator_column']}";
                     echo "<br>\n";
                 }
+                if (array_key_exists('client_port', $request) && intval($request['client_port']))
+                    echo "<b>Client Port:</b> {$request['client_port']}<br>\n";
                 if (array_key_exists('custom_rules', $request)) {
                     foreach($request['custom_rules'] as $rule_name => &$rule) {
                         echo "<b>Custom Rule - $rule_name: </b>({$rule['count']} matches) - " . htmlspecialchars($rule['value']) . "<br>\n";

@@ -177,7 +177,8 @@ function LoadRequests($request_file_name) {
         69 => 'initiator_line',
         70 => 'initiator_column',
         71 => 'server_count',
-        72 => 'server_rtt'
+        72 => 'server_rtt',
+        73 => 'client_port',
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {
@@ -186,9 +187,8 @@ function LoadRequests($request_file_name) {
             if (count($columns)) {
                 $request = array();
                 foreach ($columns as $i => $value) {
-                    if (array_key_exists($i + 1, $needed_columns)) {
+                    if (array_key_exists($i + 1, $needed_columns))
                         $request[$needed_columns[$i + 1]] = trim($value);
-                    }
                 }
                 if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
                     $url = 'http://';

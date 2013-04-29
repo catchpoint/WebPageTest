@@ -95,23 +95,36 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
   }
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
     struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
+    bool localhost = false;
 
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s, false);
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
     QueryPerformanceCounter(&info->_connect_start);
-    if (!info->IsLocalhost()) {
-      _test_state.ActivityDetected();
-    }
+    localhost = info->IsLocalhost();
     LeaveCriticalSection(&cs);
+
+    if (!localhost)
+      _test_state.ActivityDetected();
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::Connected(SOCKET s) {
+  bool localhost = false;
+  struct sockaddr_in client;
+  int addrlen = sizeof(client);
+  int local_port = 0;
+  if(getsockname(s, (struct sockaddr *)&client, &addrlen) == 0 &&
+      client.sin_family == AF_INET &&
+      addrlen == sizeof(client))
+    local_port = ntohs(client.sin_port);
+
   WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - TrackSockets::Connected(%d)\n"), s);
+            _T("[wpthook] - TrackSockets::Connected(%d) - Client port: %d\n"),
+               s, local_port);
+
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
   QueryPerformanceCounter(&info->_connect_end);
@@ -124,17 +137,18 @@ void TrackSockets::Connected(SOCKET s) {
     DWORD addr = info->_addr.sin_addr.S_un.S_addr;
     DWORD ms = -1;
     if (ipv4_rtt_.Lookup(addr, ms)) {
-      if (elapsed < ms) {
+      if (elapsed < ms)
         ipv4_rtt_.SetAt(addr, elapsed);
-      }
     } else {
       ipv4_rtt_.SetAt(addr, elapsed);
     }
   }
-  if (!info->IsLocalhost()) {
-    _test_state.ActivityDetected();
-  }
+  info->_local_port = local_port;
+  localhost = info->IsLocalhost();
   LeaveCriticalSection(&cs);
+
+  if (!localhost)
+    _test_state.ActivityDetected();
 }
 
 /*-----------------------------------------------------------------------------
@@ -249,11 +263,22 @@ ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
   ULONG peer_address = 0;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
-  if (_socketInfo.Lookup(socket_id, info) && info) {
+  if (_socketInfo.Lookup(socket_id, info) && info)
     peer_address = info->_addr.sin_addr.S_un.S_addr;
-  }
   LeaveCriticalSection(&cs);
   return peer_address;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int TrackSockets::GetLocalPort(DWORD socket_id) {
+  int local_port = 0;
+  EnterCriticalSection(&cs);
+  SocketInfo * info = NULL;
+  if (_socketInfo.Lookup(socket_id, info) && info)
+    local_port = info->_local_port;
+  LeaveCriticalSection(&cs);
+  return local_port;
 }
 
 /*-----------------------------------------------------------------------------

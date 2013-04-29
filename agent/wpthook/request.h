@@ -243,6 +243,7 @@ public:
   bool  _reported;
   DWORD _socket_id;
   ULONG _peer_address;
+  int   _local_port;
   bool  _is_ssl;
   bool  _is_spdy;
   CString initiator_;

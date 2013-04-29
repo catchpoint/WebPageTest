@@ -974,6 +974,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += buff;
   // Server RTT
   result += request->rtt_ + "\t";
+  // Local Port
+  buff.Format("%d\t", request->_local_port);
+  result += buff;
 
   result += "\r\n";
 

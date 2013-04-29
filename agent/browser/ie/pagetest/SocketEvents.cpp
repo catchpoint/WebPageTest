@@ -163,11 +163,6 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
       // last chance to override host headers (redirect case)
       ModifyDataOut(buff, len);
 	        
-      // figure out what the client port is
-      struct sockaddr_in local;
-      int localLen = sizeof(local);
-      getsockname(s, (sockaddr *)&local, &localLen);
-
 			// see if this socket had an existing connect.  If so, end that now
 			EnterCriticalSection(&cs);
 			POSITION pos = connects.GetHeadPosition();
@@ -245,6 +240,7 @@ void CSocketEvents::SocketSend(SOCKET s, DWORD len, LPBYTE buff)
 					request->ipAddress[3] = soc->ipAddress[3];
 					request->port = soc->port;
 					request->socketId = soc->id;
+					UpdateClientPort(s, soc->id);
           ATLTRACE(_T("[%d] - CWatchDlg::SocketSend - New request to %d.%d.%d.%d:%d\n"), s, soc->ipAddress[0], soc->ipAddress[1], soc->ipAddress[2], soc->ipAddress[3], soc->port);
         } else {
           ATLTRACE(_T("[%d] - CWatchDlg::SocketSend - Failed to find matching socket info\n"), s);
@@ -481,6 +477,7 @@ void CSocketEvents::SocketConnect(SOCKET s, struct sockaddr_in * addr)
 -----------------------------------------------------------------------------*/
 void CSocketEvents::SocketConnected(SOCKET s)
 {
+    DWORD id = 0;
 		EnterCriticalSection(&cs);
 		POSITION pos = connects.GetHeadPosition();
 		while( pos )
@@ -489,6 +486,7 @@ void CSocketEvents::SocketConnected(SOCKET s)
 			CSocketConnect * c = connects.GetNext(pos);
 			if( c && !c->end && c->s == s)
 			{
+			  id = c->socketId;
 				c->Done();
         UpdateRTT(c);
 				
@@ -498,6 +496,8 @@ void CSocketEvents::SocketConnected(SOCKET s)
 			}
 		}
 		LeaveCriticalSection(&cs);
+		if (id)
+		  UpdateClientPort(s, id);
 }
 
 /*-----------------------------------------------------------------------------
@@ -741,4 +741,19 @@ void * CSocketEvents::GetSchannelId(SOCKET s){
   schannelIds.Lookup(s, schannelId);
   LeaveCriticalSection(&socket_cs);
   return schannelId;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CSocketEvents::UpdateClientPort(SOCKET s, DWORD id) {
+  struct sockaddr_in client;
+  int addrlen = sizeof(client);
+  if(getsockname(s, (struct sockaddr *)&client, &addrlen) == 0 &&
+     client.sin_family == AF_INET &&
+     addrlen == sizeof(client)) {
+    int localPort = ntohs(client.sin_port);
+    EnterCriticalSection(&cs);
+    client_ports.SetAt(id, localPort);
+    LeaveCriticalSection(&cs);
+  }
 }

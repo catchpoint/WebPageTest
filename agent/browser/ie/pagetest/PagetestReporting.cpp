@@ -1090,7 +1090,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 					_T("Secure\tDNS Time\tConnect Time\tSSL Time\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\tCache Time (sec)")
 					_T("\tReal Start Time (ms)\tFull Time to Load (ms)\tOptimization Checked\tCDN Provider")
           _T("\tDNS Start\tDNS End\tConnect Start\tConnect End\tSSL Start\tSSL End\tInitiator\tInitiator Line\tInitiator Column")
-          _T("\tServer Count\tServer RTT")
+          _T("\tServer Count\tServer RTT\tClient Port")
 					_T("\r\n");
 		}
 		else
@@ -1108,7 +1108,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 						_T("%d\t%s\t%s\t%s")
 						_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%s")
             _T("\t\t\t\t\t\t\t\t\t")
-            _T("\t\t%s")
+            _T("\t\t%s\t%d")
 						_T("\r\n"),
 				(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, 
 				(LPCTSTR)ip, _T(""), _T(""), (LPCTSTR)pageUrl,
@@ -1120,7 +1120,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 				doctypeScore, minifyScore, combineScore, compressionScore, etagScore, flaggedRequests,
 				0, _T(""), _T(""), _T(""),
 				gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, 
-        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T(""), (LPCTSTR)GetRTT(pageIP.sin_addr.S_un.S_addr) );
+        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T(""), (LPCTSTR)GetRTT(pageIP.sin_addr.S_un.S_addr), 0 );
 		buff += result;
 
 		// loop through all of the requests on the page
@@ -1175,6 +1175,9 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 					if( !w->fromNet )
 						reqType = CTrackedEvent::etCachedRequest;
 					
+					int localPort = 0;
+					client_ports.Lookup(w->socketId, localPort);
+					
 					result.Format(	_T("%s\t%s\t%s\t%s\t")
 									_T("%s\t%s\t%s\t")
 									_T("%d\t%d\t%d\t%d\t%d\t%d\t")
@@ -1190,7 +1193,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 									_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s")
 									_T("\t%d\t%d\t%d\t%s")
                   _T("\t\t\t\t\t\t\t\t\t")
-                  _T("\t%d\t%s")
+                  _T("\t%d\t%s\t%d")
 									_T("\r\n"),
 							(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPTSTR)ip, 
 							(LPCTSTR)w->verb, (LPCTSTR)w->host, (LPCTSTR)w->object,
@@ -1205,7 +1208,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,
 							w->gzipTotal, w->gzipTotal - w->gzipTarget, w->minifyTotal, w->minifyTotal - w->minifyTarget, w->compressTotal, w->compressTotal - w->compressTarget, (LPCTSTR)ttl,
-              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr) );
+              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr), localPort );
 					buff += result;
 				}
 			}

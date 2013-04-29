@@ -206,6 +206,7 @@ public:
 	CAtlArray<struct in_addr>	dnsServers;		// DNS servers to use for lookups (if overriding the default)
   CAtlList<CCustomRule> customRules;
   DWORD           currentRun;
+	CAtlMap<DWORD, int>	    client_ports;
 
 	// timing support
 	__int64						freq;			// timer frequency
@@ -310,7 +311,8 @@ public:
 	virtual void UpdateRTT(DWORD ipv4_address, long elapsed) = 0;
   virtual void AddAddress(CString host, DWORD address) = 0;
   virtual int GetAddressCount(CString host) = 0;
-	
+  virtual void UpdateClientPort(SOCKET s, DWORD id) = 0;
+
 	typedef enum{
 		equal = 0,
 		left = 1,

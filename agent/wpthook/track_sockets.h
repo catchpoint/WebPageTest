@@ -40,7 +40,8 @@ public:
     , _accounted_for(false)
     , _during_test(false)
     , _is_ssl(false)
-    , _is_ssl_handshake_complete(false) {
+    , _is_ssl_handshake_complete(false)
+    , _local_port(0) {
     memset(&_addr, 0, sizeof(_addr));
     _connect_start.QuadPart = 0;
     _connect_end.QuadPart = 0;
@@ -53,6 +54,7 @@ public:
 
   DWORD               _id;
   struct sockaddr_in  _addr;
+  int                 _local_port;
   bool                _accounted_for;
   bool                _during_test;
   bool                _is_ssl;
@@ -92,6 +94,7 @@ public:
                     LARGE_INTEGER& start, LARGE_INTEGER& end,
                     LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
   ULONG GetPeerAddress(DWORD socket_id);
+  int GetLocalPort(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);
   CStringA GetRTT(DWORD ipv4_address);
 

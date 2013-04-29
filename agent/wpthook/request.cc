@@ -348,6 +348,7 @@ Request::Request(TestState& test_state, DWORD socket_id,
   _ssl_start.QuadPart = 0;
   _ssl_end.QuadPart = 0;
   _peer_address = sockets.GetPeerAddress(socket_id);
+  _local_port = sockets.GetLocalPort(socket_id);
   _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
 

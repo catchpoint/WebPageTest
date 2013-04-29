@@ -72,6 +72,7 @@ CPagetestBase::CPagetestBase(void):
 	requestSocketIds.InitHashTable(257);
 	threadWindows.InitHashTable(257);
 	openSockets.InitHashTable(257);
+  client_ports.InitHashTable(257);
 
 	// create a NULL DACL we will re-use everywhere we do file access
 	ZeroMemory(&nullDacl, sizeof(nullDacl));

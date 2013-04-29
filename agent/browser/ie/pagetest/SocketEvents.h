@@ -57,6 +57,7 @@ public:
   virtual void MapSchannelSocket(void * schannelId, SOCKET s);
   virtual SOCKET GetSchannelSocket(void * schannelId);
   virtual void * GetSchannelId(SOCKET s);
+  virtual void UpdateClientPort(SOCKET s, DWORD id);
 
 	DWORD	nextSocketId;	// ID to assign to the next socket
 	DWORD	bwBytesIn;

@@ -50,7 +50,7 @@ TrackDns::~TrackDns(void){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void * TrackDns::LookupStart(CString& name) {
-  if (name == _T("127.0.0.1"))
+  if (!name.GetLength() || name == _T("127.0.0.1"))
     return NULL;
 
   WptTrace(loglevel::kFrequentEvent, 
