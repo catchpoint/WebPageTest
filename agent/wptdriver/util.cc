@@ -125,10 +125,12 @@ void CopyDirectoryTree(CString source, CString destination) {
         if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName,_T(".."))) {
           CString src = source + CString(_T("\\")) + fd.cFileName;
           CString dest = destination + CString(_T("\\")) + fd.cFileName;
-          if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+          if( fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) {
             CopyDirectoryTree(src, dest);
-          else
+          } else {
             CopyFile(src, dest, FALSE);
+            SetFileAttributes(dest, FILE_ATTRIBUTE_NORMAL);
+          }
         }
       }while(FindNextFile(hFind, &fd));
       FindClose(hFind);

@@ -54,3 +54,4 @@ user_pref("xpinstall.whitelist.add", "");
 user_pref("xpinstall.whitelist.add.36", "");
 user_pref("toolkit.telemetry.prompted", 2);
 user_pref("signon.rememberSignons", false);
+user_pref("javascript.options.showInConsole", true);

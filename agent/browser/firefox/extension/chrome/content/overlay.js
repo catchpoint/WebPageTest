@@ -46,11 +46,13 @@ var TEST_TASK_INTERVAL = 5000;
 var TASK_INTERVAL = 1000;
 var TASK_INTERVAL_SHORT = 0;
 var DOM_ELEMENT_POLL_INTERVAL = 100;
+var STARTUP_FAILSAFE_INTERVAL = 5000;
 
 var g_active = false;
 var g_tabId = -1;
 var g_requesting_task = false;
 var g_started = false;
+var g_initialized = false;
 
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
@@ -257,14 +259,23 @@ var wptExtension = {
   init: function() {
     // Use the load event on the global browser object to see when the
     // page gets the onload event.
-    gBrowser.addEventListener('load', onPageLoad, true);
-    gBrowser.addEventListener('pagehide', onPageHide, true);
+	if (!g_initialized) {
+		gBrowser.addEventListener('load', onPageLoad, true);
+		gBrowser.addEventListener('pagehide', onPageHide, true);
 		gBrowser.addProgressListener(progressListener);
+		g_initialized = true;
+		setTimeout(function() {
+			if (!g_started)
+				onPageLoad();
+		}, STARTUP_FAILSAFE_INTERVAL);
+	}
   },
   uninit: function() {
-    gBrowser.removeEventListener('load', onPageLoad, true);
-    gBrowser.removeEventListener('pagehide', onPageHide, true);
+	if (g_initialized) {
+		gBrowser.removeEventListener('load', onPageLoad, true);
+		gBrowser.removeEventListener('pagehide', onPageHide, true);
 		gBrowser.removeProgressListener(progressListener);
+	}
   },
   loadStart: function() {
 	wpt.moz.main.onNavigate();
@@ -276,6 +287,10 @@ var wptExtension = {
 window.addEventListener('load', function() { wptExtension.init(); }, false);
 window.addEventListener('unload', function() { wptExtension.uninit(); }, false);
 
+// Create a startup failsafe in case the events we attach to have already fired
+setTimeout(function() {
+	wptExtension.init();
+}, STARTUP_FAILSAFE_INTERVAL);
 
 /***********************************************************
                       Utility Functions
