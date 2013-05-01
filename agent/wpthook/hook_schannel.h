@@ -40,10 +40,10 @@ private:
   NCodeHookIA32* _hook;
 
   // original functions
-  INITIALIZE_SECURITY_CONTEXT_FN_W  _InitializeSecurityContextW;
-  INITIALIZE_SECURITY_CONTEXT_FN_A  _InitializeSecurityContextA;
-  DELETE_SECURITY_CONTEXT_FN  _DeleteSecurityContext;
-  DECRYPT_MESSAGE_FN  _DecryptMessage;
-  ENCRYPT_MESSAGE_FN  _EncryptMessage;
+  INITIALIZE_SECURITY_CONTEXT_FN_W  InitializeSecurityContextW_;
+  INITIALIZE_SECURITY_CONTEXT_FN_A  InitializeSecurityContextA_;
+  DELETE_SECURITY_CONTEXT_FN  DeleteSecurityContext_;
+  DECRYPT_MESSAGE_FN  DecryptMessage_;
+  ENCRYPT_MESSAGE_FN  EncryptMessage_;
 };
 

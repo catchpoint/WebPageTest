@@ -47,6 +47,7 @@ private:
   bool FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,
                         LPCTSTR browser_exe);
   void ConfigureFirefoxPrefs();
+  void ConfigureIESettings();
   HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 
   WptSettings&    _settings;
