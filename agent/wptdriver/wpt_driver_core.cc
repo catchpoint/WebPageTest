@@ -183,13 +183,12 @@ void WptDriverCore::WorkThread(void) {
           }
         }
         test._run = test._specific_run ? test._specific_run : test._runs;
-
-        bool uploaded = false;
-        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-          uploaded = _webpagetest.TestDone(test);
-          if( !uploaded )
-            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
-        }
+      }
+      bool uploaded = false;
+      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
+        uploaded = _webpagetest.TestDone(test);
+        if( !uploaded )
+          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
       ReleaseMutex(_testing_mutex);
     } else {
