@@ -112,43 +112,47 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::Connected(SOCKET s) {
-  bool localhost = false;
-  struct sockaddr_in client;
-  int addrlen = sizeof(client);
-  int local_port = 0;
-  if(getsockname(s, (struct sockaddr *)&client, &addrlen) == 0 &&
-      client.sin_family == AF_INET &&
-      addrlen == sizeof(client))
-    local_port = ntohs(client.sin_port);
+  DWORD socket_id = 0;
+  _openSockets.Lookup(s, socket_id);
+  if (socket_id) {
+    bool localhost = false;
+    struct sockaddr_in client;
+    int addrlen = sizeof(client);
+    int local_port = 0;
+    if(getsockname(s, (struct sockaddr *)&client, &addrlen) == 0 &&
+        client.sin_family == AF_INET &&
+        addrlen == sizeof(client))
+      local_port = ntohs(client.sin_port);
 
-  WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - TrackSockets::Connected(%d) - Client port: %d\n"),
-               s, local_port);
+    WptTrace(loglevel::kFunction, 
+              _T("[wpthook] - TrackSockets::Connected(%d) - Client port: %d\n"),
+                 s, local_port);
 
-  EnterCriticalSection(&cs);
-  SocketInfo* info = GetSocketInfo(s);
-  QueryPerformanceCounter(&info->_connect_end);
-  if (info->_connect_start.QuadPart && 
-      info->_connect_end.QuadPart && 
-      info->_connect_end.QuadPart >= info->_connect_start.QuadPart) {
-    DWORD elapsed = (DWORD)((info->_connect_end.QuadPart - 
-                             info->_connect_start.QuadPart) / 
-                             _test_state._ms_frequency.QuadPart);
-    DWORD addr = info->_addr.sin_addr.S_un.S_addr;
-    DWORD ms = -1;
-    if (ipv4_rtt_.Lookup(addr, ms)) {
-      if (elapsed < ms)
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    QueryPerformanceCounter(&info->_connect_end);
+    if (info->_connect_start.QuadPart && 
+        info->_connect_end.QuadPart && 
+        info->_connect_end.QuadPart >= info->_connect_start.QuadPart) {
+      DWORD elapsed = (DWORD)((info->_connect_end.QuadPart - 
+                               info->_connect_start.QuadPart) / 
+                               _test_state._ms_frequency.QuadPart);
+      DWORD addr = info->_addr.sin_addr.S_un.S_addr;
+      DWORD ms = -1;
+      if (ipv4_rtt_.Lookup(addr, ms)) {
+        if (elapsed < ms)
+          ipv4_rtt_.SetAt(addr, elapsed);
+      } else {
         ipv4_rtt_.SetAt(addr, elapsed);
-    } else {
-      ipv4_rtt_.SetAt(addr, elapsed);
+      }
     }
-  }
-  info->_local_port = local_port;
-  localhost = info->IsLocalhost();
-  LeaveCriticalSection(&cs);
+    info->_local_port = local_port;
+    localhost = info->IsLocalhost();
+    LeaveCriticalSection(&cs);
 
-  if (!localhost)
-    _test_state.ActivityDetected();
+    if (!localhost)
+      _test_state.ActivityDetected();
+  }
 }
 
 /*-----------------------------------------------------------------------------
