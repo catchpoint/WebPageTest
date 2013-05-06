@@ -351,6 +351,7 @@ $page_description = "Comparison Test$testLabel.";
 
         <script type="text/javascript">
         <?php 
+            echo "var wptForgetSettings = true;\n";
             echo "var maxRuns = {$settings['maxruns']};\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
@@ -493,7 +494,7 @@ function LoadLocations()
     {
         if( isset($loc['browser']) )
         {
-            $testCount = 26;
+            $testCount = 16;
             if (array_key_exists('relayServer', $loc)) {
                 $loc['backlog'] = 0;
                 $loc['avgTime'] = 30;
