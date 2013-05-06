@@ -24,30 +24,30 @@ if (LoadResults($results)) {
         }
         if ($valid) {
             $url = $result['url'];
-            $location = $locations[$result['location']];
+            $label = $result['label'];
             $index = 1;
             $key = $url;
-            while (array_key_exists($key, $data) && array_key_exists($location, $data[$key])) {
+            while (array_key_exists($key, $data) && array_key_exists($label, $data[$key])) {
               $index++;
               $key = "$url ($index)";
             }
             if( !array_key_exists($key, $data) )
                 $data[$key] = array();
             $data[$key]['url'] = $url;
-            $data[$key][$location] = array();
-            $data[$key][$location]['id'] = $result['id'];
-            $data[$key][$location]['result'] = $result['result'];
+            $data[$key][$label] = array();
+            $data[$key][$label]['id'] = $result['id'];
+            $data[$key][$label]['result'] = $result['result'];
             if( $result['result'] == 0 || $result['result'] == 99999 ) {
-                if (!array_key_exists($location, $stats)) {
-                    $stats[$location] = array();
+                if (!array_key_exists($label, $stats)) {
+                    $stats[$label] = array();
                     foreach ($metrics as $metric) {
-                        $stats[$location][$metric] = array();
+                        $stats[$label][$metric] = array();
                     }
                 }
                 foreach ($metrics as $metric) {
-                    $data[$key][$location][$metric] = $result[$metric];
-                    $data[$key][$location]["$metric.stddev"] = $result["$metric.stddev"];
-                    $stats[$location][$metric][] = $result[$metric];
+                    $data[$key][$label][$metric] = $result[$metric];
+                    $data[$key][$label]["$metric.stddev"] = $result["$metric.stddev"];
+                    $stats[$label][$metric][] = $result[$metric];
                 }
             }
         }
@@ -57,12 +57,12 @@ if (LoadResults($results)) {
     $file = fopen("./tests.csv", 'w');
     if ($file) {
       fwrite($file, 'URL');
-      foreach($locations as $loc => $label)
+      foreach($permutations as $label => &$permutation)
           fwrite($file, ",$label");
       fwrite($file, "\r\n");
       foreach($data as $key => &$urlData) {
         fwrite($file, "\"{$urlData['url']}\"");
-        foreach($locations as $loc => $label) {
+        foreach($permutations as $label => &$permutation) {
           $test = '';
           if (array_key_exists($label, $urlData) &&
               is_array($urlData[$label]) &&
@@ -80,7 +80,7 @@ if (LoadResults($results)) {
             fwrite($file, 'URL,');
             $metricData = array();
             $first = true;
-            foreach($locations as $loc => $label) {
+            foreach($permutations as $label => &$permutation) {
                 fwrite($file, "$label,");
                 fwrite($file, "$label stddev,");
                 if (!$first)
@@ -93,7 +93,7 @@ if (LoadResults($results)) {
                 fwrite($file, "\"{$urlData['url']}\",");
                 // check and make sure we have data for all of the configurations for this url
                 $valid = true;
-                foreach($locations as $loc => $label) {
+                foreach($permutations as $label => &$permutation) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
@@ -101,7 +101,7 @@ if (LoadResults($results)) {
                     $compare = "\"http://www.webpagetest.org/video/compare.php?tests=";
                     $first = true;
                     $baseline = null;
-                    foreach($locations as $loc => $label) {
+                    foreach($permutations as $label => &$permutation) {
                         $value = '';
                         if (array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
                             $value = $urlData[$label][$metric];
@@ -134,7 +134,7 @@ if (LoadResults($results)) {
             if ($summary) {
                 fwrite($summary, ',');
                 $first = true;
-                foreach($locations as $loc => $label) {
+                foreach($permutations as $label => &$permutation) {
                     sort($metricData[$label]);
                     fwrite($summary, "$label,");
                     if (!$first)
@@ -146,7 +146,7 @@ if (LoadResults($results)) {
                 $first = true;
                 $baseline = null;
                 $testCount = 0;
-                foreach($locations as $loc => $label) {
+                foreach($permutations as $label => &$permutation) {
                     $value = '';
                     if (array_key_exists($label, $metricData))
                         $value = Avg($metricData[$label]);
@@ -173,7 +173,7 @@ if (LoadResults($results)) {
                     fwrite($summary, "{$percentile}th Percentile,");
                     $first = true;
                     $baseline = null;
-                    foreach($locations as $loc => $label) {
+                    foreach($permutations as $label => &$permutation) {
                         $value = '';
                         if (array_key_exists($label, $metricData))
                             $value = Percentile($metricData[$label], $percentile);

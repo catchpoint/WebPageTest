@@ -13,8 +13,8 @@ if (LoadResults($results)) {
         foreach ($urls as $url) {
             $url = trim($url);
             if (strlen($url)) {
-                foreach( $locations as $location => $label )
-                    $results[] = array( 'url' => $url, 'location' => $location );
+                foreach( $permutations as $label => &$permutation )
+                    $results[] = array( 'url' => $url, 'label' => $label );
             }
         }
     }
@@ -41,7 +41,7 @@ if (count($results)) {
         // store the results
         StoreResults($results);
         
-        echo "Done submitting tests.  The test ID's are stored in results.txt\r\n";
+        echo "Done submitting tests.  The test ID's are stored in results.json\r\n";
     } else {
         echo "No tests to submit, all tests have completed successfully are are still running\r\n";
     }
@@ -63,10 +63,16 @@ function SubmitTests(&$results, $testCount) {
     global $fvonly;
     global $key;
     global $options;
+    global $permutations;
 
     $count = 0;
     foreach ($results as &$result) {
-        if (!array_key_exists('id', $result) || !strlen($result['id']) || 
+      if (array_key_exists('label', $result) &&
+          strlen($result['label']) &&
+          array_key_exists($result['label'], $permutations) &&
+          array_key_exists('location', $permutations[$result['label']])) {
+        if (!array_key_exists('id', $result) ||
+            !strlen($result['id']) || 
             (array_key_exists('result', $result) &&
              strlen($result['result']) && 
              $result['result'] != 0 && 
@@ -74,7 +80,8 @@ function SubmitTests(&$results, $testCount) {
             $count++;
             echo "\rSubmitting test $count of $testCount...                  ";
 
-            $request = $server . "runtest.php?f=json&priority=6&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($result['location']);
+            $location = $permutations[$result['label']]['location'];
+            $request = $server . "runtest.php?f=json&priority=9&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
             if( $private )
                 $request .= '&private=1';
             if( $video )
@@ -85,9 +92,10 @@ function SubmitTests(&$results, $testCount) {
                 $request .= '&fvonly=1';
             if(strlen($key))
                 $request .= "&k=$key";
-            if (isset($options) && strlen($options)) {
+            if (isset($options) && strlen($options))
                 $request .= '&' . $options;
-            }
+            if (array_key_exists('options', $permutations[$result['label']]) && strlen($permutations[$result['label']]['options']))
+                $request .= '&' . $permutations[$result['label']]['options'];
 
             $response_str = file_get_contents($request);
             if (strlen($response_str)) {
@@ -100,6 +108,7 @@ function SubmitTests(&$results, $testCount) {
                 }
             }
         }
+      }
     }
     
     // clear the progress text

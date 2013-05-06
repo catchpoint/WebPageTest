@@ -24,7 +24,7 @@ if (LoadResults($res)) {
                  (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
                 $entry = array();
                 $entry['url'] = $result['url'];
-                $entry['location'] = $result['location'];
+                $entry['label'] = $result['label'];
                 $result = $entry;
                 $count++;
             }

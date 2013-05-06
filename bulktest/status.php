@@ -3,6 +3,7 @@ include './settings.inc';
 
 $results = array();
 $errors = array();
+$urlErrors = array();
 
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
@@ -11,65 +12,65 @@ if (LoadResults($results)) {
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
-            (!array_key_exists('result', $result) || !strlen($result['result']))) {
-//            true) {
+            (!array_key_exists('result', $result) || !strlen($result['result'])))
             $testCount++;
-        }
     }
             
     if ($testCount) {
         echo "Updating the status for $testCount tests...\r\n";
-        
         UpdateResults($results, $testCount);
-        
-        // store the results
         StoreResults($results);
+    }
         
-        // go through and provide a summary of the results
-        $testCount = count($results);
-        $failedSubmit = 0;
-        $complete = 0;
-        $stillTesting = 0;
-        $failed = 0;
-        foreach ($results as &$result) {
-            if (array_key_exists('id', $result) && strlen($result['id'])) {
-                if (array_key_exists('result', $result) && strlen($result['result'])) {
-                    $complete++;
-                    if (($result['result'] != 0 && $result['result'] != 99999 ) ||
-                        !$result['bytesInDoc'] ||
-                        !$result['docTime'] ||
-                        !$result['TTFB'] ||
-                        $result['TTFB'] > $result['docTime'] ||
-                        (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
-                        if (!array_key_exists($result['location'], $errors))
-                            $errors[$result['location']] = 1;
-                        else
-                            $errors[$result['location']]++;
-                        $failed++;
-                    }
-                } else {
-                    $stillTesting++;
+    // go through and provide a summary of the results
+    $testCount = count($results);
+    $failedSubmit = 0;
+    $complete = 0;
+    $stillTesting = 0;
+    $failed = 0;
+    foreach ($results as &$result) {
+        if (array_key_exists('id', $result) && strlen($result['id'])) {
+            if (array_key_exists('result', $result) && strlen($result['result'])) {
+                $complete++;
+                if (($result['result'] != 0 && $result['result'] != 99999 ) ||
+                    !$result['bytesInDoc'] ||
+                    !$result['docTime'] ||
+                    !$result['TTFB'] ||
+                    $result['TTFB'] > $result['docTime'] ||
+                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
+                    if (!array_key_exists($result['label'], $errors))
+                        $errors[$result['label']] = 1;
+                    else
+                        $errors[$result['label']]++;
+                    if (!array_key_exists($result['url'], $urlErrors))
+                        $urlErrors[$result['url']] = 1;
+                    else
+                        $urlErrors[$result['url']]++;
+                    $failed++;
                 }
             } else {
-                $failedSubmit++;
+                $stillTesting++;
             }
+        } else {
+            $failedSubmit++;
         }
-        
-        echo "Update complete (and the results are in results.txt):\r\n";
-        echo "\t$testCount tests in total (each url across all locations)\r\n";
-        echo "\t$complete tests have completed\r\n";
-        if( $failedSubmit )
-            echo "\t$failedSubmit were not submitted successfully and need to be re-submitted\r\n";
-        if( $stillTesting )
-            echo "\t$stillTesting are still waiting to be tested\r\n";
-        if( $failed ) {
-            echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n\n\n";
-            echo "Errors by location:\r\n";
-            foreach ($errors as $location => $count)
-                echo "  $location: $count\r\n";
-        }
-    } else {
-        echo "All tests have results available\r\n";
+    }
+    
+    echo "Update complete (and the results are in results.txt):\r\n";
+    echo "\t$testCount tests in total (each url across all locations)\r\n";
+    echo "\t$complete tests have completed\r\n";
+    if( $failedSubmit )
+        echo "\t$failedSubmit were not submitted successfully and need to be re-submitted\r\n";
+    if( $stillTesting )
+        echo "\t$stillTesting are still waiting to be tested\r\n";
+    if( $failed ) {
+        echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n\r\n";
+        echo "Errors by location:\r\n";
+        foreach ($errors as $label => $count)
+            echo "  $label: $count\r\n";
+        echo "\r\n\r\nErrors by URL:\r\n";
+        foreach ($urlErrors as $url => $count)
+            echo "  $url: $count\r\n";
     }
 } else {
     echo "No tests found in results.txt\r\n";  
@@ -89,7 +90,6 @@ function UpdateResults(&$results, $testCount) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
             (!array_key_exists('result', $result) || !strlen($result['result']))) {
-//            true) {
             $count++;
             echo "\rUpdating the status of test $count of $testCount...                  ";
 
@@ -131,7 +131,8 @@ function GetTestResult(&$data, &$result) {
         $result['result'] = (int)$data['median']['firstView']['result'];
         $result['successfulRuns'] =(int)$data['successfulFVRuns'];
         foreach ($metrics as $metric) {
-            $result[$metric] = (int)$data['median']['firstView'][$metric];
+            if (array_key_exists($metric, $data['median']['firstView']))
+              $result[$metric] = (int)$data['median']['firstView'][$metric];
             if (array_key_exists('standardDeviation', $data) &&
                 is_array($data['standardDeviation']) &&
                 array_key_exists('firstView', $data['standardDeviation']) &&
