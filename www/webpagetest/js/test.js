@@ -1,4 +1,4 @@
-if (wptForgetSettings)
+if (window['wptForgetSettings'])
   var wptStorage = {};
 else  
   var wptStorage = window.localStorage || {};
