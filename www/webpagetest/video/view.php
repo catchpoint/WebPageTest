@@ -5,15 +5,24 @@ $id = $_REQUEST['id'];
 $valid = false;
 $done = false;
 $embed = false;
-if( $_REQUEST['embed'] )
+if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
 {
     $embed = true;
     header('Last-Modified: ' . gmdate('r'));
     header('Expires: '.gmdate('r', time() + 31536000));
 }
+$color = 'white';
 $bgcolor = "black";
+$displayData = false;
+if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
+  $bgcolor = 'white';
+  $color = "black";
+  $displayData = true;
+}
 if (array_key_exists('bgcolor', $_REQUEST))
     $bgcolor = $_REQUEST['bgcolor'];
+if (array_key_exists('color', $_REQUEST))
+    $color = $_REQUEST['color'];
 $autoplay = 'false';
 if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
     $autoplay = 'true';
@@ -22,11 +31,13 @@ $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
 $page_description = "Side-by-side video comparison of website performance.";
 
 $xml = false;
-if( !strcasecmp($_REQUEST['f'], 'xml') )
-    $xml = true;
 $json = false;
-if( !strcasecmp($_REQUEST['f'], 'json') )
+if( array_key_exists('f', $_REQUEST)) {
+  if (!strcasecmp($_REQUEST['f'], 'xml') )
+    $xml = true;
+  elseif( !strcasecmp($_REQUEST['f'], 'json') )
     $json = true;
+}
 
 $ini = null;
 $title = "WebPagetest - Visual Comparison";
@@ -169,17 +180,27 @@ else
         ?>
         <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
+            .content h2 {
+                font-size: 1.5em;
+                <?php
+                echo "color: $color;\n";
+                ?>
+            }
             div.content
             {
                 text-align:center;
-                background-color: black;
-                color: white;
+                <?php
+                echo "background-color: $bgcolor;\n";
+                echo "color: $color;\n";
+                ?>
                 font-family: arial,sans-serif
             }
             .link
             {
                 text-decoration: none;
-                color: white;
+                <?php
+                echo "color: $color;\n";
+                ?>
             }
             #player
             {
@@ -204,8 +225,7 @@ else
     <body>
         <div class="page">
             <?php
-            if( !$embed )
-            {
+            if( !$embed ) {
                 $tab = 'Test Result';
                 $videoId = $id;
                 $nosubheader = true;
@@ -214,8 +234,13 @@ else
 
             if( $valid && ($done || $embed) )
             {
-                if (isset($location) && strlen($location) && !$embed) {
+                if (!$embed) {
+                  if (isset($location) && strlen($location))
                     echo "<div id=\"location\">Tested From: $location</div>";
+                  if (array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']))
+                    echo "<h2>" . htmlspecialchars($_REQUEST['label']) . "</h2>\n";
+                  if ($displayData)
+                    DisplayData();
                 }
 
                 $width = 800;
@@ -228,9 +253,9 @@ else
                     list($width, $height) = getimagesize("./$dir/video.png");
                 }
 
-                if( $_REQUEST['width'] )
+                if( array_key_exists('width', $_REQUEST) && $_REQUEST['width'] )
                     $width = (int)$_REQUEST['width'];
-                if( $_REQUEST['height'] )
+                if( array_key_exists('height', $_REQUEST) && $_REQUEST['height'] )
                     $height = (int)$_REQUEST['height'];
 
                 echo "<script>\n";
@@ -286,5 +311,87 @@ else
 </html>
 
 <?php
+}
+
+function DisplayData() {
+  global $tests;
+  $metrics = array('loadTime' => 'Page Load Time',
+                   'SpeedIndex' => '<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index">Speed Index</a> (lower is better)');
+  echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
+          <tr>
+          <th class="empty"></th>';
+  foreach ($tests as &$test) {
+    RestoreTest($test['id']);
+    $label = '';
+    if (array_key_exists('label', $test))
+      $label = htmlspecialchars($test['label']);
+    echo "<th>$label</th>";
+  }
+  echo "</tr>\n";
+  foreach ($metrics as $metric => $label) {
+    echo "<tr><td class=\"right\"><b>$label</b></td>";
+    $base = null;
+    $index = 0;
+    foreach ($tests as &$test) {
+      $display = '';
+      $value = null;
+      if (array_key_exists('cached', $test) &&
+          array_key_exists('run', $test) &&
+          array_key_exists('pageData', $test) &&
+          is_array($test['pageData']) &&
+          array_key_exists($test['run'], $test['pageData']) &&
+          is_array($test['pageData'][$test['run']]) &&
+          array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
+          is_array($test['pageData'][$test['run']][$test['cached']]) &&
+          array_key_exists($metric, $test['pageData'][$test['run']][$test['cached']])) {
+        $value = htmlspecialchars($test['pageData'][$test['run']][$test['cached']][$metric]);
+        if ($metric == 'loadTime')
+          $display = number_format($value / 1000, 3) . 's';
+        else
+          $display = number_format($value, 0);
+      }
+      if (!$index)
+        $base = $value;
+      elseif(isset($base) && isset($value)) {
+        $delta = $value - $base;
+        $deltaPct = number_format(abs(($delta / $base) * 100), 1);
+        if ($metric == 'loadTime')
+          $deltaStr = number_format(abs($delta / 1000), 3) . 's';
+        else
+          $deltaStr = number_format(abs($delta), 0);
+        $deltaStr = htmlspecialchars("$deltaStr / $deltaPct%");
+        if ($delta > 0)
+          $display .= " <span class=\"bad\">(+$deltaStr)</span>";
+         elseif ($delta < 0)
+          $display .= " <span class=\"good\">(-$deltaStr)</span>";
+         else
+          $display .= "(No Change)";
+      }
+      echo "<td>$display</td>";
+      $index++;
+    }
+    echo "</tr>";
+  }
+  echo "<tr><td class=\"right\">Full Test Result</td>";
+  foreach ($tests as &$test) {
+    $img = '';
+    if (array_key_exists('id', $test)) {
+      if( FRIENDLY_URLS )
+        $result = "/result/{$test['id']}/";
+      else
+        $result = "/results.php?test={$test['id']}";
+      $cached = '';
+      if ($test['cached'])
+        $cached = '_Cached';
+      $thumbnail = "/thumbnail.php?test={$test['id']}&width=150&file={$test['run']}{$cached}_screen.jpg";
+      $img = "<a href=\"$result\"><img class=\"progress pimg\" src=\"$thumbnail\"><br>view test</a>";
+    }
+    echo "<td>$img</td>";
+  }
+  echo '</tr></table><br>';
+  $filmstrip = "/video/compare.php?tests=";
+  foreach ($tests as &$test)
+    $filmstrip .= urlencode("{$test['id']}-r:{$test['run']}-c:{$test['cached']}-l:{$test['label']}") . ',';
+  echo "<h2>Visual Comparison (<a href=\"$filmstrip\">view filmstrip comparison</a>)</h2>";
 }
 ?>

@@ -197,8 +197,8 @@ table.result {width: 920px;}
 .batchResults { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
 .batchResults th, .batchResults td {border: 1px silver solid; padding: 5px 15px; }
 .batchResults th { background: gainsboro; }
-.batchResults td.good {color: green; font-weight: bold;}
-.batchResults td.bad {color: red;  font-weight: bold;}
+.batchResults .good {color: green; font-weight: bold;}
+.batchResults .bad {color: red;  font-weight: bold;}
 .batchResults th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
 
 /*Status page*/
