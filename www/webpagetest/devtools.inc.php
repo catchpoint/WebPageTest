@@ -289,9 +289,14 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 if (array_key_exists('errorCode', $rawRequest))
                     $request['responseCode'] = $rawRequest['errorCode'];
                 $request['load_ms'] = -1;
+                if (array_key_exists('response', $rawRequest) &&
+                    array_key_exists('timing', $rawRequest['response']) &&
+                    array_key_exists('sendStart', $rawRequest['response']['timing']) &&
+                    $rawRequest['response']['timing']['sendStart'] >= 0)
+                    $rawRequest['startTime'] = $rawRequest['response']['timing']['sendStart'];
                 if (array_key_exists('endTime', $rawRequest)) {
                     $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']) * 1000);
-                    $endOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000);
+                    $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
                     if ($endOffset > $pageData['fullyLoaded'])
                         $pageData['fullyLoaded'] = $endOffset;
                 }
@@ -326,32 +331,28 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 $request['ssl_start'] = -1;
                 $request['ssl_end'] = -1;
                 if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('timing', $rawRequest['response'])) {
-                  if (array_key_exists('sendStart', $rawRequest['response']['timing']) &&
-                      $rawRequest['response']['timing']['sendStart'] >= 0)
-                    $request['load_start'] = round(($rawRequest['response']['timing']['sendStart'] - $rawPageData['startTime']) * 1000);
-                  if ($request['socket'] !== -1 &&
-                      !array_key_exists($request['socket'], $connections)) {
-                      $connections[$request['socket']] = $rawRequest['response']['timing'];
-                      if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsStart'] >= 0)
-                        $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']) * 1000);
-                      if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                        $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']) * 1000);
-                      if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                        $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']) * 1000);
-                      if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                        $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']) * 1000);
-                      if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                        $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']) * 1000);
-                      if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
-                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                        $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']) * 1000);
-                  }
+                    array_key_exists('timing', $rawRequest['response']) &&
+                    $request['socket'] !== -1 &&
+                    !array_key_exists($request['socket'], $connections)) {
+                    $connections[$request['socket']] = $rawRequest['response']['timing'];
+                    if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsStart'] >= 0)
+                      $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']) * 1000);
+                    if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                      $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']) * 1000);
+                    if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                      $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']) * 1000);
+                    if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                      $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']) * 1000);
+                    if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                      $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']) * 1000);
+                    if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
+                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                      $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']) * 1000);
                 }
                 $request['initiator'] = '';
                 $request['initiator_line'] = '';
