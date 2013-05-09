@@ -387,7 +387,7 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;" checked=checked>
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
