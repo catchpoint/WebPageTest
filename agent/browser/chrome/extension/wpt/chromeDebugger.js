@@ -106,11 +106,13 @@ wpt.chromeDebugger.CaptureTimeline = function() {
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   if (g_instance.active) {
     // keep track of all of the dev tools messages
-    if (g_instance.devToolsData.length)
-      g_instance.devToolsData += ',';
-    g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
-    if (g_instance.devToolsTimer == undefined)
-      g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+    if (g_instance.timeline) {
+      if (g_instance.devToolsData.length)
+        g_instance.devToolsData += ',';
+      g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
+      if (g_instance.devToolsTimer == undefined)
+        g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+    }
 	
     // Network events
     if (message === 'Network.requestWillBeSent') {
