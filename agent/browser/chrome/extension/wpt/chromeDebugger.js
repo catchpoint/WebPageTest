@@ -137,13 +137,17 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
     } else if (message === 'Network.responseReceived') {
       if (!params.response.fromDiskCache &&
-          g_instance.requests[params.requestId] !== undefined) {
+          g_instance.requests[params.requestId] !== undefined &&
+          g_instance.requests[params.requestId]['fromNet'] !== false) {
         g_instance.requests[params.requestId].fromNet = true;
         if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
           g_instance.requests[params.requestId].firstByteTime = params.timestamp;
         }
         g_instance.requests[params.requestId].response = params.response;
       }
+    } else if (message === 'Network.requestServedFromCache') {
+      if (g_instance.requests[params.requestId] !== undefined)
+        g_instance.requests[params.requestId].fromNet = false;
     } else if (message === 'Network.loadingFinished') {
       if (g_instance.requests[params.requestId] !== undefined &&
           g_instance.requests[params.requestId]['fromNet']) {
