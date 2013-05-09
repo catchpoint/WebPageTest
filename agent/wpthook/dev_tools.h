@@ -34,6 +34,7 @@ public:
   void Reset();
   bool Write(CString file);
   void SetStartTime(LARGE_INTEGER &start_time);
+  void AddRawEvents(CStringA data);
   void AddEvent(LPCSTR method, CStringA data, bool at_head = false);
   void AddPaintEvent(int x, int y, int width, int height);
   void RequestStart(double id, CStringA pageUrl, CStringA url, CStringA method,
@@ -47,4 +48,5 @@ private:
   CAtlList<CStringA> events_;
   LARGE_INTEGER start_time_;
   long double counters_per_ms_;
+  bool  using_raw_events_;
 };

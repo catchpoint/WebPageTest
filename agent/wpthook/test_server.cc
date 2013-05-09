@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test_hook.h"
 #include "mongoose/mongoose.h"
 #include "test_state.h"
+#include "dev_tools.h"
 #include "requests.h"
 #include <atlutil.h>
 
@@ -63,12 +64,13 @@ static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
-                        Requests& requests)
+                        Requests& requests, DevTools &dev_tools)
   :mongoose_context_(NULL)
   ,hook_(hook)
   ,test_(test)
   ,test_state_(test_state)
-  ,requests_(requests) {
+  ,requests_(requests)
+  ,dev_tools_(dev_tools) {
   InitializeCriticalSection(&cs);
 }
 
@@ -146,6 +148,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       // Browsers may get "/event/window_timing" to set "onload" time.
+      DWORD load_time = GetDwordParam(request_info->query_string, "timestamp");
       hook_.OnLoad();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/window_timing") == 0) {
@@ -205,10 +208,11 @@ void TestServer::MongooseCallback(enum mg_event event,
         test_state_.AddConsoleLogMessage(body);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/timeline") == 0) {
+    } else if (strcmp(request_info->uri, "/event/devTools") == 0) {
       if (test_state_._active) {
-        CString body = GetPostBody(conn, request_info);
-        test_state_.AddTimelineEvent(body);
+        CStringA body = CT2A(GetPostBody(conn, request_info));
+        if (body.GetLength())
+          dev_tools_.AddRawEvents(body);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/trace") == 0) {

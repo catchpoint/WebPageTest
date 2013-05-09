@@ -130,7 +130,6 @@ void TestState::Reset(bool cascade) {
     _title_time.QuadPart = 0;
     _title.Empty();
     _user_agent = _T("WebPagetest");
-    _timeline_events.RemoveAll();
     _console_log_messages.RemoveAll();
     _navigated = false;
     _pre_render_paints.RemoveAll();
@@ -853,14 +852,6 @@ void TestState::AddConsoleLogMessage(CString message) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TestState::AddTimelineEvent(CString timeline_event) {
-  EnterCriticalSection(&_data_cs);
-  _timeline_events.AddTail(timeline_event);
-  LeaveCriticalSection(&_data_cs);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 CString TestState::GetConsoleLogJSON() {
   CString ret;
   EnterCriticalSection(&_data_cs);
@@ -882,26 +873,3 @@ CString TestState::GetConsoleLogJSON() {
   LeaveCriticalSection(&_data_cs);
   return ret;
 }
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-CString TestState::GetTimelineJSON() {
-  CString ret;
-  EnterCriticalSection(&_data_cs);
-  if (!_timeline_events.IsEmpty()) {
-    ret = _T("[\"");
-    ret += _user_agent + _T("\"");
-    POSITION pos = _timeline_events.GetHeadPosition();
-    while (pos) {
-      CString entry = _timeline_events.GetNext(pos);
-      if (entry.GetLength()) {
-        ret += _T(",");
-        ret += entry;
-      }
-    }
-    ret += _T("]");
-  }
-  LeaveCriticalSection(&_data_cs);
-  return ret;
-}
-

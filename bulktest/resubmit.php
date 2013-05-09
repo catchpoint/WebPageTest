@@ -11,6 +11,11 @@ if (LoadResults($res)) {
     if (count($res)) {
         $count = 0;
         foreach ($res as &$result) {
+            $stddev = 0;
+            if (array_key_exists('docTime', $result) &&
+                array_key_exists('docTime.stddev', $result) &&
+                $result['docTime'] > 0)
+                $stddev = ($result['docTime.stddev'] / $result['docTime']) * 100;
             if (!array_key_exists('id', $result) ||
                 !strlen($result['id']) || 
                 !array_key_exists('result', $result) ||
@@ -21,11 +26,9 @@ if (LoadResults($res)) {
                  !$result['docTime'] ||
                  !$result['TTFB'] ||
                  $result['TTFB'] > $result['docTime'] ||
+                 $stddev > $maxVariancePct || // > 10% variation in results
                  (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
-                $entry = array();
-                $entry['url'] = $result['url'];
-                $entry['label'] = $result['label'];
-                $result = $entry;
+                $result['resubmit'] = true;
                 $count++;
             }
         }

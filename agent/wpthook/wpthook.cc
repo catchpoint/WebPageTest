@@ -59,7 +59,7 @@ WptHook::WptHook(void):
             dev_tools_)
   ,dns_(test_state_, test_)
   ,done_(false)
-  ,test_server_(*this, test_, test_state_, requests_)
+  ,test_server_(*this, test_, test_state_, requests_, dev_tools_)
   ,test_(shared_test_timeout) {
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);

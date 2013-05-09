@@ -33,7 +33,7 @@ static const char * kNetworkRequestStart = "Network.requestWillBeSent";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-DevTools::DevTools(void) {
+DevTools::DevTools(void):using_raw_events_(false) {
   InitializeCriticalSection(&cs_);
   QueryPerformanceCounter(&start_time_);
   LARGE_INTEGER freq;
@@ -118,16 +118,18 @@ bool DevTools::Write(CString file) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void DevTools::AddEvent(LPCSTR method, CStringA data, bool at_head) {
-  CStringA event_string = "{\"method\":\"";
-  event_string += method;
-  event_string += "\",\"params\":";
-  event_string += data;
-  event_string += "}";
   EnterCriticalSection(&cs_);
-  if (at_head)
-    events_.AddHead(event_string);
-  else
-    events_.AddTail(event_string);
+  if (!using_raw_events_) {
+    CStringA event_string = "{\"method\":\"";
+    event_string += method;
+    event_string += "\",\"params\":";
+    event_string += data;
+    event_string += "}";
+    if (at_head)
+      events_.AddHead(event_string);
+    else
+      events_.AddTail(event_string);
+  }
   LeaveCriticalSection(&cs_);
 }
 
@@ -136,43 +138,47 @@ void DevTools::AddEvent(LPCSTR method, CStringA data, bool at_head) {
   start time.
 -----------------------------------------------------------------------------*/
 void DevTools::SetStartTime(LARGE_INTEGER &start_time) {
-  if (start_time.QuadPart >= start_time_.QuadPart &&
-      counters_per_ms_ > 0) {
-    long double seconds = (long double)(start_time.QuadPart -
-                                        start_time_.QuadPart) /
-                          counters_per_ms_;
-    CStringA timestamp;
-    timestamp.Format("%0.4lf", seconds);
-    CStringA event_string = "{\"record\":{\"startTime\":";
-    event_string += timestamp;
-    event_string += ",\"data\":{},\"children\":[],\"endTime\":";
-    event_string += timestamp;
-    event_string += ",\"type\":\"Program\"}}";
-    AddEvent(kTimelineEvent, event_string, true);
+  if (!using_raw_events_) {
+    if (start_time.QuadPart >= start_time_.QuadPart &&
+        counters_per_ms_ > 0) {
+      long double seconds = (long double)(start_time.QuadPart -
+                                          start_time_.QuadPart) /
+                            counters_per_ms_;
+      CStringA timestamp;
+      timestamp.Format("%0.4lf", seconds);
+      CStringA event_string = "{\"record\":{\"startTime\":";
+      event_string += timestamp;
+      event_string += ",\"data\":{},\"children\":[],\"endTime\":";
+      event_string += timestamp;
+      event_string += ",\"type\":\"Program\"}}";
+      AddEvent(kTimelineEvent, event_string, true);
+    }
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void DevTools::AddPaintEvent(int x, int y, int width, int height) {
-  CStringA timestamp = GetTime();
-  CStringA position;
-  position.Format("\"x\":%d,\"y\":%d,\"width\":%d,\"height\":%d",
-                  x, y, width, height);
-  CStringA event_string = "{\"record\":{\"startTime\":";
-  event_string += timestamp;
-  event_string += ",\"data\":{},\"children\":[{\"startTime\":";
-  event_string += timestamp;
-  event_string += ",\"data\":{";
-  event_string += position;
-  event_string += "},\"children\":[],\"endTime\":";
-  event_string += timestamp;
-  event_string += ",\"type\":\"Paint\",\"frameId\":\"1\",\"usedHeapSize\":";
-  event_string += GetUsedHeap();
-  event_string += "}],\"endTime\":";
-  event_string += timestamp;
-  event_string += ",\"type\":\"Program\"}}";
-  AddEvent(kTimelineEvent, event_string);
+  if (!using_raw_events_) {
+    CStringA timestamp = GetTime();
+    CStringA position;
+    position.Format("\"x\":%d,\"y\":%d,\"width\":%d,\"height\":%d",
+                    x, y, width, height);
+    CStringA event_string = "{\"record\":{\"startTime\":";
+    event_string += timestamp;
+    event_string += ",\"data\":{},\"children\":[{\"startTime\":";
+    event_string += timestamp;
+    event_string += ",\"data\":{";
+    event_string += position;
+    event_string += "},\"children\":[],\"endTime\":";
+    event_string += timestamp;
+    event_string += ",\"type\":\"Paint\",\"frameId\":\"1\",\"usedHeapSize\":";
+    event_string += GetUsedHeap();
+    event_string += "}],\"endTime\":";
+    event_string += timestamp;
+    event_string += ",\"type\":\"Program\"}}";
+    AddEvent(kTimelineEvent, event_string);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -182,23 +188,41 @@ void DevTools::AddPaintEvent(int x, int y, int width, int height) {
 -----------------------------------------------------------------------------*/
 void DevTools::RequestStart(double id, CStringA pageUrl, CStringA url,
                             CStringA method, CAtlArray<CString> &headers) {
-  CStringA timestamp = GetTime();
-  CStringA event_string;
-  event_string.Format("{\"requestId\":\"%0.1f\",\"frameId\":\"0\",", id);
-  event_string += "\"documentURL\":\"";
-  event_string += JSONEscapeA(pageUrl);
-  event_string += "\",\"request\":{\"url\":\"";
-  event_string += JSONEscapeA(url);
-  event_string += "\",\"method\":\"";
-  event_string += JSONEscapeA(method);
-  event_string += "\"";
-  if (!headers.IsEmpty()) {
-    event_string += ",\"headers\":{";
-    // TODO: add header processing
-    event_string += "}";
+  if (!using_raw_events_) {
+    CStringA timestamp = GetTime();
+    CStringA event_string;
+    event_string.Format("{\"requestId\":\"%0.1f\",\"frameId\":\"0\",", id);
+    event_string += "\"documentURL\":\"";
+    event_string += JSONEscapeA(pageUrl);
+    event_string += "\",\"request\":{\"url\":\"";
+    event_string += JSONEscapeA(url);
+    event_string += "\",\"method\":\"";
+    event_string += JSONEscapeA(method);
+    event_string += "\"";
+    if (!headers.IsEmpty()) {
+      event_string += ",\"headers\":{";
+      // TODO: add header processing
+      event_string += "}";
+    }
+    event_string += "},\"timestamp\":";
+    event_string += timestamp;
+    event_string += ",\"initiator\":{\"type\":\"other\"}}";
+    AddEvent(kNetworkRequestStart, event_string);
   }
-  event_string += "},\"timestamp\":";
-  event_string += timestamp;
-  event_string += ",\"initiator\":{\"type\":\"other\"}}";
-  AddEvent(kNetworkRequestStart, event_string);
+}
+
+/*-----------------------------------------------------------------------------
+  Add raw dev tools events from a webkit browser that supports them.
+  This disables the synthetic events and just records whatever the browser
+  provides;
+-----------------------------------------------------------------------------*/
+void DevTools::AddRawEvents(CStringA data) {
+  OutputDebugStringA("DevTools::AddRawEvents\n");
+  EnterCriticalSection(&cs_);
+  if (!using_raw_events_) {
+    events_.RemoveAll();
+    using_raw_events_ = true;
+  }
+  events_.AddTail(data);
+  LeaveCriticalSection(&cs_);
 }

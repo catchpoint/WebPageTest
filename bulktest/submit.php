@@ -27,7 +27,8 @@ if (count($results)) {
     foreach ($results as &$result) {
         if (!array_key_exists('id', $result) || 
             !strlen($result['id']) || 
-            (strlen($result['result']) && 
+            (array_key_exists('resubmit', $result) && $result['resubmit']) ||
+            (array_key_exists('result', $result) && 
              $result['result'] != 0 && 
              $result['result'] != 99999)) {
             $testCount++;
@@ -73,6 +74,7 @@ function SubmitTests(&$results, $testCount) {
           array_key_exists('location', $permutations[$result['label']])) {
         if (!array_key_exists('id', $result) ||
             !strlen($result['id']) || 
+            (array_key_exists('resubmit', $result) && $result['resubmit']) ||
             (array_key_exists('result', $result) &&
              strlen($result['result']) && 
              $result['result'] != 0 && 
@@ -101,10 +103,14 @@ function SubmitTests(&$results, $testCount) {
             if (strlen($response_str)) {
                 $response = json_decode($response_str, true);
                 if ($response['statusCode'] == 200) {
-                    $result['id'] = $response['data']['testId'];
+                    $entry = array();
+                    $entry['url'] = $result['url'];
+                    $entry['label'] = $result['label'];
+                    $entry['id'] = $response['data']['testId'];
+                    $result = $entry;
                 } else {
                     echo "\r                                                     ";
-                    echo "\rError '{$response['statusText']}' submitting {$result['url']} to {$result['location']}\r\n";
+                    echo "\rError '{$response['statusText']}' submitting {$result['url']} for {$result['label']}\r\n";
                 }
             }
         }

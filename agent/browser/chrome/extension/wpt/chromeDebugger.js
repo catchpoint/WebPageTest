@@ -37,7 +37,7 @@ var g_instance = {connected: false,
                   timeline: false,
                   timelineConnected: false,
                   active: false};
-var TIMELINE_AGGREGATION_INTERVAL = 250;
+var TIMELINE_AGGREGATION_INTERVAL = 500;
 
 /**
  * Construct an object that connectes to the Chrome debugger.
@@ -56,8 +56,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
-    g_instance.timelineData = '';
-    g_instance.timelineTimer = undefined;
+    g_instance.devToolsData = '';
+    g_instance.devToolsTimer = undefined;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger']) {
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -76,7 +76,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
 };
 
 wpt.chromeDebugger.SetActive = function(active) {
-  g_instance.timelineData = '';
+  g_instance.devToolsData = '';
   g_instance.requests = {};
   g_instance.active = active;
 };
@@ -105,6 +105,13 @@ wpt.chromeDebugger.CaptureTimeline = function() {
  */
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   if (g_instance.active) {
+    // keep track of all of the dev tools messages
+    if (g_instance.devToolsData.length)
+      g_instance.devToolsData += ',';
+    g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
+    if (g_instance.devToolsTimer == undefined)
+      g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+	
     // Network events
     if (message === 'Network.requestWillBeSent') {
       if (params.request.url.indexOf('http') == 0) {
@@ -152,28 +159,14 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         wpt.chromeDebugger.sendRequestDetails(request);
       }
     }
-
-    // console events
-    else if (message === 'Console.messageAdded') {
-      wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params.message));
-    }
-
-    // Timeline
-    else if (message === 'Timeline.eventRecorded') {
-      if (g_instance.timelineData.length)
-        g_instance.timelineData += ',';
-      g_instance.timelineData += JSON.stringify(params.record);
-      if (g_instance.timelineTimer == undefined)
-        g_instance.timelineTimer = setTimeout(wpt.chromeDebugger.SendTimelineData, TIMELINE_AGGREGATION_INTERVAL);
-    }
   }
 }
 
-wpt.chromeDebugger.SendTimelineData = function() {
-  g_instance.timelineTimer = undefined;
-  if (g_instance.timelineData.length) {
-    wpt.chromeDebugger.sendEvent('timeline', g_instance.timelineData);
-    g_instance.timelineData = '';
+wpt.chromeDebugger.SendDevToolsData = function() {
+  g_instance.devToolsTimer = undefined;
+  if (g_instance.devToolsData.length) {
+    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData);
+    g_instance.devToolsData = '';
   }
 }
 

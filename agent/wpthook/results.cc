@@ -116,7 +116,6 @@ void Results::Save(void) {
     SavePageData(checks);
     SaveResponseBodies();
     SaveConsoleLog();
-    SaveTimeline();
     _dev_tools.SetStartTime(_test_state._start);
     _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
     _saved = true;
@@ -1065,21 +1064,6 @@ void Results::SaveConsoleLog(void) {
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;
       WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
-      CloseHandle(file);
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void Results::SaveTimeline(void) {
-  CStringA timeline = CT2A(_test_state.GetTimelineJSON());
-  if (timeline.GetLength()) {
-    HANDLE file = CreateFile(_file_base + TIMELINE_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)timeline, timeline.GetLength(), &written, 0);
       CloseHandle(file);
     }
   }

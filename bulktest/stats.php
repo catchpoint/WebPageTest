@@ -13,11 +13,11 @@ if (LoadResults($results)) {
     foreach($results as &$result) {
         $valid = true;
         $total++;
-        if (($result['result'] != 0 && $result['result'] != 99999 ) ||
-            !$result['bytesInDoc'] ||
-            !$result['docTime'] ||
-            !$result['TTFB'] ||
-            $result['TTFB'] > $result['docTime'] ||
+        if ((@$result['result'] != 0 && @$result['result'] != 99999 ) ||
+            !@$result['bytesInDoc'] ||
+            !@$result['docTime'] ||
+            !@$result['TTFB'] ||
+            @$result['TTFB'] > @$result['docTime'] ||
             (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
             $valid = false;
             $invalid++;
@@ -45,9 +45,12 @@ if (LoadResults($results)) {
                     }
                 }
                 foreach ($metrics as $metric) {
+                  if (array_key_exists($metric, $result)) {
                     $data[$key][$label][$metric] = $result[$metric];
-                    $data[$key][$label]["$metric.stddev"] = $result["$metric.stddev"];
+                    if (array_key_exists("$metric.stddev", $result))
+                      $data[$key][$label]["$metric.stddev"] = $result["$metric.stddev"];
                     $stats[$label][$metric][] = $result[$metric];
+                  }
                 }
             }
         }

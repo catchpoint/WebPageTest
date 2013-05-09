@@ -19,7 +19,6 @@ if (LoadResults($results)) {
     if ($testCount) {
         echo "Updating the status for $testCount tests...\r\n";
         UpdateResults($results, $testCount);
-        StoreResults($results);
     }
         
     // go through and provide a summary of the results
@@ -32,11 +31,18 @@ if (LoadResults($results)) {
         if (array_key_exists('id', $result) && strlen($result['id'])) {
             if (array_key_exists('result', $result) && strlen($result['result'])) {
                 $complete++;
+                $result['resubmit'] = false;
+                $stddev = 0;
+                if (array_key_exists('docTime', $result) &&
+                    array_key_exists('docTime.stddev', $result) &&
+                    $result['docTime'] > 0)
+                    $stddev = ($result['docTime.stddev'] / $result['docTime']) * 100;
                 if (($result['result'] != 0 && $result['result'] != 99999 ) ||
                     !$result['bytesInDoc'] ||
                     !$result['docTime'] ||
                     !$result['TTFB'] ||
                     $result['TTFB'] > $result['docTime'] ||
+                    $stddev > $maxVariancePct || // > 10% variation in results
                     (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
                     if (!array_key_exists($result['label'], $errors))
                         $errors[$result['label']] = 1;
@@ -47,6 +53,7 @@ if (LoadResults($results)) {
                     else
                         $urlErrors[$result['url']]++;
                     $failed++;
+                    $result['resubmit'] = true;
                 }
             } else {
                 $stillTesting++;
@@ -56,15 +63,7 @@ if (LoadResults($results)) {
         }
     }
     
-    echo "Update complete (and the results are in results.txt):\r\n";
-    echo "\t$testCount tests in total (each url across all locations)\r\n";
-    echo "\t$complete tests have completed\r\n";
-    if( $failedSubmit )
-        echo "\t$failedSubmit were not submitted successfully and need to be re-submitted\r\n";
-    if( $stillTesting )
-        echo "\t$stillTesting are still waiting to be tested\r\n";
     if( $failed ) {
-        echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n\r\n";
         echo "Errors by location:\r\n";
         foreach ($errors as $label => $count)
             echo "  $label: $count\r\n";
@@ -72,6 +71,17 @@ if (LoadResults($results)) {
         foreach ($urlErrors as $url => $count)
             echo "  $url: $count\r\n";
     }
+    echo "\r\nUpdate complete (and the results are in results.txt):\r\n";
+    echo "\t$testCount tests in total (each url across all locations)\r\n";
+    echo "\t$complete tests have completed\r\n";
+    if( $failedSubmit )
+        echo "\t$failedSubmit were not submitted successfully and need to be re-submitted\r\n";
+    if( $stillTesting )
+        echo "\t$stillTesting are still waiting to be tested\r\n";
+    if( $failed )
+        echo "\t$failed returned an error while testing (page timeot, test error, etc)\r\n\r\n";
+
+    StoreResults($results);
 } else {
     echo "No tests found in results.txt\r\n";  
 }

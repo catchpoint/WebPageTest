@@ -85,7 +85,6 @@ private:
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
-  void SaveTimeline(void);
   void SaveHistogram(CxImage& image, CString file);
   bool NativeRequestExists(Request * browser_request);
 };

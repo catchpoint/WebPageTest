@@ -32,12 +32,13 @@ class WptHook;
 class WptTestHook;
 class TestState;
 class Requests;
+class DevTools;
 
 class TestServer
 {
 public:
   TestServer(WptHook& hook, WptTestHook &test, TestState& test_state, 
-            Requests& requests);
+            Requests& requests, DevTools &dev_tools);
   ~TestServer(void);
 
   bool Start(void);
@@ -52,6 +53,7 @@ private:
   WptTestHook&      test_;
   TestState&        test_state_;
   Requests&         requests_;
+  DevTools          &dev_tools_;
   CRITICAL_SECTION  cs;
 
   void SendResponse(struct mg_connection *conn,
