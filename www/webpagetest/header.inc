@@ -7,15 +7,27 @@ if( !isset($pageData) && isset($id) && isset($testPath) ) {
     $pageData = loadAllPageData($testPath, $options);
 }
 if (isset($pageData) && is_array($pageData)) {
-    foreach($pageData as &$run_data) {
-        foreach($run_data as &$test_data) {
-            if( array_key_exists('adult_site', $test_data) && $test_data['adult_site']) {
-                define('ADULT_SITE', true);
-                $adult_site = true;
-                break 2;
-            }
-        }
-    }
+  $adultKeywords = array();
+  if (is_file('./settings/adult.txt'))
+    $adultKeywords = file('./settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach($pageData as &$run_data) {
+      foreach($run_data as &$test_data) {
+          $isAdult = false;
+          if (array_key_exists('URL', $test_data))
+            foreach ($adultKeywords as $keyword)
+              if ((stripos($test_data['URL'], $keyword) !== false) ||
+                  (array_key_exists('title', $test_data) &&
+                  stripos($test_data['title'], $keyword) !== false)) {
+                $isAdult = true;
+                break;
+              }
+          if ($isAdult || (array_key_exists('adult_site', $test_data) && $test_data['adult_site'])) {
+              define('ADULT_SITE', true);
+              $adult_site = true;
+              break 2;
+          }
+      }
+  }
 }
 
 if( $supportsAuth && !defined('EMBED') )
