@@ -181,7 +181,12 @@ $userImages = true;
                         $rowClass = '';
                         if ($row % 2 == 0)
                             $rowClass = ' class="even"';
-                        echo "<tr$rowClass><td class=\"source\">{$log_entry['source']}</td><td class=\"level\">{$log_entry['level']}</td><td class=\"message\"><div>{$log_entry['text']}</div></td><td class=\"url\"><div><a href=\"{$log_entry['url']}\">{$log_entry['url']}</a></div></td><td class=\"line\">{$log_entry['line']}</td></tr>\n";
+                        echo "<tr$rowClass><td class=\"source\">" . htmlspecialchars($log_entry['source']) .
+                             "</td><td class=\"level\">" . htmlspecialchars($log_entry['level']) .
+                             "</td><td class=\"message\"><div>" . htmlspecialchars($log_entry['text']) . 
+                             "</div></td><td class=\"url\"><div><a href=\"" . htmlspecialchars($log_entry['url']) . 
+                             "\">" . htmlspecialchars($log_entry['url']) .
+                             "</a></div></td><td class=\"line\">" . htmlspecialchars($log_entry['line']) . "</td></tr>\n";
                     }
                     echo "</table>\n";
                 }
