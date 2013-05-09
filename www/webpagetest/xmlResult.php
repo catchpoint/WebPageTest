@@ -8,6 +8,7 @@ require_once('testStatus.inc');
 require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
+require_once('devtools.inc.php');
 
 // see if we are sending abbreviated results
 $pagespeed = 0;
@@ -526,25 +527,19 @@ function StatusMessages($id, $testPath, $run, $cached) {
 * @param mixed $cached
 */
 function ConsoleLog($id, $testPath, $run, $cached) {
-    $cachedText = '';
-    if ($cached)
-        $cachedText = '_Cached';
-    $consoleLogFile = "$testPath/$run{$cachedText}_console_log.json";
-    if (gz_is_file($consoleLogFile)) {
-        $consoleLog = json_decode(gz_file_get_contents($consoleLogFile), true);
-        if (isset($consoleLog) && is_array($consoleLog) && count($consoleLog)) {
-            echo "<consoleLog>\n";
-            foreach( $consoleLog as &$entry ) {
-                echo "<entry>\n";
-                echo "<source>" . xml_entities($entry['source']) . "</source>\n";
-                echo "<level>" . xml_entities($entry['level']) . "</level>\n";
-                echo "<message>" . xml_entities($entry['text']) . "</message>\n";
-                echo "<url>" . xml_entities($entry['url']) . "</url>\n";
-                echo "<line>" . xml_entities($entry['line']) . "</line>\n";
-                echo "</entry>\n";
-            }
-            echo "</consoleLog>\n";
+    $consoleLog = DevToolsGetConsoleLog($testPath, $run, $cached);
+    if (isset($consoleLog) && is_array($consoleLog) && count($consoleLog)) {
+        echo "<consoleLog>\n";
+        foreach( $consoleLog as &$entry ) {
+            echo "<entry>\n";
+            echo "<source>" . xml_entities($entry['source']) . "</source>\n";
+            echo "<level>" . xml_entities($entry['level']) . "</level>\n";
+            echo "<message>" . xml_entities($entry['text']) . "</message>\n";
+            echo "<url>" . xml_entities($entry['url']) . "</url>\n";
+            echo "<line>" . xml_entities($entry['line']) . "</line>\n";
+            echo "</entry>\n";
         }
+        echo "</consoleLog>\n";
     }
 }
 

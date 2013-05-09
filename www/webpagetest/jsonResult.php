@@ -5,6 +5,7 @@ require_once('testStatus.inc');
 require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
+require_once('devtools.inc.php');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
     include 'resultBatch.inc';
@@ -54,7 +55,7 @@ function GetTestResult($id) {
         if (array_key_exists('location', $testInfo) && strlen($testInfo['location'])) {
             $locstring = $testInfo['location'];
             if( array_key_exists('browser', $testInfo) && strlen($testInfo['browser']) )
-                $locstring .= ':' . $test['testinfo']['browser'];
+                $locstring .= ':' . $testInfo['browser'];
             $ret['location'] = $locstring;
         }
         if (isset($test) &&
@@ -206,8 +207,9 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       $ret['domains'] = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
       $ret['breakdown'] = getBreakdown($id, $testPath, $run, $cached, $requests);
       $ret['requests'] = $requests;
-      if (gz_is_file("$testPath/$run{$cachedText}_console_log.json"))
-          $ret['consoleLog'] = json_decode(gz_file_get_contents("$testPath/$run{$cachedText}_console_log.json"), true);
+      $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
+      if (isset($console_log))
+          $ret['consoleLog'] = $console_log;
       if (gz_is_file("$testPath/$run{$cachedText}_status.txt")) {
           $ret['status'] = array();
           $lines = gz_file("$testPath/$run{$cachedText}_status.txt");

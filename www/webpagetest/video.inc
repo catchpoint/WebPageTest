@@ -214,23 +214,34 @@ function BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, $syncStar
     $pageData = loadPageRunData($testPath, $run, $cached);
     if( $pageData && count($pageData) && is_dir($videoDir))
     {
-        if (!$syncStartRender)
+        if (!$syncStartRender && array_key_exists('render', $pageData))
             $syncStartRender = $pageData['render'];
-        if (!$syncDocTime)
+        if (!$syncDocTime && array_key_exists('docTime', $pageData))
             $syncDocTime = $pageData['docTime'];
-        if (!$syncFullyLoaded)
+        if (!$syncFullyLoaded && array_key_exists('fullyLoaded', $pageData))
             $syncFullyLoaded = $pageData['fullyLoaded'];
-        $script = "test_url=\"{$pageData['URL']}\"\r\n";
-        $script .= "test_loadTime={$pageData['loadTime']}\r\n";
-        $script .= "test_TTFB={$pageData['TTFB']}\r\n";
-        $script .= "test_startRender={$pageData['render']}\r\n";
-        $script .= "test_fullyLoaded={$pageData['fullyLoaded']}\r\n";
-        $script .= "test_documentComplete={$pageData['docTime']}\r\n";
-        $script .= "test_domTime={$pageData['domTime']}\r\n";
-        $script .= "test_bytesIn={$pageData['bytesIn']}\r\n";
-        $script .= "test_requests={$pageData['requests']}\r\n";
-        $script .= "test_result={$pageData['result']}\r\n";
-        $script .= "test_cached={$pageData['cached']}\r\n";
+        if (array_key_exists('URL', $pageData))
+          $script = "test_url=\"{$pageData['URL']}\"\r\n";
+        if (array_key_exists('loadTime', $pageData))
+          $script .= "test_loadTime={$pageData['loadTime']}\r\n";
+        if (array_key_exists('TTFB', $pageData))
+          $script .= "test_TTFB={$pageData['TTFB']}\r\n";
+        if (array_key_exists('render', $pageData))
+          $script .= "test_startRender={$pageData['render']}\r\n";
+        if (array_key_exists('fullyLoaded', $pageData))
+          $script .= "test_fullyLoaded={$pageData['fullyLoaded']}\r\n";
+        if (array_key_exists('docTime', $pageData))
+          $script .= "test_documentComplete={$pageData['docTime']}\r\n";
+        if (array_key_exists('domTime', $pageData))
+          $script .= "test_domTime={$pageData['domTime']}\r\n";
+        if (array_key_exists('bytesIn', $pageData))
+          $script .= "test_bytesIn={$pageData['bytesIn']}\r\n";
+        if (array_key_exists('requests', $pageData))
+          $script .= "test_requests={$pageData['requests']}\r\n";
+        if (array_key_exists('result', $pageData))
+          $script .= "test_result={$pageData['result']}\r\n";
+        if (array_key_exists('cached', $pageData))
+          $script .= "test_cached={$pageData['cached']}\r\n";
         $script .= "test_syncStartRender={$syncStartRender}\r\n";
         $script .= "test_syncDocumentComplete={$syncDocTime}\r\n";
         $script .= "test_syncFullyLoaded={$syncFullyLoaded}\r\n";

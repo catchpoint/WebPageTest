@@ -709,4 +709,26 @@ function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse) {
       } 
   }
 }
+
+function DevToolsGetConsoleLog($testPath, $run, $cached) {
+  $console_log = null;
+  $cachedText = '';
+  if( $cached )
+      $cachedText = '_Cached';
+  $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
+  if (gz_is_file($console_log_file))
+      $console_log = json_decode(gz_file_get_contents($console_log_file), true);
+  elseif (GetDevToolsEvents(array('Console.messageAdded'), $testPath, $run, $cached, $events) &&
+          is_array($events) &&
+          count($events)) {
+    $console_log = array();
+    foreach ($events as $event) {
+      if (is_array($event) &&
+          array_key_exists('message', $event) &&
+          is_array($event['message']))
+          $console_log[] = $event['message'];
+    }
+  }
+  return $console_log;
+}
 ?>
