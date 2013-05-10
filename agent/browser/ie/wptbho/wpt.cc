@@ -868,12 +868,12 @@ void Wpt::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
     ULARGE_INTEGER expires;
     expires.HighPart = info->ExpireTime.dwHighDateTime;
     expires.LowPart = info->ExpireTime.dwLowDateTime;
-    if (now.QuadPart <= expires.QuadPart) {
+    if (!seconds || now.QuadPart <= expires.QuadPart) {
       now.QuadPart = now.QuadPart / 1000000;
       expires.QuadPart = expires.QuadPart / 1000000;
       ULARGE_INTEGER remaining;
       remaining.QuadPart = expires.QuadPart - now.QuadPart;
-      if (remaining.QuadPart <= seconds) {
+      if (!seconds || remaining.QuadPart <= seconds) {
         // just set the expiration as the last accessed time
         info->ExpireTime.dwHighDateTime = info->LastAccessTime.dwHighDateTime;
         info->ExpireTime.dwLowDateTime = info->LastAccessTime.dwLowDateTime;
