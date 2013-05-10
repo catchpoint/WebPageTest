@@ -49,4 +49,6 @@ private:
   void  SubmitForm(CString target);
   void  Block(CString block_string);
   void  SetDomElement(CString target);
+  void  ExpireCache(CString target);
+  void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
 };

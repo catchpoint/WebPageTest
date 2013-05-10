@@ -216,4 +216,6 @@ protected:
 	void SendCommand(CScriptItem & item, bool & err, bool & done);
 	bool ExecuteScript(_bstr_t script);
   bool ConditionMatches(CString condition, CString value);
+  void ExpireCache(DWORD seconds);
+  void ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
 };

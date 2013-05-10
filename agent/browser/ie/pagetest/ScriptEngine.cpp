@@ -790,6 +790,14 @@ void CScriptEngine::ContinueScript(bool reset)
           }
           err = false;
         }
+        else if(!item.command.CompareNoCase(_T("expireCache")))
+        {
+          DWORD seconds = 0;
+          if (item.target.GetLength())
+            seconds = _tcstoul(item.target, NULL, 10);
+          ExpireCache(seconds);
+          err = false;
+        }
        
   			
 			  if( err && script_logErrors && !script_ignoreErrors )
@@ -1639,4 +1647,133 @@ bool CScriptEngine::PreProcessScriptItem(CScriptItem &item) {
   }
 
   return keep;
+}
+
+/*-----------------------------------------------------------------------------
+	Expire any items in the cache that will expire within X seconds.
+-----------------------------------------------------------------------------*/
+void CScriptEngine::ExpireCache(DWORD seconds) {
+  HANDLE hEntry;
+  DWORD len, entry_size = 0;
+  GROUPID id;
+  INTERNET_CACHE_ENTRY_INFO * info = NULL;
+  HANDLE hGroup = FindFirstUrlCacheGroup(0, CACHEGROUP_SEARCH_ALL, 0, 0, &id, 0);
+  if (hGroup) {
+    do {
+      len = entry_size;
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len, NULL, NULL, NULL);
+      if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+        entry_size = len;
+        info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+        if (info)
+          hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, id, info, &len, NULL, NULL, NULL);
+      }
+      if (hEntry && info) {
+        bool ok = true;
+        do {
+          ExpireCacheEntry(info, seconds);
+          len = entry_size;
+          if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+              entry_size = len;
+              info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+              if (info && !FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL))
+                ok = false;
+            } else {
+              ok = false;
+            }
+          }
+        } while (ok);
+      }
+      if (hEntry)
+        FindCloseUrlCache(hEntry);
+    } while(FindNextUrlCacheGroup(hGroup, &id,0));
+    FindCloseUrlCache(hGroup);
+  }
+
+  len = entry_size;
+  hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, NULL, NULL, NULL);
+  if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+    entry_size = len;
+    info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+    if (info)
+      hEntry = FindFirstUrlCacheEntryEx(NULL, 0, 0xFFFFFFFF, 0, info, &len, NULL, NULL, NULL);
+  }
+  if (hEntry && info) {
+    bool ok = true;
+    do {
+      ExpireCacheEntry(info, seconds);
+      len = entry_size;
+      if (!FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL)) {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+          entry_size = len;
+          info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+          if (info && !FindNextUrlCacheEntryEx(hEntry, info, &len, NULL, NULL, NULL))
+            ok = false;
+        } else {
+          ok = false;
+        }
+      }
+    } while (ok);
+  }
+  if (hEntry)
+    FindCloseUrlCache(hEntry);
+
+  len = entry_size;
+  hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+  if (!hEntry && GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+    entry_size = len;
+    info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+    if (info)
+      hEntry = FindFirstUrlCacheEntry(NULL, info, &len);
+  }
+  if (hEntry && info) {
+    bool ok = true;
+    do {
+      ExpireCacheEntry(info, seconds);
+      len = entry_size;
+      if (!FindNextUrlCacheEntry(hEntry, info, &len)) {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER && len) {
+          entry_size = len;
+          info = (INTERNET_CACHE_ENTRY_INFO *)realloc(info, len);
+          if (info && !FindNextUrlCacheEntry(hEntry, info, &len))
+            ok = false;
+        } else {
+          ok = false;
+        }
+      }
+    } while (ok);
+  }
+  if (hEntry)
+    FindCloseUrlCache(hEntry);
+  if (info)
+    free(info);
+}
+
+/*-----------------------------------------------------------------------------
+	Expire a single item in the cache if it expires within X seconds.
+-----------------------------------------------------------------------------*/
+void CScriptEngine::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
+  if (info->lpszSourceUrlName) {
+    FILETIME now_filetime;
+    GetSystemTimeAsFileTime(&now_filetime);
+    ULARGE_INTEGER now;
+    now.HighPart = now_filetime.dwHighDateTime;
+    now.LowPart = now_filetime.dwLowDateTime;
+    ULARGE_INTEGER expires;
+    expires.HighPart = info->ExpireTime.dwHighDateTime;
+    expires.LowPart = info->ExpireTime.dwLowDateTime;
+    if (now.QuadPart <= expires.QuadPart) {
+      now.QuadPart = now.QuadPart / 1000000;
+      expires.QuadPart = expires.QuadPart / 1000000;
+      ULARGE_INTEGER remaining;
+      remaining.QuadPart = expires.QuadPart - now.QuadPart;
+      if (remaining.QuadPart <= seconds) {
+        // just set the expiration as the last accessed time - it's guaranteed to be in the past
+        info->ExpireTime.dwHighDateTime = info->LastAccessTime.dwHighDateTime;
+        info->ExpireTime.dwLowDateTime = info->LastAccessTime.dwLowDateTime;
+        SetUrlCacheEntryInfo(info->lpszSourceUrlName, info, CACHE_ENTRY_EXPTIME_FC);
+      }
+    }
+  }
 }

@@ -19,7 +19,8 @@ public:
     SET_VALUE,
     SUBMIT_FORM,
     BLOCK,
-    SET_DOM_ELEMENT
+    SET_DOM_ELEMENT,
+    EXPIRE_CACHE
   } TASK_ACTION;
 
   bool        _valid;

@@ -13,6 +13,7 @@ const char * ACTION_SET_VALUE = "setValue";
 const char * ACTION_SUBMIT_FORM = "submitForm";
 const char * ACTION_BLOCK = "block";
 const char * ACTION_SET_DOM_ELEMENT = "setDomElement";
+const char * ACTION_EXPIRE_CACHE = "expireCache";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -64,28 +65,30 @@ bool WptTask::ParseTask(CString task) {
         if (!value.empty() && value.isConvertibleTo(Json::stringValue))
           action = value.asCString();
 
-        if (action == ACTION_NAVIGATE)
+        if (!action.CompareNoCase(ACTION_NAVIGATE))
           _action = NAVIGATE;
-        else if (action == ACTION_CLEAR_CACHE)
+        else if (!action.CompareNoCase(ACTION_CLEAR_CACHE))
           _action = CLEAR_CACHE;
-        else if (action == ACTION_SET_COOKIE)
+        else if (!action.CompareNoCase(ACTION_SET_COOKIE))
           _action = SET_COOKIE;
-        else if (action == ACTION_EXEC)
+        else if (!action.CompareNoCase(ACTION_EXEC))
           _action = EXEC;
-        else if (action == ACTION_CLICK)
+        else if (!action.CompareNoCase(ACTION_CLICK))
           _action = CLICK;
-        else if (action == ACTION_SET_INNER_HTML)
+        else if (!action.CompareNoCase(ACTION_SET_INNER_HTML))
           _action = SET_INNER_HTML;
-        else if (action == ACTION_SET_INNER_TEXT)
+        else if (!action.CompareNoCase(ACTION_SET_INNER_TEXT))
           _action = SET_INNER_TEXT;
-        else if (action == ACTION_SET_VALUE)
+        else if (!action.CompareNoCase(ACTION_SET_VALUE))
           _action = SET_VALUE;
-        else if (action == ACTION_SUBMIT_FORM)
+        else if (!action.CompareNoCase(ACTION_SUBMIT_FORM))
           _action = SUBMIT_FORM;
-        else if (action == ACTION_BLOCK)
+        else if (!action.CompareNoCase(ACTION_BLOCK))
           _action = BLOCK;
-        else if (action == ACTION_SET_DOM_ELEMENT)
+        else if (!action.CompareNoCase(ACTION_SET_DOM_ELEMENT))
           _action = SET_DOM_ELEMENT;
+        else if (!action.CompareNoCase(ACTION_EXPIRE_CACHE))
+          _action = EXPIRE_CACHE;
 
         if (_action != UNDEFINED)
           _valid = true;
