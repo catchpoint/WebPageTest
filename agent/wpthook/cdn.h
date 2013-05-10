@@ -49,6 +49,7 @@ CDN_PROVIDER cdnList[] = {
   {".llnwd.net", "Limelight"},
   {"edgecastcdn.net", "Edgecast"},
   {".systemcdn.net", "Edgecast"},
+  {".v5cdn.net", "Edgecast"},
   {"hwcdn.net", "Highwinds"},
   {".panthercdn.com", "Panther"},
   {".simplecdn.net", "Simple CDN"},
@@ -99,6 +100,7 @@ CDN_PROVIDER cdnList[] = {
   {".azioncdn.com", "Azion"},
   {".azion.net", "Azion"},
   {".cdncloud.net.au", "MediaCloud"},
+  {".rncdn1.com", "Reflected Networks"},
   {"END_MARKER", "END_MARKER"}
 };
 
