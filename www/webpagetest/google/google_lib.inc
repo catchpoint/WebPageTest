@@ -40,10 +40,10 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll)
  */
 function ParseSubParams(&$params, $combined_pairs)
 {
-	$combined_pair_list = split(',', $params[$combined_pairs]);
+	$combined_pair_list = explode(',', $params[$combined_pairs]);
 	foreach ($combined_pair_list as $item)
 	{
-		$pair = split('\.', $item);
+		$pair = explode('.', $item);
 		$params[$pair[0]] = $pair[1];
 	}
 }

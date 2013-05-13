@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.5';
+$DevToolsCacheVersion = '0.6';
 $eventList = array();
 
 /**
@@ -25,9 +25,26 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             }
             global $eventList;
             $eventList = array();
+            $startTimes = array();
             foreach($timeline as &$entry) {
+                if (array_key_exists('method', $entry)) {
+                  if (array_key_exists('params', $entry) &&
+                      !array_key_exists($entry['method'], $startTimes)) {
+                    if (array_key_exists('timestamp', $entry['params']))
+                      $startTimes[$entry['method']] = $entry['params']['timestamp'] * 1000;
+                    elseif (array_key_exists('record', $entry['params']) &&
+                            array_key_exists('startTime', $entry['params']['record']))
+                      $startTimes[$entry['method']] = $entry['params']['record']['startTime'];
+                  }
+                } elseif (array_key_exists('timestamp', $entry) &&
+                  !array_key_exists('timestamp', $startTimes))
+                  $startTimes['timestamp'] = $entry['timestamp'];
                 $frame = '0';
-                ProcessPaintEntry($entry, $startTime, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
+                ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
+            }
+            foreach($startTimes as $time) {
+              if (!$startTime || $time < $startTime)
+                $startTime = $time;
             }
             $regionCount = count($regions);
             if ($regionCount) {
@@ -121,7 +138,7 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
 * @param mixed $fullScreen
 * @param mixed $regions
 */
-function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse) {
+function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse) {
     $ret = false;
     if (isset($entry) && is_array($entry)) {
         $hadPaintChildren = false;
@@ -139,16 +156,11 @@ function ProcessPaintEntry(&$entry, &$startTime, &$fullScreen, &$regions, $frame
         if (array_key_exists('frameId', $entry))
             $frame = $entry['frameId'];
         if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-            ProcessPaintEntry($entry['params']['record'], $startTime, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
-        if (array_key_exists('startTime', $entry) &&
-            $entry['startTime'] &&
-            (!$startTime ||
-             $entry['startTime'] < $startTime))
-            $startTime = $entry['startTime'];
+            ProcessPaintEntry($entry['params']['record'], $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
         if(array_key_exists('children', $entry) &&
            is_array($entry['children'])) {
             foreach($entry['children'] as &$child)
-                if (ProcessPaintEntry($child, $startTime, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse))
+                if (ProcessPaintEntry($child, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse))
                     $hadPaintChildren = true;
         } 
         if (array_key_exists('type', $entry) &&
