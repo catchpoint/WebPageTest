@@ -260,7 +260,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             $perTestTime = 0;
             $testCount = 0;
             $beaconUrl = null;
-            if (strlen($settings['showslow']))
+            if (strpos($id, '.') === false && strlen($settings['showslow']))
             {
                 $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
                 if (array_key_exists('showslow_key', $settings) &&
