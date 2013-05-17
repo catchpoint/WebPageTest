@@ -39,10 +39,11 @@ static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
-// mobile emulation defaults (taken from a Droid RAZR)
+// Mobile emulation defaults (taken from a Droid RAZR).
+// The height has 36 added pixels to allow for the debugging header.
 static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
 static const DWORD DEFAULT_MOBILE_WIDTH = 540;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 864;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 900;
 static const char * DEFAULT_MOBILE_USER_AGENT =
     "Mozilla/5.0 (Linux; Android 4.1.2; DROID RAZR Build/9.8.2O-72_VZW-16) "
     "AppleWebKit/537.33 (KHTML, like Gecko) Chrome/27.0.1441.0 "

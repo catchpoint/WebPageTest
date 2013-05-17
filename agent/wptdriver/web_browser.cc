@@ -43,6 +43,9 @@ static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
     _T(" --trace-startup-duration=240 --trace-startup-file=\"%s_trace.json\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
 static const TCHAR * CHROME_MOBILE = 
+    _T(" --force-compositing-mode")
+    _T(" --enable-threaded-compositing")
+    _T(" --enable-pinch")
     _T(" --enable-viewport")
     _T(" --enable-fixed-layout");
 static const TCHAR * CHROME_SCALE_FACTOR =
