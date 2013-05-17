@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.6';
+$DevToolsCacheVersion = '0.7';
 $eventList = array();
 
 /**
@@ -164,12 +164,18 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
                     $hadPaintChildren = true;
         } 
         if (array_key_exists('type', $entry) &&
-            !strcasecmp($entry['type'], 'Paint') &&
-            array_key_exists('data', $entry) &&
-            array_key_exists('width', $entry['data']) &&
-            array_key_exists('height', $entry['data']) &&
-            array_key_exists('x', $entry['data']) &&
-            array_key_exists('y', $entry['data'])) {
+          !strcasecmp($entry['type'], 'Paint') &&
+          array_key_exists('data', $entry)) {
+          if (array_key_exists('clip', $entry['data'])) {
+            $entry['data']['x'] = $entry['data']['clip'][0];
+            $entry['data']['y'] = $entry['data']['clip'][1];
+            $entry['data']['width'] = $entry['data']['clip'][4] - $entry['data']['clip'][0];
+            $entry['data']['height'] = $entry['data']['clip'][4] - $entry['data']['clip'][1];
+          }
+          if (array_key_exists('width', $entry['data']) &&
+              array_key_exists('height', $entry['data']) &&
+              array_key_exists('x', $entry['data']) &&
+              array_key_exists('y', $entry['data'])) {
             $ret = true;
             $area = $entry['data']['width'] * $entry['data']['height'];
             if ($area > $fullScreen)
@@ -184,6 +190,7 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
                 }
                 $regions[$regionName]['times'][] = $entry['startTime'];
             }
+          }
         }
     }
     return $ret;
