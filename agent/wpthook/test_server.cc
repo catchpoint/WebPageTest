@@ -53,6 +53,8 @@ static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
     "Content-Type:text/html\r\n"
     "\r\n"
     "<html><head><title>Blank</title>\r\n"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
+    "maximum-scale=1.0, user-scalable=0;\">\r\n"
     "<style type=\"text/css\">\r\n"
     "body {background-color: #FFF;}\r\n"
     "</style>\r\n"
@@ -220,6 +222,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       OutputDebugString(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/blank.html") == 0) {
+      test_state_.UpdateBrowserWindow();
       mg_printf(conn, BLANK_HTML);
     } else {
         // unknown command fall-through
