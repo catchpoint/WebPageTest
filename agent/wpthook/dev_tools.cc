@@ -217,7 +217,6 @@ void DevTools::RequestStart(double id, CStringA pageUrl, CStringA url,
   provides;
 -----------------------------------------------------------------------------*/
 void DevTools::AddRawEvents(CStringA data) {
-  OutputDebugStringA("DevTools::AddRawEvents\n");
   EnterCriticalSection(&cs_);
   if (!using_raw_events_) {
     events_.RemoveAll();

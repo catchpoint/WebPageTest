@@ -136,10 +136,10 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           lstrcat(cmdLine, CHROME_SPDY3);
         if (_test._emulate_mobile)
           lstrcat(cmdLine, CHROME_MOBILE);
-        if (_test._device_scale_factor.GetLength()) {
-          lstrcat(cmdLine, CHROME_SCALE_FACTOR);
-          lstrcat(cmdLine, _test._device_scale_factor);
-        }
+        //if (_test._device_scale_factor.GetLength()) {
+        //  lstrcat(cmdLine, CHROME_SCALE_FACTOR);
+        //  lstrcat(cmdLine, _test._device_scale_factor);
+        //}
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {

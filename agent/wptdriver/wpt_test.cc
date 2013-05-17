@@ -39,6 +39,15 @@ static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
+// mobile emulation defaults (taken from a Droid RAZR)
+static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
+static const DWORD DEFAULT_MOBILE_WIDTH = 540;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 864;
+static const char * DEFAULT_MOBILE_USER_AGENT =
+    "Mozilla/5.0 (Linux; Android 4.1.2; DROID RAZR Build/9.8.2O-72_VZW-16) "
+    "AppleWebKit/537.33 (KHTML, like Gecko) Chrome/27.0.1441.0 "
+    "Mobile Safari/537.33";
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void):_version(0),
@@ -430,15 +439,27 @@ void WptTest::BuildScript() {
 
   if (_emulate_mobile) {
     if (_device_scale_factor.IsEmpty())
-      _device_scale_factor = _T("2");
+      _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
     if (!_viewport_width && !_viewport_height) {
-      _viewport_width = 640;
-      _viewport_height = 960;
+      _viewport_width = DEFAULT_MOBILE_WIDTH;
+      _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
     if (_user_agent.IsEmpty())
-      _user_agent = "Mozilla/5.0 (Linux; Android 4.2.2; Nexus 4 Build/JDQ39)"
-                    " AppleWebKit/537.31 (KHTML, like Gecko)"
-                    " Chrome/26.0.1408.0 Mobile Safari/537.31";
+      _user_agent = DEFAULT_MOBILE_USER_AGENT;
+  }
+
+  // Scale the viewport or browser size by the scale factor.
+  // The forced scaling is not working correctly for Chrome.
+  if (_device_scale_factor.GetLength()) {
+    double scale = _ttof(_device_scale_factor);
+    if (scale >= 0.5 && scale <= 10.0) {
+      _browser_width = (int)((double)_browser_width / scale);
+      _browser_height = (int)((double)_browser_height / scale);
+      if (_viewport_width)
+        _viewport_width = (int)((double)_viewport_width / scale);
+      if (_viewport_height)
+        _viewport_height = (int)((double)_viewport_height / scale);
+    }
   }
 }
 
