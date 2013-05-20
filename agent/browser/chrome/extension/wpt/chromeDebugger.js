@@ -35,7 +35,6 @@ goog.provide('wpt.chromeDebugger');
 
 var g_instance = {connected: false,
                   timeline: false,
-                  timelineConnected: false,
                   active: false};
 var TIMELINE_AGGREGATION_INTERVAL = 500;
 
@@ -86,19 +85,7 @@ wpt.chromeDebugger.SetActive = function(active) {
  */
 wpt.chromeDebugger.CaptureTimeline = function() {
   g_instance.timeline = true;
-  if (g_instance.connected) {
-    try {
-      if (g_instance.chromeApi_['debugger']) {
-        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-      } else if (g_instance.chromeApi_.experimental['debugger']) {
-        g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
-      }
-      g_instance.timelineConnected = true;
-    } catch (err) {
-      wpt.LOG.warning('Error starting timeline capture (already connected): ' + err);
-    }
-  }
-}
+};
 
 /**
  * Actual message callback
@@ -112,6 +99,12 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
       if (g_instance.devToolsTimer == undefined)
         g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+    }
+    
+    // check for paint events
+    if (message === 'Timeline.eventRecorded' &&
+        wpt.chromeDebugger.isPaintEvent(params)) {
+      wpt.chromeDebugger.sendEvent('paint', '');
     }
 	
     // Network events
@@ -166,7 +159,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
     }
   }
-}
+};
 
 wpt.chromeDebugger.SendDevToolsData = function() {
   g_instance.devToolsTimer = undefined;
@@ -174,7 +167,7 @@ wpt.chromeDebugger.SendDevToolsData = function() {
     wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData);
     g_instance.devToolsData = '';
   }
-}
+};
 
 /**
  * Attached using the 1.0 released interface
@@ -191,12 +184,9 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  if (g_instance.timeline && !g_instance.timelineConnected) {
-    g_instance.timelineConnected = true;
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  }
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
   g_instance.startedCallback();
-}
+};
 
 /**
  * Attached using the old experimental interface
@@ -213,12 +203,9 @@ wpt.chromeDebugger.OnAttachOld = function() {
   g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Network.enable');
   g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Console.enable');
   g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Page.enable');
-  if (g_instance.timeline && !g_instance.timelineConnected) {
-    g_instance.timelineConnected = true;
-    g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
-  }
+  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
   g_instance.startedCallback();
-}
+};
 
 /**
  * Attached using the new experimental interface
@@ -234,13 +221,9 @@ wpt.chromeDebugger.OnAttachExperimental = function() {
   g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
   g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
   g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  // the timeline is pretty resource intensive so it is optional
-  if (g_instance.timeline && !g_instance.timelineConnected) {
-    g_instance.timelineConnected = true;
-    g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  }
+  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
   g_instance.startedCallback();
-}
+};
 
 /**
  * Process and send the data for a single request
@@ -357,7 +340,7 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
     eventData += '\n';
   }
   wpt.chromeDebugger.sendEvent('request_data', eventData);
-}
+};
 
 
 /**
@@ -373,6 +356,26 @@ wpt.chromeDebugger.sendEvent = function(event, data) {
   } catch (err) {
     wpt.LOG.warning('Error sending request data XHR: ' + err);
   }
-}
+};
+
+/**
+ * See if the trace event is a paint event (recursively)
+ */
+wpt.chromeDebugger.isPaintEvent = function(event) {
+  var isPaint = false;
+  if (event['type'] != undefined &&
+      event['type'] == 'Paint')
+    isPaint = true;
+  else {
+    if (event['record'] != undefined)
+      isPaint = wpt.chromeDebugger.isPaintEvent(event.record);
+    if (!isPaint &&
+        event['children'] != undefined) {
+      for (var i = 0; i < event.children.length && !isPaint; i++)
+        isPaint = wpt.chromeDebugger.isPaintEvent(event.children[i]);
+    }
+  }
+  return isPaint;
+};
 
 })());  // namespace

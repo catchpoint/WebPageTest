@@ -488,34 +488,36 @@ void TestState::GrabVideoFrame(bool force) {
 -----------------------------------------------------------------------------*/
 void TestState::PaintEvent(int x, int y, int width, int height) {
     _screen_updated = true;
-    if (_render_start.QuadPart) {
-      bool valid = true;
-      if (_screen_capture.IsViewportSet()) {
-        int left = max(x - _screen_capture._viewport.left, 0);
-        int top = max(y - _screen_capture._viewport.top, 0);
-        int right = max(min(x + width, _screen_capture._viewport.right)
-                        - _screen_capture._viewport.left, 0);
-        int bottom = max(min(y + height, _screen_capture._viewport.bottom)
-                         - _screen_capture._viewport.top, 0);
-        x = left;
-        y = top;
-        width = right - left;
-        height = bottom - top;
-        if (width <= 0 || height <= 0)
-          valid = false;
+    if (width || height) {
+      if (_render_start.QuadPart) {
+        bool valid = true;
+        if (_screen_capture.IsViewportSet()) {
+          int left = max(x - _screen_capture._viewport.left, 0);
+          int top = max(y - _screen_capture._viewport.top, 0);
+          int right = max(min(x + width, _screen_capture._viewport.right)
+                          - _screen_capture._viewport.left, 0);
+          int bottom = max(min(y + height, _screen_capture._viewport.bottom)
+                           - _screen_capture._viewport.top, 0);
+          x = left;
+          y = top;
+          width = right - left;
+          height = bottom - top;
+          if (width <= 0 || height <= 0)
+            valid = false;
+        }
+        if (valid) {
+          _dev_tools.AddPaintEvent(x, y, width, height);
+        }
+      } else {
+        RECT paint_rect;
+        paint_rect.left = x;
+        paint_rect.top = y;
+        paint_rect.right = x + width;
+        paint_rect.bottom = y + height;
+        EnterCriticalSection(&_data_cs);
+        _pre_render_paints.AddTail(paint_rect);
+        LeaveCriticalSection(&_data_cs);
       }
-      if (valid) {
-        _dev_tools.AddPaintEvent(x, y, width, height);
-      }
-    } else {
-      RECT paint_rect;
-      paint_rect.left = x;
-      paint_rect.top = y;
-      paint_rect.right = x + width;
-      paint_rect.bottom = y + height;
-      EnterCriticalSection(&_data_cs);
-      _pre_render_paints.AddTail(paint_rect);
-      LeaveCriticalSection(&_data_cs);
     }
     CheckStartRender();
 }
