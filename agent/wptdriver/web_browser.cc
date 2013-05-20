@@ -48,6 +48,8 @@ static const TCHAR * CHROME_MOBILE =
     _T(" --enable-pinch")
     _T(" --enable-viewport")
     _T(" --enable-fixed-layout");
+static const TCHAR * CHROME_NOT_MOBILE = 
+    _T(" --disable-accelerated-compositing");
 static const TCHAR * CHROME_SCALE_FACTOR =
     _T(" --force-device-scale-factor=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
@@ -139,6 +141,8 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           lstrcat(cmdLine, CHROME_SPDY3);
         if (_test._emulate_mobile)
           lstrcat(cmdLine, CHROME_MOBILE);
+        else
+          lstrcat(cmdLine, CHROME_NOT_MOBILE);
         //if (_test._device_scale_factor.GetLength()) {
         //  lstrcat(cmdLine, CHROME_SCALE_FACTOR);
         //  lstrcat(cmdLine, _test._device_scale_factor);
