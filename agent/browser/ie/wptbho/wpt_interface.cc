@@ -34,9 +34,12 @@ bool WptInterface::GetTask(WptTask& task) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptInterface::OnLoad() {
+void WptInterface::OnLoad(CString options) {
   CString response;
-  HttpGet(EVENT_ON_LOAD, response);
+  CString url = EVENT_ON_LOAD;
+  if (options.GetLength())
+    url += CString(_T("?")) + options;
+  HttpGet(url, response);
 }
 
 /*-----------------------------------------------------------------------------

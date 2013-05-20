@@ -119,7 +119,24 @@ bool Wpt::InstallHook() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnLoad() {
   if (_active) {
-    _wpt_interface.OnLoad();
+    int fixed_viewport = 0;
+    int dom_element_count = 0;
+    if (_web_browser) {
+      CComPtr<IDispatch> dispatch;
+      if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
+        CComQIPtr<IHTMLDocument2> document = dispatch;
+        if (document) {
+          dom_element_count = CountDOMElements(document);
+          if (FindDomElementInDocument(_T("meta"), _T("name"), _T("viewport"),
+                                       equal, document))
+            fixed_viewport = 1;
+        }
+      }
+    }
+    CString options;
+    options.Format(_T("fixedViewport=%d&domCount=%d"),
+                   fixed_viewport, dom_element_count);
+    _wpt_interface.OnLoad(options);
     _active = false;
   }
 }
@@ -882,4 +899,45 @@ void Wpt::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Recursively count the number of DOM elements on the page
+-----------------------------------------------------------------------------*/
+DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
+  DWORD count = 0;
+  if (document) {
+		CComPtr<IHTMLElementCollection> coll;
+		if (SUCCEEDED(document->get_all(&coll)) && coll) {
+			long nodes = 0;
+			if( SUCCEEDED(coll->get_length(&nodes)) )
+        count += nodes;
+      coll.Release();
+    }
+
+    // walk any/all iFrames
+		CComQIPtr<IOleContainer> ole(document);
+		if (ole) {
+			CComPtr<IEnumUnknown> objects;
+			if (SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) &&
+          objects) {
+				IUnknown* pUnk;
+				ULONG uFetched;
+				while (S_OK == objects->Next(1, &pUnk, &uFetched)) {
+					CComQIPtr<IWebBrowser2> browser(pUnk);
+					pUnk->Release();
+					if (browser) {
+						CComPtr<IDispatch> disp;
+						if (SUCCEEDED(browser->get_Document(&disp)) && disp) {
+							CComQIPtr<IHTMLDocument2> frameDoc(disp);
+							if (frameDoc)
+								count += CountDOMElements(frameDoc);
+						}
+					}
+				}
+			}
+		}			
+  }
+
+  return count;
 }

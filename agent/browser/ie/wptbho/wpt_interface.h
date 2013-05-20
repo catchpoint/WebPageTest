@@ -9,7 +9,7 @@ public:
   ~WptInterface(void);
 
   bool  GetTask(WptTask& task);
-  void  OnLoad();
+  void  OnLoad(CString options);
   void  OnNavigate();
   void  OnTitle(CString title);
   void  OnStatus(CString status);

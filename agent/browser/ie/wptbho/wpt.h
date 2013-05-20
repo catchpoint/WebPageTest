@@ -51,4 +51,5 @@ private:
   void  SetDomElement(CString target);
   void  ExpireCache(CString target);
   void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
+  DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
 };
