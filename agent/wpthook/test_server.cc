@@ -149,6 +149,12 @@ void TestServer::MongooseCallback(enum mg_event event,
         hook_.Start();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
+      CString fixed_viewport = GetParam(request_info->query_string,
+                                        "fixedViewport");
+      if (!fixed_viewport.IsEmpty())
+        test_state_._fixed_viewport = _ttoi(fixed_viewport);
+      test_state_._dom_element_count =
+          GetDwordParam(request_info->query_string, "domCount");
       // Browsers may get "/event/window_timing" to set "onload" time.
       DWORD load_time = GetDwordParam(request_info->query_string, "timestamp");
       hook_.OnLoad();

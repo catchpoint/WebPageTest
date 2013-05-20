@@ -5421,7 +5421,14 @@ window.addEventListener('load', function() {
   var timestamp = 0;
   if (window['performance'] != undefined)
     timestamp = window.performance.now();
-  chrome.extension.sendRequest({'message': 'wptLoad', 'timestamp': timestamp}, function(response) {});
+  var fixedViewport = 0;
+  if (document.querySelector("meta[name=viewport]"))
+    fixedViewport = 1;
+  var domCount = document.getElementsByTagName("*").length;
+  chrome.extension.sendRequest({'message': 'wptLoad',
+                                'fixedViewport': fixedViewport,
+                                'domCount': domCount,
+                                'timestamp': timestamp}, function(response) {});
   window.setTimeout(wpt.contentScript.reportTiming_, 0);
 }, false);
 

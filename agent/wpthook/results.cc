@@ -565,7 +565,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     // AFT (ms) (no longer supported)
     result += "\t";
     // DOM Element Count
-    result += "\t";
+    buff.Format("%d\t", _test_state._dom_element_count);
+    result += buff;
     // Page Speed Version
     result += "\t";
     // Page Title
@@ -606,6 +607,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     } else {
       result += "0\t";
     }
+    // Fixed Viewport
+    buff.Format("%d\t", _test_state._fixed_viewport);
+    result += buff;
 
     result += "\r\n";
 

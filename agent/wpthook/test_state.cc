@@ -90,6 +90,8 @@ void TestState::Reset(bool cascade) {
   _load_event_start = 0;
   _load_event_end = 0;
   _on_load.QuadPart = 0;
+  _fixed_viewport = -1;
+  _dom_element_count = 0;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);

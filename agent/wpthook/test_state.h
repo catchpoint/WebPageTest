@@ -136,6 +136,8 @@ public:
   CString _browser_name;
   CString _browser_version;
   CString _user_agent;
+  int _fixed_viewport;
+  int _dom_element_count;
 
   bool  _active;
   int   _current_document;

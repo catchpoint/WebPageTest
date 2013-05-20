@@ -355,7 +355,10 @@ chrome.extension.onRequest.addListener(
           '?load_time=' + time);
     }
     else if (request.message == 'wptLoad') {
-      wptSendEvent('load', '?timestamp=' + request['timestamp']);
+      wptSendEvent('load', 
+                   '?timestamp=' + request['timestamp'] + 
+                   '&fixedViewport=' + request['fixedViewport'] +
+                   '&domCount=' + request['domCount']);
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();

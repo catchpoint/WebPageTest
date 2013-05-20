@@ -172,7 +172,12 @@ wpt.moz.main.onNavigate = function() {
 // Send onload & W3C navigation timing events.
 wpt.moz.main.onLoad = function(win) {
   g_active = false;
-  wpt.moz.main.sendEventToDriver_('load');
+  var fixedViewport = 0;
+  if (document.querySelector("meta[name=viewport]"))
+    fixedViewport = 1;
+  var domCount = document.getElementsByTagName("*").length;
+  wpt.moz.main.sendEventToDriver_('load?fixedViewport=' +
+      fixedViewport + '&domCount=' + domCount);
   setTimeout(function() {
       var timingParams = {};
       function addTime(name) {
