@@ -404,6 +404,12 @@ $loc = ParseLocations($locations);
                                             Force Spdy version 3
                                         </label>
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="swrender" id="swrender" class="checkbox" style="float: left;width: auto;">
+                                        <label for="swrender" class="auto_width">
+                                            Force Software Rendering (disable GPU acceleration)
+                                        </label>
+                                    </li>
                                 </ul>
                             </div>
                             <div id="auth" class="test_subbox ui-tabs-hide">

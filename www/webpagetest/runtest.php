@@ -102,6 +102,7 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
+            $test['swrender'] = $req_swrender;
             $test['trace'] = $req_trace;
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
@@ -856,6 +857,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
             $test['standards'] = $test['standards'] ? 1 : 0;
             $test['timeline'] = $test['timeline'] ? 1 : 0;
+            $test['swrender'] = $test['swrender'] ? 1 : 0;
             $test['trace'] = $test['trace'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
             $test['spdy3'] = $test['spdy3'] ? 1 : 0;
@@ -1590,6 +1592,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nstandards=1";
             if( $test['timeline'] )
                 $testFile .= "\r\ntimeline=1";
+            if( $test['swrender'] )
+                $testFile .= "\r\nswRender=1";
             if( $test['trace'] )
                 $testFile .= "\r\ntrace=1";
             if( $test['netlog'] )
