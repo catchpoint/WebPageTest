@@ -16,5 +16,3 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-#include <atlstr.h>
-#include <atlcoll.h>
