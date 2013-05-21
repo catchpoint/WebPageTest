@@ -98,6 +98,7 @@ void WptTest::Reset(void) {
   _noscript = false;
   _clear_certs = false;
   _emulate_mobile = false;
+  _force_software_render = false;
   _test_type.Empty();
   _block.Empty();
   _bwIn = 0;
@@ -198,6 +199,8 @@ bool WptTest::Load(CString& test) {
           _clear_certs = true;
         else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim()))
           _emulate_mobile = true;
+        else if (!key.CompareNoCase(_T("swRender")) &&_ttoi(value.Trim()))
+          _force_software_render = true;
         else if (!key.CompareNoCase(_T("type")))
           _test_type = value.Trim();
         else if (!key.CompareNoCase(_T("block")))

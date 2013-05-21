@@ -38,14 +38,24 @@ if (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1) {
     // See if there is an update.
     if (!$is_done && $_GET['ver']) {
         $is_done = GetUpdate();
+        if ($is_done)
+          logMsg("getwork.php Update Available ($location:$tester)");
     }
     // see if there is a video  job
     if (!$is_done && @$_GET['video']) {
         $is_done = GetVideoJob();
+        if ($is_done)
+          logMsg("getwork.php Video Job ($location:$tester)");
     }
     if (!$is_done) {
         $is_done = GetJob();
+        if ($is_done)
+          logMsg("getwork.php Work returned ($location:$tester)");
+        else
+          logMsg("getwork.php No Work Available ($location:$tester)");
     }
+} else {
+  logMsg("getwork.php Not enough free disk space ($location:$tester)");
 }
 
 // kick off any cron work we need to do asynchronously
@@ -81,6 +91,7 @@ function GetJob() {
 
     $workDir = $locations[$location]['localDir'];
     $locKey = @$locations[$location]['key'];
+    logMsg("getwork.php Key:$key ($locKey), dir: $workDir ($location:$tester)");
     if (strlen($workDir) && (!strlen($locKey) || !strcmp($key, $locKey))) {
         // see if the tester is marked as being offline
         $offline = false;
@@ -223,8 +234,10 @@ function GetJob() {
                 $testerInfo['test'] = $testId;
             }
             UpdateTester($location, $tester, $testerInfo);
-        }
-    }
+      } else
+        logMsg("getwork.php Failed to lock location ($location:$tester)");
+    } else
+      logMsg("getwork.php Invalid location ($location:$tester)");
     
     return $is_done;
 }

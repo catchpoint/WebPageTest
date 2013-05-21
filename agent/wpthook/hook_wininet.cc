@@ -157,16 +157,16 @@ WinInetHook::~WinInetHook(void) {
   if (g_hook == this) {
     g_hook = NULL;
   }
-  delete _hook;  // remove all the hooks
+  if (_hook)
+    delete _hook;  // remove all the hooks
   DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WinInetHook::Init() {
-  if (_hook || g_hook) {
+  if (_hook || g_hook)
     return;
-  }
   _hook = new NCodeHookIA32();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] WinInetHook::Init()\n"));

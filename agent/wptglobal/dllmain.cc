@@ -1,8 +1,3 @@
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
-
 /******************************************************************************
 Copyright (c) 2010, Google Inc.
 All rights reserved.
@@ -31,34 +26,26 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#pragma once
+// dllmain.cpp : Defines the entry point for the DLL application.
+#include "stdafx.h"
+#include "wptglobal.h"
 
-#include "targetver.h"
+extern HINSTANCE global_dll_handle; // DLL handle
 
-#define WIN32_LEAN_AND_MEAN
-// Windows Header Files:
-#include <windows.h>
-
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-
-#include <shlobj.h>
-#include <atlstr.h>
-#include <atltime.h>
-#include <atlcoll.h>
-#include <in6addr.h>
-#include "../wpthook/wpthook_dll.h"
-#include "../wptglobal/wptglobal_dll.h"
-
-// shared internal includes
-#include "wpt_status.h"
-#include "wpt_settings.h"
-#include "wpt_test_driver.h"
-#include "webpagetest.h"
-#include "web_browser.h"
-#include "TraceRoute.h"
-#include "WinPCap.h"
-#include "util.h"
+BOOL APIENTRY DllMain( HMODULE hModule,
+                       DWORD  ul_reason_for_call,
+                       LPVOID lpReserved) {
+  switch (ul_reason_for_call) {
+    case DLL_PROCESS_ATTACH:
+      global_dll_handle = (HINSTANCE)hModule;
+      Initialize();
+      break;
+    case DLL_PROCESS_DETACH:
+      Unload();
+      break;
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+      break;
+  }
+  return TRUE;
+}

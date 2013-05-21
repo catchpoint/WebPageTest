@@ -48,7 +48,7 @@ static const TCHAR * CHROME_MOBILE =
     _T(" --enable-pinch")
     _T(" --enable-viewport")
     _T(" --enable-fixed-layout");
-static const TCHAR * CHROME_NOT_MOBILE = 
+static const TCHAR * CHROME_SOFTWARE_RENDER = 
     _T(" --disable-accelerated-compositing");
 static const TCHAR * CHROME_SCALE_FACTOR =
     _T(" --force-device-scale-factor=");
@@ -141,12 +141,8 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           lstrcat(cmdLine, CHROME_SPDY3);
         if (_test._emulate_mobile)
           lstrcat(cmdLine, CHROME_MOBILE);
-        else
-          lstrcat(cmdLine, CHROME_NOT_MOBILE);
-        //if (_test._device_scale_factor.GetLength()) {
-        //  lstrcat(cmdLine, CHROME_SCALE_FACTOR);
-        //  lstrcat(cmdLine, _test._device_scale_factor);
-        //}
+        if (_test._force_software_render)
+          lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
@@ -180,6 +176,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       si.wShowWindow = SW_SHOWNORMAL;
       si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
+      InstallGlobalHook();
       EnterCriticalSection(&cs);
       _browser_process = NULL;
       HANDLE additional_process = NULL;
@@ -306,6 +303,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       }
       LeaveCriticalSection(&cs);
       ResetIpfw();
+      RemoveGlobalHook();
     }
   }
 

@@ -361,9 +361,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -653,6 +650,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dev_tools.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

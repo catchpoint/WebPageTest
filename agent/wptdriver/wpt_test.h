@@ -150,6 +150,7 @@ public:
   bool    _noscript;
   bool    _clear_certs;
   bool    _emulate_mobile;
+  bool    _force_software_render;
   CString _test_type;
   CString _block;
   DWORD   _bwIn;

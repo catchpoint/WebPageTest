@@ -8,13 +8,8 @@
 function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
-    if ((array_key_exists('debug', $_REQUEST) && $_REQUEST['debug']) || $debug || $force) {
-        $file = fopen($logFile, 'a');
-        if ($file) {
-            fwrite($file, gmdate('Y/m/d H:i:s - ') . $msg . "\n");
-            fclose($file);
-        }
-    }
+    if ((array_key_exists('debug', $_REQUEST) && $_REQUEST['debug']) || $debug || $force)
+      error_log(gmdate('Y/m/d H:i:s - ') . $msg . "\n", 3, $logFile);
 }
 
 function logAlways($msg, $logFile = './log.txt') {
