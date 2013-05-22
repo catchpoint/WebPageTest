@@ -2,9 +2,13 @@
 
 include 'common.inc';
 $remote_cache = array();
+if ($CURL_CONTEXT !== false) {
+  curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 30);
+}
 
 // load the locations
-$locations = &GetAllTesters();
+$locations = GetAllTesters();
 
 // kick out the data
 if( $_REQUEST['f'] == 'json' )
@@ -38,6 +42,8 @@ else
                     echo "<index>$count</index>\n";
                     foreach( $tester as $k => &$v )
                     {
+                        if (is_array($v))
+                          $v = '';
                         if (htmlspecialchars($v)!=$v)
                             echo "<$k><![CDATA[$v]]></$k>\n";
                         else
@@ -106,17 +112,26 @@ function GetRemoteTesters($server, $remote_location) {
     
     // see if we need to populate the cache from the remote server
     if (!array_key_exists($server_hash, $remote_cache)) {
-        $remote = json_decode(json_encode((array)simplexml_load_file("$server/getTesters.php?hidden=1")), true);
+      $xml = http_fetch("$server/getTesters.php?hidden=1");
+      if ($xml) {
+        $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
         if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
             $cache_entry = array();
             foreach($remote['data']['location'] as &$location) {
-                $parts = explode(':', $location['id']);
-                $id = $parts[0];
-                $cache_entry[$id] = array(  'elapsed' => $location['elapsed'],
-                                                        'testers' => $location['testers']['tester']);
+                if (array_key_exists('testers', $location) && array_key_exists('tester', $location['testers'])) {
+                  $parts = explode(':', $location['id']);
+                  $id = $parts[0];
+                  if (array_key_exists(0, $location['testers']['tester']))
+                    $cache_entry[$id] = array(  'elapsed' => $location['elapsed'],
+                                                            'testers' => $location['testers']['tester']);
+                  else
+                    $cache_entry[$id] = array(  'elapsed' => $location['elapsed'],
+                                                            'testers' => array($location['testers']['tester']));
+                }
             }
             $remote_cache[$server_hash] = $cache_entry;
         }
+      }
     }
 
     if (array_key_exists($server_hash, $remote_cache) && array_key_exists($remote_location,$remote_cache[$server_hash])) {

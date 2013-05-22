@@ -1,6 +1,10 @@
 <?php
 include 'common.inc';
 $remote_cache = array();
+if ($CURL_CONTEXT !== false) {
+  curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 30);
+}
 
 // load the locations
 $locations = &LoadLocations();
@@ -176,15 +180,18 @@ function GetRemoteBacklog($server, $remote_location) {
     
     // see if we need to populate the cache from the remote server
     if (!array_key_exists($server_hash, $remote_cache)) {
-        $remote = json_decode(json_encode((array)simplexml_load_file("$server/getLocations.php?hidden=1")), true);
-        if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
-            $cache_entry = array();
-            foreach($remote['data']['location'] as &$location) {
-                $parts = explode(':', $location['id']);
-                $id = $parts[0];
-                $cache_entry[$id] = $location['PendingTests'];
-            }
-            $remote_cache[$server_hash] = $cache_entry;
+        $xml = http_fetch("$server/getLocations.php?hidden=1");
+        if ($xml) {
+          $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
+          if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
+              $cache_entry = array();
+              foreach($remote['data']['location'] as &$location) {
+                  $parts = explode(':', $location['id']);
+                  $id = $parts[0];
+                  $cache_entry[$id] = $location['PendingTests'];
+              }
+              $remote_cache[$server_hash] = $cache_entry;
+          }
         }
     }
 
