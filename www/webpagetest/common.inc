@@ -1677,9 +1677,9 @@ function GetTesters($locationId)
             $location['testers'] = array();
             foreach( $testers as $index => $tester )
             {
-                if( !$tester['offline'] )
+                if( !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
-                    $entry = array('pc' => $tester['pc'], 'ec2' => $tester['ec2'], 'ip' => $tester['ip'], 'version' => $tester['ver'], 'freedisk' => $tester['freedisk'], 'ie' => $tester['ie'], 'dns' => $tester['dns']);
+                    $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns']);
                     
                     // last time it checked in
                     if( isset($tester['updated']) )

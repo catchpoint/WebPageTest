@@ -11,8 +11,13 @@ if ($CURL_CONTEXT !== false) {
 $locations = GetAllTesters();
 
 // kick out the data
-if( $_REQUEST['f'] == 'json' )
+if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' )
 {
+  $ret = array();
+  $ret['statusCode'] = 200;
+  $ret['statusText'] = 'Ok';
+  $ret['data'] = $locations;
+  json_response($ret);
 }
 else
 {
