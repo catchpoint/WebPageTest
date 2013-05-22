@@ -7,7 +7,7 @@ if ($CURL_CONTEXT !== false) {
 }
 
 // load the locations
-$locations = &LoadLocations();
+$locations = LoadLocations();
 
 // get the backlog for each location
 foreach( $locations as $id => &$location )
@@ -23,8 +23,13 @@ foreach( $locations as $id => &$location )
 }
 
 // kick out the data
-if( $_REQUEST['f'] == 'json' )
+if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' )
 {
+  $ret = array();
+  $ret['statusCode'] = 200;
+  $ret['statusText'] = 'Ok';
+  $ret['data'] = $locations;
+  json_response($ret);
 }
 else
 {
@@ -89,7 +94,9 @@ function LoadLocations()
     while( isset($loc['locations'][$i]) )
     {
         $group = &$loc[$loc['locations'][$i]];
-        if( !$group['hidden'] || $_REQUEST['hidden'] )
+        if( !array_key_exists('hidden', $group) ||
+            !$group['hidden'] ||
+            $_REQUEST['hidden'] )
         {
             $label = $group['label'];
             
@@ -102,13 +109,15 @@ function LoadLocations()
             while( isset($group[$j]) )
             {
                 if (array_key_exists($group[$j], $loc)) {
-                    if (!$loc[$group[$j]]['hidden'] || $_REQUEST['hidden']) {
+                    if (!array_key_exists('hidden', $loc[$group[$j]]) ||
+                        !$loc[$group[$j]]['hidden'] ||
+                        $_REQUEST['hidden']) {
                         $locations[$group[$j]] = array( 'Label' => $label, 
                                                         'location' => $loc[$group[$j]]['location'],
                                                         'Browser' => $loc[$group[$j]]['browser'],
                                                         'localDir' => $loc[$group[$j]]['localDir'],
-                                                        'relayServer' => $loc[$group[$j]]['relayServer'],
-                                                        'relayLocation' => $loc[$group[$j]]['relayLocation']
+                                                        'relayServer' => @$loc[$group[$j]]['relayServer'],
+                                                        'relayLocation' => @$loc[$group[$j]]['relayLocation']
                                                         );
 
                         if( $default == $loc['locations'][$i] && $def == $group[$j] )
