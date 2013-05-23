@@ -16,7 +16,9 @@ foreach( $wl as &$w )
 
 $counts = array();
 $dayCounts = array();
-$ip_keys = array();
+
+// load the API keys
+$keys = parse_ini_file('./settings/keys.ini', true);
 
 $targetDate = new DateTime($from, new DateTimeZone('GMT'));
 for($offset = 0; $offset <= $days; $offset++)
@@ -43,8 +45,8 @@ for($offset = 0; $offset <= $days; $offset++)
                     if (array_key_exists(14, $parts))
                         $count = intval(trim($parts[14]));
                     $count = max(1, $count);
-                    if( strlen($key) )
-                        $ip_keys[$ip] = $key;
+                    if( strlen($key) && array_key_exists($key, $keys) )
+                        $ip = $keys[$key]['contact'];
                     if( isset($counts[$ip]) )
                         $counts[$ip] += $count;
                     else
@@ -68,18 +70,15 @@ for($offset = 0; $offset <= $days; $offset++)
 // sort the counts descending
 arsort($counts);
 
-// load the API keys
-$keys = parse_ini_file('./settings/keys.ini', true);
-
 echo '<html><head></head><body><table><tr><th>Total</th>';
 foreach( $dayCounts as $index => &$dayCount ) {
     echo "<th>Day $index</th>";
 }
-echo '<th>API Key</th><th>Key Limit</th><th>IP Address</th></tr>';
+echo '<th>IP Address/API Key</th></tr>';
 
 foreach($counts as $ip => $count)
 {
-    if( $count > 50 )
+    if( $count > 500 )
     {
         echo "<tr><td>$count</td>";
         foreach( $dayCounts as $index => &$dayCount )
@@ -89,16 +88,7 @@ foreach($counts as $ip => $count)
                 $c = $dayCount[$ip];
             echo "<td>$c</td>";
         }
-
-        $owner = '';
-        $limit = '';            
-        $key = $ip_keys[$ip];
-        if( strlen($key) ) {
-            $owner = $keys[$key]['contact'];
-            $limit = $keys[$key]['limit'];
-        }
-        
-        echo "<td>$owner</td><td>$limit</td><td>$ip</td></tr>\n";
+        echo "<td>$ip</td></tr>\n";
     }
     else
         break;
