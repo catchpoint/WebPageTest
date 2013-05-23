@@ -121,28 +121,36 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       CString exe(_browser._exe);
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
-        for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
-          if (_browser._options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
-            lstrcat(cmdLine, _T(" "));
-            lstrcat(cmdLine, CHROME_REQUIRED_OPTIONS[i]);
+        if (_test._browser_command_line.GetLength()) {
+          lstrcat(cmdLine, CString(_T(" ")) +
+                  _test._browser_command_line);
+        } else {
+          for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
+            if (_browser._options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
+              lstrcat(cmdLine, _T(" "));
+              lstrcat(cmdLine, CHROME_REQUIRED_OPTIONS[i]);
+            }
           }
+          if (_test._netlog) {
+            CString netlog;
+            netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
+            lstrcat(cmdLine, netlog);
+          }
+          if (_test._trace) {
+            CString trace;
+            trace.Format(CHROME_TRACE, (LPCTSTR)_test._file_base);
+            lstrcat(cmdLine, trace);
+          }
+          if (_test._spdy3)
+            lstrcat(cmdLine, CHROME_SPDY3);
+          if (_test._emulate_mobile)
+            lstrcat(cmdLine, CHROME_MOBILE);
+          if (_test._force_software_render)
+            lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
         }
-        if (_test._netlog) {
-          CString netlog;
-          netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
-          lstrcat(cmdLine, netlog);
-        }
-        if (_test._trace) {
-          CString trace;
-          trace.Format(CHROME_TRACE, (LPCTSTR)_test._file_base);
-          lstrcat(cmdLine, trace);
-        }
-        if (_test._spdy3)
-          lstrcat(cmdLine, CHROME_SPDY3);
-        if (_test._emulate_mobile)
-          lstrcat(cmdLine, CHROME_MOBILE);
-        if (_test._force_software_render)
-          lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
+        if (_test._browser_additional_command_line.GetLength())
+          lstrcat(cmdLine, CString(_T(" ")) +
+                  _test._browser_additional_command_line);
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
@@ -154,12 +162,12 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       }
       if (exe.Find(_T("iexplore.exe")) >= 0) {
         hook = false;
-        lstrcat ( cmdLine, _T(" about:blank"));
+        lstrcat(cmdLine, _T(" about:blank"));
         ConfigureIESettings();
       } else if (exe.Find(_T("safari.exe")) >= 0) {
         hook_child = true;
       } else {
-        lstrcat ( cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
+        lstrcat(cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
 
       _status.Set(_T("Launching: %s\n"), cmdLine);

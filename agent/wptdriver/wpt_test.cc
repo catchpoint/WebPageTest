@@ -139,6 +139,9 @@ void WptTest::Reset(void) {
   _no_run = 0;
   _custom_rules.RemoveAll();
   _client.Empty();
+  _continuous_video = false;
+  _browser_command_line.Empty();
+  _browser_additional_command_line.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -249,7 +252,13 @@ bool WptTest::Load(CString& test) {
               }
             }
           }
-        }
+        } else if (!key.CompareNoCase(_T("cmdLine")))
+          _browser_command_line = value;
+        else if (!key.CompareNoCase(_T("addCmdLine")))
+          _browser_additional_command_line = value;
+        else if (!key.CompareNoCase(_T("continuousVideo")) &&
+                 _ttoi(value.Trim()))
+          _continuous_video = true;
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script

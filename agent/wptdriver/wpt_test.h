@@ -177,6 +177,9 @@ public:
   DWORD   _activity_timeout;
   CString _client;
   CString _device_scale_factor;
+  bool    _continuous_video;
+  CString _browser_command_line;
+  CString _browser_additional_command_line;
   
   // current state
   int     _run;

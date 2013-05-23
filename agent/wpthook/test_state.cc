@@ -457,19 +457,21 @@ void TestState::SetDocument(HWND wnd) {
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
   if (_active && _document_window && _test._video) {
-    if (force || (_screen_updated && _render_start.QuadPart)) {
+    if (force ||
+        _test._continuous_video ||
+        (_screen_updated && _render_start.QuadPart)) {
       // use a falloff on the resolution with which we capture video
       bool grab_video = false;
       LARGE_INTEGER now;
       QueryPerformanceCounter(&now);
-      if (!_last_video_time.QuadPart)
+      if (!_last_video_time.QuadPart || _test._continuous_video)
         grab_video = true;
       else {
         DWORD interval = DATA_COLLECTION_INTERVAL;
         if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
-          interval *= 50;
+          interval *= 20;
         else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
-          interval *= 10;
+          interval *= 5;
         LARGE_INTEGER min_time;
         min_time.QuadPart = _last_video_time.QuadPart + 
                               (interval * _ms_frequency.QuadPart);
