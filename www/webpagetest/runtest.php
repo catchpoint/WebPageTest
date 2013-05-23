@@ -74,6 +74,7 @@
             $test['block'] = $req_block;
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
+            $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
             $test['label'] = htmlspecialchars(trim($req_label));
             $test['industry'] = trim($req_ig);
             $test['industry_page'] = trim($req_ip);
@@ -94,9 +95,8 @@
             $test['testLatency'] = (int)$req_latency;
             $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
             $test['callback'] = $req_pingback;
-            if (!$json && !isset($req_pingback) && isset($req_callback)) {
+            if (!$json && !isset($req_pingback) && isset($req_callback))
                 $test['callback'] = $req_callback;
-            }
             $test['agent'] = $req_agent;
             $test['aftEarlyCutoff'] = (int)$req_aftec;
             $test['aftMinChanges'] = (int)$req_aftmc;
@@ -127,9 +127,8 @@
             $test['max_retries'] = min((int)$req_retry, 10);
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
-            if (is_file('./settings/customrules.txt')) {
+            if (is_file('./settings/customrules.txt'))
                 $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            }
             $test['pss_advanced'] = $req_pss_advanced;
             $test['shard_test'] = $settings['shard_tests'];
             if (array_key_exists('shard', $_REQUEST))
@@ -137,6 +136,12 @@
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
+            
+            // custom options
+            $test['cmdLine'] = '';
+            $test['addCmdLine'] = '';
+            if (isset($req_disableThreadedParser) && $req_disableThreadedParser)
+              $test['addCmdLine'] .= '--disable-threaded-html-parser';
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -1652,6 +1657,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
                 $testFile .= "orientation={$test['orientation']}\r\n";
+            if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
+                $testFile .= "continuousVideo=1\r\n";
+            if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
+                $testFile .= "cmdLine={$test['cmdLine']}\r\n";
+            if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
+                $testFile .= "addCmdLine={$test['addCmdLine']}\r\n";
             
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

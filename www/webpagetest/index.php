@@ -410,6 +410,12 @@ $loc = ParseLocations($locations);
                                             Force Software Rendering (disable GPU acceleration)
                                         </label>
                                     </li>
+                                    <li>
+                                        <input type="checkbox" name="disableThreadedParser" id="disableThreadedParser" class="checkbox" style="float: left;width: auto;">
+                                        <label for="disableThreadedParser" class="auto_width">
+                                            Disable Threaded HTML Parser
+                                        </label>
+                                    </li>
                                 </ul>
                             </div>
                             <div id="auth" class="test_subbox ui-tabs-hide">
@@ -515,8 +521,16 @@ $loc = ParseLocations($locations);
                                     $video = (int)$_REQUEST['video'];
                                 }
                                 ?>
-                                <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
-                                <label for="videoCheck" class="auto_width">Capture Video</label>
+                                <ul class="input_fields">
+                                    <li>
+                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
+                                      <label for="videoCheck" class="auto_width">Capture Video</label>
+                                    </li>
+                                    <li>
+                                      <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox before_label">
+                                      <label for="continuousVideo" class="auto_width">Continuous Video Capture (may crash the browser)</label>
+                                    </li>
+                                </ul>
                                 <br>
                                 <br>
                             </div>
