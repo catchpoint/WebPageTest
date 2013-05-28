@@ -126,7 +126,7 @@ U NCodeHook<ArchT>::createHookByName(const string& dll, const string& funcName, 
 	HMODULE hDll = LoadLibraryA(dll.c_str());
 	funcPtr = (U)GetProcAddress(hDll, funcName.c_str());
 	if (funcPtr != NULL) funcPtr = createHook(funcPtr, newFunc);
-	FreeLibrary(hDll);
+	//FreeLibrary(hDll);
 	return funcPtr;
 }
 
