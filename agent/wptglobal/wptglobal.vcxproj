@@ -91,6 +91,7 @@
     <ClInclude Include="..\wpthook\NCodeHook\NCodeHookInstantiation.h" />
     <ClInclude Include="..\wpthook\NCodeHook\NCodeHookItem.h" />
     <ClInclude Include="hook_angle.h" />
+    <ClInclude Include="hook_dx9.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -155,6 +156,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="hook_angle.cc" />
+    <ClCompile Include="hook_dx9.cc" />
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

@@ -80,6 +80,9 @@
     <ClInclude Include="targetver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hook_dx9.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cc">
@@ -128,6 +131,9 @@
       <Filter>Third-Party\NCodeHook</Filter>
     </ClCompile>
     <ClCompile Include="hook_angle.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_dx9.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
