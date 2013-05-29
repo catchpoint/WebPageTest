@@ -27,7 +27,7 @@ else
     echo "<response>\n";
     echo "<statusCode>200</statusCode>\n";
     echo "<statusText>Ok</statusText>\n";
-    if( strlen($_REQUEST['r']) )
+    if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
     echo "<data>\n";
     
