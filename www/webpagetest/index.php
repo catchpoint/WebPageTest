@@ -526,10 +526,14 @@ $loc = ParseLocations($locations);
                                       <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
                                       <label for="videoCheck" class="auto_width">Capture Video</label>
                                     </li>
+                                    <?php
+                                    /*
                                     <li>
                                       <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox before_label">
                                       <label for="continuousVideo" class="auto_width">Continuous Video Capture (may crash the browser)</label>
                                     </li>
+                                    */
+                                    ?>
                                 </ul>
                                 <br>
                                 <br>

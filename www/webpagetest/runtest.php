@@ -1657,8 +1657,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
                 $testFile .= "orientation={$test['orientation']}\r\n";
-            if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
-                $testFile .= "continuousVideo=1\r\n";
+            //if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
+            //    $testFile .= "continuousVideo=1\r\n";
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
                 $testFile .= "cmdLine={$test['cmdLine']}\r\n";
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
