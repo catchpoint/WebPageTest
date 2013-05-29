@@ -741,9 +741,11 @@ void Results::SaveRequests(OptimizationChecks& checks) {
               WriteFile(custom_rules_file, ",", 1, &bytes, 0);
             }
             buff.Format("\"%d\"", i);
-            WriteFile(custom_rules_file,(LPCSTR)buff,buff.GetLength(),&bytes,0);
+            WriteFile(custom_rules_file, (LPCSTR)buff, buff.GetLength(),
+                      &bytes, 0);
             WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
-            POSITION match_pos =request->_custom_rules_matches.GetHeadPosition();
+            POSITION match_pos =
+                request->_custom_rules_matches.GetHeadPosition();
             DWORD match_count = 0;
             while (match_pos) {
               match_count++;
@@ -755,7 +757,8 @@ void Results::SaveRequests(OptimizationChecks& checks) {
               if (match_count > 1)
                 entry += ",";
               entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
-              entry += CStringA("\"value\":\"")+JSONEscapeA((LPCSTR)value)+"\",";
+              entry += CStringA("\"value\":\"") +
+                       JSONEscapeA((LPCSTR)value)+"\",";
               buff.Format("%d", match._count);
               entry += CStringA("\"count\":") + buff + "}";
               WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 

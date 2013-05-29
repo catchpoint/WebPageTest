@@ -236,12 +236,15 @@ void OptimizationChecks::CheckGzip()
 /*-----------------------------------------------------------------------------
   Protect against malformed images
 -----------------------------------------------------------------------------*/
-static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size, DWORD imagetype)
+static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size,
+                        DWORD imagetype)
 {
   bool ret = false;
   
   __try{
-    ret = img.Decode(buffer, size, imagetype);
+    // only decode images that have a JPEG header
+    if (size > 2 && buffer[0] == 0xFF && buffer[1] == 0xD8)
+      ret = img.Decode(buffer, size, imagetype);
   }__except(1){
     WptTrace(loglevel::kError,
       _T("[wpthook] - Exception when decoding image"));
@@ -274,7 +277,7 @@ void OptimizationChecks::CheckImageCompression()
 
       // If there is response body and it is an image.
       DataChunk body = request->_response_data.GetBody();
-      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 0 ) {
+      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 0) {
         DWORD targetRequestBytes = body.GetLength();
         DWORD size = targetRequestBytes;
         count++;
@@ -284,9 +287,9 @@ void OptimizationChecks::CheckImageCompression()
         if (DecodeImage(img, (BYTE*)body.GetData(),
                         body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
           DWORD type = img.GetType();
-          switch( type )
-          {
-          // TODO: Add appropriate scores for gif and png once they are available.
+          switch (type) {
+          // TODO: Add appropriate scores for gif and png
+          //       once they are available.
           // Currently, even DecodeImage doesn't support gif and png.
           // case CXIMAGE_FORMAT_GIF:
           // case CXIMAGE_FORMAT_PNG:
