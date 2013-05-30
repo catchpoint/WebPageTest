@@ -177,6 +177,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
           CString version, CString command, DWORD update, CString check_file) {
   bool ok = true;
+  bool already_installed = false;
 
   WptTrace(loglevel::kFunction,
             _T("[wptdriver] SoftwareUpdate::InstallSoftware - %s\n"),
@@ -193,9 +194,9 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
       DWORD len = sizeof(buff);
       if (RegQueryValueEx(key, app, 0, 0, (LPBYTE)buff, &len) 
           == ERROR_SUCCESS) {
-        if (!version.Compare(buff) || !update) {
+        already_installed = true;
+        if (!version.Compare(buff) || !update)
           install = false;
-        }
       }
 
       // download and install it
@@ -261,10 +262,9 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
         if (ok) {
           if (check_file.GetLength())
             ok = FileExists(check_file);
-          if (ok) {
+          if (ok)
             RegSetValueEx(key, app, 0, REG_SZ, (const LPBYTE)(LPCTSTR)version, 
                           (version.GetLength() + 1) * sizeof(TCHAR));
-          }
         }
       }
 
@@ -275,6 +275,11 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
   WptTrace(loglevel::kFunction,
            _T("[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s\n"),
            (LPCTSTR)app, ok ? _T("Succeeded") : _T("FAILED!"));
+
+  // don't fail if we already have the package installed and we are just doing
+  // an update.
+  if (already_installed)
+    ok = true;
 
   return ok;
 }
