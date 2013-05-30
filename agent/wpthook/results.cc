@@ -213,11 +213,6 @@ void Results::SaveVideo(void) {
       // we save the frames in increments of 100ms (for now anyway)
       // round it to the closest interval
       DWORD image_time = ((image_time_ms + 50) / 100);
-      // resize the image down to a max width of 400 to reduce bandwidth/space
-      DWORD newWidth = min(400, img->GetWidth() / 2);
-      DWORD newHeight = (DWORD)((double)img->GetHeight() * 
-                          ((double)newWidth / (double)img->GetWidth()));
-      //img->Resample2(newWidth, newHeight);
       if (last_image) {
         RGBQUAD black = {0,0,0,0};
         if (img->GetWidth() > width)
@@ -293,7 +288,7 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 void Results::SaveImage(CxImage& image, CString file, 
                           bool shrink, BYTE quality) {
   if (image.IsValid()) {
-    if (shrink)
+    if (shrink && image.GetWidth() > 600 && image.GetHeight() > 600)
       image.Resample2(image.GetWidth() / 2, image.GetHeight() / 2);
 
     image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
