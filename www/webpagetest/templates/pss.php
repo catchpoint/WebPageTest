@@ -74,6 +74,7 @@ function PSS_GetCacheEntry($url) {
                     $id = $cache[$key]['id'];
                 }
             }
+            flock($cache_lock, LOCK_UN);
         }
         fclose($cache_lock);
     }
@@ -110,6 +111,7 @@ function PSS_TestSubmitted(&$test) {
                 }
                 $cache[$key] = $entry;
                 file_put_contents('./tmp/pss.cache', json_encode($cache));
+                flock($cache_lock, LOCK_UN);
             }
             fclose($cache_lock);
         }

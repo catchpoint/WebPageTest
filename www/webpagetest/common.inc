@@ -1719,19 +1719,16 @@ function GetTesters($locationId)
 */
 function LockLocation($location)
 {
-    if( !is_dir('./tmp') )
-        mkdir('./tmp');
-    $lock = fopen( "./tmp/$location.lock", 'w',  false);
-    if( $lock )
-    {
-        if( !flock($lock, LOCK_EX) )
-        {
-            fclose($lock);
-            $lock = false;
-        }
+  if( !is_dir('./tmp') )
+    mkdir('./tmp');
+  $lock = fopen( "./tmp/$location.lock", 'w',  false);
+  if( $lock ) {
+    if( !flock($lock, LOCK_EX) ) {
+      fclose($lock);
+      $lock = false;
     }
-
-    return $lock;
+  }
+  return $lock;
 }
 
 /**
@@ -1739,8 +1736,10 @@ function LockLocation($location)
 */
 function UnlockLocation($lock)
 {
-    if( $lock )
-        fclose($lock);
+  if( $lock ) {
+    flock($lock, LOCK_UN);
+    fclose($lock);
+  }
 }
 
 /**

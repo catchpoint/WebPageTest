@@ -752,10 +752,8 @@ function ValidateKey(&$test, &$error, $key = null)
               mkdir('./dat', 0777, true);
               
           $lock = fopen( "./dat/keys.lock", 'w',  false);
-          if( $lock )
-          {
-            if( flock($lock, LOCK_EX) )
-            {
+          if( $lock ) {
+            if( flock($lock, LOCK_EX) ) {
                 $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
                 $usage = null;
                 if( is_file($keyfile) )
@@ -785,6 +783,7 @@ function ValidateKey(&$test, &$error, $key = null)
               }
               if( !strlen($error) )
                 file_put_contents($keyfile, json_encode($usage));
+              flock($lock, LOCK_UN);
             }
             fclose($lock);
           }
@@ -1195,8 +1194,7 @@ function WriteJob($location, &$test, &$job, $testId)
         $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
         if( $lockFile )
         {
-            if( flock($lockFile, LOCK_EX) )
-            {
+            if( flock($lockFile, LOCK_EX) ) {
                 $fileName = $test['job'];
                 $file = "$workDir/$fileName";
                 if( file_put_contents($file, $job) ) {
@@ -1232,6 +1230,7 @@ function WriteJob($location, &$test, &$job, $testId)
                         $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
                     }
                 }
+                flock($lockFile, LOCK_UN);
             }
             fclose($lockFile);
         }
@@ -1371,32 +1370,24 @@ function LogTest(&$test, $testId, $url)
         
     // open the log file
     $filename = "./logs/" . gmdate("Ymd") . ".log";
-    $file = fopen( $filename, "a+b",  false);
     $video = 0;
     if( strlen($test['video']) )
         $video = 1;
-    if( $file )
-    {
-        $ip = $_SERVER['REMOTE_ADDR'];
-        if( array_key_exists('ip',$test) && strlen($test['ip']) )
-            $ip = $test['ip'];
-        $pageLoads = $test['runs'];
-        if (!$test['fvonly'])
-            $pageLoads *= 2;
-        if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
-            $pageLoads *= $test['navigateCount'];
-        
-        $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
-        $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
-        $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
-        $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\t$pageLoads" . "\r\n";
+    $ip = $_SERVER['REMOTE_ADDR'];
+    if( array_key_exists('ip',$test) && strlen($test['ip']) )
+        $ip = $test['ip'];
+    $pageLoads = $test['runs'];
+    if (!$test['fvonly'])
+        $pageLoads *= 2;
+    if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+        $pageLoads *= $test['navigateCount'];
+    
+    $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
+    $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
+    $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
+    $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\t$pageLoads" . "\r\n";
 
-        // flock will block until we acquire the lock or the script times out and is killed
-        if( flock($file, LOCK_EX) )
-            fwrite($file, $log);
-        
-        fclose($file);
-    }
+    error_log($log, 3, $filename);
 }
 
 
@@ -1980,6 +1971,7 @@ function uniqueId(&$test_num) {
             fseek($file, 0, SEEK_SET);
             ftruncate($file, 0);
             fwrite($file, json_encode($testData));
+            flock($file, LOCK_UN);
         }
 
         fclose($file);

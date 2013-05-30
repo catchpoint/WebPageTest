@@ -335,6 +335,7 @@ function GetVideoJob()
 
                     closedir($dir);
                 }
+                flock($lockFile, LOCK_UN);
             }
 
             fclose($lockFile);
@@ -413,6 +414,7 @@ function CheckCron() {
             if ($should_run) {
                 file_put_contents('./tmp/wpt_cron.dat', $now);
             }
+            flock($cron_lock, LOCK_UN);
         }
         fclose($cron_lock);
     }
@@ -513,8 +515,10 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
             if (!$done)
                 $delete = false;
                 
-            if ($testLock)
+            if (isset($testLock) && $testLock) {
+                flock($testLock, LOCK_UN);
                 fclose($testLock);
+            }
         } else {
             $testInfo['shard_test'] = 0;
         }

@@ -38,6 +38,7 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
                         $key = $keys['server']['key'];
                 }
                 ProcessBenchmark(basename($benchmark, '.php'));
+                flock($lock, LOCK_UN);
             }
             fclose($lock);
         }
@@ -63,7 +64,7 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
                 foreach ($bm_list as $benchmark) {
                     PreProcessBenchmark(basename($benchmark, '.php'));
                 }
-
+                flock($lock, LOCK_UN);
                 logMsg("Done", "./log/$logFile", true);
             } else {
                 echo "Benchmark cron job is already running\n";
@@ -115,6 +116,7 @@ function PreProcessBenchmark($benchmark) {
                     file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
                 }
             }
+            flock($lock, LOCK_UN);
         } else {
             echo "Benchmark '$benchmark' is currently locked\n";
             logMsg("Benchmark '$benchmark' is currently locked", "./log/$logFile", true);

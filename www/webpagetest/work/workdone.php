@@ -345,6 +345,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                                     $tests['tests'] = max(0, $tests['tests'] - $testCount);
                                 file_put_contents("./tmp/$location.tests", json_encode($tests));
                             }
+                            flock($lockFile, LOCK_UN);
                         }
                         fclose($lockFile);
                     }
@@ -365,13 +366,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 $elapsed = $time - $testInfo['started'];
                 if ($elapsed > $settings['slow_test_time']) {
                     $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
-                    $log_file = fopen('./tmp/slow_tests.log', 'a+');
-                    if ($log_file) {
-                        if (flock($log_file, LOCK_EX)) {
-                            fwrite($log_file, $log_entry);
-                        }
-                        fclose($log_file);
-                    }
+                    error_log($log_entry, 3, './tmp/slow_tests.log');
                 }
             }
             
@@ -401,6 +396,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                         $ind[$ini['industry']][$ini['industry_page']] = $update;
                         $data = json_encode($ind);
                         file_put_contents('./video/dat/industry.dat', $data);
+                        flock($lockFile, LOCK_UN);
                     }
                         
                     fclose($lockFile);
@@ -1626,8 +1622,10 @@ function FinishProcessingIncrementalResult() {
     global $testPath;
     global $testLock;
     global $done;
-    if ($testLock)
+    if (isset($testLock) && $testLock) {
+        flock($testLock, LOCK_UN);
         fclose($testLock);
+    }
     if ($done)
         unlink("$testPath/test.lock");
 }

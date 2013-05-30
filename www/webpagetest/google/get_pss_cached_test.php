@@ -58,6 +58,7 @@ function PSS_GetCacheEntry($url) {
                     $id = $cache[$key]['id'];
                 }
             }
+            flock($cache_lock, LOCK_UN);
         }
         fclose($cache_lock);
     }

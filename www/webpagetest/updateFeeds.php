@@ -92,8 +92,9 @@ function UpdateFeeds()
 
             // save out the feed data
             file_put_contents('./tmp/feeds.dat', json_encode($feedData));
-            fclose($lockFile);
+            flock($lockFile, LOCK_UN);
         }
+        fclose($lockFile);
     }
 }
 
