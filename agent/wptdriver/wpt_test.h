@@ -180,6 +180,7 @@ public:
   bool    _continuous_video;
   CString _browser_command_line;
   CString _browser_additional_command_line;
+  CStringA  _user_agent;
   
   // current state
   int     _run;
@@ -197,6 +198,9 @@ public:
   // Whether we need to wait for DOM element.
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
+
+  // system information
+  bool      has_gpu_;
 
   void      BuildScript();
   CAtlList<ScriptCommand> _script_commands;
@@ -218,7 +222,6 @@ protected:
   CAtlList<CString> _block_requests;
 
   // header overrides
-  CStringA  _user_agent;
   CAtlList<HttpHeaderValue> _add_headers;
   CAtlList<HttpHeaderValue> _set_headers;
   CAtlList<HttpHeaderValue> _override_hosts;

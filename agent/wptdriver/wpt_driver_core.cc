@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_driver_core.h"
 #include "zlib/contrib/minizip/unzip.h"
 #include <Wtsapi32.h>
+#include <D3D9.h>
 
 const TCHAR * BROWSERS[] = {
   _T("chrome.exe"),
@@ -60,9 +61,11 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_browser(NULL)
   ,_exit(false)
   ,_work_thread(NULL)
-  ,housekeeping_timer_(NULL) {
+  ,housekeeping_timer_(NULL)
+  ,has_gpu_(false) {
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
+  has_gpu_ = DetectGPU();
 }
 
 
@@ -157,7 +160,7 @@ void WptDriverCore::WorkThread(void) {
     _status.Set(_T("Checking for software updates..."));
     _settings.UpdateSoftware();
     _status.Set(_T("Checking for work..."));
-    WptTestDriver test(_settings._timeout * SECONDS_TO_MS);
+    WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
     if (_webpagetest.GetTest(test)) {
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser, test._client)) {
@@ -649,4 +652,64 @@ void WptDriverCore::CloseDialogs(void) {
         ::PostMessage(hDlg[i],WM_CLOSE,0,0);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  See if a video adapter is present that supports hardware acceleration
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::DetectGPU() {
+  bool has_gpu = false;
+  HMODULE dll = LoadLibrary(_T("d3d9.dll"));
+  if (dll) {
+    typedef IDirect3D9 *(__stdcall * LPDIRECT3DCREATE9)(UINT SDKVersion);
+    LPDIRECT3DCREATE9 Direct3DCreate9_ =
+        (LPDIRECT3DCREATE9)GetProcAddress(dll, "Direct3DCreate9");
+    if (Direct3DCreate9_) {
+      LPDIRECT3D9 d3d = Direct3DCreate9_(D3D_SDK_VERSION);
+      if (d3d) {
+        static const TCHAR windowName[] = TEXT("WPTDxDetect");
+        static const TCHAR className[] = TEXT("STATIC");
+        HWND wnd = CreateWindowEx(WS_EX_NOACTIVATE, className, windowName,
+                                  WS_DISABLED | WS_POPUP, 0, 0, 1, 1,
+                                  HWND_MESSAGE, NULL,
+                                  GetModuleHandle(NULL), NULL);
+        LPDIRECT3DDEVICE9 device = NULL;
+        D3DPRESENT_PARAMETERS present_parameters; 
+        ZeroMemory( &present_parameters, sizeof(present_parameters) );
+        present_parameters.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
+        present_parameters.BackBufferCount = 1;
+        present_parameters.BackBufferFormat = D3DFMT_UNKNOWN;
+        present_parameters.BackBufferWidth = 1;
+        present_parameters.BackBufferHeight = 1;
+        present_parameters.EnableAutoDepthStencil = FALSE;
+        present_parameters.Flags = 0;
+        present_parameters.hDeviceWindow = wnd;
+        present_parameters.MultiSampleQuality = 0;
+        present_parameters.MultiSampleType = D3DMULTISAMPLE_NONE;
+        present_parameters.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        present_parameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        present_parameters.Windowed = TRUE;
+
+        if (SUCCEEDED(d3d->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+            wnd, D3DCREATE_FPU_PRESERVE | D3DCREATE_NOWINDOWCHANGES |
+            D3DCREATE_SOFTWARE_VERTEXPROCESSING, &present_parameters,
+            &device)) && device) {
+          has_gpu = true;
+          device->Release();
+        } else if (SUCCEEDED(d3d->CreateDevice(D3DADAPTER_DEFAULT,
+            D3DDEVTYPE_HAL, wnd,
+            D3DCREATE_FPU_PRESERVE | D3DCREATE_NOWINDOWCHANGES |
+            D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_PUREDEVICE,
+            &present_parameters, &device)) && device) {
+          has_gpu = true;
+          device->Release();
+        }
+        if (wnd)
+          DestroyWindow(wnd);
+        d3d->Release();
+      }
+    }
+    FreeLibrary(dll);
+  }
+  return has_gpu;
 }

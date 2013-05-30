@@ -42,16 +42,19 @@ static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
     _T(" --trace-startup-duration=240 --trace-startup-file=\"%s_trace.json\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
-static const TCHAR * CHROME_MOBILE = 
+static const TCHAR * CHROME_GPU = 
     _T(" --force-compositing-mode")
     _T(" --enable-threaded-compositing")
+    _T(" --enable-viewport");
+static const TCHAR * CHROME_MOBILE = 
     _T(" --enable-pinch")
-    _T(" --enable-viewport")
     _T(" --enable-fixed-layout");
 static const TCHAR * CHROME_SOFTWARE_RENDER = 
     _T(" --disable-accelerated-compositing");
 static const TCHAR * CHROME_SCALE_FACTOR =
     _T(" --force-device-scale-factor=");
+static const TCHAR * CHROME_USER_AGENT =
+    _T(" --user-agent=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--ignore-certificate-errors"),
@@ -143,10 +146,24 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           }
           if (_test._spdy3)
             lstrcat(cmdLine, CHROME_SPDY3);
-          if (_test._emulate_mobile)
-            lstrcat(cmdLine, CHROME_MOBILE);
           if (_test._force_software_render)
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
+          else if (_test._emulate_mobile) {
+            lstrcat(cmdLine, CHROME_GPU);
+            lstrcat(cmdLine, CHROME_MOBILE);
+          } else if (_test._device_scale_factor.GetLength())
+            lstrcat(cmdLine, CHROME_GPU);
+          if (_test.has_gpu_ && _test._device_scale_factor.GetLength()) {
+            lstrcat(cmdLine, CHROME_SCALE_FACTOR);
+            lstrcat(cmdLine, _test._device_scale_factor);
+          }
+          if (_test._user_agent.GetLength() &&
+              _test._user_agent.Find(_T('"')) == -1) {
+            lstrcat(cmdLine, CHROME_USER_AGENT);
+            lstrcat(cmdLine, _T("\""));
+            lstrcat(cmdLine, CA2T(_test._user_agent));
+            lstrcat(cmdLine, _T("\""));
+          }
         }
         if (_test._browser_additional_command_line.GetLength())
           lstrcat(cmdLine, CString(_T(" ")) +

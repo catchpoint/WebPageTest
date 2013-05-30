@@ -51,10 +51,12 @@ static const char * DEFAULT_MOBILE_USER_AGENT =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTest::WptTest(void):_version(0),
-  _test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS),
-  _activity_timeout(DEFAULT_ACTIVITY_TIMEOUT),
-  _measurement_timeout(DEFAULT_TEST_TIMEOUT) {
+WptTest::WptTest(void):
+  _version(0)
+  ,_test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS)
+  ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
+  ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
+  ,has_gpu_(false) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -462,9 +464,11 @@ void WptTest::BuildScript() {
   }
 
   // Scale the viewport or browser size by the scale factor.
-  // The forced scaling is not working correctly for Chrome.
+  // Once the viewport scaling is ACTUALLY working in Chrome then we can ues it
+  // but as of right now it isn't.
   if (_device_scale_factor.GetLength()) {
     double scale = _ttof(_device_scale_factor);
+    _device_scale_factor.Empty();
     if (scale >= 0.5 && scale <= 10.0) {
       _browser_width = (int)((double)_browser_width / scale);
       _browser_height = (int)((double)_browser_height / scale);

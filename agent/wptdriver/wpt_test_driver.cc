@@ -3,10 +3,10 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestDriver::WptTestDriver(DWORD default_timeout)
-{
+WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu) {
   _test_timeout = default_timeout;
   _measurement_timeout = default_timeout;
+  has_gpu_ = has_gpu;
 }
 
 /*-----------------------------------------------------------------------------

@@ -5,7 +5,7 @@ class WptTestDriver :
   public WptTest
 {
 public:
-  WptTestDriver(DWORD default_timeout);
+  WptTestDriver(DWORD default_timeout, bool has_gpu);
   virtual ~WptTestDriver(void);
   virtual bool  Load(CString& test);
   bool  Start();
