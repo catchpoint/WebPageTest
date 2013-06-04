@@ -15,11 +15,9 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
         ReportKeepAlive($pageData, $requests);
         ReportTransferCompression($pageData, $requests);
         ReportImageCompression($pageData, $requests);
+        ReportProgressiveJpeg($pageData, $requests);
         ReportCache($pageData, $requests);
-        ReportCombine($pageData, $requests);
         ReportCDN($pageData, $requests);
-        ReportMinify($pageData, $requests);
-        ReportCookies($pageData, $requests);
     }
 }
 
@@ -176,6 +174,40 @@ function ReportImageCompression(&$pageData, &$requests)
     }
         
     echo "<a  name=\"compress_images\"><h3>Compress Images: $score</h3></a>\n";
+    if( isset($summary) )
+        echo "<p>$summary</p>\n";
+    echo "<p class=\"indented1\">";
+    foreach( $report as $entry )
+        echo "$entry<br>\n";
+    echo "</p><br>\n";
+}
+
+function ReportProgressiveJpeg(&$pageData, &$requests)
+{
+    $score = 'N/A';
+    $report = array();
+    if( isset($pageData['score_progressive_jpeg']) && $pageData['score_progressive_jpeg'] >= 0 )
+    {
+        $summary = "{$pageData['score_progressive_jpeg']}% of JPEG bytes were from progressive JPEG images";
+        $score = "{$pageData['score_progressive_jpeg']}/100";
+        
+        foreach( $requests as $index => &$request )
+        {
+            if( array_key_exists('score_progressive_jpeg', $request) && $request['score_progressive_jpeg'] >= 0 && $request['score_progressive_jpeg'] < 100 )
+            {
+                $key = $request['image_total'] . ' ' . $request['host'] . ' ' . $index;
+                $proto = 'http://';
+                if( $request['is_secure'] )
+                    $proto = 'https://';
+                $kb = number_format($request['image_total'] / 1024.0, 1);
+                $report[$key] = "FAILED ($kb KB) - " . $proto . $request['host'] . $request['url'];
+            }
+        }
+        
+        krsort($report, SORT_NUMERIC);
+    }
+        
+    echo "<a  name=\"progressive_jpeg\"><h3>Use Progressive JPEGs: $score</h3></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";
@@ -472,6 +504,16 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
+        <tr><th rowspan=<?php echo $rowspan; ?> colspan=1>Use Progressive JPEGs</th>
+            <td class="nowrap">Applicable Objects</td>
+            <td >All JPEG Images</td>
+        </tr>
+        <tr>
+            <td class="nowrap">What is checked</td>
+            <td >Each JPEG image is checked and the resulting score is the percentage of JPEG bytes that were served as progressive images relative to the total JPEG bytes.</td>
+        </tr>
+
+        <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cache Static</th>
             <td class="nowrap">Applicable Objects</td>
             <td >Any non-html object with a mime type of "text/*", "*javascript*" or "image/*" that does not
@@ -489,16 +531,6 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Combine CSS/JS</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All css and javascript objects</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >If multiple files of the same type are served then each additional css file beyond 1 will subtract 5 percent and each Javascript file beyond the first wil subtract 10 percent</td>
-        </tr>
-
-        <tr class="blank"></tr>
         <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Use A CDN</th>
             <td class="nowrap">Applicable Objects</td>
             <td >All static non-html content (css, js and images)</td>
@@ -506,26 +538,6 @@ function dumpOptimizationGlossary(&$settings)
         <tr>
             <td class="nowrap">What is checked</td>
             <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN. The current list of known CDN's is <a href="http://webpagetest.googlecode.com/svn/trunk/agent/wpthook/cdn.h">here</a></td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Minify JS</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All html, javascript and json responses</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Javascript will be run through jsmin.  If the original content was gzip encoded, the minified version will also be gzipped for comparison.  If > 5KB or 10% is saved then it will fail.  If > 1KB is saved, it will warn, otherwise it will pass.</td>
-        </tr>
-
-        <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cookies</th>
-            <td class="nowrap">Applicable Objects</td>
-            <td >All requests</td>
-        </tr>
-        <tr>
-            <td class="nowrap">What is checked</td>
-            <td >Any request for a static object that sends up a cookie will fail.  All other requests that send up cookies will warn.</td>
         </tr>
 
     </table>

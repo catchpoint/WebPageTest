@@ -179,6 +179,7 @@ function LoadRequests($request_file_name) {
         71 => 'server_count',
         72 => 'server_rtt',
         73 => 'client_port',
+        74 => 'jpeg_scan_count',
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {
@@ -187,7 +188,7 @@ function LoadRequests($request_file_name) {
             if (count($columns)) {
                 $request = array();
                 foreach ($columns as $i => $value) {
-                    if (array_key_exists($i + 1, $needed_columns))
+                    if (array_key_exists($i + 1, $needed_columns) && strlen(trim($value)))
                         $request[$needed_columns[$i + 1]] = trim($value);
                 }
                 if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
@@ -196,6 +197,14 @@ function LoadRequests($request_file_name) {
                         $url = 'https://';
                     $url .= $request['host'] . $request['url'];
                     $request['full_url'] = $url;
+                }
+                if (array_key_exists('jpeg_scan_count', $request)) {
+                  if ($request['jpeg_scan_count'] > 1)
+                    $request['score_progressive_jpeg'] = 100;
+                  elseif ($request['jpeg_scan_count'] == 1)
+                    $request['score_progressive_jpeg'] = 0;
+                  else
+                    $request['score_progressive_jpeg'] = -1;
                 }
                 $requests[] = $request;
             }
@@ -314,15 +323,18 @@ function FixUpRequestTimes(&$requests) {
         $all_ms = $req['load_ms'];
 
         foreach (array('ssl', 'connect', 'dns') as $key) {
+            $start = $end = $ms = 0;
             // Create local variables for start, end, and duration of this
             // request.  These values will be copied back into $req at the
             // end of the foreach loop.
-            $start = $req[$key . '_start'];
-            $end = $req[$key . '_end'];
-            $ms = $req[$key . '_ms'];
-            if ($end > 0) {
+            if (array_key_exists($key . '_start', $req))
+              $start = $req[$key . '_start'];
+            if (array_key_exists($key . '_end', $req))
+              $end = $req[$key . '_end'];
+            if (array_key_exists($key . '_ms', $req))
+              $ms = $req[$key . '_ms'];
+            if ($end > 0 && $start > 0 && $end >= $start)
                 $ms = max(0, $end - $start);
-            }
             if ($ms > 0) {
                 if ($start == 0) {
                     // Compute start for old-style timing.

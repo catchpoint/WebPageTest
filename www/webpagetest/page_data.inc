@@ -193,6 +193,9 @@ function loadPageData($file, $options = null)
                                 'base_page_cdn' => @trim($fields[86]),
                                 'adult_site' => @(int)trim($fields[87])
                             );
+
+                $ret['fixed_viewport'] = (array_key_exists(88, $fields) && strlen(trim($fields[88]))) ? (int)trim($fields[88]) : -1;
+                $ret['score_progressive_jpeg'] = (array_key_exists(89, $fields) && strlen(trim($fields[89]))) ? (int)trim($fields[89]) : -1;
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))

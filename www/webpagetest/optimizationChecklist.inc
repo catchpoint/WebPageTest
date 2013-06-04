@@ -60,11 +60,9 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
         $standards = array( 'score_keep-alive' => 'Keep-Alive',
                             'score_gzip' => 'GZip',
                             'score_compress' => 'Compress Img',
+                            'score_progressive_jpeg' => 'Progressive',
                             'score_cache' => 'Cache Static',
-                            'score_combine' => 'Combine',
-                            'score_cdn' => 'CDN Detected',
-                            'score_minify' => 'Minify JS',
-                            'score_cookies' => 'Cookies');
+                            'score_cdn' => 'CDN Detected');
         $stdCount = count($standards);
 
         $x = $left;

@@ -166,7 +166,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #sponsor {display: none; background-color: #fff; }
 
 /* Test Reults Pages */
-.grades {float: right;line-height: 1.2em;font-size: 11px;font-weight: bold;}
+.grades {float: right;line-height: 1.2em;font-size: 11px;}
 .grades li {float: left;width: 59px;margin-left: 10px;}
 .grades h2 {width: 100%; text-align:center; height: 30px; margin:0; padding-top: 11px; font-size: 35px; margin-bottom: 5px;}
 .grades .A {background-color: #9bce54;}
@@ -175,6 +175,8 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .grades .D {background-color: #e33535;}
 .grades .F {background-color: #e33535;}
 .grades a {text-decoration: none;}
+.grades.smaller {font-size: 10px;}
+.grades.smaller li {width: 54px;margin-left: 5px;}
 
 #test_results-container {margin: 0 -25px -25px;}
 #test_results_running-container {margin: 0 -25px 0px;}

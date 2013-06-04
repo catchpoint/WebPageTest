@@ -38,6 +38,11 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         $opt['cookies']['score'] = $pageData['score_cookies'];
         $opt['minify']['score'] = $pageData['score_minify'];
         $opt['e-tags']['score'] = $pageData['score_etags'];
+        if (array_key_exists('score_progressive_jpeg', $pageData) && $pageData['score_progressive_jpeg'] >= 0) {
+          $opt['progressive_jpeg'] = array('score' => $pageData['score_progressive_jpeg'],
+                                           'label' => 'Progressive JPEGs',
+                                           'important' => true);
+        }
 
         // define the labels for all  of them
         $opt['ttfb']['label'] = 'First Byte Time';
