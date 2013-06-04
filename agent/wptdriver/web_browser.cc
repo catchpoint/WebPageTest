@@ -586,6 +586,7 @@ void WebBrowser::ConfigureIESettings() {
                     (const LPBYTE)&val, sizeof(val));
 			RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
+			//val = 0;
 			RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
 			RegCloseKey(hKey);

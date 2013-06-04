@@ -53,6 +53,7 @@ public:
   int   _cache_score;
   int   _combine_score;
   int   _static_cdn_score;
+  int   _progressive_jpeg_score;
   bool  _checked;
   CStringA _base_page_CDN;
     
@@ -62,14 +63,18 @@ public:
   TrackDns&   _dns;
 
 private:
-  void CheckKeepAlive();
+  void CheckCacheStatic();
+  void CheckCDN();
+  void CheckCombine();
+  void CheckCustomRules();
   void CheckGzip();
   void CheckImageCompression();
-  void CheckCacheStatic();
-  void CheckCombine();
-  void CheckCDN();
+  void CheckKeepAlive();
+  void CheckProgressiveJpeg();
   bool IsCDN(Request * request, CStringA &provider);
-  void CheckCustomRules();
+
+  bool FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
+                      BYTE * &marker, DWORD &marker_len);
 
   CRITICAL_SECTION _cs_cdn;
 };

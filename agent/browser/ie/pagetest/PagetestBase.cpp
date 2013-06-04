@@ -202,6 +202,7 @@ void CPagetestBase::Reset(void)
 		cookieScore = -1;
 		minifyScore = -1;
 		compressionScore = -1;
+		progressiveJpegScore = -1;
 		etagScore = -1;
     adultSite = 0;
 

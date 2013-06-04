@@ -1030,7 +1030,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
                     _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d\t")
-                    _T("%s\t%s\t%d\t%s\t%s\t%d")
+                    _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1044,7 +1044,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
       0, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite);
+      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore);
 	buff += result;
 }
 
@@ -1193,7 +1193,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 									_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s")
 									_T("\t%d\t%d\t%d\t%s")
                   _T("\t\t\t\t\t\t\t\t\t")
-                  _T("\t%d\t%s\t%d")
+                  _T("\t%d\t%s\t%d\t%d")
 									_T("\r\n"),
 							(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPTSTR)ip, 
 							(LPCTSTR)w->verb, (LPCTSTR)w->host, (LPCTSTR)w->object,
@@ -1208,7 +1208,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,
 							w->gzipTotal, w->gzipTotal - w->gzipTarget, w->minifyTotal, w->minifyTotal - w->minifyTarget, w->compressTotal, w->compressTotal - w->compressTarget, (LPCTSTR)ttl,
-              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr), localPort );
+              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr), localPort, w->jpegScans );
 					buff += result;
 				}
 			}
@@ -1538,6 +1538,7 @@ void CPagetestReporting::CheckOptimization(void)
 		CheckKeepAlive();
 		CheckGzip();
 		CheckImageCompression();
+		CheckProgressiveJpeg();
 		CheckCache();
 		CheckCombine();
 		CheckMinify();
@@ -3509,4 +3510,108 @@ CStringA CPagetestReporting::JSONEscape(CStringA src) {
   src.Replace("\t", "\\t");
   src.Replace("\f", "\\f");
   return src;
+}
+
+/*-----------------------------------------------------------------------------
+	? If the object is a JPEG, see if it is progressive (and count the scans)
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::CheckProgressiveJpeg()
+{
+	progressiveJpegScore = -1;
+  double progressive_bytes = 0;
+  double total_bytes = 0;
+
+	ATLTRACE(_T("[Pagetest] - CheckProgressiveJpeg\n"));
+	
+	POSITION pos = events.GetHeadPosition();
+	while( pos ) {
+		CTrackedEvent * e = events.GetNext(pos);
+		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore ) {
+			CWinInetRequest * w = (CWinInetRequest *)e;
+			CString mime = w->response.contentType;
+			mime.MakeLower();
+			
+			LPBYTE body = w->body;
+			DWORD bodyLen = w->bodyLen;
+			
+			if( w->fromNet && 
+				w->result == 200 && 
+				mime.Find(_T("image/")) >= 0 && 
+				body && bodyLen > 2 &&
+				body[0] == 0xff && body[1] == 0xd8) {
+        w->jpegScans = 0;
+        DWORD pos = 0;
+        BYTE * marker;
+        DWORD marker_length;
+        while (FindJPEGMarker(body, bodyLen, pos, marker, marker_length) &&
+               marker) {
+          if (marker[0] == 0xff && marker[1] == 0xda)
+            w->jpegScans++;
+          pos += marker_length;
+        }
+        
+        if (w->jpegScans > 0) {
+          total_bytes += bodyLen;
+          if (w->jpegScans > 1)
+            progressive_bytes += bodyLen;
+        }
+			}
+		}
+	}
+
+  if (total_bytes > 0)
+    progressiveJpegScore = (int)(progressive_bytes * 100.0 / total_bytes);
+}
+
+/*-----------------------------------------------------------------------------
+  Given a JPEG byte stream, find the next marker
+-----------------------------------------------------------------------------*/
+bool CPagetestReporting::FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
+                                        BYTE * &marker, DWORD &marker_len) {
+  bool found = false;
+  marker = NULL;
+  marker_len = 0;
+  BYTE sos = 0xda;
+  if (pos < len) {
+    BYTE val = buff[pos];
+    if (val == 0xff) {
+      // ff can repeat, the actual marker comes from the first non-ff
+      while (val == 0xff && pos < len) {
+        pos++;
+        val = buff[pos];
+      }
+      marker = &buff[pos - 1];
+      pos++;
+      if ((val >= 0xd0 && val <= 0xd9) || val == 0x01) {
+        found = true;
+      } else if(val == sos) {
+        // image data
+        DWORD marker_end = pos + 1;
+        DWORD next_marker = len;
+        while (marker_end < len - 1 && !found) {
+          val = buff[marker_end];
+          if (val == 0xff) {
+            DWORD i = marker_end + 1;
+            val = buff[i];
+            if (val != 0x00) {   // escaping
+              while (i < len - 1 && val == 0xff) {
+                i++;
+                val = buff[i];
+              }
+              next_marker = marker_end;
+              found = true;
+            }
+          }
+          marker_end++;
+        }
+        marker_len = next_marker - pos;
+      } else if (pos + 1 < len) {
+        BYTE v1 = buff[pos];
+        BYTE v2 = buff[pos + 1];
+        marker_len = (DWORD)v1 * 256 + (DWORD)v2;
+        found = true;
+      }
+    }
+  }
+  return found;
 }

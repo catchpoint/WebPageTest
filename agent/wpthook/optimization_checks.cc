@@ -59,6 +59,7 @@ OptimizationChecks::OptimizationChecks(Requests& requests,
   , _cache_score(-1)
   , _combine_score(-1)
   , _static_cdn_score(-1)
+  , _progressive_jpeg_score(-1)
   , _checked(false) {
   InitializeCriticalSection(&_cs_cdn);
 }
@@ -79,6 +80,7 @@ void OptimizationChecks::Check(void) {
   CheckKeepAlive();
   CheckGzip();
   CheckImageCompression();
+  CheckProgressiveJpeg();
   CheckCacheStatic();
   CheckCombine();
   CheckCDN();
@@ -242,9 +244,7 @@ static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size,
   bool ret = false;
   
   __try{
-    // only decode images that have a JPEG header
-    if (size > 2 && buffer[0] == 0xFF && buffer[1] == 0xD8)
-      ret = img.Decode(buffer, size, imagetype);
+    ret = img.Decode(buffer, size, imagetype);
   }__except(1){
     WptTrace(loglevel::kError,
       _T("[wpthook] - Exception when decoding image"));
@@ -277,61 +277,64 @@ void OptimizationChecks::CheckImageCompression()
 
       // If there is response body and it is an image.
       DataChunk body = request->_response_data.GetBody();
-      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 0) {
-        DWORD targetRequestBytes = body.GetLength();
-        DWORD size = targetRequestBytes;
-        count++;
+      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 2) {
+        BYTE * buffer = (BYTE *)body.GetData();
+        if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
+          DWORD targetRequestBytes = body.GetLength();
+          DWORD size = targetRequestBytes;
+          count++;
         
-        CxImage img;
-        // Decode the image with an exception protected function.
-        if (DecodeImage(img, (BYTE*)body.GetData(),
-                        body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
-          DWORD type = img.GetType();
-          switch (type) {
-          // TODO: Add appropriate scores for gif and png
-          //       once they are available.
-          // Currently, even DecodeImage doesn't support gif and png.
-          // case CXIMAGE_FORMAT_GIF:
-          // case CXIMAGE_FORMAT_PNG:
-          //  request->_scores._imageCompressionScore = 100;
-          //  break;
-          case CXIMAGE_FORMAT_JPG:
-            {
-              img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-              img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-              img.SetJpegQuality(85);
-              BYTE* mem = NULL;
-              int len = 0;
-              if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
-                img.FreeMemory(mem);
-                targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
+          CxImage img;
+          // Decode the image with an exception protected function.
+          if (DecodeImage(img, (BYTE*)body.GetData(),
+                          body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
+            DWORD type = img.GetType();
+            switch (type) {
+            // TODO: Add appropriate scores for gif and png
+            //       once they are available.
+            // Currently, even DecodeImage doesn't support gif and png.
+            // case CXIMAGE_FORMAT_GIF:
+            // case CXIMAGE_FORMAT_PNG:
+            //  request->_scores._imageCompressionScore = 100;
+            //  break;
+            case CXIMAGE_FORMAT_JPG:
+              {
+                img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+                img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+                img.SetJpegQuality(85);
+                BYTE* mem = NULL;
+                int len = 0;
+                if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
+                  img.FreeMemory(mem);
+                  targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
+                }
               }
-            }
-            break;
-          default:
-            request->_scores._image_compression_score = 0;
-          }
-          if( targetRequestBytes > size )
-            targetRequestBytes = size;
-          totalBytes += size;
-          targetBytes += targetRequestBytes;
-          
-          request->_scores._image_compress_total = size;
-          request->_scores._image_compress_target = targetRequestBytes;
-          request->_scores._image_compression_score = 100;
-
-          // If the original was within 10%, then give 100
-          // If it's less than 50% bigger then give 50
-          // More than that is a fail
-          if (targetRequestBytes && targetRequestBytes < size && size > 1400) {
-            double ratio = (double)size / (double)targetRequestBytes;
-            if (ratio >= 1.5)
+              break;
+            default:
               request->_scores._image_compression_score = 0;
-            else if (ratio >= 1.1)
-              request->_scores._image_compression_score = 50;
+            }
+            if( targetRequestBytes > size )
+              targetRequestBytes = size;
+            totalBytes += size;
+            targetBytes += targetRequestBytes;
+          
+            request->_scores._image_compress_total = size;
+            request->_scores._image_compress_target = targetRequestBytes;
+            request->_scores._image_compression_score = 100;
+
+            // If the original was within 10%, then give 100
+            // If it's less than 50% bigger then give 50
+            // More than that is a fail
+            if (targetRequestBytes && targetRequestBytes < size && size > 1400) {
+              double ratio = (double)size / (double)targetRequestBytes;
+              if (ratio >= 1.5)
+                request->_scores._image_compression_score = 0;
+              else if (ratio >= 1.1)
+                request->_scores._image_compression_score = 50;
+            }
           }
+          total += request->_scores._image_compression_score;
         }
-        total += request->_scores._image_compression_score;
       }
     }
   }
@@ -348,7 +351,6 @@ void OptimizationChecks::CheckImageCompression()
     _T("[wpthook] - OptChecks::CheckImageCompression() score: %d\n"),
     _image_compression_score);
 }
-
 
 /*-----------------------------------------------------------------------------
 ﻿  Check each static element to make sure it was cachable
@@ -458,7 +460,7 @@ void OptimizationChecks::CheckCombine() {
   // average the Combine scores of all of the objects for the page
   if( count ) {
     // For each redundant resource, reduce 10 for js and 5 for css.
-    _combine_score = max(100 - js_redundant_count * 10 - css_redundant_count * 5,
+    _combine_score = max(100 - js_redundant_count *10 - css_redundant_count *5,
       0);
   }
 
@@ -592,4 +594,113 @@ void OptimizationChecks::CheckCustomRules() {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+﻿  If the object is a JPEG, see if it is progressive (and count the scans)
+-----------------------------------------------------------------------------*/
+void OptimizationChecks::CheckProgressiveJpeg() {
+  _progressive_jpeg_score = -1;
+  double progressive_bytes = 0;
+  double total_bytes = 0;
+
+  _requests.Lock();
+  POSITION pos = _requests._requests.GetHeadPosition();
+  int fileCount = 0;
+  while( pos ) {
+    Request *request = _requests._requests.GetNext(pos);
+    if (request && request->_processed && request->GetResult() == 200) {
+      int temp_pos = 0;
+      CStringA mime = request->GetResponseHeader("content-type").Tokenize(";",
+        temp_pos);
+      mime.MakeLower();
+
+      DataChunk body = request->_response_data.GetBody();
+      if (mime.Find("image/") >= 0 &&
+          body.GetData() &&
+          body.GetLength() > 0) {
+        BYTE * buffer = (BYTE *)body.GetData();
+        if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
+          DWORD len = body.GetLength();
+          request->_scores._jpeg_scans = 0;
+          DWORD pos = 0;
+          BYTE * marker;
+          DWORD marker_length;
+          while (FindJPEGMarker(buffer, len, pos, marker, marker_length) &&
+                 marker) {
+            if (marker[0] == 0xff && marker[1] == 0xda)
+              request->_scores._jpeg_scans++;
+            pos += marker_length;
+          }
+
+          if (request->_scores._jpeg_scans > 0) {
+            total_bytes += len;
+            if (request->_scores._jpeg_scans > 1)
+              progressive_bytes += len;
+          }
+        }
+      }
+    }
+  }
+  _requests.Unlock();
+
+  // Calculate the score based on target/total.
+  if (total_bytes > 0)
+    _progressive_jpeg_score = (int)(progressive_bytes * 100.0 / total_bytes);
+  WptTrace(loglevel::kFunction,
+    _T("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d\n"),
+    _progressive_jpeg_score);
+}
+
+/*-----------------------------------------------------------------------------
+  Given a JPEG byte stream, find the next marker
+-----------------------------------------------------------------------------*/
+bool OptimizationChecks::FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
+                                        BYTE * &marker, DWORD &marker_len) {
+  bool found = false;
+  marker = NULL;
+  marker_len = 0;
+  BYTE sos = 0xda;
+  if (pos < len) {
+    BYTE val = buff[pos];
+    if (val == 0xff) {
+      // ff can repeat, the actual marker comes from the first non-ff
+      while (val == 0xff && pos < len) {
+        pos++;
+        val = buff[pos];
+      }
+      marker = &buff[pos - 1];
+      pos++;
+      if ((val >= 0xd0 && val <= 0xd9) || val == 0x01) {
+        found = true;
+      } else if(val == sos) {
+        // image data
+        DWORD marker_end = pos + 1;
+        DWORD next_marker = len;
+        while (marker_end < len - 1 && !found) {
+          val = buff[marker_end];
+          if (val == 0xff) {
+            DWORD i = marker_end + 1;
+            val = buff[i];
+            if (val != 0x00) {   // escaping
+              while (i < len - 1 && val == 0xff) {
+                i++;
+                val = buff[i];
+              }
+              next_marker = marker_end;
+              found = true;
+            }
+          }
+          marker_end++;
+        }
+        marker_len = next_marker - pos;
+      } else if (pos + 1 < len) {
+        BYTE v1 = buff[pos];
+        BYTE v2 = buff[pos + 1];
+        marker_len = (DWORD)v1 * 256 + (DWORD)v2;
+        found = true;
+      }
+    }
+  }
+  return found;
 }

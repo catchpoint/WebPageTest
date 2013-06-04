@@ -224,6 +224,7 @@ public:
 		,cookieScore(-1)
 		,minifyScore(-1)
 		,compressionScore(-1)
+		,jpegScans(0)
 		,etagScore(-1)
 		,gzipTotal(0)
 		,gzipTarget(0)
@@ -305,6 +306,7 @@ public:
 	int					cookieScore;
 	int					minifyScore;
 	int					compressionScore;
+	int         jpegScans;
 	int					etagScore;
 	CString				cdnProvider;
 

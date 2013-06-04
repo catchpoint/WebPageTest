@@ -180,6 +180,7 @@ protected:
 	void CheckCookie();
 	void CheckMinify();
 	void CheckImageCompression();
+	void CheckProgressiveJpeg();
 	void CheckEtags();
 	void CheckPageSpeed();
 	void ProtectedCheckPageSpeed();
@@ -208,5 +209,7 @@ private:
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   void SaveHistogram(CxImage& image, CString file);
   CStringA JSONEscape(CStringA src);
+  bool FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
+                      BYTE * &marker, DWORD &marker_len);
 };
 

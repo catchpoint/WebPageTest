@@ -605,6 +605,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Fixed Viewport
     buff.Format("%d\t", _test_state._fixed_viewport);
     result += buff;
+    // Progressive JPEG Score
+    buff.Format("%d\t", checks._progressive_jpeg_score);
+    result += buff;
 
     result += "\r\n";
 
@@ -977,6 +980,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->rtt_ + "\t";
   // Local Port
   buff.Format("%d\t", request->_local_port);
+  result += buff;
+  // JPEG scan count
+  buff.Format("%d\t", request->_scores._jpeg_scans);
   result += buff;
 
   result += "\r\n";

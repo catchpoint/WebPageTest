@@ -258,6 +258,7 @@ public:
 	int compressionScore;
 	int etagScore;
   int adultSite;
+	int progressiveJpegScore;
 	
 	// screen shots of various stages
   ScreenCapture screenCapture;
