@@ -419,11 +419,14 @@ function CheckCron() {
         fclose($cron_lock);
     }
     
-    // send the crone requests
+    // send the cron requests
     if ($should_run) {
         if (is_file('./settings/benchmarks/benchmarks.txt') && 
             is_file('./benchmarks/cron.php')) {
             SendCronRequest('/benchmarks/cron.php');
+        }
+        if (is_file('./jpeginfo/cleanup.php')) {
+            SendCronRequest('/jpeginfo/cleanup.php');
         }
     }
 }
