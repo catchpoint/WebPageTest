@@ -363,6 +363,13 @@ Request::~Request(void) {
   DeleteCriticalSection(&cs);
 }
 
+CStringA Request::GetEventName(void){
+	return CT2A(event_name);
+}
+
+void Request::SetEventName(CString eventName){
+	event_name = eventName;
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::DataIn(DataChunk& chunk) {

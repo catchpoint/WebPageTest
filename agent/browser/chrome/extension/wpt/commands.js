@@ -268,9 +268,9 @@ wpt.commands.CommandRunner.prototype.doSetDOMElements = function() {
     if (goog.isNull(g_tabid))
       throw ('It should not be posible to run the doSetDOMElements() method ' +
              'before we find the id of the tab in which pages are loaded.');
-
+    
     chrome.tabs.sendRequest(
-        g_tabid,
+    	g_tabid,
         {'message': 'setDOMElements', name_values: wpt.commands.g_domElements},
         function(response) {});
     wpt.LOG.info('doSetDOMElements for :  ' + wpt.commands.g_domElements);

@@ -511,8 +511,8 @@ wpt.moz.main.setDomElement = function(target) {
 
 wpt.moz.main.pollForDomElements = function() {
   var missingDomElements = [];
-  for (var i = 0, ie = wpt.moz.main.domElementsToWaitOn_.length; i < ie; i++) {
-    var target = wpt.moz.main.domElementsToWaitOn_[i];
+  for (var i = 0; i < wpt.moz.main.domElementsToWaitOn_.length; i++) {
+	var target = wpt.moz.main.domElementsToWaitOn_[i];
     var targetInPage = SendCommandToContentScript_({
       'command': 'isTargetInDom',
       'target': target
@@ -522,7 +522,11 @@ wpt.moz.main.pollForDomElements = function() {
       var domElementParams = {
         'name_value': target
       };
+
       wpt.moz.main.sendEventToDriver_('dom_element', domElementParams);
+      var index = wpt.moz.main.domElementsToWaitOn_.indexOf(target)
+	  wpt.moz.main.domElementsToWaitOn_.splice(index, 1);;
+	  i--;
     } else {
       // If we did not find |target|, save it for the next poll.
       missingDomElements.push(target);

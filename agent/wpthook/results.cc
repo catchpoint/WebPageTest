@@ -408,7 +408,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += "\t";
+    result += (CT2A(checks._test.event_name + "\t"));
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -867,6 +867,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         request->_reported = true;
         if (request->_processed) {
           i++;
+          request->SetEventName(checks._test.event_name);  
           SaveRequest(file, headers_file, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
@@ -931,7 +932,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += "\t";
+  result += request->GetEventName()+"\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;
