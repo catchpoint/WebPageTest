@@ -3560,7 +3560,7 @@ void CPagetestReporting::CheckProgressiveJpeg()
 	}
 
   if (total_bytes > 0)
-    progressiveJpegScore = (int)(progressive_bytes * 100.0 / total_bytes);
+    progressiveJpegScore = (int)((progressive_bytes * 100.0 / total_bytes) + 0.5);
 }
 
 /*-----------------------------------------------------------------------------

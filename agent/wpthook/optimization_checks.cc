@@ -645,8 +645,10 @@ void OptimizationChecks::CheckProgressiveJpeg() {
   _requests.Unlock();
 
   // Calculate the score based on target/total.
-  if (total_bytes > 0)
-    _progressive_jpeg_score = (int)(progressive_bytes * 100.0 / total_bytes);
+  if (total_bytes > 0) {
+    _progressive_jpeg_score =
+      (int)((progressive_bytes * 100.0 / total_bytes) + 0.5);
+  }
   WptTrace(loglevel::kFunction,
     _T("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d\n"),
     _progressive_jpeg_score);

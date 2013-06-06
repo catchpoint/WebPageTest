@@ -196,7 +196,6 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
         {
             if (array_key_exists('score_progressive_jpeg', $request) && $request['score_progressive_jpeg'] >= 0) {
               if ($request['score_progressive_jpeg'] < 100 ) {
-                $candidateBytes += $request['image_total'];
                 $key = $request['image_total'] . ' ' . $request['host'] . ' ' . $index;
                 $proto = 'http://';
                 if( $request['is_secure'] )
@@ -204,8 +203,10 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
                 $kb = number_format($request['image_total'] / 1024.0, 1);
                 if ($request['score_progressive_jpeg'] > 0 )
                   $report[$key] = "Info ($kb KB) - " . $proto . $request['host'] . $request['url'];
-                else
+                else {
+                  $candidateBytes += $request['image_total'];
                   $report[$key] = "FAILED ($kb KB) - " . $proto . $request['host'] . $request['url'];
+                }
               } else {
                 $candidateBytes += $request['image_total'];
                 $progressiveBytes += $request['image_total'];
@@ -214,10 +215,10 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
         }
 
         if ($candidateBytes > 0) {
+          $pct = number_format($progressiveBytes * 100.0 / $candidateBytes, 0);
           $candidateBytes = number_format($candidateBytes / 1024.0, 1);
           $progressiveBytes = number_format($progressiveBytes / 1024.0, 1);
-          $pct = number_format($progressiveBytes * 100.0 / $candidateBytes, 0);
-          $summary = "$progressiveBytes KB of $candidateBytes JPEG KB ($pct%) were from progressive JPEG images";
+          $summary = "$progressiveBytes KB of a possible $candidateBytes KB ($pct%) were from progressive JPEG images";
         }
         
         krsort($report, SORT_NUMERIC);
