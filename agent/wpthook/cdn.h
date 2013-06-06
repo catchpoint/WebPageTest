@@ -106,6 +106,7 @@ CDN_PROVIDER cdnList[] = {
 
 CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "cloudflare", "Cloudflare"},
+  {"server", "ECS", "Edgecast"},
   {"server", "NetDNA", "NetDNA"},
   {"X-CDN-Geo", "", "OVH CDN"}
 };
