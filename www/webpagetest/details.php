@@ -288,7 +288,7 @@ $page_description = "Website performance test details$testLabel";
                 <?php
                     InsertWaterfall($url, $requests, $id, $run, $cached);
                     echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
-                    echo "<a href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
+                    echo "<a id=\"view-images\" href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
                 ?>
                 <br>
                 <br>

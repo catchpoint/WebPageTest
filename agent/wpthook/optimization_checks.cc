@@ -633,7 +633,7 @@ void OptimizationChecks::CheckProgressiveJpeg() {
             pos += marker_length;
           }
 
-          if (request->_scores._jpeg_scans > 0) {
+          if (len > 10240 && request->_scores._jpeg_scans > 0) {
             total_bytes += len;
             if (request->_scores._jpeg_scans > 1)
               progressive_bytes += len;

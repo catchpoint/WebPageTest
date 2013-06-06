@@ -3550,7 +3550,7 @@ void CPagetestReporting::CheckProgressiveJpeg()
           pos += marker_length;
         }
         
-        if (w->jpegScans > 0) {
+        if (bodyLen > 10240 && w->jpegScans > 0) {
           total_bytes += bodyLen;
           if (w->jpegScans > 1)
             progressive_bytes += bodyLen;

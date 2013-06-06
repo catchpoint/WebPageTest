@@ -201,9 +201,13 @@ function LoadRequests($request_file_name) {
                 if (array_key_exists('jpeg_scan_count', $request)) {
                   if ($request['jpeg_scan_count'] > 1)
                     $request['score_progressive_jpeg'] = 100;
-                  elseif ($request['jpeg_scan_count'] == 1)
-                    $request['score_progressive_jpeg'] = 0;
-                  else
+                  elseif ($request['jpeg_scan_count'] == 1) {
+                    if (array_key_exists('image_total', $request) &&
+                        $request['image_total'] <= 10240)
+                      $request['score_progressive_jpeg'] = 50;
+                    else
+                      $request['score_progressive_jpeg'] = 0;
+                  } else
                     $request['score_progressive_jpeg'] = -1;
                 }
                 $requests[] = $request;
