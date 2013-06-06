@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpthook.h"
 #include "shared_mem.h"
 #include <Tlhelp32.h>
+#include <Imagehlp.h>
 
 HINSTANCE global_dll_handle = NULL; // DLL handle
 extern WptHook * global_hook;
@@ -65,7 +66,7 @@ DWORD __stdcall RemoteThreadProc(void * thread_data) {
 /*-----------------------------------------------------------------------------
   Find the base address where the given dll is loaded
 -----------------------------------------------------------------------------*/
-LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll) {
+LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll, TCHAR * dll_path) {
   LPBYTE base_address = NULL;
   HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, 
                                                         GetProcessId(process));
@@ -75,8 +76,11 @@ LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll) {
     module.dwSize = sizeof(module);
     if (Module32First(snap, &module)) {
       do {
-        if (!lstrcmpi(module.szModule, dll))
+        if (!lstrcmpi(module.szModule, dll)) {
           base_address = module.modBaseAddr;
+          if (dll_path)
+            lstrcpyn(dll_path, module.szExePath, MAX_PATH);
+        }
       } while(!base_address && Module32Next(snap, &module));
     }
     CloseHandle(snap);
@@ -86,29 +90,63 @@ LPBYTE GetDllBaseAddress(HANDLE process, TCHAR * dll) {
 }
 
 /*-----------------------------------------------------------------------------
+  Figure out the offset from the start of the given DLL where the requested
+  function is.  Use the image helper API's to walk the PE headers directly
+  in case the target process is using a different version of the dll that we
+  might be.
+-----------------------------------------------------------------------------*/
+DWORD GetFunctionOffset(const char * dll, const char * fn) {
+  DWORD offset = 0;
+  _LOADED_IMAGE loaded_image;
+  if (MapAndLoad(dll, NULL, &loaded_image, TRUE, TRUE)) {
+    unsigned long dir_size;
+    _IMAGE_EXPORT_DIRECTORY * ImageExportDirectory = (_IMAGE_EXPORT_DIRECTORY*)
+        ImageDirectoryEntryToData(loaded_image.MappedAddress, false,
+                                  IMAGE_DIRECTORY_ENTRY_EXPORT, &dir_size);
+    if (ImageExportDirectory != NULL) {
+      DWORD * name_RVAs = (DWORD *)ImageRvaToVa(loaded_image.FileHeader, 
+          loaded_image.MappedAddress, ImageExportDirectory->AddressOfNames,
+          NULL);
+      DWORD * address_RVAs = (DWORD *)ImageRvaToVa(loaded_image.FileHeader, 
+          loaded_image.MappedAddress, ImageExportDirectory->AddressOfFunctions,
+          NULL);
+      for (DWORD i = 0; i <
+            ImageExportDirectory->NumberOfNames && !offset; i++) {
+        const char * export_name = (const char *)ImageRvaToVa(
+            loaded_image.FileHeader, loaded_image.MappedAddress, name_RVAs[i],
+            NULL);
+        if (!lstrcmpA(fn, export_name))
+          offset = address_RVAs[i];
+      }
+    }
+    UnMapAndLoad(&loaded_image);
+  }
+  return offset;
+}
+
+/*-----------------------------------------------------------------------------
   Figure out the address of the given function in the remote process
 -----------------------------------------------------------------------------*/
 LPBYTE GetRemoteFunction(HANDLE process, TCHAR * dll, TCHAR * fn){
   LPBYTE remote_function = NULL;
+  TCHAR dll_path[MAX_PATH];
 
-  // first, get the offset of the function from the dll base address in the 
-  // current process
-  HMODULE module = LoadLibrary(dll);
-  if (module) {
-    LPBYTE base = GetDllBaseAddress(GetCurrentProcess(), dll);
-    if (base) {
-      LPBYTE addr = (LPBYTE)GetProcAddress(module, CT2A(fn));
-      if (addr > base) {
-        unsigned __int64 offset = addr - base;
+  AtlTrace(_T("[wpthook] Looking for %s in %s"), fn, dll);
 
-        // now find the base address of the dll in the remote process
-        LPBYTE remote_base = GetDllBaseAddress(process, dll);
-        if (remote_base)
-          remote_function = remote_base + offset;
-      }
+  // Find the address of the DLL in the remote process and get the full
+  // path to the version of the DLL that is being used by the remote process
+  // (in case of SxS installs).
+  LPBYTE remote_base = GetDllBaseAddress(process, dll, dll_path);
+  if (remote_base) {
+    DWORD offset = GetFunctionOffset((CT2A)dll_path, (CT2A)fn);
+    if (offset) {
+      remote_function = remote_base + offset;
+      AtlTrace(_T("[wpthook] Found remote process"));
+    } else {
+      AtlTrace(_T("[wpthook] failed to find function"));
     }
-
-    FreeLibrary(module);
+  } else {
+    AtlTrace(_T("[wpthook] dll not found in remote process"));
   }
 
   return remote_function;
@@ -123,25 +161,32 @@ bool LoadRemoteDll(HANDLE process) {
   // get the addresses of the functions we need in the remote process
   LPBYTE fn_LoadLibraryW = GetRemoteFunction(process, _T("kernel32.dll"), 
                                                 _T("LoadLibraryW"));
-
-  // copy the dll path to the remote process memory
-  TCHAR dll_path[MAX_PATH];
-  if (GetModuleFileNameW(global_dll_handle, dll_path, _countof(dll_path))) {
-    WCHAR * remote_path = (WCHAR *)VirtualAllocEx(process, NULL, 
-                                 sizeof(dll_path), MEM_COMMIT, PAGE_READWRITE);
-    if (remote_path) {
-      if (WriteProcessMemory(process, remote_path, dll_path, 
-                                sizeof(dll_path), NULL) ) {
-        // Load the DLL
-        HANDLE thread_handle = CreateRemoteThread(process, NULL, 0, 
-               (LPTHREAD_START_ROUTINE)fn_LoadLibraryW, remote_path, 0 , NULL);
-        if (thread_handle) {
-          WaitForSingleObject(thread_handle, 120000);
-          CloseHandle(thread_handle);
-          ret = true;
+  if (fn_LoadLibraryW) {
+    // copy the dll path to the remote process memory
+    TCHAR dll_path[MAX_PATH];
+    if (GetModuleFileNameW(global_dll_handle, dll_path, _countof(dll_path))) {
+      WCHAR * remote_path = (WCHAR *)VirtualAllocEx(process, NULL, 
+                            sizeof(dll_path), MEM_COMMIT, PAGE_READWRITE);
+      if (remote_path) {
+        if (WriteProcessMemory(process, remote_path, dll_path, 
+                                  sizeof(dll_path), NULL) ) {
+          // Load the DLL
+          HANDLE thread_handle = CreateRemoteThread(process, NULL, 0, 
+              (LPTHREAD_START_ROUTINE)fn_LoadLibraryW, remote_path, 0 , NULL);
+          if (thread_handle) {
+            WaitForSingleObject(thread_handle, 120000);
+            CloseHandle(thread_handle);
+            ret = true;
+          } else {
+            AtlTrace(_T("[wpthook] Failed to start remote thread"));
+          }
+        } else {
+          AtlTrace(_T("[wpthook] Failed to write memory in the remote process"));
         }
+        VirtualFreeEx(process, remote_path, sizeof(dll_path), MEM_RELEASE);
+      } else {
+        AtlTrace(_T("[wpthook] Failed to allocate memory in the remote process"));
       }
-      VirtualFreeEx(process, remote_path, sizeof(dll_path), MEM_RELEASE);
     }
   }
 
@@ -153,6 +198,7 @@ bool LoadRemoteDll(HANDLE process) {
 -----------------------------------------------------------------------------*/
 BOOL WINAPI InstallHook(HANDLE process) {
   BOOL ret = FALSE;
+  AtlTrace(_T("[wpthook] InstallHook, loading the DLL remotely"));
   if (LoadRemoteDll(process)) {
     // code is loaded remotely, figure out the function offset and run the init
     LPBYTE fn_RemoteThreadProc = GetRemoteFunction(process, _T("wpthook.dll"), 
