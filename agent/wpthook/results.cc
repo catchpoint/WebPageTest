@@ -948,7 +948,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Full Time to Load (ms)
   result += "\t";
   // Optimization Checked
-  result += "0\t";
+  result += "1\t";
   // CDN Provider
   result += request->_scores._cdn_provider + "\t";
   // DNS start

@@ -459,8 +459,12 @@ void WptTest::BuildScript() {
       _viewport_width = DEFAULT_MOBILE_WIDTH;
       _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
-    if (_user_agent.IsEmpty())
+    if (_user_agent.IsEmpty()) {
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
+      CStringA ver;
+      ver.Format(" PTST/%d", _version);
+      _user_agent += ver;
+    }
   }
 
   // Scale the viewport or browser size by the scale factor.
