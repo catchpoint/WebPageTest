@@ -13,6 +13,7 @@ if( array_key_exists('embed', $_REQUEST) && $_REQUEST['embed'] )
 }
 $color = 'white';
 $bgcolor = "black";
+$lightcolor = '#777';
 $displayData = false;
 if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
   $bgcolor = 'white';
@@ -193,11 +194,12 @@ else
                 echo "background-color: $bgcolor;\n";
                 echo "color: $color;\n";
                 ?>
-                font-family: arial,sans-serif
+                font-family: arial,sans-serif;
+                padding: 0px 25px;
             }
             .link
             {
-                text-decoration: none;
+                text-decoration: underline;
                 <?php
                 echo "color: $color;\n";
                 ?>
@@ -212,6 +214,43 @@ else
                 padding: 5px;
                 width: 100%;
             }
+            #embed
+            {
+                <?php
+                    echo "background: $bgcolor;\n";
+                    echo "color: $color;\n"
+                ?>
+                font-family: arial,sans-serif;
+                padding: 20px;
+            }
+            #embed td
+            {
+                padding: 2px 10px;
+            }
+            #embed-ok
+            {
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 10px;
+                display: block;
+            }
+            #embed-code
+            {
+            }
+            #testmode
+            {
+              clear: both;
+              float: right;
+              <?php
+              echo "color: $lightcolor;\n";
+              ?>
+            }
+            #testmode a.link
+            {
+              <?php
+              echo "color: $lightcolor;\n";
+              ?>
+            }
             .vjs-default-skin .vjs-controls {height: 0;}
             .vjs-default-skin .vjs-mute-control {display: none;}
             .vjs-default-skin .vjs-volume-control {display: none;}
@@ -221,6 +260,11 @@ else
             ?>
         </style>
         <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
+        <script type="text/javascript">
+            function ShowEmbed() {
+                $("#embed").modal({opacity:80});
+            }
+        </script>
     </head>
     <body>
         <div class="page">
@@ -291,8 +335,19 @@ else
                     <source src=\"/$dir/video.mp4\" type='video/mp4'>
                 </video>";
 
-                if(!$embed)
-                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
+                if(!$embed) {
+                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Download</a> | ";
+                    echo '<a class="link" href="javascript:ShowEmbed()">Embed</a>';
+                    $dataText = 'View as data comparison';
+                    $dataUrl = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id&data=1";
+                    if ($displayData) {
+                      $dataText = 'View as video';
+                      $dataUrl = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id";
+                    }
+                    if (defined('BARE_UI'))
+                      $dataUrl .= '&bare=1';
+                    echo "<div class=\"cleared\"></div><div id=\"testmode\"><a class=\"link\" href=\"$dataUrl\">$dataText</a></div>";
+                }
             }
             elseif( $valid && !$embed )
                 echo '<h1>Your video will be available shortly.  Please wait...</h1>';
@@ -306,6 +361,25 @@ else
                 if (!$embed)
                     include('footer.inc'); 
             ?>
+        </div>
+        <div id="embed" style="display:none;">
+            <h3>Video Embed</h3>
+            <p>Copy and past the code below into a website to embed the video.</p>  
+            <p>You can adjust the size of the video as necessary by changing the 
+            width and height parameters<br>(make sure to change both the parameters on 
+            the src URL and the iFrame).</p>
+            <p id="embed-code">
+            <?php
+            $dimensions = '';
+            $framesize = '';
+            if (isset($width) && isset($height) && $width && $height) {
+              $dimensions = "&width=$width&height=$height";
+              $framesize = " width=\"$width\" height=\"$height\"";
+            }
+            echo htmlspecialchars("<iframe src=\"http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id&embed=1$dimensions\"$framesize></iframe>");
+            ?>
+            </p>
+            <input id="embed-ok" type=button class="simplemodal-close" value="OK">
         </div>
     </body>
 </html>

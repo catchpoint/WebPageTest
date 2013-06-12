@@ -84,6 +84,7 @@ public:
   void Start();
   void ActivityDetected();
   void OnNavigate();
+  void OnNavigateComplete();
   void OnAllDOMElementsLoaded(DWORD load_time);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD load_event_start, DWORD load_event_end);
@@ -142,7 +143,8 @@ public:
   bool  _active;
   int   _current_document;
   bool  _exit;
-  bool  _navigated;
+  bool navigated_;
+  bool navigating_;
   bool no_gdi_;
   bool gdi_only_;
   UINT paint_msg_;

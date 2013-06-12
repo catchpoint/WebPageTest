@@ -60,6 +60,7 @@ public:
   void SetLoadEvent(DWORD start, DWORD end);
   void OnLoad();
   void OnNavigate();
+  void OnNavigateComplete();
 
 private:
   CGDIHook  gdi_hook_;

@@ -58,6 +58,11 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     
     // see if we have video files to calculate a visually complete time from
     if (isset($ret)) {
+        if (array_key_exists('loadTime', $ret) &&
+            !$ret['loadTime'] &&
+            array_key_exists('fullyLoaded', $ret) &&
+            $ret['fullyLoaded'] > 0)
+            $ret['loadTime'] = $ret['fullyLoaded'];
         $video_dir = "$testPath/video_$run";
         if ($cached)
             $video_dir .= '_cached';

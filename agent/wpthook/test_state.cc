@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test_hook.h"
 #include "dev_tools.h"
 
-static const DWORD ON_LOAD_GRACE_PERIOD = 1000;
+static const DWORD ON_LOAD_GRACE_PERIOD = 100;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
 static const DWORD START_RENDER_MARGIN = 30;
@@ -58,7 +58,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_test(test)
   ,_dev_tools(dev_tools)
   ,no_gdi_(false)
-  ,gdi_only_(false) {
+  ,gdi_only_(false)
+  ,navigated_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -133,7 +134,7 @@ void TestState::Reset(bool cascade) {
     _title.Empty();
     _user_agent = _T("WebPagetest");
     _console_log_messages.RemoveAll();
-    _navigated = false;
+    navigating_ = false;
     _pre_render_paints.RemoveAll();
     GetSystemTime(&_start_time);
   }
@@ -192,7 +193,8 @@ void TestState::Start() {
 -----------------------------------------------------------------------------*/
 void TestState::ActivityDetected() {
   if (_active) {
-    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::ActivityDetected()\n"));
+    WptTrace(loglevel::kFunction,
+             _T("[wpthook] TestState::ActivityDetected()\n"));
     QueryPerformanceCounter(&_last_activity);
     if (!_first_activity.QuadPart)
       _first_activity.QuadPart = _last_activity.QuadPart;
@@ -203,7 +205,8 @@ void TestState::ActivityDetected() {
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigate() {
   if (_active) {
-    WptTrace(loglevel::kFunction, _T("[wpthook] TestState::OnNavigate()\n"));
+    WptTrace(loglevel::kFunction,
+             _T("[wpthook] TestState::OnNavigate()\n"));
     UpdateBrowserWindow();
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
@@ -211,7 +214,7 @@ void TestState::OnNavigate() {
     _load_event_end = 0;
     _dom_elements_time.QuadPart = 0;
     _on_load.QuadPart = 0;
-    _navigated = true;
+    navigating_ = true;
     if (!_current_document) {
       _current_document = _next_document;
       _next_document++;
@@ -220,6 +223,12 @@ void TestState::OnNavigate() {
       QueryPerformanceCounter(&_first_navigate);
     ActivityDetected();
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::OnNavigateComplete() {
+  navigating_ = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -270,6 +279,8 @@ void TestState::SetLoadEvent(DWORD start, DWORD end) {
 -----------------------------------------------------------------------------*/
 void TestState::OnLoad() {
   if (_active) {
+    navigated_ = true;
+    navigating_ = false;
     QueryPerformanceCounter(&_on_load);
     ActivityDetected();
     _screen_capture.Capture(_document_window,
@@ -304,12 +315,18 @@ bool TestState::IsDone() {
     if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
+      DWORD navigated = navigated_ ? 1:0;
+      DWORD navigating = navigating_ ? 1:0;
       WptTrace(loglevel::kFunction,
-               _T("[wpthook] - TestState::IsDone()? ")
-               _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d\n"),
-               test_ms, load_ms, inactive_ms, _test._measurement_timeout);
-      bool is_loaded = (load_ms > ON_LOAD_GRACE_PERIOD && 
-                      !_test._dom_element_check);
+               _T("[wpthook] - TestState::IsDone() ")
+               _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d,")
+               _T(" navigating:%d, navigated: %d\n"),
+               test_ms, load_ms, inactive_ms, _test._measurement_timeout,
+               navigating, navigated);
+      bool is_loaded = (navigated_ &&
+                        !navigating_ &&
+                        //load_ms > ON_LOAD_GRACE_PERIOD && 
+                        !_test._dom_element_check);
       if (_test_result) {
         is_page_done = true;
         done_reason = _T("Page Error");

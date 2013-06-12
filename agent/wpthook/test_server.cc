@@ -174,6 +174,9 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/complete") == 0) {
+      hook_.OnNavigateComplete();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate_error") == 0) {
       CString err_str = GetUnescapedParam(request_info->query_string, "str");
       test_state_.OnStatusMessage(CString(_T("Navigation Error: ")) + err_str);
