@@ -16,6 +16,7 @@ foreach( $wl as &$w )
 
 $counts = array();
 $dayCounts = array();
+$keys = array();
 
 // load the API keys
 $keys = parse_ini_file('./settings/keys.ini', true);
@@ -39,14 +40,14 @@ for($offset = 0; $offset <= $days; $offset++)
             if( isset($parts[1]) )
             {
                 $ip = trim($parts[1]);
-                if( strlen($ip) ) {
+                if( strlen($ip)) {
                     $key = trim($parts[13]);
                     $count = 1;
                     if (array_key_exists(14, $parts))
                         $count = intval(trim($parts[14]));
                     $count = max(1, $count);
                     if( strlen($key) && array_key_exists($key, $keys) )
-                        $ip = $keys[$key]['contact'];
+                      $keys[$ip] = $keys[$key]['contact'];
                     if( isset($counts[$ip]) )
                         $counts[$ip] += $count;
                     else
@@ -65,6 +66,29 @@ for($offset = 0; $offset <= $days; $offset++)
     
     // on to the previous day
     $targetDate->modify('-1 day');
+}
+
+// aggregate the different IP's for any given key
+foreach ($counts as $ip => $count) {
+  if (array_key_exists($ip, $keys)) {
+    if (array_key_exists($keys[$ip], $counts))
+      $counts[$keys[$ip]] += $count;
+    else
+      $counts[$keys[$ip]] = $count;
+    unset($counts[$ip]);
+  }
+}
+
+foreach ($dayCounts as &$dayCount) {
+  foreach ($dayCount as $ip => $count) {
+    if (array_key_exists($ip, $keys)) {
+      if (array_key_exists($keys[$ip], $dayCount))
+        $dayCount[$keys[$ip]] += $count;
+      else
+        $dayCount[$keys[$ip]] = $count;
+      unset($dayCount[$ip]);
+    }
+  }
 }
 
 // sort the counts descending

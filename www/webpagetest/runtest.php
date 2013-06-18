@@ -741,7 +741,11 @@ function ValidateKey(&$test, &$error, $key = null)
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
       // validate their API key and enforce any rate limits
-      if( isset($keys[$key]) ){
+      if( array_key_exists($key, $keys) ){
+        if (array_key_exists('default location', $keys[$key]) &&
+            strlen($keys[$key]['default location']) &&
+            !strlen($test['location']))
+            $test['location'] = $keys[$key]['default location'];
         if (isset($keys[$key]['priority']))
             $test['priority'] = $keys[$key]['priority'];
         if( isset($keys[$key]['limit']) ){
@@ -1497,7 +1501,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
     global $settings;
     $testId = null;
     
-    if (CheckUrl($url)) {
+    if (CheckUrl($url) && WptHookValidateTest($test)) {
         // generate the test ID
         $test_num;
         $id = uniqueId($test_num);
