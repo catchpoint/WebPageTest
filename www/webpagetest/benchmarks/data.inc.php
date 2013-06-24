@@ -112,9 +112,9 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                         $value = $row[$configuration['name']][$location['location']];
                         if ($aggregate != 'count') {
                             if ($isbytes)
-                                $value = number_format($value / 1024.0, 3);
+                                $value = number_format($value / 1024.0, 3, '.', '');
                             elseif ($istime)
-                                $value = number_format($value / 1000.0, 3);
+                                $value = number_format($value / 1000.0, 3, '.', '');
                         }
                         $tsv .= $value;
                     }
@@ -319,6 +319,7 @@ function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }
+
     if (LoadTestData($data, $configurations, $benchmark, $cached, $metric, $test, $meta, $loc)) {
         $series = array();
         $tsv = 'URL';
@@ -380,9 +381,9 @@ function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
                                 $meta[$url]['tests'][$column] = $row[$configuration['name']][$location['location']][$i]['test'];
                                 $value = $row[$configuration['name']][$location['location']][$i]['value'];
                                 if ($isbytes)
-                                    $value = number_format($value / 1024.0, 3);
+                                    $value = number_format($value / 1024.0, 3, '.', '');
                                 elseif ($istime)
-                                    $value = number_format($value / 1000.0, 3);
+                                    $value = number_format($value / 1000.0, 3, '.', '');
                             }
                         }
                         $tsv .= "\t$value";
@@ -554,9 +555,9 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
                         array_key_exists('value', $row[$configuration['name']][$location['location']]) ) {
                         $value = $row[$configuration['name']][$location['location']]['value'];
                         if ($isbytes)
-                            $value = number_format($value / 1024.0, 3);
+                            $value = number_format($value / 1024.0, 3, '.', '');
                         elseif ($istime)
-                            $value = number_format($value / 1000.0, 3);
+                            $value = number_format($value / 1000.0, 3, '.', '');
                         $tsv .= $value;
                         if (!array_key_exists($time, $meta)) {
                             $meta[$time] = array();
@@ -798,7 +799,7 @@ function LoadDeltaTSV($benchmark, $ref, $config, $cached, $metric, $test_time, &
         $tsv = "Delta,Percentile\n";
         $meta = array();
         foreach($delta as &$data) {
-            $percentile = number_format(($index / $count) * 100, 5);
+            $percentile = number_format(($index / $count) * 100, 5, '.', '');
             $tsv .= "{$data['delta']},$percentile\n";
             $meta[$percentile] = $data;
             $index++;
