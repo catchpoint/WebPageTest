@@ -61,6 +61,8 @@ public:
   void OnLoad();
   void OnNavigate();
   void OnNavigateComplete();
+  void Report();
+  void OnReport();
 
 private:
   CGDIHook  gdi_hook_;
@@ -73,6 +75,8 @@ private:
   HWND      message_window_;
   CString   file_base_;
   bool      done_;
+  bool      reported_;
+  UINT      report_message_;
 
   // winsock event tracking
   TrackDns      dns_;

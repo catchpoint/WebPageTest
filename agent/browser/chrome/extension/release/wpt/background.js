@@ -13928,6 +13928,18 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
   });
 };
 
+/**
+ * Implement the collectStats command.
+ */
+wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
+  console.log("collecting stats");
+  chrome.tabs.sendRequest( this.tabId_, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
+};
+
 })());  // namespace
 /******************************************************************************
  Copyright (c) 2012, Google Inc.
@@ -14553,12 +14565,12 @@ function wptGetTask() {
   }
 }
 
-function wptSendEvent(event_name, query_string) {
+function wptSendEvent(event_name, query_string, data) {
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string,
              true);
-    xhr.send();
+    xhr.send(data);
   } catch (err) {
     wpt.LOG.warning('Error sending page load XHR: ' + err);
   }
@@ -14685,6 +14697,25 @@ chrome.extension.onRequest.addListener(
           '&loadEventStart=' + request['loadEventStart'] +
           '&loadEventEnd=' + request['loadEventEnd']);
     }
+    else if (request.message == 'wptDomCount') {
+      wptSendEvent('domCount', 
+                   '&domCount=' + request['domCount']);
+    }
+    else if (request.message == 'wptMarks') {
+      if (request['marks'] != undefined &&
+          request.marks.length) {
+        for (var i = 0; i < request.marks.length; i++) {
+          var mark = request.marks[i];
+          mark.type = 'mark';
+          wptSendEvent('timed_event', '', JSON.stringify(mark));
+        }
+      }
+    } else if (request.message == 'wptStats') {
+      var stats = '?';
+      if (request['domCount'] != undefined)
+        stats += 'domCount=' + request['domCount'];
+      wptSendEvent('stats', stats);
+    }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
     sendResponse({});
@@ -14765,6 +14796,10 @@ function wptExecuteTask(task) {
         break;
       case 'overridehost':
         g_overrideHosts[task.target] = task.value;
+        break;
+      case 'collectstats':
+        g_processing_task = true;
+        g_commandRunner.doCollectStats(wptTaskCallback);
         break;
 
       default:

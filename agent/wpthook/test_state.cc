@@ -134,6 +134,7 @@ void TestState::Reset(bool cascade) {
     _title.Empty();
     _user_agent = _T("WebPagetest");
     _console_log_messages.RemoveAll();
+    _timed_events.RemoveAll();
     navigating_ = false;
     _pre_render_paints.RemoveAll();
     GetSystemTime(&_start_time);
@@ -875,6 +876,14 @@ void TestState::AddConsoleLogMessage(CString message) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TestState::AddTimedEvent(CString timed_event) {
+  EnterCriticalSection(&_data_cs);
+  _timed_events.AddTail(timed_event);
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CString TestState::GetConsoleLogJSON() {
   CString ret;
   EnterCriticalSection(&_data_cs);
@@ -884,6 +893,30 @@ CString TestState::GetConsoleLogJSON() {
     POSITION pos = _console_log_messages.GetHeadPosition();
     while (pos) {
       CString entry = _console_log_messages.GetNext(pos);
+      if (entry.GetLength()) {
+        if (!first)
+          ret += _T(",");
+        ret += entry;
+        first = false;
+      }
+    }
+    ret += _T("]");
+  }
+  LeaveCriticalSection(&_data_cs);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString TestState::GetTimedEventsJSON() {
+  CString ret;
+  EnterCriticalSection(&_data_cs);
+  if (!_timed_events.IsEmpty()) {
+    ret = _T("[");
+    bool first = true;
+    POSITION pos = _timed_events.GetHeadPosition();
+    while (pos) {
+      CString entry = _timed_events.GetNext(pos);
       if (entry.GetLength()) {
         if (!first)
           ret += _T(",");

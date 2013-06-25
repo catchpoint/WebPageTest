@@ -104,7 +104,9 @@ public:
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
+  void AddTimedEvent(CString timed_event);
   CString GetConsoleLogJSON();
+  CString GetTimedEventsJSON();
 
   // times
   LARGE_INTEGER _start;
@@ -167,6 +169,7 @@ private:
   HANDLE  _check_render_event;
   HANDLE  _data_timer;
   CAtlList<CString>        _console_log_messages; // messages to the console
+  CAtlList<CString>        _timed_events; // any supported timed events
 
   // tracking of the periodic data capture
   LARGE_INTEGER  _last_data;

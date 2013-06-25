@@ -5396,7 +5396,28 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
 /**
  * @private
  */
-wpt.contentScript.reportTiming_ = function() {
+wpt.contentScript.collectStats_ = function() {
+  // look for any user timing data
+  try {
+    if (window['performance'] != undefined &&
+        (window.performance.getEntriesByType ||
+         window.performance.webkitGetEntriesByType)) {
+      if (window.performance.getEntriesByType)
+        var marks = window.performance.getEntriesByType("mark");
+      else
+        var marks = window.performance.webkitGetEntriesByType("mark");
+      if (marks.length)
+        chrome.extension.sendRequest({'message': 'wptMarks', 
+                                      'marks': marks },
+                                     function(response) {});
+    }
+  } catch(e){
+  }
+
+  var domCount = document.getElementsByTagName("*").length;
+  chrome.extension.sendRequest({'message': 'wptStats',
+                                'domCount': domCount}, function(response) {});
+  
   var timingRequest = { 'message': 'wptWindowTiming' };
   function addTime(name) {
     if (window.performance.timing[name] > 0) {
@@ -5424,12 +5445,9 @@ window.addEventListener('load', function() {
   var fixedViewport = 0;
   if (document.querySelector("meta[name=viewport]"))
     fixedViewport = 1;
-  var domCount = document.getElementsByTagName("*").length;
   chrome.extension.sendRequest({'message': 'wptLoad',
                                 'fixedViewport': fixedViewport,
-                                'domCount': domCount,
                                 'timestamp': timestamp}, function(response) {});
-  window.setTimeout(wpt.contentScript.reportTiming_, 0);
 }, false);
 
 
@@ -5514,6 +5532,8 @@ chrome.extension.onRequest.addListener(
       g_intervalId = window.setInterval(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
+    } else if (request.message == 'collectStats') {
+      wpt.contentScript.collectStats_();
     }
     sendResponse({});
 });
@@ -18255,6 +18275,18 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
     'primaryPattern': '<all_urls>',
     'setting': 'block'
   });
+};
+
+/**
+ * Implement the collectStats command.
+ */
+wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
+  console.log("collecting stats");
+  chrome.tabs.sendRequest( this.tabId_, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
 };
 
 })());  // namespace

@@ -38,8 +38,10 @@ WptHook * global_hook = NULL;
 extern HINSTANCE global_dll_handle;
 
 static const UINT_PTR TIMER_DONE = 1;
+static const UINT_PTR TIMER_FORCE_REPORT = 2;
 static const DWORD TIMER_DONE_INTERVAL = 100;
 static const DWORD INIT_TIMEOUT = 30000;
+static const DWORD TIMER_FORCE_REPORT_INTERVAL = 10000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -60,9 +62,12 @@ WptHook::WptHook(void):
   ,dns_(test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, dev_tools_)
-  ,test_(shared_test_timeout) {
+  ,test_(*this, shared_test_timeout) {
+
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
+  report_message_ = RegisterWindowMessage(_T("WPT Report Data"));
+
   // grab the version number of the dll
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(global_dll_handle, file, _countof(file))) {
@@ -89,9 +94,8 @@ WptHook::WptHook(void):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::~WptHook(void) {
-  if (background_thread_started_) {
+  if (background_thread_started_)
     CloseHandle(background_thread_started_);
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -134,6 +138,7 @@ void WptHook::Init(){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Start() {
+  reported_ = false;
   test_state_.Start();
   SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
 }
@@ -177,33 +182,63 @@ void WptHook::OnNavigateComplete() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WptHook::OnReport() {
+  KillTimer(message_window_, TIMER_FORCE_REPORT);
+  if (!reported_) {
+    reported_ = true;
+    if (!test_._combine_steps)
+      results_.Save();
+    test_.CollectDataDone();
+    if (test_.Done()) {
+      test_server_.Stop();
+      results_.Save();
+      done_ = true;
+      if (test_state_._frame_window) {
+        WptTrace(loglevel::kTrace, 
+                  _T("[wpthook] - **** Exiting Hooked Browser\n"));
+        ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::Report() {
+  if (message_window_ && report_message_)
+    PostMessage(message_window_, report_message_, 0, 0);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
   bool ret = true;
 
   switch (message){
-    case WM_TIMER:
-        if (test_state_.IsDone()) {
-          KillTimer(message_window_, TIMER_DONE);
-          if (!test_._combine_steps)
-            results_.Save();
-          if (test_.Done() ) {
-            test_server_.Stop();
-            results_.Save();
-            done_ = true;
-            if (test_state_._frame_window) {
-              WptTrace(loglevel::kTrace, 
-                       _T("[wpthook] - **** Exiting Hooked Browser\n"));
-              ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
-            }
-          }
+    case WM_TIMER:{
+        switch (wParam){
+            case TIMER_DONE:
+                if (test_state_.IsDone()) {
+                  KillTimer(message_window_, TIMER_DONE);
+                  test_.CollectData();
+                  test_.Done();
+                  SetTimer(message_window_, TIMER_FORCE_REPORT,
+                           TIMER_FORCE_REPORT_INTERVAL, NULL);
+                }
+                break;
+            case TIMER_FORCE_REPORT:
+                OnReport();
+                break;
         }
-
+    }
     default:
         if (message == test_state_.paint_msg_) {
           if (!test_state_._exit && test_state_._active) {
             test_state_.PaintEvent(LOWORD(wParam), HIWORD(wParam),
                                    LOWORD(lParam), HIWORD(lParam));
           }
+        } else if (message == report_message_) {
+          OnReport();
         } else {
           ret = false;
         }

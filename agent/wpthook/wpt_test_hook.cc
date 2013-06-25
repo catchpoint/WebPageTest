@@ -1,11 +1,13 @@
 #include "StdAfx.h"
 #include "wpt_test_hook.h"
 #include "shared_mem.h"
+#include "wpthook.h"
 
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestHook::WptTestHook(DWORD timeout) {
+WptTestHook::WptTestHook(WptHook& hook, DWORD timeout):
+  hook_(hook) {
   _measurement_timeout = timeout;
 }
 
@@ -42,3 +44,8 @@ void WptTestHook::LoadFromFile() {
   }
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptTestHook::ReportData() {
+  hook_.Report();
+}

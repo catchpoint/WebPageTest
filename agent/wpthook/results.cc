@@ -51,6 +51,7 @@ static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
+static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const TCHAR * DEV_TOOLS_FILE = _T("_devtools.json");
@@ -116,6 +117,7 @@ void Results::Save(void) {
     SavePageData(checks);
     SaveResponseBodies();
     SaveConsoleLog();
+    SaveTimedEvents();
     _dev_tools.SetStartTime(_test_state._start);
     _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
     _saved = true;
@@ -1068,6 +1070,21 @@ void Results::SaveConsoleLog(void) {
   CStringA log = CT2A(_test_state.GetConsoleLogJSON());
   if (log.GetLength()) {
     HANDLE file = CreateFile(_file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveTimedEvents(void) {
+  CStringA log = CT2A(_test_state.GetTimedEventsJSON());
+  if (log.GetLength()) {
+    HANDLE file = CreateFile(_file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;

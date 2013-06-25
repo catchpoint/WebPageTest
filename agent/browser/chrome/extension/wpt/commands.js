@@ -366,4 +366,16 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
   });
 };
 
+/**
+ * Implement the collectStats command.
+ */
+wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
+  console.log("collecting stats");
+  chrome.tabs.sendRequest( this.tabId_, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
+};
+
 })());  // namespace

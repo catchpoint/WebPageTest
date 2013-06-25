@@ -130,6 +130,9 @@ public:
   ULONG OverrideDNSAddress(CString& name);
   bool  ModifyRequestHeader(CStringA& header) const;
   bool  BlockRequest(CString host, CString object);
+  void  CollectData();
+  void CollectDataDone();
+  virtual void  ReportData();
 
   // overall test settings
   CString _id;

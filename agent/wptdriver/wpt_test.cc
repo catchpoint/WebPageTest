@@ -625,6 +625,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       new_rule._regex = command.value.Trim();
       _custom_rules.AddTail(new_rule);
     }
+  } else if(cmd == _T("reportdata")) {
+    ReportData();
   } else {
     continue_processing = false;
     consumed = false;
@@ -840,9 +842,8 @@ bool WptTest::BlockRequest(CString host, CString object) {
 bool WptTest::ConditionMatches(ScriptCommand& command) {
   bool match = false;
   int cached = 1;
-  if (_clear_cache) {
+  if (_clear_cache)
     cached = 0;
-  }
 
   if (!command.target.CompareNoCase(_T("run"))) {
     if (_run == _ttoi(command.value)) {
@@ -875,4 +876,41 @@ void WptTest::ParseBlockCommand(CString block_list, bool add_head) {
       }
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  The test is finished, insert the 2 dummy commands into the top of the
+  script to collect data
+-----------------------------------------------------------------------------*/
+void  WptTest::CollectData() {
+  ScriptCommand cmd;
+  cmd.command = _T("reportdata");
+  _script_commands.AddHead(cmd);
+  cmd.command = _T("collectstats");
+  _script_commands.AddHead(cmd);
+}
+
+/*-----------------------------------------------------------------------------
+  Overridden in the hook-version to actually report the test data
+-----------------------------------------------------------------------------*/
+void WptTest::ReportData() {
+}
+
+/*-----------------------------------------------------------------------------
+  Remove any of our fake data collection commands if they are at the head of
+  the script command queue;
+-----------------------------------------------------------------------------*/
+void WptTest::CollectDataDone() {
+  bool removed = false;
+  do {
+    removed = false;
+    if (!_script_commands.IsEmpty()) {
+      ScriptCommand &cmd = _script_commands.GetHead();
+      if (cmd.command == _T("reportdata") ||
+          cmd.command == _T("collectstats")) {
+        _script_commands.RemoveHead();
+        removed = true;
+      }
+    }
+  } while(removed);
 }

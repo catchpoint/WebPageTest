@@ -153,8 +153,9 @@ void TestServer::MongooseCallback(enum mg_event event,
                                         "fixedViewport");
       if (!fixed_viewport.IsEmpty())
         test_state_._fixed_viewport = _ttoi(fixed_viewport);
-      test_state_._dom_element_count =
-          GetDwordParam(request_info->query_string, "domCount");
+      DWORD dom_count = GetDwordParam(request_info->query_string, "domCount");
+      if (dom_count)
+        test_state_._dom_element_count = dom_count;
       // Browsers may get "/event/window_timing" to set "onload" time.
       DWORD load_time = GetDwordParam(request_info->query_string, "timestamp");
       hook_.OnLoad();
@@ -196,15 +197,13 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/title") == 0) {
       CString title = GetParam(request_info->query_string, "title");
-      if (!title.IsEmpty()) {
+      if (!title.IsEmpty())
         test_state_.TitleSet(title);
-      }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/status") == 0) {
       CString status = GetParam(request_info->query_string, "status");
-      if (!status.IsEmpty()) {
+      if (!status.IsEmpty())
         test_state_.OnStatusMessage(status);
-      }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
       if (test_state_._active) {
@@ -218,6 +217,14 @@ void TestServer::MongooseCallback(enum mg_event event,
         CString body = GetPostBody(conn, request_info);
         test_state_.AddConsoleLogMessage(body);
       }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/timed_event") == 0) {
+      test_state_.AddTimedEvent(GetPostBody(conn, request_info));
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/stats") == 0) {
+      DWORD dom_count = GetDwordParam(request_info->query_string, "domCount");
+      if (dom_count)
+        test_state_._dom_element_count = dom_count;
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/devTools") == 0) {
       if (test_state_._active) {
