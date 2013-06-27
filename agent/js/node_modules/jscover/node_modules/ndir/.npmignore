@@ -1,0 +1,5 @@
+node_modules
+example/world/
+test/dir.test.bar.txt
+lib-cov
+coverage.html

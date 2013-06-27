@@ -25,18 +25,19 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
-var logger = require('logger');
 var process_utils = require('process_utils');
 
+/** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
 
 
 /**
  * Creates an adb runner for a given device serial.
- * @param {String} serial the device serial.
- * @param {String} [adbCommand] the adb command, defaults to 'adb'.
+ *
+ * @param {webdriver.promise.Application} app the scheduler app.
+ * @param {string} serial the device serial.
+ * @param {string=} adbCommand the adb command, defaults to 'adb'.
  * @constructor
  */
 function Adb(app, serial, adbCommand) {
@@ -45,39 +46,114 @@ function Adb(app, serial, adbCommand) {
   this.adbCommand_ = adbCommand || process.env.ANDROID_ADB || 'adb';
   this.serial = serial;
 }
+/** Public class. */
 exports.Adb = Adb;
 
 /**
  * Schedules an adb command, resolves with its stdout.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.
+ * @param {number=} timeout milliseconds to wait before killing the process,
+ *   defaults to DEFAULT_TIMEOUT.
+ * @return {webdriver.promise.Promise} The scheduled promise.
  * @private
  */
-Adb.prototype.command_ = function(args, timeout) {
+Adb.prototype.command_ = function(args, options, timeout) {
   'use strict';
-  return process_utils.scheduleExecWithTimeout(this.app_,
-      this.adbCommand_, args, timeout || exports.DEFAULT_TIMEOUT).then(
-      function(stdout, stderr) {
-    logger.debug('succeeded%s',
-        process_utils.stdoutStderrMessage(stdout, stderr));
-    return stdout;
-  }, function(e, stdout, stderr) {
-    logger.error('filed: %s%s',
-        e, process_utils.stdoutStderrMessage(stdout, stderr));
-    throw e;
-  });
+  return process_utils.scheduleExec(this.app_,
+      this.adbCommand_, args, options, timeout || exports.DEFAULT_TIMEOUT);
 };
 
 /**
  * Schedules an adb command on the device, resolves with its stdout.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.
+ * @param {number=} timeout milliseconds to wait before killing the process,
+ *   defaults to DEFAULT_TIMEOUT.
+ * @return {webdriver.promise.Promise} The scheduled promise.
  */
-Adb.prototype.do = function(args, timeout) {
+Adb.prototype.adb = function(args, options, timeout) {
   'use strict';
-  return this.command_(['-s', this.serial].concat(args), timeout);
+  return this.command_(['-s', this.serial].concat(args), options, timeout);
 };
 
 /**
  * Schedules an adb shell command on the device, resolves with its stdout.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.
+ * @param {number=} timeout milliseconds to wait before killing the process,
+ *   defaults to DEFAULT_TIMEOUT.
+ * @return {webdriver.promise.Promise} The scheduled promise.
  */
-Adb.prototype.shell = function(args, timeout) {
+Adb.prototype.shell = function(args, options, timeout) {
   'use strict';
-  return this.do(['shell'].concat(args), timeout);
+  return this.adb(['shell'].concat(args), options, timeout);
+};
+
+/**
+ * Remove trailing '^M's from adb's output.
+ *
+ * E.g.
+ *   adb shell ls | cat -v
+ * returns
+ *   acct^M
+ *   cache^M
+ *   ...
+ *
+ * @param {string|Buffer} s string or Buffer with '\r\n's.
+ * @return {string|Buffer} string or Buffer with '\n's.
+ */
+Adb.prototype.dos2unix = function(s) {
+  'use strict';
+  if (!s) {
+    return s;
+  }
+  if (!(s instanceof Buffer)) {
+    return s.replace(/\r\n/g, '\n');
+  }
+  var origBuf = s;
+  // Tricky binary buffer case.
+  //
+  // UTF-8 won't work for PNGs, so we can't do:
+  //   return new Buffer(s.toString('utf8').replace(/\r\n/g, '\n'), 'utf8');
+  // Hex is awkward due to character alignment, e.g.:
+  //   return new Buffer(s.toString('hex').replace(/0d0a/g, '0a'), 'hex');
+  // will mangle '70d0a6'.  Instead, we'll do this the hard way:
+  var origPos;
+  // Imaginary newline before buffer start, always < origPos - 1.
+  var origPosAfterNewline = 0;
+  var origLen = origBuf.length;
+  var retLen = 0;
+  var retBuf = new Buffer(origLen);
+  for (origPos = 1; origPos < origLen; ++origPos) {
+    if (10 === origBuf[origPos] && 13 === origBuf[origPos - 1]) {
+      // At \r\n, copy up to (but omit) this \r\n.
+      var copyLen = origPos - origPosAfterNewline - 1;
+      if (copyLen > 0) {
+        origBuf.copy(
+            retBuf,  // targetBuffer
+            retLen,  // targetStart
+            origPosAfterNewline,  // sourceStart
+            origPos - 1); // sourceEnd (exclusive)
+        retLen += copyLen;
+      }
+      // Explicitly add the \n.
+      retBuf[retLen++] = 10;
+      origPosAfterNewline = origPos + 1;
+    }
+  }
+  var tailLen = origLen - origPosAfterNewline;
+  if (tailLen > 0) {
+    // origBuf did not end with \r\n.
+    origBuf.copy(retBuf, retLen, origPosAfterNewline, origLen);
+    retLen += tailLen;
+  }
+  if (retLen < retBuf.length) {
+    // Trim result buffer.
+    retBuf = retBuf.slice(0, retLen);
+  }
+  return retBuf;
 };

@@ -25,24 +25,30 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
 var fs = require('fs');
 var logger = require('logger');
 var process_utils = require('process_utils');
 var webdriver = require('webdriver');
 
-var DEFAULT_CAPTURE_COMMAND = '/data/hdmi/capture';  // TODO(klm): put under lib
-
+/**
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string=} captureCommand the capture command.
+ * @constructor
+ */
 function VideoHdmi(app, captureCommand) {
   'use strict';
   this.app_ = app;
-  this.captureCommand_ = captureCommand || DEFAULT_CAPTURE_COMMAND;
+  this.captureCommand_ = captureCommand;
   this.recordProcess_ = undefined;
   this.isSupported_ = undefined;
 }
+/** Allow to stub out in tests. */
 exports.VideoHdmi = VideoHdmi;
 
+/**
+ * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
+ */
 VideoHdmi.prototype.scheduleIsSupported = function() {
   'use strict';
   return this.app_.schedule('isSupported', function() {
@@ -61,52 +67,88 @@ VideoHdmi.prototype.scheduleIsSupported = function() {
   }.bind(this));
 };
 
-VideoHdmi.prototype.scheduleKillRunningCapture_ = function() {
+/**
+ * @param {string} deviceSerial the unique device identifer.
+ * @private
+ */
+VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
   'use strict';
-  return process_utils.scheduleExecWithTimeout(
-      this.app_,  'killall', ['raw_capture'], 5000, [0, 1]);
-};
-
-VideoHdmi.prototype.scheduleStartVideoRecording = function(file, deviceType) {
-  'use strict';
-  return this.scheduleIsSupported().then(function(isSupported) {
-    if (isSupported) {
-      if (!this.recordProcess_) {
-        this.scheduleKillRunningCapture_();
-        var args = ['-f', file];
-        if (deviceType) {
-          args = args.concat(['-c', '-d', deviceType]);
-        }
-        process_utils.scheduleSpawn(this.app_, this.captureCommand_, args)
-            .then(function(proc) {
-          this.recordProcess_ = proc;
-          proc.on('exit', function(code, signal) {
-            logger.info('Video recording EXIT code %s signal %s', code, signal);
-            this.recordProcess_ = undefined;
-          }.bind(this));
-        }.bind(this));
-      } else {
-        logger.error('Video record process already running, will not start');
-      }
-    } else {
-      logger.error('Requesting video recording, but ' + this.captureCommand_ +
-          ' does not exist');
+  this.scheduleIsSupported().then(function(isSupported) {
+    if (!isSupported) {
+      throw new Error('!isSupported');
     }
+    process_utils.scheduleKillAll(this.app_, 'Kill dangling capture',
+        new RegExp('^' + this.captureCommand_ + '\\s+-f\\s+\\S+\\s+' +
+            (deviceSerial ? ('-s\\s+' + deviceSerial + '\\s') : '')));
   }.bind(this));
 };
 
-VideoHdmi.prototype.stopVideoRecording = function() {
+/**
+ * @param {!string} filename the file to write to.
+ * @param {string=} deviceSerial for use by scheduleKillRunningCapture_.
+ * @param {string=} deviceType to select the correct screen size and crop.
+ * @param {string=} videoCard to select the correct card, if multiple exist.
+ * @param {Function=} onExit Function({Error=} err), to listen for the
+ *   expected scheduleStopVideoRecording exit or an unexpected exit.
+ */
+VideoHdmi.prototype.scheduleStartVideoRecording = function(filename,
+    deviceSerial, deviceType, videoCard, onExit) {
   'use strict';
-  if (this.recordProcess_) {
-    logger.info('Killing video recording');
-    var proc = this.recordProcess_;
-    this.recordProcess_ = undefined;  // Guard against repeat calls.
-    process_utils.scheduleExitWaitOrKill(proc, 'video recording', 10000);
-    try {
-      proc.kill();
-      logger.info('Killed video recording');
-    } catch(e) {
-      logger.error('Cannot kill video recording: %s', e);
+  this.scheduleIsSupported().then(function(isSupported) {
+    if (!isSupported) {
+      throw new Error('!isSupported');
     }
-  }
+    if (this.recordProcess_) {
+      throw new Error('Video recording is already running, will not start');
+    }
+    var args = ['-f', filename];
+    if (deviceSerial) {
+      args = args.concat(['-s', deviceSerial]);
+    }
+    if (deviceType) {
+      args = args.concat(['-t', deviceType]);
+    }
+    if (videoCard) {
+      args = args.concat(['-d', videoCard]);
+    }
+    args = args.concat(['-w']);
+    this.scheduleKillRunningCapture_(deviceSerial);
+    process_utils.scheduleSpawn(this.app_, this.captureCommand_, args).then(
+          function(proc) {
+      logger.info('Started video recording to ' + filename);
+      this.recordProcess_ = proc;
+      proc.on('exit', function(code, signal) {
+        var err;
+        if (!this.recordProcess_) {
+          logger.debug('Normal exit via scheduleStopVideoRecording');
+        } else {
+          this.recordProcess_ = undefined;
+          err = new Error('Unexpected video recording EXIT with code ' + code +
+              ' signal ' + signal);
+          logger.error(err.message);
+        }
+        if (onExit) {
+          onExit(err);
+        }
+      }.bind(this));
+    }.bind(this));
+  }.bind(this));
+};
+
+/**
+ * Stop video.
+ */
+VideoHdmi.prototype.scheduleStopVideoRecording = function() {
+  'use strict';
+  this.app_.schedule('Stop video recording', function() {
+    if (!this.recordProcess_) {
+      // Either there was an unexpected exit or we never started recording
+      logger.debug('Ignoring stop request, video process is not running');
+      return;
+    }
+    logger.info('Stopping video recording');
+    var proc = this.recordProcess_;
+    this.recordProcess_ = undefined; // Guard against repeat calls.
+    process_utils.scheduleKill(this.app_, 'Kill video recording', proc);
+  }.bind(this));
 };

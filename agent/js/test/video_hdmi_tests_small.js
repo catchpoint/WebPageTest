@@ -25,9 +25,8 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, beforeEach: true, afterEach: true,
-  it: true*/
 
+var child_process = require('child_process');
 var fs = require('fs');
 var process_utils = require('process_utils');
 var should = require('should');
@@ -67,9 +66,17 @@ describe('video_hdmi small', function() {
   });
 
   it('should start and stop video recording', function() {
+    var serial = 'GAGA123';
+    var pid = 7;
+
+    var fakeCaptureProc;
     var processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
     processSpawnStub.callback = function(proc, command) {
-      return videoCommand === command;  // true: keep running, do not exit.
+      if (videoCommand === command) {
+        proc.pid = pid;
+        fakeCaptureProc = proc;
+        return true; // keep alive
+      }
     };
     // Check for existence of the video record script
     var fsExistsStub = sandbox.stub(fs, 'exists', function(path, cb) {
@@ -78,24 +85,64 @@ describe('video_hdmi small', function() {
       }, 1);
     });
 
+    var killCount = 0;
+    sandbox.stub(child_process, 'exec', function(command, callback) {
+      if (/^ps\s/.test(command)) {
+        var want_all = (/^ps(\s+-o\s+\S+)*$/.test(command));
+        var want_pid = (want_all ||
+            (new RegExp('^ps\\s+-p\\s' + pid + '\\s')).test(command));
+        var want_ppid = (want_all || (new RegExp(
+            '^ps\\s[^|]*\\|\\s+grep\\s+"\\^\\s+\\*' + pid + '\\s')).test(
+            command));
+        var lines = [];
+        if (want_pid) {
+          lines.push('1 ' + pid + ' ' + videoCommand + ' -f foo -s ' + serial +
+              ' x');
+        }
+        if (want_all) {
+          lines.push('1 ' + (pid + 100) + ' ignoreMe');
+        }
+        if (want_ppid) {
+          lines.push(pid + ' ' + (pid + 10) + ' raw_capture');
+        }
+        callback(undefined, lines.join('\n'), '');
+      } else if (/^kill\s/.test(command)) {
+        if ((new RegExp('^kill\\s+(-\\d+\\s+)?' + pid + '$')).test(command) &&
+            fakeCaptureProc) {
+          fakeCaptureProc.emit('exit', undefined, 'SIGAGA');
+          fakeCaptureProc = undefined;
+        }
+        killCount += 1;
+        callback(undefined, '', '');
+      } else {
+        should.fail('Unexpected command: ' + command);
+      }
+    });
+
+    should.equal('[]', app.getSchedule());
+    var videoFile = 'test.avi';
+    var deviceType = 'shmantra';
+    var videoCard = '2';
+
     var video = new video_hdmi.VideoHdmi(app, videoCommand);
-    video.scheduleStartVideoRecording('test.avi', 'shmantra');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('killall', processSpawnStub.firstCall.args[0]);
-    should.equal(videoCommand, processSpawnStub.secondCall.args[0]);
-    test_utils.assertStringsMatch(['-f', 'test.avi', '-c', '-d', 'shmantra'],
-        processSpawnStub.secondCall.args[1]);
-    should.equal(2, processSpawnStub.callCount);
+    should.equal('[]', app.getSchedule());
+    video.scheduleStartVideoRecording(videoFile, serial, deviceType, videoCard);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    should.equal('[]', app.getSchedule());
+    should.equal(1, killCount);
+    processSpawnStub.assertCall(videoCommand, '-f', videoFile, '-s', serial,
+         '-t', deviceType, '-d', videoCard, '-w');
     should.ok(fsExistsStub.calledOnce);
 
     // Watch for IDLE -- make sure the wait for recording exit has finished.
     var idleSpy = sandbox.spy();
     app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
-    video.stopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
-    should.ok(processSpawnStub.secondCall.returnValue.kill.calledOnce);
-    processSpawnStub.secondCall.returnValue.emit('exit', undefined, 'SIGAGA');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
+    video.scheduleStopVideoRecording();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    should.equal('[]', app.getSchedule());
+    should.equal(3, killCount);
+    should.equal(undefined, fakeCaptureProc);
+    processSpawnStub.assertCall();
     should.ok(idleSpy.calledOnce);
   });
 });

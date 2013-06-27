@@ -25,7 +25,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
 var vm = require('vm');
 var logger = require('logger');
@@ -123,7 +122,7 @@ function SandboxedDriver(driver, wdSandbox, sandboxedDriverListener) {
  * createSandboxedWdNamespace builds the sandboxed module then adds a
  * protected builder to it
  *
- * @param {String} serverUrl the url of the webdriver server.
+ * @param {string} serverUrl the url of the webdriver server.
  * @param {Object} capabilities sandbox information such as browser, version
  *                 and platform.
  * @param {Object} sandboxedDriverListener an object with three methods:
@@ -151,6 +150,7 @@ exports.createSandboxedWdNamespace = function(
      * NOTE: the WebDriver instances returned by #build could
      * also be proxied to restrict access to internal state while
      * I work on refactoring the code.
+     *
      * @constructor
      */
     function ProtectedBuilder() {
@@ -184,6 +184,6 @@ exports.createSandboxedWdNamespace = function(
         Key: wdSandbox.Key,
         promise: wdSandbox.promise,
         process: wdSandbox.process
-    };
+      };
   });
 };

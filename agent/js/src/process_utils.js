@@ -25,29 +25,30 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
 var child_process = require('child_process');
-var fs = require('fs');
 var logger = require('logger');
+var net = require('net');
 var system_commands = require('system_commands');
-var util = require('util');
 var webdriver = require('webdriver');
 
 
 /**
  * Represents a process, as parsed from ps command output.
  *
- * @param  {String} psLine a line in the format: "<ppid> <pid> <command...>".
- *     See setSystemCommands for explanation why this specific order.
+ * @param {string} psLine a line in the format: "<ppid> <pid> <command...>".
+ *   See setSystemCommands for explanation why this specific order.
+ * @constructor
  */
-exports.ProcessInfo = function(psLine) {
+function ProcessInfo(psLine) {
   'use strict';
   var splitLine = psLine.trim().split(/\s+/);
   this.ppid = splitLine.shift();
   this.pid = splitLine.shift();
   this.command = splitLine.join(' ');
-};
+}
+/** Allow test access. */
+exports.ProcessInfo = ProcessInfo;
 
 function newProcessInfo(psLine) {
   'use strict';
@@ -55,10 +56,43 @@ function newProcessInfo(psLine) {
 }
 
 /**
+ * @param {Process} process the process to signal.
+ * @param {string=} processName name for debugging.
+ */
+exports.signalKill = function(process, processName) {
+  // TODO replace with scheduleKill w/ signal
+  'use strict';
+  logger.debug('Killing %s', processName);
+  var killSignal;
+  try {
+    killSignal = system_commands.get('kill signal');
+  } catch (e) {
+    killSignal = undefined;
+  }
+  try {
+    process.kill(killSignal);
+  } catch (killException) {
+    logger.error('%s kill failed: %s', processName, killException);
+  }
+};
+
+/**
+ * @param {ProcessInfo} processInfo from getProcessInfo_.
+ * @param {Function} callback Function({Error=} err, {string=} stdout).
+ */
+exports.killProcess = function(processInfo, callback) {
+  'use strict';
+  logger.warn(
+      'Killing PID %s Command: %s', processInfo.pid, processInfo.command);
+  var command = system_commands.get('kill', [processInfo.pid]);
+  child_process.exec(command, callback);
+};
+
+/**
  * Kills given processes.
  *
  * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
- * @param {Function} [callback] what to call when done.
+ * @param {Function=} callback Function({Error=} err).
  */
 exports.killProcesses = function(processInfos, callback) {
   'use strict';
@@ -68,10 +102,7 @@ exports.killProcesses = function(processInfos, callback) {
   function processQueue() {
     var processInfo = queue.pop();
     if (processInfo) {
-      logger.warn(
-          'Killing PID %s Command: %s', processInfo.pid, processInfo.command);
-      var command = system_commands.get('kill', [processInfo.pid]);
-      child_process.exec(command, processQueue);
+      exports.killProcess(processInfo, processQueue);
     } else {  // Done
       if (callback) {
         callback();
@@ -82,216 +113,289 @@ exports.killProcesses = function(processInfos, callback) {
 };
 
 /**
- * Kills given processes and their children, recursively.
+ * Kill all processes with commands that match the given RegExp.
  *
- * @param {ProcessInfo[]} processInfos top processes to kill.
- * @param {Function} [callback] what to call when done.
+ * @param {Object} regex command pattern, e.g. /^\S+capture\s.*12345/.
+ * @param {Function=} callback Function({Error=} err).
  */
-exports.killProcessTrees = function(processInfos, callback) {
+function killAll(regex, callback) {
   'use strict';
-  var stack = processInfos.slice();  // Copy, don't change the original.
-  var traversedProcessInfos = [];
+  logger.debug('killAll %s', regex);
+  var command = system_commands.get('get all');
 
-  function processStack() {
-    var processInfo = stack.pop();
-    if (processInfo) {
-      traversedProcessInfos.push(processInfo);
-      try {
-        var command = system_commands.get('find children', [processInfo.pid]);
-        child_process.exec(command, function(error, stdout, stderr) {
-          if (error && '' !== stderr) {
-            logger.error(
-                'Command "%s" failed: %s, stderr: %s', command, error, stderr);
-          } else if ('' !== stdout) {
-            var childProcessInfos =
-                stdout.trim().split('\n').map(newProcessInfo);
-            logger.debug('killProcessTrees children of %s: %j',
-                processInfo.pid, childProcessInfos);
-            stack.push.apply(stack, childProcessInfos);  // Push all
-          } else {
-            logger.debug('Process %s has no children', processInfo.pid);
-          }
-          processStack();
-        });
-      } catch (e) {
-        // We get an Error on Windows because there is no 'find children',
-        // see setSystemCommands(). Just keep going through the top ones.
-        processStack();
+  var queue;
+  function processQueue() {
+    var processInfo;
+    while (true) {
+      processInfo = queue.pop();
+      if (!processInfo || regex.test(processInfo.command)) {
+        break;
       }
-    } else {  // Stack is empty, we are done
-      exports.killProcesses(traversedProcessInfos, callback);
+    }
+    if (processInfo) {
+      exports.killProcess(processInfo, processQueue);
+    } else if (callback) {
+      callback();
     }
   }
-  processStack();
+  child_process.exec(command, function(error, stdout) {
+      queue = stdout.trim().split('\n').map(newProcessInfo);
+      processQueue();
+    });
+}
+
+/**
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string=} description debug title.
+ * @param {RegExp} regex command pattern.
+ */
+exports.scheduleKillAll = function(app, description, regex) {
+  'use strict';
+  exports.scheduleFunction(app, (description || 'killAll ' + regex),
+      killAll, regex);
 };
 
 /**
- * killDanglingProcesses will search for any processes of type selenium,
- * chromedriver, or wd_server and will call killChildTree on it to kill the
- * entire process tree before killing itself.
+ * @param {number} pid process id.
+ * @param {Function=} callback Function({Error=} err, {ProcessInfo} p).
+ * @private
  */
-exports.killDanglingProcesses = function(callback) {
+exports.getProcessInfo_ = function(pid, callback) {
   'use strict';
-  // Find PIDs of any *orphaned* Java WD server and chromedriver processes
-  var command = system_commands.get('dangling pids');
+  var command = system_commands.get('get info', [pid]);
   child_process.exec(command, function(error, stdout, stderr) {
-    logger.debug('dangling ps: %s', stdout);
-    if (error && stderr) {  // An error with no stderr means we found nothing
+    var processInfo;
+    if (error && '' !== stderr) {
       logger.error(
           'Command "%s" failed: %s, stderr: %s', command, error, stderr);
-      callback();
     } else if ('' !== stdout) {
-      var processInfos =
-          stdout.trim().split('\n').map(newProcessInfo);
-      exports.killProcessTrees(processInfos, callback);
+      processInfo = newProcessInfo(stdout.trim().split('\n')[0]);
     } else {
-      logger.debug('No dangling processes found');
-      callback();
+      logger.debug('Process %s not found', pid);
+    }
+    if (callback) {
+      callback(undefined, processInfo);
     }
   });
 };
 
 /**
- * Schedule a command exec on the webdriver promise manager.
- *
- * @param {String} command the command to run.
- * @param {boolean} [requireZeroExit] if true, fail on nonzero exit code.
- * @return {webdriver.promise.Promise} scheduled promise.
+ * @param {number} pid process id.
+ * @param {Function=} callback Function({Error=} err).
  */
-exports.scheduleExec = function(command, requireZeroExit) {
+exports.kill = function(pid, callback) {
   'use strict';
-  var app = webdriver.promise.Application.getInstance();
-  return app.schedule(command, function() {
-    var done = new webdriver.promise.Deferred();
-    child_process.exec(command, function(e, stdout, stderr) {
-      // child_process.exec passes e even on normal exit with non-zero code.
-      if (e && (e.signal || (requireZeroExit && 0 !== e.code))) {
-        logger.error('Command "%s" error %j, stderr: %s', command, e, stderr);
-        done.reject(e, stdout, stderr);
-      } else {
-        done.resolve(stdout, stderr);
+  var stack = [];
+  function processStack() {
+    var processInfo = stack.pop();
+    if (!processInfo) {
+      // Stack is empty, we are done
+      if (callback) {
+        callback();
       }
-    });
-    return done.promise;
+      return;
+    }
+    try {
+      // Find children
+      var command = system_commands.get('find children', [processInfo.pid]);
+      child_process.exec(command, function(error, stdout, stderr) {
+        if (error && '' !== stderr) {
+          logger.error(
+              'Command "%s" failed: %s, stderr: %s', command, error, stderr);
+        } else if ('' !== stdout) {
+          var childProcessInfos = stdout.trim().split('\n').map(newProcessInfo);
+          stack.push.apply(stack, childProcessInfos);  // Push all
+        } else {
+          logger.debug('Process %s has no children', processInfo.pid);
+        }
+        // Kill parent
+        exports.killProcess(processInfo, processStack);
+      });
+    } catch (e) {
+      // We get an Error on Windows because there is no 'find children',
+      // see setSystemCommands(). Just keep going through the top ones.
+      exports.killProcess(processInfo, processStack);
+    }
+  }
+  exports.getProcessInfo_(pid, function(err, processInfo) {
+    logger.warn('Killing process and all children of ' + pid + ' = ' +
+        processInfo);
+    if (processInfo) {
+      stack.push(processInfo);
+      processStack();
+    } else {
+      // No such process
+      if (callback) {
+        callback();
+      }
+    }
   });
 };
 
 /**
- * Waits for a running process to exit, or kills it after a given timeout.
+ * Kill a process and all child proceses (by PID).
  *
- * Waits for the child process to die by itself and resolves the promise.
- * If it doesn't, kills the process and rejects the promise.
- *
- * Sets up the process wait and the timeout countdown *immediately* --
- * i.e. when time comes for this scheduled operation to run, if the process
- * already exited or timed out, we would already know and not block.
- *
- * @param {ChildProcess} p the process.
- * @param {String} name the process name for logging.
- * @param {Number} timeout how long to wait before killing.
- * @return {!webdriver.promise.Promise} scheduled promise, rejects on timeout.
+ * @param {webdriver.promise.Application=} app the app under which to schedule.
+ * @param {string=} description debug title.
+ * @param {Process} process the process to kill.
  */
-exports.scheduleExitWaitOrKill = function(p, name, timeout) {
+exports.scheduleKill = function(app, description, process) {
+  'use strict';
+  var pid = process.pid;
+  if (pid) {
+    exports.scheduleFunction(app,
+        (description || 'Kill ' + pid + ' and children'), exports.kill, pid);
+  } else {
+    app.schedule('Kill non-pid', process.kill); // Unit test?
+  }
+};
+
+/**
+ * Wait for process to exit.
+ *
+ * @param {Process} proc the process.
+ * @param {string} name the process name for logging.
+ * @param {number} timeout how many milliseconds to wait.
+ * @return {webdriver.promise.Promise} resolve() if the process has already
+ *   exited or exits before the timeout.
+ */
+exports.scheduleWait = function(proc, name, timeout) {
   'use strict';
   var exited = new webdriver.promise.Deferred();
-  var exitTimerId = global.setTimeout(function() {
+  var exitTimerId;
+  var onExit = function(/*code, signal*/) {
+    global.clearTimeout(exitTimerId);
+    exited.resolve();
+  };
+  exitTimerId = global.setTimeout(function() {
+    proc.removeListener('exit', onExit);
     exited.reject();
   }, timeout);
-  p.on('exit', function(code, signal) {
-    logger.info('%s exited with code %s signal %s', name, code, signal);
-    // Exit event will fire even if we time out and kill the process,
-    // in which case the promise is already rejected -- check for that.
-    if (exited.isPending()) {
-      exited.resolve(code, signal);
-    }
-  });
-  exited.then(function(/*code, signal*/) {
-    global.clearTimeout(exitTimerId);
-  }, function() {
-    logger.error('Timed out waiting for %s to exit, killing', name);
-    try {
-      p.kill();
-    } catch (e) {
-      logger.error('Error killing %s: %s', name, e);
-    }
-  });
+  proc.on('exit', onExit);
   var app = webdriver.promise.Application.getInstance();
   return app.schedule('Wait for ' + name + ' exit', function() {
     return exited.promise;
   });
 };
 
-exports.stdoutStderrMessage = function(stdout, stderr) {
+/**
+ * @param {string} command e.g. 'x'.
+ * @param {Array} args e.g. ['a', 'b c', 'd'].
+ * @return {string} e.g. 'x a \'b c\' d'.
+ */
+function formatForMessage(command, args) {
   'use strict';
-  return (stdout ? ', stdout "' + stdout.trim() + '"': '') +
-      (stderr ? ', stderr "' + stderr.trim() + '"': '');
-};
+  var ret = [];
+  var i;
+  for (i = -1; i < args.length; i++) {
+    var s = (i < 0 ? command : args[i]);
+    s = (/^[-_a-zA-Z0-9\.\\\/:]+$/.test(s) ? s : '\'' + s + '\'');
+    ret.push(s);
+  }
+  return ret.join(' ');
+}
 
 /**
  * Schedules a command execution, kills it after a timeout.
  *
  * @param {webdriver.promise.Application} app the app under which to schedule.
- * @param {String} command the command to run, as in process.spawn.
- * @param {Array} args command args, as in process.spawn.
- * @param {Number} [timeout] kill the process after timeout, default 10 seconds.
- * @param {Array} [okExitCodes] array of success exit codes.
- *     If not specified and the command exit code is nonzero,
- *     or if specified and command exit code not in the array,
- *     or if the command terminates with a signal, rejects the promise.
- * @returns {webdriver.promise.Promise} The scheduled promise.
+ * @param {string} command the command to run, as in process.spawn.
+ * @param {Array=} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.  Use
+ *   options.encoding === 'binary' for a binary stdout Buffer.
+ * @param {number=} timeout milliseconds to wait before killing the process,
+ *   defaults to 100000.
+ * @return {webdriver.promise.Promise} resolve({string|Buffer} stdout) if the
+ *   process exits within the timeout, with code zero, and signal 0,
+ *   otherwise reject(Error) with the stderr/code/signal attached to the Error.
  */
-exports.scheduleExecWithTimeout = function(
-    app, command, args, timeout, okExitCodes) {
+exports.scheduleExec = function(app, command, args, options, timeout) {
   'use strict';
+  app = app || webdriver.promise.Application.getInstance();
   timeout = timeout || 10000;
-  return (app || webdriver.promise.Application.getInstance()).schedule(
-      command + (args ? ' "' + args.join('", "') + '"' : ''), function() {
-    var done = new webdriver.promise.Deferred();
+  var cmd = formatForMessage(command, args);
+  return app.schedule(cmd, function() {
+    logger.debug('Exec with timeout(%d): %s', timeout, cmd);
+
+    // Create output buffers
     var stdout = '';
     var stderr = '';
-    var proc = child_process.spawn(command, args);
+    var binout = ((options && options.encoding === 'binary') && new Buffer(0));
+    function newMsg(desc, code, signal) {
+      function crop(s, n) {
+        return (s.length <= n ? s : s.substring(0, n - 3) + '...');
+      }
+      var ret = [desc, code && 'code ' + code, signal && 'signal ' + signal,
+          binout && 'binout[' + binout.length + '] ...',
+          stdout && 'stdout[' + stdout.length + '] ' + crop(stdout, 80),
+          stderr && 'stderr[' + stderr.length + '] ' + crop(stderr, 80)];
+      return ret.filter(function(v) { return v; }).join(', ');
+    }
+    function newError(desc, code, signal) {
+      var ret = new Error(newMsg(desc, code, signal));
+      // Attach the stdout/stderr/etc to the Error
+      ret.stdout = stdout;
+      ret.stderr = stderr;
+      ret.binout = binout;
+      ret.code = code;
+      ret.signal = signal;
+      return ret;
+    }
+
+    // Spawn
+    var done = new webdriver.promise.Deferred();
+    var proc = child_process.spawn(command, args, options);
+
+    // Start timer
     var timerId = global.setTimeout(function() {
-      timerId = undefined;  // Reset it before the exit listener gets called.
+      timerId = undefined;  // Reset it before the close listener gets called.
       try {
         proc.kill();
       } catch (e) {
-        logger.error('Error killing %s %j: %s', command, args, e);
+        logger.error('Error killing %s: %s', cmd, e);
       }
-      // The kill() call normally triggers the exit listener, but we reject
-      // the promise here instead of the exit listener, because we don't really
-      // know if and when it's going to exit at OS level.
+      // The kill() call normally triggers the close listener, but we reject
+      // the promise here instead of the close listener, because we don't really
+      // know if and when it's going to be killed at OS level.
       // In the future we may want to restart the adb server here as a recovery
       // for wedged adb connections, or use a relay board for device recovery.
-      done.reject(new Error(util.format('%s %j timeout after %d seconds',
-          command, args, timeout / 1000)),
-          exports.stdoutStderrMessage(stdout, stderr));
-    }.bind(this), timeout);
-    proc.on('exit', function(code, signal) {
-      if (timerId) {  // Timer was still ticking: exit by natural causes.
-        global.clearTimeout(timerId);
-        if ((!okExitCodes && code) ||
-            (okExitCodes && -1 === okExitCodes.indexOf(code)) ||
-            signal) {
-          var e = new Error(
-              util.format('%s %j failed: code %s, signal %s%s',
-                  command, args, code, signal,
-                  exports.stdoutStderrMessage(stdout, stderr)));
-          done.reject(e, stdout, stderr);
-        } else {
-          done.resolve(stdout, stderr);
-        }
-      } else {
-        // timerId has already been reset, meaning we got killed,
-        // and the promise is already rejected.
-        logger.debug('%s %j exited on timeout kill%s', command, args,
-            exports.stdoutStderrMessage(stdout, stderr));
-      }
-    }.bind(this));
+      var e = newError(cmd + ' timeout after ' + (timeout / 1000) + ' seconds');
+      done.reject(e);
+    }, timeout);
+
+    // Listen for stdout/err
     proc.stdout.on('data', function(data) {
-      stdout += data;
+      if (binout) {
+        // This "concat" doesn't seem to be a performance problem, but we could
+        // easily replace it with an array of Buffers that we concat on demand.
+        binout = Buffer.concat([binout, data]);
+      } else {
+        stdout += data;
+      }
     });
     proc.stderr.on('data', function(data) {
       stderr += data;
+    });
+
+    // Listen for 'close' not 'exit', otherwise we might miss some output.
+    proc.on('close', function(code, signal) {
+      if (timerId) {
+        // Our timer is still ticking, so we didn't timeout.
+        global.clearTimeout(timerId);
+        if (code || signal) {
+          var e = newError(cmd + ' failed', code, signal);
+          done.reject(e);
+        } else {
+          logger.debug(newMsg());
+          // TODO webdriver's resolve only saves the first argument, so we can
+          // only return the stdout.  For now our clients only need the stdout.
+          done.resolve(binout || stdout);//, stderr, code, signal);
+        }
+      } else {
+        // The timer has expired, which means that we're already killed our
+        // process and rejected our promise.
+        logger.debug('%s close on timeout kill', cmd);
+      }
     });
     return done.promise;
   });
@@ -301,25 +405,24 @@ exports.scheduleExecWithTimeout = function(
  * Spawns a command, logs output.
  *
  * @param {webdriver.promise.Application} app the app under which to schedule.
- * @param {String} command the command to run, as in process.spawn.
+ * @param {string} command the command to run, as in process.spawn.
  * @param {Array} args command args, as in process.spawn.
- * @param {Object} [options] spawn options, as in process.spawn.
- * @param {Function} [logStdoutFunc] function to log stdout, or logger.info.
- * @param {Function} [logStderrFunc] function to log stderr, or logger.error.
- * @returns {webdriver.promise.Promise} The scheduled promise,
- *     resolves with the child process object.
+ * @param {Object=} options spawn options, as in process.spawn.
+ * @param {Function=} logStdoutFunc function to log stdout, or logger.info.
+ * @param {Function=} logStderrFunc function to log stderr, or logger.error.
+ * @return {webdriver.promise.Promise} resolve({Process} proc).
  */
 exports.scheduleSpawn = function(app, command, args, options,
     logStdoutFunc, logStderrFunc) {
   'use strict';
-  return app.schedule(command + (args ? ' "' + args.join('", "') + '"' : ''),
-      function() {
-    logger.debug('Spawning: %s %j', command, args);
+  var cmd = formatForMessage(command, args);
+  return app.schedule(cmd, function() {
+    logger.info('Spawning: %s', cmd);
     var proc = child_process.spawn(command, args, options);
     proc.stdout.on('data', function(data) {
       (logStdoutFunc || logger.info)('%s STDOUT: %s', command, data);
     });
-    proc.stderr.on('warn', function(data) {
+    proc.stderr.on('data', function(data) {
       (logStderrFunc || logger.error)('%s STDERR: %s', command, data);
     });
     return proc;
@@ -327,7 +430,10 @@ exports.scheduleSpawn = function(app, command, args, options,
 };
 
 /**
- * Injects logging of processed tasks into a {!webdriver.promise.Application}.
+ * Adds "logger.extra" level logging to all process scheduler tasks.
+ *
+ * @param {string=} appName log message prefix.
+ * @param {webdriver.promise.Application} app The app to inject logging into.
  */
 function injectWdAppLogging(appName, app) {
   'use strict';
@@ -352,56 +458,189 @@ function injectWdAppLogging(appName, app) {
     app.isLoggingInjected = true;
   }
 }
+/** Allow test access. */
 exports.injectWdAppLogging = injectWdAppLogging;
 
 /**
- * Returns an errback that logs the error with the given description.
+ * Schedules an action, catches and logs any exceptions instead of propagating.
  *
- * Works very similar to a logging catch that drops the exception.
- * @param {String} description description string for logging.
- * @return {Function} the errback for use in Application.schedule.
- */
-exports.getLoggingErrback = function(description) {
-  'use strict';
-  return function(e) {
-    logger.error('Exception from "%s": %s', description, e);
-    logger.debug('%s', e.stack);
-  };
-};
-
-/**
- * Shedules an action and drops&logs any exceptions.
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string=} description debug title.
+ * @param {Function} f Function to schedule.
+ * @return {webdriver.promise.Promise} will log instead of reject(Error).
  */
 exports.scheduleNoFault = function(app, description, f) {
   'use strict';
-  return app.schedule(description, f).addErrback(
-      exports.getLoggingErrback(description));
+  return app.schedule(description, f).addErrback(function(e) {
+    logger.error('Exception from "%s": %s', description, e);
+    logger.debug('%s', e.stack);
+  });
 };
 
 /**
- * Schedules a function that takes a callback and errback.
+ * Schedules a fs-style asynchronous completion function.
  *
- * Resolves or rejects the scheduled promise with the same args that
- * the callback or errback get, respectively.
+ * The function must expect a callback as its last argument, and the
+ * callback must accept an error as the first argument.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
- * @param {String} description action description.
- * @param {Function} f a function that takes callback and errback arguments.
- * @returns {webdriver.promise.Promise} the scheduled promise.
+ * Examples:
+ *  fs.stat(path, callback) --> callback(err, stats)
+ *  ==>
+ *  scheduleFunction(app, 'x', fs.stat, path).then(function(stats) {...});
+ *
+ *  foo(a, b, callback) --> callback(err, c, d)
+ *  ==>
+ *  scheduleFunction(app, 'x', foo, a, b).then(
+ *      function(c, d) {...}, function(err) {...});
+ *
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string=} description debug title.
+ * @param {Function} f Function({Function} callback, {Function=} errback).
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} the scheduled promise.
  */
-exports.scheduleCbEb = function(app, description, f) {
+exports.scheduleFunction = function(app, description, f,
+     var_args) { // jshint unused:false
   'use strict';
-  return app.schedule(description, function() {
-    var done = new webdriver.promise.Deferred();
-    f(function() {
-      logger.debug('Callback for %s', description);
-      done.resolve.apply(done, arguments);
-    }, function() {
+  app = app || webdriver.promise.Application.getInstance();
+  var done = new webdriver.promise.Deferred();
+  function cb() {
+    var i;
+    var err = arguments[0];
+    if (err === undefined || err === null) {
+      i = 1;
+    } else if (err instanceof Error) {
       logger.debug('Errback for %s', description);
-      done.reject.apply(done, arguments);
-    });
+      done.reject(err);
+      return;
+    } else {
+      // Annoying special case:
+      //   fs.exists(path, callback) --> callback(bool)
+      i = 0;
+    }
+    logger.debug('Callback for %s', description);
+    var ok = Array.prototype.slice.apply(arguments).slice(i);
+    done.resolve.apply(undefined, ok);
+  }
+  var args = Array.prototype.slice.apply(arguments).slice(3).concat([cb]);
+  return app.schedule(description, function() {
+    logger.debug('Calling %s', description);
+    f.apply(undefined, args);
     return done.promise;
   });
+};
+
+/**
+ * Find and reserve a randomly-selected port in the given port range.
+ *
+ * We randomly select two consecutive ports:
+ *
+ * 1) An even-numbered "port" that we'll return in our resolved promise.
+ *    We briefly test-bind and unbind this port to make sure it's available.
+ *
+ * 2) An odd-numbered "lockPort" (=== port+1) which we bind and keep bound
+ *    until the caller invokes our returned promise-resolved "release"
+ *    function.  The lockPort ensures that another process doesn't
+ *    test-bind/unbind and take our "port" from us, especially if the caller
+ *    doesn't actually bind the returned port (e.g. they're only using the
+ *    portId as a unique number, not a socket).
+ *
+ * Multiple NodeJS agents on the same host will use the same logic, so
+ * they will correctly lock ports.  Other non-agent applications are only
+ * compatible if they use the above logic.
+ *
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string=} description debug title.
+ * @param {number=} minPort min port, defaults to 1k.
+ * @param {number=} maxPort max port, defaults to 32k.
+ * @return {webdriver.promise.Promise} resolve({Object}):
+ *    #param {string} port
+ *    #param {function} release must be called to release the port.
+ */
+exports.scheduleAllocatePort = function(app, description, minPort, maxPort) {
+  'use strict';
+  if (!minPort) {
+    minPort = (1 << 10);
+  }
+  if (!maxPort) {
+    maxPort = (1 << 15) - 1;
+  }
+  // We'll return an even port and use "port+1" as the "lock".
+  if (minPort % 2) {
+    minPort += 1;
+  }
+  if (maxPort % 2) {
+    maxPort -= 1;
+  }
+  if (minPort > maxPort) {
+    throw new Error('Invalid range');
+  }
+  var done = new webdriver.promise.Deferred();
+  var remainingRetries = 10;
+  function maybeRetry(e) {
+    // e.code === 'EADDRINUSE' ?
+    logger.debug('bind failed: ' + e);
+    if (remainingRetries > 0) {
+      remainingRetries -= 1;
+      findPort();
+    } else {
+      done.reject(new Error('Unable to find a port'));
+    }
+  }
+  function findPort() {
+    // Try to bind a random "lock" port, which must be odd and >minPort
+    var lockServer = net.createServer();
+    var lockPort = Math.floor(minPort +
+        Math.random() * (maxPort - minPort + 1));
+    if (0 === (lockPort % 2)) {
+      lockPort = (lockPort < maxPort ? lockPort + 1 : minPort + 1);
+    }
+    lockServer.on('error', maybeRetry);
+    lockServer.listen(lockPort, function() {
+      // Try to bind "lock-1"
+      var retPort = lockPort - 1;
+      var retServer = net.createServer();
+      retServer.on('error', function(e) {
+        lockServer.close();
+        maybeRetry(e);
+      });
+      retServer.listen(retPort, function() {
+        // Great, release the retPort for our caller's use, but keep the lock.
+        // The caller can call "release()" as soon as they bind retPort, or
+        // when they're done with retPort.
+        retServer.close();
+        logger.debug('Allocated port ' + retPort);
+        done.resolve({port: retPort, release: function() {
+          lockServer.close();
+        }});
+      });
+    });
+  }
+  app.schedule((description || 'Allocate port'), findPort);
+  return done.promise;
+};
+
+/**
+ * Iterate over object properties recursively, depth first, pre-order.
+ *
+ * @param {Object} obj the object to iterate.
+ * @param {Function} callback Function({string} key, {Object} obj) the callback
+ *   to call on a property, where "key" is the property name and "obj" is the
+ *   object that has the property.
+ * @param {Array=} keyPath optional path to the current object.
+ */
+exports.forEachRecursive = function(obj, callback, keyPath) {
+  'use strict';
+  if ('object' === typeof obj) {
+    if (!keyPath) {
+      keyPath = [];
+    }
+    Object.keys(obj).forEach(function(key) {
+      if (!callback(key, obj, keyPath)) {
+        exports.forEachRecursive(obj[key], callback, keyPath.concat(key));
+      }
+    });
+  }
 };
 
 /**
@@ -414,21 +653,17 @@ exports.scheduleCbEb = function(app, description, f) {
 exports.setSystemCommands = function() {
   'use strict';
   system_commands.set(
-      'dangling pids',
-      // Ordered ppid,pid because on Windows PID is second,
-      // and we only use the PID on Windows (never deal with children).
-      'ps ax -o ppid,pid,command ' +
-      '| egrep "chromedriver|selenium|wd_server" ' +
-      '| egrep -v "agent_main|egrep"',
+      'get all',
+      'ps -o ppid= -o pid= -o command=',
       'unix');
-  // Windows columns: Image Name, PID, Session Name, Session#, Mem Usage.
-  // We will parse Image Name as ppid, but we don't use ppid on Windows,
-  // so we will still work ok since we parse the right pid, we would just
-  // log a bad command name.
-  // TODO: Figure out a better cross platform way to handle ps output.
+
   system_commands.set(
-      'dangling pids',
-      'tasklist | find "selenium"',
+      'get info',
+      'ps -p $0 -o ppid= -o pid= -o command=',
+      'unix');
+  system_commands.set(
+      'get info',
+      'tasklist | find "$0"', // TODO
       'win32');
 
   system_commands.set(
@@ -441,4 +676,6 @@ exports.setSystemCommands = function() {
 
   system_commands.set('kill', 'kill -9 $0', 'unix');
   system_commands.set('kill', 'taskkill /F /PID $0 /T', 'win32');
+
+  system_commands.set('kill signal', 'SIGHUP', 'unix');
 };

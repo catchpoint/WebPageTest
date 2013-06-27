@@ -1,0 +1,24 @@
+The DeviceSupport directory contains Xcode iOS Developer Disk Images, which are required
+by the idevice-app-runner to launch our openURL app.
+
+These images are only required if you're using the openURL app, and only if you want to
+avoid an Xcode runtime dependency (e.g. on Linux).
+
+
+The DeviceSupport directory should contain all "*.dmg*" files, e.g.:
+
+  ./DeviceSupport/5.0/DeveloperDiskImage.dmg
+  ./DeviceSupport/5.0/DeveloperDiskImage.dmg.signature
+  ./DeviceSupport/6.0/DeveloperDiskImage.dmg
+  ./DeviceSupport/6.0/DeveloperDiskImage.dmg.signature
+  ...
+
+This can be a symlink:
+
+  ln -s \
+    /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/DeviceSupport
+
+or a full copy:
+
+  rsync -a SOME_DIRECTORY/DeviceSupport --include="DeveloperDiskImage.dmg*" .
+

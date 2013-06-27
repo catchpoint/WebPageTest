@@ -37,7 +37,6 @@ var wpt_client = require('wpt_client');
 var test_utils = require('../test_utils.js');
 var logger = require('logger');
 
-var stubs = [];
 var WPT_SERVER = process.env.WPT_SERVER || 'http://localhost:8888';
 var LOCATION = process.env.LOCATION || 'TEST';
 

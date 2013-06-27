@@ -25,18 +25,16 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global after:true, describe:true, before:true, beforeEach:true,
-  afterEach:true, it:true*/
 
 var agent_main = require('agent_main');
 var events = require('events');
+var fs = require('fs');
 var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var util = require('util');
 var webdriver = require('webdriver');
-var wpt_client = require('wpt_client');
 
 
 function FakeEmitterWithRun() {
@@ -44,6 +42,7 @@ function FakeEmitterWithRun() {
 }
 util.inherits(FakeEmitterWithRun, events.EventEmitter);
 
+/** Fake emitter. */
 FakeEmitterWithRun.prototype.run = function() {
   'use strict';
 };
@@ -72,14 +71,17 @@ describe('agent_main', function() {
     sandbox = sinon.sandbox.create();
     test_utils.fakeTimers(sandbox);
 
+    sandbox.stub(fs, 'exists', function(path, cb) {
+      cb(false);
+    });
     sandbox.stub(process_utils, 'scheduleExec', function() {
       return new webdriver.promise.Deferred();
     });
-    sandbox.stub(process_utils, 'scheduleExitWaitOrKill', function() {
+    sandbox.stub(process_utils, 'scheduleWait', function() {
       return new webdriver.promise.Deferred();
     });
-    sandbox.stub(process_utils, 'killDanglingProcesses', function(callback) {
-      callback();
+    sandbox.stub(process_utils, 'scheduleAllocatePort', function() {
+      return new webdriver.promise.Deferred();
     });
 
     app.reset();  // We reuse the app across tests, clean it up.
@@ -99,7 +101,7 @@ describe('agent_main', function() {
     agent.run();
 
     client.onJobTimeout(fakeJob);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
     should.ok(runFinishedSpy.calledOnce);
   });
 });

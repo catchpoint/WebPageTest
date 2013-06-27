@@ -25,16 +25,19 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-var logger = require('logger');
 
+/** @private */
 var UNIX_ = 0;
+/** @private */
 var WIN32_ = 1;
+/** @private */
 var PLATFORM_TYPES_ = {
   'darwin': UNIX_,
   'freebsd': UNIX_,
   'linux': UNIX_,
   'unix': UNIX_,
-  'win32': WIN32_};
+  'win32': WIN32_
+};
 
 var commands = {};
 
@@ -42,9 +45,9 @@ var commands = {};
 /**
  * set sets a native platform dependent command.
  *
- * @param {String} desc a human readable description of the command.
- * @param {String} command the platform dependent command.
- * @param {String} platform name, one of: darwin, linux, unix, win32.
+ * @param {string} desc a human readable description of the command.
+ * @param {string} command the platform dependent command.
+ * @param {string} platform name, one of: darwin, linux, unix, win32.
  */
 exports.set = function(desc, command, platform) {
   'use strict';
@@ -62,20 +65,16 @@ exports.set = function(desc, command, platform) {
 /**
  * get returns the correct platform dependent command for the current platform.
  *
- * @param  {String} desc the human readable description of the command.
- * @param  {String[]} args an array of arguments which will be parsed and
- *                    inserted into the command for $0, $1, etc.
- *
- * @return {String} the command.
+ * @param {string} desc the human readable description of the command.
+ * @param {string[]} args an array of arguments which will be parsed and
+ *   inserted into the command for $0, $1, etc.
+ * @return {string} the command.
  */
 exports.get = function(desc, args) {
   'use strict';
   var platformId = PLATFORM_TYPES_[process.platform];
   if (undefined === platformId) {
     throw new Error('Unknown process.platform: ' + process.platform);
-  }
-  if (undefined === commands[desc]) {
-    throw new Error('Unknown command ' + desc);
   }
   var command = commands[desc][platformId];
   if (undefined === command) {

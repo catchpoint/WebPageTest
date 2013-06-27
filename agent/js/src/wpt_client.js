@@ -25,9 +25,9 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false*/
 
 var events = require('events');
+var fs = require('fs');
 var http = require('http');
 var logger = require('logger');
 var multipart = require('multipart');
@@ -36,7 +36,8 @@ var url = require('url');
 var util = require('util');
 var Zip = require('node-zip');
 
-exports.process = process;  // Allow to stub out in tests
+/** Allow tests to stub out . */
+exports.process = process;
 
 var GET_WORK_SERVLET = 'work/getwork.php';
 var RESULT_IMAGE_SERVLET = 'work/resultimage.php';
@@ -48,7 +49,8 @@ var JOB_CAPTURE_VIDEO = 'Capture Video';
 var JOB_RUNS = 'runs';
 var JOB_FIRST_VIEW_ONLY = 'fvonly';
 
-var DEFAULT_JOB_TIMEOUT = 60000;
+var DEFAULT_JOB_TIMEOUT = 80000;
+/** Allow test access. */
 exports.NO_JOB_PAUSE = 10000;
 var MAX_RUNS = 1000;  // Sanity limit
 
@@ -109,10 +111,13 @@ function Job(client, task) {
   this.zipResultFiles = {};
   this.error = undefined;
 }
+/** Public class. */
 exports.Job = Job;
 
 /**
  * Called to finish the current run of this job, submit results, start next run.
+ *
+ * @param {boolean} isRunFinished true if finished.
  */
 Job.prototype.runFinished = function(isRunFinished) {
   'use strict';
@@ -122,12 +127,13 @@ Job.prototype.runFinished = function(isRunFinished) {
 /**
  * ResultFile sets information about the file produced as a
  * result of running a job.
+ *
  * @this {ResultFile}
  *
- * @param {String} [resultType] a ResultType constant defining the file role.
- * @param {String} fileName file will be sent to the server with this filename.
- * @param {String} contentType MIME content type.
- * @param {String|Buffer} content the content to send.
+ * @param {string=} resultType a ResultType constant defining the file role.
+ * @param {string} fileName file will be sent to the server with this filename.
+ * @param {string} contentType MIME content type.
+ * @param {string|Buffer} content the content to send.
  */
 function ResultFile(resultType, fileName, contentType, content) {
   'use strict';
@@ -136,6 +142,7 @@ function ResultFile(resultType, fileName, contentType, content) {
   this.contentType = contentType;
   this.content = content;
 }
+/** Public class. */
 exports.ResultFile = ResultFile;
 
 /**
@@ -151,8 +158,9 @@ ResultFile.ResultType = Object.freeze({
  * processResponse will take a http GET response, concat its data until it
  * finishes and pass it to callback
  *
- * @param  {Object} response http GET response object.
- * @param  {Function(String)} callback called on completed http request body.
+ * @param {Object} response http GET response object.
+ * @param {Function} callback Function({string} responseBody) called on
+ *   completed http request body.
  */
 exports.processResponse = function(response, callback) {
   'use strict';
@@ -160,6 +168,12 @@ exports.processResponse = function(response, callback) {
   response.setEncoding('utf8');
   response.on('data', function(chunk) {
     responseBody += chunk;
+  });
+  response.on('error', function(e) {
+    logger.error('Unable to processResponse ' + e.stack);
+    if (callback) {
+      callback('');
+    }
   });
   response.on('end', function() {
     logger.extra('Got response: %s', responseBody);
@@ -171,38 +185,49 @@ exports.processResponse = function(response, callback) {
 
 /**
  * A WebPageTest client that talks to the WebPageTest server.
- * @this {Client}
  *
- * @field {Function} [onStartJobRun] called upon a new job run start.
+ * @this {Client}
+ * #field {Function=} onStartJobRun called upon a new job run start.
  *     #param {Job} job the job whose run has started.
  *         MUST call job.runFinished() when done, even after an error.
- * @field {Function} [onJobTimeout] job timeout callback.
+ * #field {Function=} onJobTimeout job timeout callback.
  *     #param {Job} job the job that timed out.
  *         MUST call job.runFinished() after handling the timeout.
  *
- * @param {String} baseUrl server base URL.
- * @param {String} location location name to use for job polling
- *                 and result submission.
- * @param {?String=} apiKey API key, if any.
- * @param {Number=} jobTimeout how long the entire job has before it is killed.
+ * @param {Object} args that contains:
+ *     #param {string} serverUrl server base URL.
+ *     #param {string} location location name to use for job polling
+ *        and result submission.
+ *     #param {?string=} deviceSerial mobile device id, if any.
+ *     #param {?string=} apiKey API key, if any.
+ *     #param {number=} jobTimeout milliseconds until the job is killed.
  */
-function Client(baseUrl, location, apiKey, jobTimeout) {
+function Client(args) {
   'use strict';
   events.EventEmitter.call(this);
-  this.baseUrl_ = url.parse(baseUrl);
+  var serverUrl = (args.serverUrl || '');
+  if (-1 === serverUrl.indexOf('://')) {
+    serverUrl = 'http://' + serverUrl;
+  }
+  this.baseUrl_ = url.parse(serverUrl || '');
   // Bring the URL path into a normalized form ending with /
   // The trailing / is for url.resolve not to strip the last path component
   var urlPath = this.baseUrl_.path;
-  if (urlPath.slice(urlPath.length - 1) !== '/') {
+  if (urlPath && urlPath.slice(urlPath.length - 1) !== '/') {
     urlPath += '/';
+  }
+  if (!urlPath) {
+    throw new Error('Invalid serverUrl: ' + args.serverUrl);
   }
   this.baseUrl_.path = urlPath;
   this.baseUrl_.pathname = urlPath;
-  this.location_ = location;
-  this.apiKey = apiKey;
+  this.location_ = args.location;
+  this.deviceSerial_ = args.deviceSerial;
+  this.apiKey = args.apiKey;
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
-  this.jobTimeout_ = jobTimeout || DEFAULT_JOB_TIMEOUT;
+  this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
+  this.onGetTesterInfo = undefined;
   this.onStartJobRun = undefined;
   this.onJobTimeout = undefined;
   this.handlingUncaughtException_ = undefined;
@@ -212,13 +237,14 @@ function Client(baseUrl, location, apiKey, jobTimeout) {
   logger.extra('Created Client (urlPath=%s): %j', urlPath, this);
 }
 util.inherits(Client, events.EventEmitter);
+/** Allow test access. */
 exports.Client = Client;
 
 /**
  * Unhandled exception in the client process.
- * @private
  *
-\ * @param {Object} e error object.
+ * @param {Error} e error object.
+ * @private
  */
 Client.prototype.onUncaughtException_ = function(e) {
   'use strict';
@@ -248,18 +274,26 @@ Client.prototype.onUncaughtException_ = function(e) {
 /**
  * requestNextJob_ will query the server for a new job and will either process
  * the job response to begin it, emit 'nojob' or 'shutdown'.
+ *
  * @private
  */
 Client.prototype.requestNextJob_ = function() {
   'use strict';
   var getWorkUrl = url.resolve(this.baseUrl_,
       GET_WORK_SERVLET +
-          '?location=' + encodeURIComponent(this.location_) + '&f=json');
+          '?location=' + encodeURIComponent(this.location_) +
+          (this.deviceSerial_ ?
+             ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '') +
+          '&f=json');
 
   logger.info('Get work: %s', getWorkUrl);
-  http.get(url.parse(getWorkUrl), function(res) {
+  var request = http.get(url.parse(getWorkUrl), function(res) {
     exports.processResponse(res, function(responseBody) {
-      if (responseBody === '' || responseBody[0] === '<') {
+      if (responseBody === '') {
+        this.emit('nojob');
+      } else if (responseBody[0] === '<') {
+        // '<' is a sign that it's HTML, most likely an error page.
+        logger.warn('Error response? ' + responseBody);
         this.emit('nojob');
       } else if (responseBody === 'shutdown') {
         this.emit('shutdown');
@@ -268,26 +302,42 @@ Client.prototype.requestNextJob_ = function() {
       }
     }.bind(this));
   }.bind(this));
+  request.on('error', function(e) {
+    logger.warn('Got error: ' + e.message);
+    this.emit('nojob');
+  }.bind(this));
 };
 
 /**
  * processJobResponse_ processes a server response and starts a new job
+ *
  * @private
  *
- * @param {String} responseBody server response as stringified JSON
+ * @param {string} responseBody server response as stringified JSON
  *                 with job information.
  */
 Client.prototype.processJobResponse_ = function(responseBody) {
   'use strict';
-  // We don't do input validation -- don't explicitly catch JSON.parse errors,
-  // because we would not be able to sent a meaningful error report back to WPT,
-  // because we don't have the task ID if the parse fails.
-  // We rely on the unhandled exception handler and would just log it.
-  var job = new Job(this, JSON.parse(responseBody));
+  // Catch parse exceptions here, since our onUncaughtException_ handler lacks
+  // a currentJob_.  We can't report this error back to the WPT server, since
+  // we're unable to parse the Task ID, so we'll simply ignore it.
+  var task;
+  try {
+    task = JSON.parse(responseBody);
+  } catch (e) {
+    logger.warn('Ignoring job with invalid JSON: "%s"', responseBody);
+    this.emit('nojob');
+    return;
+  }
+  var job = new Job(this, task);
   logger.info('Got job: %j', job);
   this.startNextRun_(job);
 };
 
+/**
+ * @param {Job} job the job to start/continue.
+ * @private
+ */
 Client.prototype.startNextRun_ = function(job) {
   'use strict';
   job.error = undefined;  // Reset previous run's error, if any.
@@ -302,13 +352,13 @@ Client.prototype.startNextRun_ = function(job) {
     } else {
       job.runFinished(/*isRunFinished=*/true);
     }
-  }.bind(this), this.jobTimeout_);
+  }.bind(this), this.jobTimeout);
 
   if (this.onStartJobRun) {
     try {
       this.onStartJobRun(job);
     } catch (e) {
-      logger.error('Exception while running the job: %s', e);
+      logger.error('Exception while running the job: %s', e.stack);
       job.error = e.message;
       job.runFinished(/*isRunFinished=*/true);
     }
@@ -324,9 +374,10 @@ Client.prototype.startNextRun_ = function(job) {
  * If it is, it will submit it so the results can be generated.
  * If a job times out and finishes later, finishRun_ will still be called,
  * but it will be handled and no results will be generated.
- * @private
  *
  * @param {Object} job the job that supposedly finished.
+ * @param {boolean} isRunFinished true if finished.
+ * @private
  */
 Client.prototype.finishRun_ = function(job, isRunFinished) {
   'use strict';
@@ -370,17 +421,18 @@ function createZip(zipFileMap, fileNamePrefix) {
   // Convert back and forth between base64, otherwise corrupts on long content.
   // Unfortunately node-zip does not support passing/returning Buffer.
   return new Buffer(
-      zip.generate({compression:'DEFLATE', base64: true}), 'base64');
+      zip.generate({compression: 'DEFLATE', base64: true}), 'base64');
 }
 
 /**
  * Submits one part of the job result, with an optional file.
+ *
  * @private
  *
- * @param  {Object} job the result file will be saved for.
- * @param  {Object} resultFile of type ResultFile. May be null/undefined.
- * @param  {Array} [fields] an array of [name, value] text fields to add.
- * @param  {Function} [callback] will get called with the HTTP response body.
+ * @param {Object} job the result file will be saved for.
+ * @param {Object} resultFile of type ResultFile. May be null/undefined.
+ * @param {Array=} fields an array of [name, value] text fields to add.
+ * @param {Function=} callback will get called with the HTTP response body.
  */
 Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   'use strict';
@@ -414,28 +466,49 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
         resultFile.fileName;
     mp.addFilePart(
         'file', fileName, resultFile.contentType, resultFile.content);
+    if (logger.isLogging('debug')) {
+      logger.debug('Writing a local copy of %s', fileName);
+      var body = resultFile.content;
+      var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
+      fs.mkdir('results/', parseInt('0755', 8), function(e) {
+        if (!e || 'EEXIST' === e.code) {
+          var subdir = 'results/' + job.id + '/';
+          fs.mkdir(subdir, parseInt('0755', 8), function(e) {
+            if (!e || 'EEXIST' === e.code) {
+              fs.writeFile(subdir + fileName, bodyBuffer);
+            }
+          });
+        }
+      });
+    }
   }
   // TODO(klm): change body to chunked request.write().
   // Only makes sense if done for file content, the rest is peanuts.
   var mpResponse = mp.getHeadersAndBody();
 
   var options = {
-    method: 'POST',
-    host: this.baseUrl_.hostname,
-    port: this.baseUrl_.port,
-    path: path.join(this.baseUrl_.path, servlet),
-    headers: mpResponse.headers};
+      method: 'POST',
+      host: this.baseUrl_.hostname,
+      port: this.baseUrl_.port,
+      path: path.join(this.baseUrl_.path, servlet),
+      headers: mpResponse.headers
+    };
   var request = http.request(options, function(res) {
     exports.processResponse(res, callback);
+  });
+  request.on('error', function(e) {
+    logger.warn('Unable to post result: ' + e.message);
   });
   request.end(mpResponse.bodyBuffer, 'UTF-8');
 };
 
 /**
  * submitResult_ posts all result files for the job and emits done.
- * @private
  *
- * @param  {Object} job that should be completed.
+ * @param {Object} job that should be completed.
+ * @param {boolean} isRunFinished true if finished.
+ * @param {Function} callback Function({Error?} err).
+ * @private
  */
 Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
   'use strict';
@@ -454,7 +527,7 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
   }
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
-  var submitNextResult = function() {
+  var submitNextResult = (function() {
     var resultFile = filesToSubmit.shift();
     var fields = [];
     if (resultFile) {
@@ -478,7 +551,7 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
         callback();
       }
     }
-  }.bind(this);
+  }.bind(this));
   submitNextResult();
 };
 
@@ -492,7 +565,7 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
  * 'timeout' with the job as an argument - to let other infrastructure clean up,
  * and then submits the job result and emits 'done'.
  *
- * @param {Boolean} forever if false, make only one request. If true, chain
+ * @param {boolean} forever if false, make only one request. If true, chain
  *                  the request off of 'done' and 'nojob' events, running
  *                  forever or until the server responds with 'shutdown'.
  */

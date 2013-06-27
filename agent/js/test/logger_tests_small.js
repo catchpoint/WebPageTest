@@ -25,12 +25,9 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, afterEach: true, it: true*/
 
 var logger = require('logger');
-var sinon = require('sinon');
 var should = require('should');
-var test_utils = require('./test_utils.js');
 
 describe('logger small', function() {
   'use strict';
@@ -53,16 +50,23 @@ describe('logger small', function() {
 
   it('should output to the error, warn, info, and honor max logging level',
       function() {
-    var lines = [];
+    var buffer = '';
     Object.keys(logger.LEVELS).forEach(function(levelName) {
       var originalLogger = logger.LEVELS[levelName][1];
       restoreCalls.push(function() {
         logger.LEVELS[levelName][1] = originalLogger;
       });
       logger.LEVELS[levelName][1] = function(message) {
-        lines.push(message);
+        buffer += message + '\n';
       };
     });
+    var originalDotWriter = logger.DOT_WRITER;
+    restoreCalls.push(function() {
+      logger.DOT_WRITER = originalDotWriter;
+    });
+    logger.DOT_WRITER = {write: function(message) {
+      buffer += message;
+    }};
     logger.LOG_TO_CONSOLE = true;
 
     logger.MAX_LOG_LEVEL = 99;
@@ -76,12 +80,17 @@ describe('logger small', function() {
     logger.extra('log message');
     logger.MAX_LOG_LEVEL = logger.LEVELS.alert[0];
     logger.extra('log message');
+    logger.MAX_LOG_LEVEL = logger.LEVELS.info[0];
+    logger.info('info message');
 
-    should.equal(5, lines.length);
-    should.ok(/E .*: error message/.test(lines[0]));
-    should.ok(/W .*: warning message/.test(lines[1]));
-    should.ok(/I .*: info message/.test(lines[2]));
-    should.ok(/F .*: log message/.test(lines[3]));
-    should.ok(/F .*: log message/.test(lines[4]));
+    var lines = buffer.split('\n');
+    should.equal(7, lines.length);
+    should.ok(/^E .*: error message$/.test(lines[0]));
+    should.ok(/^W .*: warning message$/.test(lines[1]));
+    should.ok(/^I .*: info message$/.test(lines[2]));
+    should.ok(/^F .*: log message$/.test(lines[3]));
+    should.ok(/^\./.test(lines[4]));
+    should.ok(/^I .*: info message$/.test(lines[5]));
+    should.ok(/^$/.test(lines[6]));
   });
 });

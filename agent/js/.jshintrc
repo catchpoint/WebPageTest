@@ -1,0 +1,32 @@
+/*
+Copyright 2013 Google Inc. All Rights Reserved.
+Author: wrightt@google.com (Todd Wright)
+
+Usage:
+  node_modules/.bin/jshint src/* test/*
+
+JSON doesn't support C-style comments, but JSHint kindly removes these comments
+for us :)
+*/
+
+{
+	"curly":     true,
+    "globals": {
+        "after": false,
+        "afterEach": false,
+        "before": false,
+        "beforeEach": false,
+        "console": false,
+        "describe": false,
+        "it": false
+    },
+	"indent":    2,
+	"maxlen":    80,
+	"newcap":    true,
+	"node":      true,
+	"onecase":   true,
+	"smarttabs": true,
+	"strict":    true,
+	"undef":     true,
+	"unused":    true
+}

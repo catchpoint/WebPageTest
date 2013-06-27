@@ -1,4 +1,9 @@
 @echo off
+rem Copyright 2013 Google Inc. All Rights Reserved.
+rem Author: wrightt@google.com (Todd Wright)
+rem
+rem TODO update to match wptdriver.sh
+
 set DP0=%~dp0
 set WPT_SERVER=http://localhost:8888
 set LOCATION=Test
@@ -78,4 +83,4 @@ for %%E in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do s
 
 set NODE_PATH="%AGENT%;%AGENT%\src;%WDJS_DIR%
 
-node src\agent_main --wpt_server %WPT_SERVER% --location %LOCATION% --chromedriver %CHROMEDRIVER% --selenium_jar %SELENIUM_JAR%
+node src\agent_main --serverUrl %WPT_SERVER% --location %LOCATION% --chromedriver %CHROMEDRIVER% --seleniumJar %SELENIUM_JAR%

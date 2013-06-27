@@ -25,14 +25,13 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
-var events = require('events');
 var http = require('http');
-var url = require('url');
 var logger = require('logger');
-exports.WebSocket = require('ws');  // Allow to stub out in tests.
+var url = require('url');
 
+/** Allow tests to stub out. */
+exports.WebSocket = require('ws');
 
 function processResponse(response, callback) {
   'use strict';
@@ -51,6 +50,7 @@ function processResponse(response, callback) {
     throw new Error('Bad HTTP response: ' + JSON.stringify(response));
   });
 }
+/** Public function. */
 exports.ProcessResponse = processResponse;
 
 /**
@@ -68,8 +68,14 @@ function DevTools(devToolsUrl) {
   this.commandCallbacks_ = {};
   this.messageCallback_ = function() {};
 }
+/** Public class. */
 exports.DevTools = DevTools;
 
+/**
+ * Sets the onMessage(Object) callback.
+ *
+ * @param {Function} callback Function({Object} message).
+ */
 DevTools.prototype.onMessage = function(callback) {
   'use strict';
   this.messageCallback_ = callback;
@@ -78,13 +84,13 @@ DevTools.prototype.onMessage = function(callback) {
 /**
  * Establishes connection to the WKRDP endpoint, first tab.
  *
- * @param {Function} [callback] invoked on success.
- * @param {Function} [errback] invoked on failure with an Error object.
+ * @param {Function} callback Function() invoked on success.
+ * @param {Function} errback Function({Error} err) invoked on failure.
  */
 DevTools.prototype.connect = function(callback, errback) {
   'use strict';
   var retries = 0;  // ios_webkit_debug_proxy sometimes returns an empty array.
-  var listTabs = function() {
+  var listTabs = (function() {
     var request = http.get(url.parse(this.devToolsUrl_), function(response) {
       exports.ProcessResponse(response, function(responseBody) {
         var devToolsJson = JSON.parse(responseBody);
@@ -105,10 +111,15 @@ DevTools.prototype.connect = function(callback, errback) {
     request.on('error', function(e) {
       errback(e);
     });
-  }.bind(this);
+  }.bind(this));
   listTabs();
 };
 
+/**
+ * @param {Function} callback Function({string} responseBody).
+ * @param {Function} errback Function({Error} err).
+ * @private
+ */
 DevTools.prototype.connectDebugger_ = function(callback, errback) {
   'use strict';
   // TODO(klm): do we actually need origin?
@@ -133,16 +144,21 @@ DevTools.prototype.connectDebugger_ = function(callback, errback) {
   ws.on('message', this.onMessage_.bind(this));
 };
 
+/**
+ * @param {string} data message data in JSON string format.
+ * @param {Object} flags Flags, where
+ *   flags.binary will be set if a binary data is received
+ *   flags.masked will be set if the data was masked.
+ * @private
+ */
 DevTools.prototype.onMessage_ = function(data, flags) {
   'use strict';
-  // flags.binary will be set if a binary data is received
-  // flags.masked will be set if the data was masked
   var callbackErrback;
   if (!flags.binary) {
     var message;
     try {
       message = JSON.parse(data);
-    } catch(e) {
+    } catch (e) {
       logger.error('JSON parse error on DevTools data: %s', data);
       return;
     }
@@ -173,15 +189,36 @@ DevTools.prototype.onMessage_ = function(data, flags) {
   }
 };
 
-  /**
+/**
+ * @param {Object} command the WKRDP command object to send, except id field.
+ * @param {Function=} cb Function({Error=} err, {string=} responseBody).
+ * @return {Number} id.
+ */
+DevTools.prototype.sendCommand = function(command, cb) {
+  'use strict';
+  // Split cb into callback/errback
+  var callback;
+  if (cb) {
+    callback = function() {
+      // Pass undefined as the err argument to cb.
+      cb.apply(cb, [undefined].concat(Array.prototype.slice.apply(arguments)));
+    };
+  }
+  var errback = cb;
+  return this.command_(command, callback, errback);
+};
+
+/**
  * Sends WKRDP command and registers response handing callback/errback.
  *
  * @param {Object} command the WKRDP command object to send, except id field.
- * @param {Function} [callback] invoked on success.
- * @param {Function} [errback] invoked on failure with an Error object.
- * @returns {string} Generated command id (from an incrementing counter).
+ * @param {Function} callback Function({string} responseBody) invoked on
+ *   success.
+ * @param {Function} errback Function({Error} err) invoked on failure.
+ * @return {Number} Generated command id (from an incrementing counter).
+ * @private
  */
-DevTools.prototype.command = function(command, callback, errback) {
+DevTools.prototype.command_ = function(command, callback, errback) {
   'use strict';
   this.commandId_ += 1;
   command.id = this.commandId_;
@@ -190,7 +227,7 @@ DevTools.prototype.command = function(command, callback, errback) {
         method: command.method,
         callback: callback,
         errback: errback
-    };
+      };
   }
   logger.debug('Send command: %j', command);
   this.ws_.send(JSON.stringify(command));

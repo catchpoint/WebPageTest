@@ -1,10 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-# Copyright 2013 Google Inc. All Rights Reserved.
-# Author: wrightt
-# Modified to add "-u ${UDID}" support 
-
 #
 #	tcprelay.py - TCP connection relay for usbmuxd
 #
@@ -75,19 +70,14 @@ class TCPRelay(SocketServer.BaseRequestHandler):
 	def handle(self):
 		print "Incoming connection to %d"%self.server.server_address[1]
 		mux = usbmux.USBMux(options.sockpath)
-        # WRIGHTT
+		print "Waiting for devices..."
 		if not mux.devices:
-			print "Waiting for devices..."
 			mux.process(1.0)
-		devs = (mux.devices if not self.server.rserial else
-				[x for x in mux.devices if x.serial == self.server.rserial])
-		if not devs:
-			print "No device found" if not self.server.rserial else (
-			        "Device %s not found" % self.server.rserial)
+		if not mux.devices:
+			print "No device found"
 			self.request.close()
 			return
-		dev = devs[0]
-        # /WRIGHTT
+		dev = mux.devices[0]
 		print "Connecting to device %s"%str(dev)
 		dsock = mux.connect(dev, self.server.rport)
 		lsock = self.request
@@ -108,13 +98,11 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, TCPServer):
 
 HOST = "localhost"
 
-parser = OptionParser(usage="usage: %prog [OPTIONS] RemotePort[[:RemoteSerial]:LocalPort]...")
+parser = OptionParser(usage="usage: %prog [OPTIONS] RemotePort[:LocalPort] [RemotePort[:LocalPort]]...")
 parser.add_option("-t", "--threaded", dest='threaded', action='store_true', default=False, help="use threading to handle multiple connections at once")
 parser.add_option("-b", "--bufsize", dest='bufsize', action='store', metavar='KILOBYTES', type='int', default=128, help="specify buffer size for socket forwarding")
 parser.add_option("-s", "--socket", dest='sockpath', action='store', metavar='PATH', type='str', default=None, help="specify the path of the usbmuxd socket")
-# WRIGHTT
-parser.add_option("-u", "--udid", dest='serial', action='store', metavar='UDID', type='str', default=None, help="target specific device by its 40-digit serial UDID")
-# /WRIGHTT 
+
 options, args = parser.parse_args()
 
 serverclass = TCPServer
@@ -129,23 +117,23 @@ ports = []
 
 for arg in args:
 	try:
-		arr = arg.split(":")
-		rport = int(arr[0])
-		rserial = (arr[1] if len(arr) == 3 else options.serial)
-		lport = int(arr[-1])
-		ports.append((rport, rserial, lport))
+		if ':' in arg:
+			rport, lport = arg.split(":")
+			rport = int(rport)
+			lport = int(lport)
+			ports.append((rport, lport))
+		else:
+			ports.append((int(arg), int(arg)))
 	except:
 		parser.print_help()
 		sys.exit(1)
 
 servers=[]
 
-for rport, rserial, lport in ports:
-	print "Forwarding local port %d to remote%s port %d"%(lport,
-		 '' if not rserial else (" device %s" % rserial), rport)
+for rport, lport in ports:
+	print "Forwarding local port %d to remote port %d"%(lport, rport)
 	server = serverclass((HOST, lport), TCPRelay)
 	server.rport = rport
-	server.rserial = rserial
 	server.bufsize = options.bufsize
 	servers.append(server)
 

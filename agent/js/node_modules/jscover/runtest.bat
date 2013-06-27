@@ -1,0 +1,1 @@
+node_modules\.bin\mocha --globals _*jscoverage  --reporter spec

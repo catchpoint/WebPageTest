@@ -25,7 +25,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*jslint nomen:false */
 
 var child_process = require('child_process');
 var fs = require('fs');
@@ -33,60 +32,47 @@ var logger = require('logger');
 var nopt = require('nopt');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
-var util = require('util');
+var traffic_shaper = require('traffic_shaper');
 var webdriver = require('webdriver');
 var wpt_client = require('wpt_client');
 
-
-var flagDefs = {
-  knownOpts: {
-    wpt_server: [String, null],
-    location: [String, null],
-    java: [String, null],
-    seleniumJar: [String, null],
-    chrome: [String, null],
-    android_serial: [String, null],
-    ios_serial: [String, null],
-    ios_idevice_dir: [String, null],
-    ios_python_port_forward_dir: [String, null],
-    ios_ssh_local_port: [Number, 2222],
-    ios_ssh_cert: [String, null],
-    ios_urlopener_app: [String, null],
-    chromedriver: [String, null],
-    job_timeout: [Number, null],
-    api_key: [String, null]
-  },
-  shortHands: {}
+/**
+ * Partial list of expected command-line options.
+ *
+ * @see wd_server init defines additional command-line args, e.g.:
+ *     browser: [String, null],
+ *     chromedriver: [String, null],
+ *     ..
+ */
+var knownOpts = {
+  serverUrl: [String, null],
+  location: [String, null],
+  deviceAddr: [String, null],
+  deviceSerial: [String, null],
+  jobTimeout: [Number, null],
+  apiKey: [String, null]
 };
 
 var WD_SERVER_EXIT_TIMEOUT = 5000;  // Wait for 5 seconds before force-killing
-var IPFW_FLUSH_FILE_ = 'ipfw_flush.sh';
-
-exports.seleniumJar = undefined;
-exports.chromedriver = undefined;
 
 /**
- * Used as an errback for when we want to drop the error without logging.
- *
- * The underlying action has already logged the error, we only want to
- * prevent it from propagating up the promise manager stack.
+ * @param {wpt_client.Client} client the WebPagetest client.
+ * @param {Object} flags from knownOpts.
+ * @constructor
  */
-function swallowError() {
-  'use strict';
-}
-
 function Agent(client, flags) {
   'use strict';
-
   this.client_ = client;
   this.flags_ = flags;
   this.app_ = webdriver.promise.Application.getInstance();
   process_utils.injectWdAppLogging('main app', this.app_);
   this.wdServer_ = undefined;  // The wd_server child process.
+  this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onJobTimeout = this.jobTimeout_.bind(this);
 }
+/** Public class. */
 exports.Agent = Agent;
 
 /**
@@ -97,62 +83,22 @@ Agent.prototype.run = function() {
   this.client_.run(/*forever=*/true);
 };
 
+/**
+ * @param {string=} description debug title.
+ * @param {Function} f the function to schedule.
+ * @return {webdriver.promise.Promise} the scheduled promise.
+ * @private
+ */
 Agent.prototype.scheduleNoFault_ = function(description, f) {
   'use strict';
   return process_utils.scheduleNoFault(this.app_, description, f);
 };
 
-/** flusIpfw runs the flush script used when setting or resetting ipfw */
-Agent.prototype.scheduleIpfwReset_ = function() {
-  'use strict';
-  return process_utils.scheduleExec(
-      system_commands.get('run', [IPFW_FLUSH_FILE_])).addErrback(swallowError);
-};
-
 /**
- * Starts traffic shaping.
+ * Starts a child process with the wd_server module.
  *
- * @param {Number} bwIn input bandwidth throttling.
- * @param {Number} bwOut output bandwidth throttling.
- * @param {Number} latency round trip latency.
- * @param {Number} plr packet loss rate.
+ * @private
  */
-Agent.prototype.scheduleIpfwStart_ = function(bwIn, bwOut, latency, plr) {
-  'use strict';
-  logger.info('Starting traffic shaping');
-  var pipeInArgs = '';
-  var pipeOutArgs = '';
-  if (bwIn) {
-    pipeInArgs += ' bw ' + bwIn + 'Kbit/s';
-  }
-  if (bwOut) {
-    pipeOutArgs += ' bw ' + bwOut + 'Kbit/s';
-  }
-
-  if (latency) {
-    var latencyIn = Math.floor(latency / 2);
-    // if the latency is odd, add 1 to latencyOut to ensure they sum to latency.
-    var latencyOut = (0 === latency % 2) ? latencyIn : latencyIn + 1;
-    pipeInArgs += ' delay ' + latencyIn  + 'ms';
-    pipeOutArgs += ' delay ' + latencyOut  + 'ms';
-  }
-
-  if (plr) {
-    // Incur all loss on the output.
-    pipeOutArgs += ' plr ' + plr;
-  }
-
-  this.scheduleIpfwReset_();
-  if (pipeInArgs) {
-    var pipeInCommand = 'ipfw pipe 1 config ' + pipeInArgs;
-    process_utils.scheduleExec(pipeInCommand).addErrback(swallowError);
-  }
-  if (pipeInArgs) {
-    var pipeOutCommand = 'ipfw pipe 2 config ' + pipeOutArgs;
-    process_utils.scheduleExec(pipeOutCommand).addErrback(swallowError);
-  }
-};
-
 Agent.prototype.startWdServer_ = function() {
   'use strict';
   this.wdServer_ = child_process.fork('./src/wd_server.js',
@@ -163,6 +109,13 @@ Agent.prototype.startWdServer_ = function() {
   }.bind(this));
 };
 
+/**
+ * Processes job results, including failed jobs.
+ *
+ * @param {Object} ipcMsg a message from the wpt client.
+ * @param {Job} job the job with results.
+ * @private
+ */
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
   this.scheduleNoFault_('Process job results', function() {
@@ -192,20 +145,15 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       }
     }
     if (ipcMsg.videoFile) {
-      this.app_.schedule('Read video file', function() {
-        var videoDone = new webdriver.promise.Deferred();
-        fs.readFile(ipcMsg.videoFile, function(e, buffer) {
-          if (e) {
-            videoDone.reject(e);
-          } else {
-            job.resultFiles.push(new wpt_client.ResultFile(
-                wpt_client.ResultFile.ResultType.IMAGE,
-                'video.avi', 'video/avi', buffer));
-          }
-          videoDone.resolve();
-        });
-        return videoDone;
-      }.bind(this));
+      process_utils.scheduleFunction(this.app_, 'Read video file',
+          fs.readFile, ipcMsg.videoFile).then(function(buffer) {
+        job.resultFiles.push(new wpt_client.ResultFile(
+            wpt_client.ResultFile.ResultType.IMAGE,
+            'video.avi', 'video/avi', buffer));
+      }, function() { // ignore errors?
+      });
+      process_utils.scheduleFunction(this.app_, 'Delete video file',
+          fs.unlink, ipcMsg.videoFile);
     }
   }.bind(this));
 };
@@ -216,6 +164,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
  * Must call job.runFinished() no matter how the run ended.
  *
  * @param {Job} job the job to run.
+ * @private
  */
 Agent.prototype.startJobRun_ = function(job) {
   'use strict';
@@ -223,7 +172,7 @@ Agent.prototype.startJobRun_ = function(job) {
   logger.info('Running job %s run %d/%d cacheWarm=%s',
       job.id, job.runNumber, job.runs, job.isCacheWarm);
   if (!this.wdServer_) {
-    this.scheduleIpfwStart_(
+    this.trafficShaper_.scheduleStart(
         job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
     this.startWdServer_();
     this.wdServer_.on('message', function(ipcMsg) {
@@ -246,12 +195,19 @@ Agent.prototype.startJobRun_ = function(job) {
     }.bind(this));
   }
   var script = job.task.script;
-  var url;
-  if (!script) {
-    url = job.task.url;
+  var url = job.task.url;
+  var pac;
+  if (script && !/new\s+(\S+\.)?Builder\s*\(/.test(script)) {
+    var urlAndPac = this.decodeUrlAndPacFromScript_(script);
+    url = urlAndPac.url;
+    pac = urlAndPac.pac;
+  }
+  url = url.trim();
+  if (!((/^https?:\/\//i).test(url))) {
+    url = 'http://' + url;
   }
   this.scheduleNoFault_('Send IPC "run"', function() {
-    this.wdServer_.send({
+    var message = {
         cmd: 'run',
         options: {browserName: job.task.browser},
         runNumber: job.runNumber,
@@ -259,31 +215,112 @@ Agent.prototype.startJobRun_ = function(job) {
         captureVideo: job.captureVideo,
         script: script,
         url: url,
-        seleniumJar: this.flags_.selenium_jar,
-        chromedriver: this.flags_.chromedriver,
-        chrome: this.flags_.chrome,
-        androidSerial: this.flags_.android_serial,
-        iosSerial: this.flags_.ios_serial,
-        iosIDeviceDir: this.flags_.ios_idevice_dir,
-        iosPythonPortForwardDir: this.flags_.ios_python_port_forward_dir,
-        iosSshLocalPort: this.flags_.ios_ssh_local_port,
-        iosSshCert: this.flags_.ios_ssh_cert,
-        iosUrlOpenerApp: this.flags_.ios_urlopener_app,
-        javaCommand: this.flags_.java
-    });
+        pac: pac,
+        timeout: this.client_.jobTimeout - 15000  // 15 seconds to stop+submit.
+      };
+    var key;
+    for (key in this.flags_) {
+      if (!message[key]) {
+        message[key] = this.flags_[key];
+      }
+    }
+    this.wdServer_.send(message);
   }.bind(this));
 };
 
+/**
+ * @param {string} message the error message.
+ * @constructor
+ * @see decodeUrlAndPacFromScript_
+ */
+function ScriptError(message) {
+  'use strict';
+  this.message = message;
+  this.stack = (new Error(message)).stack;
+}
+ScriptError.prototype = new Error();
+
+/**
+ * Extract the URL and PAC from a simple WPT script.
+ *
+ * We don't support general WPT scripts.  Instead, we only support the minimal
+ * subset that's required to express a PAC proxy configuration script.
+ * Here are a couple examples of supported scripts:
+ *
+ *    1)
+ *    setDnsName foo.com bar.com
+ *    navigate qux.com
+ *
+ *    2)
+ *    setDnsName foo.com ignored.com
+ *    overrideHost foo.com bar.com
+ *    navigate qux.com
+ *
+ * Blank lines and lines starting with "//" are ignored.  Lines starting with
+ * "if", "endif", and "addHeader" are also ignored for now, but this feature is
+ * deprecated and these commands will be rejected in a future.  Any other input
+ * will throw a ScriptError.
+ *
+ * @param {string} script e.g.:
+ *   setDnsName fromHost toHost
+ *   navigate url.
+ * @return {Object} a URL and PAC object, e.g.:
+ *   {url:'http://x.com', pac:'function Find...'}.
+ * @private
+ */
+Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
+  'use strict';
+  var fromHost, toHost, proxy, url;
+  script.split('\n').forEach(function(line, lineNumber) {
+    line = line.trim();
+    if (!line || 0 === line.indexOf('//')) {
+      return;
+    }
+    if (line.match(/^(if|endif|addHeader)\s/i)) {
+      return;
+    }
+    var m = line.match(/^setDnsName\s+(\S+)\s+(\S+)$/i);
+    if (m && !fromHost && !url) {
+      fromHost = m[1];
+      toHost = m[2];
+      return;
+    }
+    m = line.match(/^overrideHost\s+(\S+)\s+(\S+)$/i);
+    if (m && fromHost && m[1] === fromHost && !proxy && !url) {
+      proxy = m[2];
+      return;
+    }
+    m = line.match(/^navigate\s+(\S+)$/i);
+    if (m && fromHost && !url) {
+      url = m[1];
+      return;
+    }
+    throw new ScriptError('WPT script contains unsupported line[' +
+        lineNumber + ']: ' + line);
+  });
+  if (!fromHost || !url) {
+    throw new ScriptError('WPT script lacks ' +
+        (fromHost ? 'navigate' : 'setDnsName'));
+  }
+  logger.debug('Script is a simple PAC from=%s to=%s url=%s',
+      fromHost, (proxy ? proxy : toHost), url);
+  return {url: url, pac: 'function FindProxyForURL(url, host) {\n' +
+      '  if ("' + fromHost + '" === host) {\n' +
+      '    return "PROXY ' + (proxy ? proxy : toHost) + '";\n' +
+      '  }\n' +
+      '  return "DIRECT";\n}\n'};
+};
+
+/**
+ * @param {Object} job the timed-out job to abort.
+ * @private
+ */
 Agent.prototype.jobTimeout_ = function(job) {
   'use strict';
-  // Immediately kill wd_server
   if (this.wdServer_) {
-    try {
-      this.wdServer_.kill();
-    } catch (e) {
-      logger.error('wd_server kill failed: %s', e);
-    }
-    this.wdServer_ = undefined;
+    this.scheduleNoFault_('Send IPC "abort"', function() {
+      this.wdServer_.send({cmd: 'abort'});
+    }.bind(this));
   }
   this.scheduleCleanup_();
   this.scheduleNoFault_('Timed out job finished',
@@ -291,28 +328,27 @@ Agent.prototype.jobTimeout_ = function(job) {
 };
 
 /**
- * cleanupJob will try to kill the webdriver server if it has been started and
- * will call killDanglingProcesses to kill anything left over from a job.
- * The callback is a wpt_client callback, for the wpt_client.Client to continue
- * working after we process the timeout.
+ * Kill the wdServer and traffic shaper.
+ *
+ * @private
  */
 Agent.prototype.scheduleCleanup_ = function() {
   'use strict';
   if (this.wdServer_) {
-    process_utils.scheduleExitWaitOrKill(this.wdServer_, 'wd_server',
-            WD_SERVER_EXIT_TIMEOUT).addBoth(function() {
-      this.wdServer_ = undefined;
+    process_utils.scheduleWait(this.wdServer_, 'wd_server',
+          WD_SERVER_EXIT_TIMEOUT).then(function() {
+      // This assumes a clean exit with no zombies
+      this.wdServer = undefined;
+    }.bind(this), function() {
+      process_utils.scheduleKill(this.app_, 'Kill wd_server',
+          this.wdServer_);
+      this.app_.schedule('undef wd_server', function() {
+        this.wdServer_ = undefined;
+      }.bind(this));
     }.bind(this));
   }
-  this.scheduleNoFault_('Child process cleanup', function() {
-    var danglingDone = new webdriver.promise.Deferred();
-    logger.info('Cleaning up child processes');
-    process_utils.killDanglingProcesses(function() {
-      danglingDone.resolve();
-    });
-    return danglingDone.promise;
-  });
-  this.scheduleIpfwReset_();
+  this.trafficShaper_.scheduleStop();
+  // TODO kill dangling child processes
 };
 
 /**
@@ -339,13 +375,21 @@ exports.setSystemCommands = function() {
  */
 exports.main = function(flags) {
   'use strict';
+  if (!((/^v\d\.([^0]\d|[89])/).test(process.version))) {
+    throw new Error('node version must be >0.8, not ' + process.version);
+  }
   exports.setSystemCommands();
-  var client = new wpt_client.Client(flags.wpt_server, flags.location,
-      flags.api_key, flags.job_timeout);
+  delete flags.argv; // Remove nopt dup
+  var client = new wpt_client.Client(flags);
   var agent = new Agent(client, flags);
   agent.run();
 };
 
 if (require.main === module) {
-  exports.main(nopt(flagDefs.knownOpts, flagDefs.shortHands, process.argv, 2));
+  try {
+    exports.main(nopt(knownOpts, {}, process.argv, 2));
+  } catch (e) {
+    console.log(e);
+    process.exit(-1);
+  }
 }

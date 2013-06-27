@@ -25,8 +25,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
-/*global describe: true, before: true, beforeEach: true, afterEach: true,
-  it: true*/
 
 var browser_local_chrome = require('browser_local_chrome');
 var process_utils = require('process_utils');
@@ -55,27 +53,38 @@ describe('browser_local_chrome small', function() {
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
+    test_utils.fakeTimers(sandbox);
     processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    processSpawnStub.callback = function() {
+      return true; // keep running
+    };
   });
 
   afterEach(function() {
+    should.equal('[]', app.getSchedule());
+    test_utils.unfakeTimers(sandbox);
     sandbox.verifyAndRestore();
   });
 
   it('should start and get killed', function() {
     var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
+        app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
     should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+    processSpawnStub.assertCall(chromedriver, '-port=4444');
+    processSpawnStub.assertCall();
 
     browser.kill();
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
+    processSpawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
     should.ok(processSpawnStub.firstCall.returnValue.kill.calledOnce);
@@ -83,19 +92,24 @@ describe('browser_local_chrome small', function() {
 
   it('should start and handle process self-exit', function() {
     var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, chromedriver);
+        app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
     should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.firstCall.args[0].should.equal(chromedriver);
-    processSpawnStub.firstCall.args[1].should.include('-port=4444');
+    processSpawnStub.assertCall(chromedriver, '-port=4444');
+    processSpawnStub.assertCall();
     var chromedriverProc = processSpawnStub.firstCall.returnValue;
 
     chromedriverProc.emit('exit', /*code=*/0);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
+    processSpawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
     should.ok(chromedriverProc.kill.notCalled);
