@@ -1,0 +1,11 @@
+/_Pagetest.h
+/_Pagetest.idl
+/_Pagetest.tlb
+/_Pagetest_i.c
+/_Pagetest_p.c
+/chrome_tab_h.h
+/chrome_tab_i.c
+/chrome_tab_p.c
+/ncodehook/distorm*.lib
+/ncodehook/distorm*.idb
+/ncodehook/distorm*.pdb

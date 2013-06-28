@@ -1,0 +1,11 @@
+/ads/
+/custom/
+/dat/*.dat
+/dat/*.lock
+/log/
+/log.txt
+/logs/*.log
+/newrelic-dash/
+/results/
+/work/jobs/
+/work/video/
