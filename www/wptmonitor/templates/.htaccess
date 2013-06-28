@@ -1,6 +1,0 @@
-Options -Indexes
-
-<FilesMatch "^(.*)\.txt$">
-  Order deny,allow
-  Deny from all
-</FilesMatch>
