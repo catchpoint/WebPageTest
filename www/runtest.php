@@ -1405,7 +1405,7 @@ function CheckIp(&$test)
     global $user;
     global $usingAPI;
     $date = gmdate("Ymd");
-    if (!isset($user) && !$usingAPI) {
+    if (!$usingAPI) {
         $ip2 = @$test['ip'];
         $ip = $_SERVER['REMOTE_ADDR'];
         $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
