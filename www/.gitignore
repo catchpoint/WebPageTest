@@ -9,3 +9,10 @@
 /results/
 /work/jobs/
 /work/video/
+/plugins/*.inc
+/settings/*.inc
+/settings/*.ini
+/settings/*.php
+/settings/block*.txt
+/settings/whitelist.txt
+/settings/customrules.txt

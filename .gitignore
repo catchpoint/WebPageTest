@@ -2,6 +2,8 @@ Debug/
 Release/
 lib-release/
 lib-debug/
+wptdriver tests/
+/ipch/
 *.vcxproj.user
 *.vcproj.*.user
 *~
@@ -12,7 +14,6 @@ webpagetest.opensdf
 webpagetest.sdf
 *.suo
 webpagetest.vsmdi
-wptdriver tests/
 .svn
 *.last
 .DS_store
