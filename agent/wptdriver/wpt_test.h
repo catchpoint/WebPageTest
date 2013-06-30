@@ -133,6 +133,9 @@ public:
   void  CollectData();
   void CollectDataDone();
   virtual void  ReportData();
+  void Lock();
+  void Unlock();
+  bool IsLocked();
 
   // overall test settings
   CString _id;
@@ -216,6 +219,9 @@ protected:
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
   void      ParseBlockCommand(CString block_list, bool add_head);
+  int       lock_count_;
+
+  CRITICAL_SECTION cs_;
 
   // DNS overrides
   CAtlList<CDNSEntry>	_dns_override;

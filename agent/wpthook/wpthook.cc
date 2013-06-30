@@ -200,13 +200,16 @@ void WptHook::OnReport() {
       }
     }
   }
+  test_.Unlock();
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Report() {
-  if (message_window_ && report_message_)
+  if (message_window_ && report_message_) {
+    test_.Lock();
     PostMessage(message_window_, report_message_, 0, 0);
+  }
 }
 
 /*-----------------------------------------------------------------------------

@@ -56,7 +56,8 @@ WptTest::WptTest(void):
   ,_test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS)
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
-  ,has_gpu_(false) {
+  ,has_gpu_(false)
+  ,lock_count_(0) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -71,6 +72,7 @@ WptTest::WptTest(void):
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
   }
+  InitializeCriticalSection(&cs_);
 
   Reset();
 }
@@ -78,6 +80,7 @@ WptTest::WptTest(void):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptTest::~WptTest(void) {
+  DeleteCriticalSection(&cs_);
 }
 
 /*-----------------------------------------------------------------------------
@@ -292,9 +295,10 @@ bool WptTest::Load(CString& test) {
 bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = false;
 
+  EnterCriticalSection(&cs_);
   WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::GetNextTask\n"));
-
-  if (!_active){
+  if (!_active && !IsLocked()){
+    Lock();
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if( !_sleep_end.QuadPart || now.QuadPart >= _sleep_end.QuadPart) {
@@ -316,7 +320,9 @@ bool WptTest::GetNextTask(CStringA& task, bool& record) {
         }
       }
     }
+    Unlock();
   }
+  LeaveCriticalSection(&cs_);
 
   return ret;
 }
@@ -627,6 +633,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     }
   } else if(cmd == _T("reportdata")) {
     ReportData();
+    continue_processing = false;
   } else {
     continue_processing = false;
     consumed = false;
@@ -913,4 +920,22 @@ void WptTest::CollectDataDone() {
       }
     }
   } while(removed);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptTest::Lock() {
+  lock_count_++;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptTest::Unlock() {
+  lock_count_--;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptTest::IsLocked() {
+  return lock_count_ != 0;
 }

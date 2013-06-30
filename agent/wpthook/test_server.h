@@ -34,8 +34,7 @@ class TestState;
 class Requests;
 class DevTools;
 
-class TestServer
-{
+class TestServer {
 public:
   TestServer(WptHook& hook, WptTestHook &test, TestState& test_state, 
             Requests& requests, DevTools &dev_tools);
