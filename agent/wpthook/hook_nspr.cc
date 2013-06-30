@@ -215,12 +215,10 @@ template <typename U>
 void NsprHook::GetFunctionByName(
     const string& dll_name, const string& function_name, U& function_ptr) {
   HMODULE dll = LoadLibraryA(dll_name.c_str());
-  if (dll) {
+  if (dll)
     function_ptr = (U)GetProcAddress(dll, function_name.c_str());
-    FreeLibrary(dll);
-  } else {
+  else
     function_ptr = NULL;
-  }
 }
 
 SECStatus NsprHook::SSL_SetURL(PRFileDesc *fd, const char *url) {
