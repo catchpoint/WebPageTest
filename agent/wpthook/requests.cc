@@ -67,8 +67,6 @@ void Requests::Reset() {
     delete _requests.RemoveHead();
   browser_request_data_.RemoveAll();
   LeaveCriticalSection(&cs);
-  _sockets.Reset();
-  _dns.Reset();
 }
 
 /*-----------------------------------------------------------------------------
