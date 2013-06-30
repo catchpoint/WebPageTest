@@ -97,23 +97,52 @@ void NsprHook::Init() {
   }
   _hook = new NCodeHookIA32();
   g_hook = this; 
+
   GetFunctionByName(
+      "nss3.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+  if (!_PR_FileDesc2NativeHandle)
+    GetFunctionByName(
       "nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+
   if (_PR_FileDesc2NativeHandle != NULL) {
     // Hook Firefox.
     WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init()\n"));
+
     _SSL_ImportFD = _hook->createHookByName(
-        "ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+        "nss3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+    if (!_SSL_ImportFD)
+      _SSL_ImportFD = _hook->createHookByName(
+          "ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+
     _PR_Close = _hook->createHookByName(
-        "nspr4.dll", "PR_Close", PR_Close_Hook);
+        "nss3.dll", "PR_Close", PR_Close_Hook);
+    if (!_PR_Close)
+      _PR_Close = _hook->createHookByName(
+          "nspr4.dll", "PR_Close", PR_Close_Hook);
+
     _PR_Write = _hook->createHookByName(
-        "nspr4.dll", "PR_Write", PR_Write_Hook);
+        "nss3.dll", "PR_Write", PR_Write_Hook);
+    if (!_PR_Write)
+      _PR_Write = _hook->createHookByName(
+          "nspr4.dll", "PR_Write", PR_Write_Hook);
+
     _PR_Read = _hook->createHookByName(
-        "nspr4.dll", "PR_Read", PR_Read_Hook);
+        "nss3.dll", "PR_Read", PR_Read_Hook);
+    if (!_PR_Read)
+      _PR_Read = _hook->createHookByName(
+          "nspr4.dll", "PR_Read", PR_Read_Hook);
+
     GetFunctionByName(
-        "ssl3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+        "nss3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+    if (!_SSL_AuthCertificateHook)
+      GetFunctionByName(
+          "ssl3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+
     _SSL_SetURL = _hook->createHookByName(
-      "ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook);
+      "nss3.dll", "SSL_SetURL", SSL_SetURL_Hook);
+    if (!_SSL_SetURL)
+      _SSL_SetURL = _hook->createHookByName(
+        "ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook);
   }
 }
 
