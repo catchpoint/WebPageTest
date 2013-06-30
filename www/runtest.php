@@ -54,6 +54,7 @@
             $test = json_decode(gz_file_get_contents("$path/testinfo.json"), true);
             unset($test['completed']);
             unset($test['started']);
+            unset($test['tester']);
         }
         
         // pull in the test parameters
