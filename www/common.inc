@@ -71,10 +71,10 @@ define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
 $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
 
-$tempDir = realpath('./tmp');
+$tempDir = './tmp';
 if (!is_dir($tempDir))
     mkdir($tempDir, 0777, true);
-$tempDir .= '/';
+$tempDir = realpath($tempDir) . '/';
 define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
 if (isset($req_embed)) {

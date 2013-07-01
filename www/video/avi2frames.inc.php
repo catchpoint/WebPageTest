@@ -6,6 +6,7 @@
 * @param mixed $testPath
 */
 function ProcessAllAVIVideos($testPath) {
+  if (is_dir($testPath)) {
     $files = scandir($testPath);
     foreach ($files as $file) {
         if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?_video.avi$/', $file, $matches)) {
@@ -16,6 +17,7 @@ function ProcessAllAVIVideos($testPath) {
             ProcessAVIVideo($testPath, $run, $cached);
         }
     }
+  }
 }
 
 /**
