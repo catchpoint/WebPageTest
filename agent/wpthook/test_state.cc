@@ -259,20 +259,16 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
   Save web timings for DOMContentLoaded event.
 -----------------------------------------------------------------------------*/
 void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
-  if (_active) {
-    _dom_content_loaded_event_start = start;
-    _dom_content_loaded_event_end = end;
-  }
+  _dom_content_loaded_event_start = start;
+  _dom_content_loaded_event_end = end;
 }
 
 /*-----------------------------------------------------------------------------
   Save web timings for load event.
 -----------------------------------------------------------------------------*/
 void TestState::SetLoadEvent(DWORD start, DWORD end) {
-  if (_active) {
-    _load_event_start = start;
-    _load_event_end = end;
-  }
+  _load_event_start = start;
+  _load_event_end = end;
 }
 
 /*-----------------------------------------------------------------------------
