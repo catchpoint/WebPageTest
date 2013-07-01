@@ -82,6 +82,7 @@ if( $log ) {
 }
 
 if ($lock) {
+    flock($lock, LOCK_UN);
     fclose($lock);
 }
 

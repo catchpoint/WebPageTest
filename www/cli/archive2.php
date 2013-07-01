@@ -61,6 +61,7 @@ if (isset($archive_dir) && strlen($archive_dir) &&
 echo "\nDone\n\n";
 
 if ($lock) {
+    flock($lock, LOCK_UN);
     fclose($lock);
 }
 
