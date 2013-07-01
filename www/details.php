@@ -262,18 +262,15 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
                     <tr>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1f7c83"></div></td><td>DNS Lookup</td></tr></table></td>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#e58226"></div></td><td>Initial Connection</td></tr></table></td>
                         <?php if($secure) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#c141cd"></div></td><td>SSL Negotiation</td></tr></table></td>
                         <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#00FF00"></div></td><td>Time to First Byte</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#007BFF"></div></td><td>Content Download</td></tr></table></td>
-                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#FFFF00">&nbsp;3xx result&nbsp;</div></td>
-                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#FF0000">&nbsp;4xx+ result&nbsp;</div></td>
-                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
-                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
-                        <?php } ?> 
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1fe11f"></div></td><td>Time to First Byte</td></tr></table></td>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1977dd"></div></td><td>Content Download</td></tr></table></td>
+                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ffff60">&nbsp;3xx response&nbsp;</div></td>
+                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ff6060">&nbsp;4xx+ response&nbsp;</div></td>
                     </tr>
                 </table>
                 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">
@@ -292,6 +289,9 @@ $page_description = "Website performance test details$testLabel";
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
                         <?php } ?>						
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
+                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
+                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
+                        <?php } ?> 
                     </tr>
                 </table>
                 <br>
