@@ -260,7 +260,7 @@ $page_description = "Website performance test details$testLabel";
                 ?>
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
-                <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
+                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
                     <tr>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
@@ -269,6 +269,15 @@ $page_description = "Website performance test details$testLabel";
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#00FF00"></div></td><td>Time to First Byte</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#007BFF"></div></td><td>Content Download</td></tr></table></td>
+                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#FFFF00">&nbsp;3xx result&nbsp;</div></td>
+                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#FF0000">&nbsp;4xx+ result&nbsp;</div></td>
+                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
+                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
+                        <?php } ?> 
+                    </tr>
+                </table>
+                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">
+                    <tr>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
                         <?php if (array_key_exists('aft', $data) && $data['aft'] ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>
@@ -276,12 +285,13 @@ $page_description = "Website performance test details$testLabel";
                         <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
-                        <td style="vertical-align:middle;"><div style="background-color:#FFFF00">3xx result</div></td>
-                        <td style="vertical-align:middle;"><div style="background-color:#FF0000">4xx+ result</div></td>
-                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
-                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
+                        <?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
                         <?php } ?>
+                        <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
+                        <?php } ?>						
+                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                     </tr>
                 </table>
                 <br>
@@ -316,7 +326,7 @@ $page_description = "Website performance test details$testLabel";
                     }
                 ?>
                 </map>
-                <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
+                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
                     <tr>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
@@ -327,6 +337,12 @@ $page_description = "Website performance test details$testLabel";
                         <?php if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
+						<?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
+                        <?php } ?>
+                        <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
+                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
+                        <?php } ?>						
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                     </tr>
                 </table>
