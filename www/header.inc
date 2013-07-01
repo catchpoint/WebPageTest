@@ -382,12 +382,5 @@ function GetGrades(&$pageData, &$test, $id, $run)
 }
 ?>
 <script type="text/javascript">
-  if (window['performance'] != undefined) {
-    if (performance.mark)
-      performance.mark("Header finished");
-    else if (performance.webkitMark)
-      performance.webkitMark("Header finished");
-  }
-  if (console != undefined && console.timeStamp)
-    console.timeStamp("Header finished");
+  markUserTime('Header finished');
 </script>

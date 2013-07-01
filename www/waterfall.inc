@@ -915,7 +915,7 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_option
     
     // main container for the waterfall
     echo '<div class="waterfall-container">';
-    echo "<img class=\"waterfall-image\" alt=\"\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('Waterfall Loaded')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
 
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {

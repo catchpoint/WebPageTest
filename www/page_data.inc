@@ -14,24 +14,26 @@ function loadAllPageData($testPath, $options = null)
     $ret = array();
     
     // go in order for the number of runs there are supposed to be
-    $ini = parse_ini_file("$testPath/testinfo.ini", true);
-    if( gz_is_file("$testPath/testinfo.json") )
-        $ini['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    $runs = $ini['test']['runs'];
-    $fvonly = $ini['test']['fvonly'];
-    for( $run = 1; $run <= $runs; $run++ )
-    {
-        $data = loadPageRunData($testPath, $run, 0, $options);
-        if( isset($data) )
-            $ret[$run][0] = $data;
-        
-        if( !$fvonly )
-        {
-            unset( $data );
-            $data = loadPageRunData($testPath, $run, 1, $options);
-            if( isset($data) )
-                $ret[$run][1] = $data;
-        }
+    if (is_file("$testPath/testinfo.ini")) {
+      $ini = parse_ini_file("$testPath/testinfo.ini", true);
+      if( gz_is_file("$testPath/testinfo.json") )
+          $ini['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+      $runs = $ini['test']['runs'];
+      $fvonly = $ini['test']['fvonly'];
+      for( $run = 1; $run <= $runs; $run++ )
+      {
+          $data = loadPageRunData($testPath, $run, 0, $options);
+          if( isset($data) )
+              $ret[$run][0] = $data;
+          
+          if( !$fvonly )
+          {
+              unset( $data );
+              $data = loadPageRunData($testPath, $run, 1, $options);
+              if( isset($data) )
+                  $ret[$run][1] = $data;
+          }
+      }
     }
     
     return $ret;
