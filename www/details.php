@@ -128,6 +128,8 @@ $page_description = "Website performance test details$testLabel";
                     <tr>
                         <?php
                         $cols = 4;
+                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
+                            $cols++;
                         if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
                             $cols++;
                         if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
@@ -147,6 +149,9 @@ $page_description = "Website performance test details$testLabel";
                         <th align="center" valign="middle">Load Time</th>
                         <th align="center" valign="middle">First Byte</th>
                         <th align="center" valign="middle">Start Render</th>
+                        <?php if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) { ?>
+                        <th align="center" valign="middle">User Time</th>
+                        <?php } ?>
                         <?php if( array_key_exists('aft', $test['test']) && $test['test']['aft'] ) { ?>
                         <th align="center" valign="middle">Above the Fold</th>
                         <?php } ?>
@@ -178,6 +183,8 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
                         //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
                         echo "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
+                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 )
+                            echo "<td id=\"userTime\" valign=\"middle\">" . formatMsInterval($data['userTime'], 3) . "</td>\n";
                         if (array_key_exists('aft', $test['test']) && $test['test']['aft'] ) {
                             $aft = number_format($data['aft'] / 1000.0, 1) . 's';
                             if( !$data['aft'] )
@@ -289,14 +296,14 @@ $page_description = "Website performance test details$testLabel";
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
                         <?php } ?>						
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
-                        <?php if(array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] ) { ?>
-                        <td><table><tr><td><div class="arrow-down"></div></td><td>CSI</td></tr></table></td>
+                        <?php if(array_key_exists('userTime', $data) || (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'])) { ?>
+                        <td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>
                         <?php } ?> 
                     </tr>
                 </table>
                 <br>
                 <?php
-                    InsertWaterfall($url, $requests, $id, $run, $cached);
+                    InsertWaterfall($url, $requests, $id, $run, $cached, $data);
                     echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
                     echo "<a id=\"view-images\" href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
                 ?>
@@ -312,9 +319,10 @@ $page_description = "Website performance test details$testLabel";
                         'run_id' => $run,
                         'is_cached' => (bool)@$_GET['cached'],
                         'use_cpu' => true,
+                        'show_labels' => true,
                         'width' => 930
                         );
-                    $map = GetWaterfallMap($connection_rows, $url, $options);
+                    $map = GetWaterfallMap($connection_rows, $url, $options, $data);
                     foreach($map as $entry) {
                         if (array_key_exists('request', $entry)) {
                             $index = $entry['request'] + 1;

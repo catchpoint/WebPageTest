@@ -44,7 +44,7 @@ $options = array(
     'is_mime' => $is_mime,
     'is_state' => $is_state
     );
-$im = GetWaterfallImage($rows, $url, $page_events, $options);
+$im = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
 
 // Spit the image out to the browser.
 imagepng($im);

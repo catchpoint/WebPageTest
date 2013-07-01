@@ -60,6 +60,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     
     // see if we have video files to calculate a visually complete time from
     if (isset($ret)) {
+        loadUserTimingData($ret, $testPath, $run, $cached);
         if (array_key_exists('loadTime', $ret) &&
             !$ret['loadTime'] &&
             array_key_exists('fullyLoaded', $ret) &&
@@ -479,5 +480,36 @@ function PageDataStandardDeviation($pageData, $metric, $cached) {
         $ret = (int)sqrt($sum / $count);
     }
     return $ret;
+}
+
+/**
+* Load the reported user timings data for the given run
+* 
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+*/
+function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
+  if( $cached )
+    $file = "$testPath/{$run}_Cached_timed_events.json";
+  else
+    $file = "$testPath/{$run}_timed_events.json";
+  if (gz_is_file($file)) {
+    $events = json_decode(gz_file_get_contents($file), true);
+    if (isset($events) && is_array($events) && count($events)) {
+      $lastEvent = 0;
+      foreach ($events as $event) {
+        if (is_array($event) &&
+            array_key_exists('name', $event) &&
+            array_key_exists('startTime', $event)) {
+          if ($event['startTime'] > $lastEvent)
+            $lastEvent = $event['startTime'];
+          $name = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $event['name']);
+          $pageData["userTime.$name"] = intval($event['startTime'] + 0.5);
+        }
+      }
+      $pageData["userTime"] = intval($lastEvent + 0.5);
+    }
+  }
 }
 ?>

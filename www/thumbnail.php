@@ -115,7 +115,7 @@ function tbnDrawWaterfall(&$img)
         'is_thumbnail' => true,
         'width' => $newWidth
         );
-    $img = GetWaterfallImage($rows, $url, $page_events, $options);
+    $img = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
     if (!$requests || !$page_data) {
         $failed = true;
     }

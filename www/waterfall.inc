@@ -104,10 +104,10 @@ function GetPageEvents($page_data) {
 /**
 * Return data for an image map of the given rows.
 */
-function GetWaterfallMap($rows, $url, $options) {
+function GetWaterfallMap($rows, $url, $options, &$page_data) {
     $page_events = array();
     $is_image_map = true;
-    return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map);
+    return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data);
 }
 
 /**
@@ -115,9 +115,9 @@ function GetWaterfallMap($rows, $url, $options) {
 *
 * @return resource
 */
-function GetWaterfallImage($rows, $url, $page_events, $options) {
+function GetWaterfallImage($rows, $url, $page_events, $options, &$page_data) {
     $is_image_map = false;
-    return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map);
+    return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data);
 }
 
 /**
@@ -125,7 +125,7 @@ function GetWaterfallImage($rows, $url, $page_events, $options) {
 *
 * @return resource
 */
-function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
+function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$page_data) {
     global $settings;
     $is_mime = (bool)@$options['is_mime'];
     $is_state = (bool)@$options['is_state'];
@@ -230,6 +230,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                                    $options['run_id'], $options['is_cached'],
                                    $use_all);
         $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
+    }
+    // get any user timings
+    if (isset($page_data) && array_key_exists('userTime', $page_data)) {
+      foreach ($page_data as $key => $value) {
+        if (substr($key, 0, 9) == 'userTime.') {
+          $label = substr($key, 9);
+          if (!isset($user_times))
+            $user_times = array();
+          $user_times[$label] = $value;
+        }
+      }
+    }    
+    if (isset($csi_info)) {
+      if (!isset($user_times))
+        $user_times = array();
+      foreach ($csi_info as $key => $value)
+        $user_times[$key] = $value;
     }
 
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
@@ -361,7 +378,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
                 'nav_load' => GetColor($im, 192, 192, 255),
                 'nav_dom' => GetColor($im, 216, 136, 223),
                 'aft' => GetColor($im, 255, 0, 0),
-                'csi' => GetColor($im, 105, 0, 158)
+                'user' => GetColor($im, 105, 0, 158)
                 );
             foreach ($page_events as $event_name => &$event) {
                 $color = $event_colors[$event_name];
@@ -444,17 +461,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
             }
 
             // Draw the csi metrics.
-            if (null != $csi_info) {
-                foreach ($csi_info as $name => $value) {
+            if (isset($user_times)) {
+                foreach ($user_times as $name => $value) {
                     if ($name != 'srt' && $value > 0 && $value <= $max_ms) {
                         $x = $x_scaler($value);
                         if (!$is_thumbnail) {
                             $triangle_coords = array($x - 3, $row_height + 1,
                                                      $x,     $row_height + 9,
                                                      $x + 3, $row_height + 1);
-                            imagefilledpolygon($im, $triangle_coords, 3, $colCsi);
+                            imagefilledpolygon($im, $triangle_coords, 3, $event_colors['user']);
                         }
-                        imageline($im, $x, $row_height + 1, $x, $height - 1, $colCsi);
+                        imageline($im, $x, $row_height + 1, $x, $height - 1, $event_colors['user']);
                     }
                 }
             }
@@ -536,15 +553,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         }
     }
 
-    if ($is_image_map && $settings['enable_google_csi'] == 1) {
-        // Map CSI entries.
-        foreach ($csi_info as $name => $value) {
+    if ($is_image_map && isset($user_times)) {
+        foreach ($user_times as $name => $value) {
             if ($name != 'srt') {
                 $x = $x_scaler($value);
-                $triangle_coords = array($x - 3, $row_height + 1,
-                                         $x,     $row_height + 9,
-                                         $x + 3, $row_height + 1);
-                AddMapCsi($map, "srt + $name: $value", $triangle_coords);
+                AddMapUserTime($map, $x - 3, $row_height + 1, $x + 3, $row_height + 9, "$name: " . number_format($value / 1000.0, 3) . 's');
             }
         }
     }
@@ -572,11 +585,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map) {
         }
     }
 
-    if ($is_image_map) {
-        return $map;
-    } else {
-        return $im;
-    }
+    if ($is_image_map)
+      return $map;
+    else
+      return $im;
 }
 
 /**
@@ -823,12 +835,15 @@ function AddMapRequest(&$map, $x1, $y1, $x2, $y2, $request) {
 }
 
 /**
-* Append imagemap data for csi data.
+* Append imagemap data for user timing.
 */
-function AddMapCsi($map, $label, $coords) {
+function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
     $map[] = array(
-        'csi' => $label,
-        'coords' => implode(",", $coords));
+        'userTime' => $label,
+        'left' => $x1,
+        'right' => $x2,
+        'top' => $y1,
+        'bottom' => $y2);
 }
 
 
@@ -884,7 +899,7 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 * Insert an interactive waterfall into the current page
 * 
 */
-function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_options = '') {
+function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '') {
     global $settings;
     
     // create the image map (this is for fallback when Javascript isn't enabled
@@ -896,19 +911,20 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_option
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
+        'show_labels' => true,
         'width' => 930
         );
     $rows = GetRequestRows($requests, false);
-    $map = GetWaterfallMap($rows, $url, $options);
+    $map = GetWaterfallMap($rows, $url, $options, $page_data);
     foreach($map as $entry) {
-        if (isset($entry['request'])) {
+        if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
             $title = $index . ': ' . htmlspecialchars($entry['url']);
             echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-        } elseif (isset($entry['url'])) {
+        } elseif (array_key_exists('url', $entry)) {
             echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-        } elseif (isset($entry['csi'])) {
-            echo '<area nohref="nohref" alt="' . $entry['csi'] . '" title="' . $entry['csi'] . '" shape=POLYGON coords="' . $entry['coords'] . '">' . "\n";
+        } elseif (array_key_exists('userTime', $entry)) {
+            echo '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         }
     }
     echo '</map>';

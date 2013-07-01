@@ -88,9 +88,10 @@ if( (int)$test[test][fvonly] == 0 )
                     'run_id' => $run,
                     'is_cached' => $cached,
                     'use_cpu' => true,
+                    'show_labels' => true,
                     'is_mime' => $mime
                     );
-                $map = GetWaterfallMap($connection_rows, $url, $options);
+                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
                 foreach($map as $entry)
                 {
                     if( $entry['request'] !== NULL )
@@ -154,9 +155,10 @@ if( (int)$test[test][fvonly] == 0 )
                     'run_id' => $run,
                     'is_cached' => $cached,
                     'use_cpu' => true,
+                    'show_labels' => true,
                     'is_mime' => $mime
                     );
-                $map = GetWaterfallMap($connection_rows, $url, $options);
+                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
                 foreach($map as $entry)
                 {
                     if( $entry['request'] !== NULL )
