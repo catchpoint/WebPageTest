@@ -34,7 +34,7 @@ STDMETHODIMP_(void) WptBHO::OnBeforeNavigate2(IDispatch *pDisp, VARIANT * vUrl,
   if (vUrl)
     url = *vUrl;
 
-  AtlTrace(CString(_T("[WptBHO] OnBeforeNavigate2 - ")) + url);
+  AtlTrace(_T("[WptBHO] OnBeforeNavigate2 - %s"), url);
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {

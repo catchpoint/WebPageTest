@@ -26,5 +26,6 @@
 #include <atlstr.h>
 #include <ExDispID.h>
 #include <Wininet.h>
+#include <comdef.h>
 
 using namespace ATL;

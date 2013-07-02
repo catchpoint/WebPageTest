@@ -1,9 +1,9 @@
 #include "StdAfx.h"
 #include "wpt.h"
 #include "wpt_task.h"
-#include <comdef.h>
 
 extern HINSTANCE dll_hinstance;
+Wpt* global_wpt = NULL;
 
 const DWORD TASK_INTERVAL = 1000;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
@@ -22,37 +22,76 @@ static const TCHAR * REG_DOM_STORAGE_KEY =
 static const TCHAR * REG_SHELL_FOLDERS = 
     _T("Software\\Microsoft\\Windows\\CurrentVersion")
     _T("\\Explorer\\User Shell Folders");
-
+static const TCHAR * DOM_SCRIPT_FUNCTIONS =
+    _T("var wptGetUserTimings = (function(){")
+    _T("  var ret = \"\";")
+    _T("  if (window.performance && window.performance.getEntriesByType) {")
+    _T("    var marks = performance.getEntriesByType(\"mark\");")
+    _T("    for (var i = 0; i < marks.length; i++) {")
+    _T("      var mark = marks[i];")
+    _T("      mark.type = 'mark';")
+    _T("      if (ret.length)")
+    _T("        ret += ',';")
+    _T("      ret += JSON.stringify(mark);")
+    _T("    }")
+    _T("  }")
+    _T("  return ret;")
+    _T("});");
+LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Wpt::Wpt(void):_active(false),_task_timer(NULL),_hook_dll(NULL) {
+Wpt::Wpt(void):
+  _active(false)
+  ,_task_timer(0)
+  ,_hook_dll(NULL)
+  ,_message_window(NULL) {
 }
 
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Wpt::~Wpt(void) {
+  global_wpt = NULL;
 }
 
-VOID CALLBACK TaskTimer(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
-  if( lpParameter )
-    ((Wpt *)lpParameter)->CheckForTask();
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+static LRESULT CALLBACK WptBHOWindowProc(HWND hwnd, UINT uMsg, 
+                                                WPARAM wParam, LPARAM lParam) {
+  LRESULT ret = 0;
+  bool handled = false;
+  if (global_wpt)
+    handled = global_wpt->OnMessage(uMsg, wParam, lParam);
+  if (!handled)
+    ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::Install(CComPtr<IWebBrowser2> web_browser) {
-  AtlTrace(_T("[wptbho] - Start"));
+  AtlTrace(_T("[wptbho] - Install"));
   HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
   if (!_task_timer && active_mutex) {
+    global_wpt = this;
+    WNDCLASS wndClass;
+    memset(&wndClass, 0, sizeof(wndClass));
+    wndClass.lpszClassName = _T("wptbho");
+    wndClass.lpfnWndProc = WptBHOWindowProc;
+    wndClass.hInstance = dll_hinstance;
+    if (RegisterClass(&wndClass)) {
+      _message_window = CreateWindow(wndClass.lpszClassName,
+          wndClass.lpszClassName, WS_POPUP, 0, 0, 0, 0, NULL, NULL,
+          dll_hinstance, NULL);
+    }
     if (InstallHook()) {
       _web_browser = web_browser;
       CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
       _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
     }
   } else {
-    AtlTrace(_T("[wptbho] - Start, failed to open mutex"));
+    AtlTrace(_T("[wptbho] - Install, failed to open mutex"));
   }
   if (active_mutex)
     CloseHandle(active_mutex);
@@ -60,21 +99,36 @@ void Wpt::Install(CComPtr<IWebBrowser2> web_browser) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool Wpt::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
+  bool ret = true;
+
+  switch (message){
+    case WM_TIMER:
+        CheckForTask();
+        break;
+    default:
+        ret = false;
+        break;
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void Wpt::Start(void) {
-  if (!_task_timer) {
-    timeBeginPeriod(1);
-    CreateTimerQueueTimer(&_task_timer, NULL, ::TaskTimer, this, 
-                          TASK_INTERVAL, TASK_INTERVAL, WT_EXECUTEDEFAULT);
+  if (!_task_timer && _message_window) {
+    _task_timer = SetTimer(_message_window, 1, TASK_INTERVAL, NULL);
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::Stop(void) {
-  if (_task_timer) {
-    DeleteTimerQueueTimer(NULL, _task_timer, NULL);
-    _task_timer = NULL;
-    timeEndPeriod(1);
+  if (_message_window) {
+    KillTimer(_message_window, 1);
+    _task_timer = 0;
+    DestroyWindow(_message_window);
   }
   _web_browser.Release();
 }
@@ -120,13 +174,11 @@ bool Wpt::InstallHook() {
 void Wpt::OnLoad() {
   if (_active) {
     int fixed_viewport = 0;
-    int dom_element_count = 0;
     if (_web_browser) {
       CComPtr<IDispatch> dispatch;
       if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
         CComQIPtr<IHTMLDocument2> document = dispatch;
         if (document) {
-          dom_element_count = CountDOMElements(document);
           if (FindDomElementInDocument(_T("meta"), _T("name"), _T("viewport"),
                                        equal, document))
             fixed_viewport = 1;
@@ -134,8 +186,7 @@ void Wpt::OnLoad() {
       }
     }
     CString options;
-    options.Format(_T("fixedViewport=%d&domCount=%d"),
-                   fixed_viewport, dom_element_count);
+    options.Format(_T("fixedViewport=%d"), fixed_viewport);
     _wpt_interface.OnLoad(options);
     _active = false;
   }
@@ -172,20 +223,32 @@ void Wpt::CheckForTask() {
       if (task._record)
         _active = true;
       switch (task._action) {
-        case WptTask::NAVIGATE: 
-          NavigateTo(task._target); 
+        case WptTask::BLOCK:
+          Block(task._target);
           break;
         case WptTask::CLEAR_CACHE: 
           ClearCache(); 
           break;
-        case WptTask::SET_COOKIE:
-          SetCookie(task._target, task._value);
+        case WptTask::CLICK:
+          Click(task._target);
+          break;
+        case WptTask::COLLECT_STATS:
+          CollectStats();
           break;
         case WptTask::EXEC:
           Exec(task._target);
           break;
-        case WptTask::CLICK:
-          Click(task._target);
+        case WptTask::EXPIRE_CACHE:
+          ExpireCache(task._target);
+          break;
+        case WptTask::NAVIGATE: 
+          NavigateTo(task._target); 
+          break;
+        case WptTask::SET_COOKIE:
+          SetCookie(task._target, task._value);
+          break;
+        case WptTask::SET_DOM_ELEMENT:
+          SetDomElement(task._target);
           break;
         case WptTask::SET_INNER_HTML:
           SetInnerHTML(task._target, task._value);
@@ -198,15 +261,6 @@ void Wpt::CheckForTask() {
           break;
         case WptTask::SUBMIT_FORM:
           SubmitForm(task._target);
-          break;
-        case WptTask::BLOCK:
-          Block(task._target);
-          break;
-        case WptTask::SET_DOM_ELEMENT:
-          SetDomElement(task._target);
-          break;
-        case WptTask::EXPIRE_CACHE:
-          ExpireCache(task._target);
           break;
       }
       if (!_active)
@@ -449,7 +503,8 @@ void  Wpt::SetCookie(CString path, CString value) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void  Wpt::Exec(CString javascript) {
+bool Wpt::Exec(CString javascript) {
+  bool ret = false;
   javascript.Replace(_T("\r"), _T(" "));
   javascript.Replace(_T("\n"), _T(" "));
   if (_web_browser) {
@@ -459,16 +514,44 @@ void  Wpt::Exec(CString javascript) {
       if (document) {
         CComPtr<IHTMLWindow2> window;
         if (SUCCEEDED(document->get_parentWindow(&window))) {
-          VARIANT var;
-          VariantInit(&var);
+          _variant_t result;
           BSTR lang = SysAllocString(L"Javascript");
           CComBSTR script = javascript;
-          window->execScript(script, lang, &var);
+          if (SUCCEEDED(window->execScript(script, lang, &result)))
+            ret = true;
           SysFreeString(lang);
         }
       }
     }
   }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool  Wpt::Invoke(LPOLESTR function, _variant_t &result) {
+  bool ret = false;
+  if (_web_browser) {
+    CComPtr<IDispatch> dispatch;
+    if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
+      CComQIPtr<IHTMLDocument> document = dispatch;
+      if (document) {
+        CComPtr<IDispatch> script;
+        if (SUCCEEDED(document->get_Script(&script)) && script) {
+          DISPID id = 0;
+          if (SUCCEEDED(script->GetIDsOfNames(IID_NULL, &function, 1,
+                                              LOCALE_SYSTEM_DEFAULT, &id))) {
+            result.Clear();
+            DISPPARAMS dpNoArgs = {NULL, NULL, 0, 0};
+            if (SUCCEEDED(script->Invoke(id, IID_NULL, LOCALE_SYSTEM_DEFAULT,
+                DISPATCH_METHOD, &dpNoArgs, &result, NULL, NULL)))
+              ret = true;
+          }
+        }
+      }
+    }
+  }
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -586,6 +669,38 @@ CComPtr<IHTMLElement> Wpt::FindDomElement(CString target) {
   }
   
   return result;
+}
+
+/*-----------------------------------------------------------------------------
+  Converts a IHTMLWindow2 object to a IWebBrowser2.
+  Returns NULL in case of failure.
+-----------------------------------------------------------------------------*/
+CComQIPtr<IWebBrowser2> HtmlWindowToHtmlWebBrowser(
+    CComQIPtr<IHTMLWindow2> window) {
+  CComQIPtr<IWebBrowser2> browser;
+  CComQIPtr<IServiceProvider> provider = window;
+  if (provider)
+    provider->QueryService(IID_IWebBrowserApp, IID_IWebBrowser2,
+                           (void**)&browser);
+  return browser;
+}
+
+/*-----------------------------------------------------------------------------
+	Convert a window to a document, accounting for cross-domain security
+  issues.
+-----------------------------------------------------------------------------*/
+CComQIPtr<IHTMLDocument2> HtmlWindowToHtmlDocument(
+    CComQIPtr<IHTMLWindow2> window) {
+  CComQIPtr<IHTMLDocument2> document;
+  if (!SUCCEEDED(window->get_document(&document))) {
+    CComQIPtr<IWebBrowser2>  browser = HtmlWindowToHtmlWebBrowser(window);
+    if (browser) {
+      CComQIPtr<IDispatch> disp;
+      if(SUCCEEDED(browser->get_Document(&disp)) && disp)
+        document = disp;
+    }
+  }
+  return document;
 }
 
 /*-----------------------------------------------------------------------------
@@ -708,36 +823,10 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
       }
     }
 
-    // walk the IFrames using OLE (to bypass security blocks)
-    if (!result) {
-      CComQIPtr<IOleContainer> ole(document);
-      if (ole) {
-        CComPtr<IEnumUnknown> objects;
-        if (SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) 
-                        && objects) {
-          IUnknown* pUnk;
-          ULONG uFetched;
-          while (!result && S_OK == objects->Next(1, &pUnk, &uFetched)) {
-            CComQIPtr<IWebBrowser2> browser(pUnk);
-            pUnk->Release();
-            if (browser) {
-              CComPtr<IDispatch> disp;
-              if (SUCCEEDED(browser->get_Document(&disp)) && disp) {
-                CComQIPtr<IHTMLDocument2> frameDoc(disp);
-                if (frameDoc)
-                  result = FindDomElementInDocument(tag, attribute, value, op, 
-                                                          frameDoc);
-              }
-            }
-          }
-        }
-      }			
-    }
-
     // walk the IFrames diriectly (the OLE way doesn't appear to always work)
     if (!result) {
       CComPtr<IHTMLFramesCollection2> frames;
-      if (SUCCEEDED(document->get_frames(&frames)) && frames) {
+      if (document->get_frames(&frames) && frames) {
         long count = 0;
         if (SUCCEEDED(frames->get_length(&count))) {
           for (long i = 0; i < count && !result; i++) {
@@ -747,7 +836,8 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
               CComQIPtr<IHTMLWindow2> window(varFrame);
               if (window) {
                 CComQIPtr<IHTMLDocument2> frameDoc;
-                if (SUCCEEDED(window->get_document(&frameDoc)) && frameDoc)
+                frameDoc = HtmlWindowToHtmlDocument(window);
+                if (frameDoc)
                   result = FindDomElementInDocument(tag, attribute, value, op, 
                                                       frameDoc);
               }
@@ -907,37 +997,71 @@ void Wpt::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
 DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
   DWORD count = 0;
   if (document) {
-		CComPtr<IHTMLElementCollection> coll;
+		IHTMLElementCollection *coll;
 		if (SUCCEEDED(document->get_all(&coll)) && coll) {
 			long nodes = 0;
 			if( SUCCEEDED(coll->get_length(&nodes)) )
         count += nodes;
-      coll.Release();
+      coll->Release();
     }
 
-    // walk any/all iFrames
-		CComQIPtr<IOleContainer> ole(document);
-		if (ole) {
-			CComPtr<IEnumUnknown> objects;
-			if (SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) &&
-          objects) {
-				IUnknown* pUnk;
-				ULONG uFetched;
-				while (S_OK == objects->Next(1, &pUnk, &uFetched)) {
-					CComQIPtr<IWebBrowser2> browser(pUnk);
-					pUnk->Release();
-					if (browser) {
-						CComPtr<IDispatch> disp;
-						if (SUCCEEDED(browser->get_Document(&disp)) && disp) {
-							CComQIPtr<IHTMLDocument2> frameDoc(disp);
-							if (frameDoc)
-								count += CountDOMElements(frameDoc);
-						}
-					}
-				}
-			}
-		}			
+    // Recursively walk any iFrames
+    IHTMLFramesCollection2 * frames = NULL;
+    if (document->get_frames(&frames) && frames) {
+      long count = 0;
+      if (SUCCEEDED(frames->get_length(&count))) {
+        for (long i = 0; i < count; i++) {
+          _variant_t index = i;
+          _variant_t varFrame;
+          if (SUCCEEDED(frames->item(&index, &varFrame))) {
+            CComQIPtr<IHTMLWindow2> window(varFrame);
+            if (window) {
+              CComQIPtr<IHTMLDocument2> frameDoc;
+              frameDoc = HtmlWindowToHtmlDocument(window);
+              if (frameDoc)
+                count += CountDOMElements(frameDoc);
+            }
+          }
+        }
+      }
+      frames->Release();
+    }
   }
 
   return count;
+}
+
+/*-----------------------------------------------------------------------------
+  Collect the stats at the end of a test
+-----------------------------------------------------------------------------*/
+void Wpt::CollectStats() {
+  AtlTrace(_T("[wptbho] - Wpt::CollectStats()"));
+  if (_web_browser) {
+    CComPtr<IDispatch> dispatch;
+    if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
+      CComQIPtr<IHTMLDocument2> document = dispatch;
+      if (document) {
+        DWORD count = CountDOMElements(document);
+        _wpt_interface.ReportDOMElementCount(count);
+        AtlTrace(_T("[wptbho] - Wpt::CollectStats() Reported %d DOM elements"),
+                count);
+      }
+    }
+  }
+  if (Exec(DOM_SCRIPT_FUNCTIONS)) {
+    _variant_t timings;
+    if (Invoke(GET_USER_TIMINGS, timings)) {
+      if (timings.vt == VT_BSTR) {
+        CString user_timings(timings);
+        OutputDebugString(user_timings);
+        _wpt_interface.ReportUserTiming(user_timings);
+      } else {
+        OutputDebugString(_T("User timing returned a non-BSTR result"));
+      }
+    } else {
+      OutputDebugString(_T("Invoke failed"));
+    }
+  } else {
+    OutputDebugString(_T("Exec failed"));
+  }
 }

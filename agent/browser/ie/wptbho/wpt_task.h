@@ -9,18 +9,19 @@ public:
 
   typedef enum {
     UNDEFINED,
-    NAVIGATE,
+    BLOCK,
     CLEAR_CACHE,
-    SET_COOKIE,
-    EXEC,
     CLICK,
+    COLLECT_STATS,
+    EXEC,
+    EXPIRE_CACHE,
+    NAVIGATE,
+    SET_COOKIE,
+    SET_DOM_ELEMENT,
     SET_INNER_HTML,
     SET_INNER_TEXT,
     SET_VALUE,
-    SUBMIT_FORM,
-    BLOCK,
-    SET_DOM_ELEMENT,
-    EXPIRE_CACHE
+    SUBMIT_FORM
   } TASK_ACTION;
 
   bool        _valid;

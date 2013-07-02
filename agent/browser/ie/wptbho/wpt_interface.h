@@ -13,8 +13,14 @@ public:
   void  OnNavigate();
   void  OnTitle(CString title);
   void  OnStatus(CString status);
+  void  ReportDOMElementCount(DWORD count);
+  void  ReportNavigationTiming(CString timing);
+  void  ReportUserTiming(CString events);
 
 private:
   bool HttpGet(CString url, CString& response);
+  bool HttpPost(CString url, const char * body = NULL);
+  bool CrackUrl(CString url, CString &host, unsigned short &port, 
+                CString& object, DWORD &secure_flag);
 };
 

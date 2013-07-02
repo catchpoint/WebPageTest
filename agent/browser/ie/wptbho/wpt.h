@@ -11,6 +11,7 @@ public:
   void Stop(void);
   bool InstallHook();
   void CheckForTask();
+  bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
   // browser events
   void  OnLoad();
@@ -22,9 +23,10 @@ public:
 
 private:
   CComPtr<IWebBrowser2> _web_browser;
-  HANDLE        _task_timer;
+  UINT          _task_timer;
   WptInterface  _wpt_interface;
   HMODULE       _hook_dll;
+  HWND          _message_window;
 
   typedef enum{
     equal = 0,
@@ -38,18 +40,22 @@ private:
           CComPtr<IHTMLDocument2> document);
 
   // commands
-  void  NavigateTo(CString url);
+  void  Block(CString block_string);
   void  ClearCache(void);
-  void  SetCookie(CString path, CString value);
-  void  Exec(CString javascript);
   void  Click(CString target);
+  void  CollectStats();
+  bool  Exec(CString javascript);
+  void  ExpireCache(CString target);
+  bool  Invoke(LPOLESTR function, _variant_t &result);
+  void  NavigateTo(CString url);
+  void  SetCookie(CString path, CString value);
+  void  SetDomElement(CString target);
   void  SetInnerHTML(CString target, CString value);
   void  SetInnerText(CString target, CString value);
   void  SetValue(CString target, CString value);
   void  SubmitForm(CString target);
-  void  Block(CString block_string);
-  void  SetDomElement(CString target);
-  void  ExpireCache(CString target);
-  void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
+
+  // support routines
   DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
+  void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
 };
