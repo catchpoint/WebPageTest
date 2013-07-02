@@ -55,3 +55,5 @@ user_pref("xpinstall.whitelist.add.36", "");
 user_pref("toolkit.telemetry.prompted", 2);
 user_pref("signon.rememberSignons", false);
 user_pref("javascript.options.showInConsole", true);
+user_pref("devtools.chrome.enabled", true);
+user_pref("devtools.debugger.remote-enabled", true);
