@@ -36,8 +36,23 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("    }")
     _T("  }")
     _T("  return ret;")
+    _T("});")
+    _T("var wptGetNavTimings = (function(){")
+    _T("  var timingParams = \"\";")
+    _T("  if (window.performance && window.performance.timing) {")
+    _T("    function addTime(name) {")
+    _T("      return name + '=' + Math.max(0, (performance.timing[name] - ")
+    _T("              performance.timing['navigationStart']));")
+    _T("    };")
+    _T("    timingParams = addTime('domContentLoadedEventStart') + '&' +")
+    _T("        addTime('domContentLoadedEventEnd') + '&' +")
+    _T("        addTime('loadEventStart') + '&' +")
+    _T("        addTime('loadEventEnd');")
+    _T("  }")
+    _T("  return timingParams;")
     _T("});");
 LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
+LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -1053,15 +1068,14 @@ void Wpt::CollectStats() {
     if (Invoke(GET_USER_TIMINGS, timings)) {
       if (timings.vt == VT_BSTR) {
         CString user_timings(timings);
-        OutputDebugString(user_timings);
         _wpt_interface.ReportUserTiming(user_timings);
-      } else {
-        OutputDebugString(_T("User timing returned a non-BSTR result"));
       }
-    } else {
-      OutputDebugString(_T("Invoke failed"));
     }
-  } else {
-    OutputDebugString(_T("Exec failed"));
+    if (Invoke(GET_NAV_TIMINGS, timings)) {
+      if (timings.vt == VT_BSTR) {
+        CString nav_timings(timings);
+        _wpt_interface.ReportNavigationTiming(nav_timings);
+      }
+    }
   }
 }
