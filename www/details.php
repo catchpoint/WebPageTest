@@ -265,6 +265,10 @@ $page_description = "Website performance test details$testLabel";
                 $haveLocations = false;
                 $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
                 ?>
+                <script type="text/javascript">
+                  markUserTime('Detail Table');
+                </script>
+                
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">

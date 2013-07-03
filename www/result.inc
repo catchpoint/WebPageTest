@@ -358,6 +358,9 @@ $page_description = "Website performance test result$testLabel.";
                 }
                 ?>
             </div>
+            <script type="text/javascript">
+              markUserTime('Result Data Table');
+            </script>
             <?php } ?>
             <div id="tables" style="text-align:left;">
             <?php
@@ -368,6 +371,7 @@ $page_description = "Website performance test result$testLabel.";
             $fvonly = 1;
             if( isset($rv) )
                 $fvonly = 0;
+            $first_displayed = false;
             for( $run = 1; $run <= $runs; $run++)
             {
                 $error_str = null;
@@ -404,6 +408,13 @@ $page_description = "Website performance test result$testLabel.";
                     }
                 echo '</tr><tr>';
                     if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
+                        $onloadWaterfall = '';
+                        $onloadScreenShot = '';
+                        if (!$first_displayed) {
+                          $onloadWaterfall = " onload=\"markUserTime('First Waterfall')\"";
+                          $onloadScreenShot = " onload=\"markUserTime('First Screen Shot')\"";
+                        }
+                        $first_displayed = true;
                         echo '<td align="left" valign="middle">First View';
                         if( isset($pageData[$run][0]['result']) && $pageData[$run][0]['result'] !== 0 && $pageData[$run][0]['result'] !== 99999 )
                             echo '<br>(Error: ' . LookupError($pageData[$run][0]['result']) . ')';
@@ -443,12 +454,12 @@ $page_description = "Website performance test result$testLabel.";
                         elseif (FRIENDLY_URLS)
                             $testUrl = "/result/$id/$run/details/";
                         echo "<a href=\"$testUrl\">";
-                        echo "<img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png\"></a></td>\n";
+                        echo "<img class=\"progress\"$onloadWaterfall width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png\"></a></td>\n";
                         if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
                             if( FRIENDLY_URLS )
-                                echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
+                                echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
                             else
-                                echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
+                                echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
                         }
                         if($video) {
                             echo '<td align="center" valign="middle">';
