@@ -439,6 +439,8 @@ void CPagetestReporting::FlushResults(void)
             start_time.QuadPart = start;
             dev_tools_.SetStartTime(start_time);
 					  dev_tools_.Write(logFile+step+_T("_devtools.json"));
+
+					  SaveUserTiming(logFile+step+_T("_timed_events.json"));
           }
 
           // delete the image data
@@ -956,6 +958,10 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
         domElements = CountDOMElements(doc);
     }
   }
+  
+  // get the navigation timing information from supported browsers
+  long load_start, load_end, dcl_start, dcl_end;
+  GetNavTiming(load_start, load_end, dcl_start, dcl_end);
 
 	CA2T ip(inet_ntoa(pageIP.sin_addr));
 	
@@ -1028,8 +1034,9 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%s\t%s\t%d\t%d\t%d\t%d\t")
-										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
-                    _T("%d\t%d\t%s\t%s\t%d\t0\t0\t0\t0\t%d\t")
+										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
+										_T("%d\t%d\t%d\t%d\t%d\t%d\t%s\t")
+                    _T("%s\t%d\t%d\t%d\t%d\t%d\t%d\t")
                     _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
@@ -1040,10 +1047,11 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			measurementType, experimental, msLoadDoc, (LPCTSTR)guid, msDomElement, includeObjectData_Now ? 1 : 0, 
 			cacheScore, staticCdnScore, oneCdnScore, gzipScore, cookieScore, keepAliveScore, doctypeScore, minifyScore, combineScore,
 			out_doc, in_doc, nDns_doc, nConnect_doc, 
-			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc,
-			compressionScore, host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
-			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt,
-      0, domElements, (LPCTSTR)pageSpeedVersion, (LPCTSTR)pageTitle, msTitle, msVisualComplete,
+			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc, compressionScore,
+			host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
+			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget,
+			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, (LPCTSTR)pageSpeedVersion,
+			(LPCTSTR)pageTitle, msTitle, load_start, load_end, dcl_start, dcl_end, msVisualComplete,
       _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore);
 	buff += result;
 }
@@ -3614,4 +3622,85 @@ bool CPagetestReporting::FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
     }
   }
   return found;
+}
+
+/*-----------------------------------------------------------------------------
+  Run some in-page javascript to get the navigation timing data from
+  supported browsers (IE 9+).
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
+                                      long &dcl_start, long &dcl_end) {
+  load_start = load_end = dcl_start = dcl_end = 0;
+  static const TCHAR * FN_GET_NAV_TIMING =
+      _T("var wptGetNavTimings = (function(){")
+      _T("  var timingParams = \"\";")
+      _T("  if (window.performance && window.performance.timing) {")
+      _T("    function addTime(name) {")
+      _T("      return Math.max(0, (performance.timing[name] - ")
+      _T("              performance.timing['navigationStart']));")
+      _T("    };")
+      _T("    timingParams = addTime('domContentLoadedEventStart') + ',' +")
+      _T("        addTime('domContentLoadedEventEnd') + ',' +")
+      _T("        addTime('loadEventStart') + ',' +")
+      _T("        addTime('loadEventEnd');")
+      _T("  }")
+      _T("  return timingParams;")
+      _T("});");
+  LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
+  if (ExecuteScript(FN_GET_NAV_TIMING)) {
+    _variant_t timings;
+    if (InvokeScript(GET_NAV_TIMINGS, timings)) {
+      if (timings.vt == VT_BSTR) {
+        CString nav_timings(timings);
+        int pos = 0;
+        int index = 0;
+        CString val = nav_timings.Tokenize(_T(","), pos);
+        while (pos != -1) {
+          index++;
+          long int_val = _ttol(val);
+          switch (index) {
+            case 1: dcl_start = int_val; break;
+            case 2: dcl_end = int_val; break;
+            case 3: load_start = int_val; break;
+            case 4: load_end = int_val; break;
+          }
+          val = nav_timings.Tokenize(_T(","), pos);
+        }
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Run some in-page javascript to get the user timing data if it exists
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveUserTiming(CString file) {
+  static const TCHAR * FN_GET_USER_TIMING =
+    _T("var wptGetUserTimings = (function(){")
+    _T("  var ret = '';")
+    _T("  if (window.performance && window.performance.getEntriesByType) {")
+    _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
+    _T("    if (marks.length > 2)")
+    _T("      ret = marks.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
+    _T("  }")
+    _T("  return ret;")
+    _T("});");
+  LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
+  if (ExecuteScript(FN_GET_USER_TIMING)) {
+    _variant_t timings;
+    if (InvokeScript(GET_USER_TIMINGS, timings)) {
+      if (timings.vt == VT_BSTR) {
+        CString user_timings(timings);
+        if (user_timings.GetLength()) {
+				  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
+				  if( hFile != INVALID_HANDLE_VALUE ) {
+					  DWORD written;
+					  CT2A str((LPCTSTR)user_timings, CP_UTF8);
+					  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
+					  CloseHandle(hFile);
+				  }
+        }
+      }
+    }
+  }
 }

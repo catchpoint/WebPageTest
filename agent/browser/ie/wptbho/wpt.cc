@@ -1020,9 +1020,9 @@ DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
     // Recursively walk any iFrames
     IHTMLFramesCollection2 * frames = NULL;
     if (document->get_frames(&frames) && frames) {
-      long count = 0;
-      if (SUCCEEDED(frames->get_length(&count))) {
-        for (long i = 0; i < count; i++) {
+      long num_frames = 0;
+      if (SUCCEEDED(frames->get_length(&num_frames))) {
+        for (long i = 0; i < num_frames; i++) {
           _variant_t index = i;
           _variant_t varFrame;
           if (SUCCEEDED(frames->item(&index, &varFrame))) {

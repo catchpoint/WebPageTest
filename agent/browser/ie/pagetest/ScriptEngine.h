@@ -215,6 +215,7 @@ protected:
 	void SendMouseCommand(const OLECHAR * command, CScriptItem & item, bool & err, bool & done);
 	void SendCommand(CScriptItem & item, bool & err, bool & done);
 	bool ExecuteScript(_bstr_t script);
+  bool InvokeScript(LPOLESTR function, _variant_t &result);
   bool ConditionMatches(CString condition, CString value);
   void ExpireCache(DWORD seconds);
   void ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);

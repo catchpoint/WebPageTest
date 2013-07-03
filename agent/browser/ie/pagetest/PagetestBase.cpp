@@ -453,6 +453,39 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString attrVal)
 }
 
 /*-----------------------------------------------------------------------------
+  Converts a IHTMLWindow2 object to a IWebBrowser2.
+  Returns NULL in case of failure.
+-----------------------------------------------------------------------------*/
+CComQIPtr<IWebBrowser2> HtmlWindowToHtmlWebBrowser(
+    CComQIPtr<IHTMLWindow2> window) {
+  CComQIPtr<IWebBrowser2> browser;
+  CComQIPtr<IServiceProvider> provider = window;
+  if (provider)
+    provider->QueryService(IID_IWebBrowserApp, IID_IWebBrowser2,
+                           (void**)&browser);
+  return browser;
+}
+
+/*-----------------------------------------------------------------------------
+	Convert a window to a document, accounting for cross-domain security
+  issues.
+-----------------------------------------------------------------------------*/
+CComQIPtr<IHTMLDocument2> HtmlWindowToHtmlDocument(
+    CComQIPtr<IHTMLWindow2> window) {
+  CComQIPtr<IHTMLDocument2> document;
+  if (!SUCCEEDED(window->get_document(&document))) {
+    CComQIPtr<IWebBrowser2>  browser = HtmlWindowToHtmlWebBrowser(window);
+    if (browser) {
+      CComQIPtr<IDispatch> disp;
+      if(SUCCEEDED(browser->get_Document(&disp)) && disp)
+        document = disp;
+    }
+  }
+  return document;
+}
+
+
+/*-----------------------------------------------------------------------------
 	Locate the first HTML element on the DOM of any of the browsers that
 	matches the attribute we're looking for
 -----------------------------------------------------------------------------*/
@@ -644,45 +677,7 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString &tag, CSt
 			}
 		}
 
-		// walk the IFrames using OLE (to bypass security blocks)
-		if( !result )
-		{
-			// walk all of the frames on the document
-			// this is a little complicated because we need to bypass cross site scripting security
-			CComQIPtr<IOleContainer> ole(doc);
-			if(ole)
-			{
-				CComPtr<IEnumUnknown> objects;
-
-				// Get an enumerator for the frames
-				if( SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) && objects )
-				{
-					IUnknown* pUnk;
-					ULONG uFetched;
-
-					// Enumerate all the frames
-					while( !result && S_OK == objects->Next(1, &pUnk, &uFetched) )
-					{
-						// QI for IWebBrowser here to see if we have an embedded browser
-						CComQIPtr<IWebBrowser2> browser(pUnk);
-						pUnk->Release();
-
-						if (browser)
-						{
-							CComPtr<IDispatch> disp;
-							if( SUCCEEDED(browser->get_Document(&disp)) && disp )
-							{
-								CComQIPtr<IHTMLDocument2> frameDoc(disp);
-								if (frameDoc)
-									result = FindDomElementByAttribute(tag, attribute, value, op, frameDoc);
-							}
-						}
-					}
-				}
-			}			
-		}
-
-		// walk the IFrames diriectly (the OLE way doesn't appear to always work)
+		// recursively check in any iFrames
 		if( !result )
 		{
 			// walk all of the frames on the document
@@ -704,7 +699,8 @@ CComPtr<IHTMLElement> CPagetestBase::FindDomElementByAttribute(CString &tag, CSt
 							if( window )
 							{
 								CComQIPtr<IHTMLDocument2> frameDoc;
-								if( SUCCEEDED(window->get_document(&frameDoc)) && frameDoc )
+								frameDoc = HtmlWindowToHtmlDocument(window);
+								if( frameDoc )
 									result = FindDomElementByAttribute(tag, attribute, value, op, frameDoc);
 							}
 						}
@@ -736,32 +732,27 @@ DWORD CPagetestBase::CountDOMElements(CComQIPtr<IHTMLDocument2> &doc)
       coll.Release();
     }
 
-    // walk any/all iFrames
-		CComQIPtr<IOleContainer> ole(doc);
-		if(ole)
-		{
-			CComPtr<IEnumUnknown> objects;
-			if( SUCCEEDED(ole->EnumObjects(OLECONTF_EMBEDDINGS, &objects)) && objects )
-			{
-				IUnknown* pUnk;
-				ULONG uFetched;
-				while( S_OK == objects->Next(1, &pUnk, &uFetched) )
-				{
-					CComQIPtr<IWebBrowser2> browser(pUnk);
-					pUnk->Release();
-					if (browser)
-					{
-						CComPtr<IDispatch> disp;
-						if( SUCCEEDED(browser->get_Document(&disp)) && disp )
-						{
-							CComQIPtr<IHTMLDocument2> frameDoc(disp);
-							if (frameDoc)
-								count += CountDOMElements(frameDoc);
-						}
-					}
-				}
-			}
-		}			
+    // Recursively walk any iFrames
+    IHTMLFramesCollection2 * frames = NULL;
+    if (doc->get_frames(&frames) && frames) {
+      long num_frames = 0;
+      if (SUCCEEDED(frames->get_length(&num_frames))) {
+        for (long i = 0; i < num_frames; i++) {
+          _variant_t index = i;
+          _variant_t varFrame;
+          if (SUCCEEDED(frames->item(&index, &varFrame))) {
+            CComQIPtr<IHTMLWindow2> window(varFrame);
+            if (window) {
+              CComQIPtr<IHTMLDocument2> frameDoc;
+              frameDoc = HtmlWindowToHtmlDocument(window);
+              if (frameDoc)
+                count += CountDOMElements(frameDoc);
+            }
+          }
+        }
+      }
+      frames->Release();
+    }
   }
 
   return count;

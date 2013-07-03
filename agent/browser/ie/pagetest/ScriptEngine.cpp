@@ -1590,6 +1590,35 @@ bool CScriptEngine::ExecuteScript(_bstr_t script)
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool CScriptEngine::InvokeScript(LPOLESTR function, _variant_t &result) {
+  bool ret = false;
+	// Work with the top-level browser window
+	CBrowserTracker tracker = browsers.GetTail();
+	if( tracker.browser ) {
+		CComPtr<IDispatch> disp;
+		if( SUCCEEDED(tracker.browser->get_Document(&disp)) ) {
+			CComQIPtr<IHTMLDocument> doc = disp;
+			if( doc ) {
+        CComPtr<IDispatch> script;
+        if (SUCCEEDED(doc->get_Script(&script)) && script) {
+          DISPID id = 0;
+          if (SUCCEEDED(script->GetIDsOfNames(IID_NULL, &function, 1,
+                                              LOCALE_SYSTEM_DEFAULT, &id))) {
+            result.Clear();
+            DISPPARAMS dpNoArgs = {NULL, NULL, 0, 0};
+            if (SUCCEEDED(script->Invoke(id, IID_NULL, LOCALE_SYSTEM_DEFAULT,
+                DISPATCH_METHOD, &dpNoArgs, &result, NULL, NULL)))
+              ret = true;
+          }
+        }
+      }
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
 	See if the specified condition is a match
 -----------------------------------------------------------------------------*/
 bool CScriptEngine::ConditionMatches(CString condition, CString value) {
