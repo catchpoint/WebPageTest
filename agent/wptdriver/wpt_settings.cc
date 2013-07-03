@@ -346,23 +346,26 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
   }
 
   // Clear the various IE caches that we know about
-  DeleteRegKey(HKEY_CURRENT_USER, 
-      _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"),
-      false);
-  DeleteRegKey(HKEY_CURRENT_USER,
-      _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"),
-      false);
-  DeleteDirectory(cookies_dir_, false);
-  DeleteDirectory(history_dir_, false);
-  DeleteDirectory(dom_storage_dir_, false);
-  DeleteDirectory(temp_files_dir_, false);
-  DeleteDirectory(temp_dir_, false);
-  DeleteDirectory(silverlight_dir_, false);
-  DeleteDirectory(recovery_dir_, false);
-  DeleteDirectory(flash_dir_, false);
-  DeleteDirectory(windows_dir_ + _T("\\temp"), false);
-  ClearWinInetCache();
-  ClearWebCache();
+  CString match = _exe;
+  if (match.MakeLower().Find(_T("iexplore.exe")) >= 0) {
+    DeleteRegKey(HKEY_CURRENT_USER, 
+        _T("Software\\Microsoft\\Internet Explorer\\LowRegistry\\DOMStorage"),
+        false);
+    DeleteRegKey(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Internet Explorer\\DOMStorage"),
+        false);
+    DeleteDirectory(cookies_dir_, false);
+    DeleteDirectory(history_dir_, false);
+    DeleteDirectory(dom_storage_dir_, false);
+    DeleteDirectory(temp_files_dir_, false);
+    DeleteDirectory(temp_dir_, false);
+    DeleteDirectory(silverlight_dir_, false);
+    DeleteDirectory(recovery_dir_, false);
+    DeleteDirectory(flash_dir_, false);
+    DeleteDirectory(windows_dir_ + _T("\\temp"), false);
+    ClearWinInetCache();
+    ClearWebCache();
+  }
 
   // delete any .tmp files in our directory or the root directory of the drive.
   // Not sure where they are coming from but they collect over time.
