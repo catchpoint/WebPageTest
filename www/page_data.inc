@@ -124,6 +124,25 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                 $ret['visualCompleteCustom'] = $progress['visualComplete'];
             }
         }
+        // clean up any insane values (from negative numbes as unsigned most likely)
+        $times = array('loadTime',
+                       'TTFB',
+                       'render',
+                       'fullyLoaded',
+                       'docTime',
+                       'domTime',
+                       'aft',
+                       'titleTime',
+                       'loadEventStart',
+                       'loadEventEnd',
+                       'domContentLoadedEventStart',
+                       'domContentLoadedEventEnd',
+                       'lastVisualChange',
+                       'server_rtt');
+        foreach ($times as $key) {
+          if ($ret[$key] > 3600000 || $ret[$key] < 0)
+            $ret[$key] = 0;
+        }
     }
     
     return $ret;
@@ -502,10 +521,13 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
         if (is_array($event) &&
             array_key_exists('name', $event) &&
             array_key_exists('startTime', $event)) {
-          if ($event['startTime'] > $lastEvent)
-            $lastEvent = $event['startTime'];
           $name = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $event['name']);
-          $pageData["userTime.$name"] = intval($event['startTime'] + 0.5);
+          $time = intval($event['startTime'] + 0.5);
+          if ($time > 0 && $time < 3600000) {
+            if ($event['startTime'] > $lastEvent)
+              $lastEvent = $event['startTime'];
+            $pageData["userTime.$name"] = $time;
+          }
         }
       }
       $pageData["userTime"] = intval($lastEvent + 0.5);
