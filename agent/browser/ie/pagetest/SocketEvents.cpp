@@ -351,6 +351,7 @@ void CSocketEvents::SocketRecv(SOCKET s, DWORD len, LPBYTE buff)
 					{
 						r->linkedRequest->Done();
 						r->linkedRequest->in = r->in;
+						lastActivity = now;
 					}
 
 					// update the end time (this can be done multiple times)
