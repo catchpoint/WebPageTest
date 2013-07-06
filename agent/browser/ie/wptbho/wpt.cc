@@ -5,7 +5,7 @@
 extern HINSTANCE dll_hinstance;
 Wpt* global_wpt = NULL;
 
-const DWORD TASK_INTERVAL = 1000;
+const DWORD TASK_INTERVAL = 500;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * HOOK_DLL = _T("wpthook.dll");
 
@@ -57,7 +57,8 @@ Wpt::Wpt(void):
   _active(false)
   ,_task_timer(0)
   ,_hook_dll(NULL)
-  ,_message_window(NULL) {
+  ,_message_window(NULL)
+  ,_navigating(false) {
 }
 
 
@@ -116,6 +117,7 @@ bool Wpt::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
 
   switch (message){
     case WM_TIMER:
+        CheckBrowserState();
         CheckForTask();
         break;
     default:
@@ -185,6 +187,7 @@ bool Wpt::InstallHook() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnLoad() {
   if (_active) {
+    AtlTrace(_T("[wptbho] - Wpt::OnLoad()"));
     int fixed_viewport = 0;
     if (_web_browser) {
       CComPtr<IDispatch> dispatch;
@@ -201,14 +204,31 @@ void Wpt::OnLoad() {
     options.Format(_T("fixedViewport=%d"), fixed_viewport);
     _wpt_interface.OnLoad(options);
     _active = false;
+    _navigating = false;
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::OnNavigate() {
-  if (_active)
+  if (_active) {
+    AtlTrace(_T("[wptbho] - Wpt::OnNavigate()"));
+    _navigating = true;
     _wpt_interface.OnNavigate();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Wpt::OnNavigateError(DWORD error) {
+  if (_active) {
+    AtlTrace(_T("[wptbho] - Wpt::OnNavigateError(%d)"), error);
+    CString options;
+    options.Format(_T("error=%d"), error);
+    _wpt_interface.OnNavigateError(options);
+    _active = false;
+    _navigating = false;
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -1074,5 +1094,18 @@ void Wpt::CollectStats() {
         _wpt_interface.ReportNavigationTiming(nav_timings);
       }
     }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Periodically check the browser state in case it changes to ready but
+  the onload event never fired.
+-----------------------------------------------------------------------------*/
+void Wpt::CheckBrowserState() {
+  if (_navigating && _web_browser) {
+    READYSTATE ready_state = READYSTATE_COMPLETE;
+    if (SUCCEEDED(_web_browser->get_ReadyState(&ready_state)) &&
+        ready_state == READYSTATE_COMPLETE)
+      OnLoad();
   }
 }

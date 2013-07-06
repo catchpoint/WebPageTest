@@ -16,6 +16,7 @@ public:
   // browser events
   void  OnLoad();
   void  OnNavigate();
+  void  OnNavigateError(DWORD error);
   void  OnTitle(CString title);
   void  OnStatus(CString status);
 
@@ -27,6 +28,7 @@ private:
   WptInterface  _wpt_interface;
   HMODULE       _hook_dll;
   HWND          _message_window;
+  bool          _navigating;
 
   typedef enum{
     equal = 0,
@@ -58,4 +60,5 @@ private:
   // support routines
   DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
   void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
+  void  CheckBrowserState();
 };

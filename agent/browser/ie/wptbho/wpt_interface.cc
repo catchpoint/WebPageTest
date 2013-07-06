@@ -5,6 +5,8 @@
 const TCHAR * TASK_REQUEST = _T("http://127.0.0.1:8888/task");
 const TCHAR * EVENT_ON_NAVIGATE = _T("http://127.0.0.1:8888/event/navigate");
 const TCHAR * EVENT_ON_LOAD = _T("http://127.0.0.1:8888/event/load");
+const TCHAR * EVENT_ON_NAVIGATE_ERROR =
+    _T("http://127.0.0.1:8888/event/navigate_error");
 const TCHAR * EVENT_ON_TITLE = _T("http://127.0.0.1:8888/event/title?title=");
 const TCHAR * EVENT_ON_STATUS = 
     _T("http://127.0.0.1:8888/event/status?status=");
@@ -51,6 +53,15 @@ void WptInterface::OnLoad(CString options) {
 -----------------------------------------------------------------------------*/
 void WptInterface::OnNavigate() {
   HttpPost(EVENT_ON_NAVIGATE);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptInterface::OnNavigateError(CString options) {
+  CString url = EVENT_ON_NAVIGATE_ERROR;
+  if (options.GetLength())
+    url += CString(_T("?")) + options;
+  HttpPost(url);
 }
 
 /*-----------------------------------------------------------------------------

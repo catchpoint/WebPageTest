@@ -82,7 +82,7 @@ STDMETHODIMP_(void) WptBHO::OnNavigateError(IDispatch *pDisp, VARIANT *vUrl,
     CString buff;
     buff.Format(_T("[WptBHO] - NavigateError (%d): "), code);
     AtlTrace(buff + url);
-    _wpt.OnLoad();
+    _wpt.OnNavigateError(code);
   }
 }
 

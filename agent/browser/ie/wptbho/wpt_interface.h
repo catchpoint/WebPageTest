@@ -11,6 +11,7 @@ public:
   bool  GetTask(WptTask& task);
   void  OnLoad(CString options);
   void  OnNavigate();
+  void  OnNavigateError(CString options);
   void  OnTitle(CString title);
   void  OnStatus(CString status);
   void  ReportDOMElementCount(DWORD count);
