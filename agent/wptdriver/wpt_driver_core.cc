@@ -246,7 +246,10 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     if (test._tcpdump)
       _winpcap.StartCapture( test._file_base + _T(".cap") );
 
+    SetCursorPos(0,0);
+    ShowCursor(FALSE);
     ret = browser.RunAndWait(critical_error);
+    ShowCursor(TRUE);
 
     if (test._tcpdump)
       _winpcap.StopCapture();
