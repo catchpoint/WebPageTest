@@ -687,10 +687,12 @@ void WebBrowser::ConfigureIESettings() {
 			DWORD val = 0;
 			
 			// don't warn about posting data
-			RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val,
+                    sizeof(val));
 
 			// don't warn about mixed content
-			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val,
+                    sizeof(val));
 
 			RegCloseKey(hKey);
 		}

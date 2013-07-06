@@ -65,6 +65,17 @@ SECURITY_STATUS SEC_ENTRY DecryptMessage_Hook(PCtxtHandle phContext,
   return ret;
 }
 
+BOOL __stdcall CertVerifyCertificateChainPolicy_Hook(
+    LPCSTR pszPolicyOID, PCCERT_CHAIN_CONTEXT pChainContext,
+    PCERT_CHAIN_POLICY_PARA pPolicyPara,
+    PCERT_CHAIN_POLICY_STATUS pPolicyStatus) {
+  BOOL ret = FALSE;
+  if (g_hook)
+    ret = g_hook->CertVerifyCertificateChainPolicy(pszPolicyOID, pChainContext,
+                                                   pPolicyPara, pPolicyStatus);
+  return ret;
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state):
@@ -74,7 +85,8 @@ SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state):
   ,InitializeSecurityContextW_(NULL)
   ,InitializeSecurityContextA_(NULL)
   ,DecryptMessage_(NULL)
-  ,EncryptMessage_(NULL) {
+  ,EncryptMessage_(NULL)
+  ,CertVerifyCertificateChainPolicy_(NULL) {
 }
 
 
@@ -108,6 +120,9 @@ void SchannelHook::Init() {
       "secur32.dll", "DecryptMessage", DecryptMessage_Hook);
   EncryptMessage_ = _hook->createHookByName(
       "secur32.dll", "EncryptMessage", EncryptMessage_Hook);
+  CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
+      "crypt32.dll", "CertVerifyCertificateChainPolicy",
+      CertVerifyCertificateChainPolicy_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -215,5 +230,17 @@ SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext,
       }
     }
   }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL SchannelHook::CertVerifyCertificateChainPolicy(
+  LPCSTR pszPolicyOID, PCCERT_CHAIN_CONTEXT pChainContext,
+  PCERT_CHAIN_POLICY_PARA pPolicyPara,
+  PCERT_CHAIN_POLICY_STATUS pPolicyStatus) {
+  BOOL ret = TRUE;
+  if (pPolicyStatus)
+    pPolicyStatus->dwError = 0;
   return ret;
 }

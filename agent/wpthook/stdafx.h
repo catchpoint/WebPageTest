@@ -52,6 +52,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Ws2tcpip.h>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT  0x0501
+#include <Wincrypt.h>
 
 #include <shlobj.h>
 #include <atlstr.h>

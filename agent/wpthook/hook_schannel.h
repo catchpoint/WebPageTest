@@ -6,6 +6,11 @@
 class TestState;
 class TrackSockets;
 
+typedef BOOL (__stdcall * PFN_CERTVERIFYCERTIFICATECHAINPOLICY)(
+    LPCSTR pszPolicyOID, PCCERT_CHAIN_CONTEXT pChainContext,
+    PCERT_CHAIN_POLICY_PARA pPolicyPara,
+    PCERT_CHAIN_POLICY_STATUS pPolicyStatus);
+
 class SchannelHook
 {
 public:
@@ -33,6 +38,10 @@ public:
   SECURITY_STATUS DecryptMessage(PCtxtHandle phContext, 
       PSecBufferDesc pMessage, unsigned long MessageSeqNo,
       unsigned long * pfQOP);
+  BOOL CertVerifyCertificateChainPolicy(
+    LPCSTR pszPolicyOID, PCCERT_CHAIN_CONTEXT pChainContext,
+    PCERT_CHAIN_POLICY_PARA pPolicyPara,
+    PCERT_CHAIN_POLICY_STATUS pPolicyStatus);
 
 private:
   TestState& _test_state;
@@ -45,5 +54,6 @@ private:
   DELETE_SECURITY_CONTEXT_FN  DeleteSecurityContext_;
   DECRYPT_MESSAGE_FN  DecryptMessage_;
   ENCRYPT_MESSAGE_FN  EncryptMessage_;
+  PFN_CERTVERIFYCERTIFICATECHAINPOLICY  CertVerifyCertificateChainPolicy_;
 };
 
