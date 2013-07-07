@@ -359,7 +359,7 @@ $page_description = "Website performance test result$testLabel.";
                 ?>
             </div>
             <script type="text/javascript">
-              markUserTime('Result Data Table');
+              markUserTime('aft.Result Data Table');
             </script>
             <?php } ?>
             <div id="tables" style="text-align:left;">
@@ -411,8 +411,8 @@ $page_description = "Website performance test result$testLabel.";
                         $onloadWaterfall = '';
                         $onloadScreenShot = '';
                         if (!$first_displayed) {
-                          $onloadWaterfall = " onload=\"markUserTime('First Waterfall')\"";
-                          $onloadScreenShot = " onload=\"markUserTime('First Screen Shot')\"";
+                          $onloadWaterfall = " onload=\"markUserTime('aft.First Waterfall')\"";
+                          $onloadScreenShot = " onload=\"markUserTime('aft.First Screen Shot')\"";
                         }
                         $first_displayed = true;
                         echo '<td align="left" valign="middle">First View';

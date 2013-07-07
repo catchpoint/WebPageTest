@@ -29,7 +29,41 @@
 }());
 
 markUserTime = (function(l) {
-  window.performance.mark(l);
-  if (console && console.timeStamp)
-    console.timeStamp(l);
+  var raf = window.requestAnimationFrame ||
+    (function(callback){setTimeout(callback, 0);});
+  raf(function(){
+    window.performance.mark(l);
+    if (console && console.timeStamp)
+      console.timeStamp(l);
+  });
 });
+
+(function() {
+var wtt = function(g, n, t) {
+  if (window._trackTiming)
+    _trackTiming(g, n, t);
+};
+utOnLoad = function() {
+  var m = window.performance.getEntriesByType("mark");
+  var lm={};
+  for (i = 0; i < m.length; i++) {
+    g = 'user';
+    n = m[i].name;
+    p = n.match(/([^\.]+)\.([^\.]*)/);
+    if (p && p.length > 2) {
+      g = p[1];
+      n = p[2];
+    }
+    if (lm[g] == undefined || m[i].startTime > lm[g])
+      lm[g] = m[i].startTime;
+    wtt(g, n, m[i].startTime)
+  }
+  for (g in lm) {
+    wtt('UserTimings', g, lm[g]);
+  }
+};
+if (window.addEventListener)
+    window.addEventListener('load', utOnLoad, false);   
+else if (window.attachEvent)
+    window.attachEvent('onload', utOnLoad);  
+})();

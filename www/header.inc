@@ -382,5 +382,5 @@ function GetGrades(&$pageData, &$test, $id, $run)
 }
 ?>
 <script type="text/javascript">
-  markUserTime('Site Header');
+  markUserTime('aft.Site Header');
 </script>

@@ -266,7 +266,7 @@ $page_description = "Website performance test details$testLabel";
                 $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
                 ?>
                 <script type="text/javascript">
-                  markUserTime('Detail Table');
+                  markUserTime('aft.Detail Table');
                 </script>
                 
                 <div style="text-align:center;">
