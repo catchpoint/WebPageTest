@@ -40,8 +40,8 @@ markUserTime = (function(l) {
 
 (function() {
 var wtt = function(g, n, t) {
-  if (window._trackTiming)
-    _trackTiming(g, n, t);
+  if (window._gaq)
+    _gaq.push(['_trackTiming', g, n, t]);
 };
 utOnLoad = function() {
   var m = window.performance.getEntriesByType("mark");
