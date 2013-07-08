@@ -256,6 +256,8 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _exe_directory.Empty();
   _options.Empty();
 
+  AtlTrace(_T("Loading settings for %s"), browser);
+
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
   _wpt_directory = buff;

@@ -329,6 +329,8 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       LeaveCriticalSection(&cs);
       ResetIpfw();
       RemoveGlobalHook();
+    } else {
+      AtlTrace(_T("Browser exe not defined"));
     }
   }
 
@@ -392,6 +394,11 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
   }
   else
     ret = true;
+
+  if (!ret) {
+    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
+  }
+
   return ret;
 }
 
