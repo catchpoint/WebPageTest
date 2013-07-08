@@ -904,7 +904,7 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
     POSITION pos = headersAdd.GetHeadPosition();
     while(pos)
     {
-      CAddHeader header = headersAdd.GetNext(pos);
+      CFilteredHeader header = headersAdd.GetNext(pos);
       CString h = header.header;
       if( h.GetLength() && RegexMatch(r->host, header.filter) )
       {
@@ -917,8 +917,9 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
     pos = headersSet.GetHeadPosition();
     while(pos)
     {
-      CString h = headersSet.GetNext(pos);
-      if( h.GetLength() )
+      CFilteredHeader header = headersSet.GetNext(pos);
+      CString h = header.header;
+      if( h.GetLength() && RegexMatch(r->host, header.filter) )
       {
         h = h + _T("\r\n");
         HttpAddRequestHeaders( hRequest, h, h.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE );

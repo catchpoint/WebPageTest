@@ -788,11 +788,13 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     pos = _set_headers.GetHeadPosition();
     while (pos) {
       HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                      new_header._value;
-      if (!new_header._tag.CompareNoCase("Host")) {
-        header.Empty();
-        new_headers.TrimLeft();
+      if (RegexMatch(value, new_header._filter)) {
+        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                        new_header._value;
+        if (!new_header._tag.CompareNoCase("Host")) {
+          header.Empty();
+          new_headers.TrimLeft();
+        }
       }
     }
     // Override the Host header for specified hosts

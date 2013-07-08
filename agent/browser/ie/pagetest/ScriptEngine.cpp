@@ -677,12 +677,13 @@ void CScriptEngine::ContinueScript(bool reset)
 			  }
 			  else if( !item.command.CompareNoCase(_T("setHeader")) )
 			  {
-          headersSet.AddTail(item.target.Trim());
+          CFilteredHeader header(item.target.Trim(), item.value.Trim());
+          headersSet.AddTail(header);
 				  err = false;
 			  }
 			  else if( !item.command.CompareNoCase(_T("addHeader")) )
 			  {
-          CAddHeader header(item.target.Trim(), item.value.Trim());
+          CFilteredHeader header(item.target.Trim(), item.value.Trim());
           headersAdd.AddTail(header);
 				  err = false;
 			  }
