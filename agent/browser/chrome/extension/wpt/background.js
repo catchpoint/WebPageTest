@@ -47,7 +47,7 @@ goog.provide('wpt.main');
  *
  * @const
  */
-var STARTUP_DELAY = 5000;
+var STARTUP_DELAY = 1000;
 
 /** @const */
 var TASK_INTERVAL = 1000;
@@ -75,8 +75,9 @@ var UNWANTED_EXTENSIONS = [
 // regex to extract a host name from a URL
 var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
 
-var STARTUP_URL = 'http://127.0.0.1:8888/blank.html';
+var STARTUP_URL = 'http://127.0.0.1:8888/blank2.html';
 
+var g_starting = false;
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
@@ -132,18 +133,32 @@ wpt.main.onStartup = function() {
 
 wpt.main.startMeasurements = function() {
   wpt.LOG.info('Enter wptStartMeasurements');
-
-  g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
-  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
-    if (RUN_FAKE_COMMAND_SEQUENCE) {
-      // Run the tasks in FAKE_TASKS.
-      window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
-    } else {
-      // Fetch tasks from wptdriver.exe.
-      window.setInterval(wptGetTask, TASK_INTERVAL);
-    }
-  });
+  if (RUN_FAKE_COMMAND_SEQUENCE) {
+    // Run the tasks in FAKE_TASKS.
+    window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
+  } else {
+    // Fetch tasks from wptdriver.exe.
+    window.setInterval(wptGetTask, TASK_INTERVAL);
+  }
 }
+
+// Install an onLoad handler for all tabs.
+chrome.tabs.onUpdated.addListener(function(tabId, props) {
+  if (!g_started && g_starting && props.status == 'complete') {
+    // handle the startup sequencing (attach the debugger
+    // after the browser loads and then start testing).
+    g_started = true;
+    wpt.main.onStartup();
+  }else if (g_active && tabId == g_tabid) {
+    if (props.status == 'loading') {
+      g_start = new Date().getTime();
+      wptSendEvent('navigate', '');
+    } else if (props.status == 'complete') {
+      wptSendEvent('complete', '');
+    }
+  }
+});
+
 
 /**
  * Build a fake command record.
@@ -251,23 +266,6 @@ function wptSendEvent(event_name, query_string, data) {
     wpt.LOG.warning('Error sending page load XHR: ' + err);
   }
 }
-
-// Install an onLoad handler for all tabs.
-chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (!g_started && props.status == 'complete') {
-    // handle the startup sequencing (attach the debugger
-    // after the browser loads and then start testing).
-    g_started = true;
-    wpt.main.onStartup();
-  } else if (g_active && tabId == g_tabid) {
-    if (props.status == 'loading') {
-      g_start = new Date().getTime();
-      wptSendEvent('navigate', '');
-    } else if (props.status == 'complete') {
-      wptSendEvent('complete', '');
-    }
-  }
-});
 
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
@@ -499,7 +497,10 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   var tab = focusedTabs[0];
   g_tabid = tab.id;
   wpt.LOG.info('Got tab id: ' + tab.id);
-  chrome.tabs.update(g_tabid, {'url': STARTUP_URL});
+  g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
+  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
+    setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
+  });
 });
 
 })());  // namespace

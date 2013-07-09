@@ -14001,17 +14001,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.devToolsData = '';
     g_instance.devToolsTimer = undefined;
     var version = '1.0';
-    if (g_instance.chromeApi_['debugger']) {
+    if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
-    } else if (g_instance.chromeApi_.experimental['debugger']) {
-      // deal with the different function signatures for different chrome versions
-      try {
-        g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
-      } catch (err) {
-        version = '0.1';
-        g_instance.chromeApi_.experimental.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
-      }
-    }
   } catch (err) {
     wpt.LOG.warning('Error initializing debugger interfaces: ' + err);
   }
@@ -14124,48 +14115,15 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
   g_instance.chromeApi_.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
 
   // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  g_instance.startedCallback();
-};
-
-/**
- * Attached using the old experimental interface
- */
-wpt.chromeDebugger.OnAttachOld = function() {
-  wpt.LOG.info('attached to debugger old experimental extension interface');
-  g_instance.connected = true;
-  g_instance.requests = {};
-
-  // attach the event listener
-  g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-
-  // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Network.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Console.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Page.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
-  g_instance.startedCallback();
-};
-
-/**
- * Attached using the new experimental interface
- */
-wpt.chromeDebugger.OnAttachExperimental = function() {
-  wpt.LOG.info('attached to debugger experimental extension interface');
-  g_instance.requests = {};
-
-  // attach the event listener
-  g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-
-  // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  g_instance.startedCallback();
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable', null, function(){
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable', null, function(){
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable', null, function(){
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+          g_instance.startedCallback();
+        });
+      });
+    });
+  });
 };
 
 /**
@@ -14371,7 +14329,7 @@ goog.provide('wpt.main');
  *
  * @const
  */
-var STARTUP_DELAY = 5000;
+var STARTUP_DELAY = 1000;
 
 /** @const */
 var TASK_INTERVAL = 1000;
@@ -14399,8 +14357,9 @@ var UNWANTED_EXTENSIONS = [
 // regex to extract a host name from a URL
 var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
 
-var STARTUP_URL = 'http://127.0.0.1:8888/blank.html';
+var STARTUP_URL = 'http://127.0.0.1:8888/blank2.html';
 
+var g_starting = false;
 var g_active = false;
 var g_start = 0;
 var g_requesting_task = false;
@@ -14456,18 +14415,32 @@ wpt.main.onStartup = function() {
 
 wpt.main.startMeasurements = function() {
   wpt.LOG.info('Enter wptStartMeasurements');
-
-  g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
-  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
-    if (RUN_FAKE_COMMAND_SEQUENCE) {
-      // Run the tasks in FAKE_TASKS.
-      window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
-    } else {
-      // Fetch tasks from wptdriver.exe.
-      window.setInterval(wptGetTask, TASK_INTERVAL);
-    }
-  });
+  if (RUN_FAKE_COMMAND_SEQUENCE) {
+    // Run the tasks in FAKE_TASKS.
+    window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
+  } else {
+    // Fetch tasks from wptdriver.exe.
+    window.setInterval(wptGetTask, TASK_INTERVAL);
+  }
 }
+
+// Install an onLoad handler for all tabs.
+chrome.tabs.onUpdated.addListener(function(tabId, props) {
+  if (!g_started && g_starting && props.status == 'complete') {
+    // handle the startup sequencing (attach the debugger
+    // after the browser loads and then start testing).
+    g_started = true;
+    wpt.main.onStartup();
+  }else if (g_active && tabId == g_tabid) {
+    if (props.status == 'loading') {
+      g_start = new Date().getTime();
+      wptSendEvent('navigate', '');
+    } else if (props.status == 'complete') {
+      wptSendEvent('complete', '');
+    }
+  }
+});
+
 
 /**
  * Build a fake command record.
@@ -14575,23 +14548,6 @@ function wptSendEvent(event_name, query_string, data) {
     wpt.LOG.warning('Error sending page load XHR: ' + err);
   }
 }
-
-// Install an onLoad handler for all tabs.
-chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (!g_started && props.status == 'complete') {
-    // handle the startup sequencing (attach the debugger
-    // after the browser loads and then start testing).
-    g_started = true;
-    wpt.main.onStartup();
-  } else if (g_active && tabId == g_tabid) {
-    if (props.status == 'loading') {
-      g_start = new Date().getTime();
-      wptSendEvent('navigate', '');
-    } else if (props.status == 'complete') {
-      wptSendEvent('complete', '');
-    }
-  }
-});
 
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
@@ -14823,7 +14779,10 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   var tab = focusedTabs[0];
   g_tabid = tab.id;
   wpt.LOG.info('Got tab id: ' + tab.id);
-  chrome.tabs.update(g_tabid, {'url': STARTUP_URL});
+  g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
+  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
+    setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
+  });
 });
 
 })());  // namespace

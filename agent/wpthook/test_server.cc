@@ -240,7 +240,7 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       test_state_.PaintEvent(0, 0, 0, 0);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/blank.html") == 0) {
+    } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
       test_state_.UpdateBrowserWindow();
       mg_printf(conn, BLANK_HTML);
     } else {

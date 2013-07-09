@@ -58,17 +58,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.devToolsData = '';
     g_instance.devToolsTimer = undefined;
     var version = '1.0';
-    if (g_instance.chromeApi_['debugger']) {
+    if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
-    } else if (g_instance.chromeApi_.experimental['debugger']) {
-      // deal with the different function signatures for different chrome versions
-      try {
-        g_instance.chromeApi_.experimental.debugger.attach(g_instance.tabId_, wpt.chromeDebugger.OnAttachOld);
-      } catch (err) {
-        version = '0.1';
-        g_instance.chromeApi_.experimental.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachExperimental);
-      }
-    }
   } catch (err) {
     wpt.LOG.warning('Error initializing debugger interfaces: ' + err);
   }
@@ -181,48 +172,15 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
   g_instance.chromeApi_.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
 
   // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  g_instance.startedCallback();
-};
-
-/**
- * Attached using the old experimental interface
- */
-wpt.chromeDebugger.OnAttachOld = function() {
-  wpt.LOG.info('attached to debugger old experimental extension interface');
-  g_instance.connected = true;
-  g_instance.requests = {};
-
-  // attach the event listener
-  g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-
-  // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Network.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Console.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Page.enable');
-  g_instance.chromeApi_.experimental.debugger.sendRequest(g_instance.tabId_, 'Timeline.start');
-  g_instance.startedCallback();
-};
-
-/**
- * Attached using the new experimental interface
- */
-wpt.chromeDebugger.OnAttachExperimental = function() {
-  wpt.LOG.info('attached to debugger experimental extension interface');
-  g_instance.requests = {};
-
-  // attach the event listener
-  g_instance.chromeApi_.experimental.debugger.onEvent.addListener(wpt.chromeDebugger.OnMessage);
-
-  // start the different interfaces we are interested in monitoring
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable');
-  g_instance.chromeApi_.experimental.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start');
-  g_instance.startedCallback();
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable', null, function(){
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable', null, function(){
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable', null, function(){
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+          g_instance.startedCallback();
+        });
+      });
+    });
+  });
 };
 
 /**
