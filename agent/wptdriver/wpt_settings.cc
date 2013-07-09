@@ -28,15 +28,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "wpt_settings.h"
+#include "wpt_status.h"
 #include <WinInet.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptSettings::WptSettings(void):
+WptSettings::WptSettings(WptStatus &status):
   _timeout(DEFAULT_TEST_TIMEOUT)
   ,_startup_delay(DEFAULT_STARTUP_DELAY)
   ,_polling_delay(DEFAULT_POLLING_DELAY)
-  ,_debug(0) {
+  ,_debug(0)
+  ,_status(status)
+  ,_software_update(status) {
 }
 
 /*-----------------------------------------------------------------------------

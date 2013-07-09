@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "software_update.h"
+#include "wpt_status.h"
 #include <Shellapi.h>
 
 static const DWORD SOFTWARE_UPDATE_INTERVAL_MINUTES = 60;  // hourly
@@ -9,7 +10,8 @@ static const TCHAR * SOFTWARE_REG_ROOT =
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-SoftwareUpdate::SoftwareUpdate(void) {
+SoftwareUpdate::SoftwareUpdate(WptStatus &status):
+  _status(status) {
   // figure out what our working diriectory is
   TCHAR path[MAX_PATH];
   if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
@@ -207,6 +209,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
         if (file_pos > 0) {
           CString file_path = _directory + CString(_T("\\")) 
                                 + file_url.Mid(file_pos + 1);
+          _status.Set(_T("Downloading installer for %s"), (LPCTSTR)app);
           WptTrace(loglevel::kTrace,
                     _T("[wptdriver] Downloading - %s\n"), (LPCTSTR)file_url);
           if (HttpSaveFile(file_url, file_path)) {
@@ -239,6 +242,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
               lstrcpy(directory, _directory);
               shell_info.lpDirectory = directory;
               shell_info.nShow = SW_SHOWNORMAL;
+              _status.Set(_T("Installing %s"), (LPCTSTR)app);
               WptTrace(loglevel::kTrace,
                  _T("[wptdriver] Running '%s' with parameters '%s' in '%s'\n"),
                  exe, parameters, directory);
@@ -249,10 +253,13 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                 }
                 CloseHandle(shell_info.hProcess);
               } else {
+                _status.Set(_T("Error installing %s"), (LPCTSTR)app);
                 WptTrace(loglevel::kTrace,
                           _T("[wptdriver] Error Running Installer\n"));
               }
             } else {
+              _status.Set(_T("Error downloading installer for %s"),
+                          (LPCTSTR)app);
               WptTrace(loglevel::kTrace,
                         _T("[wptdriver] File download corrupt\n"));
             }

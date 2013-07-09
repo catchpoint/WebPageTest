@@ -45,6 +45,7 @@ const DWORD UPLOAD_RETRY_DELAY = 10;
 const DWORD SECONDS_TO_MS = 1000;
 
 class WptTest;
+class WptStatus;
 
 class BrowserSettings {
 public:
@@ -85,7 +86,7 @@ public:
 // dynamic settings loaded from file
 class WptSettings {
 public:
-  WptSettings(void);
+  WptSettings(WptStatus &status);
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
@@ -109,4 +110,5 @@ public:
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;
+  WptStatus &_status;
 };

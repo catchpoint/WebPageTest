@@ -1,4 +1,7 @@
 #pragma once
+
+class WptStatus;
+
 class BrowserInfo {
 public:
   BrowserInfo(void){}
@@ -17,7 +20,7 @@ public:
 class SoftwareUpdate
 {
 public:
-  SoftwareUpdate(void);
+  SoftwareUpdate(WptStatus &status);
   ~SoftwareUpdate(void);
   void LoadSettings(CString settings_ini);
   bool UpdateSoftware(bool force = false);
@@ -29,6 +32,7 @@ protected:
   CString           _directory;
   LARGE_INTEGER     _last_update_check;
   LARGE_INTEGER     _perf_frequency_minutes;
+  WptStatus         &_status;
 
   bool UpdateBrowsers(void);
   bool InstallSoftware(CString browser, CString file_url, CString md5,

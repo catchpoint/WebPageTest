@@ -63,7 +63,8 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_work_thread(NULL)
   ,housekeeping_timer_(NULL)
   ,has_gpu_(false)
-  ,watchdog_started_(false) {
+  ,watchdog_started_(false)
+  ,_settings(status) {
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
   has_gpu_ = DetectGPU();
