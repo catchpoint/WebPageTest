@@ -382,6 +382,18 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <script type="text/javascript">
+        function expandRequest(targetNode) {
+            var div_to_expand = $('#' + targetNode.attr('data-target-id'));
+
+            if (div_to_expand.is(":visible")) {
+                div_to_expand.hide();
+                targetNode.html('+' + targetNode.html().substring(1));
+            } else {
+                div_to_expand.show();
+                targetNode.html('-' + targetNode.html().substring(1));
+            }
+        }
+
         $(document).ready(function() { $("#tableDetails").tablesorter({
             headers: { 3: { sorter:'currency' } ,
                        4: { sorter:'currency' } ,
@@ -394,17 +406,13 @@ $page_description = "Website performance test details$testLabel";
         }); } );
 
         $('.a_request').click(function () {
-            var element_clicked = $(this),
-                div_to_expand = $('#' + element_clicked.attr('data-target-id'));
-
-            if (div_to_expand.is(":visible")) {
-                div_to_expand.hide();
-                element_clicked.html('+' + element_clicked.html().substring(1));
-            } else {
-                div_to_expand.show();
-                element_clicked.html('-' + element_clicked.html().substring(1));
-            }
+            expandRequest($(this));
         });
+
+        $(document).ready(function() {
+            expandRequest($(window.location.hash));
+        });
+
 
         <?php
         include "waterfall.js";
