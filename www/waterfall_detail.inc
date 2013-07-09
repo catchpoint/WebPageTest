@@ -74,7 +74,7 @@ foreach($requests as $reqNum => $request)
 		else
 			echo '<td class="reqUrl ' . $highlight . '">-</td>';
 
-		if( $request['contentType'])
+		if( array_key_exists('contentType', $request) && strlen($request['contentType']))
 			echo '<td class="reqMime ' . $highlight . '">' . $request['contentType'] . '</td>';
 		else
 			echo '<td class="reqMime ' . $highlight . '">-</td>';
@@ -126,27 +126,27 @@ foreach($requests as $reqNum => $request)
 				echo '<td class="reqSSL ' . $highlight . '">-</td>';
 		}
 
-		if( $request['ttfb_ms'])
+		if( array_key_exists('ttfb_ms', $request) && $request['ttfb_ms'])
 			echo '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb_ms'] . ' ms</td>';
 		else
 			echo '<td class="reqTTFB ' . $highlight . '">-</td>';
 
-		if( $request['download_ms'])
+		if( array_key_exists('download_ms', $request) && $request['download_ms'])
 			echo '<td class="reqDownload ' . $highlight . '">' . $request['download_ms'] . ' ms</td>';
 		else
 			echo '<td class="reqDownload ' . $highlight . '">-</td>';
 
-		if( $request['bytesIn'])
+		if( array_key_exists('bytesIn', $request) && $request['bytesIn'])
 			echo '<td class="reqBytes ' . $highlight . '">' . number_format($request['bytesIn'] / 1024, 1) . ' KB</td>';
 		else
 			echo '<td class="reqBytes ' . $highlight . '">-</td>';
 
-		if( $request['responseCode'])
+		if( array_key_exists('responseCode', $request) && $request['responseCode'])
 			echo '<td class="reqResult ' . $highlight . '">' . $request['responseCode'] . '</td>';
 		else
 			echo '<td class="reqResult ' . $highlight . '">-</td>';
 
-		if( $request['ip_addr'])
+		if( array_key_exists('ip_addr', $request) && $request['ip_addr'])
 			echo '<td class="reqIP ' . $highlight . '">' . $request['ip_addr'] . '</td>';
 		else
 			echo '<td class="reqIP ' . $highlight . '">-</td>';

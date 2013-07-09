@@ -89,27 +89,35 @@ else
         }
         echo "<average>\n";
         echo "<firstView>\n";
-        foreach( $fv as $key => $val )
-            echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+        foreach( $fv as $key => $val ) {
+          $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+          echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+        }
         echo "</firstView>\n";
         if( isset($rv) )
         {
             echo "<repeatView>\n";
-            foreach( $rv as $key => $val )
-                echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+            foreach( $rv as $key => $val ) {
+              $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+              echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+            }
             echo "</repeatView>\n";
         }
         echo "</average>\n";
         echo "<standardDeviation>\n";
         echo "<firstView>\n";
-        foreach( $fv as $key => $val )
-            echo "<$key>" . PageDataStandardDeviation($pageData, $key, 0) . "</$key>\n";
+        foreach( $fv as $key => $val ) {
+          $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+          echo "<$key>" . PageDataStandardDeviation($pageData, $key, 0) . "</$key>\n";
+        }
         echo "</firstView>\n";
         if( isset($rv) )
         {
             echo "<repeatView>\n";
-            foreach( $rv as $key => $val )
-                echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+            foreach( $rv as $key => $val ) {
+              $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+              echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+            }
             echo "</repeatView>\n";
         }
         echo "</standardDeviation>\n";
@@ -121,8 +129,10 @@ else
             echo "<median>\n";
             echo "<firstView>\n";
             echo "<run>$fvMedian</run>\n";
-            foreach( $pageData[$fvMedian][0] as $key => $val )
-                echo "<$key>" . xml_entities($val) . "</$key>\n";
+            foreach( $pageData[$fvMedian][0] as $key => $val ) {
+              $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+              echo "<$key>" . xml_entities($val) . "</$key>\n";
+            }
             if( $pagespeed )
             {
                 $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
@@ -147,8 +157,10 @@ else
                 {
                     echo "<repeatView>\n";
                     echo "<run>$rvMedian</run>\n";
-                    foreach( $pageData[$rvMedian][1] as $key => $val )
-                        echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    foreach( $pageData[$rvMedian][1] as $key => $val ) {
+                      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+                      echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    }
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
@@ -183,8 +195,10 @@ else
                 {
                     echo "<firstView>\n";
                     echo "<results>\n";
-                    foreach( $pageData[$i][0] as $key => $val )
-                        echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    foreach( $pageData[$i][0] as $key => $val ) {
+                      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+                      echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    }
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
@@ -279,8 +293,10 @@ else
                 {
                     echo "<repeatView>\n";
                     echo "<results>\n";
-                    foreach( $pageData[$i][1] as $key => $val )
-                        echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    foreach( $pageData[$i][1] as $key => $val ) {
+                      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+                      echo "<$key>" . xml_entities($val) . "</$key>\n";
+                    }
                     if( $pagespeed )
                     {
                         $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");

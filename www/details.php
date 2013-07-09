@@ -116,7 +116,7 @@ $page_description = "Website performance test details$testLabel";
                     </div>
                     <?php
                         echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
-                        if ( is_dir('./google') && $settings['enable_google_csi'] )
+                        if ( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
                             echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
@@ -222,6 +222,20 @@ $page_description = "Website performance test details$testLabel";
                     </tr>
                 </table><br>
                 <?php
+                $userTimings = array();
+                foreach($data as $metric => $value)
+                  if (substr($metric, 0, 9) == 'userTime.')
+                    $userTimings[substr($metric, 9)] = $value;
+                $timingCount = count($userTimings);
+                if ($timingCount) {
+                  echo '<table id="tableUserTimings" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0"><tr>';
+                  foreach($userTimings as $label => $value)
+                    echo '<th>' . htmlspecialchars($label) . '</th>';
+                  echo '</tr><tr>';
+                  foreach($userTimings as $label => $value)
+                    echo '<td>' . number_format($value / 1000, 3) . 's</td>';
+                  echo '</tr></table><br>';
+                }
                 if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
                 {
                     require_once('google/google_lib.inc');

@@ -521,7 +521,7 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
         if (is_array($event) &&
             array_key_exists('name', $event) &&
             array_key_exists('startTime', $event)) {
-          $name = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $event['name']);
+          $name = preg_replace('/[^a-zA-Z0-9\.\-_\(\) ]/', '_', $event['name']);
           $time = intval($event['startTime'] + 0.5);
           if ($time > 0 && $time < 3600000) {
             if ($event['startTime'] > $lastEvent)
