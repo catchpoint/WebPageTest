@@ -222,20 +222,6 @@ $page_description = "Website performance test details$testLabel";
                     </tr>
                 </table><br>
                 <?php
-                $userTimings = array();
-                foreach($data as $metric => $value)
-                  if (substr($metric, 0, 9) == 'userTime.')
-                    $userTimings[substr($metric, 9)] = $value;
-                $timingCount = count($userTimings);
-                if ($timingCount) {
-                  echo '<table id="tableUserTimings" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0"><tr>';
-                  foreach($userTimings as $label => $value)
-                    echo '<th>' . htmlspecialchars($label) . '</th>';
-                  echo '</tr><tr>';
-                  foreach($userTimings as $label => $value)
-                    echo '<td>' . number_format($value / 1000, 3) . 's</td>';
-                  echo '</tr></table><br>';
-                }
                 if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
                 {
                     require_once('google/google_lib.inc');
@@ -264,21 +250,40 @@ $page_description = "Website performance test details$testLabel";
                     </table><br>
                 <?php
                 }
+                $userTimings = array();
+                foreach($data as $metric => $value)
+                  if (substr($metric, 0, 9) == 'userTime.')
+                    $userTimings[substr($metric, 9)] = $value;
+                $timingCount = count($userTimings);
+                $navTiming = false;
                 if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
                     (array_key_exists('domContentLoadedEventStart', $data) && $data['domContentLoadedEventStart'] > 0))
+                    $navTiming = true;
+                if ($timingCount || $navTiming)
                 {
-                    echo '<h2><a href="http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process" target="_blank">W3C Navigation Timing</a></h2>';
-                    echo '<table id="tableNavTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
-                    echo '<tr><th>domContentLoaded</th><th>loadEvent</th></tr>';
-                    echo '<tr><td>';
-                    echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
-                            number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
-                            number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)';
-                    echo '</td><td>';
-                    echo number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
-                            number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
-                            number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)';
-                    echo '</td></tr>';
+                    $borderClass = '';
+                    if ($timingCount)
+                      $borderClass = ' class="border"';
+                    echo '<table id="tableW3CTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
+                    echo '<tr>';
+                    if ($timingCount)
+                      foreach($userTimings as $label => $value)
+                        echo '<th>' . htmlspecialchars($label) . '</th>';
+                    if ($navTiming)
+                      echo "<th$borderClass><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
+                    echo '</tr><tr>';
+                    if ($timingCount)
+                      foreach($userTimings as $label => $value)
+                        echo '<td>' . number_format($value / 1000, 3) . 's</td>';
+                    if ($navTiming) {
+                      echo "<td$borderClass>" . number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
+                              number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
+                              number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)' . '</td>';
+                      echo '<td>' . number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
+                              number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
+                              number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)' . '</td>';
+                    }
+                    echo '</tr>';
                     echo '</table><br>';
                 }
                 $secure = false;
