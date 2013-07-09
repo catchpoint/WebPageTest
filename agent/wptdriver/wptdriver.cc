@@ -53,49 +53,68 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      int       nCmdShow) {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
+  int ret = 0;
 
-  // TODO: Place code here.
-  MSG msg;
-  HACCEL hAccelTable;
-
-  // Initialize global strings
-  LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-  MyRegisterClass(hInstance);
-
-  // Perform application initialization:
-  HWND hWnd = InitInstance (hInstance, nCmdShow);
-  if (!hWnd) {
-    return FALSE;
-  }
-
-  hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WPTDRIVER));
-
-  // initialize winsock
-  WORD wVersionRequested = MAKEWORD(2, 2);
-  WSADATA wsaData;
-  WSAStartup(wVersionRequested, &wsaData);
-
-  // start up the actual core code
-  ClipCursor(NULL);
-  SetCursorPos(0,0);
-  WptStatus status(hWnd);
-  global_status = &status;
-
-  WptDriverCore core(status);
-  core.Start();
-
-  // Main message loop:
-  while (GetMessage(&msg, NULL, 0, 0)) {
-    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+  // make sure to only allow one instance to be running from a given directory
+  bool ok = true;
+  TCHAR name[MAX_PATH];
+  lstrcpy(name, _T("wptdriver"));
+  if (GetModuleFileName(NULL, name, _countof(name))) {
+    for (int i = 0; i < MAX_PATH && name[i] != _T('\0'); i++) {
+      if (!_istalnum(name[i]))
+        name[i] = _T('_');
     }
   }
+  CreateMutex(NULL, TRUE, name);
+  if (GetLastError() == ERROR_ALREADY_EXISTS)
+    ok = false;
 
-  core.Stop();
-  global_status = NULL;
-  WSACleanup();
-  return (int) msg.wParam;
+  if (ok) {
+    // TODO: Place code here.
+    MSG msg;
+    HACCEL hAccelTable;
+
+    // Initialize global strings
+    LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    MyRegisterClass(hInstance);
+
+    // Perform application initialization:
+    HWND hWnd = InitInstance (hInstance, nCmdShow);
+    if (!hWnd) {
+      return FALSE;
+    }
+
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_WPTDRIVER));
+
+    // initialize winsock
+    WORD wVersionRequested = MAKEWORD(2, 2);
+    WSADATA wsaData;
+    WSAStartup(wVersionRequested, &wsaData);
+
+    // start up the actual core code
+    ClipCursor(NULL);
+    SetCursorPos(0,0);
+    WptStatus status(hWnd);
+    global_status = &status;
+
+    WptDriverCore core(status);
+    core.Start();
+
+    // Main message loop:
+    while (GetMessage(&msg, NULL, 0, 0)) {
+      if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+
+    core.Stop();
+    global_status = NULL;
+    WSACleanup();
+    ret = (int)msg.wParam;
+  }
+
+  return ret;
 }
 
 
