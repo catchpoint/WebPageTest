@@ -1,6 +1,6 @@
-<?php 
+<?php
 include 'common.inc';
-include 'object_detail.inc'; 
+include 'object_detail.inc';
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
@@ -19,75 +19,81 @@ $page_description = "Website performance test details$testLabel";
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
         div.bar {
-			height:12px; 
-			margin-top:auto; 
-			margin-bottom:auto;
-		}
-		
-		.left {text-align:left;}
-		.center {text-align:center;}
+            height:12px;
+            margin-top:auto;
+            margin-bottom:auto;
+        }
 
-		.indented1 {padding-left: 40pt;}
-		.indented2 {padding-left: 80pt;}
-		
+        .left {text-align:left;}
+        .center {text-align:center;}
+
+        .indented1 {padding-left: 40pt;}
+        .indented2 {padding-left: 80pt;}
+
         td {
-			white-space:nowrap; 
-			text-align:left; 
-			vertical-align:middle; 
-		}
-		
-        td.center {
-			text-align:center;
-		}
+            white-space:nowrap;
+            text-align:left;
+            vertical-align:middle;
+        }
 
-		table.details {
-		  margin-left:auto; margin-right:auto;
-		  background: whitesmoke;
-		  border-collapse: collapse;
-		}
-		table.details th, table.details td {
-		  border: 1px silver solid;
-		  padding: 0.2em;
-		  text-align: center;
-		  font-size: smaller;
-		}
-		table.details th {
-		  background: gainsboro;
-		}
-		table.details caption {
-		  margin-left: inherit;
-		  margin-right: inherit;
-		  background: whitesmoke;
-		}
-		table.details th.reqUrl, table.details td.reqUrl {
-		  text-align: left;
-		  width: 30em; 
-		  word-wrap: break-word;
-		}
-		table.details td.even {
-		  background: gainsboro;
-		}
-		table.details td.odd {
-		  background: whitesmoke;
-		}
-		table.details td.evenRender {
-		  background: #dfffdf;
-		}
-		table.details td.oddRender {
-		  background: #ecffec;
-		}
-		table.details td.evenDoc {
-		  background: #dfdfff;
-		}
-		table.details td.oddDoc {
-		  background: #ececff;
-		}
-		table.details td.warning {
-		  background: #ffff88;
-		}
-		table.details td.error {
-		  background: #ff8888;
-		}
+        td.center {
+            text-align:center;
+        }
+
+        table.details {
+          margin-left:auto; margin-right:auto;
+          background: whitesmoke;
+          border-collapse: collapse;
+        }
+        table.details th, table.details td {
+          border: 1px silver solid;
+          padding: 0.2em;
+          text-align: center;
+          font-size: smaller;
+        }
+        table.details th {
+          background: gainsboro;
+        }
+        table.details caption {
+          margin-left: inherit;
+          margin-right: inherit;
+          background: whitesmoke;
+        }
+        table.details th.reqUrl, table.details td.reqUrl {
+          text-align: left;
+          width: 30em;
+          word-wrap: break-word;
+        }
+        table.details td.even {
+          background: gainsboro;
+        }
+        table.details td.odd {
+          background: whitesmoke;
+        }
+        table.details td.evenRender {
+          background: #dfffdf;
+        }
+        table.details td.oddRender {
+          background: #ecffec;
+        }
+        table.details td.evenDoc {
+          background: #dfdfff;
+        }
+        table.details td.oddDoc {
+          background: #ececff;
+        }
+        table.details td.warning {
+          background: #ffff88;
+        }
+        table.details td.error {
+          background: #ff8888;
+        }
+        .header_details {
+            display: none;
+        }
+        .a_request {
+            cursor: pointer;
+        }
         <?php
         include "waterfall.css";
         ?>
@@ -109,9 +115,9 @@ $page_description = "Website performance test details$testLabel";
                         ?>
                     </div>
                     <?php
-	    		        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
-			            if ( is_dir('./google') && $settings['enable_google_csi'] )
-				            echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+                        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
+                        if ( is_dir('./google') && $settings['enable_google_csi'] )
+                            echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
@@ -123,7 +129,7 @@ $page_description = "Website performance test details$testLabel";
                     ?>
                 </div>
                 <div class="cleared"></div>
-		        <br>
+                <br>
                 <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                     <tr>
                         <?php
@@ -215,13 +221,13 @@ $page_description = "Website performance test details$testLabel";
                         ?>
                     </tr>
                 </table><br>
-		        <?php
-		        if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
-		        {
-			        require_once('google/google_lib.inc');
+                <?php
+                if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
+                {
+                    require_once('google/google_lib.inc');
                     $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
-		        ?>
-		            <h2>Csi Metrics</h2>
+                ?>
+                    <h2>Csi Metrics</h2>
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
@@ -241,8 +247,8 @@ $page_description = "Website performance test details$testLabel";
                                     }
                                     echo '</tr>';
                             ?>
-		            </table><br>
-                <?php 
+                    </table><br>
+                <?php
                 }
                 if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
                     (array_key_exists('domContentLoadedEventStart', $data) && $data['domContentLoadedEventStart'] > 0))
@@ -251,11 +257,11 @@ $page_description = "Website performance test details$testLabel";
                     echo '<table id="tableNavTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
                     echo '<tr><th>domContentLoaded</th><th>loadEvent</th></tr>';
                     echo '<tr><td>';
-                    echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' . 
+                    echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
                             number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
                             number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)';
                     echo '</td><td>';
-                    echo number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' . 
+                    echo number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
                             number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
                             number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)';
                     echo '</td></tr>';
@@ -268,7 +274,7 @@ $page_description = "Website performance test details$testLabel";
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');
                 </script>
-                
+
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
@@ -298,11 +304,11 @@ $page_description = "Website performance test details$testLabel";
                         <?php } ?>
                         <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
-                        <?php } ?>						
+                        <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                         <?php if(array_key_exists('userTime', $data) || (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'])) { ?>
                         <td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>
-                        <?php } ?> 
+                        <?php } ?>
                     </tr>
                 </table>
                 <br>
@@ -349,43 +355,65 @@ $page_description = "Website performance test details$testLabel";
                         <?php if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
                         <?php } ?>
-						<?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
+                        <?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
                         <?php } ?>
                         <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
-                        <?php } ?>						
+                        <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
                     </tr>
                 </table>
                 <br>
-                <img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="<?php 
+                <img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="<?php
                     $extenstion = 'php';
                     if( FRIENDLY_URLS )
                         $extenstion = 'png';
                     echo "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1";?>">
                 </div>
-		        <br><br> 
+                <br><br>
                 <?php include('./ads/details_middle.inc'); ?>
 
-		        <br>
-		        <?php include 'waterfall_detail.inc'; ?>
+                <br>
+                <?php include 'waterfall_detail.inc'; ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
 
         <script type="text/javascript">
-        $(document).ready(function() { $("#tableDetails").tablesorter({ 
-            headers: { 3: { sorter:'currency' } , 
+        function expandRequest(targetNode) {
+            var div_to_expand = $('#' + targetNode.attr('data-target-id'));
+
+            if (div_to_expand.is(":visible")) {
+                div_to_expand.hide();
+                targetNode.html('+' + targetNode.html().substring(1));
+            } else {
+                div_to_expand.show();
+                targetNode.html('-' + targetNode.html().substring(1));
+            }
+        }
+
+        $(document).ready(function() { $("#tableDetails").tablesorter({
+            headers: { 3: { sorter:'currency' } ,
                        4: { sorter:'currency' } ,
                        5: { sorter:'currency' } ,
                        6: { sorter:'currency' } ,
                        7: { sorter:'currency' } ,
                        8: { sorter:'currency' } ,
-                       9: { sorter:'currency' } 
-                     } 
-        }); } ); 
+                       9: { sorter:'currency' }
+                     }
+        }); } );
+
+        $('.a_request').click(function () {
+            expandRequest($(this));
+        });
+
+        $(document).ready(function() {
+            expandRequest($(window.location.hash));
+        });
+
+
         <?php
         include "waterfall.js";
         ?>
