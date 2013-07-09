@@ -52,6 +52,7 @@ private:
   CIpfw       _ipfw;
   HANDLE      housekeeping_timer_;
   bool        has_gpu_;
+  bool        watchdog_started_;
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
@@ -65,4 +66,5 @@ private:
   void SetupDummynet();
   void CloseDialogs();
   bool DetectGPU();
+  void PreTest();
 };

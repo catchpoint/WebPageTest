@@ -62,7 +62,8 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_exit(false)
   ,_work_thread(NULL)
   ,housekeeping_timer_(NULL)
-  ,has_gpu_(false) {
+  ,has_gpu_(false)
+  ,watchdog_started_(false) {
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
   has_gpu_ = DetectGPU();
@@ -100,17 +101,6 @@ void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
 
   if( _settings.Load() ){
-    // launch the watchdog
-    TCHAR path[MAX_PATH];
-    GetModuleFileName(NULL, path, MAX_PATH);
-    lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
-    CString watchdog;
-    watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
-    HANDLE process = NULL;
-    LaunchProcess(watchdog, &process);
-    if (process)
-      CloseHandle(process);
-
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
@@ -162,6 +152,7 @@ void WptDriverCore::WorkThread(void) {
     _status.Set(_T("Checking for work..."));
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
     if (_webpagetest.GetTest(test)) {
+      PreTest();
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser, test._client)) {
         WebBrowser browser(_settings, test, _status, _settings._browser, 
@@ -715,4 +706,22 @@ bool WptDriverCore::DetectGPU() {
     FreeLibrary(dll);
   }
   return has_gpu;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::PreTest() {
+  // launch the watchdog just before executing the first test
+  if (!watchdog_started_) {
+    watchdog_started_ = true;
+    TCHAR path[MAX_PATH];
+    GetModuleFileName(NULL, path, MAX_PATH);
+    lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
+    CString watchdog;
+    watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
+    HANDLE process = NULL;
+    LaunchProcess(watchdog, &process);
+    if (process)
+      CloseHandle(process);
+  }
 }
