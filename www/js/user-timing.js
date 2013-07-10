@@ -27,9 +27,8 @@
       return t == 'mark' ? marks : undefined;
     }));
 }());
-
 markUserTime = (function(l) {
-  var raf = window.requestAnimationFrame ||
+  var raf = window['requestAnimationFrame'] ||
     (function(callback){setTimeout(callback, 0);});
   raf(function(){
     window.performance.mark(l);
@@ -38,18 +37,37 @@ markUserTime = (function(l) {
   });
 });
 
+// Support routines for automatically reporting user timing for common analytics platforms
+// Currently supports Google Analytics, Boomerang and SOASTA mPulse
+// In the case of mPulse, you will need to map the event names you want reported
+// to custom0, custom1, etc using a global variable:
+// mPulseMapping = {'aft': 'custom0'};
 (function() {
-var wtt = function(g, n, t) {
+var wtt = function(g, n, t, b) {
   if (t >= 0 && t < 3600000) {
-    if (window._gaq)
+    // Google Analytics
+    if (!b && window['_gaq'])
       _gaq.push(['_trackTiming', g, n, t]);
+      
+    // Boomerang/mPulse
+    if (b && window['BOOMR'] && BOOMR['plugins'] &&
+        BOOMR.plugins['RT'] && BOOMR.plugins.RT['setTimer']) {
+      if (window['mPulseMapping']) {
+        if (window.mPulseMapping[n])
+          BOOMR.plugins.RT.setTimer(window.mPulseMapping[n], t);
+      } else {
+        n = n.replace(/[^0-9a-zA-Z_]/g,'_');
+        BOOMR.plugins.RT.setTimer(n, t);
+      }
+    }
   }
 };
-utOnLoad = function() {
+utSent = false;
+utReportRUM = function(b){
   var m = window.performance.getEntriesByType("mark");
   var lm={};
   for (i = 0; i < m.length; i++) {
-    g = 'user';
+    g = 'usertiming';
     n = m[i].name;
     p = n.match(/([^\.]+)\.([^\.]*)/);
     if (p && p.length > 2) {
@@ -58,14 +76,26 @@ utOnLoad = function() {
     }
     if (lm[g] == undefined || m[i].startTime > lm[g])
       lm[g] = m[i].startTime;
-    wtt(g, n, m[i].startTime)
+    wtt(g, n, m[i].startTime, b)
   }
-  for (g in lm) {
-    wtt('UserTimings', g, lm[g]);
+  for (g in lm)
+    wtt('UserTimings', g, lm[g], b);
+  if (b && !utSent && window['BOOMR'] && BOOMR.sendBeacon) {
+    utSent = true;
+    BOOMR.sendBeacon();
   }
 };
-if (window.addEventListener)
+utOnLoad = function() {utReportRUM(false);};
+if (window['addEventListener'])
     window.addEventListener('load', utOnLoad, false);   
-else if (window.attachEvent)
+else if (window['attachEvent'])
     window.attachEvent('onload', utOnLoad);  
+
+// Boomerang/mPulse support
+BOOMR = window.BOOMR || {};
+BOOMR.plugins = BOOMR.plugins || {};
+BOOMR.plugins.UserTiming = {
+  init: function(config) {BOOMR.subscribe('page_ready', function(){utReportRUM(true);});},
+  is_complete: function() {return utSent;}
+};
 })();
