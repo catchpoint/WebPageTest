@@ -402,6 +402,7 @@ $page_description = "Website performance test details$testLabel";
 
         <script type="text/javascript">
         function expandRequest(targetNode) {
+          if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));
 
             if (div_to_expand.is(":visible")) {
@@ -411,6 +412,7 @@ $page_description = "Website performance test details$testLabel";
                 div_to_expand.show();
                 targetNode.html('-' + targetNode.html().substring(1));
             }
+          }
         }
 
         $(document).ready(function() { $("#tableDetails").tablesorter({
