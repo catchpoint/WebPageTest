@@ -142,7 +142,9 @@
             $test['cmdLine'] = '';
             $test['addCmdLine'] = '';
             if (isset($req_disableThreadedParser) && $req_disableThreadedParser)
-              $test['addCmdLine'] .= '--disable-threaded-html-parser';
+              $test['addCmdLine'] .= '--disable-threaded-html-parser ';
+            if (isset($req_spdyNoSSL) && $req_spdyNoSSL)
+              $test['addCmdLine'] .= '--use-spdy=no-ssl ';
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {

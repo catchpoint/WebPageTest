@@ -405,6 +405,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="spdyNoSSL" id="spdyNoSSL" class="checkbox" style="float: left;width: auto;">
+                                        <label for="spdyNoSSL" class="auto_width">
+                                            Use SPDY without SSL
+                                        </label>
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="swrender" id="swrender" class="checkbox" style="float: left;width: auto;">
                                         <label for="swrender" class="auto_width">
                                             Force Software Rendering (disable GPU acceleration)
