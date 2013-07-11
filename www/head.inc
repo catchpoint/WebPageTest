@@ -20,6 +20,8 @@ if( strlen($page_description) )
     if (is_file('./js/user-timing-min.js')) {
       echo "<script type=\"text/javascript\">\n";
       include('./js/user-timing-min.js');
+      if (is_file('./js/user-timing-rum-min.js'))
+        include('./js/user-timing-rum-min.js');
       echo "\n</script>\n";
     }        
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
