@@ -422,6 +422,13 @@ $loc = ParseLocations($locations);
                                             Disable Threaded HTML Parser
                                         </label>
                                     </li>
+                                    <li>
+                                        <label for="cmdline" style="width: auto;">
+                                        Command-line<br>
+                                        <small>Custom options</small>
+                                        </label>
+                                        <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;">
+                                    </li>
                                 </ul>
                             </div>
                             <div id="auth" class="test_subbox ui-tabs-hide">

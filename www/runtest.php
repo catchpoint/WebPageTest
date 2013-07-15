@@ -140,11 +140,17 @@
             
             // custom options
             $test['cmdLine'] = '';
-            $test['addCmdLine'] = '';
-            if (isset($req_disableThreadedParser) && $req_disableThreadedParser)
-              $test['addCmdLine'] .= '--disable-threaded-html-parser ';
-            if (isset($req_spdyNoSSL) && $req_spdyNoSSL)
-              $test['addCmdLine'] .= '--use-spdy=no-ssl ';
+            $test['addCmdLine'] = $req_cmdline;
+            if (isset($req_disableThreadedParser) && $req_disableThreadedParser) {
+              if (strlen($test['addCmdLine']))
+                $test['addCmdLine'] .= ' ';
+              $test['addCmdLine'] .= '--disable-threaded-html-parser';
+            }
+            if (isset($req_spdyNoSSL) && $req_spdyNoSSL) {
+              if (strlen($test['addCmdLine']))
+                $test['addCmdLine'] .= ' ';
+              $test['addCmdLine'] .= '--use-spdy=no-ssl';
+            }
             
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -304,6 +310,15 @@
         ValidateKey($test, $error);
         if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
         {
+            if (isset($req_cmdline) && strlen($req_cmdline)) {
+              $req_cmdline = trim($req_cmdline);
+              if (!preg_match('/^--[a-zA-Z0-9\-\.\+=,_ "]+$/', $req_cmdline)) {
+                $error = 'Invalid command-line options';
+                $req_cmdline = '';
+              }
+            } else
+              $req_cmdline = '';
+
             if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
               
