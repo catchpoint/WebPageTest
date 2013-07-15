@@ -579,8 +579,23 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     if (pos > 0) {
       CStringA tag = CT2A(command.target.Left(pos).Trim());
       CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
-      HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
-      _set_headers.AddTail(header);
+      CStringA filter = CT2A(command.value.Trim());
+      bool repeat = false;
+      if (!_set_headers.IsEmpty()) {
+        POSITION pos = _set_headers.GetHeadPosition();
+        while (pos && !repeat) {
+          HttpHeaderValue &header = _set_headers.GetNext(pos);
+          if (!header._tag.CompareNoCase(tag) &&
+              header._filter == filter) {
+            repeat = true;
+            header._value = value;
+          }
+        }
+      }
+      if (!repeat) {
+        HttpHeaderValue header(tag, value, filter);
+        _set_headers.AddTail(header);
+      }
     }
   } else if (cmd == _T("resetheaders")) {
     _add_headers.RemoveAll();
