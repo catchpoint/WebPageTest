@@ -17,6 +17,7 @@ CDN_PROVIDER cdnList[] = {
 	{".footprint.net", _T("Level 3")},
 	{".ay1.b.yahoo.com", _T("Yahoo")},
 	{".yimg.", _T("Yahoo")},
+	{".yahooapis.com", _T("Yahoo")},
 	{".google.", _T("Google")},
 	{"googlesyndication.", _T("Google")},
 	{"youtube.", _T("Google")},

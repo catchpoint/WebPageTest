@@ -57,6 +57,7 @@ CDN_PROVIDER cdnList[] = {
   {".footprint.net", "Level 3"},
   {".ay1.b.yahoo.com", "Yahoo"},
   {".yimg.", "Yahoo"},
+  {".yahooapis.com", "Yahoo"},
   {".google.", "Google"},
   {"googlesyndication.", "Google"},
   {"youtube.", "Google"},
