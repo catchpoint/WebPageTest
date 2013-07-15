@@ -180,19 +180,14 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
-    SaveImage(image, _file_base + IMAGE_START_RENDER, true, 
-              _test._image_quality);
-  }
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, true, 
-              _test._image_quality);
-  }
+  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
+    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality);
+  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
+    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality);
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
       image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, true, 
-              _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
   }
 
   if (_test._video)
@@ -229,7 +224,7 @@ void Results::SaveVideo(void) {
           _visually_complete.QuadPart = image._capture_time.QuadPart;
           file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                             image_time);
-          SaveImage(*img, file_name, false, _test._image_quality);
+          SaveImage(*img, file_name, _test._image_quality);
           file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
                             image_time);
           SaveHistogram(*img, file_name);
@@ -239,7 +234,7 @@ void Results::SaveVideo(void) {
         height = img->GetHeight();
         // always save the first image at time zero
         file_name = _file_base + _T("_progress_0000.jpg");
-        SaveImage(*img, file_name, false, _test._image_quality);
+        SaveImage(*img, file_name, _test._image_quality);
         file_name = _file_base + _T("_progress_0000.hist");
         SaveHistogram(*img, file_name);
       }
@@ -287,16 +282,16 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveImage(CxImage& image, CString file, 
-                          bool shrink, BYTE quality) {
+void Results::SaveImage(CxImage& image, CString file, BYTE quality) {
   if (image.IsValid()) {
-    if (shrink && image.GetWidth() > 600 && image.GetHeight() > 600)
-      image.Resample2(image.GetWidth() / 2, image.GetHeight() / 2);
+    CxImage img(image);
+    if (img.GetWidth() > 600 && img.GetHeight() > 600)
+      img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
 
-    image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-    image.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-    image.SetJpegQuality((BYTE)quality);
-    image.Save(file, CXIMAGE_FORMAT_JPG);
+    img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+    img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+    img.SetJpegQuality((BYTE)quality);
+    img.Save(file, CXIMAGE_FORMAT_JPG);
   }
 }
 

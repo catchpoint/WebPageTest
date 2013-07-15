@@ -80,7 +80,7 @@ private:
   void SaveVideo(void);
   void SaveProgressData(void);
   void SaveStatusMessages(void);
-  void SaveImage(CxImage& image, CString file, bool shrink, BYTE quality);
+  void SaveImage(CxImage& image, CString file, BYTE quality);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
