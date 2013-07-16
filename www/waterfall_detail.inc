@@ -184,32 +184,32 @@ echo '<div id="headers">';
             if($request) {
                 $requestNum = $reqNum + 1;
                 echo "<h4><span class=\"a_request\" id=\"request$requestNum\" data-target-id=\"headers_$requestNum\">";
-                echo "+ Request $requestNum: {$request['full_url']}</span></h4>";
+                echo "+ Request $requestNum: " . htmlspecialchars($request['full_url']) . "</span></h4>";
                 echo '<div class="header_details" id="headers_' . $requestNum . '">';
                 echo "<p class=\"indented2\">\n";
                 if ($settings['nolinks'])
                     echo "<b>URL:</b> {$request['full_url']}<br>\n";
                 else
                     echo "<b>URL:</b> <a rel=\"nofollow\" href=\"{$request['full_url']}\">{$request['full_url']}</a><br>\n";
-                echo "<b>Host:</b> {$request['host']}<br>\n";
+                echo "<b>Host:</b> " . htmlspecialchars($request['host']) . "<br>\n";
                 if (array_key_exists('ip_addr', $request) && strlen($request['ip_addr']))
                     echo "<b>IP:</b> {$request['ip_addr']}<br>\n";
                 if (array_key_exists('location', $request) && strlen($request['location']))
-                    echo "<b>Location:</b> {$request['location']}<br>\n";
-                echo "<b>Error/Status Code:</b> {$request['responseCode']}<br>\n";
+                    echo "<b>Location:</b> " . htmlspecialchars($request['location']) . "<br>\n";
+                echo "<b>Error/Status Code:</b> " . htmlspecialchars($request['responseCode']) . "<br>\n";
                 if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
-                    echo "<b>Initiated By:</b> {$request['initiator']}";
+                    echo "<b>Initiated By:</b> " . htmlspecialchars($request['initiator']);
                     if (array_key_exists('initiator_line', $request) && strlen($request['initiator_line']))
-                        echo " line {$request['initiator_line']}";
+                        echo " line " . htmlspecialchars($request['initiator_line']);
                     if (array_key_exists('initiator_column', $request) && strlen($request['initiator_column']))
-                        echo " column {$request['initiator_column']}";
+                        echo " column " . htmlspecialchars($request['initiator_column']);
                     echo "<br>\n";
                 }
                 if (array_key_exists('client_port', $request) && intval($request['client_port']))
-                    echo "<b>Client Port:</b> {$request['client_port']}<br>\n";
+                    echo "<b>Client Port:</b> " . htmlspecialchars($request['client_port']) . "<br>\n";
                 if (array_key_exists('custom_rules', $request)) {
                     foreach($request['custom_rules'] as $rule_name => &$rule) {
-                        echo "<b>Custom Rule - $rule_name: </b>({$rule['count']} matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
+                        echo "<b>Custom Rule - " . htmlspecialchars($rule_name) . ": </b>(" . htmlspecialchars($rule['count']) . " matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
                     }
                 }
                 echo "<b>Start Offset:</b> " . number_format($request['load_start'] / 1000.0, 3) . " s<br>\n";
