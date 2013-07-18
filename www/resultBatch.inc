@@ -73,9 +73,10 @@ if( $videoCaptured && (!$supportsAuth || ($admin || strpos($_COOKIE['google_emai
 
 $testIds = array();
 foreach( $tests['urls'] as &$testData ) {
-    $testIds[] = $testData['id'];
+  $testIds[] = $testData['id'];
+  if (array_key_exists('v', $test) && is_array($test['v']))
     foreach( $test['v'] as $variationId )
-        $testIds[] = $variationId;
+      $testIds[] = $variationId;
 }
 
 // run a quick check to see if the tests are complete
@@ -588,7 +589,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $showExperimental;
     require_once('object_detail.inc');
     $includeRender = false;
-    if( $_REQUEST['norender'] )
+    if( array_key_exists('norender', $_REQUEST) && $_REQUEST['norender'] )
         $includeRender = false;
     
     $fvLoadTime = array();
@@ -611,6 +612,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
+        if (!strlen($url) && array_key_exists('u', $test))
+          $url = $test['u'];
         $test['end'] = 'visual';
         if (!$count) {
             if (array_key_exists('endOriginal', $_GET)) {
@@ -775,11 +778,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $baseDomainSSL = false;
     global $mod_pagespeed;
     if (!$mod_pagespeed) {
+      if (!strncasecmp($url, 'https://', 8))
+        $baseDomainSSL = true;
       $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
-      if( count($requests) )
-      {
-          if($basePage = GetBasePage($requests))
-          {
+      if( count($requests) ) {
+          if($basePage = GetBasePage($requests)) {
               // see if there was a domain redirect for the base page
               $testedHost = $requests[0]['host'];
               $basePageHost = $basePage['host'];
@@ -787,10 +790,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
                   $baseDomainRedirect = true;
               
               // see if any of the requests served from the base page were over ssl
-              foreach( $requests as &$request )
-              {
-                  if( $request['host'] == $basePageHost && $request['is_secure'] )
-                  {
+              foreach( $requests as &$request ) {
+                  if( $request['host'] == $basePageHost && $request['is_secure'] ) {
                       $baseDomainSSL = true;
                       break;
                   }
@@ -923,7 +924,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         {
             echo '<div class="alert">';
             echo '<h1>HTTPS Content Detected</h1>';
-            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(PageSpeed Service does not support serving HTTPS content from the base domain)";
+            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Testing of the PageSpeed Service does not support serving HTTPS content from the base domain)";
             echo '</div>';
         }
         

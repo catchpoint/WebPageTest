@@ -380,8 +380,13 @@ $page_description = "Comparison Test$testLabel.";
                 if( url == "" || url == "Enter a Website URL" )
                 {
                     alert( "Please enter an URL to test." );
-                    form.url.focus();
-                    return false
+                    form.testurl.focus();
+                    return false;
+                }
+                if (url.match(/^https:\/\//i)) {
+                    alert( "Testing of secure (https) pages is not supported.\r\nPlease enter a non-secure page for testing." );
+                    form.testurl.focus();
+                    return false;
                 }
                 var proto = url.substring(0, 6).toLowerCase();
                 if (proto == 'https:') {

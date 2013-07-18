@@ -279,7 +279,8 @@ function AddLocationData(&$requests) {
 * Convert old format for DNS/connection data.
 */
 function MergeDnsAndConnectionTimes($requests) {
-    $merged_requests = array();
+  $merged_requests = array();
+  if (isset($requests) && is_array($requests)) {
     $dns_ms = null;
     $connect_ms = null;
     foreach($requests as $i => &$request) {
@@ -300,7 +301,8 @@ function MergeDnsAndConnectionTimes($requests) {
             $merged_requests[] = $request;
         }
     }
-    return $merged_requests;
+  }
+  return $merged_requests;
 }
 
 /**
