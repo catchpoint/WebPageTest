@@ -689,7 +689,15 @@ function UpdateLocation(&$test, &$locations, $new_location)
   $test['workdir'] = $locations[$test['location']]['localDir'];
   $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
   $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
-  if( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
+  if (array_key_exists('type', $locations[$test['location']]) &&
+      $locations[$test['location']]['type'] == 'Appurify' &&
+      array_key_exists('key', $locations[$test['location']]) &&
+      array_key_exists('secret', $locations[$test['location']])) {
+      $test['loc_type'] = 'Appurify';
+      $test['appurify_key'] = $locations[$test['location']]['key'];
+      $test['appurify_secret'] = $locations[$test['location']]['secret'];
+  }
+  elseif( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
       $error = "Invalid Location, please try submitting your test request again.";
 
   // see if we need to pick the default connectivity
@@ -924,7 +932,14 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['workdir'] = $locations[$test['location']]['localDir'];
             $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
             $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
-            if( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
+            if (array_key_exists('type', $locations[$test['location']]) &&
+                $locations[$test['location']]['type'] == 'Appurify' &&
+                array_key_exists('key', $locations[$test['location']]) &&
+                array_key_exists('secret', $locations[$test['location']])) {
+                $test['loc_type'] = 'Appurify';
+                $test['appurify_key'] = $locations[$test['location']]['key'];
+                $test['appurify_secret'] = $locations[$test['location']]['secret'];
+            } elseif( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
                 $error = "Invalid Location, please try submitting your test request again.";
 
             if( strlen($test['type']) )
@@ -1165,30 +1180,36 @@ function SubmitUrl($testId, $testData, &$test, $url)
     $ret = false;
     global $error;
     global $locations;
-    
-    $script = ProcessTestScript($url, $test);
-    
-    $out = "Test ID=$testId\r\nurl=";
-    if (isset($script) && strlen($script))
-        $out .= "script://$testId.pts";
-    else
-        $out .= $url;
 
-    // add the actual test configuration
-    $out .= $testData;
+    if (array_key_exists('loc_type', $test) && $test['loc_type'] == 'Appurify') {
+      require_once('./lib/appurify.inc.php');
+      $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
+      $ret = $appurify->SubmitTest($test, $error);
+    } else {
+      $script = ProcessTestScript($url, $test);
+      
+      $out = "Test ID=$testId\r\nurl=";
+      if (isset($script) && strlen($script))
+          $out .= "script://$testId.pts";
+      else
+          $out .= $url;
 
-    if (isset($script) && strlen($script))
-      $out .= "\r\n[Script]\r\n" . $script;
-    
-    // write out the actual test file
-    $ext = 'url';
-    if( $test['priority'] )
-        $ext = "p{$test['priority']}";
-    $test['job'] = "$testId.$ext";
-    
-    $location = $test['location'];
-    $ret = WriteJob($location, $test, $out, $testId);
-    
+      // add the actual test configuration
+      $out .= $testData;
+
+      if (isset($script) && strlen($script))
+        $out .= "\r\n[Script]\r\n" . $script;
+      
+      // write out the actual test file
+      $ext = 'url';
+      if( $test['priority'] )
+          $ext = "p{$test['priority']}";
+      $test['job'] = "$testId.$ext";
+      
+      $location = $test['location'];
+      $ret = WriteJob($location, $test, $out, $testId);
+    }
+        
     return $ret;
 }
 

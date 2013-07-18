@@ -17,6 +17,9 @@ function GetTestStatus($id, $includePosition = true) {
     if (isset($testInfoJson['relayId'])) {
         $ret = GetRelayStatus($id, $testPath, $testInfoJson);
         $ret['remote'] = true;
+    } elseif (array_key_exists('loc_type', $testInfoJson) && $testInfoJson['loc_type'] == 'Appurify') {
+        $ret = GetAppurifyStatus($id, $testPath, $testInfoJson);
+        $ret['remote'] = true;
     } else {
         $test = @parse_ini_file("$testPath/testinfo.ini",true);
         if (isset($test) && isset($test['test'])) {
@@ -285,4 +288,65 @@ function GetRelayStatus($id, $testPath, &$test) {
     
     return $ret;
 }
+
+/**
+* Check on the status of a pending Appurify test
+* 
+* @param mixed $id
+* @param mixed $testPath
+* @param mixed $test
+*/
+function GetAppurifyStatus($id, $testPath, &$test) {
+  $ret = array('statusCode' => 401, 'statusText' => 'Test request not found');
+  if (array_key_exists('appurify_tests', $test) &&
+      is_array($test['appurify_tests']) &&
+      count($test['appurify_tests'])) {
+    $ret['statusCode'] = 102;
+    $ret['statusText'] = 'Server Unreachable';
+    require_once('./lib/appurify.inc.php');
+    $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
+    $all_complete = true;
+    $dirty = false;
+    $ok = true;
+    foreach ($test['appurify_tests'] as $index => &$run) {
+      $completed = array_key_exists('completed', $run) ? $run['completed'] : false;
+      if (!$completed) {
+        if ($appurify->CheckTestRun($test, $run, $index, $testPath)) {
+          if (array_key_exists('completed', $run) && $run['completed']) {
+            $completed = true;
+            $dirty = true;
+          }
+        } else {
+          $ok = false;
+          break;
+        }
+      }
+      if ($ok) {
+        if (!$completed)
+          $all_complete = false;
+        if ($all_complete) {
+          $now = time();
+          $test['completed'] = $now;
+          gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+          $ini = file_get_contents("$testPath/testinfo.ini");
+          $date = gmdate("m/d/y G:i:s", $now);
+
+          // update the completion time if it isn't already set
+          if (!strpos($ini, 'completeTime')) {
+              $complete = "[test]\r\ncompleteTime=$date";
+              $out = str_replace('[test]', $complete, $ini);
+              file_put_contents("$testPath/testinfo.ini", $out);
+          }
+          $ret['statusCode'] = 200;
+          $ret['statusText'] = 'Test Complete';
+          $ret['completeTime'] = $date;
+        }
+      }
+      if ($dirty)
+        gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+    }
+  }
+  return $ret;
+}
+
 ?>
