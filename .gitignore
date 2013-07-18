@@ -24,3 +24,4 @@ webpagetest.vsmdi
 *.dsk
 *.idx
 *.ncb
+*.$wrk
