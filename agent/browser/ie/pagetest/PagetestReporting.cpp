@@ -1104,33 +1104,6 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 		else
 			buff.Empty();
 			
-		// page-level data
-		result.Format(	_T("%s\t%s\t%s\t")
-						_T("%s\t%s\t%s\t%s\t")
-						_T("%d\t%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%d\t%d\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t")
-						_T("%s\t%d\t%d\t%d\t%d\t%s\t%d\t")
-						_T("%d\t%d\t%s\t%d\t")
-						_T("%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%s\t%s\t%s")
-						_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%s")
-            _T("\t\t\t\t\t\t\t\t\t")
-            _T("\t\t%s\t%d")
-						_T("\r\n"),
-				(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, 
-				(LPCTSTR)ip, _T(""), _T(""), (LPCTSTR)pageUrl,
-				errorCode, msLoad, msTTFB, msStartRender, out, in,
-				0, 0, 0, _T(""), _T(""), _T(""), _T(""), CTrackedEvent::etPage, 0, 0, msLoadDoc,
-				descriptor, labID, dialerID, connectionType, cached, logUrl, build,
-				measurementType, experimental, (LPCTSTR)guid, sequence++,
-				cacheScore, staticCdnScore, gzipScore, cookieScore, keepAliveScore, 
-				doctypeScore, minifyScore, combineScore, compressionScore, etagScore, flaggedRequests,
-				0, _T(""), _T(""), _T(""),
-				gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, 
-        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T(""), (LPCTSTR)GetRTT(pageIP.sin_addr.S_un.S_addr), 0 );
-		buff += result;
-
 		// loop through all of the requests on the page
 		POSITION pos = events.GetHeadPosition();
 		while( pos )
@@ -1386,15 +1359,16 @@ void CPagetestReporting::GenerateReport(CString &szReport)
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveBodies(CString file)
 {
-  if (bodies)
+  if (bodies || htmlbody)
   {
 	  zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
 	  if( zip )
 	  {
+	    bool done = false;
 	    DWORD count = 0;
       DWORD bodiesCount = 0;
 	    POSITION pos = events.GetHeadPosition();
-	    while( pos )
+	    while( pos && !done )
 	    {
 		    CTrackedEvent * event = events.GetNext(pos);
 		    if( event && event->type == CTrackedEvent::etWinInetRequest )
@@ -1417,6 +1391,8 @@ void CPagetestReporting::SaveBodies(CString file)
                 zipWriteInFileInZip( zip, r->body, r->bodyLen );
 							  zipCloseFileInZip( zip );
                 bodiesCount++;
+                if (htmlbody)
+                  done = true;
 						  }
             }
           }

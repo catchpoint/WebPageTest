@@ -257,6 +257,8 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
           imageQuality = max(JPEG_DEFAULT_QUALITY, min(100, imageQuality));
 					bodies = 0;
 					key.QueryDWORDValue(_T("bodies"), bodies);
+					htmlbody = 0;
+					key.QueryDWORDValue(_T("htmlbody"), htmlbody);
 					keepua = 0;
 					key.QueryDWORDValue(_T("keepua"), keepua);
 					minimumDuration = 0;

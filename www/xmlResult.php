@@ -246,7 +246,7 @@ else
                     // raw results
                     echo "<rawData>";
                     echo "<headers>http://$host$uri$path/{$i}_report.txt</headers>\n";
-                    if (array_key_exists('bodies', $test['testinfo']) && $test['testinfo']['bodies']) {
+                    if (is_file("$testPath/{$i}_bodies.zip")) {
                         echo "<bodies>http://$host$uri$path/{$i}_bodies.zip</bodies>\n";
                     }
                     echo "<pageData>http://$host$uri$path/{$i}_IEWPG.txt</pageData>\n";
@@ -334,7 +334,7 @@ else
                     // raw results
                     echo "<rawData>\n";
                     echo "<headers>http://$host$uri$path/{$i}_Cached_report.txt</headers>\n";
-                    if (array_key_exists('bodies', $test['testinfo']) && $test['testinfo']['bodies']) {
+                    if (is_file("$testPath/{$i}_Cached_bodies.zip")) {
                         echo "<bodies>http://$host$uri$path/{$i}_Cached_bodies.zip</bodies>\n";
                     }
                     echo "<pageData>http://$host$uri$path/{$i}_Cached_IEWPG.txt</pageData>\n";
