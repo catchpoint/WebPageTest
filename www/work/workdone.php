@@ -285,7 +285,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 $pageData = loadAllPageData($testPath);
             }
             $medianRun = GetMedianRun($pageData, 0);
-            
+
             // calculate and cache the content breakdown and visual progress information
             if( isset($testInfo) ) {
                 require_once('breakdown.inc');
@@ -299,6 +299,10 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
 
+            // delete all of the videos except for the median run?
+            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
+                KeepVideoForRun($testPath, $medianRun);
+            
             $test = file_get_contents("$testPath/testinfo.ini");
             $now = gmdate("m/d/y G:i:s", $time);
 
@@ -403,10 +407,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // delete all of the videos except for the median run?
-            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
-                KeepVideoForRun($testPath, $medianRun);
-                
             // archive the test (modifies the on-disk testinfo so we need to flush it and update
             if( isset($testInfo) && $testInfo_dirty ) {
                 $testInfo_dirty = false;
@@ -559,21 +559,32 @@ function notify( $mailto, $from,  $id, $testPath, $host )
 */
 function KeepVideoForRun($testPath, $run)
 {
-    if( $run )
-    {
-        $dir = opendir($testPath);
-        if( $dir )
-        {
-            while($file = readdir($dir)) 
-            {
-                $path = $testPath  . "/$file/";
-                if( is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run" )
-                    delTree("$path/");
+  if ($run) {
+    $dir = opendir($testPath);
+    if ($dir) {
+      while($file = readdir($dir)) {
+        $path = $testPath  . "/$file/";
+        if( is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run" )
+          delTree("$path/");
+        elseif (is_file("$testPath/$file")) {
+          if (preg_match('/^([0-9]+(_Cached)?)[_\.]/', $file, $matches) && count($matches) > 1) {
+            $match_run = $matches[1];
+            if (strcmp("$run", $match_run) &&
+                (strpos($file, '_bodies.zip') ||
+                 strpos($file, '.cap') ||
+                 strpos($file, '_devtools.json') ||
+                 strpos($file, '_netlog.txt') ||
+                 strpos($file, '_doc.') ||
+                 strpos($file, '_render.'))) {
+              unlink("$testPath/$file");
             }
-
-            closedir($dir);
+          }
         }
+      }
+
+      closedir($dir);
     }
+  }
 }
 
 /**
