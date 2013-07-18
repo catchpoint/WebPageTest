@@ -2,6 +2,14 @@
 $DevToolsCacheVersion = '0.7';
 $eventList = array();
 
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('GetDevToolsProgress');
+    newrelic_add_custom_tracer('GetTimeline');
+    newrelic_add_custom_tracer('GetDevToolsRequests');
+    newrelic_add_custom_tracer('GetDevToolsEvents');
+    newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+}
+
 /**
 * Calculate the visual progress and speed index from the dev tools timeline trace
 * 
