@@ -5,7 +5,7 @@ header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
 chdir('..');
-include 'common_basic.inc';
+include 'common_lib.inc';
 $location = $_REQUEST['location'];
 $key = '';
 if (array_key_exists('key', $_REQUEST))
