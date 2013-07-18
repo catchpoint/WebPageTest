@@ -86,10 +86,8 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         }
     }
 } elseif (ValidateTestId($id)) {
-    $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
     $settings = parse_ini_file('./settings/settings.ini');
-    $locKey = arrayLookupWithDefault('key', $locations[$location], "");
+    $locKey = GetLocationKey($location);
     logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
     if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") ) {
         // update the location time
@@ -356,15 +354,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // clean up the backup of the job file
-            $backupDir = $locations[$location]['localDir'] . '/testing';
-            if( is_dir($backupDir) )
-            {
-                $files = glob("$backupDir/*$id.*", GLOB_NOSORT);
-                foreach($files as $file)
-                    unlink($file);
-            }
-
             // log any slow tests
             if (isset($testInfo) && array_key_exists('slow_test_time', $settings) && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
                 $elapsed = $time - $testInfo['started'];
