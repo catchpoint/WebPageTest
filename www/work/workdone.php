@@ -86,7 +86,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         }
     }
 } elseif (ValidateTestId($id)) {
-    $settings = parse_ini_file('./settings/settings.ini');
     $locKey = GetLocationKey($location);
     logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
     if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") ) {
@@ -258,14 +257,15 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             $perTestTime = 0;
             $testCount = 0;
             $beaconUrl = null;
-            if (strpos($id, '.') === false && strlen($settings['showslow']))
+            $showslow = GetSetting('showslow');
+            if (strpos($id, '.') === false && $showslow && strlen($showslow))
             {
-                $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
-                if (array_key_exists('showslow_key', $settings) &&
-                    strlen($settings['showslow_key']))
-                    $beaconUrl .= '?key=' . trim($settings['showslow_key']);
-                if (array_key_exists('beaconRate', $settings) &&
-                    $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
+                $beaconUrl = "$showslow/beacon/webpagetest/";
+                $showslow_key = GetSetting('showslow_key');
+                if ($showslow_key && strlen($showslow_key))
+                    $beaconUrl .= '?key=' . trim($showslow_key);
+                $beaconRate = GetSetting('beaconRate');
+                if ($beaconRate && rand(1, 100) > $beaconRate )
                     unset($beaconUrl);
                 else {
                     $testInfo['showslow'] = 1;
@@ -355,9 +355,10 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             }
             
             // log any slow tests
-            if (isset($testInfo) && array_key_exists('slow_test_time', $settings) && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
+            $slow_test_time = GetSetting('slow_test_time');
+            if (isset($testInfo) && $slow_test_time && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
                 $elapsed = $time - $testInfo['started'];
-                if ($elapsed > $settings['slow_test_time']) {
+                if ($elapsed > $slow_test_time) {
                     $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
                     error_log($log_entry, 3, './tmp/slow_tests.log');
                 }
@@ -408,11 +409,13 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             
             // do any other post-processing (e-mail notification for example)
-            if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )
+            $notifyFrom = GetSetting('notifyFrom');
+            if( $notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini") )
             {
+                $host = GetSetting('host');
                 $test = parse_ini_file("$testPath/testinfo.ini",true);
                 if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
-                    notify( $test['test']['notify'], $settings['notifyFrom'], $id, $testPath, $settings['host'] );
+                    notify( $test['test']['notify'], $notifyFrom, $id, $testPath, $host );
             }
             
             // send a callback request

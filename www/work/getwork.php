@@ -1,19 +1,19 @@
 <?php
 if(extension_loaded('newrelic')) { 
-    newrelic_add_custom_tracer('GetUpdate');
-    newrelic_add_custom_tracer('GetVideoJob');
-    newrelic_add_custom_tracer('GetJob');
-    newrelic_add_custom_tracer('GetJobFile');
-    newrelic_add_custom_tracer('CheckCron');
-    newrelic_add_custom_tracer('ProcessTestShard');
-    newrelic_add_custom_tracer('GetTesters');
+  newrelic_add_custom_tracer('GetUpdate');
+  newrelic_add_custom_tracer('GetVideoJob');
+  newrelic_add_custom_tracer('GetJob');
+  newrelic_add_custom_tracer('GetJobFile');
+  newrelic_add_custom_tracer('CheckCron');
+  newrelic_add_custom_tracer('ProcessTestShard');
+  newrelic_add_custom_tracer('GetTesters');
+  newrelic_add_custom_tracer('LockLocation');
 }
 
 chdir('..');
 include 'common_lib.inc';
 error_reporting(0);
 set_time_limit(600);
-$settings = array();
 $is_json = array_key_exists('f', $_GET) && $_GET['f'] == 'json';
 $location = $_GET['location'];
 $key = array_key_exists('key', $_GET) ? $_GET['key'] : '';
@@ -72,14 +72,12 @@ function GetJob() {
     global $is_json;
     global $dnsServers;
 
-    global $settings;
-    $settings = parse_ini_file('./settings/settings.ini');
-    
-    // load all of the locations
-    $locations = parse_ini_file('./settings/locations.ini', true);
     $workDir = "./work/jobs/$location";
     $locKey = GetLocationKey($location);
-    if (array_key_exists($location, $locations) && (!strlen($locKey) || !strcmp($key, $locKey))) {
+    if (strpos($location, '..') == false &&
+        strpos($location, '\\') == false &&
+        strpos($location, '/') == false &&
+        (!strlen($locKey) || !strcmp($key, $locKey))) {
         if( $lock = LockLocation($location) )
         {
             $now = time();
@@ -134,11 +132,10 @@ function GetJob() {
                         }
                     }
 
-                    if ($delete) {
+                    if ($delete)
                         unlink("$workDir/$fileName");
-                    } else {
+                    else
                         AddJobFileHead($workDir, $fileName, $priority, true);
-                    }
                     
                     if ($is_json) {
                         $testJson = array();

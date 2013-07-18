@@ -34,12 +34,13 @@ function GetTestPath($id)
         
         $testPath = "$base/" . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
     } else {
-      global $settings;
-      if( strlen($settings['olddir']) ) {
-        if( $settings['oldsubdir'] )
-            $testPath = "$base/{$settings['olddir']}/_" . strtoupper(substr($id, 0, 1)) . "/$id";
+      $olddir = GetSetting('olddir');
+      if( strlen($olddir) ) {
+        $oldsubdir = GetSetting('oldsubdir');
+        if( strlen($oldsubdir) )
+            $testPath = "$base/$olddir/_" . strtoupper(substr($id, 0, 1)) . "/$id";
         else
-            $testPath = "$base/{$settings['olddir']}/$id";
+            $testPath = "$base/$olddir/$id";
       }
     }
 
@@ -77,6 +78,33 @@ function GetLocationKey($location) {
     }
   }
   return $key;
+}
+
+/**
+* Get a setting from settings.ini (and cache it for up to a minute)
+*/
+function GetSetting($setting) {
+  global $settings;
+  $ret = false;
+  if (function_exists('apc_fetch') &&
+      function_exists('apc_store')) {
+    $value = apc_fetch("setting_$setting", $success);
+    if ($success)
+      $ret = $value;
+    else {
+      if (!isset($settings) || !is_array($settings))
+        $settings = parse_ini_file('./settings/settings.ini');
+      if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
+        $ret = $settings[$setting];
+      apc_store("setting_$setting", $ret, 60);
+    }
+  } else {
+    if (!isset($settings) || !is_array($settings))
+      $settings = parse_ini_file('./settings/settings.ini');
+    if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
+      $ret = $settings[$setting];
+  }
+  return $ret;
 }
 
 /**
@@ -370,10 +398,9 @@ function gz_file_get_contents($file)
 */
 function gz_file_put_contents($filename, $data)
 {
-    global $settings;
     $ret = false;
-    
-    if( (!array_key_exists('nogzip', $settings) || !$settings['nogzip']) && extension_loaded('zlib') )
+    $nogzip = GetSetting('nogzip');
+    if( !$nogzip && extension_loaded('zlib') )
     {
         $zip = gzopen("$filename.gz", 'wb9');
         if( $zip !== false )
@@ -416,10 +443,10 @@ function gz_file($filename)
 */
 function gz_compress($filename)
 {
-    global $settings;
     $ret = false;
-    
-    if( (!array_key_exists('nogzip', $settings) || !$settings['nogzip']) && extension_loaded('zlib') )
+
+    $nogzip = GetSetting('nogzip');
+    if( !$nogzip && extension_loaded('zlib') )
     {
         $data = file_get_contents($filename);
         if( $data ){
@@ -926,7 +953,6 @@ function GetTestInfoHtml($includeScript = true)
     global $isOwner;
     global $dom;
     global $login;
-    global $settings;
     global $admin;
     global $privateInstall;
     $html = '';
@@ -951,7 +977,8 @@ function GetTestInfoHtml($includeScript = true)
     {
         $show = false;
         if ($includeScript) {
-            if ($admin || (array_key_exists('show_script_in_results', $settings) && $settings['show_script_in_results'])) {
+            $showscript = GetSetting('show_script_in_results');
+            if ($admin || $showscript) {
                 $show = true;
             } elseif ($isOwner && !$test['testinfo']['sensitive']) {
                 $show = true;
@@ -1011,13 +1038,15 @@ function FixUrlSlash($url)
 */
 function RestoreTest($id)
 {
-    global $settings;
     $ret = false;
     if (ValidateTestId($id)) {
         $testPath = './' . GetTestPath($id);
-        if( array_key_exists('archive_dir', $settings) || 
-            array_key_exists('archive_s3_url', $settings) ||
-            array_key_exists('archive_s3_server', $settings) )
+        $archive_dir = GetSetting('archive_dir');
+        $archive_s3_url = GetSetting('archive_s3_url');
+        $archive_s3_server = GetSetting('archive_s3_server');
+        if( ($archive_dir && strlen($archive_dir)) ||
+            ($archive_s3_url && strlen($archive_s3_url)) ||
+            ($archive_s3_server && strlen($archive_s3_server)) )
         {
             $restore = false;
             if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
@@ -1104,7 +1133,6 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($loc, &$count, &$avgTime)
 {
-    global $settings;
     $total = 0;
     $locations = explode(',', $loc);
     foreach($locations as $location) {
@@ -1127,9 +1155,10 @@ function GetPendingTests($loc, &$count, &$avgTime)
             }
         }
         // now count just the low priority tests
-        if (array_key_exists('beanstalkd', $settings)) {
+        $beanstalkd = GetSetting('beanstalkd');
+        if ($beanstalkd && strlen($beanstalkd)) {
             require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
             for ($priority = 0; $priority < 9; $priority++) {
                 $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
                 try {
@@ -1157,11 +1186,11 @@ function GetPendingTests($loc, &$count, &$avgTime)
 * @param mixed $location
 */
 function GetQueueLengths($location) {
-    global $settings;
     $queues = array();
-    if (array_key_exists('beanstalkd', $settings)) {
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
         require_once('./lib/beanstalkd/pheanstalk_init.php');
-        $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
         for ($priority = 0; $priority <= 9; $priority++) {
             $queues[$priority] = 0;
             $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
@@ -1209,14 +1238,14 @@ function GetTesterCount($location)
 */
 function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 {
-    global $settings;
     $ret = false;
 
-    if (array_key_exists('beanstalkd', $settings)) {
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
         try {
             $tube = 'wpt.' . md5($workDir) . ".$priority";
             require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
             $pheanstalk->putInTube($tube, $file);
             $ret = true;
         } catch(Exception $e) {
@@ -1235,14 +1264,14 @@ function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 */
 function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 {
-    global $settings;
     $ret = false;
 
-    if (array_key_exists('beanstalkd', $settings)) {
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
         try {
             $tube = 'wpt.' . md5($workDir) . ".$priority";
             require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
             $pheanstalk->putInTube($tube, $file, '0');
             $ret = true;
         } catch(Exception $e) {
@@ -1265,11 +1294,11 @@ function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 */
 function GetJobFile($workDir, &$priority) {
     $file = null;
-    global $settings;
-    
-    if (array_key_exists('beanstalkd', $settings)) {
+
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
         require_once('./lib/beanstalkd/pheanstalk_init.php');
-        $pheanstalk = new Pheanstalk_Pheanstalk($settings['beanstalkd']);
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
         $priority = 0;
         while (!isset($file) && $priority <= 9) {
             $found = false;
@@ -1315,9 +1344,9 @@ function FindJobPosition($workDir, $testId)
 {
     $count = 0;
     $found = false;
-    global $settings;
-    
-    if (array_key_exists('beanstalkd', $settings)) {
+
+    $beanstalkd = GetSetting('beanstalkd');    
+    if ($beanstalkd && strlen($beanstalkd)) {
         $found = true;
     } elseif( LoadJobQueue($workDir, $queue) ) {
         $priority = 0;
@@ -1737,19 +1766,20 @@ function http_fetch($url) {
 * 
 */
 function ShardKey($test_num) {
-    global $settings;
     $key = '';
 
-    if( array_key_exists('bucket_size', $settings) && $settings['bucket_size'] > 0 ) {
+    $bucket_size = GetSetting('bucket_size');
+    if( $bucket_size ) {
         // group the tests sequentially
-        $bucket_size = (int)$settings['bucket_size'];
+        $bucket_size = (int)$bucket_size;
         $bucket = $test_num / $bucket_size;
         $key = NumToString($bucket) . '_';
     } else {
         // default to a 2-digit shard (1024-way shard)
         $size = 2;
-        if( array_key_exists('shard', $settings) )
-            $size = (int)$settings['shard'];
+        $shard = GetSetting('shard');
+        if( $shard )
+            $size = (int)$shard;
         
         if( $size > 0 && $size < 20 )
         {
