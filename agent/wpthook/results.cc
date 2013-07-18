@@ -377,7 +377,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Event Name
     result += "\t";
     // URL
-    result += "\t";
+    result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
     CStringA formatted_on_load = FormatTime(_test_state._on_load);
     result += formatted_on_load;

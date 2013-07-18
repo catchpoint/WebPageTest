@@ -187,6 +187,7 @@ public:
   CString _browser_command_line;
   CString _browser_additional_command_line;
   CStringA  _user_agent;
+  CString _navigated_url;
   
   // current state
   int     _run;

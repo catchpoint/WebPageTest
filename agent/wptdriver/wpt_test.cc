@@ -551,6 +551,9 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _log_data = true;
     else
       _log_data = false;
+  } else if (cmd == _T("navigate")) {
+    _navigated_url = command.target;
+    consumed = false;
   } else if (cmd == _T("sleep")) {
     int seconds = _ttoi(command.target);
     if (seconds > 0) {
