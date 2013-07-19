@@ -256,22 +256,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             
             $perTestTime = 0;
             $testCount = 0;
-            $beaconUrl = null;
-            $showslow = GetSetting('showslow');
-            if (strpos($id, '.') === false && $showslow && strlen($showslow))
-            {
-                $beaconUrl = "$showslow/beacon/webpagetest/";
-                $showslow_key = GetSetting('showslow_key');
-                if ($showslow_key && strlen($showslow_key))
-                    $beaconUrl .= '?key=' . trim($showslow_key);
-                $beaconRate = GetSetting('beaconRate');
-                if ($beaconRate && rand(1, 100) > $beaconRate )
-                    unset($beaconUrl);
-                else {
-                    $testInfo['showslow'] = 1;
-                    $testInfo_dirty = true;
-                }
-            }
 
             // do pre-complete post-processing
             require_once('video.inc');
@@ -279,9 +263,8 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             MoveVideoFiles($testPath);
             BuildVideoScripts($testPath);
             
-            if (!isset($pageData)) {
-                $pageData = loadAllPageData($testPath);
-            }
+            if (!isset($pageData))
+              $pageData = loadAllPageData($testPath);
             $medianRun = GetMedianRun($pageData, 0);
 
             // calculate and cache the content breakdown and visual progress information
@@ -354,16 +337,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // log any slow tests
-            $slow_test_time = GetSetting('slow_test_time');
-            if (isset($testInfo) && $slow_test_time && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
-                $elapsed = $time - $testInfo['started'];
-                if ($elapsed > $slow_test_time) {
-                    $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
-                    error_log($log_entry, 3, './tmp/slow_tests.log');
-                }
-            }
-            
             // see if it is an industry benchmark test
             if( array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
                 strlen($ini['industry']) && strlen($ini['industry_page']) )
@@ -397,67 +370,15 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // archive the test (modifies the on-disk testinfo so we need to flush it and update
             if( isset($testInfo) && $testInfo_dirty ) {
                 $testInfo_dirty = false;
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
             }
             SecureDir($testPath);
             FinishProcessingIncrementalResult();
-
-            ArchiveTest($id);
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             
-            // do any other post-processing (e-mail notification for example)
-            $notifyFrom = GetSetting('notifyFrom');
-            if( $notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini") )
-            {
-                $host = GetSetting('host');
-                $test = parse_ini_file("$testPath/testinfo.ini",true);
-                if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
-                    notify( $test['test']['notify'], $notifyFrom, $id, $testPath, $host );
-            }
-            
-            // send a callback request
-            if( isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback']) )
-            {
-                $send_callback = true;
-                $testId = $id;
-                
-                if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
-                    require_once('testStatus.inc');
-                    $testId = $testInfo['batch_id'];
-                    $status = GetTestStatus($testId);
-                    $send_callback = false;
-                    if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
-                        $send_callback = true;
-                }
-                
-                if ($send_callback) {
-                    // build up the url we are going to ping
-                    $url = $testInfo['callback'];
-                    if( strncasecmp($url, 'http', 4) )
-                        $url = "http://" . $url;
-                    if( strpos($url, '?') == false )
-                        $url .= '?';
-                    else
-                        $url .= '&';
-                    $url .= "id=$testId";
-                    
-                    // set a 10 second timeout on the request
-                    $ctx = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10))); 
-
-                    // send the request (we don't care about the response)
-                    @file_get_contents($url, 0, $ctx);
-                }
-            }
-            
-            // send a beacon?
-            if( isset($beaconUrl) && strlen($beaconUrl) )
-            {
-                @include('./work/beacon.inc');
-                @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
-            }
+            // send an async request to the post-processing code so we don't block
+            SendAsyncRequest("/work/postprocess.php?test=$id");
         } else {
             if( isset($testInfo) && $testInfo_dirty )
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));

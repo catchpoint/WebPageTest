@@ -37,8 +37,6 @@ if (function_exists('curl_init')) {
 } else
     $CURL_CONTEXT = false;
 
-require_once('./logging.inc');
-
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
     if (array_key_exists('X-Forwarded-For', $headers)){

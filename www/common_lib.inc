@@ -3,6 +3,8 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
 }
 
+require_once('./logging.inc');
+
 /**
 * Figure out the test path (relative) for the given test id
 * 
@@ -1795,5 +1797,22 @@ function ShardKey($test_num) {
     }
     
     return $key;
+}
+
+/**
+* Send a request with a really short timeout to fire an async processing task
+* 
+* @param mixed $relative_url
+*/
+function SendAsyncRequest($relative_url) {
+    $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_setopt($c, CURLOPT_TIMEOUT, 1);
+    curl_exec($c);
+    curl_close($c);
 }
 ?>
