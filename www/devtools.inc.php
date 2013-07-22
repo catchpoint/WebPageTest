@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.7';
+$DevToolsCacheVersion = '0.8';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -20,96 +20,104 @@ if(extension_loaded('newrelic')) {
 function GetDevToolsProgress($testPath, $run, $cached) {
     $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
     if (!isset($progress) || !is_array($progress)) {
-        if (GetTimeline($testPath, $run, $cached, $timeline)) {
-            $startTime = 0;
-            $fullScreen = 0;
-            $regions = array();
-            if (DevToolsHasLayout($timeline)) {
-              $didLayout = false;
-              $didReceiveResponse = false;
-            } else {
-              $didLayout = true;
-              $didReceiveResponse = true;
-            }
-            global $eventList;
-            $eventList = array();
-            $startTimes = array();
-            foreach($timeline as &$entry) {
-                if (array_key_exists('method', $entry)) {
-                  if (array_key_exists('params', $entry) &&
-                      !array_key_exists($entry['method'], $startTimes)) {
-                    if (array_key_exists('timestamp', $entry['params']))
-                      $startTimes[$entry['method']] = $entry['params']['timestamp'] * 1000;
-                    elseif (array_key_exists('record', $entry['params']) &&
-                            array_key_exists('startTime', $entry['params']['record']))
-                      $startTimes[$entry['method']] = $entry['params']['record']['startTime'];
-                  }
-                } elseif (array_key_exists('timestamp', $entry) &&
-                  !array_key_exists('timestamp', $startTimes))
-                  $startTimes['timestamp'] = $entry['timestamp'];
-                $frame = '0';
-                ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
-            }
-            foreach($startTimes as $time) {
-              if (!$startTime || $time < $startTime)
-                $startTime = $time;
-            }
-            $regionCount = count($regions);
-            if ($regionCount) {
-                $paintEvents = array();
-                $total = 0.0;
-                foreach($regions as $name => &$region) {
-                    $area = $region['width'] * $region['height'];
-                    $updateCount = floatval(count($region['times']));
-                    $incrementalImpact = floatval($area) / $updateCount;
-                    // only count full screen paints for half their value
-                    if ($area == $fullScreen)
-                        $incrementalImpact /= 2;
-                    foreach($region['times'] as $time) {
-                        $total += $incrementalImpact;
-                        $elapsed = (int)($time - $startTime);
-                        if (!array_key_exists($elapsed, $paintEvents))
-                            $paintEvents[$elapsed] = $incrementalImpact;
-                        else
-                            $paintEvents[$elapsed] += $incrementalImpact;
-                    }
-                }
-                if (count($paintEvents)) {
-                    ksort($paintEvents, SORT_NUMERIC);
-                    $current = 0.0;
-                    $lastTime = 0.0;
-                    $lastProgress = 0.0;
-                    $progress = array('SpeedIndex' => 0.0, 
-                                      'VisuallyComplete' => 0,
-                                      'StartRender' => 0,
-                                      'VisualProgress' => array());
-                    foreach($paintEvents as $time => $increment) {
-                        $current += $increment;
-                        $currentProgress = floatval(floatval($current) / floatval($total));
-                        $currentProgress = floatval(round($currentProgress * 100) / 100.0);
-                        $elapsed = $time - $lastTime;
-                        $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
-                        $progress['SpeedIndex'] += $siIncrement;
-                        $progress['VisualProgress'][$time] = $currentProgress;
-                        $progress['VisuallyComplete'] = $time;
-                        if (!$progress['StartRender'])
-                            $progress['StartRender'] = $time;
-                        $lastProgress = $currentProgress;
-                        $lastTime = $time;
-                        if ($currentProgress >= 1.0)
-                            break;
-                    }
+      if (GetTimeline($testPath, $run, $cached, $timeline)) {
+        $progress = array();
+        $startTime = 0;
+        $fullScreen = 0;
+        $regions = array();
+        if (DevToolsHasLayout($timeline)) {
+          $didLayout = false;
+          $didReceiveResponse = false;
+        } else {
+          $didLayout = true;
+          $didReceiveResponse = true;
+        }
+        global $eventList;
+        $eventList = array();
+        $startTimes = array();
+        $progress['processing'] = array();
+        foreach($timeline as &$entry) {
+            if (array_key_exists('method', $entry)) {
+              if (array_key_exists('params', $entry) &&
+                  !array_key_exists($entry['method'], $startTimes)) {
+                if (array_key_exists('timestamp', $entry['params']))
+                  $startTimes[$entry['method']] = $entry['params']['timestamp'] * 1000;
+                elseif (array_key_exists('record', $entry['params']) &&
+                        array_key_exists('startTime', $entry['params']['record']))
+                  $startTimes[$entry['method']] = $entry['params']['record']['startTime'];
+              }
+            } elseif (array_key_exists('timestamp', $entry) &&
+              !array_key_exists('timestamp', $startTimes))
+              $startTimes['timestamp'] = $entry['timestamp'];
+            $frame = '0';
+            ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
+            GetTimelineProcessingTimes($entry, $progress['processing']);
+        }
+        if (count($progress['processing'])) {
+          foreach($progress['processing'] as $type => &$time)
+            $time = intval(round($time));
+        } else
+          unset($progress['processing']);
+        foreach($startTimes as $time) {
+          if (!$startTime || $time < $startTime)
+            $startTime = $time;
+        }
+        $regionCount = count($regions);
+        if ($regionCount) {
+            $paintEvents = array();
+            $total = 0.0;
+            foreach($regions as $name => &$region) {
+                $area = $region['width'] * $region['height'];
+                $updateCount = floatval(count($region['times']));
+                $incrementalImpact = floatval($area) / $updateCount;
+                // only count full screen paints for half their value
+                if ($area == $fullScreen)
+                    $incrementalImpact /= 2;
+                foreach($region['times'] as $time) {
+                    $total += $incrementalImpact;
+                    $elapsed = (int)($time - $startTime);
+                    if (!array_key_exists($elapsed, $paintEvents))
+                        $paintEvents[$elapsed] = $incrementalImpact;
+                    else
+                        $paintEvents[$elapsed] += $incrementalImpact;
                 }
             }
-            if (count($eventList)) {
-                ksort($eventList, SORT_NUMERIC);
-                @unlink('./log/timeline.txt');
-                foreach($eventList as $time => $event)
-                    logMsg("$time - {$event['type']} : " . json_encode($event), './log/timeline.txt', true);
+            if (count($paintEvents)) {
+                ksort($paintEvents, SORT_NUMERIC);
+                $current = 0.0;
+                $lastTime = 0.0;
+                $lastProgress = 0.0;
+                $progress['SpeedIndex'] = 0.0;
+                $progress['VisuallyComplete'] = 0;
+                $progress['StartRender'] = 0;
+                $progress['VisualProgress'] = array();
+                foreach($paintEvents as $time => $increment) {
+                    $current += $increment;
+                    $currentProgress = floatval(floatval($current) / floatval($total));
+                    $currentProgress = floatval(round($currentProgress * 100) / 100.0);
+                    $elapsed = $time - $lastTime;
+                    $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
+                    $progress['SpeedIndex'] += $siIncrement;
+                    $progress['VisualProgress'][$time] = $currentProgress;
+                    $progress['VisuallyComplete'] = $time;
+                    if (!$progress['StartRender'])
+                        $progress['StartRender'] = $time;
+                    $lastProgress = $currentProgress;
+                    $lastTime = $time;
+                    if ($currentProgress >= 1.0)
+                        break;
+                }
             }
+        }
+        if (count($eventList)) {
+            ksort($eventList, SORT_NUMERIC);
+            @unlink('./log/timeline.txt');
+            foreach($eventList as $time => $event)
+                logMsg("$time - {$event['type']} : " . json_encode($event), './log/timeline.txt', true);
         }
         if (isset($progress) && is_array($progress))
             SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
+      }
     }
     return $progress;
 }  
@@ -757,5 +765,43 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
     }
   }
   return $console_log;
+}
+
+/**
+* Get the processing times by event type
+* 
+* @param mixed $entry
+* @param mixed $processingTimes
+*/
+function GetTimelineProcessingTimes(&$entry, &$processingTimes) {
+  $duration = 0;
+  if (array_key_exists('type', $entry)) {
+    if (array_key_exists('endTime', $entry) &&
+        array_key_exists('startTime', $entry) &&
+        $entry['endTime'] > $entry['startTime'])
+      $duration = $entry['endTime'] - $entry['startTime'];
+    if (array_key_exists('children', $entry) &&
+        is_array($entry['children']) &&
+        count($entry['children'])) {
+      $childTime = 0;
+      foreach($entry['children'] as &$child)
+        $childTime += GetTimelineProcessingTimes($child, $processingTimes);
+      if ($childTime < $duration) {
+        $selfTime = $duration - $childTime;
+        if (array_key_exists($entry['type'], $processingTimes))
+          $processingTimes[$entry['type']] += $selfTime;
+        else
+          $processingTimes[$entry['type']] = $selfTime;
+      }
+    } elseif ($duration) {
+      if (array_key_exists($entry['type'], $processingTimes))
+        $processingTimes[$entry['type']] += $duration;
+      else
+        $processingTimes[$entry['type']] = $duration;
+    }
+  }
+  if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
+      GetTimelineProcessingTimes($entry['params']['record'], $processingTimes);
+  return $duration;
 }
 ?>

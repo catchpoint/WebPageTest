@@ -183,11 +183,11 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       if( is_file("$testPath/$run{$cachedText}_bodies.zip") )
           $ret['rawData']['bodies'] = "http://$host$uri$path/$run{$cachedText}_bodies.zip";
 
+      $progress = GetVisualProgress($testPath, $run, $cached);
       if (array_key_exists('video', $testInfo) && $testInfo['video']) {
           $cachedTextLower = strtolower($cachedText);
           loadVideo("$testPath/video_{$run}$cachedTextLower", $frames);
           if (isset($frames) && count($frames)) {
-              $progress = GetVisualProgress($testPath, $run, 0);
               $ret['videoFrames'] = array();
               foreach ($frames as $time => $frameFile) {
                   $seconds = $time / 10.0;
@@ -201,6 +201,13 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
                   $ret['videoFrames'][] = $frame;
               }
           }
+      }
+      if (isset($progress) &&
+          is_array($progress) &&
+          array_key_exists('DevTools', $progress) &&
+          is_array($progress['DevTools']) &&
+          array_key_exists('processing', $progress['DevTools'])) {
+          $ret['processing'] = $progress['DevTools']['processing'];
       }
       
       $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);

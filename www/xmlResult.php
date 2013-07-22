@@ -256,13 +256,13 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
+                    $progress = GetVisualProgress($testPath, $i, 0);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}", $frames);
                         if( $frames && count($frames) )
                         {
-                            $progress = GetVisualProgress($testPath, $i, 0);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
@@ -278,6 +278,16 @@ else
                             }
                             echo "</videoFrames>\n";
                         }
+                    }
+                    if (isset($progress) &&
+                        is_array($progress) &&
+                        array_key_exists('DevTools', $progress) &&
+                        is_array($progress['DevTools']) &&
+                        array_key_exists('processing', $progress['DevTools'])) {
+                        echo "<processing>\n";
+                        foreach ($progress['DevTools']['processing'] as $key => $value)
+                          echo "<$key>$value</$key>\n";
+                        echo "</processing>\n";
                     }
                     
                     xmlDomains($id, $testPath, $i, 0);
@@ -344,13 +354,13 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
+                    $progress = GetVisualProgress($testPath, $i, 1);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}_cached", $frames);
                         if( $frames && count($frames) )
                         {
-                            $progress = GetVisualProgress($testPath, $i, 1);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
@@ -366,6 +376,16 @@ else
                             }
                             echo "</videoFrames>\n";
                         }
+                    }
+                    if (isset($progress) &&
+                        is_array($progress) &&
+                        array_key_exists('DevTools', $progress) &&
+                        is_array($progress['DevTools']) &&
+                        array_key_exists('processing', $progress['DevTools'])) {
+                        echo "<processing>\n";
+                        foreach ($progress['DevTools']['processing'] as $key => $value)
+                          echo "<$key>$value</$key>\n";
+                        echo "</processing>\n";
                     }
                     
                     xmlDomains($id, $testPath, $i, 1);
