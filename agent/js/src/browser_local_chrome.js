@@ -177,3 +177,21 @@ BrowserLocalChrome.prototype.scheduleGetCapabilities = function() {
       };
   }.bind(this));
 };
+
+/**
+ * Starts packet capture.
+ *
+ * @param {string} filename  local file where to copy the pcap result.
+ */
+BrowserLocalChrome.prototype.scheduleStartPacketCapture = function(filename) {
+  'use strict';
+  throw new Error('Packet capture requested, but not implemented for Chrome');
+};
+
+/**
+ * Stops packet capture and copies the result to a local file.
+ */
+BrowserLocalChrome.prototype.scheduleStopPacketCapture = function() {
+  'use strict';
+  throw new Error('Packet capture requested, but not implemented for Chrome');
+};

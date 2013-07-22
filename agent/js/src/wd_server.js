@@ -131,6 +131,7 @@ WebDriverServer.prototype.init = function(initMessage) {
   'use strict';
   // Reset every run:
   this.abortTimer_ = undefined;
+  this.capturePackets_ = initMessage.capturePackets;
   this.captureVideo_ = initMessage.captureVideo;
   this.devToolsMessages_ = [];
   this.driver_ = undefined;
@@ -145,6 +146,7 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.timeoutTimer_ = undefined;
   this.timeout_ = initMessage.timeout;
   this.url_ = initMessage.url;
+  this.pcapFile_ = undefined;
   this.videoFile_ = undefined;
   this.tearDown_();
   if (!this.browser_) {
@@ -404,11 +406,11 @@ WebDriverServer.prototype.takeScreenshot_ = function(
       return this.pageCommand_('captureScreenshot').then(function(result) {
         return result.data;
       });
-    } else if (caps.takeScreenshot) {
-      return this.browser_.scheduleTakeScreenshot();
-    } else {
-      return undefined;
     }
+    if (caps.takeScreenshot) {
+      return this.browser_.scheduleTakeScreenshot();
+    }
+    return undefined;
   }.bind(this)).then(function(screenshot) {
     if (screenshot) {
       this.saveScreenshot_(fileNameNoExt, screenshot, description);
@@ -422,10 +424,10 @@ WebDriverServer.prototype.takeScreenshot_ = function(
  * Called by the sandboxed driver before each command.
  *
  * @param {string} command WebDriver command name.
- * @param {Object} commandArgs array of command arguments.
+ * #param {Object} commandArgs array of command arguments.
  */
-WebDriverServer.prototype.onBeforeDriverAction = function(command,
-     commandArgs) { // jshint unused:false
+WebDriverServer.prototype.onBeforeDriverAction = function(command /*,
+     commandArgs*/) { // jshint unused:false
   'use strict';
   if (command.getName() === webdriver.command.CommandName.QUIT) {
     logger.debug('Before WD quit: forget driver, devTools');
@@ -439,11 +441,10 @@ WebDriverServer.prototype.onBeforeDriverAction = function(command,
  *
  * @param {string} command WebDriver command name.
  * @param {Object} commandArgs array of command arguments.
- * @param {Object} result command result.
+ * #param {Object} result command result.
  */
 WebDriverServer.prototype.onAfterDriverAction = function(
-    command, commandArgs,
-     result) { // jshint unused:false
+    command, commandArgs /*, result*/) { // jshint unused:false
   'use strict';
   logger.extra('Injected after command: %s', commandArgs[1]);
   if (this.actionCbRecurseGuard_) {
@@ -576,12 +577,11 @@ WebDriverServer.prototype.getCapabilities_ = function() {
     var done = new webdriver.promise.Deferred();
     done.resolve(this.capabilities_);
     return done;
-  } else {
-    return this.browser_.scheduleGetCapabilities().then(function(caps) {
-      this.capabilities_ = caps;
-      return caps;
-    }.bind(this));
   }
+  return this.browser_.scheduleGetCapabilities().then(function(caps) {
+    this.capabilities_ = caps;
+    return caps;
+  }.bind(this));
 };
 
 /**
@@ -642,6 +642,14 @@ WebDriverServer.prototype.clearPage_ = function() {
       }.bind(this));
       this.setPageBackground_(frameId);  // White
     }.bind(this));
+    if (this.capturePackets_) {
+      var pcapFile = exports.process.pid + '_tcpdump.pcap';
+      this.browser_.scheduleStartPacketCapture(pcapFile);
+      this.app_.schedule('Packet capture started', function() {
+        logger.debug('Packet capture start succeeded');
+        this.pcapFile_ = pcapFile;
+      }.bind(this));
+    }
   }.bind(this));
 };
 
@@ -828,13 +836,19 @@ WebDriverServer.prototype.done_ = function() {
   if (videoFile) {
     this.browser_.scheduleStopVideoRecording();
   }
+  var pcapFile = this.pcapFile_;
+  if (pcapFile) {
+    this.browser_.scheduleStopPacketCapture();
+    this.pcapFile_ = undefined;
+  }
   this.app_.schedule('Send IPC done', function() {
     logger.debug('sending IPC done');
     exports.process.send({
         cmd: 'done',
         devToolsMessages: this.devToolsMessages_,
         screenshots: this.screenshots_,
-        videoFile: videoFile
+        videoFile: videoFile,
+        pcapFile: pcapFile
       });
   }.bind(this));
   if (this.exitWhenDone_) {

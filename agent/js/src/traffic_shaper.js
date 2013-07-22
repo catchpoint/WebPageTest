@@ -75,7 +75,7 @@ exports.TrafficShaper = TrafficShaper;
 /**
  * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
  */
-TrafficShaper.prototype.scheduleIsSupported = function() {
+TrafficShaper.prototype.scheduleIsSupported_ = function() {
   'use strict';
   return this.app_.schedule('isSupported', function() {
     if (undefined !== this.isSupported_) {
@@ -131,7 +131,7 @@ TrafficShaper.prototype.scheduleIsSupported = function() {
  */
 TrafficShaper.prototype.scheduleIpfw_ = function(opts) {
   'use strict';
-  this.scheduleIsSupported().then(function(isSupported) {
+  this.scheduleIsSupported_().then(function(isSupported) {
     if (!isSupported) {
       throw new Error(this.ipfwCommand_ + ' not found.' +
         ' To disable traffic shaping, re-run your test with ' +
@@ -247,7 +247,7 @@ TrafficShaper.prototype.scheduleStop = function() {
   // If our deviceAddr_ is 'any' we could do:
   //   ipfw -q flush; ipfw -q pipe flush
   // but that'd also delete all non-'any' rules!
-  this.scheduleIsSupported().then(function(isSupported) {
+  this.scheduleIsSupported_().then(function(isSupported) {
     if (!isSupported) {
       return;
     }

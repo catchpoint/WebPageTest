@@ -493,8 +493,8 @@ exports.scheduleNoFault = function(app, description, f) {
  *  scheduleFunction(app, 'x', foo, a, b).then(
  *      function(c, d) {...}, function(err) {...});
  *
- * @param {webdriver.promise.Application=} app the scheduler.
- * @param {string=} description debug title.
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string} description debug title.
  * @param {Function} f Function({Function} callback, {Function=} errback).
  * @param {string} var_args arguments.
  * @return {webdriver.promise.Promise} the scheduled promise.
@@ -549,8 +549,8 @@ exports.scheduleFunction = function(app, description, f,
  * they will correctly lock ports.  Other non-agent applications are only
  * compatible if they use the above logic.
  *
- * @param {webdriver.promise.Application=} app the scheduler.
- * @param {string=} description debug title.
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string} description debug title.
  * @param {number=} minPort min port, defaults to 1k.
  * @param {number=} maxPort max port, defaults to 32k.
  * @return {webdriver.promise.Promise} resolve({Object}):
@@ -642,6 +642,24 @@ exports.forEachRecursive = function(obj, callback, keyPath) {
     });
   }
 };
+
+/**
+ * Concatenates a directory path with a file or relative path.
+ *
+ * @param {string} dir  the base directory. If undefined, path returned as is.
+ * @param {string} path  the path under the directory.
+ *   If undefined, dir returned as is.
+ * @returns {*}
+ */
+exports.concatPath = function(dir, path) {
+  if (dir === undefined || (path && path[0] === '/')) {
+    return path;
+  }
+  if (dir && dir[dir.length - 1] !== '/') {
+    dir += '/';
+  }
+  return (path ? (dir ? (dir + path) : path) : dir);
+}
 
 /**
  * Node.js is a multiplatform framework, however because we are making native
