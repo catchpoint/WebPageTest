@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.8';
+$DevToolsCacheVersion = '0.9';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -54,8 +54,8 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             GetTimelineProcessingTimes($entry, $progress['processing']);
         }
         if (count($progress['processing'])) {
-          foreach($progress['processing'] as $type => &$time)
-            $time = intval(round($time));
+          foreach($progress['processing'] as $type => &$procTime)
+            $procTime = intval(round($procTime));
         } else
           unset($progress['processing']);
         foreach($startTimes as $time) {
@@ -776,6 +776,7 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
 function GetTimelineProcessingTimes(&$entry, &$processingTimes) {
   $duration = 0;
   if (array_key_exists('type', $entry)) {
+    $type = trim($entry['type']);
     if (array_key_exists('endTime', $entry) &&
         array_key_exists('startTime', $entry) &&
         $entry['endTime'] > $entry['startTime'])
@@ -788,16 +789,16 @@ function GetTimelineProcessingTimes(&$entry, &$processingTimes) {
         $childTime += GetTimelineProcessingTimes($child, $processingTimes);
       if ($childTime < $duration) {
         $selfTime = $duration - $childTime;
-        if (array_key_exists($entry['type'], $processingTimes))
-          $processingTimes[$entry['type']] += $selfTime;
+        if (array_key_exists($type, $processingTimes))
+          $processingTimes[$type] += $selfTime;
         else
-          $processingTimes[$entry['type']] = $selfTime;
+          $processingTimes[$type] = $selfTime;
       }
     } elseif ($duration) {
-      if (array_key_exists($entry['type'], $processingTimes))
-        $processingTimes[$entry['type']] += $duration;
+      if (array_key_exists($type, $processingTimes))
+        $processingTimes[$type] += $duration;
       else
-        $processingTimes[$entry['type']] = $duration;
+        $processingTimes[$type] = $duration;
     }
   }
   if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
