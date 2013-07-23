@@ -38,6 +38,10 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                 vertical-align:top; 
                 padding:0;
             }
+            
+            th.header {
+              font-weight: normal;
+            }
         </style>
     </head>
     <body>
@@ -65,6 +69,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                                'DecodeImage' => 'Painting',
                                'ResizeImage' => 'Painting',
                                'CompositeLayers' => 'Painting',
+                               'Rasterize' => 'Painting',
                                'ResourceReceivedData' => 'Loading',
                                'ParseHTML' => 'Loading',
                                'ResourceReceiveResponse' => 'Loading');
@@ -85,8 +90,11 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             
             <table align="center">
                 <tr>
-                    <th colspan="2">
+                    <th class="header" colspan="2">
                     <h2>Main thread processing breakdown</h2>
+                    Where the browser's main thread was busy, not including idle time waiting for resources <?php
+                      echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=$cached\" title=\"View Chrome Dev Tools Timeline\">view timeline</a>)";
+                    ?>.
                     </th>
                 </tr>
                 <tr>
