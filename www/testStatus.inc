@@ -303,6 +303,8 @@ function GetAppurifyStatus($id, $testPath, &$test) {
       count($test['appurify_tests'])) {
     $ret['statusCode'] = 102;
     $ret['statusText'] = 'Server Unreachable';
+    $waiting = false;
+    $started = false;
     require_once('./lib/appurify.inc.php');
     $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
     $all_complete = true;
@@ -312,6 +314,12 @@ function GetAppurifyStatus($id, $testPath, &$test) {
       $completed = array_key_exists('completed', $run) ? $run['completed'] : false;
       if (!$completed) {
         if ($appurify->CheckTestRun($test, $run, $index, $testPath)) {
+          if (array_key_exists('status', $run)) {
+            if ($run['status'] == 'in_progress')
+              $started = true;
+            elseif ($run['status'] == 'scheduled')
+              $waiting = true;
+          }
           if (array_key_exists('completed', $run) && $run['completed']) {
             $completed = true;
             $dirty = true;
@@ -340,6 +348,12 @@ function GetAppurifyStatus($id, $testPath, &$test) {
           $ret['statusCode'] = 200;
           $ret['statusText'] = 'Test Complete';
           $ret['completeTime'] = $date;
+        } elseif ($started) {
+          $ret['statusCode'] = 100;
+          $ret['statusText'] = 'Test Started';
+        } elseif ($waiting) {
+          $ret['statusCode'] = 101;
+          $ret['statusText'] = 'Test Pending';
         }
       }
       if ($dirty)

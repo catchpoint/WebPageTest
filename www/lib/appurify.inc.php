@@ -100,10 +100,12 @@ class Appurify{
         $status = $this->Get('https://live.appurify.com/resource/tests/check/', array('test_run_id' => $run['id']));
         if ($status !== false &&
             is_array($status) &&
-            array_key_exists('status', $status) &&
-            $status['status'] == 'complete') {
-          //$run['completed'] = true;
-          if ($this->GetFile('https://live.appurify.com/resource/tests/result/', $file, array('run_id' => $run['id']))) {
+            array_key_exists('status', $status)) {
+          $run['status'] = $status['status'];
+          if ($status['status'] == 'complete') {
+            //$run['completed'] = true;
+            if ($this->GetFile('https://live.appurify.com/resource/tests/result/', $file, array('run_id' => $run['id']))) {
+            }
           }
           $ret = true;
         }
