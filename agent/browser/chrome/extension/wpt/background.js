@@ -29,6 +29,8 @@
 
  ******************************************************************************/
 
+var g_tabid = 0;
+
 goog.require('wpt.chromeDebugger');
 goog.require('wpt.chromeExtensionUtils');
 goog.require('wpt.commands');
@@ -85,7 +87,6 @@ var g_processing_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
-var g_tabid = 0;
 var g_started = false;
 
 /**
