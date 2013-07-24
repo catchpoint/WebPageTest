@@ -116,7 +116,7 @@ function GetTestResult($id) {
     }
     
     $ret['runs'] = array();
-    for ($run = 0; $run <= $runs; $run++) {
+    for ($run = 1; $run <= $runs; $run++) {
         $ret['runs'][$run] = array();
         for ($cached = 0; $cached <= $cachedMax; $cached++) {
             $label = $cacheLabels[$cached];
