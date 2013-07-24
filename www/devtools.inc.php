@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '0.9';
+$DevToolsCacheVersion = '1.0';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -51,11 +51,22 @@ function GetDevToolsProgress($testPath, $run, $cached) {
               $startTimes['timestamp'] = $entry['timestamp'];
             $frame = '0';
             ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
-            GetTimelineProcessingTimes($entry, $progress['processing']);
+            GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
         }
         if (count($progress['processing'])) {
-          foreach($progress['processing'] as $type => &$procTime)
+          $proc_total = 0.0;
+          foreach($progress['processing'] as $type => &$procTime) {
+            $proc_total += $procTime;
             $procTime = intval(round($procTime));
+          }
+          $progress['processing']['Idle'] = 0;
+          if (isset($processing_start) &&
+              isset($processing_end) &&
+              $processing_end > $processing_start) {
+            $proc_elapsed = $processing_end - $processing_start;
+            if ($proc_elapsed > $proc_total)
+              $progress['processing']['Idle'] = intval(round($proc_elapsed - $proc_total));
+          }
         } else
           unset($progress['processing']);
         foreach($startTimes as $time) {
@@ -773,20 +784,25 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
 * @param mixed $entry
 * @param mixed $processingTimes
 */
-function GetTimelineProcessingTimes(&$entry, &$processingTimes) {
+function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_start, &$processing_end) {
   $duration = 0;
   if (array_key_exists('type', $entry)) {
     $type = trim($entry['type']);
     if (array_key_exists('endTime', $entry) &&
         array_key_exists('startTime', $entry) &&
-        $entry['endTime'] > $entry['startTime'])
+        $entry['endTime'] >= $entry['startTime']) {
       $duration = $entry['endTime'] - $entry['startTime'];
+      if (!isset($processing_start) || $entry['startTime'] < $processing_start)
+        $processing_start = $entry['startTime'];
+      if (!isset($processing_end) || $entry['endTime'] > $processing_end)
+        $processing_end = $entry['startTime'];
+    }
     if (array_key_exists('children', $entry) &&
         is_array($entry['children']) &&
         count($entry['children'])) {
       $childTime = 0;
       foreach($entry['children'] as &$child)
-        $childTime += GetTimelineProcessingTimes($child, $processingTimes);
+        $childTime += GetTimelineProcessingTimes($child, $processingTimes, $processing_start, $processing_end);
       if ($childTime < $duration) {
         $selfTime = $duration - $childTime;
         if (array_key_exists($type, $processingTimes))
@@ -802,7 +818,7 @@ function GetTimelineProcessingTimes(&$entry, &$processingTimes) {
     }
   }
   if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-      GetTimelineProcessingTimes($entry['params']['record'], $processingTimes);
+      GetTimelineProcessingTimes($entry['params']['record'], $processingTimes, $processing_start, $processing_end);
   return $duration;
 }
 ?>
