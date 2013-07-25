@@ -774,6 +774,7 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
           is_array($event['message']))
           $console_log[] = $event['message'];
     }
+    gz_file_put_contents($console_log_file, json_encode($console_log));
   }
   return $console_log;
 }

@@ -273,9 +273,11 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 for ($i = 1; $i <= $testInfo['runs']; $i++) {
                     getBreakdown($id, $testPath, $i, 0, $requests);
                     GetVisualProgress($testPath, $i, 0);
+                    DevToolsGetConsoleLog($testPath, $i, 0);
                     if (!$testInfo['fvonly']) {
                         getBreakdown($id, $testPath, $i, 1, $requests);
                         GetVisualProgress($testPath, $i, 1);
+                        DevToolsGetConsoleLog($testPath, $i, 1);
                     }
                 }
             }
