@@ -32,6 +32,7 @@ var events = require('events');
 var http = require('http');
 var logger = require('logger');
 var net = require('net');
+var should = require('should');
 var Stream = require('stream');
 var timers = require('timers');
 var util = require('util');
@@ -180,8 +181,10 @@ exports.assertStringsMatch = function(expected, actual) {
         util.format('[%s] does not match [%s]', actual, expected));
   } else {
     expected.forEach(function(expValue, i) {
-      if (!(expValue instanceof RegExp ? expValue.test(actual[i]) :
-            expValue === actual[i])) {
+      var matches = expValue instanceof RegExp ?
+          expValue.test(actual[i]) :
+          expValue === actual[i];
+      if (!matches) {
         assert.fail(actual[i], expValue,
             util.format('element #%d of [%s] does not match [%s]',
                 i, actual, expected));
@@ -212,21 +215,23 @@ exports.assertMatch = function(expected, actual) {
   } else if ('function' === typeof expected) {
     expected.apply(expected, actual);
   } else {
-    var i;
-    for (i in expected) {
-      var expValue = expected[i];
-      var j = i;
-      if (j < 0) {
-        j = actual.length + parseInt(j, 10);
+    Object.getOwnPropertyNames(expected).forEach(function(name) {
+      var expValue = expected[name];
+      var index = name;
+      if (index < 0) {
+        index = actual.length + parseInt(index, 10);
       }
-      var actValue = (j >= 0 && j < actual.length ? actual[j] : undefined);
-      if (!(expValue instanceof RegExp ? expValue.test(actValue) :
-            expValue === actValue)) {
+      var actValue =
+          (index >= 0 && index < actual.length ? actual[index] : undefined);
+      var matches = expValue instanceof RegExp ?
+          expValue.test(actValue) :
+          expValue === actValue;
+      if (!matches) {
         assert.fail(actValue, expValue,
             util.format('element #%d of [%s] does not match [%s]',
-                j, actual, expected));
+                name, actual, expected));
       }
-    }
+    });
   }
 };
 
@@ -285,18 +290,27 @@ exports.stubOutProcessSpawn = function(sandbox) {
 
   stub.callNum = 0;
   stub.assertCall = function() {
-    var actual = [];
-    if (stub.callNum < stub.callCount) {
-      var argv = stub.getCall(stub.callNum).args;
-      stub.callNum += 1;
-      actual = [argv[0]].concat(argv[1]);
-    }
     var expected = Array.prototype.slice.call(arguments);
+    if (0 === expected.length) {  // Called with no args: assert no more calls.
+      should.equal(this.callNum, this.callCount);
+      return;
+    }
     if (1 === expected.length && !(expected[0] instanceof Array)) {
       expected = expected[0];
     }
-    exports.assertMatch(expected, actual);
+    var actual = [];
+    if (this.callNum < this.callCount) {
+      var argv = this.getCall(this.callNum).args;
+      this.callNum += 1;
+      actual = [argv[0]].concat(argv[1]);
+      exports.assertMatch(expected, actual);
+    } else {
+      assert.fail(undefined, expected, this.printf(
+          'Too few actual calls to %n() for expected call #%1: %2',
+          this.callCount + 1, JSON.stringify(expected)));
+    }
   };
+
   stub.assertCalls = function() {
     var i;
     for (i = 0; i < arguments.length; i += 1) {
@@ -304,9 +318,10 @@ exports.stubOutProcessSpawn = function(sandbox) {
       if (!(expected instanceof Array)) {
         expected = [expected];
       }
-      stub.assertCall.apply(stub, expected);
+      this.assertCall.apply(stub, expected);
     }
   };
+
   return stub;
 };
 

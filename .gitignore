@@ -4,6 +4,7 @@ lib-release/
 lib-debug/
 wptdriver tests/
 /ipch/
+.idea/
 *.vcxproj.user
 *.vcproj.*.user
 *~

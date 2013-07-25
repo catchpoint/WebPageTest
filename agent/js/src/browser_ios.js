@@ -55,21 +55,10 @@ function BrowserIos(app, args) {
   this.app_ = app;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.deviceSerial_ = args.deviceSerial;
-  function concatPath(dir, path) {
-    var d = dir;
-    var p = path;
-    if (d === undefined || (p && p[0] === '/')) {
-      return p;
-    }
-    if (d && d[d.length - 1] !== '/') {
-      d += '/';
-    }
-    return (p ? (d ? (d + p) : p) : d);
-  }
   // TODO allow idevice/ssh/etc to be undefined and try to run as best we can,
   // potentially with lots of warnings (e.g. "can't clear cache", ...).
   var iDeviceDir = args.iosIDeviceDir;
-  var toIDevicePath = concatPath.bind(this, iDeviceDir);
+  var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
   this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
   this.iDeviceAppRunner_ = toIDevicePath('idevice-app-runner');
@@ -77,17 +66,17 @@ function BrowserIos(app, args) {
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
   this.imageConverter_ = '/usr/bin/convert'; // TODO use 'sips' on mac?
-  this.devImageDir_ = concatPath(args.iosDevImageDir);
+  this.devImageDir_ = process_utils.concatPath(args.iosDevImageDir);
   this.devToolsPort_ = args.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
   this.proxyProcess_ = undefined;
   this.sshConfigFile_ = '/dev/null';
-  this.sshProxy_ = concatPath(args.iosSshProxyDir,
+  this.sshProxy_ = process_utils.concatPath(args.iosSshProxyDir,
       args.iosSshProxy || 'sshproxy.py');
   this.sshCertPath_ = (args.iosSshCert ||
       process.env.HOME + '/.ssh/id_dsa_ios');
-  this.urlOpenerApp_ = concatPath(args.iosAppDir,
+  this.urlOpenerApp_ = process_utils.concatPath(args.iosAppDir,
       args.iosUrlOpenerApp || 'urlOpener.ipa');
   this.pac_ = args.pac;
   this.pacServerPort_ = undefined;
@@ -97,7 +86,7 @@ function BrowserIos(app, args) {
   this.pacUrlPortLock_ = undefined;
   this.pacForwardProcess_ = undefined;
   this.videoCard_ = args.videoCard;
-  var capturePath = concatPath(args.captureDir,
+  var capturePath = process_utils.concatPath(args.captureDir,
       args.captureScript || 'capture');
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
 }
@@ -136,7 +125,7 @@ BrowserIos.prototype.startBrowser = function() {
 BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   'use strict';
   if (!this.iDeviceAppRunner_) {
-    return;
+    return undefined;
   }
   var done = new webdriver.promise.Deferred();
   function reject(e) {
@@ -307,9 +296,8 @@ BrowserIos.prototype.scheduleSsh_ = function(var_args) { // jshint unused:false
     function(e) {
       if (!e.signal && 1 === e.code) {
         return e.stdout;
-      } else {
-        throw e;
       }
+      throw e;
     });
 };
 
@@ -368,9 +356,7 @@ BrowserIos.prototype.scheduleConfigurePac_ = function() {
       logger.debug((this.pacUrlPort_ ? 'Setting' : 'Clearing') + ' PAC');
       var commands = [];
       var lines = stdout.trim().split('\n');
-      var lineNumber;
-      for (lineNumber in lines) {
-        var line = lines[lineNumber];
+      lines.forEach(function(line) {
         var matches = /^\s*subKey\s*\[\d+\]\s*=\s*(.*)\s*$/im.exec(line);
         if (matches) {
           var key = matches[1];
@@ -385,16 +371,16 @@ BrowserIos.prototype.scheduleConfigurePac_ = function() {
           }
           commands.push('set ' + key);
         }
-      }
+      }.bind(this));
       if (commands.length > 0) {
         logger.debug('Sending commands to scutil:\n  ' + commands.join('\n  '));
         return this.scheduleSsh_('echo -e "' + commands.join('\n') +
             '" | scutil');
-      } else if (!this.pacUrlPort_) {
-        return undefined;
-      } else {
-        throw new Error('scutil lacks PAC Proxies? ' + stdout);
       }
+      if (!this.pacUrlPort_) {
+        return undefined;
+      }
+      throw new Error('scutil lacks PAC Proxies? ' + stdout);
     }.bind(this));
 
   // Update the Settings UI.  This is optional but a good idea, since
@@ -656,4 +642,22 @@ BrowserIos.prototype.scheduleStartVideoRecording = function(filename, onExit) {
 BrowserIos.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   this.video_.scheduleStopVideoRecording();
+};
+
+/**
+ * Starts packet capture.
+ *
+ * #param {string} filename  local file where to copy the pcap result.
+ */
+BrowserIos.prototype.scheduleStartPacketCapture = function(/*filename*/) {
+  'use strict';
+  throw new Error('Packet capture requested, but not implemented for iOS');
+};
+
+/**
+ * Stops packet capture and copies the result to a local file.
+ */
+BrowserIos.prototype.scheduleStopPacketCapture = function() {
+  'use strict';
+  throw new Error('Packet capture requested, but not implemented for iOS');
 };

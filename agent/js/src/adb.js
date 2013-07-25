@@ -26,7 +26,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var logger = require('logger');
 var process_utils = require('process_utils');
+var util = require('util');
 
 /** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
@@ -43,7 +45,7 @@ exports.DEFAULT_TIMEOUT = 60000;
 function Adb(app, serial, adbCommand) {
   'use strict';
   this.app_ = app;
-  this.adbCommand_ = adbCommand || process.env.ANDROID_ADB || 'adb';
+  this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
   this.serial = serial;
 }
 /** Public class. */
@@ -62,7 +64,7 @@ exports.Adb = Adb;
 Adb.prototype.command_ = function(args, options, timeout) {
   'use strict';
   return process_utils.scheduleExec(this.app_,
-      this.adbCommand_, args, options, timeout || exports.DEFAULT_TIMEOUT);
+      this.adbCommand, args, options, timeout || exports.DEFAULT_TIMEOUT);
 };
 
 /**
@@ -94,6 +96,54 @@ Adb.prototype.shell = function(args, options, timeout) {
 };
 
 /**
+ * Schedules a check if a given path exists on device.
+ *
+ * @param {string} path  the path to check.
+ * @returns {webdriver.promise.Promise}  Resolves to true if exists, or false.
+ */
+Adb.prototype.exists = function(path) {
+  'use strict';
+  return this.shell(['ls', path, '>', '/dev/null', '2>&1', ';', 'echo', '$?'])
+      .then(function(stdout) {
+    return stdout === '0';
+  }.bind(this));
+};
+
+/**
+ * Schedules a promise resolved with pid's of process(es) with a given name.
+ *
+ * So far only supports non-package binary names, e.g. 'tcpdump'.
+ *
+ * @param {string} name  the process name to check.
+ * @return {webdriver.promise.Promise} Resolves to Array of pid's as strings.
+ */
+Adb.prototype.getPidsOfProcess = function(name) {
+  'use strict';
+  return this.shell(['ps', name]).then(function(stdout) {
+    var pids = [];
+    var lines = stdout.split(/\r?\n/);
+    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {
+      throw new Error(util.format('ps command failed, output: %j', stdout));
+    }
+    lines.forEach(function(line, iLine) {
+      if (line.length === 0) {
+        return;  // Skip empty lines (last line in particular).
+      }
+      var fields = line.split(/\s+/);
+      if (iLine === 0 && fields[0] === 'USER') {  // Skip the header
+        return;
+      }
+      if (fields.length !== 9) {
+        throw new Error(util.format('Failed to parse ps output line %d: %j',
+            iLine, stdout));
+      }
+      pids.push(fields[1]);
+    }.bind(this));
+    return pids;
+  }.bind(this));
+};
+
+/**
  * Remove trailing '^M's from adb's output.
  *
  * E.g.
@@ -103,18 +153,17 @@ Adb.prototype.shell = function(args, options, timeout) {
  *   cache^M
  *   ...
  *
- * @param {string|Buffer} s string or Buffer with '\r\n's.
+ * @param {string|Buffer} origBuf  string or Buffer with '\r\n's.
  * @return {string|Buffer} string or Buffer with '\n's.
  */
-Adb.prototype.dos2unix = function(s) {
+Adb.prototype.dos2unix = function(origBuf) {
   'use strict';
-  if (!s) {
-    return s;
+  if (!origBuf) {
+    return origBuf;
   }
-  if (!(s instanceof Buffer)) {
-    return s.replace(/\r\n/g, '\n');
+  if (!(origBuf instanceof Buffer)) {
+    return origBuf.replace(/\r\n/g, '\n');
   }
-  var origBuf = s;
   // Tricky binary buffer case.
   //
   // UTF-8 won't work for PNGs, so we can't do:
