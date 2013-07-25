@@ -239,14 +239,19 @@ WebDriverServer.prototype.connectDevTools_ = function(wdNamespace) {
   this.app_.scheduleWait('Connect DevTools to ' + wdNamespace,
       function() {
     var connected = new webdriver.promise.Deferred();
-    var devTools = new devtools.DevTools(this.browser_.getDevToolsUrl());
-    devTools.connect(function() {
-      this.devTools_ = devTools;
-      this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
-      connected.resolve(true);
-    }.bind(this), function() {
+    var devToolsUrl = this.browser_.getDevToolsUrl();
+    if (devToolsUrl) {  // Browser exit resets the URL to undefined.
+      var devTools = new devtools.DevTools(devToolsUrl);
+      devTools.connect(function() {
+        this.devTools_ = devTools;
+        this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
+        connected.resolve(true);
+      }.bind(this), function() {
+        connected.resolve(false);
+      });
+    } else {
       connected.resolve(false);
-    });
+    }
     return connected.promise;
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
   this.networkCommand_('enable');

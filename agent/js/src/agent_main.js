@@ -229,7 +229,7 @@ Agent.prototype.startJobRun_ = function(job) {
         pac: pac,
         timeout: this.client_.jobTimeout - 15000  // 15 seconds to stop+submit.
       };
-    this.flags_.getOwnPropertyNames().forEach(function(flagName) {
+    Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
       if (!message[flagName]) {
         message[flagName] = this.flags_[flagName];
       }
@@ -389,7 +389,8 @@ exports.main = function(flags) {
   if (!versionMatch) {
     throw new Error('Cannot parse NodeJS version: ' + process.version);
   }
-  if (versionMatch[1] !== 0 || versionMatch[2] < 8) {
+  if (parseInt(versionMatch[1], 10) !== 0 ||
+      parseInt(versionMatch[2], 10) < 8) {
     throw new Error('node version must be >0.8, not ' + process.version);
   }
   exports.setSystemCommands();

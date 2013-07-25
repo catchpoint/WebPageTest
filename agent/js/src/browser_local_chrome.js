@@ -117,18 +117,18 @@ BrowserLocalChrome.prototype.startChildProcess_ = function(
     this.childProcessName_ = name;
     this.childProcess_ = proc;
     proc.on('exit', function(code, signal) {
-      logger.info('WD EXIT code %s signal %s', code, signal);
+      logger.info('Chrome EXIT code %s signal %s', code, signal);
       this.childProcess_ = undefined;
       this.serverUrl_ = undefined;
       this.devToolsUrl_ = undefined;
     }.bind(this));
     proc.stdout.on('data', function(data) {
-      logger.info('WD STDOUT: %s', data);
+      logger.info('Chrome STDOUT: %s', data);
     });
     // WD STDERR only gets log level warn because it outputs a lot of harmless
     // information over STDERR
     proc.stderr.on('data', function(data) {
-      logger.warn('WD STDERR: %s', data);
+      logger.warn('Chrome STDERR: %s', data);
     });
     this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
   }.bind(this));

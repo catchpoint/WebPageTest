@@ -94,7 +94,8 @@ describe('packet_capture_android small', function() {
           args.some(function(arg) { return arg === 'ps'; })) {
         stdout = 'USER ...\nuser 123 x3 x4 x5 x6 x7 x8 tcpdump\n';
       } else if (/adb$/.test(command) &&
-          args.some(new RegExp().test.bind(/^kill \-INT \d+$/))) {
+          args.some(function(arg) { return arg === 'kill'; }) &&
+          args.some(function(arg) { return arg === '-INT'; })) {
         global.setTimeout(function() {
           adbTcpdumpProc.emit('exit', 0);
           adbTcpdumpProc.emit('close');
@@ -111,7 +112,7 @@ describe('packet_capture_android small', function() {
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
-        ['shell', 'su', '-c', 'kill -INT 123'],
+        ['shell', 'su', '-c', 'kill', '-INT', '123'],
         ['pull', /\/sdcard\/\w+\.pcap/, localPcapFile]);
     assertAdbCall();
   }
@@ -123,9 +124,10 @@ describe('packet_capture_android small', function() {
       stdout = 'USER ...\n';
     } else if (/adb$/.test(command) &&
         args.some(function(arg) { return arg === 'netcfg'; })) {
-      stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01';
-    } else if (/adb$/.test(command) &&
-        args.some(new RegExp().test.bind(/tcpdump /))) {
+      stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01\r\n';
+    } else if (/adb$/.test(command) && args[3] === 'su' &&
+        /tcpdump$/.test(args[5])) {
+      // adb -s GAGA shell su -c .../tcpdump
       adbTcpdumpProc = proc;
       return true;  // Keep alive -- don't fake-exit.
     }
@@ -164,7 +166,8 @@ describe('packet_capture_android small', function() {
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '0'.
         ['shell', 'ps', 'tcpdump'],  // Output 'USER ...'.
         ['shell', 'netcfg'],  // Output 'usb0 ...'.
-        ['shell', 'su', '-c', /^tcpdump [\w\- ]+ \/sdcard\/\w+\.pcap/]);
+        ['shell', 'su', '-c', /^tcpdump/, '-i', 'usb0', '-p', '-s', '0', '-w',
+          /\/sdcard\/\w+\.pcap/]);
     assertAdbCall();
 
     stop(pcap);
@@ -200,11 +203,12 @@ describe('packet_capture_android small', function() {
         ['shell', 'ls', '/data/local/tmp/tcpdump',
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '1'.
         ['push', localTcpdump, '/data/local/tmp/tcpdump'],
-        ['shell', 'su', '-c', 'chown root /data/local/tmp/tcpdump'],
-        ['shell', 'su', '-c', 'chmod 6755 /data/local/tmp/tcpdump'],
+        ['shell', 'su', '-c', 'chown', 'root', '/data/local/tmp/tcpdump'],
+        ['shell', 'su', '-c', 'chmod', '6755', '/data/local/tmp/tcpdump'],
         ['shell', 'netcfg'],  // Output 'usb0 ...'.
-        ['shell', 'su', '-c',
-         /^\/data\/local\/tmp\/tcpdump [\w\- ]+ \/sdcard\/\w+\.pcap/]);
+        ['shell', 'su', '-c', '/data/local/tmp/tcpdump',
+          '-i', 'usb0', '-p', '-s', '0', '-w',
+          /\/sdcard\/\w+\.pcap/]);
     assertAdbCall();
 
     stop(pcap);

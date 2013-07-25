@@ -102,9 +102,9 @@ PacketCaptureAndroid.prototype.schedulePushTcpdumpIfNeeded_ = function() {
               'push', this.localTcpdumpBinary_, this.deviceTcpdumpCommand_]);
           // /data/local/tmp needs no su, but chown root and sticky bit do.
           this.adb_.shell(['su', '-c',
-              'chown root ' + this.deviceTcpdumpCommand_]);
+              'chown', 'root', this.deviceTcpdumpCommand_]);
           this.adb_.shell(['su', '-c',
-              'chmod 6755 ' + this.deviceTcpdumpCommand_]);
+              'chmod', '6755', this.deviceTcpdumpCommand_]);
         }
       }.bind(this));
     }
@@ -126,7 +126,7 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
     // -p = don't put into promiscuous mode.
     // -s 0 = capture entire packets.
     var args = ['-s', this.deviceSerial_, 'shell', 'su', '-c',
-      this.deviceTcpdumpCommand_ + ' -i ' + iface + ' -p -s 0 -w ' +
+      this.deviceTcpdumpCommand_, '-i', iface, '-p', '-s', '0', '-w',
       this.devicePcapFile_];
     logger.debug('Starting tcpdump on device: adb ' + args);
     process_utils.scheduleSpawn(this.app_, this.adb_.adbCommand, args)
@@ -168,7 +168,7 @@ PacketCaptureAndroid.prototype.scheduleKillTcpdumps_ = function(signal) {
   // Soft-kill all tcpdumps running on device.
   this.adb_.getPidsOfProcess('tcpdump').then(function(pids) {
     pids.forEach(function(pid) {
-      this.adb_.shell(['su', '-c', 'kill -' + signal + ' ' + pid]);
+      this.adb_.shell(['su', '-c', 'kill', '-' + signal, pid]);
     }.bind(this));
   }.bind(this));
 };
@@ -189,10 +189,14 @@ PacketCaptureAndroid.prototype.scheduleDetectConnectedInterface_ = function() {
   'use strict';
   return this.adb_.shell(['netcfg']).then(function(stdout) {
     var connectedInterfaces = [];
-    stdout.split(/\r?\n/).forEach(function(line) {
+    stdout.split(/\r?\n/).forEach(function(line, lineNumber) {
+      if (!line) {
+        return;  // Skip empty lines.
+      }
       var fields = line.split(/\s+/);
       if (fields.length !== 5) {
-        throw new Error(util.format('netcfg output not recognized: %j', line));
+        throw new Error(util.format('netcfg output unrecognized at line %d: %j',
+            lineNumber, stdout));
       }
       if (fields[0] !== 'lo' && fields[1] === 'UP' &&
           0 !== fields[2].indexOf('0.0.0.0')) {
