@@ -382,7 +382,11 @@ function GetMedianRun(&$pageData, $cached, $metric = 'loadTime') {
     $count = count($times);
     if( $count > 1 ) {
         asort($times);
-        $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+        if (array_key_exists('medianRun', $_REQUEST) &&
+            $_REQUEST['medianRun'] == 'fastest')
+          $medianIndex = 1;
+        else
+          $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
         $current = 0;
         foreach( $times as $index => $time ) {
             $current++;
