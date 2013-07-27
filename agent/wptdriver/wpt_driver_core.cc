@@ -635,17 +635,8 @@ void WptDriverCore::CloseDialogs(void) {
       hWnd = ::GetWindow(hWnd, GW_HWNDNEXT);
     }
 
-    // close all of the dialogs, preferably by clicking on OK
-    for (size_t i = 0; i < hDlg.GetCount(); i++) {
-      HWND hOk = ::FindWindowEx(hDlg[i], 0, 0, _T("OK"));
-      if (hOk) {
-        int id = ::GetDlgCtrlID(hOk);
-        if( !id )
-          id = IDOK;
-        ::PostMessage(hDlg[i],WM_COMMAND,id,0);
-      } else
-        ::PostMessage(hDlg[i],WM_CLOSE,0,0);
-    }
+    for (size_t i = 0; i < hDlg.GetCount(); i++)
+      ::PostMessage(hDlg[i],WM_CLOSE,0,0);
   }
 }
 
