@@ -678,6 +678,10 @@ bool CURLBlaster::LaunchBrowser(void)
   OutputDebugString(_T("[UrlBlast] - Flushing DNS"));
   if( !keepDNS )
 	  FlushDNS();
+
+  // move the cursor to the top-left corner
+  SetCursorPos(0,0);
+  ShowCursor(FALSE);
 	
 	if( !info.url.IsEmpty() )
 	{
@@ -902,6 +906,9 @@ bool CURLBlaster::LaunchBrowser(void)
 			ResetIpfw();
 		}
 	}
+
+  // restore the cursor
+  ShowCursor(TRUE);
 	
 	return ret;
 }
