@@ -1,4 +1,15 @@
 <?php
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('StartProcessingIncrementalResult');
+  newrelic_add_custom_tracer('CheckForSpam');
+  newrelic_add_custom_tracer('loadPageRunData');
+  newrelic_add_custom_tracer('ProcessAVIVideo');
+  newrelic_add_custom_tracer('getBreakdown');
+  newrelic_add_custom_tracer('GetVisualProgress');
+  newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+  newrelic_add_custom_tracer('FinishProcessingIncrementalResult');
+}
+
 chdir('..');
 //$debug = true;
 include('common.inc');
@@ -19,6 +30,11 @@ $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
 $testLock = null;
+
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_parameter('test', $id);
+  newrelic_add_custom_parameter('location', $location);
+}
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
