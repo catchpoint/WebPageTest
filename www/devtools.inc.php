@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.1';
+$DevToolsCacheVersion = '1.2';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -209,13 +209,14 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
                 $fullScreen = $area;
             if ($didLayout && $didReceiveResponse && !$hadPaintChildren) {
                 $paintEvent = $entry['data'];
+                $paintEvent['endTime'] = $entry['endTime'];
                 $paintEvent['startTime'] = $entry['startTime'];
                 $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
                 if (!array_key_exists($regionName, $regions)) {
                     $regions[$regionName] = $paintEvent;
                     $regions[$regionName]['times'] = array();
                 }
-                $regions[$regionName]['times'][] = $entry['startTime'];
+                $regions[$regionName]['times'][] = $entry['endTime'];
             }
           }
         }
