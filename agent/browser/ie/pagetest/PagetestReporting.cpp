@@ -3638,12 +3638,14 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
         while (pos != -1) {
           index++;
           long int_val = _ttol(val);
-          switch (index) {
-            case 1: dcl_start = int_val; break;
-            case 2: dcl_end = int_val; break;
-            case 3: first_paint = int_val; break;
-            case 4: load_start = int_val; break;
-            case 5: load_end = int_val; break;
+          if (int_val > 0 && int_val < 3600000) {
+            switch (index) {
+              case 1: dcl_start = int_val; break;
+              case 2: dcl_end = int_val; break;
+              case 3: first_paint = int_val; break;
+              case 4: load_start = int_val; break;
+              case 5: load_end = int_val; break;
+            }
           }
           val = nav_timings.Tokenize(_T(","), pos);
         }
