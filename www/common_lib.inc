@@ -559,10 +559,13 @@ function BuildLocations( &$locations )
         // start from the top-level locations
         foreach ($original as $name => $loc) {
             // just the top-level locations
-            if (isset($loc['browser'])) {
+            if (array_key_exists('browser', $loc) ||
+                array_key_exists('type', $loc)) {
                 // clone the existing locations over for code that just accesses them directly
                 $loc['localDir'] = "./work/jobs/$name";
                 $loc['location'] = $name;
+                if( !is_dir($loc['localDir']) )
+                    mkdir($loc['localDir'], 0777, true);
                 $locations[$name] = $loc;
             } else {
                 if ($name == 'locations') {
@@ -570,28 +573,36 @@ function BuildLocations( &$locations )
                 } else {
                     $index = 1;
                     $default = null;
-                    if (array_key_exists('default', $loc))
+                    if (array_key_exists('default', $loc)) {
                         $default = $loc['default'];
+                    }
                     $location = array();
                     foreach ($loc as $key => $value) {
                         if (is_numeric($key)) {
                             // make sure we have a default
-                            if (!isset($default) || !strlen($default))
+                            if (!isset($default) || !strlen($default)) {
                                 $default = $value;
+                            }
                             // clone the individual configuration based on the available browsers
                             if (array_key_exists($value, $original)) {
                                 $configuration = $original[$value];
-                                if (array_key_exists('browser', $configuration) && strlen($configuration['browser'])) {
+                                if (array_key_exists('browser', $configuration) &&
+                                    strlen($configuration['browser'])) {
                                     $configuration['localDir'] = "./work/jobs/$value";
                                     $configuration['location'] = $value;
+                                    if (!is_dir($configuration['localDir'])) {
+                                        mkdir($configuration['localDir'], 0777, true);
+                                    }
                                     $browsers = array();
                                     $parts = explode(',', $configuration['browser']);
-                                    foreach ($parts as $browser)
+                                    foreach ($parts as $browser) {
                                         $browsers[] = trim($browser);
+                                    }
                                     if (count($browsers) > 1) {
                                         // default to the first browser in the list
-                                        if ($default == $value)
+                                        if ($default == $value) {
                                             $default .= ':' . $browsers[0];
+                                        }
                                         // build the actual configurations
                                         foreach ($browsers as $browser) {
                                             $label = $value . ':' . $browser;
@@ -607,6 +618,29 @@ function BuildLocations( &$locations )
                                         $location[$index] = $value;
                                         $index++;
                                     }
+                                } elseif (array_key_exists('type', $configuration) &&
+                                          $configuration['type'] == 'Appurify' &&
+                                          array_key_exists('key', $configuration) &&
+                                          array_key_exists('secret', $configuration)) {
+                                  $configuration['localDir'] = "./work/jobs/$value";
+                                  $configuration['location'] = $value;
+                                  require_once('./lib/appurify.inc.php');
+                                  $appurify = new Appurify($configuration['key'], $configuration['secret']);
+                                  unset($configuration['key']);
+                                  unset($configuration['secret']);
+                                  $devices = $appurify->GetDevices();
+                                  if (count($devices)) {
+                                    $configuration['browser'] = '';
+                                    foreach($devices as $app_id => $app_name) {
+                                      $label = $value . ':' . $app_id;
+                                      $location[$index] = $label;
+                                      $index++;
+                                      $cfg = $configuration;
+                                      $cfg['browser'] = $app_name;
+                                      $cfg['label'] = $cfg['label'] . " - $app_name";
+                                      $locations[$label] = $cfg;
+                                    }
+                                  }
                                 }
                             }
                         } elseif ($key !== 'default') {
