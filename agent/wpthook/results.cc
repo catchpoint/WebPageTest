@@ -605,6 +605,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Progressive JPEG Score
     buff.Format("%d\t", checks._progressive_jpeg_score);
     result += buff;
+    // W3C Navigation timing first paint (MS-specific right now)
+    buff.Format("%d\t", _test_state._first_paint);
+    result += buff;
 
     result += "\r\n";
 

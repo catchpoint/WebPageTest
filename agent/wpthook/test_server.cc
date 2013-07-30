@@ -166,11 +166,12 @@ void TestServer::MongooseCallback(enum mg_event event,
       DWORD end = GetDwordParam(request_info->query_string,
                                 "domContentLoadedEventEnd");
       hook_.SetDomContentLoadedEvent(start, end);
-
-      // To set "onload" time, browsers may request "/event/load".
       start = GetDwordParam(request_info->query_string, "loadEventStart");
       end = GetDwordParam(request_info->query_string, "loadEventEnd");
       hook_.SetLoadEvent(start, end);
+      DWORD first_paint = GetDwordParam(request_info->query_string,
+                                "msFirstPaint");
+      hook_.SetFirstPaint(first_paint);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();

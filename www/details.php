@@ -269,14 +269,21 @@ $page_description = "Website performance test details$testLabel";
                     if ($timingCount)
                       foreach($userTimings as $label => $value)
                         echo '<th>' . htmlspecialchars($label) . '</th>';
-                    if ($navTiming)
-                      echo "<th$borderClass><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
+                    if ($navTiming) {
+                      echo "<th$borderClass>";
+                      if ($data['firstPaint'] > 0)
+                        echo "msFirstPaint</th><th>";
+                      echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
+                    }
                     echo '</tr><tr>';
                     if ($timingCount)
                       foreach($userTimings as $label => $value)
                         echo '<td>' . number_format($value / 1000, 3) . 's</td>';
                     if ($navTiming) {
-                      echo "<td$borderClass>" . number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
+                      echo "<td$borderClass>";
+                      if ($data['firstPaint'] > 0)
+                        echo number_format($data['firstPaint'] / 1000.0, 3) . 's</td><td>';
+                      echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
                               number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
                               number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)' . '</td>';
                       echo '<td>' . number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
@@ -312,22 +319,21 @@ $page_description = "Website performance test details$testLabel";
                 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">
                     <tr>
                         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php if (array_key_exists('aft', $data) && $data['aft'] ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>
-                        <?php } ?>
-                        <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
-                        <?php } ?>
-                        <?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
-                        <?php } ?>
-                        <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
-                        <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
-                        <?php if(array_key_exists('userTime', $data) || (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'])) { ?>
-                        <td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>
-                        <?php } ?>
+                        <?php 
+                        if (array_key_exists('aft', $data) && $data['aft'] )
+                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>';
+                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
+                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>';
+                        if(array_key_exists('firstPaint', $data) && (float)$data['firstPaint'] > 0.0 )
+                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#8FBC83"></div></td><td>msFirstPaint</td></tr></table></td>';
+                        if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 )
+                          echo '<td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>';
+                        if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 )
+                          echo '<td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>';
+                        echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>';
+                        if(array_key_exists('userTime', $data) || (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']))
+                          echo '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
+                        ?>
                     </tr>
                 </table>
                 <br>

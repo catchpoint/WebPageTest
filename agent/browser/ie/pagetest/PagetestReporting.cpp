@@ -960,8 +960,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
   }
   
   // get the navigation timing information from supported browsers
-  long load_start, load_end, dcl_start, dcl_end;
-  GetNavTiming(load_start, load_end, dcl_start, dcl_end);
+  long load_start, load_end, dcl_start, dcl_end, first_paint;
+  GetNavTiming(load_start, load_end, dcl_start, dcl_end, first_paint);
 
 	CA2T ip(inet_ntoa(pageIP.sin_addr));
 	
@@ -1037,7 +1037,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%s\t")
                     _T("%s\t%d\t%d\t%d\t%d\t%d\t%d\t")
-                    _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d")
+                    _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t")
+                    _T("%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1052,7 +1053,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget,
 			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, (LPCTSTR)pageSpeedVersion,
 			(LPCTSTR)pageTitle, msTitle, load_start, load_end, dcl_start, dcl_end, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore);
+      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore,
+      first_paint);
 	buff += result;
 }
 
@@ -3605,8 +3607,9 @@ bool CPagetestReporting::FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
   supported browsers (IE 9+).
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
-                                      long &dcl_start, long &dcl_end) {
-  load_start = load_end = dcl_start = dcl_end = 0;
+                                      long &dcl_start, long &dcl_end,
+                                      long &first_paint) {
+  load_start = load_end = dcl_start = dcl_end = first_paint = 0;
   static const TCHAR * FN_GET_NAV_TIMING =
       _T("var wptGetNavTimings = (function(){")
       _T("  var timingParams = \"\";")
@@ -3617,6 +3620,7 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
       _T("    };")
       _T("    timingParams = addTime('domContentLoadedEventStart') + ',' +")
       _T("        addTime('domContentLoadedEventEnd') + ',' +")
+      _T("        addTime('msFirstPaint') + ',' +")
       _T("        addTime('loadEventStart') + ',' +")
       _T("        addTime('loadEventEnd');")
       _T("  }")
@@ -3637,8 +3641,9 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
           switch (index) {
             case 1: dcl_start = int_val; break;
             case 2: dcl_end = int_val; break;
-            case 3: load_start = int_val; break;
-            case 4: load_end = int_val; break;
+            case 3: first_paint = int_val; break;
+            case 4: load_start = int_val; break;
+            case 5: load_end = int_val; break;
           }
           val = nav_timings.Tokenize(_T(","), pos);
         }

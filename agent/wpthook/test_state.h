@@ -88,6 +88,7 @@ public:
   void OnAllDOMElementsLoaded(DWORD load_time);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD load_event_start, DWORD load_event_end);
+  void SetFirstPaint(DWORD first_paint);
   void OnLoad(); // browsers either call this or SetLoadEvent
   void OnStatusMessage(CString status);
   bool IsDone();
@@ -118,6 +119,7 @@ public:
   LARGE_INTEGER _on_load;
   DWORD _load_event_start;
   DWORD _load_event_end;
+  DWORD _first_paint;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
