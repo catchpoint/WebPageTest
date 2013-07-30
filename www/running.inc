@@ -42,7 +42,7 @@
                 <h3>Testing...</h3>
                 <?php
                 $status = GetTestStatus($id, true);
-                if ( !$status['startTime'] )
+                if ( !array_key_exists('startTime', $status) || !$status['startTime'] )
                 {
                     ?>
                     <form action="/cancelTest.php" method="get">
@@ -59,7 +59,7 @@
             <div id="statusImg">
                 <?php
                     $img = "waiting";
-                    if( $status['startTime'] )
+                    if( array_key_exists('startTime', $status) && $status['startTime'] )
                         $img = "testing";
                     echo "<img id='statusImage' src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
                     echo "<div id=\"statusText\">$statusText</div>\n";

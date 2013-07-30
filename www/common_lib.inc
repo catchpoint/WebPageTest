@@ -280,21 +280,19 @@ function GetDefaultLocation()
 */
 function delTree($dir) 
 {
-    if( substr( $dir, -1 ) != '/' )
-        $dir .= '/';
-        
-    $files = glob( $dir . '*', GLOB_MARK );
-    foreach( $files as $file )
-    {
-        if( substr( $file, -1 ) == '/' )
-            delTree( $file );
+  $dir = trim($dir, '/');
+  if (is_dir($dir)) {
+    $files = scandir($dir);
+    foreach( $files as $file ) {
+      if ($file != '.' && $file != '..') {
+        if (is_dir("$dir/$file"))
+          delTree("$dir/$file");
         else
-            unlink( $file );
+          unlink("$dir/$file");
+      }
     }
-   
-    $dir = trim($dir, '/');
-    if( is_dir($dir) ) 
-        rmdir( $dir );
+    rmdir( $dir );
+  }
 } 
 
 /**
@@ -376,9 +374,9 @@ function gz_file_get_contents($file)
 {
     $data = null;
     
-    $zip = gzopen("$file.gz", 'rb');
+    $zip = @gzopen("$file.gz", 'rb');
     if( $zip === false )
-        $zip = gzopen($file, 'rb');
+        $zip = @gzopen($file, 'rb');
     
     if( $zip !== false ) {
         while ($string = gzread($zip, 4096)) {

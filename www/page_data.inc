@@ -141,7 +141,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                        'server_rtt',
                        'firstPaint');
         foreach ($times as $key) {
-          if ($ret[$key] > 3600000 || $ret[$key] < 0)
+          if (array_key_exists($key, $ret) &&
+              ($ret[$key] > 3600000 || $ret[$key] < 0))
             $ret[$key] = 0;
         }
     }

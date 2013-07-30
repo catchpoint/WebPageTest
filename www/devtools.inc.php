@@ -315,191 +315,197 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
             // go through and pull out the requests, calculating the page stats as we go
             $connections = array();
             foreach($rawRequests as &$rawRequest) {
-                $request = array();
-                $request['ip_addr'] = '';
-                $request['method'] = array_key_exists('method', $rawRequest) ? $rawRequest['method'] : '';
-                $request['host'] = '';
-                $request['url'] = '';
-                $request['full_url'] = '';
-                $request['is_secure'] = 0;
-                if (array_key_exists('url', $rawRequest)) {
-                    $request['full_url'] = $rawRequest['url'];
-                    $parts = parse_url($rawRequest['url']);
-                    $request['host'] = $parts['host'];
-                    $request['url'] = $parts['path'];
-                    if (array_key_exists('query', $parts) && strlen($parts['query']))
-                        $request['url'] .= '?' . $parts['query'];
-                    if ($parts['scheme'] == 'https')
-                        $request['is_secure'] = 1;
-                }
-                $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
-                if (array_key_exists('errorCode', $rawRequest))
-                    $request['responseCode'] = $rawRequest['errorCode'];
-                $request['load_ms'] = -1;
-                if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('timing', $rawRequest['response']) &&
-                    array_key_exists('sendStart', $rawRequest['response']['timing']) &&
-                    $rawRequest['response']['timing']['sendStart'] >= 0)
-                    $rawRequest['startTime'] = $rawRequest['response']['timing']['sendStart'];
-                if (array_key_exists('endTime', $rawRequest)) {
-                    $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']) * 1000);
-                    $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
-                    if ($endOffset > $pageData['fullyLoaded'])
-                        $pageData['fullyLoaded'] = $endOffset;
-                }
-                $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime']) * 1000) : -1;
-                $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000) : 0;
-                $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
-                $request['bytesIn'] = array_key_exists('bytesIn', $rawRequest) ? $rawRequest['bytesIn'] : 0;
-                if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
-                    $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
-                $request['objectSize'] = '';
-                $request['expires'] = '';
-                $request['cacheControl'] = '';
-                $request['contentType'] = '';
-                $request['contentEncoding'] = '';
-                if (array_key_exists('response', $rawRequest) && 
-                    array_key_exists('headers', $rawRequest['response'])) {
-                    if (array_key_exists('Expires', $rawRequest['response']['headers']))
-                        $request['expires'] =  $rawRequest['response']['headers']['Expires'];
-                    if (array_key_exists('Cache-Control', $rawRequest['response']['headers']))
-                        $request['cacheControl'] =  $rawRequest['response']['headers']['Cache-Control'];
-                    if (array_key_exists('Content-Type', $rawRequest['response']['headers']))
-                        $request['contentType'] =  $rawRequest['response']['headers']['Content-Type'];
-                    if (array_key_exists('Content-Encoding', $rawRequest['response']['headers']))
-                        $request['contentEncoding'] =  $rawRequest['response']['headers']['Content-Encoding'];
-                }
-                $request['type'] = 3;
-                $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
-                $request['dns_start'] = -1;
-                $request['dns_end'] = -1;
-                $request['connect_start'] = -1;
-                $request['connect_end'] = -1;
-                $request['ssl_start'] = -1;
-                $request['ssl_end'] = -1;
-                if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('timing', $rawRequest['response']) &&
-                    $request['socket'] !== -1 &&
-                    !array_key_exists($request['socket'], $connections)) {
-                    $connections[$request['socket']] = $rawRequest['response']['timing'];
-                    if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsStart'] >= 0)
-                      $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']) * 1000);
-                    if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                      $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']) * 1000);
-                    if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                      $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']) * 1000);
-                    if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                      $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']) * 1000);
-                    if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                      $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']) * 1000);
-                    if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
-                        $rawRequest['response']['timing']['dnsEnd'] >= 0)
-                      $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']) * 1000);
-                }
-                $request['initiator'] = '';
-                $request['initiator_line'] = '';
-                $request['initiator_column'] = '';
-                if (array_key_exists('initiator', $rawRequest)) {
-                    if (array_key_exists('url', $rawRequest['initiator']))
-                        $request['initiator'] = $rawRequest['initiator']['url'];
-                    if (array_key_exists('lineNumber', $rawRequest['initiator']))
-                        $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
-                }
-                $request['server_rtt'] = null;
-                $request['headers'] = array('request' => array(), 'response' => array());
-                if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('requestHeadersText', $rawRequest['response'])) {
-                    $request['headers']['request'] = array();
-                    $headers = explode("\n", $rawRequest['response']['requestHeadersText']);
-                    foreach($headers as $header) {
-                        $header = trim($header);
-                        if (strlen($header))
-                            $request['headers']['request'][] = $header;
-                    }
-                } elseif (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('requestHeaders', $rawRequest['response'])) {
-                    $request['headers']['request'] = array();
-                    foreach($rawRequest['response']['requestHeaders'] as $key => $value)
-                        $request['headers']['request'][] = "$key: $value";
-                } elseif (array_key_exists('headers', $rawRequest)) {
-                    $request['headers']['request'] = array();
-                    foreach($rawRequest['headers'] as $key => $value)
-                        $request['headers']['request'][] = "$key: $value";
-                }
-                if (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('headersText', $rawRequest['response'])) {
-                    $request['headers']['response'] = array();
-                    $headers = explode("\n", $rawRequest['response']['headersText']);
-                    foreach($headers as $header) {
-                        $header = trim($header);
-                        if (strlen($header))
-                            $request['headers']['response'][] = $header;
-                    }
-                } elseif (array_key_exists('response', $rawRequest) &&
-                    array_key_exists('headers', $rawRequest['response'])) {
-                    $request['headers']['response'] = array();
-                    foreach($rawRequest['response']['headers'] as $key => $value)
-                        $request['headers']['response'][] = "$key: $value";
-                }
+              if (array_key_exists('url', $rawRequest)) {
+                $parts = parse_url($rawRequest['url']);
+                if (isset($parts) &&
+                    is_array($parts) &&
+                    array_key_exists('host', $parts) &&
+                    array_key_exists('path', $parts)) {
+                  $request = array();
+                  $request['ip_addr'] = '';
+                  $request['method'] = array_key_exists('method', $rawRequest) ? $rawRequest['method'] : '';
+                  $request['host'] = '';
+                  $request['url'] = '';
+                  $request['full_url'] = '';
+                  $request['is_secure'] = 0;
+                  $request['full_url'] = $rawRequest['url'];
+                  $request['host'] = $parts['host'];
+                  $request['url'] = $parts['path'];
+                  if (array_key_exists('query', $parts) && strlen($parts['query']))
+                    $request['url'] .= '?' . $parts['query'];
+                  if ($parts['scheme'] == 'https')
+                    $request['is_secure'] = 1;
 
-                // unsupported fields
-                $request['score_cache'] = -1;
-                $request['score_cdn'] = -1;
-                $request['score_gzip'] = -1;
-                $request['score_cookies'] = -1;
-                $request['score_keep-alive'] = -1;
-                $request['score_minify'] = -1;
-                $request['score_combine'] = -1;
-                $request['score_compress'] = -1;
-                $request['score_etags'] = -1;
-                $request['dns_ms'] = -1;
-                $request['connect_ms'] = -1;
-                $request['ssl_ms'] = -1;
-                $request['gzip_total'] = null;
-                $request['gzip_save'] = null;
-                $request['minify_total'] = null;
-                $request['minify_save'] = null;
-                $request['image_total'] = null;
-                $request['image_save'] = null;
-                $request['cache_time'] = null;
-                $request['cdn_provider'] = null;
-                $request['server_count'] = null;
-                
-                // page-level stats
-                if (!array_key_exists('URL', $pageData) && strlen($request['full_url']))
-                    $pageData['URL'] = $request['full_url'];
-                if (array_key_exists('endTime', $rawRequest)) {
-                    $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
-                    if ($endOffset > $pageData['fullyLoaded'])
-                        $pageData['fullyLoaded'] = $endOffset;
+                  $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
+                  if (array_key_exists('errorCode', $rawRequest))
+                      $request['responseCode'] = $rawRequest['errorCode'];
+                  $request['load_ms'] = -1;
+                  if (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('timing', $rawRequest['response']) &&
+                      array_key_exists('sendStart', $rawRequest['response']['timing']) &&
+                      $rawRequest['response']['timing']['sendStart'] >= 0)
+                      $rawRequest['startTime'] = $rawRequest['response']['timing']['sendStart'];
+                  if (array_key_exists('endTime', $rawRequest)) {
+                      $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']) * 1000);
+                      $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
+                      if ($endOffset > $pageData['fullyLoaded'])
+                          $pageData['fullyLoaded'] = $endOffset;
+                  }
+                  $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime']) * 1000) : -1;
+                  $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000) : 0;
+                  $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
+                  $request['bytesIn'] = array_key_exists('bytesIn', $rawRequest) ? $rawRequest['bytesIn'] : 0;
+                  if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                      $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
+                  $request['objectSize'] = '';
+                  $request['expires'] = '';
+                  $request['cacheControl'] = '';
+                  $request['contentType'] = '';
+                  $request['contentEncoding'] = '';
+                  if (array_key_exists('response', $rawRequest) && 
+                      array_key_exists('headers', $rawRequest['response'])) {
+                      if (array_key_exists('Expires', $rawRequest['response']['headers']))
+                          $request['expires'] =  $rawRequest['response']['headers']['Expires'];
+                      if (array_key_exists('Cache-Control', $rawRequest['response']['headers']))
+                          $request['cacheControl'] =  $rawRequest['response']['headers']['Cache-Control'];
+                      if (array_key_exists('Content-Type', $rawRequest['response']['headers']))
+                          $request['contentType'] =  $rawRequest['response']['headers']['Content-Type'];
+                      if (array_key_exists('Content-Encoding', $rawRequest['response']['headers']))
+                          $request['contentEncoding'] =  $rawRequest['response']['headers']['Content-Encoding'];
+                  }
+                  $request['type'] = 3;
+                  $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
+                  $request['dns_start'] = -1;
+                  $request['dns_end'] = -1;
+                  $request['connect_start'] = -1;
+                  $request['connect_end'] = -1;
+                  $request['ssl_start'] = -1;
+                  $request['ssl_end'] = -1;
+                  if (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('timing', $rawRequest['response']) &&
+                      $request['socket'] !== -1 &&
+                      !array_key_exists($request['socket'], $connections)) {
+                      $connections[$request['socket']] = $rawRequest['response']['timing'];
+                      if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsStart'] >= 0)
+                        $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']) * 1000);
+                      if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                        $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']) * 1000);
+                      if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                        $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']) * 1000);
+                      if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                        $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']) * 1000);
+                      if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                        $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']) * 1000);
+                      if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
+                          $rawRequest['response']['timing']['dnsEnd'] >= 0)
+                        $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']) * 1000);
+                  }
+                  $request['initiator'] = '';
+                  $request['initiator_line'] = '';
+                  $request['initiator_column'] = '';
+                  if (array_key_exists('initiator', $rawRequest)) {
+                      if (array_key_exists('url', $rawRequest['initiator']))
+                          $request['initiator'] = $rawRequest['initiator']['url'];
+                      if (array_key_exists('lineNumber', $rawRequest['initiator']))
+                          $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
+                  }
+                  $request['server_rtt'] = null;
+                  $request['headers'] = array('request' => array(), 'response' => array());
+                  if (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('requestHeadersText', $rawRequest['response'])) {
+                      $request['headers']['request'] = array();
+                      $headers = explode("\n", $rawRequest['response']['requestHeadersText']);
+                      foreach($headers as $header) {
+                          $header = trim($header);
+                          if (strlen($header))
+                              $request['headers']['request'][] = $header;
+                      }
+                  } elseif (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('requestHeaders', $rawRequest['response'])) {
+                      $request['headers']['request'] = array();
+                      foreach($rawRequest['response']['requestHeaders'] as $key => $value)
+                          $request['headers']['request'][] = "$key: $value";
+                  } elseif (array_key_exists('headers', $rawRequest)) {
+                      $request['headers']['request'] = array();
+                      foreach($rawRequest['headers'] as $key => $value)
+                          $request['headers']['request'][] = "$key: $value";
+                  }
+                  if (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('headersText', $rawRequest['response'])) {
+                      $request['headers']['response'] = array();
+                      $headers = explode("\n", $rawRequest['response']['headersText']);
+                      foreach($headers as $header) {
+                          $header = trim($header);
+                          if (strlen($header))
+                              $request['headers']['response'][] = $header;
+                      }
+                  } elseif (array_key_exists('response', $rawRequest) &&
+                      array_key_exists('headers', $rawRequest['response'])) {
+                      $request['headers']['response'] = array();
+                      foreach($rawRequest['response']['headers'] as $key => $value)
+                          $request['headers']['response'][] = "$key: $value";
+                  }
+
+                  // unsupported fields
+                  $request['score_cache'] = -1;
+                  $request['score_cdn'] = -1;
+                  $request['score_gzip'] = -1;
+                  $request['score_cookies'] = -1;
+                  $request['score_keep-alive'] = -1;
+                  $request['score_minify'] = -1;
+                  $request['score_combine'] = -1;
+                  $request['score_compress'] = -1;
+                  $request['score_etags'] = -1;
+                  $request['dns_ms'] = -1;
+                  $request['connect_ms'] = -1;
+                  $request['ssl_ms'] = -1;
+                  $request['gzip_total'] = null;
+                  $request['gzip_save'] = null;
+                  $request['minify_total'] = null;
+                  $request['minify_save'] = null;
+                  $request['image_total'] = null;
+                  $request['image_save'] = null;
+                  $request['cache_time'] = null;
+                  $request['cdn_provider'] = null;
+                  $request['server_count'] = null;
+                  
+                  // page-level stats
+                  if (!array_key_exists('URL', $pageData) && strlen($request['full_url']))
+                      $pageData['URL'] = $request['full_url'];
+                  if (array_key_exists('endTime', $rawRequest)) {
+                      $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']) * 1000);
+                      if ($endOffset > $pageData['fullyLoaded'])
+                          $pageData['fullyLoaded'] = $endOffset;
+                  }
+                  if (!array_key_exists('TTFB', $pageData) &&
+                      $request['ttfb_ms'] >= 0 &&
+                      ($request['responseCode'] == 200 ||
+                       $request['responseCode'] == 304))
+                      $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
+                  $pageData['bytesOut'] += $request['bytesOut'];
+                  $pageData['bytesIn'] += $request['bytesIn'];
+                  $pageData['requests']++;
+                  if ($request['load_start'] < $pageData['docTime']) {
+                      $pageData['bytesOutDoc'] += $request['bytesOut'];
+                      $pageData['bytesInDoc'] += $request['bytesIn'];
+                      $pageData['requestsDoc']++;
+                  }
+                  if ($request['responseCode'] == 200)
+                      $pageData['responses_200']++;
+                  elseif ($request['responseCode'] == 404) {
+                      $pageData['responses_404']++;
+                      $pageData['result'] = 99999;
+                  } else
+                      $pageData['responses_other']++;
+                  
+                  $requests[] = $request;
                 }
-                if (!array_key_exists('TTFB', $pageData) &&
-                    $request['ttfb_ms'] >= 0 &&
-                    ($request['responseCode'] == 200 ||
-                     $request['responseCode'] == 304))
-                    $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
-                $pageData['bytesOut'] += $request['bytesOut'];
-                $pageData['bytesIn'] += $request['bytesIn'];
-                $pageData['requests']++;
-                if ($request['load_start'] < $pageData['docTime']) {
-                    $pageData['bytesOutDoc'] += $request['bytesOut'];
-                    $pageData['bytesInDoc'] += $request['bytesIn'];
-                    $pageData['requestsDoc']++;
-                }
-                if ($request['responseCode'] == 200)
-                    $pageData['responses_200']++;
-                elseif ($request['responseCode'] == 404) {
-                    $pageData['responses_404']++;
-                    $pageData['result'] = 99999;
-                } else
-                    $pageData['responses_other']++;
-                
-                $requests[] = $request;
+              }
             }
             $pageData['connections'] = count($connections);
         }
@@ -533,7 +539,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
             if ($event['method'] == 'Network.requestWillBeSent' &&
                 array_key_exists('request', $event) &&
                 array_key_exists('url', $event['request']) &&
-                stripos($event['request']['url'], 'http') === 0) {
+                stripos($event['request']['url'], 'http') === 0 &&
+                parse_url($event['request']['url']) !== false) {
                 $request = $event['request'];
                 $request['startTime'] = $event['timestamp'];
                 $request['endTime'] = $event['timestamp'];
