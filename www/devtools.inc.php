@@ -510,8 +510,15 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
             $pageData['connections'] = count($connections);
         }
     }
-    if (count($requests))
-        $ok = true;
+    if (count($requests)) {
+      if ($pageData['responses_200'] == 0) {
+        if (array_key_exists('responseCode', $requests[0]))
+          $pageData['result'] = $requests[0]['responseCode'];
+        else
+          $pageData['result'] = 12999;
+      }
+      $ok = true;
+    }
     return $ok;
 }
 

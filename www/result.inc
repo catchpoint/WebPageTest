@@ -704,6 +704,7 @@ function LookupError($error)
         case 99997: $errorText = "Timed Out"; break;
         case 99998: $errorText = "Timed Out"; break;
         case 88888: $errorText = "Script Error"; break;
+        case 12999: $errorText = "Navigation Error"; break;
         case -2146697211: $errorText = "Failed to Connect"; break;
     }
     
