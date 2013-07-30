@@ -1,61 +1,48 @@
 <?php
 if(extension_loaded('newrelic')) { 
-    newrelic_add_custom_tracer('GetUpdate');
-    newrelic_add_custom_tracer('GetVideoJob');
-    newrelic_add_custom_tracer('GetJobFile');
+  newrelic_add_custom_tracer('GetUpdate');
+  newrelic_add_custom_tracer('GetVideoJob');
+  newrelic_add_custom_tracer('GetJob');
+  newrelic_add_custom_tracer('GetJobFile');
+  newrelic_add_custom_tracer('CheckCron');
+  newrelic_add_custom_tracer('ProcessTestShard');
+  newrelic_add_custom_tracer('GetTesters');
+  newrelic_add_custom_tracer('LockLocation');
 }
 
 chdir('..');
-$debug = false;
-include 'common.inc';
+include 'common_lib.inc';
+error_reporting(0);
 set_time_limit(600);
-
-$is_json = isset($_GET['f']) && $_GET['f'] == 'json';
+$is_json = array_key_exists('f', $_GET) && $_GET['f'] == 'json';
 $location = $_GET['location'];
-$key = @$_GET['key'];
-$recover = @$_GET['recover'];
-$pc = @$_GET['pc'];
-$ec2 = @$_GET['ec2'];
+$key = array_key_exists('key', $_GET) ? $_GET['key'] : '';
+$recover = array_key_exists('recover', $_GET) ? $_GET['recover'] : '';
+$pc = array_key_exists('pc', $_GET) ? $_GET['pc'] : '';
+$ec2 = array_key_exists('ec2', $_GET) ? $_GET['ec2'] : '';
 $tester = null;
-if (@strlen($ec2)) {
-    $tester = $ec2;
-} elseif (@strlen($pc)) {
-    $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
-} else {
-    $tester = trim($_SERVER['REMOTE_ADDR']);
-}
+if (strlen($ec2))
+  $tester = $ec2;
+elseif (strlen($pc))
+  $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
+else
+  $tester = trim($_SERVER['REMOTE_ADDR']);
+
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
-    $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
+  $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
 $supports_sharding = false;
 if (array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
-    $supports_sharding = true;
-
-logMsg("getwork.php location:$location tester:$tester ex2:$ec2 recover:$recover");
+  $supports_sharding = true;
 
 $is_done = false;
 if (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1) {
-    // See if there is an update.
-    if (!$is_done && $_GET['ver']) {
-        $is_done = GetUpdate();
-        if ($is_done)
-          logMsg("getwork.php Update Available ($location:$tester)");
-    }
-    // see if there is a video  job
-    if (!$is_done && @$_GET['video']) {
-        $is_done = GetVideoJob();
-        if ($is_done)
-          logMsg("getwork.php Video Job ($location:$tester)");
-    }
-    if (!$is_done) {
-        $is_done = GetJob();
-        if ($is_done)
-          logMsg("getwork.php Work returned ($location:$tester)");
-        else
-          logMsg("getwork.php No Work Available ($location:$tester)");
-    }
-} else {
-  logMsg("getwork.php Not enough free disk space ($location:$tester)");
+  if (!$is_done && array_key_exists('ver', $_GET))
+    $is_done = GetUpdate();
+  if (!$is_done && @$_GET['video'])
+    $is_done = GetVideoJob();
+  if (!$is_done)
+    $is_done = GetJob();
 }
 
 // kick off any cron work we need to do asynchronously
@@ -63,9 +50,9 @@ CheckCron();
 
 // Send back a blank result if we didn't have anything.
 if (!$is_done) {
-    header('Content-type: text/plain');
-    header("Cache-Control: no-cache, must-revalidate");
-    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+  header('Content-type: text/plain');
+  header("Cache-Control: no-cache, must-revalidate");
+  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 
 
@@ -85,33 +72,14 @@ function GetJob() {
     global $is_json;
     global $dnsServers;
 
-    // load all of the locations
-    $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
-
-    $workDir = $locations[$location]['localDir'];
-    $locKey = @$locations[$location]['key'];
-    logMsg("getwork.php Key:$key ($locKey), dir: $workDir ($location:$tester)");
-    if (strlen($workDir) && (!strlen($locKey) || !strcmp($key, $locKey))) {
-        // see if the tester is marked as being offline
-        $offline = false;
-        if( strlen($ec2) && strlen($locations[$location]['ec2']) && is_file('./ec2/ec2.inc.php') )
-        {
-            logMsg("Checking $ec2 to see if it is offline");
-            require_once('./ec2/ec2.inc.php');
-            if( !EC2_CheckInstance($location, $locations[$location]['ec2'], $ec2) )
-            {
-                logMsg("$ec2 is offline");
-                $offline = true;
-            }
-        }
-        
+    $workDir = "./work/jobs/$location";
+    $locKey = GetLocationKey($location);
+    if (strpos($location, '..') == false &&
+        strpos($location, '\\') == false &&
+        strpos($location, '/') == false &&
+        (!strlen($locKey) || !strcmp($key, $locKey))) {
         if( $lock = LockLocation($location) )
         {
-            // make sure the work directory actually exists
-            if( !is_dir($workDir) )
-                mkdir($workDir, 0777, true);
-            
             $now = time();
             $testers = GetTesters($location);
 
@@ -164,11 +132,10 @@ function GetJob() {
                         }
                     }
 
-                    if ($delete) {
+                    if ($delete)
                         unlink("$workDir/$fileName");
-                    } else {
+                    else
                         AddJobFileHead($workDir, $fileName, $priority, true);
-                    }
                     
                     if ($is_json) {
                         $testJson = array();
@@ -234,57 +201,10 @@ function GetJob() {
                 $testerInfo['test'] = $testId;
             }
             UpdateTester($location, $tester, $testerInfo);
-      } else
-        logMsg("getwork.php Failed to lock location ($location:$tester)");
-    } else
-      logMsg("getwork.php Invalid location ($location:$tester)");
+      }
+    }
     
     return $is_done;
-}
-
-/**
-* Get the next job from the work queue
-* 
-* @param mixed $workDir
-*/
-function GetNextJobFile($workDir)
-{
-    $fileName = null;
-    
-    // get a list of all of the files in the directory and store them indexed by filetime
-    $files = array();
-    $f = scandir($workDir);
-    foreach( $f as $file )
-    {
-        $fileTime = filemtime("$workDir/$file");
-        if( $fileTime && !isset($files[$fileTime]) )
-            $files[$fileTime] = $file;
-        else
-            $files[] = $file;
-    }
-    
-    // sort it by time
-    ksort($files);
-    
-    // loop through all of the possible extension types in priority order
-    $priority = array( "url", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9" );
-    foreach( $priority as $ext )
-    {
-        foreach( $files as $file )
-        {
-            if(is_file("$workDir/$file"))
-            {
-                $parts = pathinfo($file);
-                if( !strcasecmp( $parts['extension'], $ext) )
-                {
-                    $fileName = "$workDir/$file";
-                    break 2;
-                }
-            }
-        }
-    }
-
-    return $fileName;
 }
 
 /**
@@ -324,8 +244,6 @@ function GetVideoJob()
                         header('Content-Type: application/zip');
                         header("Cache-Control: no-cache, must-revalidate");
                         header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-
-                        logMsg("Video job $testFile sent to $tester from $location");
                         readfile_chunked($testFile);
                         $ret = true;
                         
@@ -423,29 +341,12 @@ function CheckCron() {
     if ($should_run) {
         if (is_file('./settings/benchmarks/benchmarks.txt') && 
             is_file('./benchmarks/cron.php')) {
-            SendCronRequest('/benchmarks/cron.php');
+            SendAsyncRequest('/benchmarks/cron.php');
         }
         if (is_file('./jpeginfo/cleanup.php')) {
-            SendCronRequest('/jpeginfo/cleanup.php');
+            SendAsyncRequest('/jpeginfo/cleanup.php');
         }
     }
-}
-
-/**
-* Send a request with a really short timeout to fire an async cron event
-* 
-* @param mixed $relative_url
-*/
-function SendCronRequest($relative_url) {
-    $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
-    $c = curl_init();
-    curl_setopt($c, CURLOPT_URL, $url);
-    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
-    curl_setopt($c, CURLOPT_TIMEOUT, 1);
-    curl_exec($c);
-    curl_close($c);
 }
 
 /**

@@ -1,22 +1,19 @@
 <?php
+
 header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
 chdir('..');
-include 'common.inc';
-require_once('./video/avi2frames.inc.php');
+include 'common_lib.inc';
 $location = $_REQUEST['location'];
-$key = $_REQUEST['key'];
+$key = '';
+if (array_key_exists('key', $_REQUEST))
+  $key = $_REQUEST['key'];
 $id = $_REQUEST['id'];
 
-logMsg("\n\nImage received for test: $id, location: $location, key: $key\n");
-
 // load all of the locations
-$locations = parse_ini_file('./settings/locations.ini', true);
-BuildLocations($locations);
-
-$locKey = $locations[$location]['key'];
+$locKey = GetLocationKey($location);
 if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") )
 {
     if( isset($_FILES['file']) )
@@ -62,9 +59,7 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
                         $fileName = 'frame_' . $fileBase;
                     }
                 }
-                logMsg(" Moving uploaded image '{$_FILES['file']['tmp_name']}' to '$path/$fileName'\n");
-                move_uploaded_file($_FILES['file']['tmp_name'], "$path/$fileName");
-                @chmod("$path/$fileName", 0666);
+                MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");
                 if (strpos($fileName, 'video.avi')) {
                     $parts = explode('_', $fileName);
                     if( count($parts) ) {
@@ -72,16 +67,21 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
                         $cached = 0;
                         if( strpos($fileName, '_Cached') )
                             $cached = 1;
+                        require_once('./video/avi2frames.inc.php');
                         ProcessAVIVideo($testPath, $runNum, $cached);
                     }
                 }
             }
         }
     }
-    else
-        logMsg(" no uploaded file attached");
 }
-else
-    logMsg(" location key incorrect\n");
+
+/**
+* Move the file upload and set the appropriate permissions
+*/
+function MoveUploadedFile($src, $dest) {
+  move_uploaded_file($src, $dest);
+  @chmod($dest, 0666);
+}
 ?>
 

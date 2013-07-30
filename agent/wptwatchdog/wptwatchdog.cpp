@@ -32,6 +32,78 @@ static unsigned __stdcall WatchThread(void* arg) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void CloseDialogs(void) {
+  TCHAR szTitle[1025];
+  // make sure wptdriver isn't doing a software install
+  bool installing = false;
+  HWND hWptDriver = ::FindWindow(_T("wptdriver_wnd"), NULL);
+  if (hWptDriver) {
+    if (::GetWindowText(hWptDriver, szTitle, _countof(szTitle))) {
+      _tcslwr_s(szTitle, sizeof(szTitle) / sizeof(TCHAR));
+      if (_tcsstr(szTitle, _T(" software")))
+        installing = true;
+    }
+  }
+
+  // if there are any explorer windows open, disable this code
+  // (for local debugging and other work)
+  if (!installing && !::FindWindow(_T("CabinetWClass"), NULL )) {
+    HWND hDesktop = ::GetDesktopWindow();
+    HWND hWnd = ::GetWindow(hDesktop, GW_CHILD);
+    TCHAR szClass[100];
+
+    const TCHAR * DIALOG_WHITELIST[] = { 
+      _T("urlblast")
+      , _T("url blast")
+      , _T("task manager")
+      , _T("aol pagetest")
+      , _T("shut down windows")
+    };
+
+    // build a list of dialogs to close
+    while (hWnd) {
+      HWND hWndKill = NULL;
+      if (::IsWindowVisible(hWnd) &&
+          ::GetClassName(hWnd, szClass, 100) &&
+          (!lstrcmp(szClass,_T("#32770")) ||
+           !lstrcmp(szClass,_T("Internet Explorer_Server")))) {
+        bool bKill = true;
+
+        // make sure it is not in our list of windows to keep
+        if (::GetWindowText( hWnd, szTitle, 1024)) {
+          _tcslwr_s(szTitle, _countof(szTitle));
+          for (int i = 0; i < _countof(DIALOG_WHITELIST) && bKill; i++) {
+            if(_tcsstr(szTitle, DIALOG_WHITELIST[i]))
+              bKill = false;
+          }
+                
+          // do we have to terminate the process that owns it?
+          if (!lstrcmp(szTitle, _T("server busy"))) {
+            DWORD pid;
+            GetWindowThreadProcessId(hWnd, &pid);
+            HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+            if (hProcess) {
+              TerminateProcess(hProcess, 0);
+              CloseHandle(hProcess);
+            }
+          }
+        }
+            
+        if(bKill)
+          hWndKill = hWnd;
+      }
+
+      // get the next window before we kill the current one
+      hWnd = ::GetWindow(hWnd, GW_HWNDNEXT);
+
+      if (hWndKill)
+        ::PostMessage(hWndKill, WM_CLOSE, 0, 0);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -100,12 +172,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
    hWnd = CreateWindow(window_class, window_class, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-   if (!hWnd) {
+   if (!hWnd)
       return FALSE;
-   }
 
    ShowWindow(hWnd, SW_HIDE);
    UpdateWindow(hWnd);
+   SetTimer(hWnd, 1, 100, NULL);
 
    return TRUE;
 }
@@ -121,6 +193,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
       hdc = BeginPaint(hWnd, &ps);
       EndPaint(hWnd, &ps);
+      break;
+    case WM_TIMER:
+      CloseDialogs();
       break;
     case WM_DESTROY:
       must_exit = true;

@@ -1,0 +1,1818 @@
+<?php
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('RestoreTest');
+}
+
+require_once('./logging.inc');
+
+/**
+* Figure out the test path (relative) for the given test id
+* 
+* @param mixed $id
+*/
+function GetTestPath($id)
+{
+    $base = 'results';
+    // see if it is a relay test (includes the key)
+    if( strpos($id, '.') !== false ) {
+        $parts = explode('.', $id);
+        if( count($parts) == 2 ) {
+            $key = trim($parts[0]);
+            if( strlen($key) ) {
+                $base .= "/relay/$key";
+                $id = trim($parts[1]);
+            }
+        }
+    }
+    
+    $testPath = "$base/$id";
+    if( strpos($id, '_') == 6 ) {
+        $parts = explode('_', $id);
+        
+        // see if we have an extra level of hashing
+        $dir = $parts[1];
+        if( count($parts) > 2 && strlen($parts[2]))
+            $dir .= '/' . $parts[2];
+        
+        $testPath = "$base/" . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
+    } else {
+      $olddir = GetSetting('olddir');
+      if( strlen($olddir) ) {
+        $oldsubdir = GetSetting('oldsubdir');
+        if( strlen($oldsubdir) )
+            $testPath = "$base/$olddir/_" . strtoupper(substr($id, 0, 1)) . "/$id";
+        else
+            $testPath = "$base/$olddir/$id";
+      }
+    }
+
+    return $testPath;
+}
+
+/**
+* Get the key for a given location (and cache it if possible)
+* 
+* @param mixed $location
+*/
+function GetLocationKey($location) {
+  $key = null;
+  if (isset($location) && strlen($location)) {
+    if (function_exists('apc_fetch') &&
+        function_exists('apc_store')) {
+      $key = apc_fetch("key_$location");
+      if ($key === false) {
+        $key = '';
+        $locations = parse_ini_file('./settings/locations.ini', true);
+        if ($locations !== false &&
+            is_array($locations) &&
+            array_key_exists($location, $locations) &&
+            array_key_exists('key', $locations[$location]))
+          $key = $locations[$location]['key'];
+        apc_store("key_$location", $key, 60);
+      }
+    } else {
+      $locations = parse_ini_file('./settings/locations.ini', true);
+      if ($locations !== false &&
+          is_array($locations) &&
+          array_key_exists($location, $locations) &&
+          array_key_exists('key', $locations[$location]))
+        $key = $locations[$location]['key'];
+    }
+  }
+  return $key;
+}
+
+/**
+* Get a setting from settings.ini (and cache it for up to a minute)
+*/
+function GetSetting($setting) {
+  global $settings;
+  $ret = false;
+  if (function_exists('apc_fetch') &&
+      function_exists('apc_store')) {
+    $value = apc_fetch("setting_$setting", $success);
+    if ($success)
+      $ret = $value;
+    else {
+      if (!isset($settings) || !is_array($settings))
+        $settings = parse_ini_file('./settings/settings.ini');
+      if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
+        $ret = $settings[$setting];
+      apc_store("setting_$setting", $ret, 60);
+    }
+  } else {
+    if (!isset($settings) || !is_array($settings))
+      $settings = parse_ini_file('./settings/settings.ini');
+    if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
+      $ret = $settings[$setting];
+  }
+  return $ret;
+}
+
+/**
+* Make the text fit in the available space.
+*
+* @param mixed $text
+* @param mixed $len
+*/
+function FitText($text, $max_len) {
+    $fit_text = $text;
+    if (strlen($fit_text) > $max_len) {
+        // Trim out middle.
+        $num_before = intval($max_len / 2) - 1;
+        if (substr($fit_text, $num_before - 1, 1) == ' ') {
+            $num_before--;
+        } elseif (substr($fit_text, $num_before + 1, 1) == ' ') {
+            $num_before++;
+        }
+        $num_after = $max_len - $num_before - 3;
+        $fit_text = (substr($fit_text, 0, $num_before) . '...' .
+                     substr($fit_text, -$num_after));
+    }
+    return $fit_text;
+}
+
+/**
+ * Create a shorter version of the url for displaying.
+ */
+function ShortenUrl($url) {
+  $short_url = $url;
+  $max_len = 40;
+  if (strlen($url) > $max_len) {
+    $short_url = (substr($url, 0, $max_len / 2) . '...' .
+                  substr($url, -$max_len / 2));
+  }
+  return $short_url;
+}
+
+/**
+ * Create a friendlier (unique) name for the download file from the url that was tested.
+ */
+function GetFileUrl($url)
+{
+  $parts = parse_url($url);
+  if (!array_key_exists('path', $parts))
+    $parts['path'] = '';
+  return trim(preg_replace( '/[^\w.]/', '_', substr("{$parts['host']}/{$parts['path']}", 0, 50)), '_');
+}
+
+/**
+* Set the php locale based on the browser's accept-languages header
+* (if one exists) - only works on linux for now
+*/
+function SetLocaleFromBrowser()
+{
+  $langs = generate_languages();
+  foreach ($langs as $lang)
+  {
+    if (array_key_exists('lang', $lang)) {
+      $language = $lang['lang'];
+      if (strlen($language > 2))
+        $language = substr($language, 0, 3) . strtoupper(substr($language, 3, 2));
+      if (setlocale(LC_TIME, $language) !== FALSE)
+        break;   // it worked!
+    }
+  }
+}
+
+function generate_languages()
+{
+    $langs = array();
+    if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+        $rawlangs = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+        foreach ($rawlangs as $rawlang) {
+            $parts = explode(';', $rawlang);
+            if (count($parts) == 1) {
+                $qual = 1;  // no q-factor
+            } else {
+                $qual = explode('=', $parts[1]);
+            }
+            if (count($qual) == 2) {
+                $qual = (float)$qual[1];  // q-factor
+            } else {
+                $qual = 1;  // ill-formed q-f
+            }
+            $langs[] = array('lang' => trim($parts[0]), 'q' => $qual);
+        }
+    }
+    usort($langs, 'lang_compare_quality');
+    return $langs;
+}
+
+// this function sorts by q-factors, putting highest first.
+function lang_compare_quality($in_a, $in_b)
+{
+  if ($in_a['q'] > $in_b['q'])
+    return -1;
+  else if ($in_a['q'] < $in_b['q'])
+    return 1;
+  else
+    return 0;
+}
+
+/**
+* Figure out the path to the video directory given an id
+* 
+* @param mixed $id
+*/
+function GetVideoPath($id, $find = false)
+{
+    $path = "results/video/$id";
+    if( strpos($id, '_') == 6 )
+    {
+        $parts = explode('_', $id);
+
+        // see if we have an extra level of hashing
+        $dir = $parts[1];
+        if( count($parts) > 2 && strlen($parts[2]))
+            $dir .= '/' . $parts[2];
+
+        $path = 'results/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
+        
+        // support using the old path structure if we are trying to find an existing video
+        if( $find && !is_dir($path) )
+            $path = 'results/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $parts[1];
+    }
+
+    return $path;
+}
+
+/**
+* Generate a thumbnail for the video file if we don't already have one
+* 
+* @param mixed $dir
+*/
+function GenerateVideoThumbnail($dir)
+{
+    $dir = realpath($dir);
+    if( is_file("$dir/video.mp4") && !is_file("$dir/video.png") )
+    {
+        $output = array();
+        $result;
+        $command = "ffmpeg -i \"$dir/video.mp4\" -vframes 1 -ss 00:00:00 -f image2 \"$dir/video.png\"";
+        $retStr = exec($command, $output, $result);
+    }
+}
+
+/**
+* Get the default location
+* 
+*/
+function GetDefaultLocation()
+{
+    $locations = parse_ini_file('./settings/locations.ini', true);
+    BuildLocations($locations);
+    
+    $def = $locations['locations']['default'];
+    if( !$def )
+        $def = $locations['locations']['1'];
+    $loc = $locations[$def]['default'];
+    if( !$loc )
+        $loc = $locations[$def]['1'];
+    
+    return $locations[$loc];
+}
+
+/**
+* Recursively delete a directory
+* 
+* @param mixed $dir
+*/
+function delTree($dir) 
+{
+    if( substr( $dir, -1 ) != '/' )
+        $dir .= '/';
+        
+    $files = glob( $dir . '*', GLOB_MARK );
+    foreach( $files as $file )
+    {
+        if( substr( $file, -1 ) == '/' )
+            delTree( $file );
+        else
+            unlink( $file );
+    }
+   
+    $dir = trim($dir, '/');
+    if( is_dir($dir) ) 
+        rmdir( $dir );
+} 
+
+/**
+* Send a large file a chunk at a time
+* 
+* @param mixed $filename
+* @param mixed $retbytes
+* @return bool
+*/
+function readfile_chunked($filename, $retbytes = TRUE) 
+{
+    $buffer = '';
+    $cnt =0;
+    $handle = fopen($filename, 'rb');
+    if ($handle === false) 
+    {
+        return false;
+    }
+    while (!feof($handle)) 
+    {
+        $buffer = fread($handle, 1024 * 1024);  // 1MB at a time
+        echo $buffer;
+        ob_flush();
+        flush();
+        if ($retbytes) 
+        {
+            $cnt += strlen($buffer);
+        }
+    }
+    $status = fclose($handle);
+    if ($retbytes && $status) 
+    {
+        return $cnt; // return num. bytes delivered like readfile() does.
+    }
+    return $status;
+}
+
+/**
+* Send a large file a chunk at a time (supports gzipped files)
+* 
+* @param mixed $filename
+* @param mixed $retbytes
+* @return bool
+*/
+function gz_readfile_chunked($filename, $retbytes = TRUE) 
+{
+    $buffer = '';
+    $cnt =0;
+    $handle = gzopen("$filename.gz", 'rb');
+    if ($handle === false) 
+        $handle = gzopen($filename, 'rb');
+    if ($handle === false) 
+        return false;
+    while (!gzeof($handle)) 
+    {
+        $buffer = gzread($handle, 1024 * 1024);  // 1MB at a time
+        echo $buffer;
+        ob_flush();
+        flush();
+        if ($retbytes) 
+        {
+            $cnt += strlen($buffer);
+        }
+    }
+    $status = gzclose($handle);
+    if ($retbytes && $status) 
+    {
+        return $cnt; // return num. bytes delivered like readfile() does.
+    }
+    return $status;
+}
+
+/**
+* Transparently read a gzip version of the given file (we will be looking for .gz extensions though it's not technically required, just good practice)
+* 
+* @param mixed $file
+*/
+function gz_file_get_contents($file)
+{
+    $data = null;
+    
+    $zip = gzopen("$file.gz", 'rb');
+    if( $zip === false )
+        $zip = gzopen($file, 'rb');
+    
+    if( $zip !== false ) {
+        while ($string = gzread($zip, 4096)) {
+            $data .= $string;
+        }
+        gzclose($zip);
+    }
+    else 
+        $data = false;
+    
+    return $data;
+}
+
+/**
+* Write out a gzip version of the given file (tacking on the .gz automatically)
+* 
+* @param mixed $filename
+* @param mixed $data
+*/
+function gz_file_put_contents($filename, $data)
+{
+    $ret = false;
+    $nogzip = GetSetting('nogzip');
+    if( !$nogzip && extension_loaded('zlib') )
+    {
+        $zip = gzopen("$filename.gz", 'wb9');
+        if( $zip !== false )
+        {
+            if( gzwrite($zip, $data) )
+                $ret = true;
+            gzclose($zip);
+        }
+    }
+    else
+    {
+        if( file_put_contents($filename, $data) )
+            $ret = true;
+    }
+    
+    return $ret;
+}
+
+/**
+* read a gzip file into an array
+* 
+* @param mixed $filename
+*/
+function gz_file($filename)
+{
+    $ret = null;
+    
+    if( is_file("$filename.gz") )
+        $ret = gzfile("$filename.gz");
+    elseif( is_file($filename) )
+        $ret = file($filename);
+    
+    return $ret;
+}
+
+/**
+* GZip compress the given file
+* 
+* @param mixed $filename
+*/
+function gz_compress($filename)
+{
+    $ret = false;
+
+    $nogzip = GetSetting('nogzip');
+    if( !$nogzip && extension_loaded('zlib') )
+    {
+        $data = file_get_contents($filename);
+        if( $data ){
+            $ret = gz_file_put_contents($filename, $data);
+            unset($data);
+        }
+    }
+    
+    return $ret;
+}
+
+/**
+* Check for either the compressed or uncompressed file
+* 
+* @param mixed $filename
+*/
+function gz_is_file($filename)
+{
+    $ret = is_file("$filename.gz") || is_file($filename);
+    return $ret;
+}
+
+/**
+* Load the pagespeed results and calculate the score
+* 
+* @param mixed $file
+*/
+function GetPageSpeedScore($file)
+{
+    $score = '';
+    if (gz_is_file($file)) {
+        $pagespeed = LoadPageSpeedData($file);
+
+        if( $pagespeed )
+        {
+            if( isset($pagespeed['score']) )
+                $score = $pagespeed['score'];
+            else
+            {
+                $total = 0;
+                $count = 0;
+                foreach( $pagespeed as &$check )
+                {
+                    $total += (double)$check['score'];
+                    $count++;
+                }
+                if( $count )
+                    $score = ceil($total / $count);
+            }
+        }
+    }
+    
+    return $score;
+}
+
+/**
+* Load the full Page Speed data from disk
+* 
+* @param mixed $file
+*/
+function LoadPageSpeedData($file)
+{
+    $pagespeed = json_decode(gz_file_get_contents($file), true);
+
+    if( !$pagespeed )
+    {
+        // try an alternate JSON decoder
+        require_once('./lib/json.php');
+        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
+        $pagespeed = $json->decode(gz_file_get_contents($file), true);
+        if( $pagespeed )
+        {
+            // make sure we only have to go this route once, save the corrected file
+            gz_file_put_contents($file, json_encode($pagespeed));
+        }
+    }
+    
+    return $pagespeed;
+}
+
+/**
+* Count the number of test files in the given directory
+* 
+* @param mixed $dir
+* @param mixed $path
+*/
+function CountTests($path)
+{
+    $files = glob( $path . '/*.url', GLOB_NOSORT );
+    $count = count($files);
+    
+    return $count;
+}
+
+/**
+* Build the work queues and other dynamic information tied to the locations
+* 
+* @param mixed $locations
+*/
+function BuildLocations( &$locations )
+{
+    if (!isset($locations['processed'])) {
+        // dynamically create a whole new tree based on the data from the locations
+        // the main reason for this is to be able to support multiple browsers in each "location"
+        $original = $locations;
+        $locations = array();
+        
+        // start from the top-level locations
+        foreach ($original as $name => $loc) {
+            // just the top-level locations
+            if (isset($loc['browser'])) {
+                // clone the existing locations over for code that just accesses them directly
+                $loc['localDir'] = "./work/jobs/$name";
+                $loc['location'] = $name;
+                $locations[$name] = $loc;
+            } else {
+                if ($name == 'locations') {
+                    $locations[$name] = $loc;
+                } else {
+                    $index = 1;
+                    $default = null;
+                    if (array_key_exists('default', $loc))
+                        $default = $loc['default'];
+                    $location = array();
+                    foreach ($loc as $key => $value) {
+                        if (is_numeric($key)) {
+                            // make sure we have a default
+                            if (!isset($default) || !strlen($default))
+                                $default = $value;
+                            // clone the individual configuration based on the available browsers
+                            if (array_key_exists($value, $original)) {
+                                $configuration = $original[$value];
+                                if (array_key_exists('browser', $configuration) && strlen($configuration['browser'])) {
+                                    $configuration['localDir'] = "./work/jobs/$value";
+                                    $configuration['location'] = $value;
+                                    $browsers = array();
+                                    $parts = explode(',', $configuration['browser']);
+                                    foreach ($parts as $browser)
+                                        $browsers[] = trim($browser);
+                                    if (count($browsers) > 1) {
+                                        // default to the first browser in the list
+                                        if ($default == $value)
+                                            $default .= ':' . $browsers[0];
+                                        // build the actual configurations
+                                        foreach ($browsers as $browser) {
+                                            $label = $value . ':' . $browser;
+                                            $location[$index] = $label;
+                                            $index++;
+                                            $cfg = $configuration;
+                                            $cfg['browser'] = $browser;
+                                            $cfg['label'] = $cfg['label'] . " - $browser";
+                                            $locations[$label] = $cfg;
+                                        }
+                                    } else {
+                                        // for single-browser locations, just copy it over as it exists
+                                        $location[$index] = $value;
+                                        $index++;
+                                    }
+                                }
+                            }
+                        } elseif ($key !== 'default') {
+                            $location[$key] = $value;
+                        }
+                    }
+                    if ($index > 1) {
+                        $location['default'] = $default;
+                        $locations[$name] = $location;
+                    }
+                }
+            }
+        }
+        $locations['processed'] = true;
+    }
+}
+
+/**
+* Remove any locations that appear to be offline
+* 
+* @param mixed $locations
+*/
+function FilterLocations(&$locations, $includeHidden = '',
+                         $stripBrowser = null) {
+    BuildLocations($locations);
+    // drop the main index of any hidden locations so they don't show up in the map view
+    foreach ($locations as $name => &$locRef) {
+        if (isset($locRef['hidden']) && !isset($_REQUEST['hidden'])) {
+            $hide = true;
+            if (strlen($includeHidden) &&
+                stripos($locRef['hidden'], $includeHidden) !== false) {
+                $hide = false;
+            }
+            if ($hide) {
+                unset( $locations[$name] );
+            }
+        }
+        unset($locRef['hidden']);
+    }
+
+    // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
+    if (!isset($_REQUEST['hidden']) &&
+       (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows')) {
+        // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
+        foreach ($locations as $name => &$locRef) {
+            if (isset($locRef['browser'])) {
+                $parts = explode(':', $name);
+                $locname = $parts[0];
+                // now check the times
+                $file = "./tmp/$locname.tm";
+                if (is_file($file)) {
+                    $updated = filemtime($file);
+                    $now = time();
+                    $elapsed = 0;
+                    if( $now > $updated )
+                        $elapsed = $now - $updated;
+                    $minutes = (int)($elapsed / 60);
+                    if( $minutes > 30 )
+                        unset($locations[$name]);
+                }
+            }
+        }
+    }
+    
+    // next pass, filter browsers if we were asked to
+    if (isset($stripBrowser)) {
+        foreach ($locations as $name => &$locRef) {
+            if (isset($locRef['browser'])) {
+                $remove = false;
+                foreach ($stripBrowser as $browser) {
+                    $pos = stripos($locRef['browser'], $browser);
+                    if ($pos !== false) {
+                        $remove = true;
+                        break;
+                    }
+                }
+                if ($remove) {
+                    unset($locations[$name]);
+                }
+            } else {
+                // strip the browsers from the label
+                foreach ($stripBrowser as $browser) {
+                    $locRef['label'] = preg_replace("/[, -]*$browser/i", '', $locRef['label']);
+                }
+            }
+        }
+    }
+
+    // next pass, remove any top-level locations whose sub-locations have all been removed
+    foreach ($locations as $name => &$locRef) {
+        // top-level locations do not have the browser specified
+        // and "locations" is the uber-top-level grouping
+        if ($name != 'locations' && $name != 'processed' &&
+            !isset($locRef['browser'])) {
+            $ok = false;        // default to deleting the location
+            $newLoc = array();  // new, filtered copy of the location
+            $default = null;    // the default location for the group
+
+            // remove any of the child locations that don't exist
+            $index = 0;
+            foreach ($locRef as $key => $val) {
+                // the sub-locations are identified with numeric keys (1, 2, 3)
+                if (is_numeric($key)) {
+                    // check the location that is being referenced to see if it exists
+                    if (isset($locations[$val])) {
+                        $ok = true;
+                        $index++;
+                        $newLoc[$index] = $val;
+                        if (isset($locRef['default']) &&
+                            $locRef['default'] == $val) {
+                            $default = $val;
+                        }
+                    } else {
+                        if (isset($locRef['default']) &&
+                            $locRef['default'] == $val) {
+                            unset($locRef['default']);
+                        }
+                    }
+                }
+                elseif ($key != 'default') {
+                    $newLoc[$key] = $val;
+                }
+            }
+            
+            if( $ok )
+            {
+                if( isset($default) )
+                    $newLoc['default'] = $default;
+                $locations[$name] = $newLoc;
+            }
+            else
+                unset($locations[$name]);
+            unset($newLoc);
+        }
+    }
+    
+    // final pass, remove the empty top-level locations from the locations list
+    $newList = array();
+    $default = null;
+    $index = 0;
+    foreach( $locations['locations'] as $key => $name )
+    {
+        if( is_numeric($key) )
+        {
+            if( isset( $locations[$name] ) )
+            {
+                $index++;
+                $newList[$index] = $name;
+                if( isset($locations['locations']['default']) && $locations['locations']['default'] == $name )
+                    $default = $name;
+            }
+        }
+        elseif( $key != 'default' )
+            $newList[$key] = $name;
+    }
+    if( isset($default) )
+        $newList['default'] = $default;
+    $locations['locations'] = $newList;
+}
+
+/**
+* From a given configuration, figure out what location it is in
+* 
+* @param mixed $locations
+* @param mixed $config
+*/
+function GetLocationFromConfig(&$locations, $config)
+{
+    $ret;
+    
+    foreach($locations as $location => &$values)
+        foreach($values as $cfg)
+            if( $cfg == $config )
+            {
+                $ret = $location;
+                break 2;
+            }
+    
+    return $ret;
+}
+
+/**
+* Run through the location selections and build the default selections (instead of doing this in javascript)
+*
+* @param mixed $locations
+*/
+function ParseLocations(&$locations) {
+    global $connectivity;
+    $loc = array();
+    $loc['locations'] = array();
+
+    // build the list of locations
+    foreach($locations['locations'] as $index => $name) {
+        if (is_numeric($index)) {
+            $location['label'] = $locations[$name]['label'];
+            $location['comment'] = '';
+            if (isset($locations[$name]['comment'])) {
+                $location['comment'] = str_replace(
+                    "'", '"', $locations[$name]['comment']);  // "
+            }
+            if (array_key_exists('group', $locations[$name]))
+                $location['group'] = $locations[$name]['group'];
+            $location['name'] = $name;
+            $loc['locations'][$name] = $location;
+        }
+    }
+
+    // see if they have a saved location from their cookie
+    $currentLoc = null;
+    if (array_key_exists('cfg', $_COOKIE))
+        $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
+    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
+        // nope, try thee default
+        $currentLoc = $locations['locations']['default'];
+    }
+    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
+        // if all else fails, just select the first one
+        foreach ($loc['locations'] as $key => &$val) {
+            $currentLoc = $key;
+            break;
+        }
+    }
+
+    // select the location
+    $loc['locations'][$currentLoc]['checked'] = true;
+
+    // build the list of browsers for the location
+    $loc['browsers'] = array();
+    foreach ($locations[$currentLoc] as $index => $config) {
+        if (is_numeric($index)) {
+            $browser = $locations[$config]['browser'];
+            $browserKey = str_replace(' ', '', $browser);
+            if (strlen($browserKey) && strlen($browser)) {
+                $b = array();
+                $b['label'] = $browser;
+                $b['key'] = $browserKey;
+                $loc['browsers'][$browserKey] = $b;
+            }
+        }
+    }
+
+    // default to the browser from their saved cookie
+    $currentBrowser = '';
+    if (array_key_exists('cfg', $_COOKIE) && array_key_exists($_COOKIE["cfg"], $locations)) {
+        $currentBrowser = str_replace(' ', '', $locations[$_COOKIE["cfg"]]['browser']);
+        $currentConfig = $_COOKIE["cfg"];
+    }
+    if (!strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser])) {
+        // try the browser from the default config
+        $cfg = $locations[$currentLoc]['default'];
+        if (strlen($cfg)) {
+            $currentBrowser = str_replace(' ', '', $locations[$cfg]['browser']);
+            $currentConfig = $cfg;
+        }
+    }
+    if (!strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser])) {
+        // just select the first one if all else fails
+        foreach ($loc['browsers'] as $key => &$val) {
+            $currentBrowser = $key;
+            break;
+        }
+    }
+    $loc['browsers'][$currentBrowser]['selected'] = true;
+
+    // build the list of connection types
+    $loc['bandwidth']['dynamic'] = false;
+    $loc['connections'] = array();
+    foreach($locations[$currentLoc] as $index => $config) {
+        if (is_numeric($index)) {
+            $browserKey = str_replace(' ', '', $locations[$config]['browser']);
+            if (strlen($browserKey) && $browserKey == $currentBrowser) {
+                if (isset($locations[$config]['connectivity'])) {
+                    $connection = array();
+                    $connection['key'] = $config;
+                    $connection['label'] = $locations[$config]['connectivity'];
+                    $loc['connections'][$config] = $connection;
+                } else {
+                    $loc['bandwidth']['dynamic'] = true;
+                    $loc['bandwidth']['down'] = 1500;
+                    $loc['bandwidth']['up'] = 384;
+                    $loc['bandwidth']['latency'] = 50;
+                    $loc['bandwidth']['plr'] = 0;
+
+                    foreach ($connectivity as $key => &$conn) {
+                        $connKey = $config . '.' . $key;
+                        if (!$currentConfig) {
+                            $currentConfig = $connKey;
+                        }
+                        $connection = array();
+                        $connection['key'] = $connKey;
+                        $connection['label'] = $conn['label'];
+                        $loc['connections'][$connKey] = $connection;
+                        if ($currentConfig == $connKey) {
+                            $loc['bandwidth']['down'] = $conn['bwIn'] / 1000;
+                            $loc['bandwidth']['up'] = $conn['bwOut'] / 1000;
+                            $loc['bandwidth']['latency'] = $conn['latency'];
+                            if (isset($conn['plr'])) {
+                                $loc['bandwidth']['plr'] = $conn['plr'];
+                            }
+                        }
+                    }
+                    // add the custom config option
+                    $connKey = $config . '.custom';
+                    $connection = array();
+                    $connection['key'] = $connKey;
+                    $connection['label'] = 'Custom';
+                    $loc['connections'][$connKey] = $connection;
+                    if (!$currentConfig) {
+                        $currentConfig = $connKey;
+                    }
+                }
+            }
+        }
+    }
+    
+    // default to the first connection type if we don't have a better option
+    if( !$currentConfig || !isset($loc['connections'][$currentConfig]) )
+    {
+        foreach( $loc['connections'] as $key => &$val )
+        {
+            $currentConfig = $key;
+            break;
+        }
+    }
+    $loc['connections'][$currentConfig]['selected'] = true;
+    
+    // figure out the bandwidth settings
+    if( !$loc['bandwidth']['dynamic'] )
+    {
+        $loc['bandwidth']['down'] = $locations[$currentConfig]['down'] / 1000;
+        $loc['bandwidth']['up'] = $locations[$currentConfig]['up'] / 1000;
+        $loc['bandwidth']['latency'] = $locations[$currentConfig]['latency'];
+        $loc['bandwidth']['plr'] = 0;
+    }
+    
+    return $loc;
+}
+
+/**
+* Get the text block of the test info that we want to display
+* 
+*/
+function GetTestInfoHtml($includeScript = true)
+{
+    global $test;
+    global $isOwner;
+    global $dom;
+    global $login;
+    global $admin;
+    global $privateInstall;
+    $html = '';
+    if( ($admin || $privateInstall) && isset($test['testinfo']['tester']) )
+        $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
+    if( $dom ) 
+        $html .= 'DOM Element: <b>' . $dom . '</b><br>';
+    if( $test['test']['fvonly'] ) 
+        $html .= '<b>First View only</b><br>';
+    if( (int)$test['test']['runs'] > 1 ) 
+        $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
+    if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1) 
+        $html .= '<b>Authenticated: ' . $login . '</b><br>';
+    if( array_key_exists('testinfo', $test) && array_key_exists('connectivity', $test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
+    {
+        $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";
+        if( $test['testinfo']['plr'] )
+            $html .= ", {$test['testinfo']['plr']}% Packet Loss";
+        $html .= '<br>';
+    }
+    if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
+    {
+        $show = false;
+        if ($includeScript) {
+            $showscript = GetSetting('show_script_in_results');
+            if ($admin || $showscript) {
+                $show = true;
+            } elseif ($isOwner && !$test['testinfo']['sensitive']) {
+                $show = true;
+            }
+        }
+        if ($show)
+        {
+            $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
+            $html .= '<div id="script_in_results-container" class="hidden">';
+            $html .= '<pre>' . $test['testinfo']['script'] . '</pre>';
+            $html .= '</div>';
+        }
+        else
+            $html .= '<b>Scripted test</b><br>';
+    }
+    return $html;
+}
+
+/**
+* Append the provided query param onto the provided url (handeling ? vs &)
+* 
+* @param mixed $entry
+*/
+function CreateUrlVariation($url, $query)
+{
+    $newUrl = null;
+    $url = trim($url);
+    $query = trim($query);
+    if( strlen($url) && strlen($query) )
+    {
+        $newUrl = $url;
+        if( strpos($url, '?') === false )
+            $newUrl .= '?';
+        else
+            $newUrl .= '&';
+        $newUrl .= $query;
+    }
+    return $newUrl;
+}
+
+/**
+* Append a / to the URL if we are looking at a base page
+* 
+* @param mixed $url
+*/
+function FixUrlSlash($url)
+{
+    if( strpos($url,'/',8) == false )
+        $url .= '/';
+    return $url;
+}
+
+/**
+* Restore the given test from the archive if it is archived
+* 
+* @param mixed $id
+*/
+function RestoreTest($id)
+{
+    $ret = false;
+    if (ValidateTestId($id)) {
+        $testPath = './' . GetTestPath($id);
+        $archive_dir = GetSetting('archive_dir');
+        $archive_s3_url = GetSetting('archive_s3_url');
+        $archive_s3_server = GetSetting('archive_s3_server');
+        if( ($archive_dir && strlen($archive_dir)) ||
+            ($archive_s3_url && strlen($archive_s3_url)) ||
+            ($archive_s3_server && strlen($archive_s3_server)) )
+        {
+            $restore = false;
+            if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
+            {
+                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                if( !is_array($testInfo) || 
+                    !count($testInfo) || 
+                    (array_key_exists('restored', $testInfo) && 
+                    $testInfo['restored'] && 
+                    array_key_exists('restoredDataOnly', $testInfo) &&
+                    $testInfo['restoredDataOnly']) )
+                    $restore = true;
+            }
+            else
+                $restore = true;
+            
+            if( $restore )
+            {
+                require_once('archive.inc');
+                $ret = RestoreArchive($id);
+            }
+            else
+                $ret = true;
+        }
+        else
+            $ret = true;
+
+        // Handle AVI processing here if necessary
+        require_once('./video/avi2frames.inc.php');
+        ProcessAllAVIVideos($testPath);
+    }
+    
+    return $ret;
+}
+
+/**
+* Get the number of days since the test was last accessed
+* 
+* @param mixed $id
+*/
+function TestLastAccessed($id)
+{
+    $elapsed = 0;
+    $file = './' . GetTestPath($id) . '/testinfo.ini';
+    $timestamp = filemtime($file);
+    if( $timestamp )
+    {
+        $elapsed = max(time() - $timestamp, 0);
+        $elapsed /= 86400;
+    }
+    return $elapsed;
+}
+
+/**
+* Faster image resampling
+*/
+function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h, $quality = 3) {
+  // Plug-and-Play fastimagecopyresampled function replaces much slower imagecopyresampled.
+  // Just include this function and change all "imagecopyresampled" references to "fastimagecopyresampled".
+  // Typically from 30 to 60 times faster when reducing high resolution images down to thumbnail size using the default quality setting.
+  // Author: Tim Eckel - Date: 09/07/07 - Version: 1.1 - Project: FreeRingers.net - Freely distributable - These comments must remain.
+  //
+  // Optional "quality" parameter (defaults is 3). Fractional values are allowed, for example 1.5. Must be greater than zero.
+  // Between 0 and 1 = Fast, but mosaic results, closer to 0 increases the mosaic effect.
+  // 1 = Up to 350 times faster. Poor results, looks very similar to imagecopyresized.
+  // 2 = Up to 95 times faster.  Images appear a little sharp, some prefer this over a quality of 3.
+  // 3 = Up to 60 times faster.  Will give high quality smooth results very close to imagecopyresampled, just faster.
+  // 4 = Up to 25 times faster.  Almost identical to imagecopyresampled for most images.
+  // 5 = No speedup. Just uses imagecopyresampled, no advantage over imagecopyresampled.
+
+  if (empty($src_image) || empty($dst_image) || $quality <= 0) { return false; }
+  if ($quality < 5 && (($dst_w * $quality) < $src_w || ($dst_h * $quality) < $src_h)) {
+    $temp = imagecreatetruecolor ($dst_w * $quality + 1, $dst_h * $quality + 1);
+    imagecopyresized ($temp, $src_image, 0, 0, $src_x, $src_y, $dst_w * $quality + 1, $dst_h * $quality + 1, $src_w, $src_h);
+    imagecopyresampled ($dst_image, $temp, $dst_x, $dst_y, 0, 0, $dst_w, $dst_h, $dst_w * $quality, $dst_h * $quality);
+    imagedestroy ($temp);
+  } else imagecopyresampled ($dst_image, $src_image, $dst_x, $dst_y, $src_x, $src_y, $dst_w, $dst_h, $src_w, $src_h);
+  return true;
+}
+
+/**
+* Get the number of pending high-priority page loads at the given location
+* and the average time per page load (from the last 100 tests)
+*/
+function GetPendingTests($loc, &$count, &$avgTime)
+{
+    $total = 0;
+    $locations = explode(',', $loc);
+    foreach($locations as $location) {
+        $parts = explode(':', $location);
+        $location = $parts[0];
+        $count = 0;
+        $avgTime = 0;
+        if (is_file("./tmp/$location.tests"))
+          $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+        if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
+        {
+            $count = (int)$tests['tests'];
+            $timeCount = count($tests['times']);
+            if( $timeCount )
+            {
+                $timeTotal = 0;
+                foreach( $tests['times'] as $time )
+                    $timeTotal += $time;
+                $avgTime = ceil($timeTotal / $timeCount);
+            }
+        }
+        // now count just the low priority tests
+        $beanstalkd = GetSetting('beanstalkd');
+        if ($beanstalkd && strlen($beanstalkd)) {
+            require_once('./lib/beanstalkd/pheanstalk_init.php');
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+            for ($priority = 0; $priority < 9; $priority++) {
+                $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+                try {
+                    $stats = $pheanstalk->statsTube($tube);
+                    $total += intval($stats['current-jobs-ready']);
+                    if (!$priority)
+                        $count = intval($stats['current-jobs-ready']);
+                } catch(Exception $e) {
+                }
+            }
+        } elseif( LoadJobQueue("./work/jobs/$location", $queue) ) {
+            foreach( $queue as $priority => &$q ) {
+                if ($priority < 9)
+                    $total += count($q);
+            }
+            $count = count($queue[0]);
+        }
+    }
+    return $total;
+}
+
+/**
+* Get the lengths of each of the test queues for the given location
+* 
+* @param mixed $location
+*/
+function GetQueueLengths($location) {
+    $queues = array();
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+        for ($priority = 0; $priority <= 9; $priority++) {
+            $queues[$priority] = 0;
+            $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+            try {
+                $stats = $pheanstalk->statsTube($tube);
+                $queues[$priority] = intval($stats['current-jobs-ready']);
+            } catch(Exception $e) {
+            }
+        }
+    } elseif( LoadJobQueue("./work/jobs/$location", $queue) ) {
+        foreach( $queue as $priority => &$q )
+            $queues[$priority] = count($q);
+    }
+    return $queues;
+}
+
+/**
+* Get the number of active testers at the given location
+*/
+function GetTesterCount($location)
+{
+    $parts = explode(':', $location);
+    $location = $parts[0];
+    $count = 0;
+    if (is_file("./tmp/$location.tm"))
+      $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+    if( isset($testers) && is_array($testers) && count($testers) )
+    {
+        $now = time();
+        foreach( $testers as &$tester )
+        {
+            if( (!array_key_exists('offline', $tester) ||
+                 !$tester['offline']) &&
+                $tester['updated'] &&
+                $now - $tester['updated'] < 3600 )
+                $count++;
+        }
+    }
+    
+    return $count;
+}
+
+/**
+* Add a job to the work queue (assume it is locked)
+*/
+function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
+{
+    $ret = false;
+
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+        try {
+            $tube = 'wpt.' . md5($workDir) . ".$priority";
+            require_once('./lib/beanstalkd/pheanstalk_init.php');
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+            $pheanstalk->putInTube($tube, $file);
+            $ret = true;
+        } catch(Exception $e) {
+        }
+    } elseif (LoadJobQueue($workDir, $queue)) {
+        if( !$queue_limit || count($queue[$priority]) < $queue_limit )
+            if( array_push($queue[$priority], $file) )
+                $ret = SaveJobQueue($workDir, $queue);
+    }
+    
+    return $ret;
+}
+
+/**
+* Add a job to the front of the work queue (assume it is locked)
+*/
+function AddJobFileHead($workDir, $file, $priority, $atFront = false)
+{
+    $ret = false;
+
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+        try {
+            $tube = 'wpt.' . md5($workDir) . ".$priority";
+            require_once('./lib/beanstalkd/pheanstalk_init.php');
+            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+            $pheanstalk->putInTube($tube, $file, '0');
+            $ret = true;
+        } catch(Exception $e) {
+        }
+    } elseif (LoadJobQueue($workDir, $queue)) {
+        // we actually want to insert it as the second test if there is already a queue
+        if (!$atFront && count($queue[$priority]))
+            $first = array_shift($queue[$priority]);
+        if (array_unshift($queue[$priority], $file)) {
+            if (!$atFront && isset($first) && strlen($first))
+                array_unshift($queue[$priority], $first);
+            $ret = SaveJobQueue($workDir, $queue);
+        }
+    }
+    return $ret;
+}
+
+/**
+* Get a job from the given work queue (assume it is locked)
+*/
+function GetJobFile($workDir, &$priority) {
+    $file = null;
+
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+        $priority = 0;
+        while (!isset($file) && $priority <= 9) {
+            $found = false;
+            try {
+                $tube = 'wpt.' . md5($workDir) . ".$priority";
+                $job = $pheanstalk->reserveFromTube($tube, 0);
+                if ($job !== false) {
+                    $found = true;
+                    $file = $job->getData();
+                    if (isset($file) && !is_file("$workDir/$file"))
+                        unset($file);
+                    $pheanstalk->delete($job);
+                }
+            } catch(Exception $e) {
+            }
+            if (!$found && !isset($file))
+                $priority++;
+        }
+    } elseif (LoadJobQueue($workDir, $queue)) {
+        $modified = false;
+        $priority = 0;
+        while (!isset($file) && $priority <= 9) {
+            $file = array_shift($queue[$priority]);
+            if (isset($file))
+                $modified = true;
+            if (isset($file) && !is_file("$workDir/$file"))
+                unset($file);
+            elseif (!isset($file))
+                $priority++;
+        }
+
+        if ($modified)
+            SaveJobQueue($workDir, $queue);
+    }
+
+    return $file;
+}
+
+/**
+* Find the position in the work queue for the given test (assume it is locked)
+*/
+function FindJobPosition($workDir, $testId)
+{
+    $count = 0;
+    $found = false;
+
+    $beanstalkd = GetSetting('beanstalkd');    
+    if ($beanstalkd && strlen($beanstalkd)) {
+        $found = true;
+    } elseif( LoadJobQueue($workDir, $queue) ) {
+        $priority = 0;
+        while( !$found && $priority <= 9 ) {
+            foreach($queue[$priority] as $file) {
+                if( stripos($file, $testId) !== false ) {
+                    $found = true;
+                    break;
+                }
+                elseif( !$found )
+                    $count++;
+            }
+            $priority++;
+        }
+    }
+    
+    if( !$found )
+        $count = -1;
+        
+    return $count;
+}
+
+/**
+* Load the job queue from disk
+*/
+function LoadJobQueue($workDir, &$queue)
+{
+    $ret = true;
+    if (isset($workDir) && strlen($workDir)) {
+        $queue = null;
+        $queueName = sha1($workDir);
+        $queueFile = "./tmp/$queueName.queue";
+        if( is_file($queueFile) ) {
+            $queue = json_decode(file_get_contents($queueFile), true);
+            // re-scan the directory if the queue is empty
+            if (isset($queue)) {
+                if (is_array($queue)) {
+                    $empty = true;
+                    foreach ($queue as &$p) {
+                        if (count($p)) {
+                            $empty = false;
+                            break;
+                        }
+                    }
+                    if ($empty)
+                        unset($queue);
+                } else {
+                    unset($queue);
+                }
+            }
+        }
+
+        if (!isset($queue)) {
+            // build the queue from disk
+            $files = array();
+            $f = scandir($workDir);
+            if ($f !== false) {
+                foreach( $f as $file ) {
+                    if( is_file("$workDir/$file") ) {
+                        $fileTime = filemtime("$workDir/$file");
+                        if( $fileTime && !isset($files[$fileTime]) )
+                            $files[$fileTime] = $file;
+                        else
+                            $files[] = $file;
+                    }
+                }
+            }
+
+            // sort it by time
+            ksort($files);
+            
+            // now add them to the various priority queues
+            $queue = array();
+            for($priority = 0; $priority <= 9; $priority++)
+                $queue[$priority] = array();
+                
+            foreach($files as $file) {
+                if ( stripos($file, '.url') )
+                    $queue[0][] = $file;
+                else if (preg_match('/\.p([1-9])/i', $file, $matches)) {
+                    $priority = (int)$matches[1];
+                    $queue[$priority][] = $file;
+                }
+            }
+            
+            SaveJobQueue($workDir, $queue);
+        }
+    }
+    
+    return $ret;
+}
+
+/**
+* Save the job queue to disk
+*/
+function SaveJobQueue($workDir, &$queue)
+{
+    $ret = false;
+    $queueName = sha1($workDir);
+    if (file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+        $ret = true;
+        
+    return $ret;
+}
+
+/**
+* Get the backlog for the given location
+* 
+* @param mixed $dir
+*/
+function GetTesters($locationId)
+{
+    $location = array();
+
+    $file = "./tmp/$locationId.tm";
+    if( is_file($file) )
+    {
+        $now = time();
+        $updated = filemtime($file);
+        $elapsed = 0;
+        if( $now > $updated )
+            $elapsed = $now - $updated;
+        $location['elapsed'] = (int)($elapsed / 60);
+        
+        // load information about each tester
+        $testers = json_decode(file_get_contents($file), true);
+        if( count($testers) )
+        {
+            ksort($testers);
+            $location['testers'] = array();
+            foreach( $testers as $index => $tester )
+            {
+                if( !array_key_exists('offline', $tester) || !$tester['offline'] )
+                {
+                    $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns']);
+                    
+                    // last time it checked in
+                    if( isset($tester['updated']) )
+                    {
+                        $elapsed = 0;
+                        $updated = $tester['updated'];
+                        if( $now > $updated )
+                            $elapsed = $now - $updated;
+                        $entry['elapsed'] = (int)($elapsed / 60);
+                    }
+                    
+                    // last time it got work
+                    if( isset($tester['last']) )
+                    {
+                        $elapsed = 0;
+                        $updated = $tester['last'];
+                        if( $now > $updated )
+                            $elapsed = $now - $updated;
+                        $entry['last'] = (int)($elapsed / 60);
+                    }
+                    
+                    $entry['busy'] = 0;
+                    if( strlen( $tester['test'] ) )
+                        $entry['busy'] = 1;
+                        
+                    $location['testers'][] = $entry;
+                }
+            }
+        }
+    }
+    
+    return $location;
+}
+
+/**
+* Lock the given location (make sure to unlock it when you are done)
+*/
+function LockLocation($location)
+{
+  if( !is_dir('./tmp') )
+    mkdir('./tmp');
+  $lock = fopen( "./tmp/$location.lock", 'w',  false);
+  if( $lock ) {
+    if( !flock($lock, LOCK_EX) ) {
+      fclose($lock);
+      $lock = false;
+    }
+  }
+  return $lock;
+}
+
+/**
+* Unlock the given location
+*/
+function UnlockLocation($lock)
+{
+  if( $lock ) {
+    flock($lock, LOCK_UN);
+    fclose($lock);
+  }
+}
+
+/**
+* Load and sort the video frame files into an arrray
+* 
+* @param mixed $path
+*/
+function loadVideo($path, &$frames)
+{
+    $ret = false;
+    $frames = null;
+    if (is_dir($path)) {
+        $files = glob( $path . '/frame_*.jpg', GLOB_NOSORT );
+        if ($files && count($files)) {
+            $ret = true;
+            $frames = array();
+            foreach ($files as $file) {
+                $file = basename($file);
+                $parts = explode('_', $file);
+                if (count($parts) >= 2) {
+                    $index = (int)$parts[1];
+                    $frames[$index] = $file;
+                }
+            }
+            
+            // sort the frames in order
+            ksort($frames, SORT_NUMERIC);
+        }
+    }
+    
+    return $ret;
+}
+
+/**
+* Escape XML output (insane that PHP doesn't support this natively)
+*/
+function xml_entities($text, $charset = 'UTF-8')
+{
+    // strip out any unprintable characters
+    $text = preg_replace('/[\x00-\x1F\x80-\x9F]/u', '', $text);
+    
+    // encode html characters that are also invalid in xml
+    $text = htmlentities($text, ENT_COMPAT | ENT_SUBSTITUTE, $charset, false);
+   
+    // XML character entity array from Wiki
+    // Note: &apos; is useless in UTF-8 or in UTF-16
+    $arr_xml_special_char = array("&quot;","&amp;","&apos;","&lt;","&gt;");
+   
+    // Building the regex string to exclude all strings with xml special char
+    $arr_xml_special_char_regex = "(?";
+    foreach($arr_xml_special_char as $key => $value)
+        $arr_xml_special_char_regex .= "(?!$value)";
+    $arr_xml_special_char_regex .= ")";
+   
+    // Scan the array for &something_not_xml; syntax
+    $pattern = "/$arr_xml_special_char_regex&([a-zA-Z0-9]*;)/";
+   
+    // Replace the &something_not_xml; with &amp;something_not_xml;
+    $replacement = '&amp;${1}';
+    return preg_replace($pattern, $replacement, $text);
+}
+
+/**
+ * Send a JSON response (including callback for JSONP)
+ *
+ * @param mixed $response
+ */
+function json_response(&$response) {
+    header ("Content-type: application/json; charset=utf-8");
+    if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
+        echo "{$_REQUEST['callback']}(";
+
+    if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
+        $ret['requestId'] = $_REQUEST['r'];
+    echo json_encode($response);
+
+    if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
+        echo ");";
+}
+
+/**
+ * Check to make sure a test ID is valid
+ *
+ * @param mixed $id
+ */
+function ValidateTestId(&$id) {
+    $valid = false;
+    $testId = $id;
+    // see if it is a relay test (includes the key)
+    if( strpos($id, '.') !== false ) {
+        $parts = explode('.', $id);
+        if( count($parts) == 2 ) {
+            $testId = trim($parts[1]);
+        }
+    }
+
+    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
+        $valid = true;
+    } else {
+        $id = '';
+    }
+    return $valid;
+}
+
+function arrayLookupWithDefault($key, $searchArray, $default) {
+  if (!is_array($searchArray) || !array_key_exists($key, $searchArray))
+    return $default;
+
+  return $searchArray[$key];
+}
+
+function formatMsInterval($val, $digits) {
+  if ($val == UNKNOWN_TIME)
+    return '-';
+
+  return number_format($val / 1000.0, $digits) . 's';
+}
+
+/**
+* Make sure there are no risky files in the given directory and make everything no-execute
+* 
+* @param mixed $path
+*/
+function SecureDir($path) {
+    $files = scandir($path);
+    foreach ($files as $file) {
+        $filepath = "$path/$file";
+        if (is_file($filepath)) {
+            $parts = pathinfo($file);
+            $ext = strtolower($parts['extension']);
+            if (strpos($ext, 'php') === false &&
+                strpos($ext, 'pl') === false &&
+                strpos($ext, 'py') === false &&
+                strpos($ext, 'cgi') === false &&
+                strpos($ext, 'asp') === false &&
+                strpos($ext, 'js') === false &&
+                strpos($ext, 'rb') === false &&
+                strpos($ext, 'htaccess') === false &&
+                strpos($ext, 'jar') === false) {
+                @chmod($filepath, 0666);
+            } else {
+                @chmod($filepath, 0666);    // just in case the unlink fails for some reason
+                unlink($filepath);
+            }
+        } elseif ($file != '.' && $file != '..' && is_dir($filepath)) {
+            SecureDir($filepath);
+        }
+    }
+}
+
+/**
+* Update the list of testers and the last contact time for the given tester
+* 
+* @param mixed $location
+* @param mixed $tester
+* @param mixed $testerInfo
+*/
+function UpdateTester($location, $tester, $testerInfo = null) {
+    if ($lock = LockLocation("testers-$location")) {
+        $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+        if( !count($testers) )
+            $testers = array();
+        if( !isset($testers[$tester]) )
+            $testers[$tester] = array();
+        elseif( !is_array($testers[$tester]) )
+        {
+            unset($testers[$tester]);
+            $testers[$tester] = array();
+        }
+        $now = time();
+        $testers[$tester]['updated'] = $now;
+        if (!array_key_exists('first_contact', $testers[$tester])) {
+            $testers[$tester]['first_contact'] = $now;
+        }
+        if (isset($testerInfo) && is_array($testerInfo)) {
+            // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
+            if (array_key_exists('test', $testerInfo) && 
+                (strlen($testerInfo['test']) || 
+                 (array_key_exists('test', $testers[$tester]) &&
+                  strlen($testers[$tester]['test'])))) {
+                $testers[$tester]['last'] = $now;
+            }
+            // update any other data passed in for the tester
+            foreach ($testerInfo as $key => $value) {
+                $testers[$tester][$key] = $value;
+            }
+        }
+        // delete any testers in this location that haven't checked in in over an hour
+        foreach( $testers as $name => &$data ) {
+            if( $now > $data['updated'] ) {
+                $elapsed = $now - $data['updated'];
+                if( $elapsed > 3600 )
+                    unset( $testers[$name] );
+            }
+        }
+                
+        file_put_contents("./tmp/$location.tm", json_encode($testers));
+        UnlockLocation($lock);
+    }
+}
+
+/**
+* Wrapper function that will use CURL or file_get_contents to retrieve the contents of an URL
+* 
+* @param mixed $url
+*/
+function http_fetch($url) {
+    $ret = null;
+    global $CURL_CONTEXT;
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
+        $ret = curl_exec($CURL_CONTEXT);
+    } else {
+        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
+        $ret = file_get_contents($url, false, $context);
+    }
+    return $ret;
+}
+
+/**
+* Generate a shard key to better spread out the test results
+* 
+*/
+function ShardKey($test_num) {
+    $key = '';
+
+    $bucket_size = GetSetting('bucket_size');
+    if( $bucket_size ) {
+        // group the tests sequentially
+        $bucket_size = (int)$bucket_size;
+        $bucket = $test_num / $bucket_size;
+        $key = NumToString($bucket) . '_';
+    } else {
+        // default to a 2-digit shard (1024-way shard)
+        $size = 2;
+        $shard = GetSetting('shard');
+        if( $shard )
+            $size = (int)$shard;
+        
+        if( $size > 0 && $size < 20 )
+        {
+            $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+            $digitCount = strlen($digits) - 1;
+            while( $size )
+            {
+                $key .= substr($digits, rand(0, $digitCount), 1);
+                $size--;
+            }
+            $key .= '_';
+        }
+    }
+    
+    return $key;
+}
+
+/**
+* Send a request with a really short timeout to fire an async processing task
+* 
+* @param mixed $relative_url
+*/
+function SendAsyncRequest($relative_url) {
+    $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_setopt($c, CURLOPT_TIMEOUT, 1);
+    curl_exec($c);
+    curl_close($c);
+}
+?>

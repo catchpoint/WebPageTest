@@ -121,6 +121,7 @@
             $test['pngss'] = (int)$req_pngss;
             $test['iq'] = (int)$req_iq;
             $test['bodies'] = $req_bodies;
+            $test['htmlbody'] = $req_htmlbody;
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
             $test['keepua'] = 0;
@@ -900,6 +901,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['sensitive'] = $test['sensitive'] ? 1 : 0;
             $test['pngss'] = $test['pngss'] ? 1 : 0;
             $test['bodies'] = $test['bodies'] ? 1 : 0;
+            $test['htmlbody'] = $test['htmlbody'] ? 1 : 0;
             $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
             $test['noheaders'] = $test['noheaders'] ? 1 : 0;
             $test['aft'] = 0;
@@ -1679,6 +1681,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "imageQuality={$settings['iq']}\r\n";
             if( $test['bodies'] )
                 $testFile .= "bodies=1\r\n";
+            if( $test['htmlbody'] )
+                $testFile .= "htmlbody=1\r\n";
             if( $test['time'] )
                 $testFile .= "time={$test['time']}\r\n";
             if( $test['clear_rv'] )

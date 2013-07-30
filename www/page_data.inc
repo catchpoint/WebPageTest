@@ -138,7 +138,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                        'domContentLoadedEventStart',
                        'domContentLoadedEventEnd',
                        'lastVisualChange',
-                       'server_rtt');
+                       'server_rtt',
+                       'firstPaint');
         foreach ($times as $key) {
           if ($ret[$key] > 3600000 || $ret[$key] < 0)
             $ret[$key] = 0;
@@ -223,6 +224,7 @@ function loadPageData($file, $options = null)
 
                 $ret['fixed_viewport'] = (array_key_exists(88, $fields) && strlen(trim($fields[88]))) ? (int)trim($fields[88]) : -1;
                 $ret['score_progressive_jpeg'] = (array_key_exists(89, $fields) && strlen(trim($fields[89]))) ? (int)trim($fields[89]) : -1;
+                $ret['firstPaint'] = (array_key_exists(90, $fields) && strlen(trim($fields[90]))) ? (int)trim($fields[90]) : 0;
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))
@@ -382,7 +384,11 @@ function GetMedianRun(&$pageData, $cached, $metric = 'loadTime') {
     $count = count($times);
     if( $count > 1 ) {
         asort($times);
-        $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
+        if (array_key_exists('medianRun', $_REQUEST) &&
+            $_REQUEST['medianRun'] == 'fastest')
+          $medianIndex = 1;
+        else
+          $medianIndex = (int)floor(((float)$count + 1.0) / 2.0);
         $current = 0;
         foreach( $times as $index => $time ) {
             $current++;

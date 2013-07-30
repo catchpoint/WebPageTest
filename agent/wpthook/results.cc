@@ -377,7 +377,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Event Name
     result += "\t";
     // URL
-    result += "\t";
+    result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
     CStringA formatted_on_load = FormatTime(_test_state._on_load);
     result += formatted_on_load;
@@ -604,6 +604,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     // Progressive JPEG Score
     buff.Format("%d\t", checks._progressive_jpeg_score);
+    result += buff;
+    // W3C Navigation timing first paint (MS-specific right now)
+    buff.Format("%d\t", _test_state._first_paint);
     result += buff;
 
     result += "\r\n";
@@ -1018,18 +1021,20 @@ CStringA Results::FormatTime(LARGE_INTEGER t) {
   HTML will still be captured
 -----------------------------------------------------------------------------*/
 void Results::SaveResponseBodies(void) {
-  if (_test._save_response_bodies) {
+  if (_test._save_response_bodies || _test._save_html_body) {
     CString file = _file_base + _T("_bodies.zip");
     zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
     if (zip) {
       DWORD count = 0;
       DWORD bodies_count = 0;
+      bool done = false;
       _requests.Lock();
       POSITION pos = _requests._requests.GetHeadPosition();
-      while (pos) {
+      while (pos && !done) {
         Request * request = _requests._requests.GetNext(pos);
         if (request && request->_processed) {
-          CString mime = request->GetResponseHeader("content-type").MakeLower();
+          CString mime =
+              request->GetResponseHeader("content-type").MakeLower();
           count++;
           if (request->GetResult() == 200 && 
               ( mime.Find(_T("text/")) >= 0 || 
@@ -1046,6 +1051,8 @@ void Results::SaveResponseBodies(void) {
                 zipWriteInFileInZip(zip, body_data, body_len);
                 zipCloseFileInZip(zip);
                 bodies_count++;
+                if (_test._save_html_body)
+                  done = true;
               }
             }
           }

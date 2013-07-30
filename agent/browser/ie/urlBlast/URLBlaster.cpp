@@ -678,6 +678,10 @@ bool CURLBlaster::LaunchBrowser(void)
   OutputDebugString(_T("[UrlBlast] - Flushing DNS"));
   if( !keepDNS )
 	  FlushDNS();
+
+  // move the cursor to the top-left corner
+  SetCursorPos(0,0);
+  ShowCursor(FALSE);
 	
 	if( !info.url.IsEmpty() )
 	{
@@ -902,6 +906,9 @@ bool CURLBlaster::LaunchBrowser(void)
 			ResetIpfw();
 		}
 	}
+
+  // restore the cursor
+  ShowCursor(TRUE);
 	
 	return ret;
 }
@@ -1051,6 +1058,7 @@ void CURLBlaster::ConfigurePagetest(void)
 		  RegSetValueEx(hKey, _T("pngScreenShot"), 0, REG_DWORD, (const LPBYTE)&info.pngScreenShot, sizeof(info.pngScreenShot));
 		  RegSetValueEx(hKey, _T("imageQuality"), 0, REG_DWORD, (const LPBYTE)&info.imageQuality, sizeof(info.imageQuality));
       RegSetValueEx(hKey, _T("bodies"), 0, REG_DWORD, (const LPBYTE)&info.bodies, sizeof(info.bodies));
+      RegSetValueEx(hKey, _T("htmlbody"), 0, REG_DWORD, (const LPBYTE)&info.htmlbody, sizeof(info.htmlbody));
       RegSetValueEx(hKey, _T("keepua"), 0, REG_DWORD, (const LPBYTE)&info.keepua, sizeof(info.keepua));
       RegSetValueEx(hKey, _T("minimumDuration"), 0, REG_DWORD, (const LPBYTE)&info.minimumDuration, sizeof(info.minimumDuration));
       RegSetValueEx(hKey, _T("customRules"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.customRules, (info.customRules.GetLength() + 1) * sizeof(TCHAR));

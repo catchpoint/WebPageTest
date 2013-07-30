@@ -1,4 +1,15 @@
 <?php
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('StartProcessingIncrementalResult');
+  newrelic_add_custom_tracer('CheckForSpam');
+  newrelic_add_custom_tracer('loadPageRunData');
+  newrelic_add_custom_tracer('ProcessAVIVideo');
+  newrelic_add_custom_tracer('getBreakdown');
+  newrelic_add_custom_tracer('GetVisualProgress');
+  newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+  newrelic_add_custom_tracer('FinishProcessingIncrementalResult');
+}
+
 chdir('..');
 //$debug = true;
 include('common.inc');
@@ -19,6 +30,11 @@ $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
 $testLock = null;
+
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_parameter('test', $id);
+  newrelic_add_custom_parameter('location', $location);
+}
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
@@ -86,10 +102,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         }
     }
 } elseif (ValidateTestId($id)) {
-    $locations = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($locations);
-    $settings = parse_ini_file('./settings/settings.ini');
-    $locKey = arrayLookupWithDefault('key', $locations[$location], "");
+    $locKey = GetLocationKey($location);
     logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
     if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") ) {
         // update the location time
@@ -259,21 +272,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             
             $perTestTime = 0;
             $testCount = 0;
-            $beaconUrl = null;
-            if (strpos($id, '.') === false && strlen($settings['showslow']))
-            {
-                $beaconUrl = $settings['showslow'] . '/beacon/webpagetest/';
-                if (array_key_exists('showslow_key', $settings) &&
-                    strlen($settings['showslow_key']))
-                    $beaconUrl .= '?key=' . trim($settings['showslow_key']);
-                if (array_key_exists('beaconRate', $settings) &&
-                    $settings['beaconRate'] && rand(1, 100) > $settings['beaconRate'] )
-                    unset($beaconUrl);
-                else {
-                    $testInfo['showslow'] = 1;
-                    $testInfo_dirty = true;
-                }
-            }
 
             // do pre-complete post-processing
             require_once('video.inc');
@@ -281,24 +279,29 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             MoveVideoFiles($testPath);
             BuildVideoScripts($testPath);
             
-            if (!isset($pageData)) {
-                $pageData = loadAllPageData($testPath);
-            }
+            if (!isset($pageData))
+              $pageData = loadAllPageData($testPath);
             $medianRun = GetMedianRun($pageData, 0);
-            
+
             // calculate and cache the content breakdown and visual progress information
             if( isset($testInfo) ) {
                 require_once('breakdown.inc');
                 for ($i = 1; $i <= $testInfo['runs']; $i++) {
                     getBreakdown($id, $testPath, $i, 0, $requests);
                     GetVisualProgress($testPath, $i, 0);
+                    DevToolsGetConsoleLog($testPath, $i, 0);
                     if (!$testInfo['fvonly']) {
                         getBreakdown($id, $testPath, $i, 1, $requests);
                         GetVisualProgress($testPath, $i, 1);
+                        DevToolsGetConsoleLog($testPath, $i, 1);
                     }
                 }
             }
 
+            // delete all of the videos except for the median run?
+            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
+                KeepVideoForRun($testPath, $medianRun);
+            
             $test = file_get_contents("$testPath/testinfo.ini");
             $now = gmdate("m/d/y G:i:s", $time);
 
@@ -352,24 +355,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // clean up the backup of the job file
-            $backupDir = $locations[$location]['localDir'] . '/testing';
-            if( is_dir($backupDir) )
-            {
-                $files = glob("$backupDir/*$id.*", GLOB_NOSORT);
-                foreach($files as $file)
-                    unlink($file);
-            }
-
-            // log any slow tests
-            if (isset($testInfo) && array_key_exists('slow_test_time', $settings) && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
-                $elapsed = $time - $testInfo['started'];
-                if ($elapsed > $settings['slow_test_time']) {
-                    $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
-                    error_log($log_entry, 3, './tmp/slow_tests.log');
-                }
-            }
-            
             // see if it is an industry benchmark test
             if( array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
                 strlen($ini['industry']) && strlen($ini['industry_page']) )
@@ -403,69 +388,15 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 }
             }
             
-            // delete all of the videos except for the median run?
-            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
-                KeepVideoForRun($testPath, $medianRun);
-                
-            // archive the test (modifies the on-disk testinfo so we need to flush it and update
             if( isset($testInfo) && $testInfo_dirty ) {
                 $testInfo_dirty = false;
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
             }
             SecureDir($testPath);
             FinishProcessingIncrementalResult();
-
-            ArchiveTest($id);
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
             
-            // do any other post-processing (e-mail notification for example)
-            if( isset($settings['notifyFrom']) && is_file("$testPath/testinfo.ini") )
-            {
-                $test = parse_ini_file("$testPath/testinfo.ini",true);
-                if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
-                    notify( $test['test']['notify'], $settings['notifyFrom'], $id, $testPath, $settings['host'] );
-            }
-            
-            // send a callback request
-            if( isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback']) )
-            {
-                $send_callback = true;
-                $testId = $id;
-                
-                if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
-                    require_once('testStatus.inc');
-                    $testId = $testInfo['batch_id'];
-                    $status = GetTestStatus($testId);
-                    $send_callback = false;
-                    if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
-                        $send_callback = true;
-                }
-                
-                if ($send_callback) {
-                    // build up the url we are going to ping
-                    $url = $testInfo['callback'];
-                    if( strncasecmp($url, 'http', 4) )
-                        $url = "http://" . $url;
-                    if( strpos($url, '?') == false )
-                        $url .= '?';
-                    else
-                        $url .= '&';
-                    $url .= "id=$testId";
-                    
-                    // set a 10 second timeout on the request
-                    $ctx = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10))); 
-
-                    // send the request (we don't care about the response)
-                    @file_get_contents($url, 0, $ctx);
-                }
-            }
-            
-            // send a beacon?
-            if( isset($beaconUrl) && strlen($beaconUrl) )
-            {
-                @include('./work/beacon.inc');
-                @SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
-            }
+            // send an async request to the post-processing code so we don't block
+            SendAsyncRequest("/work/postprocess.php?test=$id");
         } else {
             if( isset($testInfo) && $testInfo_dirty )
                 gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
@@ -559,21 +490,32 @@ function notify( $mailto, $from,  $id, $testPath, $host )
 */
 function KeepVideoForRun($testPath, $run)
 {
-    if( $run )
-    {
-        $dir = opendir($testPath);
-        if( $dir )
-        {
-            while($file = readdir($dir)) 
-            {
-                $path = $testPath  . "/$file/";
-                if( is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run" )
-                    delTree("$path/");
+  if ($run) {
+    $dir = opendir($testPath);
+    if ($dir) {
+      while($file = readdir($dir)) {
+        $path = $testPath  . "/$file/";
+        if( is_dir($path) && !strncmp($file, 'video_', 6) && $file != "video_$run" )
+          delTree("$path/");
+        elseif (is_file("$testPath/$file")) {
+          if (preg_match('/^([0-9]+(_Cached)?)[_\.]/', $file, $matches) && count($matches) > 1) {
+            $match_run = $matches[1];
+            if (strcmp("$run", $match_run) &&
+                (strpos($file, '_bodies.zip') ||
+                 strpos($file, '.cap') ||
+                 strpos($file, '_devtools.json') ||
+                 strpos($file, '_netlog.txt') ||
+                 strpos($file, '_doc.') ||
+                 strpos($file, '_render.'))) {
+              unlink("$testPath/$file");
             }
-
-            closedir($dir);
+          }
         }
+      }
+
+      closedir($dir);
     }
+  }
 }
 
 /**

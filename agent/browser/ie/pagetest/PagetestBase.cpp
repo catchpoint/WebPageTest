@@ -54,6 +54,7 @@ CPagetestBase::CPagetestBase(void):
   , imageQuality(JPEG_DEFAULT_QUALITY)
   , pngScreenShot(0)
   , bodies(0)
+  , htmlbody(0)
   , keepua(0)
   , minimumDuration(0)
   , clearShortTermCacheSecs(0)

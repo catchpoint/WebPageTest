@@ -136,6 +136,7 @@ void WptTest::Reset(void) {
   _dns_name_override.RemoveAll();
   _block_requests.RemoveAll();
   _save_response_bodies = false;
+  _save_html_body = false;
   _preserve_user_agent = false;
   _browser_width = BROWSER_WIDTH;
   _browser_height = BROWSER_HEIGHT;
@@ -235,6 +236,8 @@ bool WptTest::Load(CString& test) {
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim()))
           _save_response_bodies = true;
+        else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim()))
+          _save_html_body = true;
         else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
           _preserve_user_agent = true;
         else if (!key.CompareNoCase(_T("client")))
@@ -551,6 +554,9 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _log_data = true;
     else
       _log_data = false;
+  } else if (cmd == _T("navigate")) {
+    _navigated_url = command.target;
+    consumed = false;
   } else if (cmd == _T("sleep")) {
     int seconds = _ttoi(command.target);
     if (seconds > 0) {

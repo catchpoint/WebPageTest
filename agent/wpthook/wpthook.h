@@ -58,6 +58,7 @@ public:
   void OnAllDOMElementsLoaded(DWORD load_time);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD start, DWORD end);
+  void SetFirstPaint(DWORD first_paint);
   void OnLoad();
   void OnNavigate();
   void OnNavigateComplete();

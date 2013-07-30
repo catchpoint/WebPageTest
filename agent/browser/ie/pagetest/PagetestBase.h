@@ -197,6 +197,7 @@ public:
   DWORD           imageQuality;
   DWORD           pngScreenShot;
   DWORD           bodies;
+  DWORD           htmlbody;
   DWORD           keepua;
   DWORD           minimumDuration;
   CAtlList<CString>	adPatterns;

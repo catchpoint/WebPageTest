@@ -174,6 +174,7 @@ public:
   bool    _png_screen_shot;
   DWORD   _minimum_duration;
   bool    _save_response_bodies;
+  bool    _save_html_body;
   bool    _preserve_user_agent;
   DWORD   _browser_width;
   DWORD   _browser_height;
@@ -187,6 +188,7 @@ public:
   CString _browser_command_line;
   CString _browser_additional_command_line;
   CStringA  _user_agent;
+  CString _navigated_url;
   
   // current state
   int     _run;

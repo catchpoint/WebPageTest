@@ -246,7 +246,7 @@ else
                     // raw results
                     echo "<rawData>";
                     echo "<headers>http://$host$uri$path/{$i}_report.txt</headers>\n";
-                    if (array_key_exists('bodies', $test['testinfo']) && $test['testinfo']['bodies']) {
+                    if (is_file("$testPath/{$i}_bodies.zip")) {
                         echo "<bodies>http://$host$uri$path/{$i}_bodies.zip</bodies>\n";
                     }
                     echo "<pageData>http://$host$uri$path/{$i}_IEWPG.txt</pageData>\n";
@@ -256,13 +256,13 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
+                    $progress = GetVisualProgress($testPath, $i, 0);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}", $frames);
                         if( $frames && count($frames) )
                         {
-                            $progress = GetVisualProgress($testPath, $i, 0);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
@@ -278,6 +278,16 @@ else
                             }
                             echo "</videoFrames>\n";
                         }
+                    }
+                    if (isset($progress) &&
+                        is_array($progress) &&
+                        array_key_exists('DevTools', $progress) &&
+                        is_array($progress['DevTools']) &&
+                        array_key_exists('processing', $progress['DevTools'])) {
+                        echo "<processing>\n";
+                        foreach ($progress['DevTools']['processing'] as $key => $value)
+                          echo "<$key>$value</$key>\n";
+                        echo "</processing>\n";
                     }
                     
                     xmlDomains($id, $testPath, $i, 0);
@@ -334,7 +344,7 @@ else
                     // raw results
                     echo "<rawData>\n";
                     echo "<headers>http://$host$uri$path/{$i}_Cached_report.txt</headers>\n";
-                    if (array_key_exists('bodies', $test['testinfo']) && $test['testinfo']['bodies']) {
+                    if (is_file("$testPath/{$i}_Cached_bodies.zip")) {
                         echo "<bodies>http://$host$uri$path/{$i}_Cached_bodies.zip</bodies>\n";
                     }
                     echo "<pageData>http://$host$uri$path/{$i}_Cached_IEWPG.txt</pageData>\n";
@@ -344,13 +354,13 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
+                    $progress = GetVisualProgress($testPath, $i, 1);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
                         loadVideo("$testPath/video_{$i}_cached", $frames);
                         if( $frames && count($frames) )
                         {
-                            $progress = GetVisualProgress($testPath, $i, 1);
                             echo "<videoFrames>\n";
                             foreach( $frames as $time => $frameFile )
                             {
@@ -366,6 +376,16 @@ else
                             }
                             echo "</videoFrames>\n";
                         }
+                    }
+                    if (isset($progress) &&
+                        is_array($progress) &&
+                        array_key_exists('DevTools', $progress) &&
+                        is_array($progress['DevTools']) &&
+                        array_key_exists('processing', $progress['DevTools'])) {
+                        echo "<processing>\n";
+                        foreach ($progress['DevTools']['processing'] as $key => $value)
+                          echo "<$key>$value</$key>\n";
+                        echo "</processing>\n";
                     }
                     
                     xmlDomains($id, $testPath, $i, 1);

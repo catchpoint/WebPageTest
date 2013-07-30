@@ -960,8 +960,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
   }
   
   // get the navigation timing information from supported browsers
-  long load_start, load_end, dcl_start, dcl_end;
-  GetNavTiming(load_start, load_end, dcl_start, dcl_end);
+  long load_start, load_end, dcl_start, dcl_end, first_paint;
+  GetNavTiming(load_start, load_end, dcl_start, dcl_end, first_paint);
 
 	CA2T ip(inet_ntoa(pageIP.sin_addr));
 	
@@ -1037,7 +1037,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%s\t")
                     _T("%s\t%d\t%d\t%d\t%d\t%d\t%d\t")
-                    _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d")
+                    _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t")
+                    _T("%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1052,7 +1053,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget,
 			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, (LPCTSTR)pageSpeedVersion,
 			(LPCTSTR)pageTitle, msTitle, load_start, load_end, dcl_start, dcl_end, msVisualComplete,
-      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore);
+      _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore,
+      first_paint);
 	buff += result;
 }
 
@@ -1104,33 +1106,6 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 		else
 			buff.Empty();
 			
-		// page-level data
-		result.Format(	_T("%s\t%s\t%s\t")
-						_T("%s\t%s\t%s\t%s\t")
-						_T("%d\t%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%d\t%d\t%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\t")
-						_T("%s\t%d\t%d\t%d\t%d\t%s\t%d\t")
-						_T("%d\t%d\t%s\t%d\t")
-						_T("%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%d\t%d\t%d\t%d\t%d\t")
-						_T("%d\t%s\t%s\t%s")
-						_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s\t%d\t%s")
-            _T("\t\t\t\t\t\t\t\t\t")
-            _T("\t\t%s\t%d")
-						_T("\r\n"),
-				(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, 
-				(LPCTSTR)ip, _T(""), _T(""), (LPCTSTR)pageUrl,
-				errorCode, msLoad, msTTFB, msStartRender, out, in,
-				0, 0, 0, _T(""), _T(""), _T(""), _T(""), CTrackedEvent::etPage, 0, 0, msLoadDoc,
-				descriptor, labID, dialerID, connectionType, cached, logUrl, build,
-				measurementType, experimental, (LPCTSTR)guid, sequence++,
-				cacheScore, staticCdnScore, gzipScore, cookieScore, keepAliveScore, 
-				doctypeScore, minifyScore, combineScore, compressionScore, etagScore, flaggedRequests,
-				0, _T(""), _T(""), _T(""),
-				gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget, 
-        compressTotal, compressTotal - compressTarget, _T(""), checkOpt, _T(""), (LPCTSTR)GetRTT(pageIP.sin_addr.S_un.S_addr), 0 );
-		buff += result;
-
 		// loop through all of the requests on the page
 		POSITION pos = events.GetHeadPosition();
 		while( pos )
@@ -1386,15 +1361,16 @@ void CPagetestReporting::GenerateReport(CString &szReport)
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveBodies(CString file)
 {
-  if (bodies)
+  if (bodies || htmlbody)
   {
 	  zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
 	  if( zip )
 	  {
+	    bool done = false;
 	    DWORD count = 0;
       DWORD bodiesCount = 0;
 	    POSITION pos = events.GetHeadPosition();
-	    while( pos )
+	    while( pos && !done )
 	    {
 		    CTrackedEvent * event = events.GetNext(pos);
 		    if( event && event->type == CTrackedEvent::etWinInetRequest )
@@ -1417,6 +1393,8 @@ void CPagetestReporting::SaveBodies(CString file)
                 zipWriteInFileInZip( zip, r->body, r->bodyLen );
 							  zipCloseFileInZip( zip );
                 bodiesCount++;
+                if (htmlbody)
+                  done = true;
 						  }
             }
           }
@@ -3629,8 +3607,9 @@ bool CPagetestReporting::FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
   supported browsers (IE 9+).
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
-                                      long &dcl_start, long &dcl_end) {
-  load_start = load_end = dcl_start = dcl_end = 0;
+                                      long &dcl_start, long &dcl_end,
+                                      long &first_paint) {
+  load_start = load_end = dcl_start = dcl_end = first_paint = 0;
   static const TCHAR * FN_GET_NAV_TIMING =
       _T("var wptGetNavTimings = (function(){")
       _T("  var timingParams = \"\";")
@@ -3641,6 +3620,7 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
       _T("    };")
       _T("    timingParams = addTime('domContentLoadedEventStart') + ',' +")
       _T("        addTime('domContentLoadedEventEnd') + ',' +")
+      _T("        addTime('msFirstPaint') + ',' +")
       _T("        addTime('loadEventStart') + ',' +")
       _T("        addTime('loadEventEnd');")
       _T("  }")
@@ -3658,11 +3638,14 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
         while (pos != -1) {
           index++;
           long int_val = _ttol(val);
-          switch (index) {
-            case 1: dcl_start = int_val; break;
-            case 2: dcl_end = int_val; break;
-            case 3: load_start = int_val; break;
-            case 4: load_end = int_val; break;
+          if (int_val > 0 && int_val < 3600000) {
+            switch (index) {
+              case 1: dcl_start = int_val; break;
+              case 2: dcl_end = int_val; break;
+              case 3: first_paint = int_val; break;
+              case 4: load_start = int_val; break;
+              case 5: load_end = int_val; break;
+            }
           }
           val = nav_timings.Tokenize(_T(","), pos);
         }

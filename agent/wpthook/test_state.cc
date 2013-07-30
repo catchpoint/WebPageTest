@@ -90,6 +90,7 @@ void TestState::Reset(bool cascade) {
   _dom_content_loaded_event_end = 0;
   _load_event_start = 0;
   _load_event_end = 0;
+  _first_paint = 0;
   _on_load.QuadPart = 0;
   _fixed_viewport = -1;
   _dom_element_count = 0;
@@ -118,6 +119,7 @@ void TestState::Reset(bool cascade) {
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
     _load_event_end = 0;
+    _first_paint = 0;
     _first_navigate.QuadPart = 0;
     _dom_elements_time.QuadPart = 0;
     _render_start.QuadPart = 0;
@@ -213,6 +215,7 @@ void TestState::OnNavigate() {
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
     _load_event_end = 0;
+    _first_paint = 0;
     _dom_elements_time.QuadPart = 0;
     _on_load.QuadPart = 0;
     navigating_ = true;
@@ -269,6 +272,13 @@ void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
 void TestState::SetLoadEvent(DWORD start, DWORD end) {
   _load_event_start = start;
   _load_event_end = end;
+}
+
+/*-----------------------------------------------------------------------------
+  Save web timings for msFirstPaint.
+-----------------------------------------------------------------------------*/
+void TestState::SetFirstPaint(DWORD first_paint) {
+  _first_paint = first_paint;
 }
 
 /*-----------------------------------------------------------------------------
