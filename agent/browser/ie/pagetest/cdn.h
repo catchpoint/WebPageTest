@@ -22,6 +22,7 @@ CDN_PROVIDER cdnList[] = {
 	{"googlesyndication.", _T("Google")},
 	{"youtube.", _T("Google")},
   {".googleusercontent.com", _T("Google")},
+  {"googlehosted.com", _T("Google")},
 	{".internapcdn.net", _T("Internap")},
 	{".cloudfront.net", _T("Amazon CloudFront")},
 	{".netdna-cdn.com", _T("NetDNA")},
