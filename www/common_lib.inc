@@ -1910,7 +1910,7 @@ function tokenizeLogLine($line) {
 * @param int    $test_date The date of the test (YYYYMMDD)
 * @param array  $data      A key/value array of the data to update
 */
-function updateTestLog($test_guid, $test_date, $data) {
+function updateTestLog($test_guid, $test_date, $data, $test_uid, $test_user, $test_owner) {
     // Get the log file for this date
     $fileName = './logs/' . $test_date . '.log';
     $file = file_get_contents($fileName);
@@ -1923,6 +1923,14 @@ function updateTestLog($test_guid, $test_date, $data) {
 
             // Only update the line we care about
             if ($line_data['guid'] === $test_guid) {
+                // If the current user can't update this test then just return
+                if ($test_uid != $line_data['testUID']
+                    && $test_user != $line_data['testUser']
+                    && $test_owner != $line_data['o']
+                ) {
+                    return false;
+                }
+
                 foreach ($data as $key => $value) {
                     if ($key == 'label') { // Only allowing label to be updated at the moment
                         $line_data[$key] = $value;
@@ -1937,6 +1945,8 @@ function updateTestLog($test_guid, $test_date, $data) {
             }
         }
     }
+
+    return false;
 }
 
 ?>
