@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'common.inc';
 set_time_limit(0);
 
@@ -38,6 +38,17 @@ if( !strcasecmp($_GET["f"], 'csv') )
     $csv = true;
 
 
+// Handle an Ajax call to update a test ID
+if (isset($_POST['label'])) {
+    $data = array('label' => htmlentities($_POST['label']));
+    $update_result = updateTestLog($_POST['testID'], (int)$_POST['date'], $data, $uid, $user, $owner);
+    if ($update_result !== false) {
+        die('Success');
+    } else {
+        die('Failed to save file!');
+    }
+}
+
 if( $csv )
 {
     header ("Content-type: text/csv");
@@ -51,16 +62,16 @@ else
     <head>
         <title>WebPagetest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
-		<style type="text/css">
-			h4 {text-align: center;}
-			.history table {text-align:left;}
-			.history th {white-space:nowrap; text-decoration:underline;}
-			.history td.date {white-space:nowrap;}
-			.history td.location {white-space:nowrap;}
-			.history td.url {white-space:nowrap;}
+        <style type="text/css">
+            h4 {text-align: center;}
+            .history table {text-align:left;}
+            .history th {white-space:nowrap; text-decoration:underline;}
+            .history td.date {white-space:nowrap;}
+            .history td.location {white-space:nowrap;}
+            .history td.url {white-space:nowrap;}
             .history td.ip {white-space:nowrap;}
             .history td.uid {white-space:nowrap;}
-		</style>
+        </style>
     </head>
     <body>
         <div class="page">
@@ -102,11 +113,11 @@ else
                 $action = '/video/compare.php';
                 echo "<form name=\"compare\" method=\"get\" action=\"$action\">";
                 ?>
-		        <table class="history" border="0" cellpadding="5px" cellspacing="0">
-			        <tr>
+                <table class="history" border="0" cellpadding="5px" cellspacing="0">
+                    <tr>
                         <th style="text-decoration: none;" ><input style="font-size: 70%; padding: 0;" id="CompareBtn" type="submit" value="Compare"></th>
-				        <th>Date/Time</th>
-				        <th>From</th>
+                        <th>Date/Time</th>
+                        <th>From</th>
                         <?php
                         if( $includeip )
                             echo '<th>Requested By</th>';
@@ -116,21 +127,21 @@ else
                         }
                         ?>
                         <th>Label</th>
-				        <th>Url</th>
-			        </tr>
-			        <?php
+                        <th>Url</th>
+                    </tr>
+                    <?php
     }  // if( $csv )
-			        // loop through the number of days we are supposed to display
+                    // loop through the number of days we are supposed to display
                     $rowCount = 0;
                     $done = false;
                     $totalCount = 0;
-			        $targetDate = new DateTime($from, new DateTimeZone('GMT'));
-			        for($offset = 0; $offset <= $days && !$done; $offset++)
-			        {
-				        // figure out the name of the log file
-				        $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
-				        
-				        // load the log file into an array of lines
+                    $targetDate = new DateTime($from, new DateTimeZone('GMT'));
+                    for($offset = 0; $offset <= $days && !$done; $offset++)
+                    {
+                        // figure out the name of the log file
+                        $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
+
+                        // load the log file into an array of lines
                         $ok = true;
                         $file = file_get_contents($fileName);
                         if($filterstr) {
@@ -140,22 +151,22 @@ else
                         }
                         $lines = explode("\n", $file);
                         unset($file);
-				        if(count($lines) && $ok)
-				        {
-					        // walk through them backwards
-					        $records = array_reverse($lines);
-					        foreach($records as $line)
-					        {
+                        if(count($lines) && $ok)
+                        {
+                            // walk through them backwards
+                            $records = array_reverse($lines);
+                            foreach($records as $line)
+                            {
                                 $ok = true;
                                 if($filterstr && stristr($line, $filterstr) === false)
                                     $ok = false;
-                                
+
                                 if ($ok)
-                                {                                
-						            $date = NULL;
-						            $location = NULL;
-						            $url = NULL;
-						            $guid = NULL;
+                                {
+                                    $date = NULL;
+                                    $location = NULL;
+                                    $url = NULL;
+                                    $guid = NULL;
                                     $ip = NULL;
                                     $testUID = NULL;
                                     $testUser = NULL;
@@ -163,75 +174,48 @@ else
                                     $video = false;
                                     $label = NULL;
                                     $count = '';
-						            
-						            // tokenize the line
-						            $parseLine = str_replace("\t", "\t ", $line);
-						            $token = strtok($parseLine, "\t");
-						            $column = 0;
-						            while($token)
-						            {
-							            $column++;
-							            $token = trim($token);
-							            if( strlen($token) > 0)
-							            {
-								            switch($column)
-								            {
-									            case 1: $date = strtotime($token); break;
-                                                case 2: $ip = $token; break;
-									            case 5: $guid = $token; break;
-									            case 6: $url = htmlspecialchars($token); break;
-									            case 7: $location = $token; break;
-                                                case 8: $private = ($token == '1' ); break;
-                                                case 9: $testUID = $token; break;
-                                                case 10: $testUser = $token; break;
-                                                case 11: $video = ($token == '1'); break;
-                                                case 12: $label = htmlspecialchars($token); break;
-                                                case 13: $o = $token; break;
-                                                case 15: $count = $token; break;
-								            }
-							            }
-							            
-							            // on to the next token
-							            $token = strtok("\t");
-						            }
-						            
+
+                                    // tokenize the line
+                                    $line_data = tokenizeLogLine($line);
+                                    extract($line_data);
+
                                     if (!$location) {
                                         $location = '';
                                     }
-						            if( isset($date) && isset($location) && isset($url) && isset($guid))
-						            {
+                                    if( isset($date) && isset($location) && isset($url) && isset($guid))
+                                    {
                                         // see if it is supposed to be filtered out
                                         if ($private) {
                                             $ok = false;
                                             if ($includePrivate) {
                                                 $ok = true;
-                                            } elseif ((isset($uid) && $uid == $testUID) || 
+                                            } elseif ((isset($uid) && $uid == $testUID) ||
                                                 (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
                                             }
                                         }
-                                            
+
                                         if( $onlyVideo and !$video )
                                             $ok = false;
-                                            
+
                                         if ($ok && !$all) {
                                             $ok = false;
-                                            if ((isset($uid) && $uid == $testUID) || 
+                                            if ((isset($uid) && $uid == $testUID) ||
                                                 (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
                                             }
                                         }
-                                        
+
                                         if( $ok )
                                         {
                                             $rowCount++;
                                             $totalCount++;
                                             $newDate = strftime('%x %X', $date + ($tz_offset * 60));
-							                
+
                                             if( $csv )
                                             {
                                                 // only track local tests
@@ -253,20 +237,20 @@ else
                                                 if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) )
                                                     echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\">";
                                                 echo '</td>';
-							                    echo '<td class="date">';
+                                                echo '<td class="date">';
                                                 if( $private )
                                                     echo '<b>';
                                                 echo $newDate;
                                                 if( $private )
                                                     echo '</b>';
                                                 echo '</td>';
-							                    echo '<td class="location">' . $location;
+                                                echo '<td class="location">' . $location;
                                                 if( $video )
                                                     echo ' (video)';
                                                 echo '</td>';
                                                 if($includeip)
                                                     echo '<td class="ip">' . $ip . '</td>';
-                                                
+
                                                 if( $admin )
                                                 {
                                                     if( isset($testUID) )
@@ -280,14 +264,18 @@ else
                                                     $link = "/result/$guid/";
                                                 if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
                                                     $link = $guid;
-                                                    
+
                                                 $labelTxt = $label;
                                                 if( strlen($labelTxt) > 30 )
                                                     $labelTxt = substr($labelTxt, 0, 27) . '...';
-                                                echo "<td title=\"$label\" class=\"label\"><a href=\"$link\">$labelTxt</a></td>";
-                                                
-							                    echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
-                                                
+                                                echo "<td title=\"$label\" class=\"label\">";
+                                                echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
+                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label;
+                                                echo '" data-date="' . $targetDate->format("Ymd") . '">(Edit)</a>';
+                                                echo "</td>";
+
+                                                echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
+
                                                 // split the tables every 30 rows so the browser doesn't wait for ALL the results
                                                 if( $rowCount % 30 == 0 )
                                                 {
@@ -296,27 +284,27 @@ else
                                                     ob_flush();
                                                 }
                                             }
-                                            
+
                                             if (!$nolimit && $totalCount > 100) {
                                                 $done = true;
                                                 break;
                                             }
                                         }
                                     }
-						        }
-					        }
-				        }
-				        
-				        // on to the previous day
-				        $targetDate->modify('-1 day');
-			        }
+                                }
+                            }
+                        }
+
+                        // on to the previous day
+                        $targetDate->modify('-1 day');
+                    }
     if( !$csv )
     {
-			        ?>
-		        </table>
+                    ?>
+                </table>
                 </form>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
