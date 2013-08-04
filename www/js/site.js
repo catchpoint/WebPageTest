@@ -1336,7 +1336,6 @@ var getScrollbarWidth = function() {
                     element_clicked.attr('data-current-label', newLabel);
                     saveNode.remove();
                     element_clicked.show();
-                    console.log(msg);
                 });
             });
         });

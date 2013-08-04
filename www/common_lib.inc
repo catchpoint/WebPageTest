@@ -1925,7 +1925,6 @@ function updateTestLog($test_guid, $test_date, $data) {
             if ($line_data['guid'] === $test_guid) {
                 foreach ($data as $key => $value) {
                     if ($key == 'label') { // Only allowing label to be updated at the moment
-                        $old_label = $line_data['label'];
                         $line_data[$key] = $value;
                         $line_data['date'] = gmdate("Y-m-d G:i:s", $line_data['date']);
                     }
