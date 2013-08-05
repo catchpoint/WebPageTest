@@ -1588,7 +1588,7 @@ function CheckForSpam() {
     if (isset($testInfo) && 
         !array_key_exists('spam', $testInfo) &&
         strpos($id, '.') == false &&
-        !strlen($testInfo['uid']) &&
+        !strlen($testInfo['user']) &&
         !strlen($testInfo['key']) &&
         is_file('./settings/blockurl.txt')) {
         $blocked = false;

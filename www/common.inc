@@ -152,6 +152,8 @@ $isOwner = false;
 $owner = null;
 if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
   $owner = $_COOKIE['google_id'];
+  if (!isset($user))
+    $user = $owner;
 }
 else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $owner = $_COOKIE['o'];

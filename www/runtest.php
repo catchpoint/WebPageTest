@@ -81,8 +81,6 @@
             $test['industry_page'] = trim($req_ip);
             $test['median_video'] = (int)$req_mv;
             $test['ip'] = $req_addr;
-            $test['uid'] = $req_uid;
-            $test['user'] = $req_user;
             $test['priority'] = (int)$req_priority;
             if( isset($req_bwIn) && !isset($req_bwDown) )
                 $test['bwIn'] = (int)$req_bwIn;
@@ -282,11 +280,11 @@
         $test['key'] = $req_k;
             
         // some myBB integration to get the requesting user
-        if( isset($uid) && !$test['uid'] && !$test['user'] )
-        {
-            $test['uid'] = $uid;
+        if( isset($user) && !array_key_exists('user', $test) )
             $test['user'] = $user;
-        }
+
+        if( isset($uid) && !array_key_exists('uid', $test) )
+            $test['uid'] = $uid;
 
         // create an owner string (for API calls, this should already be set as a cookie for normal visitors)
         if( !isset($test['owner']) || !strlen($test['owner']) )
