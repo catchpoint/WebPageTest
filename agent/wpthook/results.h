@@ -72,6 +72,21 @@ private:
   int           base_page_address_count_;
   bool          adult_site_;
 
+  int count_connect_;
+  int count_connect_doc_;
+  int count_dns_;
+  int count_dns_doc_;
+  int count_ok_;
+  int count_ok_doc_;
+  int count_redirect_;
+  int count_redirect_doc_;
+  int count_not_modified_;
+  int count_not_modified_doc_;
+  int count_not_found_;
+  int count_not_found_doc_;
+  int count_other_;
+  int count_other_doc_;
+
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);

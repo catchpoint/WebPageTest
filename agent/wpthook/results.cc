@@ -98,6 +98,20 @@ void Results::Reset(void) {
   base_page_address_count_ = 0;
   base_page_complete_.QuadPart = 0;;
   adult_site_ = false;
+  count_connect_ = 0;
+  count_connect_doc_ = 0;
+  count_dns_ = 0;
+  count_dns_doc_ = 0;
+  count_ok_ = 0;
+  count_ok_doc_ = 0;
+  count_redirect_ = 0;
+  count_redirect_doc_ = 0;
+  count_not_modified_ = 0;
+  count_not_modified_doc_ = 0;
+  count_not_found_ = 0;
+  count_not_found_doc_ = 0;
+  count_other_ = 0;
+  count_other_doc_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -392,22 +406,29 @@ void Results::SavePageData(OptimizationChecks& checks){
     buff.Format("%d\t", _test_state._bytes_in);
     result += buff;
     // DNS Lookups
-    result += "\t";
+    buff.Format("%d\t", count_dns_);
+    result += buff;
     // Connections
-    result += "\t";
+    buff.Format("%d\t", count_connect_);
+    result += buff;
     // Requests
     buff.Format("%d\t", _test_state._requests);
     result += buff;
     // OK Responses
-    result += "\t";
+    buff.Format("%d\t", count_ok_);
+    result += buff;
     // Redirects
-    result += "\t";
+    buff.Format("%d\t", count_redirect_);
+    result += buff;
     // Not Modified
-    result += "\t";
+    buff.Format("%d\t", count_not_modified_);
+    result += buff;
     // Not Found
-    result += "\t";
+    buff.Format("%d\t", count_not_found_);
+    result += buff;
     // Other Responses
-    result += "\t";
+    buff.Format("%d\t", count_other_);
+    result += buff;
     // Error Code
     buff.Format("%d\t", _test_state._test_result);
     result += buff;
@@ -493,22 +514,29 @@ void Results::SavePageData(OptimizationChecks& checks){
     buff.Format("%d\t", _test_state._doc_bytes_in);
     result += buff;
     // DNS Lookups (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_dns_doc_);
+    result += buff;
     // Connections (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_connect_doc_);
+    result += buff;
     // Requests (Doc)
     buff.Format("%d\t", _test_state._doc_requests);
     result += buff;
     // OK Responses (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_ok_doc_);
+    result += buff;
     // Redirects (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_redirect_doc_);
+    result += buff;
     // Not Modified (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_not_modified_doc_);
+    result += buff;
     // Not Found (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_not_found_doc_);
+    result += buff;
     // Other Responses (Doc)
-    result += "\t";
+    buff.Format("%d\t", count_other_doc_);
+    result += buff;
     // Compression Score
     buff.Format("%d\t", checks._image_compression_score);
     result += buff;
@@ -619,6 +647,21 @@ void Results::SavePageData(OptimizationChecks& checks){
 }
 
 void Results::ProcessRequests(void) {
+  count_connect_ = 0;
+  count_connect_doc_ = 0;
+  count_dns_ = 0;
+  count_dns_doc_ = 0;
+  count_ok_ = 0;
+  count_ok_doc_ = 0;
+  count_redirect_ = 0;
+  count_redirect_doc_ = 0;
+  count_not_modified_ = 0;
+  count_not_modified_doc_ = 0;
+  count_not_found_ = 0;
+  count_not_found_doc_ = 0;
+  count_other_ = 0;
+  count_other_doc_ = 0;
+
   _requests.Lock();
   // first pass, reset the actual start time to be the first measured action
   // to eliminate the gap at startup for browser initialization
@@ -656,8 +699,42 @@ void Results::ProcessRequests(void) {
     if (request && 
         (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
+      int result_code = request->GetResult();
+      int doc_increment = 0;
+      if (request->_start.QuadPart <= _test_state._on_load.QuadPart)
+        doc_increment = 1;
+      switch (result_code) {
+        case 200:
+          count_ok_++;
+          count_ok_doc_ += doc_increment;
+          break;
+        case 301:
+        case 302:
+          count_redirect_++;
+          count_redirect_doc_ += doc_increment;
+          break;
+        case 304:
+          count_not_modified_++;
+          count_not_modified_doc_ += doc_increment;
+          break;
+        case 404:
+          count_not_found_++;
+          count_not_found_doc_ += doc_increment;
+          break;
+        default:
+          count_other_++;
+          count_other_ += doc_increment;
+          break;
+      }
+      if (request->_dns_start.QuadPart) {
+        count_dns_++;
+        count_dns_doc_ += doc_increment;
+      }
+      if (request->_connect_start.QuadPart) {
+        count_connect_++;
+        count_connect_doc_ += doc_increment;
+      }
       if (base_page) { 
-        int result_code = request->GetResult();
         if (result_code == 301 || result_code == 302) {
           base_page_redirects_++;
         } else {
