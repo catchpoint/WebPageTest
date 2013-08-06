@@ -11,9 +11,11 @@ require_once('archive.inc');
 set_time_limit(36000);
 error_reporting(E_ERROR | E_PARSE);
 $debug=true;
-if (!is_dir('./log')) {
+if (!is_dir('./log'))
     mkdir('./log', 0777, true);
-}
+if (is_file('./settings/custom_benchmark.inc'))
+  include ('./settings/custom_benchmark.inc');
+
 $logFile = 'benchmark.log';
 
 header ("Content-type: text/plain");
@@ -392,12 +394,17 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
                 $tests[$key] = array();
             }
             foreach ($config['locations'] as $location) {
+              $ok = true;
+              if (function_exists('CustomBenchmarkLocationFilter'))
+                $ok = CustomBenchmarkLocationFilter($location);
+              if ($ok) {
                 $tests[$key][] = array('url' => $url,
                                         'location' => $location,
                                         'settings' => $config['settings'],
                                         'benchmark' => $benchmark,
                                         'label' => $label,
                                         'config' => $config_label);
+              }
             }
         }
     }
