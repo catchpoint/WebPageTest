@@ -1,6 +1,6 @@
 browser=Firefox
-url=http://s3.amazonaws.com/wpt-software/firefox_22.exe
-md5=C57324BDFE3063EDF7DFD1942242917E
-version=22
-command=firefox_22.exe -ms
+url=http://s3.amazonaws.com/wpt-software/firefox_23.exe
+md5=7C75731DBDBC400C41F20F9A28A2FD83
+version=23
+command=firefox_23.exe -ms
 update=1
