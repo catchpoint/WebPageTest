@@ -396,7 +396,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
             foreach ($config['locations'] as $location) {
               $ok = true;
               if (function_exists('CustomBenchmarkLocationFilter'))
-                $ok = CustomBenchmarkLocationFilter($location);
+                $ok = CustomBenchmarkLocationFilter($benchmark, $location);
               if ($ok) {
                 $tests[$key][] = array('url' => $url,
                                         'location' => $location,
