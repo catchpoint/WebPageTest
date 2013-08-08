@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var adb = require('adb');
 var packet_capture_android = require('packet_capture_android');
 var fs = require('fs');
 var process_utils = require('process_utils');
@@ -90,16 +89,16 @@ describe('packet_capture_android small', function() {
   function stop(pcap) {
     spawnStub.callback = function(proc, command, args) {
       var stdout;
-      if (/adb$/.test(command) &&
-          args.some(function(arg) { return arg === 'ps'; })) {
-        stdout = 'USER ...\nuser 123 x3 x4 x5 x6 x7 x8 tcpdump\n';
-      } else if (/adb$/.test(command) &&
-          args.some(function(arg) { return arg === 'kill'; }) &&
-          args.some(function(arg) { return arg === '-INT'; })) {
-        global.setTimeout(function() {
-          adbTcpdumpProc.emit('exit', 0);
-          adbTcpdumpProc.emit('close');
-        }, 20);
+      if (/adb$/.test(command)) {
+        if (args.some(function(arg) { return arg === 'ps'; })) {
+          stdout = 'USER ...\nuser 123 x3 x4 x5 x6 x7 x8 tcpdump\n';
+        } else if (args.some(function(arg) { return arg === 'kill'; }) &&
+                   args.some(function(arg) { return arg === '-INT'; })) {
+          global.setTimeout(function() {
+            adbTcpdumpProc.emit('exit', 0);
+            adbTcpdumpProc.emit('close');
+          }, 20);
+        }
       }
       if (stdout !== undefined) {
         global.setTimeout(function() {
@@ -119,17 +118,16 @@ describe('packet_capture_android small', function() {
 
   function startSpawnStubCallback(proc, command, args) {
     var stdout;
-    if (/adb$/.test(command) &&
-        args.some(function(arg) { return arg === 'ps'; })) {
-      stdout = 'USER ...\n';
-    } else if (/adb$/.test(command) &&
-        args.some(function(arg) { return arg === 'netcfg'; })) {
-      stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01\r\n';
-    } else if (/adb$/.test(command) && args[3] === 'su' &&
-        /tcpdump$/.test(args[5])) {
-      // adb -s GAGA shell su -c .../tcpdump
-      adbTcpdumpProc = proc;
-      return true;  // Keep alive -- don't fake-exit.
+    if (/adb$/.test(command)) {
+      if (args.some(function(arg) { return arg === 'ps'; })) {
+        stdout = 'USER ...\n';
+      } else if (args.some(function(arg) { return arg === 'netcfg'; })) {
+        stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01\r\n';
+      } else if (args[3] === 'su' && /tcpdump$/.test(args[5])) {
+        // adb -s GAGA shell su -c .../tcpdump
+        adbTcpdumpProc = proc;
+        return true;  // Keep alive -- don't fake-exit.
+      }
     }
     if (stdout !== undefined) {
       global.setTimeout(function() {
@@ -186,8 +184,9 @@ describe('packet_capture_android small', function() {
       if (ret === undefined) {
         if (/adb$/.test(command) &&
             args.some(function(arg) { return arg === 'ls'; }) &&
-            args.some(function(arg) { return arg ===
-                '/data/local/tmp/tcpdump'; })) {
+            args.some(function(arg) {
+                return arg === '/data/local/tmp/tcpdump';
+              })) {
           global.setTimeout(function() {
             proc.stdout.emit('data', '1');
           }.bind(this), 1);

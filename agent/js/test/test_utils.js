@@ -298,17 +298,14 @@ exports.stubOutProcessSpawn = function(sandbox) {
     if (1 === expected.length && !(expected[0] instanceof Array)) {
       expected = expected[0];
     }
-    var actual = [];
-    if (this.callNum < this.callCount) {
-      var argv = this.getCall(this.callNum).args;
-      this.callNum += 1;
-      actual = [argv[0]].concat(argv[1]);
-      exports.assertMatch(expected, actual);
-    } else {
+    if (this.callNum >= this.callCount) {
       assert.fail(undefined, expected, this.printf(
           'Too few actual calls to %n() for expected call #%1: %2',
           this.callCount + 1, JSON.stringify(expected)));
     }
+    var argv = this.getCall(this.callNum).args;
+    this.callNum += 1;
+    exports.assertMatch(expected, [argv[0]].concat(argv[1]));
   };
 
   stub.assertCalls = function() {
@@ -318,7 +315,7 @@ exports.stubOutProcessSpawn = function(sandbox) {
       if (!(expected instanceof Array)) {
         expected = [expected];
       }
-      this.assertCall.apply(stub, expected);
+      this.assertCall.apply(this, expected);
     }
   };
 
@@ -339,22 +336,22 @@ exports.stubCreateServer = function(sandbox, mod) {
     var fakeServer = new events.EventEmitter();
     fakeServer.port = undefined;
     fakeServer.listen = function(port, callback) {
-      assert(!fakeServer.port, 'port already set');
+      assert(!this.port, 'port already set');
       if (1 === stub.ports[port]) {
-        fakeServer.emit('error', new Error('port in use'));
+        this.emit('error', new Error('port in use'));
         return;
       }
-      fakeServer.port = port;
+      this.port = port;
       stub.ports[port] = 1;
       if (callback) {
         callback();
       }
     };
     fakeServer.close = function(callback) {
-      var port = fakeServer.port;
+      var port = this.port;
       assert(port, 'port not set');
       assert(1 === stub.ports[port], 'port not in use');
-      fakeServer.port = undefined;
+      this.port = undefined;
       stub.ports[port] = -1;
       if (callback) {
         callback();

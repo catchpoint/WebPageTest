@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var logger = require('logger');
 var process_utils = require('process_utils');
 var util = require('util');
 
@@ -96,10 +95,10 @@ Adb.prototype.shell = function(args, options, timeout) {
 };
 
 /**
- * Schedules a check if a given path exists on device.
+ * Schedules a check if a given path (including wildcards) exists on device.
  *
  * @param {string} path  the path to check.
- * @returns {webdriver.promise.Promise}  Resolves to true if exists, or false.
+ * @return {webdriver.promise.Promise}  Resolves to true if exists, or false.
  */
 Adb.prototype.exists = function(path) {
   'use strict';
@@ -130,7 +129,7 @@ Adb.prototype.getPidsOfProcess = function(name) {
         return;  // Skip empty lines (last line in particular).
       }
       var fields = line.split(/\s+/);
-      if (iLine === 0 && fields[0] === 'USER') {  // Skip the header
+      if (iLine === 0) {  // Skip the header
         return;
       }
       if (fields.length !== 9) {
@@ -140,6 +139,23 @@ Adb.prototype.getPidsOfProcess = function(name) {
       pids.push(fields[1]);
     }.bind(this));
     return pids;
+  }.bind(this));
+};
+
+/**
+ * Kills any running processes with a given name, using a given signal.
+ *
+ * Requires root.
+ *
+ * @param {string} processName  the process name to kill.
+ * @param {string} signal  the signal name for the kill, 'INT' by default.
+ */
+Adb.prototype.scheduleKill = function(processName, signal) {
+  'use strict';
+  this.getPidsOfProcess(processName).then(function(pids) {
+    pids.forEach(function(pid) {
+      this.shell(['su', '-c', 'kill', '-' + (signal || 'INT'), pid]);
+    }.bind(this));
   }.bind(this));
 };
 

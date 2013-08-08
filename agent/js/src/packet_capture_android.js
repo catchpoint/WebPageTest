@@ -61,6 +61,7 @@ exports.PacketCaptureAndroid = PacketCaptureAndroid;
 
 /**
  * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
+ * @private
  */
 PacketCaptureAndroid.prototype.schedulePrepare_ = function() {
   'use strict';
@@ -90,6 +91,10 @@ PacketCaptureAndroid.prototype.schedulePrepare_ = function() {
   }.bind(this));
 };
 
+/**
+ * Pushes tcpdump to device if 1) local tcpdump specified, 2) not already there.
+ * @private
+ */
 PacketCaptureAndroid.prototype.schedulePushTcpdumpIfNeeded_ = function() {
   'use strict';
   this.app_.schedule('Push tcpdump if needed', function() {
@@ -98,8 +103,8 @@ PacketCaptureAndroid.prototype.schedulePushTcpdumpIfNeeded_ = function() {
     if (this.localTcpdumpBinary_ !== undefined) {
       this.adb_.exists(this.deviceTcpdumpCommand_).then(function(exists) {
         if (!exists) {
-          this.adb_.adb([
-              'push', this.localTcpdumpBinary_, this.deviceTcpdumpCommand_]);
+          this.adb_.adb(['push',
+              this.localTcpdumpBinary_, this.deviceTcpdumpCommand_]);
           // /data/local/tmp needs no su, but chown root and sticky bit do.
           this.adb_.shell(['su', '-c',
               'chown', 'root', this.deviceTcpdumpCommand_]);
@@ -152,24 +157,14 @@ PacketCaptureAndroid.prototype.scheduleStop = function() {
       var proc = this.tcpdumpAdbProcess_;
       this.tcpdumpAdbProcess_ = undefined;  // See 'exit' in scheduleStart.
       // Soft-kill all tcpdumps running on device. Presumably just one.
-      this.scheduleKillTcpdumps_('INT');
+      this.adb_.scheduleKill('tcpdump', 'INT');
       // Read the pcap file only after tcpdump exits: avoid incomplete data.
       process_utils.scheduleWait(proc, 'tcpdump', EXIT_TIMEOUT);
       this.adb_.adb(['pull', this.devicePcapFile_, this.localPcapFile_]);
     } else {
       // Hard-kill any possible leftover tcpdumps.
-      this.scheduleKillTcpdumps_('KILL');
+      this.adb_.scheduleKill('tcpdump', 'KILL');
     }
-  }.bind(this));
-};
-
-PacketCaptureAndroid.prototype.scheduleKillTcpdumps_ = function(signal) {
-  'use strict';
-  // Soft-kill all tcpdumps running on device.
-  this.adb_.getPidsOfProcess('tcpdump').then(function(pids) {
-    pids.forEach(function(pid) {
-      this.adb_.shell(['su', '-c', 'kill', '-' + signal, pid]);
-    }.bind(this));
   }.bind(this));
 };
 
@@ -184,6 +179,9 @@ PacketCaptureAndroid.prototype.scheduleKillTcpdumps_ = function(signal) {
  * IceCreamSandwich+:
  *
  * usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01
+ *
+ * @return {string}  The name of the connected interface.
+ * @private
  */
 PacketCaptureAndroid.prototype.scheduleDetectConnectedInterface_ = function() {
   'use strict';
@@ -203,15 +201,12 @@ PacketCaptureAndroid.prototype.scheduleDetectConnectedInterface_ = function() {
         connectedInterfaces.push(fields[0]);
       }
     }.bind(this));
-    if (connectedInterfaces.length === 1) {
-      return connectedInterfaces[0];
-    }
-    if (connectedInterfaces.length === 0) {
+    if (connectedInterfaces.length !== 1) {
       throw new Error(util.format(
-          'Cannot find a connected interface, netcfg output: %j', stdout));
+          '%s connected interfaces detected: %j, netcfg output: %j',
+          (connectedInterfaces.length === 0 ? 'Zero' : 'More than one'),
+          connectedInterfaces, stdout));
     }
-    throw new Error(util.format(
-        'More than one connected interface detected: %j, netcfg output: %j',
-        connectedInterfaces, stdout));
+    return connectedInterfaces[0];
   }.bind(this));
 };

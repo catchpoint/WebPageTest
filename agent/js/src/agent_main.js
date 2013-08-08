@@ -385,13 +385,13 @@ exports.setSystemCommands = function() {
  */
 exports.main = function(flags) {
   'use strict';
-  var versionMatch = /^v(\d+)\.(\d+)\./.exec(process.version);
+  var versionMatch = /^v(\d+)\.(\d+)(?:\.\d+)?$/.exec(process.version);
   if (!versionMatch) {
     throw new Error('Cannot parse NodeJS version: ' + process.version);
   }
   if (parseInt(versionMatch[1], 10) !== 0 ||
       parseInt(versionMatch[2], 10) < 8) {
-    throw new Error('node version must be >0.8, not ' + process.version);
+    throw new Error('node version must be >=0.8, not ' + process.version);
   }
   exports.setSystemCommands();
   delete flags.argv; // Remove nopt dup

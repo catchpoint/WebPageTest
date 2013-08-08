@@ -74,6 +74,7 @@ exports.TrafficShaper = TrafficShaper;
 
 /**
  * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
+ * @private
  */
 TrafficShaper.prototype.scheduleIsSupported_ = function() {
   'use strict';

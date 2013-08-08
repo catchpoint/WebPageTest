@@ -431,8 +431,7 @@ WebDriverServer.prototype.takeScreenshot_ = function(
  * @param {string} command WebDriver command name.
  * #param {Object} commandArgs array of command arguments.
  */
-WebDriverServer.prototype.onBeforeDriverAction = function(command /*,
-     commandArgs*/) { // jshint unused:false
+WebDriverServer.prototype.onBeforeDriverAction = function(command) {
   'use strict';
   if (command.getName() === webdriver.command.CommandName.QUIT) {
     logger.debug('Before WD quit: forget driver, devTools');
@@ -448,8 +447,7 @@ WebDriverServer.prototype.onBeforeDriverAction = function(command /*,
  * @param {Object} commandArgs array of command arguments.
  * #param {Object} result command result.
  */
-WebDriverServer.prototype.onAfterDriverAction = function(
-    command, commandArgs /*, result*/) { // jshint unused:false
+WebDriverServer.prototype.onAfterDriverAction = function(command, commandArgs) {
   'use strict';
   logger.extra('Injected after command: %s', commandArgs[1]);
   if (this.actionCbRecurseGuard_) {
@@ -843,8 +841,8 @@ WebDriverServer.prototype.done_ = function() {
   }
   var pcapFile = this.pcapFile_;
   if (pcapFile) {
-    this.browser_.scheduleStopPacketCapture();
     this.pcapFile_ = undefined;
+    this.browser_.scheduleStopPacketCapture();
   }
   this.app_.schedule('Send IPC done', function() {
     logger.debug('sending IPC done');

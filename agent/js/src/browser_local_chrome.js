@@ -181,9 +181,9 @@ BrowserLocalChrome.prototype.scheduleGetCapabilities = function() {
 /**
  * Starts packet capture.
  *
- * @param {string} filename  local file where to copy the pcap result.
+ * #param {string} filename  local file where to copy the pcap result.
  */
-BrowserLocalChrome.prototype.scheduleStartPacketCapture = function(filename) {
+BrowserLocalChrome.prototype.scheduleStartPacketCapture = function() {
   'use strict';
   throw new Error('Packet capture requested, but not implemented for Chrome');
 };

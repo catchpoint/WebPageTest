@@ -472,7 +472,7 @@ BrowserIos.prototype.scheduleStartPacServer_ = function() {
     }.bind(this));
     return process_utils.scheduleFunction(this.app_,
         'Start PAC listener on port ' + this.pacServerPort_,
-        this.pacServer_.listen, this.pacServerPort_);
+        this.pacServer_.listen.bind(this.pacServer_), this.pacServerPort_);
   }.bind(this));
   process_utils.scheduleAllocatePort(this.app_, 'Select PAC URL port').then(
     function(alloc) {
@@ -517,8 +517,8 @@ BrowserIos.prototype.stopPacServer_ = function() {
     this.pacUrlPortLock_ = undefined;
   }
   if (this.pacServer_) {
-    var server = this.pacServer_;
-    process_utils.scheduleFunction(this.app_, 'Stop PAC server', server.close);
+    process_utils.scheduleFunction(this.app_, 'Stop PAC server',
+        this.pacServer_.close.bind(this.pacServer_));
     this.pacServer_ = undefined;
   }
   if (this.pacServerPortLock_) {
@@ -649,7 +649,7 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
  *
  * #param {string} filename  local file where to copy the pcap result.
  */
-BrowserIos.prototype.scheduleStartPacketCapture = function(/*filename*/) {
+BrowserIos.prototype.scheduleStartPacketCapture = function() {
   'use strict';
   throw new Error('Packet capture requested, but not implemented for iOS');
 };
