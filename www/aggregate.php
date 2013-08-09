@@ -1,6 +1,7 @@
 <?php
 include 'common.inc';
 include 'page_data.inc';
+require_once('testStatus.inc');
 set_time_limit(300);
 
 $use_median_run = false;
@@ -94,6 +95,7 @@ if( isset($test['test']) && $test['test']['batch'] )
         foreach( $tests['urls'] as &$test )
         {
             RestoreTest($test['id']);
+            GetTestStatus($test['id']);
             $label = $test['l'];
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
@@ -128,6 +130,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     echo "\"$urlVariation\",";
                     $id = $test['v'][$variationIndex];
                     RestoreTest($id);
+                    GetTestStatus($id);
                     $testPath = './' . GetTestPath($id);
                     $pageData = loadAllPageData($testPath);
                     for( $cacheVal = 0; $cacheVal <= $cached; $cacheVal++ )
