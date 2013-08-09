@@ -1,10 +1,12 @@
 [settings]
 product=WebPagetest
 contact=admin@my.email.com
-optLinks=0
-maxruns=10
-countTests=1
-allowPrivate=0
+
+; Maximum number of runs allowed per test
+maxruns=9
+
+; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
+allowPrivate=1
 
 ; Comment out the publishTo if you do not want to be able to upload your
 ; results to the public instance (this is useful for sharing internal tests

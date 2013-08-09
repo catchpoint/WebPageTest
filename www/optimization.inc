@@ -469,14 +469,9 @@ function dumpOptimizationGlossary(&$settings)
     <hr>
     <h2>Glossary:</h2>
     <p></p>
-    <?php 
-        $rowspan = 3;
-        if((int)$settings['optLinks'] !== 1)
-            $rowspan = 2;
-    ?>
     <table border="1" cellpadding="5px" cellspacing="0" style="width:100%">
 
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>First Byte Time</th>
+        <tr><th class="nowrap" rowspan=2 colspan=1>First Byte Time</th>
             <td class="nowrap">Applicable Objects</td>
             <td >Time to First Byte for the page (back-end processing + redirects)</td>
         </tr>
@@ -486,7 +481,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Keep-Alive</th>
+        <tr><th class="nowrap" rowspan=2 colspan=1>Keep-Alive</th>
             <td class="nowrap">Applicable Objects</td>
             <td >All objects that are from a domain that serves more than one object for the page (i.e. if only a single object is served from a given domain it will not be checked)</td>
         </tr>
@@ -496,7 +491,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>GZIP Text</th>
+        <tr><th class="nowrap" rowspan=2 colspan=1>GZIP Text</th>
             <td class="nowrap">Applicable Objects</td>
             <td >All objects with a mime type of "text/*" or "*javascript*"</td>
         </tr>
@@ -507,7 +502,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th rowspan=<?php echo $rowspan; ?> colspan=1>Compress Images</th>
+        <tr><th rowspan=2 colspan=1>Compress Images</th>
             <td class="nowrap">Applicable Objects</td>
             <td >Any object with a mime type of "image/*"</td>
         </tr>
@@ -521,7 +516,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th rowspan=<?php echo $rowspan; ?> colspan=1>Use Progressive JPEGs</th>
+        <tr><th rowspan=2 colspan=1>Use Progressive JPEGs</th>
             <td class="nowrap">Applicable Objects</td>
             <td >All JPEG Images</td>
         </tr>
@@ -531,7 +526,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Cache Static</th>
+        <tr><th class="nowrap" rowspan=2 colspan=1>Cache Static</th>
             <td class="nowrap">Applicable Objects</td>
             <td >Any non-html object with a mime type of "text/*", "*javascript*" or "image/*" that does not
                 explicitly have an Expires header of 0 or -1, a cache-control header of "private",
@@ -548,7 +543,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
 
         <tr class="blank"></tr>
-        <tr><th class="nowrap" rowspan=<?php echo $rowspan; ?> colspan=1>Use A CDN</th>
+        <tr><th class="nowrap" rowspan=2 colspan=1>Use A CDN</th>
             <td class="nowrap">Applicable Objects</td>
             <td >All static non-html content (css, js and images)</td>
         </tr>
