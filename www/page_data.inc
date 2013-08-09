@@ -59,7 +59,10 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
         GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
     
     // see if we have video files to calculate a visually complete time from
-    if (isset($ret)) {
+    $basic_results = false;
+    if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
+      $basic_results = true;
+    if (isset($ret) && !$basic_results) {
         loadUserTimingData($ret, $testPath, $run, $cached);
         if (array_key_exists('loadTime', $ret) &&
             !$ret['loadTime'] &&
@@ -124,6 +127,9 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                 $ret['visualCompleteCustom'] = $progress['visualComplete'];
             }
         }
+    }
+
+    if (isset($ret)) {
         // clean up any insane values (from negative numbes as unsigned most likely)
         $times = array('loadTime',
                        'TTFB',
