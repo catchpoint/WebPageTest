@@ -227,7 +227,7 @@ Agent.prototype.startJobRun_ = function(job) {
         script: script,
         url: url,
         pac: pac,
-        timeout: this.client_.jobTimeout - 15000  // 15 seconds to stop+submit.
+        timeout: this.client_.jobTimeout
       };
     Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
       if (!message[flagName]) {
@@ -328,9 +328,10 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
 Agent.prototype.jobTimeout_ = function(job) {
   'use strict';
   if (this.wdServer_) {
-    this.scheduleNoFault_('Send IPC "abort"', function() {
-      this.wdServer_.send({cmd: 'abort'});
-    }.bind(this));
+    this.scheduleNoFault_('Remove message listener',
+      this.wdServer_.removeAllListeners.bind(this.wdServer_, 'message'));
+    this.scheduleNoFault_('Send IPC "abort"',
+        this.wdServer_.send.bind(this.wdServer_, {cmd: 'abort'}));
   }
   this.scheduleCleanup_();
   this.scheduleNoFault_('Timed out job finished',
@@ -345,12 +346,14 @@ Agent.prototype.jobTimeout_ = function(job) {
 Agent.prototype.scheduleCleanup_ = function() {
   'use strict';
   if (this.wdServer_) {
+    this.scheduleNoFault_('Remove message listener',
+      this.wdServer_.removeAllListeners.bind(this.wdServer_, 'message'));
     process_utils.scheduleWait(this.wdServer_, 'wd_server',
           WD_SERVER_EXIT_TIMEOUT).then(function() {
       // This assumes a clean exit with no zombies
       this.wdServer_ = undefined;
     }.bind(this), function() {
-      process_utils.scheduleKill(this.app_, 'Kill wd_server',
+      process_utils.scheduleKillTree(this.app_, 'Kill wd_server',
           this.wdServer_);
       this.app_.schedule('undef wd_server', function() {
         this.wdServer_ = undefined;
@@ -358,7 +361,28 @@ Agent.prototype.scheduleCleanup_ = function() {
     }.bind(this));
   }
   this.trafficShaper_.scheduleStop();
-  // TODO kill dangling child processes
+  if (1 === parseInt(this.flags_.killall || '0', 10)) {
+    // Kill all processes for this user, except our own agent_main pid.
+    //
+    // This only makes sense if we have per-device user accounts, e.g. we
+    // launch the wptdriver for deviceX as user "deviceX" via:
+    //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
+    // Ideally we could run agent_main as our normal user and do this "sudo -u"
+    // when we fork wd_server, but cross-user IPC apparently doesn't work.
+    process_utils.scheduleGetAll(this.app_, 'Get dangling pids').then(
+        function(processes) {
+      processes = processes.filter(function(v) {
+        return v.pid !== process.pid;
+      });
+      if (processes.length > 0) {
+        logger.info('Killing %s pids owned by user %s: %s', processes.length,
+            process.env.USER,
+            processes.map(function(v) { return v.pid; }).join(', '));
+        process_utils.scheduleKillAll(
+            this.app_, 'Kill dangling pids', processes);
+      }
+    }.bind(this));
+  }
 };
 
 /**

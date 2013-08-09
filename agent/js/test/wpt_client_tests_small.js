@@ -90,7 +90,7 @@ describe('wpt_client small', function() {
     client.onStartJobRun = function() {};  // Never call runFinished => timeout.
 
     client.processJobResponse_('{"Test ID": "gaga", "runs": 2}');
-    sandbox.clock.tick(1);
+    sandbox.clock.tick(wpt_client.JOB_FINISH_TIMEOUT + 1);
     should.ok(!isTimedOut);
     sandbox.clock.tick(1);
     should.ok(isTimedOut);

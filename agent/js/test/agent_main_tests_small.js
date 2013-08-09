@@ -74,14 +74,11 @@ describe('agent_main', function() {
     sandbox.stub(fs, 'exists', function(path, cb) {
       cb(false);
     });
-    sandbox.stub(process_utils, 'scheduleExec', function() {
-      return new webdriver.promise.Deferred();
-    });
-    sandbox.stub(process_utils, 'scheduleWait', function() {
-      return new webdriver.promise.Deferred();
-    });
-    sandbox.stub(process_utils, 'scheduleAllocatePort', function() {
-      return new webdriver.promise.Deferred();
+    ['scheduleExec', 'scheduleWait', 'scheduleGetAll',
+         'scheduleAllocatePort'].forEach(function(functionName) {
+      sandbox.stub(process_utils, functionName, function() {
+        return new webdriver.promise.Deferred();
+      });
     });
 
     app.reset();  // We reuse the app across tests, clean it up.
@@ -102,6 +99,7 @@ describe('agent_main', function() {
 
     client.onJobTimeout(fakeJob);
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
+    should.equal('[]', app.getSchedule());
     should.ok(runFinishedSpy.calledOnce);
   });
 });

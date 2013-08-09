@@ -39,6 +39,7 @@ exports.process = process;
 var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
+var SUBMIT_TIMEOUT_MS_ = 5000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -96,8 +97,7 @@ WebDriverServer.prototype.initIpc = function() {
       this.init(message);
       this.connect();
     } else if ('abort' === cmd) {
-      logger.debug('aborting run');
-      this.scheduleStop();
+      this.done_(new Error('abort'));
     } else {
       logger.error('Unrecognized IPC command %s, message: %j', cmd, message);
     }
@@ -130,6 +130,7 @@ WebDriverServer.prototype.initIpc = function() {
 WebDriverServer.prototype.init = function(initMessage) {
   'use strict';
   // Reset every run:
+  this.isDone_ = false;
   this.abortTimer_ = undefined;
   this.capturePackets_ = initMessage.capturePackets;
   this.captureVideo_ = initMessage.captureVideo;
@@ -429,7 +430,6 @@ WebDriverServer.prototype.takeScreenshot_ = function(
  * Called by the sandboxed driver before each command.
  *
  * @param {string} command WebDriver command name.
- * #param {Object} commandArgs array of command arguments.
  */
 WebDriverServer.prototype.onBeforeDriverAction = function(command) {
   'use strict';
@@ -673,7 +673,7 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     if (this.timeout_) {
       this.timeoutTimer_ = global.setTimeout(
           this.onPageLoad_.bind(this, new Error('Page load timeout')),
-          this.timeout_);
+          this.timeout_ - (exports.WAIT_AFTER_ONLOAD_MS + SUBMIT_TIMEOUT_MS_));
     }
     this.onTestStarted_();
     this.pageCommand_('navigate', {url: this.url_});
@@ -748,9 +748,8 @@ WebDriverServer.prototype.connect = function() {
   }.bind(this));
 
   this.app_.schedule('Run the test',
-      this.runTest_.bind(this, browserCaps)).then(
-          this.done_.bind(this), this.onError_.bind(this)).then(
-              this.tearDown_.bind(this));
+      this.runTest_.bind(this, browserCaps)).addBoth(
+          this.done_.bind(this));
 };
 
 /**
@@ -801,6 +800,7 @@ WebDriverServer.prototype.tearDown_ = function() {
   'use strict';
   this.driver_ = undefined;
   this.testStartTime_ = undefined;
+  this.isRecordingDevTools_ = false;
   if (this.pageLoadDonePromise_) {
     if (this.pageLoadDonePromise_.isPending()) {
       this.pageLoadDonePromise_.cancel('Page load promise never resolved');
@@ -818,16 +818,28 @@ WebDriverServer.prototype.tearDown_ = function() {
 };
 
 /**
+ * @param {Error=} e run error.
  * @private
  */
-WebDriverServer.prototype.done_ = function() {
+WebDriverServer.prototype.done_ = function(e) {
   'use strict';
-  logger.info('Test run succeeded');
+  if (this.isDone_) {
+    // We already sent our result
+    return;
+  }
+  this.isDone_ = true;
+  if (e) {
+    logger.error('Run failed, stopping: %s', e.stack);
+  } else {
+    logger.info('Test run succeeded');
+  }
+  var cmd = (e ? 'error' : 'done');
   var videoFile = this.videoFile_;
   // We must schedule/run a driver quit before we emit 'done', to make sure
   // we take the final screenshot and send it in the 'done' IPC message.
-  this.takeScreenshot_('screen', 'end of run').then(function(screenshot) {
-    if (screenshot && this.captureVideo_ && !this.videoFile_) {
+  this.takeScreenshot_('screen', (e ? 'run error' : 'end of run')).then(
+      function(screenshot) {
+    if (!e && screenshot && this.captureVideo_ && !this.videoFile_) {
       // Last video frame
       var wptTimestamp =
           Math.round((Date.now() - this.testStartTime_) / 100);
@@ -843,47 +855,25 @@ WebDriverServer.prototype.done_ = function() {
     this.pcapFile_ = undefined;
     this.browser_.scheduleStopPacketCapture();
   }
-  this.app_.schedule('Send IPC done', function() {
-    logger.debug('sending IPC done');
-    exports.process.send({
-        cmd: 'done',
+  this.app_.schedule('Send IPC ' + cmd, function() {
+    logger.debug('sending IPC ' + cmd);
+    try {
+      exports.process.send({
+        cmd: cmd,
+        e: (e ? e.message : undefined),
         devToolsMessages: this.devToolsMessages_,
         screenshots: this.screenshots_,
         videoFile: videoFile,
         pcapFile: pcapFile
       });
+    } catch (e2) {
+      logger.warn('Unable to send %s message: %s', cmd, e2.message);
+    }
   }.bind(this));
-  if (this.exitWhenDone_) {
+  if (e || this.exitWhenDone_) {
     this.scheduleStop();
   }
-};
-
-/**
- * @param {Error=} e run error.
- * @private
- */
-WebDriverServer.prototype.onError_ = function(e) {
-  'use strict';
-  logger.error('Run failed, stopping: %s', e.stack);
-  var videoFile = this.videoFile_;
-  // Take the final screenshot (useful for debugging) and kill the browser.
-  // We must schedule/run a driver quit before we emit 'done', to make sure
-  // we take the final screenshot and send it in the 'done' IPC message.
-  this.takeScreenshot_('screen', 'run error');
-  if (videoFile) {
-    this.browser_.scheduleStopVideoRecording();
-  }
-  this.app_.schedule('Send IPC error', function() {
-    logger.error('Sending IPC error: %s', e.message);
-    exports.process.send({
-        cmd: 'error',
-        e: e.message,
-        devToolsMessages: this.devToolsMessages_,
-        screenshots: this.screenshots_,
-        videoFile: videoFile
-      });
-  }.bind(this));
-  this.scheduleStop();
+  this.app_.schedule('Tear down', this.tearDown_.bind(this));
 };
 
 /**
@@ -895,7 +885,7 @@ WebDriverServer.prototype.onVideoRecordingExit_ = function(e) {
   if (e) {
     logger.error('Video recording failed:\n' + e.stack);
     this.videoFile_ = undefined;
-    // We could onError_ here
+    // We could call this.done_(e)
   }
 };
 
@@ -905,9 +895,11 @@ WebDriverServer.prototype.onVideoRecordingExit_ = function(e) {
  */
 WebDriverServer.prototype.onUncaughtException_ = function(e) {
   'use strict';
-  logger.critical('Uncaught exception: %s', (e ? e.stack : 'unknown'));
-  exports.process.send({cmd: 'error', e: e.message || 'unknown'});
-  this.scheduleStop();
+  if (!e) {
+    e = new Error('unknown');
+  }
+  logger.critical('Uncaught exception: %s', e.stack);
+  this.done_(e);
 };
 
 /**
@@ -923,13 +915,10 @@ WebDriverServer.prototype.scheduleStop = function() {
       this.uncaughtExceptionHandler_);
   if (this.driver_) {
     // onAfterDriverAction resets this.driver_ and this.testStartTime_.
-    logger.debug('scheduling driver.quit()');
     this.driver_.quit().addErrback(function(e) {
       logger.error('Exception from "quit": %s', e);
       logger.debug('%s', e.stack);
     });
-  } else {
-    logger.warn('driver is unset, will not call quit()');
   }
   // kill
   this.app_.schedule('Kill server/browser', function() {

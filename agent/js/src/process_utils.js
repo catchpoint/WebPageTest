@@ -43,8 +43,8 @@ var webdriver = require('webdriver');
 function ProcessInfo(psLine) {
   'use strict';
   var splitLine = psLine.trim().split(/\s+/);
-  this.ppid = splitLine.shift();
-  this.pid = splitLine.shift();
+  this.ppid = parseInt(splitLine.shift(), 10);
+  this.pid = parseInt(splitLine.shift(), 10);
   this.command = splitLine.join(' ');
 }
 /** Allow test access. */
@@ -77,10 +77,12 @@ exports.signalKill = function(process, processName) {
 };
 
 /**
+ * Kills given process.
+ *
  * @param {ProcessInfo} processInfo from getProcessInfo_.
  * @param {Function} callback Function({Error=} err, {string=} stdout).
  */
-exports.killProcess = function(processInfo, callback) {
+exports.kill = function(processInfo, callback) {
   'use strict';
   logger.warn(
       'Killing PID %s Command: %s', processInfo.pid, processInfo.command);
@@ -89,20 +91,30 @@ exports.killProcess = function(processInfo, callback) {
 };
 
 /**
- * Kills given processes.
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string} description debug title.
+ * @param {ProcessInfo} processInfo to be killed.
+ */
+exports.scheduleKill = function(app, description, processInfo) {
+  'use strict';
+  exports.scheduleFunction(app, (description || 'kill'),
+      exports.kill, processInfo);
+};
+
+/**
+ * Kills the given processes.
  *
  * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
  * @param {Function=} callback Function({Error=} err).
  */
-exports.killProcesses = function(processInfos, callback) {
+exports.killAll = function(processInfos, callback) {
   'use strict';
   var queue = processInfos.slice();  // Copy, don't modify original.
-  logger.debug('killProcesses: %j', queue);
-
+  logger.debug('killAll: %j', queue);
   function processQueue() {
     var processInfo = queue.pop();
     if (processInfo) {
-      exports.killProcess(processInfo, processQueue);
+      exports.kill(processInfo, processQueue);
     } else {  // Done
       if (callback) {
         callback();
@@ -113,46 +125,51 @@ exports.killProcesses = function(processInfos, callback) {
 };
 
 /**
- * Kill all processes with commands that match the given RegExp.
- *
- * @param {Object} regex command pattern, e.g. /^\S+capture\s.*12345/.
- * @param {Function=} callback Function({Error=} err).
+ * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {string} description debug title.
+ * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
  */
-function killAll(regex, callback) {
+exports.scheduleKillAll = function(app, description, processInfos) {
   'use strict';
-  logger.debug('killAll %s', regex);
-  var command = system_commands.get('get all');
+  exports.scheduleFunction(app, (description || 'killAll'),
+      exports.killAll, processInfos);
+};
 
-  var queue;
-  function processQueue() {
-    var processInfo;
-    while (true) {
-      processInfo = queue.pop();
-      if (!processInfo || regex.test(processInfo.command)) {
-        break;
+/**
+ * Gets the ProcessInfos for all with commands that match the given RegExp.
+ *
+ * @param {Object=} regex command pattern, e.g. /^\S+capture\s.*12345/,
+ *   defaults to match-all.
+ * @param {Function=} callback Function({Error=} err, Array<ProcessInfo>).
+ */
+function getAll(regex, callback) {
+  'use strict';
+  var command = system_commands.get('get all', [process.getuid()]);
+  child_process.exec(command, function(error, stdout) {
+    var ret;
+    if (!error) {
+      ret = stdout.trim().split('\n').map(newProcessInfo);
+      if (regex) {
+        ret = ret.filter(function(v) { return regex.test(v.command); });
       }
     }
-    if (processInfo) {
-      exports.killProcess(processInfo, processQueue);
-    } else if (callback) {
-      callback();
+    if (callback) {
+      callback(error, ret);
     }
-  }
-  child_process.exec(command, function(error, stdout) {
-      queue = stdout.trim().split('\n').map(newProcessInfo);
-      processQueue();
-    });
+  });
 }
 
 /**
  * @param {webdriver.promise.Application=} app the scheduler.
  * @param {string=} description debug title.
- * @param {RegExp} regex command pattern.
+ * @param {RegExp=} regex command pattern, defaults to all pids for
+ *    this user.
+ * @return {webdriver.promise.Promise} resolve({Array} processInfos).
  */
-exports.scheduleKillAll = function(app, description, regex) {
+exports.scheduleGetAll = function(app, description, regex) {
   'use strict';
-  exports.scheduleFunction(app, (description || 'killAll ' + regex),
-      killAll, regex);
+  return exports.scheduleFunction(app, (description || 'getAll ' + regex),
+      getAll, regex);
 };
 
 /**
@@ -162,6 +179,12 @@ exports.scheduleKillAll = function(app, description, regex) {
  */
 exports.getProcessInfo_ = function(pid, callback) {
   'use strict';
+  if (!pid) {
+    if (callback) {
+      callback();
+    }
+    return;
+  }
   var command = system_commands.get('get info', [pid]);
   child_process.exec(command, function(error, stdout, stderr) {
     var processInfo;
@@ -183,15 +206,16 @@ exports.getProcessInfo_ = function(pid, callback) {
  * @param {number} pid process id.
  * @param {Function=} callback Function({Error=} err).
  */
-exports.kill = function(pid, callback) {
+function getTree(pid, callback) {
   'use strict';
+  var ret = [];
   var stack = [];
   function processStack() {
     var processInfo = stack.pop();
     if (!processInfo) {
       // Stack is empty, we are done
       if (callback) {
-        callback();
+        callback(undefined, ret);
       }
       return;
     }
@@ -208,17 +232,19 @@ exports.kill = function(pid, callback) {
         } else {
           logger.debug('Process %s has no children', processInfo.pid);
         }
-        // Kill parent
-        exports.killProcess(processInfo, processStack);
+        // Add parent
+        ret.push(processInfo);
+        processStack();
       });
     } catch (e) {
       // We get an Error on Windows because there is no 'find children',
       // see setSystemCommands(). Just keep going through the top ones.
-      exports.killProcess(processInfo, processStack);
+      ret.push(processInfo);
+      processStack();
     }
   }
   exports.getProcessInfo_(pid, function(err, processInfo) {
-    logger.warn('Killing process and all children of ' + pid + ' = ' +
+    logger.warn('Find process and all children of ' + pid + ' = ' +
         processInfo);
     if (processInfo) {
       stack.push(processInfo);
@@ -226,25 +252,52 @@ exports.kill = function(pid, callback) {
     } else {
       // No such process
       if (callback) {
-        callback();
+        callback(undefined, ret);
       }
     }
+  });
+}
+
+/**
+ * Gets a process and all child processes (by PID).
+ *
+ * @param {webdriver.promise.Application=} app the app under which to schedule.
+ * @param {string=} description debug title.
+ * @param {number} pid process id.
+ * @return {webdriver.promise.Promise} resolve({Array} processInfos).
+ */
+exports.scheduleGetTree = function(app, description, pid) {
+  'use strict';
+  return exports.scheduleFunction(app, (description || 'GetTree ' + pid),
+      getTree, pid);
+};
+
+/**
+ * Kills a process and all child processes (by PID).
+ *
+ * @param {number} pid process id.
+ * @param {Function=} callback Function({Error=} err).
+ */
+exports.killTree = function(pid, callback) {
+  'use strict';
+  getTree(pid, function(err, procs) {
+    exports.killAll(procs, callback);
   });
 };
 
 /**
- * Kill a process and all child proceses (by PID).
+ * Kills a process and all child processes (by PID).
  *
  * @param {webdriver.promise.Application=} app the app under which to schedule.
  * @param {string=} description debug title.
- * @param {Process} process the process to kill.
+ * @param {Process} process the process to getTree then killAll.
  */
-exports.scheduleKill = function(app, description, process) {
+exports.scheduleKillTree = function(app, description, process) {
   'use strict';
   var pid = process.pid;
   if (pid) {
-    exports.scheduleFunction(app,
-        (description || 'Kill ' + pid + ' and children'), exports.kill, pid);
+    exports.scheduleFunction(app, (description || 'KillTree ' + pid),
+        exports.killTree, pid);
   } else {
     app.schedule('Kill non-pid', process.kill); // Unit test?
   }
@@ -671,7 +724,7 @@ exports.setSystemCommands = function() {
   'use strict';
   system_commands.set(
       'get all',
-      'ps -o ppid= -o pid= -o command=',
+      'ps -u $0 -o ppid= -o pid= -o command=',
       'unix');
 
   system_commands.set(

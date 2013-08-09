@@ -77,9 +77,12 @@ VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
     if (!isSupported) {
       throw new Error('!isSupported');
     }
-    process_utils.scheduleKillAll(this.app_, 'Kill dangling capture',
+    process_utils.scheduleGetAll(this.app_, 'Find dangling captures',
         new RegExp('^' + this.captureCommand_ + '\\s+-f\\s+\\S+\\s+' +
-            (deviceSerial ? ('-s\\s+' + deviceSerial + '\\s') : '')));
+            (deviceSerial ? ('-s\\s+' + deviceSerial + '\\s') : ''))).then(
+        function(procs) {
+      process_utils.scheduleKillAll(this.app_, 'Kill dangling captures', procs);
+    }.bind(this));
   }.bind(this));
 };
 
@@ -149,6 +152,6 @@ VideoHdmi.prototype.scheduleStopVideoRecording = function() {
     logger.info('Stopping video recording');
     var proc = this.recordProcess_;
     this.recordProcess_ = undefined; // Guard against repeat calls.
-    process_utils.scheduleKill(this.app_, 'Kill video recording', proc);
+    process_utils.scheduleKillTree(this.app_, 'Kill video recording', proc);
   }.bind(this));
 };

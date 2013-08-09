@@ -88,7 +88,7 @@ describe('video_hdmi small', function() {
     var killCount = 0;
     sandbox.stub(child_process, 'exec', function(command, callback) {
       if (/^ps\s/.test(command)) {
-        var want_all = (/^ps(\s+-o\s+\S+)*$/.test(command));
+        var want_all = (/^ps(\s+-u\s+\S+)?(\s+-o\s+\S+)*$/.test(command));
         var want_pid = (want_all ||
             (new RegExp('^ps\\s+-p\\s' + pid + '\\s')).test(command));
         var want_ppid = (want_all || (new RegExp(
@@ -137,6 +137,7 @@ describe('video_hdmi small', function() {
     // Watch for IDLE -- make sure the wait for recording exit has finished.
     var idleSpy = sandbox.spy();
     app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
+    should.equal('[]', app.getSchedule());
     video.scheduleStopVideoRecording();
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
     should.equal('[]', app.getSchedule());

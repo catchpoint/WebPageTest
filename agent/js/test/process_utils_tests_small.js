@@ -175,12 +175,12 @@ describe('process_utils small', function() {
     });
 
     var doneSpy = sandbox.spy();
-    process_utils.killProcesses(processInfos, doneSpy);
+    process_utils.killAll(processInfos, doneSpy);
     should.ok(doneSpy.calledOnce);
     should.equal(5, numKilled);
   });
 
-  function testKill(pid, psInput, expectedPids) {
+  function testKillTree(pid, psInput, expectedPids) {
     // ppid pid command
     var lines = psInput.split('\n');
 
@@ -219,14 +219,14 @@ describe('process_utils small', function() {
     });
 
     var doneSpy = sandbox.spy();
-    process_utils.kill(pid, doneSpy);
+    process_utils.killTree(pid, doneSpy);
     should.ok(doneSpy.calledOnce);
     should.equal(actualPids.sort().toString(),
         expectedPids.slice().sort().toString());
   }
 
   it('should kill process and children', function() {
-    testKill(7,
+    testKillTree(7,
       (' 1    7  r0\n' +
        ' 7   12  r0/c0\n' +
        ' 1    3  r1\n' +
