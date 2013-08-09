@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var adb = require('adb');
 var fs = require('fs');
 var logger = require('logger');
+var packet_capture_android = require('packet_capture_android');
 var process_utils = require('process_utils');
 var video_hdmi = require('video_hdmi');
 
@@ -74,6 +75,7 @@ function BrowserAndroidChrome(app, args) {
   }
   var captureDir = toDir(args.captureDir);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
+  this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
 }
 /** Public class. */
 exports.BrowserAndroidChrome = BrowserAndroidChrome;
@@ -143,7 +145,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   // TODO(wrightt): add flags to disable experimental chrome features, if any
   if (this.pac_) {
     flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
-    if (PAC_PORT != 80) {
+    if (PAC_PORT !== 80) {
       logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
@@ -162,10 +164,10 @@ BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
   if (!this.devToolsPort_) {
     process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port').then(
       function(alloc) {
-        logger.debug('Selected DevTools port ' + alloc.port);
-        this.devtoolsPortLock_ = alloc;
-        this.devToolsPort_ = alloc.port;
-      }.bind(this));
+      logger.debug('Selected DevTools port ' + alloc.port);
+      this.devtoolsPortLock_ = alloc;
+      this.devToolsPort_ = alloc.port;
+    }.bind(this));
   }
 };
 
@@ -228,7 +230,8 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   var args = ['-s', this.deviceSerial_, 'shell', 'su', '-c',
       'while true; do nc -l ' + PAC_PORT + ' < ' + this.pacFile_ + '; done'];
   logger.debug('Starting netcat on device: adb ' + args);
-  process_utils.scheduleSpawn(this.app_, 'adb', args).then(function(proc) {
+  process_utils.scheduleSpawn(this.app_, this.adb_.adbCommand, args)
+      .then(function(proc) {
     this.pacServer_ = proc;
     proc.on('exit', function(code) {
       if (this.pacServer_) {
@@ -351,4 +354,22 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   this.video_.scheduleStopVideoRecording();
+};
+
+/**
+ * Starts packet capture.
+ *
+ * @param {string} filename  local file where to copy the pcap result.
+ */
+BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
+  'use strict';
+  this.pcap_.scheduleStart(filename);
+};
+
+/**
+ * Stops packet capture and copies the result to a local file.
+ */
+BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
+  'use strict';
+  this.pcap_.scheduleStop();
 };
