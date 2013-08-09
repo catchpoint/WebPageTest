@@ -31,7 +31,7 @@ $page_description = "Run a free website speed test from around the globe using r
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="mobile_test" class="test_box">
-                    <p>Mobile testing is provided by <a href="http://www.blaze.io/mobile/">Mobitest</a> and you will be taken to the Akamai website for the results.</p>
+                    <p>Mobile testing is provided by <a href="http://mobitest.akamai.com/m/index.cgi">Mobitest</a> and you will be taken to the Akamai website for the results.</p>
                     <ul class="input_fields">
                         <li><input type="text" name="weburl" value="Enter Your Website URL"  id="url"  class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" /></li>
                     </ul>
