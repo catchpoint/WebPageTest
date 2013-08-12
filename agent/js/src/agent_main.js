@@ -155,6 +155,16 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       process_utils.scheduleFunction(this.app_, 'Delete video file',
           fs.unlink, ipcMsg.videoFile);
     }
+    if (ipcMsg.pcapFile) {
+      process_utils.scheduleFunction(this.app_, 'Read pcap file',
+              fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
+        job.resultFiles.push(new wpt_client.ResultFile(
+            wpt_client.ResultFile.ResultType.PCAP,
+            'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
+      });
+      process_utils.scheduleFunction(this.app_, 'Delete video file',
+          fs.unlink, ipcMsg.videoFile);
+    }
   }.bind(this));
 };
 
@@ -213,17 +223,17 @@ Agent.prototype.startJobRun_ = function(job) {
         runNumber: job.runNumber,
         exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
         captureVideo: job.captureVideo,
+        capturePackets: job.capturePackets,
         script: script,
         url: url,
         pac: pac,
         timeout: this.client_.jobTimeout - 15000  // 15 seconds to stop+submit.
       };
-    var key;
-    for (key in this.flags_) {
-      if (!message[key]) {
-        message[key] = this.flags_[key];
+    Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
+      if (!message[flagName]) {
+        message[flagName] = this.flags_[flagName];
       }
-    }
+    }.bind(this));
     this.wdServer_.send(message);
   }.bind(this));
 };
@@ -303,10 +313,10 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
         (fromHost ? 'navigate' : 'setDnsName'));
   }
   logger.debug('Script is a simple PAC from=%s to=%s url=%s',
-      fromHost, (proxy ? proxy : toHost), url);
+      fromHost, proxy || toHost, url);
   return {url: url, pac: 'function FindProxyForURL(url, host) {\n' +
       '  if ("' + fromHost + '" === host) {\n' +
-      '    return "PROXY ' + (proxy ? proxy : toHost) + '";\n' +
+      '    return "PROXY ' + (proxy || toHost) + '";\n' +
       '  }\n' +
       '  return "DIRECT";\n}\n'};
 };
@@ -338,7 +348,7 @@ Agent.prototype.scheduleCleanup_ = function() {
     process_utils.scheduleWait(this.wdServer_, 'wd_server',
           WD_SERVER_EXIT_TIMEOUT).then(function() {
       // This assumes a clean exit with no zombies
-      this.wdServer = undefined;
+      this.wdServer_ = undefined;
     }.bind(this), function() {
       process_utils.scheduleKill(this.app_, 'Kill wd_server',
           this.wdServer_);
@@ -375,8 +385,13 @@ exports.setSystemCommands = function() {
  */
 exports.main = function(flags) {
   'use strict';
-  if (!((/^v\d\.([^0]\d|[89])/).test(process.version))) {
-    throw new Error('node version must be >0.8, not ' + process.version);
+  var versionMatch = /^v(\d+)\.(\d+)(?:\.\d+)?$/.exec(process.version);
+  if (!versionMatch) {
+    throw new Error('Cannot parse NodeJS version: ' + process.version);
+  }
+  if (parseInt(versionMatch[1], 10) !== 0 ||
+      parseInt(versionMatch[2], 10) < 8) {
+    throw new Error('node version must be >=0.8, not ' + process.version);
   }
   exports.setSystemCommands();
   delete flags.argv; // Remove nopt dup
