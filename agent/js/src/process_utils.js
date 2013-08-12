@@ -289,7 +289,7 @@ function formatForMessage(command, args) {
   var i;
   for (i = -1; i < args.length; i++) {
     var s = (i < 0 ? command : args[i]);
-    s = (/^[-_a-zA-Z0-9\.\\\/:]+$/.test(s) ? s : '\'' + s + '\'');
+    s = (/^[\-_a-zA-Z0-9\.\\\/:]+$/.test(s) ? s : '\'' + s + '\'');
     ret.push(s);
   }
   return ret.join(' ');
@@ -359,8 +359,8 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
       // know if and when it's going to be killed at OS level.
       // In the future we may want to restart the adb server here as a recovery
       // for wedged adb connections, or use a relay board for device recovery.
-      var e = newError(cmd + ' timeout after ' + (timeout / 1000) + ' seconds');
-      done.reject(e);
+      done.reject(
+          newError(cmd + ' timeout after ' + (timeout / 1000) + ' seconds'));
     }, timeout);
 
     // Listen for stdout/err
@@ -493,8 +493,8 @@ exports.scheduleNoFault = function(app, description, f) {
  *  scheduleFunction(app, 'x', foo, a, b).then(
  *      function(c, d) {...}, function(err) {...});
  *
- * @param {webdriver.promise.Application=} app the scheduler.
- * @param {string=} description debug title.
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string} description debug title.
  * @param {Function} f Function({Function} callback, {Function=} errback).
  * @param {string} var_args arguments.
  * @return {webdriver.promise.Promise} the scheduled promise.
@@ -502,11 +502,9 @@ exports.scheduleNoFault = function(app, description, f) {
 exports.scheduleFunction = function(app, description, f,
      var_args) { // jshint unused:false
   'use strict';
-  app = app || webdriver.promise.Application.getInstance();
   var done = new webdriver.promise.Deferred();
-  function cb() {
+  function cb(err) {
     var i;
-    var err = arguments[0];
     if (err === undefined || err === null) {
       i = 1;
     } else if (err instanceof Error) {
@@ -549,8 +547,8 @@ exports.scheduleFunction = function(app, description, f,
  * they will correctly lock ports.  Other non-agent applications are only
  * compatible if they use the above logic.
  *
- * @param {webdriver.promise.Application=} app the scheduler.
- * @param {string=} description debug title.
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string} description debug title.
  * @param {number=} minPort min port, defaults to 1k.
  * @param {number=} maxPort max port, defaults to 32k.
  * @return {webdriver.promise.Promise} resolve({Object}):
@@ -641,6 +639,25 @@ exports.forEachRecursive = function(obj, callback, keyPath) {
       }
     });
   }
+};
+
+/**
+ * Concatenates a directory path with a file or relative path.
+ *
+ * @param {string} dir  the base directory. If undefined, path returned as is.
+ * @param {string} path  the path under the directory.
+ *   If undefined, dir returned as is.
+ * @return {string} Concatenated path.
+ */
+exports.concatPath = function(dir, path) {
+  'use strict';
+  if (dir === undefined || (path && path[0] === '/')) {
+    return path;
+  }
+  if (dir && dir[dir.length - 1] !== '/') {
+    dir += '/';
+  }
+  return (path ? (dir ? (dir + path) : path) : dir);
 };
 
 /**

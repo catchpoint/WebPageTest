@@ -44,10 +44,11 @@ var RESULT_IMAGE_SERVLET = 'work/resultimage.php';
 var WORK_DONE_SERVLET = 'work/workdone.php';
 
 // Task JSON field names
-var JOB_TEST_ID = 'Test ID';
+var JOB_CAPTURE_PACKETS = 'tcpdump';
 var JOB_CAPTURE_VIDEO = 'Capture Video';
-var JOB_RUNS = 'runs';
 var JOB_FIRST_VIEW_ONLY = 'fvonly';
+var JOB_RUNS = 'runs';
+var JOB_TEST_ID = 'Test ID';
 
 var DEFAULT_JOB_TIMEOUT = 80000;
 /** Allow test access. */
@@ -92,6 +93,7 @@ function Job(client, task) {
     throw new Error('Task has invalid/missing id: ' + JSON.stringify(task));
   }
   this.captureVideo = (1 === task[JOB_CAPTURE_VIDEO]);
+  this.capturePackets = (1 === task[JOB_CAPTURE_PACKETS]);
   var runs = task[JOB_RUNS];
   if ('number' !== typeof runs || runs <= 0 || runs > MAX_RUNS ||
       0 !== (runs - Math.floor(runs))) {  // Make sure it's an integer.
@@ -150,7 +152,8 @@ exports.ResultFile = ResultFile;
  */
 ResultFile.ResultType = Object.freeze({
   IMAGE: 'image',
-  IMAGE_ANNOTATIONS: 'image_annotations'
+  IMAGE_ANNOTATIONS: 'image_annotations',
+  PCAP: 'pcap'
 });
 
 
@@ -227,7 +230,6 @@ function Client(args) {
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
-  this.onGetTesterInfo = undefined;
   this.onStartJobRun = undefined;
   this.onJobTimeout = undefined;
   this.handlingUncaughtException_ = undefined;
