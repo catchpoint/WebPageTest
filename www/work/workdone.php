@@ -1617,7 +1617,11 @@ function CheckForSpam() {
                                 if (strlen($pageUrl)) {
                                     $parts = parse_url($pageUrl);
                                     $host = trim($parts['host']);
-                                    if (strlen($host)) {
+                                    if (strlen($host) &&
+                                        strcasecmp($host, 'www.google.com') &&
+                                        strcasecmp($host, 'google.com') &&
+                                        strcasecmp($host, 'www.youtube.com') &&
+                                        strcasecmp($host, 'youtube.com')) {
                                         // add it to the auto-block list if it isn't already there
                                         if (is_file('./settings/blockdomainsauto.txt'))
                                             $autoBlock = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -1646,8 +1650,10 @@ function CheckForSpam() {
                 }
             }
         }
-        $testInfo['spam'] = $blocked;
-        $testInfo_dirty = true;
+        if ($blocked) {
+          $testInfo['spam'] = $blocked;
+          $testInfo_dirty = true;
+        }
     }
 }
 ?>

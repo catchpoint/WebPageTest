@@ -1795,6 +1795,47 @@ function http_fetch($url) {
     return $ret;
 }
 
+function http_put_raw($url, $body) {
+  $ok = true;
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_POST, 1 );  
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+  curl_setopt($ch, CURLOPT_FAILONERROR, true);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+  curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+  $response = curl_exec($ch);
+  curl_close($ch);
+  if($response === false)
+      $ok = false;
+  return $ok;
+}
+
+function http_post_raw($url, $body) {
+  $ok = true;
+  $ch = curl_init($url);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_POST, 1 );  
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+  curl_setopt($ch, CURLOPT_FAILONERROR, true);
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+  curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+  curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+  $response = curl_exec($ch);
+  curl_close($ch);
+  if($response === false)
+      $ok = false;
+  return $ok;
+}
+
 /**
 * Generate a shard key to better spread out the test results
 * 

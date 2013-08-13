@@ -54,3 +54,6 @@ tcpdump_view="http://cloudshark.org/view?url="
 
 ; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
 ;beanstalkd=127.0.0.1
+
+;tsview time-series database
+;tsviewdb=http://<server:port>/data/v1/
