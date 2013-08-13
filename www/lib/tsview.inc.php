@@ -4,7 +4,7 @@
 */
 function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
   require_once('page_data.inc');
-  
+
   $runs = $test['runs'];
   if (array_key_exists('discard', $test) &&
       $test['discard'] > 0 &&
@@ -72,6 +72,8 @@ function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
 
 function TSViewCreate($server, $tsview_name, &$metrics) {
   $needs_update = false;
+  if (!is_dir('./dat'))
+    mkdir('./dat', 0777, true);
   $def = './dat/tsview-' . sha1($tsview_name) . '.json';
   if ($lock = fopen("$def.lock", 'w')) {
     if (flock($lock, LOCK_EX)) {

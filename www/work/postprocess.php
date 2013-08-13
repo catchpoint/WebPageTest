@@ -65,10 +65,10 @@ if (array_key_exists('test', $_REQUEST)) {
     $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
 
     // post the test to tsview if requested
+    $tsviewdb = GetSetting('tsviewdb');
     if (array_key_exists('tsview_id', $testInfo) &&
         strlen($testInfo['tsview_id']) &&
-        array_key_exists('tsviewdb', $settings) &&
-        strlen($settings['tsviewdb']) &&
+        strlen($tsviewdb) &&
         is_file('./lib/tsview.inc.php')) {
       require_once('./lib/tsview.inc.php');
       TSViewPostResult($testInfo, $id, $testPath, $settings['tsviewdb'], $testInfo['tsview_id']);

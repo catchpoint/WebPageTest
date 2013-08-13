@@ -137,7 +137,7 @@
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             if (array_key_exists('tsview_id', $_REQUEST))
-              $test['tsview_id'] = $_REQUEST('tsview_id');
+              $test['tsview_id'] = $_REQUEST['tsview_id'];
             
             // custom options
             $test['cmdLine'] = '';

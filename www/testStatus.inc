@@ -267,8 +267,7 @@ function GetRelayStatus($id, $testPath, &$test) {
                 $zip = new ZipArchive();
                 if ($zip->open($tmp) === true) {
                     if ($zip->extractTo($testPath)) {
-                        require_once('archive.inc');
-                        ArchiveTest($id);
+                        SendAsyncRequest("/work/postprocess.php?test=$id");
                         http_fetch("{$server}delete.php?test=$id&rkey=$key");
                         $ret = $status['data'];
                     }
@@ -348,6 +347,7 @@ function GetAppurifyStatus($id, $testPath, &$test) {
           $ret['statusCode'] = 200;
           $ret['statusText'] = 'Test Complete';
           $ret['completeTime'] = $date;
+          SendAsyncRequest("/work/postprocess.php?test=$id");
         } elseif ($started) {
           $ret['statusCode'] = 100;
           $ret['statusText'] = 'Test Started';
