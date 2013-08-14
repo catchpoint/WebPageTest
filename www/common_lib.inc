@@ -1123,13 +1123,15 @@ function RestoreTest($id)
 */
 function TestLastAccessed($id)
 {
-    $elapsed = 0;
+    $elapsed = null;
     $file = './' . GetTestPath($id) . '/testinfo.ini';
-    $timestamp = filemtime($file);
-    if( $timestamp )
-    {
-        $elapsed = max(time() - $timestamp, 0);
-        $elapsed /= 86400;
+    if (is_file($file)) {
+      $timestamp = filemtime($file);
+      if( $timestamp )
+      {
+          $elapsed = max(time() - $timestamp, 0);
+          $elapsed /= 86400;
+      }
     }
     return $elapsed;
 }

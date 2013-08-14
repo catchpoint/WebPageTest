@@ -12,7 +12,7 @@ if ($lock) {
     }
 }
 
-include 'common.inc';
+include 'common_lib.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
@@ -193,13 +193,15 @@ function CheckDay($dir, $baseID) {
     foreach( $tests as $test ) {
         if( $test != '.' && $test != '..' ) {
             // see if it is a test or a higher-level directory
-            if( is_file("$dir/$test/testinfo.ini") )
+            if( is_file("$dir/$test/testinfo.ini") ||
+                is_file("$dir/$test/testinfo.json.gz") ||
+                is_file("$dir/$test/testinfo.json"))
                 CheckTest("$dir/$test", "{$baseID}_$test");
             else
                 CheckDay("$dir/$test", "{$baseID}_$test");
         }
     }
-    rmdir($dir);
+    @rmdir($dir);
 }
 
 /**
@@ -218,31 +220,37 @@ function CheckTest($testPath, $id) {
 
     echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
+    $delete = false;
     $elapsed = TestLastAccessed($id);
-    if( $elapsed >= $MIN_DAYS ) {
-        $delete = true;
-        if (ArchiveTest($id) ) {
-            $archiveCount++;
-            $logLine .= "Archived";
-                                                                                          
-            if (!VerifyArchive($id) && $elapsed < 60) {
-                $delete = false;
-            }
-        } else if ($elapsed < 60) {
-            $delete = false;
-        }
-        
-        if ($delete) {
-            delTree("$testPath/");
-            $deleted++;
-            $logLine .= " Deleted";
-        } else {
-            $kept++;
-        }
-    } else {
-        $logLine .= "Last Accessed $elapsed days";
+    if (isset($elapsed)) {
+      if( $elapsed >= $MIN_DAYS ) {
+          $delete = true;
+          if (ArchiveTest($id) ) {
+              $archiveCount++;
+              $logLine .= "Archived";
+                                                                                            
+              if (!VerifyArchive($id) && $elapsed < 60)
+                  $delete = false;
+          } else if ($elapsed < 60) {
+              $delete = false;
+              $status = GetTestStatus($id, false);
+              if ($status['statusCode'] >= 400 ||
+                  ($status['statusCode'] == 102 &&
+                   $status['remote'] &&
+                   $elapsed > 1))
+                $delete = true;
+          }
+      } else
+          $logLine .= "Last Accessed $elapsed days";
+    } else
+      $delete = true;
+
+    if ($delete) {
+        delTree("$testPath/");
+        $deleted++;
+        $logLine .= " Deleted";
+    } else
         $kept++;
-    }
         
     if( $log ) {
         $logLine .= "\n";
