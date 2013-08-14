@@ -33,6 +33,17 @@ if( $ec2 )
 {
     foreach( $regions as $region => &$amiData )
     {
+        // clean up any orphaned volumes
+        $volumes = $ec2->describe_volumes();
+        if (isset($volumes)) {
+            foreach ($volumes->body->volumeSet->item as $item) {
+              if ($item->status == 'available') {
+                  $id = strval($item->volumeId);
+                  $ec2->delete_volume($id);
+              }
+            }
+        }
+        
         foreach( $amiData as $ami => &$regionData )
         {
             $location = $regionData['location'];
