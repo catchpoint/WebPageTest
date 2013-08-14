@@ -45,7 +45,7 @@ function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
                $pageData[$run][1]['result'] == 99999)) {
             $rv['availability'][] = 1;
             foreach ($pageData[$run][1] as $metric => $value) {
-              if (is_numeric($value)) {
+              if (is_int($value) && $metric != 'result') {
                 if (!array_key_exists($metric, $metrics))
                   $metrics[$metric] = 1;
                 if (!array_key_exists($metric, $rv))
