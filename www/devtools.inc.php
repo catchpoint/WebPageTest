@@ -3,6 +3,7 @@ $DevToolsCacheVersion = '1.2';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('GetCachedDevToolsProgress');
     newrelic_add_custom_tracer('GetDevToolsProgress');
     newrelic_add_custom_tracer('GetTimeline');
     newrelic_add_custom_tracer('GetDevToolsRequests');

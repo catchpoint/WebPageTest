@@ -83,8 +83,18 @@
         </div>
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
-            var pollingInterval = 5000;
-            var pollingIntervalTesting = 1000;
+            <?php
+            $polling_interval_testing = 1000;
+            $polling_interval = 15000;
+            if (array_key_exists('testinfo', $test) &&
+                array_key_exists('loc_type', $test['testinfo']) &&
+                $test['testinfo']['loc_type'] == 'Appurify') {
+              $polling_interval = 30000;
+              $polling_interval_testing = 15000;
+            }
+            echo "var pollingInterval = $polling_interval;\n";
+            echo "var pollingIntervalTesting = $polling_interval_testing;\n";
+            ?>
             var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
             var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
             var lastStatusCode = 0;

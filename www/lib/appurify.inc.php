@@ -29,14 +29,32 @@ class Appurify{
   * Get a list of the available devices
   */
   public function GetDevices() {
-    $devices = array();
-    $list = $this->Get('https://live.appurify.com/resource/devices/list/');
-    if ($list !== false && is_array($list)) {
-      foreach($list as $device) {
-        $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']}";
-        $devices[$device['device_type_id']] = $name;
-      }
+    $devices = null;
+    $this->Lock();
+    $ttl = 120;
+    if (is_file("./tmp/appurify_{$this->key}.devices")) {
+      $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.devices"), true);
+      $now = time();
+      if ($cache &&
+          is_array($cache) &&
+          array_key_exists('devices', $cache) &&
+          array_key_exists('time', $cache) &&
+          $now >= $cache['time'] &&
+          $now - $cache['time'] < $ttl / 2)
+        $devices = $cache['devices'];
     }
+    if (!isset($devices)) {
+      $devices = array();
+      $list = $this->Get('https://live.appurify.com/resource/devices/list/');
+      if ($list !== false && is_array($list)) {
+        foreach($list as $device) {
+          $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']}";
+          $devices[$device['device_type_id']] = $name;
+        }
+      }
+      file_put_contents("./tmp/appurify_{$this->key}.devices", json_encode(array('devices' => $devices, 'time' => time())));
+    }
+    $this->Unlock();
     return $devices;
   }
   
@@ -106,23 +124,24 @@ class Appurify{
             is_array($status) &&
             array_key_exists('status', $status)) {
           $run['status'] = $status['status'];
-          if ($status['status'] == 'complete') {
-            $run['completed'] = true;
+          if ($status['status'] == 'complete')
             $this->GetFile('https://live.appurify.com/resource/tests/result/', $file, array('run_id' => $run['id']));
-          }
           $ret = true;
         }
-      } else {
-        $run['completed'] = true;
-        $ret = true;
       }
-      if (is_file($file))
-        $this->ProcessResult($test, $run, $index, $testPath);
+      if (is_file($file)) {
+        $ret = true;
+        if ($this->ProcessResult($test, $run, $index, $testPath))
+          $run['completed'] = true;
+        else
+          unlink($file);
+      }
     }
     return $ret;
   }
   
   protected function ProcessResult(&$test, &$run, $index, $testPath) {
+    $ok = false;
     $zipfile = "$testPath/{$index}_appurify.zip";
     $zip = new ZipArchive;
     if ($zip->open($zipfile) === TRUE) {
@@ -134,8 +153,9 @@ class Appurify{
       $zip->close();
     }
     if (isset($tempdir) && is_dir($tempdir)) {
-      if (is_file("$tempdir/appurify_results/video.mov"))
-        rename("$tempdir/appurify_results/video.mov", "$testPath/{$index}_video.mov");
+      $ok = true;
+      $this->ProcessScreenShot($test, $tempdir, $testPath, $index);
+      $this->ProcessVideo($test, $tempdir, $testPath, $index);
       $devtools = array();
       $files = glob("$tempdir/appurify_results/WSData*");
       if (isset($files) && is_array($files) && count($files)) {
@@ -153,33 +173,61 @@ class Appurify{
       }
       delTree($tempdir);
     }
+    return $ok;
   }
   
+  protected function ProcessScreenShot(&$test, $tempdir, $testPath, $index) {
+    if (is_file("$tempdir/appurify_results/Run 1/Screenshot_Tabs.png.png"))
+      rename("$tempdir/appurify_results/Run 1/Screenshot_Tabs.png.png", "$testPath/{$index}_screen.png");
+    elseif (is_file("$tempdir/appurify_results/Run 1/Screenshot_Tabs.png"))
+      rename("$tempdir/appurify_results/Run 1/Screenshot_Tabs.png", "$testPath/{$index}_screen.png");
+    elseif (is_file("$tempdir/appurify_results/Run 1/Screenshot_Timeline.png.png"))
+      rename("$tempdir/appurify_results/Run 1/Screenshot_Timeline.png.png", "$testPath/{$index}_screen.png");
+    elseif (is_file("$tempdir/appurify_results/Run 1/Screenshot_Timeline.png"))
+      rename("$tempdir/appurify_results/Run 1/Screenshot_Timeline.png", "$testPath/{$index}_screen.png");
+    if (is_file("$testPath/{$index}_screen.png")) {
+      $img = imagecreatefrompng("$testPath/{$index}_screen.png");
+      if ($img) {
+        imageinterlace($img, 1);
+        $quality = 75;
+        if (array_key_exists('iq', $test) && $test['iq'] >= 30 && $test['iq'] < 100)
+          $quality = $test['iq'];
+        imagejpeg($img, "$testPath/{$index}_screen.jpg", $quality);
+        imagedestroy($img);
+      }
+      $keep_png = false;
+      if (array_key_exists('pngss', $test) && $test['pngss'])
+        $keep_png = true;
+      if (!$keep_png)
+        unlink("$testPath/{$index}_screen.png");
+    }
+  }
+  
+  protected function ProcessVideo(&$test, $tempdir, $testPath, $index) {
+    if (is_file("$tempdir/appurify_results/video.mov"))
+      rename("$tempdir/appurify_results/video.mov", "$testPath/{$index}_video.mov");
+  }
+
   protected function ProcessDevTools($file, $outfile) {
-    $f = fopen($file, 'r');
-    if ($f) {
-      $buffer = '';
-      do {
-        $line = fgets($f);
-        if ($line === false ||
-            substr($line, 0, 7) == 'Buffer[' ||
-            substr($line, 0, 6) == 'Frame[') {
-          $pos = strpos($buffer, '{');
-          if ($pos !== false && $pos < 10) {
-            $buffer = substr($buffer, $pos);
-            $event = json_decode($buffer, true);
-            if (isset($event) &&
-                is_array($event) &&
-                array_key_exists('method', $event)) {
-              fwrite($outfile, json_encode($event));
-              fwrite($outfile, ',');
-            }
+    $len = filesize($file);
+    if ($len > 2) {
+      $f = fopen($file, 'r');
+      if ($f) {
+        fseek($f, 1);
+        $remaining = $len - 2;
+        while ($remaining > 0) {
+          $size = min($remaining, 4096);
+          $buff = fread($f, $size);
+          if ($buff !== false) {
+            fwrite($outfile, $buff);
+            $remaining -= $size;
+          } else {
+            $remaining = 0;
           }
-          $buffer = '';
-        } elseif ($line !== false)
-          $buffer .= trim(substr($line, 59), "\r\n");
-      } while ($line !== false);
-      fclose($f);
+        }
+        fwrite($outfile, ',');
+        fclose($f);
+      }
     }
   }
 
