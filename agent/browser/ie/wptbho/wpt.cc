@@ -1,10 +1,10 @@
 #include "StdAfx.h"
 #include "wpt.h"
-#include "wpt_task.h"
 
 extern HINSTANCE dll_hinstance;
 Wpt* global_wpt = NULL;
 
+#define UWM_TASK WM_APP + 1
 const DWORD TASK_INTERVAL = 500;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * HOOK_DLL = _T("wpthook.dll");
@@ -59,7 +59,10 @@ Wpt::Wpt(void):
   ,_task_timer(0)
   ,_hook_dll(NULL)
   ,_message_window(NULL)
-  ,_navigating(false) {
+  ,_navigating(false)
+  ,_must_exit(false)
+  ,_task_thread(NULL)
+  ,_processing_task(false) {
 }
 
 
@@ -67,6 +70,11 @@ Wpt::Wpt(void):
 -----------------------------------------------------------------------------*/
 Wpt::~Wpt(void) {
   global_wpt = NULL;
+  if (_task_thread) {
+    _must_exit = true;
+    WaitForSingleObject(_task_thread, 5000);
+    CloseHandle(_task_thread);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -119,7 +127,10 @@ bool Wpt::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message){
     case WM_TIMER:
         CheckBrowserState();
+        break;
+    case UWM_TASK:
         CheckForTask();
+        _processing_task = false;
         break;
     default:
         ret = false;
@@ -129,10 +140,19 @@ bool Wpt::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
   return ret;
 }
 
+static unsigned __stdcall TaskThreadProc(void* arg) {
+  Wpt * wpt = (Wpt *)arg;
+  if( wpt )
+    wpt->TaskThread();
+    
+  return 0;
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::Start(void) {
   if (!_task_timer && _message_window) {
+    _task_thread = (HANDLE)_beginthreadex(0, 0, ::TaskThreadProc, this, 0, 0);
     _task_timer = SetTimer(_message_window, 1, TASK_INTERVAL, NULL);
   }
 }
@@ -250,55 +270,51 @@ void Wpt::OnStatus(CString status) {
   Check for new tasks that need to be executed
 -----------------------------------------------------------------------------*/
 void Wpt::CheckForTask() {
-  if (!_active) {
-    WptTask task;
-    if (_wpt_interface.GetTask(task)) {
-      if (task._record)
-        _active = true;
-      switch (task._action) {
-        case WptTask::BLOCK:
-          Block(task._target);
-          break;
-        case WptTask::CLEAR_CACHE: 
-          ClearCache(); 
-          break;
-        case WptTask::CLICK:
-          Click(task._target);
-          break;
-        case WptTask::COLLECT_STATS:
-          CollectStats();
-          break;
-        case WptTask::EXEC:
-          Exec(task._target);
-          break;
-        case WptTask::EXPIRE_CACHE:
-          ExpireCache(task._target);
-          break;
-        case WptTask::NAVIGATE: 
-          NavigateTo(task._target); 
-          break;
-        case WptTask::SET_COOKIE:
-          SetCookie(task._target, task._value);
-          break;
-        case WptTask::SET_DOM_ELEMENT:
-          SetDomElement(task._target);
-          break;
-        case WptTask::SET_INNER_HTML:
-          SetInnerHTML(task._target, task._value);
-          break;
-        case WptTask::SET_INNER_TEXT:
-          SetInnerText(task._target, task._value);
-          break;
-        case WptTask::SET_VALUE:
-          SetValue(task._target, task._value);
-          break;
-        case WptTask::SUBMIT_FORM:
-          SubmitForm(task._target);
-          break;
-      }
-      if (!_active)
-        CheckForTask();
+  if (_task._valid) {
+    if (_task._record)
+      _active = true;
+    switch (_task._action) {
+      case WptTask::BLOCK:
+        Block(_task._target);
+        break;
+      case WptTask::CLEAR_CACHE: 
+        ClearCache(); 
+        break;
+      case WptTask::CLICK:
+        Click(_task._target);
+        break;
+      case WptTask::COLLECT_STATS:
+        CollectStats();
+        break;
+      case WptTask::EXEC:
+        Exec(_task._target);
+        break;
+      case WptTask::EXPIRE_CACHE:
+        ExpireCache(_task._target);
+        break;
+      case WptTask::NAVIGATE: 
+        NavigateTo(_task._target); 
+        break;
+      case WptTask::SET_COOKIE:
+        SetCookie(_task._target, _task._value);
+        break;
+      case WptTask::SET_DOM_ELEMENT:
+        SetDomElement(_task._target);
+        break;
+      case WptTask::SET_INNER_HTML:
+        SetInnerHTML(_task._target, _task._value);
+        break;
+      case WptTask::SET_INNER_TEXT:
+        SetInnerText(_task._target, _task._value);
+        break;
+      case WptTask::SET_VALUE:
+        SetValue(_task._target, _task._value);
+        break;
+      case WptTask::SUBMIT_FORM:
+        SubmitForm(_task._target);
+        break;
     }
+    _task.Reset();
   }
 }
 
@@ -1108,5 +1124,19 @@ void Wpt::CheckBrowserState() {
     if (SUCCEEDED(_web_browser->get_ReadyState(&ready_state)) &&
         ready_state == READYSTATE_COMPLETE)
       OnLoad();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Check for tasks on a background thread so we don't block the browser thread
+-----------------------------------------------------------------------------*/
+void Wpt::TaskThread(void) {
+  while (!_must_exit) {
+    if (!_active && !_processing_task && _wpt_interface.GetTask(_task)) {
+      SendMessage(_message_window, UWM_TASK, 0, 0);
+      if (_active)
+        Sleep(TASK_INTERVAL);
+    } else
+      Sleep(TASK_INTERVAL);
   }
 }

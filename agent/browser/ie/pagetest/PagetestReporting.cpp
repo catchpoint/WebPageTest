@@ -1865,33 +1865,56 @@ void CPagetestReporting::CheckGzip()
 				{
 					LPBYTE body = w->body;
 					DWORD bodyLen = w->bodyLen;
-					
-					// try gzipping the item to see how much smaller it will be
-					DWORD origSize = w->in;
-					DWORD origLen = bodyLen;
-					DWORD headSize = w->inHeaders.GetLength();
-					if( origLen && body )
-					{
-						DWORD len = compressBound(origLen);
-						if( len )
-						{
-							LPBYTE buff = (LPBYTE)malloc(len);
-							if( buff )
-							{
-								if( compress2(buff, &len, body, origLen, 7) == Z_OK )
-									target = len + headSize;
-								
-								free(buff);
-							}
-						}
-						
-						if( target < (origSize * 0.9) && origSize - target > 1400 )
-							w->warning = true;
-						else
-						{
-							target = origSize;
-							w->gzipScore = -1;
-						}
+
+          // don't try gzip for known image formats that shouldn't be gzipped
+          if ((bodyLen > 3 &&             // JPEG FF D8 FF
+               body[0] == 0xFF &&
+               body[1] == 0xD8 &&
+               body[2] == 0xFF) ||
+              (bodyLen > 8 &&             // PNG 89 50 4E 47 0D 0A 1A 0A
+               body[0] == 0x89 &&
+               body[1] == 0x50 &&
+               body[2] == 0x4E &&
+               body[3] == 0x47 &&
+               body[4] == 0x0D &&
+               body[5] == 0x0A &&
+               body[6] == 0x1A &&
+               body[7] == 0x0A) ||
+              (bodyLen > 6 &&             // Gif 47 49 46 38 37(9) 61
+               body[0] == 0x47 &&
+               body[1] == 0x49 &&
+               body[2] == 0x46 &&
+               body[3] == 0x38 &&
+               body[5] == 0x61)) {
+            w->gzipScore = -1;
+          } else {
+					  // try gzipping the item to see how much smaller it will be
+					  DWORD origSize = w->in;
+					  DWORD origLen = bodyLen;
+					  DWORD headSize = w->inHeaders.GetLength();
+					  if( origLen && body )
+					  {
+						  DWORD len = compressBound(origLen);
+						  if( len )
+						  {
+							  LPBYTE buff = (LPBYTE)malloc(len);
+							  if( buff )
+							  {
+								  if( compress2(buff, &len, body, origLen, 7) == Z_OK )
+									  target = len + headSize;
+  								
+								  free(buff);
+							  }
+						  }
+  						
+						  if( target < (origSize * 0.9) && origSize - target > 1400 )
+							  w->warning = true;
+						  else
+						  {
+							  target = origSize;
+							  w->gzipScore = -1;
+						  }
+					  }
 					}
 				}
 

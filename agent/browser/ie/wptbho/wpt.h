@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wpt_interface.h"
+#include "wpt_task.h"
 
 class Wpt {
 public:
@@ -11,6 +12,7 @@ public:
   void Stop(void);
   bool InstallHook();
   void CheckForTask();
+  void TaskThread();
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
   // browser events
@@ -29,6 +31,10 @@ private:
   HMODULE       _hook_dll;
   HWND          _message_window;
   bool          _navigating;
+  bool          _must_exit;
+  HANDLE        _task_thread;
+  bool          _processing_task;
+  WptTask       _task;
 
   typedef enum{
     equal = 0,
