@@ -191,23 +191,46 @@ void OptimizationChecks::CheckGzip()
         DataChunk body = request->_response_data.GetBody();
         LPBYTE bodyData = (LPBYTE)body.GetData();
         DWORD bodyLen = body.GetLength();
-        DWORD headSize = request->_response_data.GetHeaders().GetLength();
-        if (bodyLen && bodyData) {
-          DWORD len = compressBound(bodyLen);
-          if( len ) {
-            char* buff = (char*) malloc(len);
-            if( buff ) {
-              // Do the compression and check the target bytes to set for this.
-              if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
-                targetRequestBytes = len + headSize;
-              free(buff);
+        // don't try gzip for known image formats that shouldn't be gzipped
+        if ((bodyLen > 3 &&             // JPEG FF D8 FF
+             bodyData[0] == 0xFF &&
+             bodyData[1] == 0xD8 &&
+             bodyData[2] == 0xFF) ||
+            (bodyLen > 8 &&             // PNG 89 50 4E 47 0D 0A 1A 0A
+             bodyData[0] == 0x89 &&
+             bodyData[1] == 0x50 &&
+             bodyData[2] == 0x4E &&
+             bodyData[3] == 0x47 &&
+             bodyData[4] == 0x0D &&
+             bodyData[5] == 0x0A &&
+             bodyData[6] == 0x1A &&
+             bodyData[7] == 0x0A) ||
+            (bodyLen > 6 &&             // Gif 47 49 46 38 37(9) 61
+             bodyData[0] == 0x47 &&
+             bodyData[1] == 0x49 &&
+             bodyData[2] == 0x46 &&
+             bodyData[3] == 0x38 &&
+             bodyData[5] == 0x61)) {
+          request->_scores._gzip_score = -1;
+        } else {
+          DWORD headSize = request->_response_data.GetHeaders().GetLength();
+          if (bodyLen && bodyData) {
+            DWORD len = compressBound(bodyLen);
+            if( len ) {
+              char* buff = (char*) malloc(len);
+              if( buff ) {
+                // Do the compression and check the target bytes to set for this.
+                if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
+                  targetRequestBytes = len + headSize;
+                free(buff);
+              }
             }
-          }
-          // allow a pass if we don't get 10% savings or less than 1400 bytes
-          if( targetRequestBytes >= (origSize * 0.9) || 
-              origSize - targetRequestBytes < 1400 ) {
-            targetRequestBytes = origSize;
-            request->_scores._gzip_score = -1;
+            // allow a pass if we don't get 10% savings or less than 1400 bytes
+            if( targetRequestBytes >= (origSize * 0.9) || 
+                origSize - targetRequestBytes < 1400 ) {
+              targetRequestBytes = origSize;
+              request->_scores._gzip_score = -1;
+            }
           }
         }
       }

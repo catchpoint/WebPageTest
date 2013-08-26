@@ -163,6 +163,7 @@ public:
   CAtlList<StatusMessage>  _status_messages;   // Browser status
 
 private:
+  bool  _started;
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;
@@ -186,7 +187,7 @@ private:
 
   void Done(bool force = false);
   void CollectSystemStats(LARGE_INTEGER &now);
-  void FindViewport();
+  void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
 };

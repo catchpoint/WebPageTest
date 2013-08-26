@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   _T("Internet Explorer_Server"),
   _T("Chrome_RenderWidgetHostHWND"),
+  _T("Chrome_WidgetWin_1"),
   _T("MozillaWindowClass"),
   _T("WebKit2WebViewWindowClass")
 };
@@ -170,18 +171,15 @@ void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove) {
   Recursively check to see if the given window has a child of the same class
   A buffer is passed so we don't have to keep re-allocating it on the stack
 -----------------------------------------------------------------------------*/
-static bool HasVisibleChildDocument(HWND parent, const TCHAR * class_name, 
-                            TCHAR * buff, DWORD buff_len) {
+static bool HasVisibleChildDocument(HWND parent) {
   bool has_child_document = false;
   HWND wnd = ::GetWindow(parent, GW_CHILD);
   while (wnd && !has_child_document) {
     if (IsWindowVisible(wnd)) {
-      if (GetClassName(wnd, buff, buff_len) && !lstrcmp(buff, class_name)) {
+      if (IsBrowserDocument(wnd))
         has_child_document = true;
-      } else {
-        has_child_document = HasVisibleChildDocument(wnd, class_name, 
-                                                      buff, buff_len);
-      }
+      else
+        has_child_document = HasVisibleChildDocument(wnd);
     }
     wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
   }
@@ -200,8 +198,7 @@ bool IsBrowserDocument(HWND wnd) {
   if (GetClassName(wnd, class_name, _countof(class_name))) {
     for (int i = 0; i < _countof(DOCUMENT_WINDOW_CLASSES); i++) {
       if (!lstrcmp(class_name, DOCUMENT_WINDOW_CLASSES[i])) {
-        if (!HasVisibleChildDocument(wnd, DOCUMENT_WINDOW_CLASSES[i], 
-            class_name, _countof(class_name))) {
+        if (!HasVisibleChildDocument(wnd)) {
           is_document = true;
         }
       }
@@ -220,11 +217,10 @@ static HWND FindDocumentWindow(DWORD process_id, HWND parent) {
     if (IsWindowVisible(wnd)) {
       DWORD pid;
       GetWindowThreadProcessId(wnd, &pid);
-      if (pid == process_id && IsBrowserDocument(wnd)) {
+      if (pid == process_id && IsBrowserDocument(wnd))
         document_window = wnd;
-      } else {
+      else
         document_window = FindDocumentWindow(process_id, wnd);
-      }
     }
     wnd = ::GetNextWindow(wnd , GW_HWNDNEXT);
   }
