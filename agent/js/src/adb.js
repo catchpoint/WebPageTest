@@ -46,6 +46,7 @@ function Adb(app, serial, adbCommand) {
   this.app_ = app;
   this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
   this.serial = serial;
+  this.isSuJoined_ = undefined;
 }
 /** Public class. */
 exports.Adb = Adb;
@@ -83,6 +84,10 @@ Adb.prototype.adb = function(args, options, timeout) {
 /**
  * Schedules an adb shell command on the device, resolves with its stdout.
  *
+ * Note that the stdout may have trailing '\r's, e.g.:
+ *   adb shell echo foo | cat -v
+ * prints "foo^M".  See the dos2unix function for details.
+ *
  * @param {Array} args command args, as in process.spawn.
  * @param {Object=} options command options, as in process.spawn.
  * @param {number=} timeout milliseconds to wait before killing the process,
@@ -95,6 +100,108 @@ Adb.prototype.shell = function(args, options, timeout) {
 };
 
 /**
+ * Formats "su -c" arguments to match the device-specific shell.
+ *
+ * We test the "su" behavior and format the arguments accordingly.
+ * SuperSu expects a single "-c" argument, e.g.:
+ *    $ adb shell su -c 'date +%s'
+ *    1234567890
+ *    $ adb shell su -c date +%s
+ *    Unknown id: +%s
+ * Android's userdebug "su" expects separate "-c" arguments, e.g.:
+ *    $ adb shell su -c 'date +%s'
+ *    su: exec failed for date +%s Error:No such file or directory
+ *    $ adb shell su -c date +%s
+ *    1234567890
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @return {webdriver.promise.Promise} resolve({Array} suArgs).
+ */
+Adb.prototype.formatSuArgs = function(args) {
+  'use strict';
+  return this.app_.schedule('formatSuArgs', function() {
+    if (undefined !== this.isSuJoined_) {
+      return (this.isSuJoined_ ? [args.join(' ')] : args);
+    }
+    // Test an arbitrary command, e.g. 'date +%s' or 'ls -l'
+    return this.shell(['su', '-c', 'date +%s']).then(function(stdout) {
+      stdout = stdout.split(/\r?\n/)[0];
+      if (/^[0-9]+$/.test(stdout)) {
+        this.isSuJoined_ = true;
+      } else if (/^su: .*:No such file/i.test(stdout)) {
+        this.isSuJoined_ = false;
+      } else {
+        throw new Error('Unexpected \'su\' output: ' + stdout);
+      }
+      return (this.isSuJoined_ ? [args.join(' ')] : args);
+    }.bind(this));
+  }.bind(this));
+};
+
+/**
+ * Schedules an "adb shell su -c" command, resolves with its stdout.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.
+ * @param {number=} timeout milliseconds to wait before killing the process,
+ *   defaults to DEFAULT_TIMEOUT.
+ * @return {webdriver.promise.Promise} The scheduled promise.
+ */
+Adb.prototype.su = function(args, options, timeout) {
+  'use strict';
+  return this.formatSuArgs(args).then(function(suArgs) {
+    return this.shell(['su', '-c'].concat(suArgs), options, timeout);
+  }.bind(this));
+};
+
+/**
+ * Spawns a background process.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @return {webdriver.promise.Promise} resolve({Process} proc).
+ * @private
+ */
+Adb.prototype.spawn_ = function(args) {
+  'use strict';
+  return process_utils.scheduleSpawn(this.app_, this.adbCommand, args);
+};
+
+/**
+ * Spawns a background "adb" process.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @return {webdriver.promise.Promise} resolve({Process} proc).
+ */
+Adb.prototype.spawnAdb = function(args) {
+  'use strict';
+  return this.spawn_(['-s', this.serial].concat(args));
+};
+
+/**
+ * Spawns a background "adb shell" process.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @return {webdriver.promise.Promise} resolve({Process} proc).
+ */
+Adb.prototype.spawnShell = function(args) {
+  'use strict';
+  return this.spawnAdb(['shell'].concat(args));
+};
+
+/**
+ * Spawns a background "adb shell su" command.
+ *
+ * @param {Array} args command args, as in process.spawn.
+ * @return {webdriver.promise.Promise} resolve({Process} proc).
+ */
+Adb.prototype.spawnSu = function(args) {
+  'use strict';
+  return this.formatSuArgs(args).then(function(suArgs) {
+    return this.spawnShell(['su', '-c'].concat(suArgs));
+  }.bind(this));
+};
+
+/**
  * Schedules a check if a given path (including wildcards) exists on device.
  *
  * @param {string} path  the path to check.
@@ -104,7 +211,7 @@ Adb.prototype.exists = function(path) {
   'use strict';
   return this.shell(['ls', path, '>', '/dev/null', '2>&1', ';', 'echo', '$?'])
       .then(function(stdout) {
-    return stdout === '0';
+    return stdout.trim() === '0';
   }.bind(this));
 };
 
@@ -154,7 +261,7 @@ Adb.prototype.scheduleKill = function(processName, signal) {
   'use strict';
   this.getPidsOfProcess(processName).then(function(pids) {
     pids.forEach(function(pid) {
-      this.shell(['su', '-c', 'kill', '-' + (signal || 'INT'), pid]);
+      this.su(['kill', '-' + (signal || 'INT'), pid]);
     }.bind(this));
   }.bind(this));
 };

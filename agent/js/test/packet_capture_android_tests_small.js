@@ -121,6 +121,9 @@ describe('packet_capture_android small', function() {
     if (/adb$/.test(command)) {
       if (args.some(function(arg) { return arg === 'ps'; })) {
         stdout = 'USER ...\n';
+      } else if ('date +%s' === args[args.length - 1]) {
+        stdout =
+            'su: exec failed for date +%s Error:No such file or directory';
       } else if (args.some(function(arg) { return arg === 'netcfg'; })) {
         stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01\r\n';
       } else if (args[3] === 'su' && /tcpdump$/.test(args[5])) {
@@ -164,6 +167,7 @@ describe('packet_capture_android small', function() {
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '0'.
         ['shell', 'ps', 'tcpdump'],  // Output 'USER ...'.
         ['shell', 'netcfg'],  // Output 'usb0 ...'.
+        ['shell', 'su', '-c', 'date +%s'],
         ['shell', 'su', '-c', /^tcpdump/, '-i', 'usb0', '-p', '-s', '0', '-w',
           /\/sdcard\/\w+\.pcap/]);
     assertAdbCall();
@@ -196,12 +200,13 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 27);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output 'USER ...'.
         ['shell', 'ls', '/data/local/tmp/tcpdump',
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '1'.
         ['push', localTcpdump, '/data/local/tmp/tcpdump'],
+        ['shell', 'su', '-c', 'date +%s'],
         ['shell', 'su', '-c', 'chown', 'root', '/data/local/tmp/tcpdump'],
         ['shell', 'su', '-c', 'chmod', '6755', '/data/local/tmp/tcpdump'],
         ['shell', 'netcfg'],  // Output 'usb0 ...'.

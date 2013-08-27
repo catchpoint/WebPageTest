@@ -178,6 +178,12 @@ describe('browser_android_chrome small', function() {
 
     ncProc = undefined;
     spawnStub.callback = function(proc, command, args) {
+      if (/adb$/.test(command) && 'date +%s' === args[args.length - 1]) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', '1234567890');
+        }, 1);
+        return false;
+      }
       var isNetcat = (/adb$/.test(command) && args.some(function(arg) {
         return (/^while true; do nc /.test(arg));
       }));
@@ -191,7 +197,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 14);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 24);
     if (1 === args.runNumber) {
       assertAdbCalls(
           ['uninstall', /com\.[\w\.]+/],
@@ -202,6 +208,7 @@ describe('browser_android_chrome small', function() {
     if (args.pac) {
       assertAdbCalls(
         ['push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/],
+        ['shell', 'su', '-c', 'date +%s'],
         ['shell', 'su', '-c',
             /^while true; do nc -l \d+ < \S+pac_body; done$/]);
     }
@@ -209,6 +216,9 @@ describe('browser_android_chrome small', function() {
        '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
+    }
+    if (!args.pac) {
+      assertAdbCall('shell', 'su', '-c', 'date +%s');
     }
     assertAdbCalls(
         ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +

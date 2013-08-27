@@ -117,8 +117,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   //
   // We also tried a Page.navigate to "data:text/html;charset=utf-8,", which
   // helped but was insufficient by itself.
-  this.adb_.shell(['su', '-c',
-      'rm /data/data/com.google.android.apps.chrome_dev/files/tab*']);
+  this.adb_.su(['rm',
+      '/data/data/com.google.android.apps.chrome_dev/files/tab*']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error, use `pm list packages` to check pkg
@@ -150,8 +150,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
   }
-  this.adb_.shell(['su', '-c', 'echo \\"chrome ' + flags.join(' ') +
-      '\\" > ' + flagsFile]);
+  this.adb_.su(['echo \\"chrome ' + flags.join(' ') + '\\" > ' + flagsFile]);
 };
 
 /**
@@ -227,11 +226,9 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   process_utils.scheduleFunction(this.app_, 'Remove local PAC file',
       fs.unlink, localPac);
   // Start netcat server
-  var args = ['-s', this.deviceSerial_, 'shell', 'su', '-c',
-      'while true; do nc -l ' + PAC_PORT + ' < ' + this.pacFile_ + '; done'];
-  logger.debug('Starting netcat on device: adb ' + args);
-  process_utils.scheduleSpawn(this.app_, this.adb_.adbCommand, args)
-      .then(function(proc) {
+  logger.debug('Starting pacServer on device port %s', PAC_PORT);
+  this.adb_.spawnSu(['while true; do nc -l ' + PAC_PORT + ' < ' +
+       this.pacFile_ + '; done']).then(function(proc) {
     this.pacServer_ = proc;
     proc.on('exit', function(code) {
       if (this.pacServer_) {
