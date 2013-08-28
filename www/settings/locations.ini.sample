@@ -1,6 +1,7 @@
 [locations]
 1=Test_loc
 2=Public_Dulles
+3=Appurify
 default=Test_loc
 
 ;
@@ -12,10 +13,12 @@ default=Test_loc
 1=IE
 2=Test
 label=Test Location
+group=Desktop
 
 [Public_Dulles]
 1=WPT_Dulles_IE8
 label="WebPagetest.org - Dulles, VA"
+group=Public
 
 ;
 ; Tese are the browser-specific configurations that match the configurations
@@ -56,3 +59,20 @@ label="WebPagetest.org Dulles, VA - IE8"
 relayServer="http://www.webpagetest.org/"
 relayKey=<your API key>
 relayLocation=Dulles_IE8
+
+;
+; This is a special location for testing on Appurify mobile devices.
+; Appurify offers mobile device testing as a service.
+;
+[Appurify]
+1=Appurify_Mobile
+label="Appurify Mobile Testing"
+lat=35.682175
+lng=139.752731
+group=Mobile
+
+[Appurify_Mobile]
+type=Appurify
+label="Appurify Mobile"
+key=<API Key>
+secret=<API Secret>

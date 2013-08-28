@@ -314,9 +314,11 @@ function GetAppurifyStatus($id, $testPath, &$test) {
       if (!$completed) {
         if ($appurify->CheckTestRun($test, $run, $index, $testPath)) {
           if (array_key_exists('status', $run)) {
-            if ($run['status'] == 'in_progress')
+            if ($run['status'] == 'in_progress' || $run['status'] == 'in-progress')
               $started = true;
             elseif ($run['status'] == 'scheduled')
+              $waiting = true;
+            else
               $waiting = true;
           }
           if (array_key_exists('completed', $run) && $run['completed']) {

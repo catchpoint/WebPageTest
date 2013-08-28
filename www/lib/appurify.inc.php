@@ -133,8 +133,7 @@ class Appurify{
         $ret = true;
         if ($this->ProcessResult($test, $run, $index, $testPath))
           $run['completed'] = true;
-        else
-          unlink($file);
+        unlink($file);
       }
     }
     return $ret;
@@ -204,29 +203,43 @@ class Appurify{
   }
   
   protected function ProcessVideo(&$test, $tempdir, $testPath, $index) {
-    if (is_file("$tempdir/appurify_results/video.mov"))
-      rename("$tempdir/appurify_results/video.mov", "$testPath/{$index}_video.mov");
+    if (is_file("$tempdir/appurify_results/video.mp4"))
+      rename("$tempdir/appurify_results/video.mp4", "$testPath/{$index}_video.mp4");
   }
 
   protected function ProcessDevTools($file, $outfile) {
-    $len = filesize($file);
-    if ($len > 2) {
-      $f = fopen($file, 'r');
-      if ($f) {
-        fseek($f, 1);
-        $remaining = $len - 2;
-        while ($remaining > 0) {
-          $size = min($remaining, 4096);
-          $buff = fread($f, $size);
-          if ($buff !== false) {
-            fwrite($outfile, $buff);
-            $remaining -= $size;
-          } else {
-            $remaining = 0;
+    $started = false;
+    $events = json_decode(file_get_contents($file), true);
+    if (isset($events) && is_array($events)) {
+      foreach ($events as &$event) {
+        if (is_array($event) &&
+            array_key_exists('method', $event) &&
+            array_key_exists('params', $event) &&
+            is_array($event['params'])) {
+          if (!$started) {
+            $url = null;
+            if ($event['method'] == 'Network.requestWillBeSent' &&
+                array_key_exists('request', $event['params']) &&
+                is_array($event['params']['request']) &&
+                array_key_exists('url', $event['params']['request']))
+              $url = $event['params']['request']['url'];
+            elseif ($event['method'] == 'Timeline.eventRecorded' &&
+                array_key_exists('record', $event['params']) &&
+                is_array($event['params']['record']) &&
+                array_key_exists('type', $event['params']['record']) &&
+                $event['params']['record']['type'] == 'ResourceSendRequest' &&
+                array_key_exists('data', $event['params']['record']) &&
+                is_array($event['params']['record']['data']) &&
+                array_key_exists('url', $event['params']['record']['data']))
+              $url = $event['params']['record']['data']['url'];
+            if (isset($url) && strpos(substr($url, 0, 20), 'localhost') === false)
+              $started = true;
+          }
+          if ($started) {
+            fwrite($outfile, json_encode($event));
+            fwrite($outfile, ',');
           }
         }
-        fwrite($outfile, ',');
-        fclose($f);
       }
     }
   }
