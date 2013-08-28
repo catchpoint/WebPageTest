@@ -46,7 +46,7 @@ function Adb(app, serial, adbCommand) {
   this.app_ = app;
   this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
   this.serial = serial;
-  this.isSuJoined_ = undefined;
+  this.isUserDebug_ = undefined;
 }
 /** Public class. */
 exports.Adb = Adb;
@@ -84,9 +84,8 @@ Adb.prototype.adb = function(args, options, timeout) {
 /**
  * Schedules an adb shell command on the device, resolves with its stdout.
  *
- * Note that the stdout may have trailing '\r's, e.g.:
- *   adb shell echo foo | cat -v
- * prints "foo^M".  See the dos2unix function for details.
+ * The caller should trim/split the returned stdout to remove any trailing '\r's
+ * or newlines.  For example, `adb shell echo foo | cat -v` returns "foo^M".
  *
  * @param {Array} args command args, as in process.spawn.
  * @param {Object=} options command options, as in process.spawn.
@@ -102,38 +101,41 @@ Adb.prototype.shell = function(args, options, timeout) {
 /**
  * Formats "su -c" arguments to match the device-specific shell.
  *
- * We test the "su" behavior and format the arguments accordingly.
- * SuperSu expects a single "-c" argument, e.g.:
- *    $ adb shell su -c 'date +%s'
- *    1234567890
- *    $ adb shell su -c date +%s
- *    Unknown id: +%s
- * Android's userdebug "su" expects separate "-c" arguments, e.g.:
- *    $ adb shell su -c 'date +%s'
- *    su: exec failed for date +%s Error:No such file or directory
- *    $ adb shell su -c date +%s
- *    1234567890
+ * The basic formats are:
+ *     COMMAND                SuperSu                 userdebug
+ *     su -c 'echo x'         x                       su: exec failed...
+ *     su 0 sh -c 'echo x'    sh: sh: No such...      x
+ * The extra "sh -c" is required for userdebug shell built-ins commands, e.g.:
+ *     su 0 echo x            sh: echo: No such..     su: exec failed...
+ *     su 0 ls data           sh: ls: No such...      app, ...
+ * For completeness, the other interesting cases are:
+ *     su -c echo x           Unknown id: x           su: exec failed...
+ *     su -c 'ls data'        app, ...                su: exec failed...
+ *     su -c ls data          Unknown id: data        app, ...
+ *     su 0 sh -c 'ls data'   sh: sh: No such...      app, ...
  *
  * @param {Array} args command args, as in process.spawn.
- * @return {webdriver.promise.Promise} resolve({Array} suArgs).
+ * @return {webdriver.promise.Promise} resolve({Array} shellArgs).
  */
 Adb.prototype.formatSuArgs = function(args) {
   'use strict';
-  return this.app_.schedule('formatSuArgs', function() {
-    if (undefined !== this.isSuJoined_) {
-      return (this.isSuJoined_ ? [args.join(' ')] : args);
+  return this.app_.schedule('Check su', function() {
+    if (undefined === this.isUserDebug_) {
+      // Test an arbitrary command, e.g. 'echo x' or 'date +%s'
+      this.shell(['su', '-c', 'echo x']).then(function(stdout) {
+        if ('x' === stdout.trim()) {
+          this.isUserDebug_ = false;
+        } else if (/^su: exec failed/.test(stdout)) {
+          this.isUserDebug_ = true;
+        } else {
+          throw new Error('Unexpected \'su\' output: ' + stdout);
+        }
+      }.bind(this));
     }
-    // Test an arbitrary command, e.g. 'date +%s' or 'ls -l'
-    return this.shell(['su', '-c', 'date +%s']).then(function(stdout) {
-      stdout = stdout.split(/\r?\n/)[0];
-      if (/^[0-9]+$/.test(stdout)) {
-        this.isSuJoined_ = true;
-      } else if (/^su: .*:No such file/i.test(stdout)) {
-        this.isSuJoined_ = false;
-      } else {
-        throw new Error('Unexpected \'su\' output: ' + stdout);
-      }
-      return (this.isSuJoined_ ? [args.join(' ')] : args);
+    return this.app_.schedule('Format su', function() {
+      return (this.isUserDebug_ ?
+          ['su', '0', 'sh', '-c', args.join(' ')] :
+          ['su', '-c', args.join(' ')]);
     }.bind(this));
   }.bind(this));
 };
@@ -149,8 +151,8 @@ Adb.prototype.formatSuArgs = function(args) {
  */
 Adb.prototype.su = function(args, options, timeout) {
   'use strict';
-  return this.formatSuArgs(args).then(function(suArgs) {
-    return this.shell(['su', '-c'].concat(suArgs), options, timeout);
+  return this.formatSuArgs(args).then(function(shellArgs) {
+    return this.shell(shellArgs, options, timeout);
   }.bind(this));
 };
 
@@ -196,8 +198,8 @@ Adb.prototype.spawnShell = function(args) {
  */
 Adb.prototype.spawnSu = function(args) {
   'use strict';
-  return this.formatSuArgs(args).then(function(suArgs) {
-    return this.spawnShell(['su', '-c'].concat(suArgs));
+  return this.formatSuArgs(args).then(function(shellArgs) {
+    return this.spawnShell(shellArgs);
   }.bind(this));
 };
 

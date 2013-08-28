@@ -150,7 +150,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
   }
-  this.adb_.su(['echo \\"chrome ' + flags.join(' ') + '\\" > ' + flagsFile]);
+  this.adb_.su(['echo', '\\"chrome ' + flags.join(' ') + '\\"', '>', flagsFile]);
 };
 
 /**
