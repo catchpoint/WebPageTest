@@ -50,6 +50,8 @@ $userImages = true;
                             $q85 = number_format((float)(($request['image_total'] - $request['image_save']) / 1024.0), 1);
                             echo "Quality 85 optimized size: $q85 KB (<b>" . number_format(((float)$request['image_save'] / 1024.0), 1). " KB smaller</b>)<br>";
                           }
+                        } else if (array_key_exists('objectSize', $request)) {
+                          echo number_format(((float)$request['objectSize'] / 1024.0), 1). " KB {$request['contentType']}<br>";
                         }
                         if (array_key_exists('jpeg_scan_count', $request) && $request['jpeg_scan_count'] > 0) {
                           if ($request['jpeg_scan_count'] == 1)
