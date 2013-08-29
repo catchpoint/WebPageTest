@@ -70,7 +70,7 @@ function Agent(client, flags) {
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
-  this.client_.onJobTimeout = this.jobTimeout_.bind(this);
+  this.client_.onAbortJob = this.abortJob_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -306,7 +306,9 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
       return;
     }
     throw new ScriptError('WPT script contains unsupported line[' +
-        lineNumber + ']: ' + line);
+        lineNumber + ']: ' + line + '\n' +
+        '--- support is limited to:\n' +
+        'setDnsName H1 H2\\n [overrideHost H1 H3]\\n navigate H4');
   });
   if (!fromHost || !url) {
     throw new ScriptError('WPT script lacks ' +
@@ -322,10 +324,10 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
 };
 
 /**
- * @param {Object} job the timed-out job to abort.
+ * @param {Object} job the job to abort (e.g. due to timeout).
  * @private
  */
-Agent.prototype.jobTimeout_ = function(job) {
+Agent.prototype.abortJob_ = function(job) {
   'use strict';
   if (this.wdServer_) {
     this.scheduleNoFault_('Remove message listener',

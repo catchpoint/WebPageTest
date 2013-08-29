@@ -97,7 +97,7 @@ describe('agent_main', function() {
     var agent = new agent_main.Agent(client, /*flags=*/{});
     agent.run();
 
-    client.onJobTimeout(fakeJob);
+    client.onAbortJob(fakeJob);
     sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
     should.equal('[]', app.getSchedule());
     should.ok(runFinishedSpy.calledOnce);

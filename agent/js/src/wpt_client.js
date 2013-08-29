@@ -195,7 +195,7 @@ exports.processResponse = function(response, callback) {
  * #field {Function=} onStartJobRun called upon a new job run start.
  *     #param {Job} job the job whose run has started.
  *         MUST call job.runFinished() when done, even after an error.
- * #field {Function=} onJobTimeout job timeout callback.
+ * #field {Function=} onAbortJob job timeout callback.
  *     #param {Job} job the job that timed out.
  *         MUST call job.runFinished() after handling the timeout.
  *
@@ -233,7 +233,7 @@ function Client(args) {
   this.currentJob_ = undefined;
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
-  this.onJobTimeout = undefined;
+  this.onAbortJob = undefined;
   this.handlingUncaughtException_ = undefined;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
@@ -342,6 +342,20 @@ Client.prototype.processJobResponse_ = function(responseBody) {
  * @param {Job} job the job to start/continue.
  * @private
  */
+Client.prototype.abortJob_ = function(job) {
+  'use strict';
+  logger.error('Aborting job %s: %s', job.id, job.error);
+  if (this.onAbortJob) {
+    this.onAbortJob(job);
+  } else {
+    job.runFinished(/*isRunFinished=*/true);
+  }
+};
+
+/**
+ * @param {Job} job the job to start/continue.
+ * @private
+ */
 Client.prototype.startNextRun_ = function(job) {
   'use strict';
   job.error = undefined;  // Reset previous run's error, if any.
@@ -349,27 +363,20 @@ Client.prototype.startNextRun_ = function(job) {
   this.currentJob_ = job;
   // Set up job timeout
   this.timeoutTimer_ = global.setTimeout(function() {
-    logger.error('job timeout: %s', job.id);
     job.error = 'timeout';
-    if (this.onJobTimeout) {
-      this.onJobTimeout(job);
-    } else {
-      job.runFinished(/*isRunFinished=*/true);
-    }
+    this.abortJob_(job);
   }.bind(this), this.jobTimeout + exports.JOB_FINISH_TIMEOUT);
 
   if (this.onStartJobRun) {
     try {
       this.onStartJobRun(job);
     } catch (e) {
-      logger.error('Exception while running the job: %s', e.stack);
       job.error = e.message;
-      job.runFinished(/*isRunFinished=*/true);
+      this.abortJob_(job);
     }
   } else {
-    logger.critical('Client.onStartJobRun must be set');
-    job.error = 'Agent is not configured to process jobs';
-    job.runFinished(/*isRunFinished=*/true);
+    job.error = 'Client.onStartJobRun not set';
+    this.abortJob_(job);
   }
 };
 

@@ -81,9 +81,9 @@ describe('wpt_client small', function() {
     var isTimedOut = false;
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
-      return ('job timeout: gaga' === message);
+      return ('Aborting job gaga: timeout' === message);
     });
-    client.onJobTimeout = function() {
+    client.onAbortJob = function() {
       logger.info('Caught timeout in test');
       isTimedOut = true;
     };
