@@ -145,25 +145,24 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       }
     }
     if (ipcMsg.videoFile) {
-      process_utils.scheduleFunction(this.app_, 'Read video file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.IMAGE,
             'video.avi', 'video/avi', buffer));
-      }, function() { // ignore errors?
       });
-      process_utils.scheduleFunction(this.app_, 'Delete video file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Delete video file',
           fs.unlink, ipcMsg.videoFile);
     }
     if (ipcMsg.pcapFile) {
-      process_utils.scheduleFunction(this.app_, 'Read pcap file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.PCAP,
             'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
       });
-      process_utils.scheduleFunction(this.app_, 'Delete video file',
-          fs.unlink, ipcMsg.videoFile);
+      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
+          fs.unlink, ipcMsg.pcapFile);
     }
   }.bind(this));
 };

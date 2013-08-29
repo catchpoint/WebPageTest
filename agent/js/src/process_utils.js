@@ -582,6 +582,26 @@ exports.scheduleFunction = function(app, description, f,
 };
 
 /**
+ * Calls scheduleFunction, catches and logs any exceptions instead of
+ * propagating.
+ *
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {string} description debug title.
+ * @param {Function} f Function({Function} callback, {Function=} errback).
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} will log instead of reject(Error).
+ */
+exports.scheduleFunctionNoFault = function(app, description, f,
+     var_args) { // jshint unused:false
+  'use strict';
+  return exports.scheduleFunction.apply(undefined, arguments).addErrback(
+      function(e) {
+    logger.error('Exception from "%s": %s', description, e);
+    logger.debug('%s', e.stack);
+  });
+};
+
+/**
  * Find and reserve a randomly-selected port in the given port range.
  *
  * We randomly select two consecutive ports:
