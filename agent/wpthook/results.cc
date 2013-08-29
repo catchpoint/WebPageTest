@@ -132,8 +132,10 @@ void Results::Save(void) {
     SaveResponseBodies();
     SaveConsoleLog();
     SaveTimedEvents();
-    _dev_tools.SetStartTime(_test_state._start);
-    _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+    if (_test._timeline) {
+      _dev_tools.SetStartTime(_test_state._start);
+      _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+    }
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
