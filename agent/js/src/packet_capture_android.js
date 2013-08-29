@@ -106,10 +106,8 @@ PacketCaptureAndroid.prototype.schedulePushTcpdumpIfNeeded_ = function() {
           this.adb_.adb(['push',
               this.localTcpdumpBinary_, this.deviceTcpdumpCommand_]);
           // /data/local/tmp needs no su, but chown root and sticky bit do.
-          this.adb_.shell(['su', '-c',
-              'chown', 'root', this.deviceTcpdumpCommand_]);
-          this.adb_.shell(['su', '-c',
-              'chmod', '6755', this.deviceTcpdumpCommand_]);
+          this.adb_.su(['chown', 'root', this.deviceTcpdumpCommand_]);
+          this.adb_.su(['chmod', '6755', this.deviceTcpdumpCommand_]);
         }
       }.bind(this));
     }
@@ -128,14 +126,11 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
   this.scheduleStop();  // Cleanup possible leftovers.
   this.schedulePushTcpdumpIfNeeded_();
   this.scheduleDetectConnectedInterface_().then(function(iface) {
+    logger.debug('Starting tcpdump of %s to %s', iface, this.devicePcapFile_);
     // -p = don't put into promiscuous mode.
     // -s 0 = capture entire packets.
-    var args = ['-s', this.deviceSerial_, 'shell', 'su', '-c',
-      this.deviceTcpdumpCommand_, '-i', iface, '-p', '-s', '0', '-w',
-      this.devicePcapFile_];
-    logger.debug('Starting tcpdump on device: adb ' + args);
-    process_utils.scheduleSpawn(this.app_, this.adb_.adbCommand, args)
-        .then(function(proc) {
+    this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', iface, '-p',
+         '-s', '0', '-w', this.devicePcapFile_]).then(function(proc) {
       this.tcpdumpAdbProcess_ = proc;
       proc.on('exit', function(code) {
         if (this.tcpdumpAdbProcess_) {  // We didn't kill it ourselves
