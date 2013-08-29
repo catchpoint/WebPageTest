@@ -947,7 +947,6 @@ var getScrollbarWidth = function() {
     // plugin definition
 
     $.fn.tabby = function(options) {
-        debug(this);
         // build main options before element iteration
         var opts = $.extend({}, $.fn.tabby.defaults, options);
         var pressed = $.fn.tabby.pressed; 
@@ -989,12 +988,6 @@ var getScrollbarWidth = function() {
     $.fn.tabby.catch_kc = function(e) { return e.keyCode ? e.keyCode : e.charCode ? e.charCode : e.which; };
     $.fn.tabby.pressed = {shft : false, ctrl : false, alt : false, last: null};
     
-    // private function for debugging
-    function debug($obj) {
-        if (window.console && window.console.log)
-        window.console.log('textarea count: ' + $obj.size());
-    };
-
     function process_keypress (o,shft,options) {
         var scrollTo = o.scrollTop;
         //var tabString = String.fromCharCode(9);

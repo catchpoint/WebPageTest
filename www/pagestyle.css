@@ -23,7 +23,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .cleared {display: block;clear: both;}
 .hidden {display: none;}
 .nomargin {margin:0;}
-.progress {min-width: 100; min-height: 100; background: url(/images/progress.gif) norepeat center middle; }
+.progress {min-width: 100px; min-height: 100px; background: url('/images/progress.gif') no-repeat center; }
 .arrow {  border-style: dashed; border-color: transparent; border-width: 0.53em; display: -moz-inline-box; display: inline-block; height: 0; line-height: 0; position: relative; vertical-align: middle; width: 0; }
 .bullet_list {list-style:disc; padding-left: 2em;}
 .bold {font-weight: bold;}
@@ -45,7 +45,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #header {height: 100px;}
 .logo {width: 222px;margin: 0;padding-top: 15px; float:left;}
 .logo a {display: block;height: 71px;text-indent: -999em;background-image: url(/images/logo_wpt.png);}
-.headerAd {float:right; width:728; height:90; margin:5px 0 1px;}
+.headerAd {float:right; width:728px; height:90px; margin:5px 0 1px;}
 #wptAuthBar {width: 980px; height: 18px; text-align: right; color: #fff;}
 #wptAuthBar a {color: #fff;}
 .gplusone {float:right; padding: 4px 5px 0 0;}
