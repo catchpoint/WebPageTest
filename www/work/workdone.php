@@ -21,7 +21,7 @@ header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 ignore_user_abort(true);
-set_time_limit(60*5*10);
+set_time_limit(60*5);
 require_once('harTiming.inc');
 require_once('./video/avi2frames.inc.php');
 
@@ -289,11 +289,9 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 for ($i = 1; $i <= $testInfo['runs']; $i++) {
                     getBreakdown($id, $testPath, $i, 0, $requests);
                     GetVisualProgress($testPath, $i, 0);
-                    DevToolsGetConsoleLog($testPath, $i, 0);
                     if (!$testInfo['fvonly']) {
                         getBreakdown($id, $testPath, $i, 1, $requests);
                         GetVisualProgress($testPath, $i, 1);
-                        DevToolsGetConsoleLog($testPath, $i, 1);
                     }
                 }
             }

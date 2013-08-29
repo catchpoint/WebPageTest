@@ -22,6 +22,11 @@ function GetDevToolsProgress($testPath, $run, $cached) {
     $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
     if (!isset($progress) || !is_array($progress)) {
       if (GetTimeline($testPath, $run, $cached, $timeline)) {
+        $cachedText = '';
+        if( $cached )
+            $cachedText = '_Cached';
+        $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
+        $console_log = array();
         $progress = array();
         $startTime = 0;
         $fullScreen = 0;
@@ -53,7 +58,13 @@ function GetDevToolsProgress($testPath, $run, $cached) {
             $frame = '0';
             ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
             GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
+            if (DevToolsMatchEvent('Console.messageAdded', $entry) &&
+                array_key_exists('message', $entry['params']) &&
+                is_array($entry['params']['message']))
+                $console_log[] = $entry['params']['message'];
         }
+        if (!gz_is_file($console_log_file))
+          gz_file_put_contents($console_log_file, json_encode($console_log));
         if (count($progress['processing'])) {
           $proc_total = 0.0;
           foreach($progress['processing'] as $type => &$procTime) {
@@ -693,36 +704,41 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
         $messages = json_decode(gz_file_get_contents($devToolsFile), true);
         if ($messages && is_array($messages)) {
             foreach($messages as &$message) {
-                if (is_array($message) &&
-                    array_key_exists('method', $message) &&
-                    array_key_exists('params', $message)) {
-                    $match = true;
-                    if (isset($filter)) {
-                        $match = false;
-                        if (is_string($filter)) {
-                            if (stripos($message['method'], $filter) !== false)
-                                $match = true;
-                        } elseif(is_array($filter)) {
-                            foreach($filter as $str) {
-                                if (stripos($message['method'], $str) !== false) {
-                                    $match = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if ($match) {
-                        $event = $message['params'];
-                        $event['method'] = $message['method'];
-                        $events[] = $event;
-                    }
-                 }
+              if (DevToolsMatchEvent($filter, $message)) {
+                $event = $message['params'];
+                $event['method'] = $message['method'];
+                $events[] = $event;
+              }
             }
         }
     }
     if (count($events))
         $ok = true;
     return $ok;
+}
+
+function DevToolsMatchEvent($filter, &$event) {
+  $match = false;
+  if (is_array($event) &&
+      array_key_exists('method', $event) &&
+      array_key_exists('params', $event)) {
+    $match = true;
+    if (isset($filter)) {
+        $match = false;
+        if (is_string($filter)) {
+            if (stripos($event['method'], $filter) !== false)
+                $match = true;
+        } elseif(is_array($filter)) {
+            foreach($filter as $str) {
+                if (stripos($event['method'], $str) !== false) {
+                    $match = true;
+                    break;
+                }
+            }
+        }
+    }
+  }
+  return $match;
 }
 
 /**
@@ -780,15 +796,17 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
   $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
   if (gz_is_file($console_log_file))
       $console_log = json_decode(gz_file_get_contents($console_log_file), true);
-  elseif (GetDevToolsEvents(array('Console.messageAdded'), $testPath, $run, $cached, $events) &&
+  elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
+    $console_log = array();
+    if (GetDevToolsEvents('Console.messageAdded', $testPath, $run, $cached, $events) &&
           is_array($events) &&
           count($events)) {
-    $console_log = array();
-    foreach ($events as $event) {
-      if (is_array($event) &&
-          array_key_exists('message', $event) &&
-          is_array($event['message']))
-          $console_log[] = $event['message'];
+      foreach ($events as $event) {
+        if (is_array($event) &&
+            array_key_exists('message', $event) &&
+            is_array($event['message']))
+            $console_log[] = $event['message'];
+      }
     }
     gz_file_put_contents($console_log_file, json_encode($console_log));
   }
