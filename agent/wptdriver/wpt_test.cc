@@ -556,6 +556,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       _log_data = false;
   } else if (cmd == _T("navigate")) {
     _navigated_url = command.target;
+    continue_processing = false;
     consumed = false;
   } else if (cmd == _T("sleep")) {
     int seconds = _ttoi(command.target);
@@ -580,6 +581,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
       HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
       _add_headers.AddTail(header);
     }
+    continue_processing = false;
+    consumed = false;
   } else if (cmd == _T("setheader")) {
     int pos = command.target.Find(_T(':'));
     if (pos > 0) {
@@ -603,9 +606,13 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
         _set_headers.AddTail(header);
       }
     }
+    continue_processing = false;
+    consumed = false;
   } else if (cmd == _T("resetheaders")) {
     _add_headers.RemoveAll();
     _set_headers.RemoveAll();
+    continue_processing = false;
+    consumed = false;
   } else if (cmd == _T("overridehost")) {
     CStringA host = CT2A(command.target.Trim());
     CStringA new_host = CT2A(command.value.Trim());
@@ -655,6 +662,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if(cmd == _T("reportdata")) {
     ReportData();
     continue_processing = false;
+    consumed = false;
   } else {
     continue_processing = false;
     consumed = false;
