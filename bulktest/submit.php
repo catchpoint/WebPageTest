@@ -99,7 +99,7 @@ function SubmitTests(&$results, $testCount) {
             if (array_key_exists('options', $permutations[$result['label']]) && strlen($permutations[$result['label']]['options']))
                 $request .= '&' . $permutations[$result['label']]['options'];
 
-            $response_str = file_get_contents($request);
+            $response_str = http_fetch($request);
             if (strlen($response_str)) {
                 $response = json_decode($response_str, true);
                 if ($response['statusCode'] == 200) {

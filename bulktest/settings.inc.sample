@@ -50,4 +50,31 @@ function StoreResults(&$results) {
     file_put_contents('./results.json', json_encode($results));
 }
 
+if (function_exists('curl_init')) {
+    $CURL_CONTEXT = curl_init();
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($CURL_CONTEXT, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_FAILONERROR, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($CURL_CONTEXT, CURLOPT_DNS_CACHE_TIMEOUT, 30);
+        curl_setopt($CURL_CONTEXT, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 30);
+    }
+} else
+    $CURL_CONTEXT = false;
+
+function http_fetch($url) {
+    $ret = null;
+    global $CURL_CONTEXT;
+    if ($CURL_CONTEXT !== false) {
+        curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
+        $ret = curl_exec($CURL_CONTEXT);
+    } else {
+        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
+        $ret = file_get_contents($url, false, $context);
+    }
+    return $ret;
+}
+
 ?>

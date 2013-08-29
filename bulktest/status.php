@@ -106,7 +106,7 @@ function UpdateResults(&$results, $testCount) {
             $doc = new MyDOMDocument();
             if ($doc) {
                 $url = "{$server}xmlResult/{$result['id']}/";
-                $response = file_get_contents($url);
+                $response = http_fetch($url);
                 if (strlen($response)) {
                     $response = preg_replace('/[^(\x20-\x7F)]*/','', $response);
                     $doc->loadXML($response);
