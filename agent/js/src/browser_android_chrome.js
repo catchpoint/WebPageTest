@@ -95,6 +95,9 @@ BrowserAndroidChrome.prototype.startWdServer = function() { //browserCaps
  */
 BrowserAndroidChrome.prototype.startBrowser = function() {
   'use strict';
+  // Stop Chrome at the start of each run.
+  // TODO(wrightt): could keep the devToolsPort and pacServer up
+  this.kill();
   if (this.shouldInstall_ && this.chrome_) {
     // Explicitly uninstall, as "install -r" fails if the installed package
     // was signed with different keys than the new apk being installed.
@@ -103,9 +106,6 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
     }.bind(this));
     // Chrome install on an emulator takes a looong time.
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
-  } else {
-    // Stop Chrome at the start of each run.
-    this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
   }
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
@@ -150,7 +150,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
   }
-  this.adb_.su(['echo', '\\"chrome ' + flags.join(' ') + '\\"', '>', flagsFile]);
+  this.adb_.su(['echo \\"chrome ' + flags.join(' ') + '\\" > ' + flagsFile]);
 };
 
 /**
@@ -178,6 +178,7 @@ BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
 BrowserAndroidChrome.prototype.releaseDevToolsPort_ = function() {
   'use strict';
   if (this.devtoolsPortLock_) {
+    logger.debug('Releasing DevTools port ' + this.devToolsPort_);
     this.devToolsPort_ = undefined;
     this.devtoolsPortLock_.release();
     this.devtoolsPortLock_ = undefined;
