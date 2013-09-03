@@ -78,5 +78,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "ECS", _T("Edgecast")},
   {"server", "NetDNA", _T("NetDNA")},
   {"X-CDN-Geo", "", _T("OVH CDN")},
+  {"X-Px", "", _T("CDNetworks")},
   {"Via", "CloudFront", _T("Amazon CloudFront")}
 };
