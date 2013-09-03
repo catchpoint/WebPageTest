@@ -183,3 +183,10 @@ function SelectRequest(request) {
             $("#request-overlay-" + i).removeClass("selected");
     }
 }
+
+// support for the multi-waterfall translucency
+$(".waterfall-transparency").change(function() {
+    var newValue = this.value;
+    var id = this.name;
+    $("#" + id).css({ opacity: newValue });
+});

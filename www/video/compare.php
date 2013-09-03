@@ -593,13 +593,22 @@ function ScreenShotTable()
         </div>
         <?php
         // display the waterfall if there is only one test
-        if( count($tests) == 1 )
-        {
+        if( count($tests) == 1 ) {
             $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
             InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
+            echo '<br><br>';
+        } else {
+          $waterfalls = array();
+          foreach ($tests as &$test) {
+            $waterfalls[] = array('id' => $test['id'],
+                                  'label' => $test['name'],
+                                  'run' => $test['run'],
+                                  'cached' => $test['cached']);
+          }
+          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0");
         }
         ?>
         
@@ -625,7 +634,6 @@ function ScreenShotTable()
             <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
         </div>
         <?php
-        echo '<br><br>';
         } // EMBED
         // scroll the table to show the first thumbnail change
         $scrollPos = $firstFrame * ($thumbSize + 8);

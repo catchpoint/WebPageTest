@@ -214,18 +214,18 @@ if (strlen($id)) {
     if (gz_is_file("$testPath/testinfo.json")) {
         $test['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
         if (isset($test['testinfo'])) {
-            if( isset($test['testinfo']['completed']))
+            if( array_key_exists('completed', $test['testinfo']))
                 $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
-            if (isset($test['testinfo']['owner']) && strlen($owner) && $owner == $test['testinfo']['owner'])
+            if (array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'])
                 $isOwner = true;
-            elseif (isset($test['testinfo']['uid']) && strlen($uid) && $uid == $test['testinfo']['uid'])
+            elseif (array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'])
                 $isOwner = true;
 
-            $url = htmlspecialchars($test['testinfo']['url']);
-            $dom = htmlspecialchars($test['testinfo']['domElement']);
-            $login = htmlspecialchars($test['testinfo']['login']);
-            $blockString = htmlspecialchars($test['testinfo']['block']);
-            $label = htmlspecialchars($test['testinfo']['label']);
+            $url = array_key_exists('url', $test['testinfo']) ? htmlspecialchars($test['testinfo']['url']) : null;
+            $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
+            $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
+            $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
+            $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
         }
     }
 
