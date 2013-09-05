@@ -650,6 +650,21 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Peak number of running browser processes
     buff.Format("%d\t", peak_process_count_);
     result += buff;
+    // Doc Complete CPU time
+    double doc_cpu_time = 0;
+    double full_cpu_time = 0;
+    _test_state.GetElapsedCPUTimes(doc_cpu_time, full_cpu_time);
+    if (doc_cpu_time > 0.0) {
+      buff.Format("%0.3f\t", doc_cpu_time);
+      result += buff;
+    } else
+      result += "\t";
+    // Fully Loaded CPU time
+    if (full_cpu_time > 0.0) {
+      buff.Format("%0.3f\t", full_cpu_time);
+      result += buff;
+    } else
+      result += "\t";
 
     result += "\r\n";
 

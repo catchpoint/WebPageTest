@@ -113,6 +113,7 @@ public:
   CString GetTimedEventsJSON();
   void ProcessStarted(DWORD process_id);
   void ProcessStopped(DWORD process_id);
+  bool GetElapsedCPUTimes(double &doc, double &end);
 
   // times
   LARGE_INTEGER _start;
@@ -193,6 +194,9 @@ private:
   DWORD _video_capture_count;
   LARGE_INTEGER  _last_video_time;
   CAtlList<RECT> _pre_render_paints;
+  FILETIME      _start_cpu_time;
+  FILETIME      _doc_cpu_time;
+  FILETIME      _end_cpu_time;
 
   CRITICAL_SECTION  _data_cs;
 
@@ -201,4 +205,6 @@ private:
   void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
+  void GetCPUTime(FILETIME &cpu_time);
+  double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
 };

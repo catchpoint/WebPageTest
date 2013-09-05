@@ -154,6 +154,9 @@ void TestState::Reset(bool cascade) {
     _last_cpu_idle.QuadPart = 0;
     _last_cpu_kernel.QuadPart = 0;
     _last_cpu_user.QuadPart = 0;
+    _start_cpu_time.dwHighDateTime = _start_cpu_time.dwLowDateTime = 0;
+    _doc_cpu_time.dwHighDateTime = _doc_cpu_time.dwLowDateTime = 0;
+    _end_cpu_time.dwHighDateTime = _end_cpu_time.dwLowDateTime = 0;
     _progress_data.RemoveAll();
     _test_result = 0;
     _title_time.QuadPart = 0;
@@ -197,6 +200,7 @@ void TestState::Start() {
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
+  GetCPUTime(_start_cpu_time);
   _active = true;
   UpdateBrowserWindow();  // the document window may not be available yet
   if (!_started) {
@@ -317,6 +321,7 @@ void TestState::OnLoad() {
     navigated_ = true;
     navigating_ = false;
     QueryPerformanceCounter(&_on_load);
+    GetCPUTime(_doc_cpu_time);
     ActivityDetected();
     _screen_capture.Capture(_document_window,
                             CapturedImage::DOCUMENT_COMPLETE);
@@ -395,6 +400,7 @@ bool TestState::IsDone() {
 void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
+    GetCPUTime(_end_cpu_time);
     _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
@@ -997,4 +1003,49 @@ void TestState::ProcessStopped(DWORD process_id) {
   EnterCriticalSection(&_cs_browser_processes);
   _browser_processes.RemoveKey(process_id);
   LeaveCriticalSection(&_cs_browser_processes);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::GetCPUTime(FILETIME &cpu_time) {
+  FILETIME idle_time, kernel_time, user_time;
+  if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+    ULARGE_INTEGER k, u, i, combined;
+    k.LowPart = kernel_time.dwLowDateTime;
+    k.HighPart = kernel_time.dwHighDateTime;
+    u.LowPart = user_time.dwLowDateTime;
+    u.HighPart = user_time.dwHighDateTime;
+    i.LowPart = idle_time.dwLowDateTime;
+    i.HighPart = idle_time.dwHighDateTime;
+    combined.QuadPart = (k.QuadPart + u.QuadPart) - i.QuadPart;
+    cpu_time.dwHighDateTime = combined.HighPart;
+    cpu_time.dwLowDateTime = combined.LowPart;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+double TestState::GetElapsedMilliseconds(FILETIME &start, FILETIME &end) {
+  double elapsed = 0;
+  ULARGE_INTEGER s, e;
+  s.LowPart = start.dwLowDateTime;
+  s.HighPart = start.dwHighDateTime;
+  e.LowPart = end.dwLowDateTime;
+  e.HighPart = end.dwHighDateTime;
+  if (e.QuadPart > s.QuadPart)
+    elapsed = (double)(e.QuadPart - s.QuadPart) / 10000.0;
+
+  return elapsed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TestState::GetElapsedCPUTimes(double &doc, double &end) {
+  bool ret = false;
+  doc = GetElapsedMilliseconds(_start_cpu_time, _doc_cpu_time);
+  end = GetElapsedMilliseconds(_start_cpu_time, _end_cpu_time);
+  if (doc > 0.0 || end > 0.0)
+    ret = true;
+
+  return ret;
 }
