@@ -40,7 +40,9 @@ const int TEST_RESULT_CONTENT_ERROR = 99999;
 
 class ProgressData {
 public:
-  ProgressData(void):_bpsIn(0),_cpu(0.0),_mem(0){ _time.QuadPart = 0; }
+  ProgressData(void):_bpsIn(0),_cpu(0.0),_mem(0),_process_count(0) {
+    _time.QuadPart = 0; 
+  }
   ProgressData(const ProgressData& src){*this = src;}
   ~ProgressData(){       }
   const ProgressData& operator =(const ProgressData& src) {
@@ -48,13 +50,15 @@ public:
     _bpsIn = src._bpsIn;
     _cpu = src._cpu;
     _mem = src._mem;
+    _process_count = src._process_count;
     return src;
   }
   
   LARGE_INTEGER   _time;
   DWORD           _bpsIn;          // inbound bandwidth
   double          _cpu;            // CPU utilization
-  DWORD           _mem;            // Working set size (in KB)
+  DWORD           _mem;            // allocated memory (in KB)
+  DWORD           _process_count;  // number of browser processes
 };
 
 class StatusMessage {
@@ -101,13 +105,14 @@ public:
   void Init();
   void TitleSet(CString title);
   void UpdateBrowserWindow();
-  void SetDocument(HWND wnd);
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
   CString GetConsoleLogJSON();
   CString GetTimedEventsJSON();
+  void ProcessStarted(DWORD process_id);
+  void ProcessStopped(DWORD process_id);
 
   // times
   LARGE_INTEGER _start;
@@ -152,6 +157,7 @@ public:
   bool no_gdi_;
   bool gdi_only_;
   UINT paint_msg_;
+  UINT process_msg_;
 
   HWND  _frame_window;
   HWND  _document_window;
@@ -173,6 +179,11 @@ private:
   HANDLE  _data_timer;
   CAtlList<CString>        _console_log_messages; // messages to the console
   CAtlList<CString>        _timed_events; // any supported timed events
+  CRITICAL_SECTION         _cs_browser_processes;
+  CAtlMap<DWORD, bool>     _browser_processes;
+  CString process_full_path_;
+  CString process_base_exe_;
+
 
   // tracking of the periodic data capture
   LARGE_INTEGER  _last_data;

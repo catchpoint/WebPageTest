@@ -87,6 +87,9 @@ private:
   int count_other_;
   int count_other_doc_;
 
+  DWORD peak_memory_;
+  DWORD peak_process_count_;
+
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);

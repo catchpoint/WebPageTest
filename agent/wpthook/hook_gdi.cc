@@ -203,11 +203,6 @@ bool CGDIHook::IsDocumentWindow(HWND hWnd) {
     document_windows_.SetAt(hWnd, is_document);
   }
 
-  if (hWnd && hWnd != test_state_._document_window && 
-      !test_state_._exit && test_state_._active && is_document) {
-    test_state_.SetDocument(hWnd);
-  }
-
   return is_document;
 }
 
@@ -252,19 +247,8 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
   if( ReleaseDC_ )
     ret = ReleaseDC_(hWnd, hDC);
 
-  bool is_document = false;
-  if (!document_windows_.Lookup(hWnd, is_document)) {
-    is_document = IsBrowserDocument(hWnd);
-    document_windows_.SetAt(hWnd, is_document);
-  }
-
-  if (hWnd && hWnd != test_state_._document_window && 
-      !test_state_._exit && test_state_._active && is_document) {
-    test_state_.SetDocument(hWnd);
-  }
-
   if (!wpt_capturing_screen && !test_state_._exit && test_state_._active && 
-      hWnd == test_state_._document_window) {
+      IsDocumentWindow(hWnd)) {
     test_state_._screen_updated = true;
     test_state_.CheckStartRender();
   }

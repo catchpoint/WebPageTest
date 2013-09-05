@@ -112,6 +112,8 @@ void Results::Reset(void) {
   count_not_found_doc_ = 0;
   count_other_ = 0;
   count_other_doc_ = 0;
+  peak_memory_ = 0;
+  peak_process_count_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -147,9 +149,10 @@ void Results::Save(void) {
 void Results::SaveProgressData(void) {
   CStringA progress;
   POSITION pos = _test_state._progress_data.GetHeadPosition();
-  while( pos )
-  {
-    if( progress.IsEmpty() )
+  peak_memory_ = 0;
+  peak_process_count_ = 0;
+  while( pos ) {
+    if (progress.IsEmpty())
       progress = "Offset Time (ms),Bandwidth In (kbps),"
                   "CPU Utilization (%),Memory Use (KB)\r\n";
     ProgressData data = _test_state._progress_data.GetNext(pos);
@@ -157,11 +160,14 @@ void Results::SaveProgressData(void) {
     CStringA buff;
     buff.Format("%d,%d,%0.2f,%d\r\n", ms, data._bpsIn, data._cpu, data._mem );
     progress += buff;
+    if (data._mem > peak_memory_)
+      peak_memory_ = data._mem;
+    if (data._process_count > peak_process_count_)
+      peak_process_count_ = data._process_count;
   }
   HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, 
                                 NULL, CREATE_ALWAYS, 0, 0);
-  if( hFile != INVALID_HANDLE_VALUE )
-  {
+  if (hFile != INVALID_HANDLE_VALUE) {
     DWORD dwBytes;
     WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
     CloseHandle(hFile);
@@ -637,6 +643,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     // W3C Navigation timing first paint (MS-specific right now)
     buff.Format("%d\t", _test_state._first_paint);
+    result += buff;
+    // Peak memory allocation across all browser processes
+    buff.Format("%d\t", peak_memory_);
+    result += buff;
+    // Peak number of running browser processes
+    buff.Format("%d\t", peak_process_count_);
     result += buff;
 
     result += "\r\n";
