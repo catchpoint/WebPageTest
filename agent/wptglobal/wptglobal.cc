@@ -10,7 +10,6 @@
 HINSTANCE global_dll_handle = NULL; // DLL handle
 AngleHook * g_angle_hook = NULL;
 Dx9Hook * g_dx9_hook = NULL;
-UINT process_message = 0;
 
 /*-----------------------------------------------------------------------------
   Install the global hook
@@ -84,9 +83,6 @@ void Initialize() {
         g_dx9_hook->Init();
       }
     }
-    process_message = RegisterWindowMessage(_T("WPT Process Change"));
-    PostMessage(HWND_BROADCAST, process_message,
-                (WPARAM)1, (LPARAM)GetCurrentProcessId());
   }
 }
 
@@ -104,7 +100,4 @@ void Unload() {
     delete g_dx9_hook;
     g_dx9_hook = NULL;
   }
-  if (process_message)
-    PostMessage(HWND_BROADCAST, process_message,
-                (WPARAM)0, (LPARAM)GetCurrentProcessId());
 }

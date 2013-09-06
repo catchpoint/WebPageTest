@@ -68,27 +68,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
-  process_msg_ = RegisterWindowMessage(_T("WPT Process Change"));
-
-  // build an initial list of known browser processes
-  InitializeCriticalSection(&_cs_browser_processes);
-  _browser_processes.InitHashTable(257);
-  TCHAR path[10000];
-  if (GetProcessImageFileName(GetCurrentProcess(), path, _countof(path))) {
-    process_full_path_ = path;
-    CString process_base_exe_ = PathFindFileName(path);;
-    WTS_PROCESS_INFO * proc = NULL;
-    DWORD proc_count = 0;
-    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, 
-          &proc_count)) {
-      for (DWORD i = 0; i < proc_count; i++) {
-        TCHAR * file = PathFindFileName(proc[i].pProcessName);
-        if (!process_base_exe_.CompareNoCase(file))
-          ProcessStarted(proc[i].ProcessId);
-      }
-      WTSFreeMemory(proc);
-    }
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -96,7 +75,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
 TestState::~TestState(void) {
   Done(true);
   DeleteCriticalSection(&_data_cs);
-  DeleteCriticalSection(&_cs_browser_processes);
 }
 
 /*-----------------------------------------------------------------------------
@@ -705,35 +683,8 @@ void TestState::CollectSystemStats(LARGE_INTEGER &now) {
     _last_cpu_user.QuadPart = u.QuadPart;
   }
 
-  // get the allocated memory across all instances of the current exe
-  if (msElapsed) {
-    DWORD total_mem = 0;
-    DWORD process_count = 0;
-    EnterCriticalSection(&_cs_browser_processes);
-    if (!_browser_processes.IsEmpty()) {
-      POSITION pos = _browser_processes.GetStartPosition();
-      while (pos) {
-        DWORD process_id = _browser_processes.GetNextKey(pos);
-        HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | 
-                                    PROCESS_VM_READ,
-                                    FALSE, process_id);
-        if (process) {
-          PROCESS_MEMORY_COUNTERS mem;
-          mem.cb = sizeof(mem);
-          if (GetProcessMemoryInfo(process, &mem, sizeof(mem))) {
-            total_mem += mem.PagefileUsage / 1024;
-            process_count++;
-          }
-          CloseHandle(process);
-        }
-      }
-    }
-    LeaveCriticalSection(&_cs_browser_processes);
-
-    data._mem = total_mem;
-    data._process_count = process_count;
+  if (msElapsed)
     _progress_data.AddTail(data);
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -974,35 +925,6 @@ CString TestState::GetTimedEventsJSON() {
   }
   LeaveCriticalSection(&_data_cs);
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestState::ProcessStarted(DWORD process_id) {
-  AtlTrace(_T("[wpthook] - Process %d Started"), process_id);
-  HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, process_id);
-  if (process) {
-    TCHAR path[10000];
-    if (GetProcessImageFileName(process, path, _countof(path))) {
-      AtlTrace(_T("[wpthook] - Process Started: %s"), path);
-      if (!process_full_path_.CompareNoCase(path)) {
-        AtlTrace(_T("[wpthook] - Browser Process Started: %s"), path);
-        EnterCriticalSection(&_cs_browser_processes);
-        _browser_processes.SetAt(process_id, true);
-        LeaveCriticalSection(&_cs_browser_processes);
-      }
-    }
-    CloseHandle(process);
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestState::ProcessStopped(DWORD process_id) {
-  AtlTrace(_T("[wpthook] - Process %d Stopped"), process_id);
-  EnterCriticalSection(&_cs_browser_processes);
-  _browser_processes.RemoveKey(process_id);
-  LeaveCriticalSection(&_cs_browser_processes);
 }
 
 /*-----------------------------------------------------------------------------

@@ -246,11 +246,6 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
             test_state_.PaintEvent(LOWORD(wParam), HIWORD(wParam),
                                    LOWORD(lParam), HIWORD(lParam));
           }
-        } else if (message == test_state_.process_msg_) {
-          if (wParam)
-            test_state_.ProcessStarted((DWORD)lParam);
-          else
-            test_state_.ProcessStopped((DWORD)lParam);
         } else if (message == report_message_) {
           OnReport();
         } else {

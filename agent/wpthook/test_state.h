@@ -111,8 +111,6 @@ public:
   void AddTimedEvent(CString timed_event);
   CString GetConsoleLogJSON();
   CString GetTimedEventsJSON();
-  void ProcessStarted(DWORD process_id);
-  void ProcessStopped(DWORD process_id);
   bool GetElapsedCPUTimes(double &doc, double &end);
 
   // times
@@ -158,7 +156,6 @@ public:
   bool no_gdi_;
   bool gdi_only_;
   UINT paint_msg_;
-  UINT process_msg_;
 
   HWND  _frame_window;
   HWND  _document_window;
@@ -180,8 +177,6 @@ private:
   HANDLE  _data_timer;
   CAtlList<CString>        _console_log_messages; // messages to the console
   CAtlList<CString>        _timed_events; // any supported timed events
-  CRITICAL_SECTION         _cs_browser_processes;
-  CAtlMap<DWORD, bool>     _browser_processes;
   CString process_full_path_;
   CString process_base_exe_;
 
