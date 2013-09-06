@@ -90,6 +90,7 @@ function CheckPHP() {
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
     ShowCheck('APC Installed', extension_loaded('apc'), false);
     ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg($ffmpegVer));
+    ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
     ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
     ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
@@ -317,6 +318,15 @@ function CheckJpegTran() {
 function CheckExifTool() {
     $ret = false;
     $command = "exiftool";
+    $retStr = exec($command, $output, $result);
+    if ($result == 0)
+      $ret = true;
+    return $ret;
+}
+
+function CheckCompare() {
+    $ret = false;
+    $command = "compare -version";
     $retStr = exec($command, $output, $result);
     if ($result == 0)
       $ret = true;

@@ -992,12 +992,21 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   echo '<div class="waterfall-container" style="text-align: left;margin-top:10em;">';
   echo 'Waterfall Opacity (adjust sliders to adjust the transparency of the given waterfall):<br>';
   echo '<table>';
+  if (count($waterfalls) == 2) {
+    echo "<tr><td>{$waterfalls[0]['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-1\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"0.5\"></td><td>{$waterfalls[1]['label']}</tr></td>";
+  } else {
+    foreach($waterfalls as $index => &$waterfall) {
+      $o = $index ? $opacity : '1.0';
+      echo '<tr>';
+      echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
+      echo '</tr>';
+    }
+  }
+  echo '</table>';
+  echo '</div>';
+
   $row_count = 0;
   foreach($waterfalls as $index => &$waterfall) {
-    $o = $index ? $opacity : '1.0';
-    echo '<tr>';
-    echo "<td>{$waterfall['label']}</td><td><input type=\"range\" class=\"waterfall-transparency\" name=\"waterfall-$index\" min=\"0.0\" max=\"1.0\" step=\"0.01\" value=\"$o\"></td>";
-    echo '</tr>';
     $test_path = null;
     $requests = getRequests($waterfall['id'], $test_path, $waterfall['run'], $waterfall['cached'], $has_secure_requests, $has_locations, false, false);
     if (isset($requests) && is_array($requests)) {
@@ -1006,8 +1015,6 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
         $row_count = $count;
     }
   }
-  echo '</table>';
-  echo '</div>';
   
   $height_style = '';
   if ($row_count) {

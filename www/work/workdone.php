@@ -36,6 +36,8 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_parameter('location', $location);
 }
 
+//logmsg(json_encode($_REQUEST), './work/workdone.log', true);
+
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $har  = arrayLookupWithDefault('har',  $_REQUEST, false);
@@ -253,7 +255,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         // pre-process any background processing we need to do for this run
         if (isset($runNumber) && isset($cacheWarmed)) {
             loadPageRunData($testPath, $runNumber, $cacheWarmed);
-            ProcessAVIVideo($testPath, $runNumber, $cacheWarmed);
+            ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
         }
             
         // see if the test is complete

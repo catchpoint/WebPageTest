@@ -321,6 +321,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
             $pageData['result'] = 0;
             $pageData['cached'] = $cached;
             $pageData['optimization_checked'] = 0;
+            $pageData['start_epoch'] = $rawPageData['startTime'];
             if (array_key_exists('onload', $rawPageData))
                 $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']) * 1000);
             

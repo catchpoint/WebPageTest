@@ -703,7 +703,8 @@ function DisplayGraphs() {
                         'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                         'TTFB' => 'Time to First Byte', 
                         'titleTime' => 'Time to Title', 
-                        'render' => 'Time to Start Render');
+                        'render' => 'Time to Start Render',
+                        'fullyLoadedCPUms' => 'CPU Busy Time');
     $progress_end = 0;
     $has_speed_index_dt = false;
     $testCount = count($tests);

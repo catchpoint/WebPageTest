@@ -7,15 +7,17 @@
 */
 function ProcessAllAVIVideos($testPath) {
   if (is_dir($testPath)) {
+    if(gz_is_file("$testPath/testinfo.json"))
+      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
     $files = scandir($testPath);
     foreach ($files as $file) {
-        if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?_video.avi$/', $file, $matches)) {
-            $run = $matches['run'];
-            $cached = 0;
-            if (array_key_exists('cached', $matches) && strlen($matches['cached']))
-                $cached = 1;
-            ProcessAVIVideo($testPath, $run, $cached);
-        }
+      if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?_video.(?P<ext>avi|mp4)$/', $file, $matches)) {
+        $run = $matches['run'];
+        $cached = 0;
+        if (array_key_exists('cached', $matches) && strlen($matches['cached']))
+            $cached = 1;
+        ProcessAVIVideo($testInfo, $testPath, $run, $cached);
+      }
     }
   }
 }
@@ -27,11 +29,45 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo($testPath, $run, $cached) {
+function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
+    $orange_leader = true;
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
+    $crop = '';
+    if (!is_file($videoFile)) {
+      $crop = '-vf crop=in_w:in_h-80:0:80 ';
+      $orange_leader = false;
+      $videoFile = "$testPath/$run{$cachedText}_video.mp4";
+    }
+    // trim the video to align with the capture if we have timestamps for both
+    $trim = '';
+    $renderStart = null;
+    if (array_key_exists('appurify_tests', $test) &&
+        is_array($test['appurify_tests']) &&
+        array_key_exists($run, $test['appurify_tests']) &&
+        is_array($test['appurify_tests'][$run])) {
+      require_once('page_data.inc');
+      $page_data = loadPageRunData($testPath, $run, $cached);
+      if (isset($page_data) &&
+          is_array($page_data) &&
+          array_key_exists('render', $page_data))
+        $renderStart = $page_data['render'];
+      if (isset($page_data) &&
+          is_array($page_data) &&
+          array_key_exists('start_epoch', $page_data) &&
+          array_key_exists('video_start', $test['appurify_tests'][$run])) {
+        $test_start = $page_data['start_epoch'];
+        $test_end = $test_start + ($page_data['fullyLoaded'] / 1000.0);
+        $video_start = $test['appurify_tests'][$run]['video_start'];
+        if ($test_start > $video_start) {
+          $startOffset = $test_start - $video_start;
+          $duration = $test_end - $test_start;
+          $trim = '-ss ' . msToHMS($startOffset) . ' -t ' . msToHMS($duration) . ' ';
+        }
+      }
+    }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
         if (!is_dir($videoDir)) {
@@ -39,9 +75,9 @@ function ProcessAVIVideo($testPath, $run, $cached) {
             $videoFile = realpath($videoFile);
             $videoDir = realpath($videoDir);
             if (strlen($videoFile) && strlen($videoDir)) {
-                if (Video2PNG($videoFile, $videoDir)) {
+                if (Video2PNG($videoFile, $videoDir, $crop, $trim)) {
                     EliminateDuplicateAVIFiles($videoDir);
-                    $lastImage = ProcessVideoFrames($videoDir);
+                    $lastImage = ProcessVideoFrames($videoDir, $orange_leader, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
                     if (isset($lastImage) &&
                         !is_file($screenShot) &&
@@ -59,10 +95,10 @@ function ProcessAVIVideo($testPath, $run, $cached) {
 * @param mixed $infile
 * @param mixed $outdir
 */
-function Video2PNG($infile, $outdir) {
+function Video2PNG($infile, $outdir, $crop, $trim) {
     $ret = false;
     $result;
-    $command = "ffmpeg -i \"$infile\" -r 10 \"$outdir/image-%4d.png\"";
+    $command = "ffmpeg -i \"$infile\" -r 10 $crop$trim\"$outdir/image-%4d.png\"";
     $retStr = exec($command, $output, $result);
     $files = glob("$outdir/image*.png");
     if (count($files))
@@ -75,37 +111,52 @@ function Video2PNG($infile, $outdir) {
 * 
 * @param mixed $videoDir
 */
-function ProcessVideoFrames($videoDir) {
+function ProcessVideoFrames($videoDir, $orange_leader, $renderStart) {
   $startFrame = 0;
   $lastFrame = 0;
+  $renderFrame = 0;
+  $renderBaseline = 0;
+  if (isset($renderStart))
+    $renderBaseline = ceil($renderStart / 100);
   $lastImage = null;
-  $orangeDetected = false;
-  $whiteDetected = false;
+  $orangeDetected = $orange_leader ? false : true;
   $files = glob("$videoDir/image*.png");
   foreach ($files as $file) {
     if (preg_match('/image-(?P<frame>[0-9]+).png$/', $file, $matches)) {
       $currentFrame = $matches['frame'];
-      $im = imagecreatefrompng($file);
-      if ($im !== false) {
-        if ($orangeDetected) {
-          if (!$whiteDetected)
-            $whiteDetected = !IsOrangeAVIFrame($im);
-          if ($whiteDetected) {
-            if (!$startFrame)
-              $startFrame = $currentFrame;
-            $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $startFrame) . '.jpg';
-            imageinterlace($im, 1);
-            imagejpeg($im, $lastImage, 75);
-          }
-        } else {
-          $orangeDetected = IsOrangeAVIFrame($im);
+      if (!$startFrame) {
+        if (IsBlankAVIFrame($file)) {
+          $startFrame = $currentFrame;
+          $lastImage = "$videoDir/frame_0000.jpg";
+          CopyAVIFrame($file, $lastImage);
         }
-        imagedestroy($im);
+      } else {
+        if ($renderBaseline) {
+          if (!$renderFrame)
+            $renderFrame = $currentFrame;
+          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $renderFrame + $renderBaseline) . '.jpg';
+        } else {
+          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $startFrame) . '.jpg';
+        }
+        CopyAVIFrame($file, $lastImage);
       }
       unlink($file);
     }
   }
   return $lastImage;
+}
+
+function CopyAVIFrame($src, $dest) {
+  shell_exec("convert \"$src\" -interlace Plane -quality 75 \"$dest\"");
+}
+
+function IsBlankAVIFrame($file) {
+  $ret = false;
+  $command = "convert \"images/video_white.png\" ( \"$file\" -crop +0+100 -resize 200x200! ) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $differentPixels = shell_exec($command);
+  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+    $ret = true;
+  return $ret;
 }
 
 /**
@@ -115,22 +166,12 @@ function ProcessVideoFrames($videoDir) {
 * 
 * @param mixed $im
 */
-function IsOrangeAVIFrame($im) {
+function IsOrangeAVIFrame($file) {
   $ret = false;
-  $width = imagesx($im);
-  $height = imagesy($im);
-  if ($width && $height) {
-    $rgb = ImageColorAt($im, intval($width / 2), intval($height / 2));
-    $r = ($rgb >> 16) & 0xFF;
-    $g = ($rgb >> 8) & 0xFF;
-    $b = $rgb & 0xFF;
-    if ($r > 200 &&
-        $r < 250 &&
-        $g > 50 &&
-        $g < 115 &&
-        $b < 25)
-      $ret = true;
-  }
+  $command = "convert  \"images/video_orange.png\" ( \"$file\" -crop +0+100 -resize 200x200! ) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $differentPixels = shell_exec($command);
+  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+    $ret = true;
   return $ret;
 }
 
@@ -141,13 +182,41 @@ function IsOrangeAVIFrame($im) {
 * @param mixed $videoDir
 */
 function EliminateDuplicateAVIFiles($videoDir) {
-    $previousMD5 = null;
-    $files = glob("$videoDir/image*.png");
-    foreach ($files as $file) {
-        $currentMD5 = md5_file($file);
-        if ($currentMD5 !== false && $currentMD5 == $previousMD5)
-            unlink($file);
-        $previousMD5 = $currentMD5;
+  $previousFile = null;
+  $previousMD5 = null;
+  $files = glob("$videoDir/image*.png");
+  foreach ($files as $file) {
+    $duplicate = false;
+    $currentMD5 = md5_file($file);
+    if ($currentMD5 !== false && $currentMD5 == $previousMD5)    
+      $duplicate = true;
+    elseif (isset($previousFile)) {
+      $command = "convert  \"$previousFile\" \"$file\" -crop +0+100 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+      $differentPixels = shell_exec($command);
+      if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+        $duplicate = true;
     }
+    if ($duplicate) {
+      unlink($file);
+    } else {
+      $previousFile = $file;
+      $previousMD5 = $currentMD5;
+    }
+  }
+}
+
+/**
+* Take a ms duration and convert it to HH:MM:SS.xxx fiormat
+* 
+* @param mixed $duration
+*/
+function msToHMS($duration) {
+  $ms = number_format($duration - floor($duration), 3) * 1000;
+  $duration = floor($duration);
+  $H = $duration % 3600;
+  $duration -= $H * 3600;
+  $M = $duration / 60;
+  $S = $duration % 60;
+  $formatted = sprintf("%02d:%02d:%02d.%03d", $H, $M, $S, $ms);
 }
 ?>

@@ -103,9 +103,9 @@ class Appurify{
             }
           }
         } else
-          $error = "Error configuring URL and browser through Appurify API";
+          $error = "Error configuring URL and browser through Appurify API for test ID $test_id";
       } else
-        $error = "Error configuring test through Appurify API";
+        $error = "Error configuring test through Appurify API for App ID $app_id";
     } else
       $error = "Error configuring application through Appurify API";
     return $ret;
@@ -124,8 +124,16 @@ class Appurify{
             is_array($status) &&
             array_key_exists('status', $status)) {
           $run['status'] = $status['status'];
-          if ($status['status'] == 'complete')
+          if ($status['status'] == 'complete') {
+            if (array_key_exists('results', $status) &&
+                is_array($status['results']) &&
+                array_key_exists('output', $status['results']) &&
+                preg_match('/Video start time: (?P<video>[0-9\.]+)/i', $status['results']['output'], $matches) &&
+                is_array($matches) &&
+                array_key_exists('video', $matches))
+              $run['video_start'] = floatval($matches['video']);
             $this->GetFile('https://live.appurify.com/resource/tests/result/', $file, array('run_id' => $run['id']));
+          }
           $ret = true;
         }
       }
@@ -133,7 +141,7 @@ class Appurify{
         $ret = true;
         if ($this->ProcessResult($test, $run, $index, $testPath))
           $run['completed'] = true;
-        unlink($file);
+        //unlink($file);
       }
     }
     return $ret;
@@ -155,6 +163,7 @@ class Appurify{
       $ok = true;
       $this->ProcessScreenShot($test, $tempdir, $testPath, $index);
       $this->ProcessVideo($test, $tempdir, $testPath, $index);
+      $this->ProcessPcap($test, $tempdir, $testPath, $index);
       $devtools = array();
       $files = glob("$tempdir/appurify_results/WSData*");
       if (isset($files) && is_array($files) && count($files)) {
@@ -203,10 +212,18 @@ class Appurify{
   }
   
   protected function ProcessVideo(&$test, $tempdir, $testPath, $index) {
-    if (is_file("$tempdir/appurify_results/video.mp4"))
+    if (is_file("$tempdir/appurify_results/video.mp4")) {
       rename("$tempdir/appurify_results/video.mp4", "$testPath/{$index}_video.mp4");
+      require_once('./video/avi2frames.inc.php');
+      ProcessAVIVideo($test, $testPath, $index, 0);
+    }
   }
 
+  protected function ProcessPcap(&$test, $tempdir, $testPath, $index) {
+    if (is_file("$tempdir/appurify_results/network.pcap"))
+      rename("$tempdir/appurify_results/network.pcap", "$testPath/{$index}.cap");
+  }
+  
   protected function ProcessDevTools($file, $outfile) {
     $started = false;
     $events = json_decode(file_get_contents($file), true);

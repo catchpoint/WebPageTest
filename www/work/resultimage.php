@@ -68,7 +68,9 @@ if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADD
                         if( strpos($fileName, '_Cached') )
                             $cached = 1;
                         require_once('./video/avi2frames.inc.php');
-                        ProcessAVIVideo($testPath, $runNum, $cached);
+                        if(gz_is_file("$testPath/testinfo.json"))
+                          $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                        ProcessAVIVideo($testInfo, $testPath, $runNum, $cached);
                     }
                 }
             }
