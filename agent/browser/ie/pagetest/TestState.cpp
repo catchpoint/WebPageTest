@@ -556,6 +556,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 
       startTime = CTime::GetCurrentTime();
 			url = szUrl;
+			GetCPUTime(startCPU);
 			
 			LeaveCriticalSection(&cs);
 
@@ -716,6 +717,8 @@ void CTestState::CheckComplete()
       }
       else
       {
+        GetCPUTime(endCPU);
+        
 		    // keep track of the end time in case there wasn't a document
 		    if( !end || abm )
 			    end = lastRequest;

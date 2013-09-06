@@ -231,6 +231,9 @@ public:
 	DWORD						ieMajorVer;		// version of IE that is running
   CString         pageTitle;    // title of the page
   DevTools        dev_tools_;
+  FILETIME        startCPU;
+  FILETIME        docCPU;
+  FILETIME        endCPU;
 
 	// URLBlast support
 	CString	testUrl;
@@ -314,6 +317,8 @@ public:
   virtual void AddAddress(CString host, DWORD address) = 0;
   virtual int GetAddressCount(CString host) = 0;
   virtual void UpdateClientPort(SOCKET s, DWORD id) = 0;
+  void GetCPUTime(FILETIME &cpu_time);
+  double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
 
 	typedef enum{
 		equal = 0,

@@ -192,6 +192,10 @@ void CPagetestBase::Reset(void)
 		layoutChanged.RemoveAll();
 		active = false;
 		url.Empty();
+    startCPU.dwHighDateTime = startCPU.dwLowDateTime = 0;
+    docCPU.dwHighDateTime = docCPU.dwLowDateTime = 0;
+    endCPU.dwHighDateTime = endCPU.dwLowDateTime = 0;
+		
 		
 		gzipScore = -1;
 		doctypeScore = -1;
@@ -992,3 +996,37 @@ void CPagetestBase::ChromeFrame(CComPtr<IChromeFrame> chromeFrame)
 {
   m_spChromeFrame = chromeFrame;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void CPagetestBase::GetCPUTime(FILETIME &cpu_time) {
+  FILETIME idle_time, kernel_time, user_time;
+  if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+    ULARGE_INTEGER k, u, i, combined;
+    k.LowPart = kernel_time.dwLowDateTime;
+    k.HighPart = kernel_time.dwHighDateTime;
+    u.LowPart = user_time.dwLowDateTime;
+    u.HighPart = user_time.dwHighDateTime;
+    i.LowPart = idle_time.dwLowDateTime;
+    i.HighPart = idle_time.dwHighDateTime;
+    combined.QuadPart = (k.QuadPart + u.QuadPart) - i.QuadPart;
+    cpu_time.dwHighDateTime = combined.HighPart;
+    cpu_time.dwLowDateTime = combined.LowPart;
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+double CPagetestBase::GetElapsedMilliseconds(FILETIME &start, FILETIME &end) {
+  double elapsed = 0;
+  ULARGE_INTEGER s, e;
+  s.LowPart = start.dwLowDateTime;
+  s.HighPart = start.dwHighDateTime;
+  e.LowPart = end.dwLowDateTime;
+  e.HighPart = end.dwHighDateTime;
+  if (e.QuadPart > s.QuadPart)
+    elapsed = (double)(e.QuadPart - s.QuadPart) / 10000.0;
+
+  return elapsed;
+}
+
