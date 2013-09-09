@@ -26,12 +26,17 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var logger = require('logger');
 var process_utils = require('process_utils');
 var util = require('util');
 
 /** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
 
+var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
+    '$SECONDARY_STORAGE',
+    '/data/local/tmp'
+];
 
 /**
  * Creates an adb runner for a given device serial.
@@ -214,6 +219,39 @@ Adb.prototype.exists = function(path) {
   return this.shell(['ls', path, '>', '/dev/null', '2>&1', ';', 'echo', '$?'])
       .then(function(stdout) {
     return stdout.trim() === '0';
+  }.bind(this));
+};
+
+/**
+ * Gets the device's writable storage path.
+ *
+ * @param {Array=} pathsToTry string paths to try, e.g. ['$TEMP', '/sdcard'].
+ *   Defaults to STORAGE_PATHS_.
+ * @return {webdriver.promise.Promise} resolve(String path).
+ */
+Adb.prototype.getStoragePath = function(pathsToTry) {
+  'use strict';
+  if (undefined === pathsToTry) {
+    pathsToTry = STORAGE_PATHS_;
+  }
+  return this.app_.schedule('getStoragePath', function() {
+    var path = (pathsToTry.length >= 0 ? pathsToTry[0] : undefined);
+    if (undefined === path) {
+      throw new Error('Unable to find storage path');
+    }
+    return this.shell(['[[ -w "' + path + '" ]] && (' +
+        'touch "' + path + '/adb_test" && rm "' + path + '/adb_test"' +
+        ') &>/dev/null && echo "' + path + '"']).then(
+        function(stdout) {
+      var resolvedPath = stdout.trim(); // remove newline.
+      if (!resolvedPath) {
+        return this.getStoragePath(pathsToTry.slice(1));
+      }
+      logger.info('Found storage path %s --> %s', path, resolvedPath);
+      // Return the resolved path (e.g. '/sdcard' not '$EXTERNAL_STORAGE'),
+      // so the caller can `adb push/pull` files to the absolute path.
+      return resolvedPath;
+    }.bind(this));
   }.bind(this));
 };
 

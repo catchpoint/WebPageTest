@@ -52,7 +52,7 @@ function PacketCaptureAndroid(app, args) {
   this.localTcpdumpBinary_ = args.tcpdumpBinary;
   this.localPcapFile_ = undefined;
   this.deviceTcpdumpCommand_ = undefined;
-  this.devicePcapFile_ = '/sdcard/webpagetest.pcap';
+  this.devicePcapFile_ = undefined;
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.tcpdumpAdbProcess_ = undefined;
 }
@@ -122,6 +122,9 @@ PacketCaptureAndroid.prototype.schedulePushTcpdumpIfNeeded_ = function() {
 PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
   'use strict';
   this.localPcapFile_ = localPcapFile;
+  this.adb_.getStoragePath().then(function(path) {
+    this.devicePcapFile_ = path + '/webpagetest.pcap';
+  }.bind(this));
   this.schedulePrepare_();
   this.scheduleStop();  // Cleanup possible leftovers.
   this.schedulePushTcpdumpIfNeeded_();
@@ -156,6 +159,7 @@ PacketCaptureAndroid.prototype.scheduleStop = function() {
       // Read the pcap file only after tcpdump exits: avoid incomplete data.
       process_utils.scheduleWait(proc, 'tcpdump', EXIT_TIMEOUT);
       this.adb_.adb(['pull', this.devicePcapFile_, this.localPcapFile_]);
+      this.adb_.shell(['rm', this.devicePcapFile_]);
     } else {
       // Hard-kill any possible leftover tcpdumps.
       this.adb_.scheduleKill('tcpdump', 'KILL');
