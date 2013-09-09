@@ -197,13 +197,12 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 33);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 34);
+    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
           ['uninstall', /com\.[\w\.]+/],
           ['install', '-r', chromeApk]);
-    } else {
-      assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     }
     if (args.pac) {
       assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);

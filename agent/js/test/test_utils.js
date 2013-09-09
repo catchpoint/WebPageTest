@@ -290,9 +290,17 @@ exports.stubOutProcessSpawn = function(sandbox) {
 
   stub.callNum = 0;
   stub.assertCall = function() {
+    var argv;
     var expected = Array.prototype.slice.call(arguments);
     if (0 === expected.length) {  // Called with no args: assert no more calls.
-      should.equal(this.callNum, this.callCount);
+      if (this.callNum < this.callCount) {
+        argv = this.getCall(this.callNum).args;
+        assert.fail(undefined, expected, this.printf(
+            'Unexpected actual call #%1 to %n(): %2',
+            this.callNum, [argv[0]].concat(argv[1])));
+      } else {
+        should.equal(this.callNum, this.callCount);
+      }
       return;
     }
     if (1 === expected.length && !(expected[0] instanceof Array)) {
@@ -300,10 +308,10 @@ exports.stubOutProcessSpawn = function(sandbox) {
     }
     if (this.callNum >= this.callCount) {
       assert.fail(undefined, expected, this.printf(
-          'Too few actual calls to %n() for expected call #%1: %2',
+          'Missing expected call #%1 to %n(): %2',
           this.callCount + 1, JSON.stringify(expected)));
     }
-    var argv = this.getCall(this.callNum).args;
+    argv = this.getCall(this.callNum).args;
     this.callNum += 1;
     exports.assertMatch(expected, [argv[0]].concat(argv[1]));
   };

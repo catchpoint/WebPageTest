@@ -617,34 +617,33 @@ WebDriverServer.prototype.clearPage_ = function() {
     // Paint the page white
     // TODO Verify that this blanking is required and, if not, remove it.
     this.setPageBackground_(frameId);
-    if (!this.captureVideo_) {
-      return;
+    if (this.captureVideo_) {
+      // Hold white(500ms) for our video / 'test started' screenshot
+      this.app_.scheduleTimeout('Hold white background', 500);
+      this.getCapabilities_().then(function(caps) {
+        if (!caps.videoRecording) {
+          return;
+        }
+        var videoFile = exports.process.pid + '_video.avi';
+        this.browser_.scheduleStartVideoRecording(videoFile,
+            this.onVideoRecordingExit_.bind(this));
+        this.app_.schedule('Started recording', function() {
+          logger.debug('Video record start succeeded');
+          this.videoFile_ = videoFile;
+        }.bind(this));
+        // Hold orange(500ms)->white: anchor video to DevTools.
+        this.setPageBackground_(frameId, '#DE640D');  // Ghastly orange.
+        this.app_.scheduleTimeout('Hold orange background', 500);
+        // Begin recording DevTools before onTestStarted_ fires,
+        // to make sure we get the paint event from the below switch to white.
+        // This allows us to match the DevTools event timestamp to the
+        // video frame where the background changed from orange to white.
+        this.app_.schedule('Start recording', function() {
+          this.isRecordingDevTools_ = true;
+        }.bind(this));
+        this.setPageBackground_(frameId);  // White
+      }.bind(this));
     }
-    // Hold white(500ms) for our video / 'test started' screenshot
-    this.app_.scheduleTimeout('Hold white background', 500);
-    this.getCapabilities_().then(function(caps) {
-      if (!caps.videoRecording) {
-        return;
-      }
-      var videoFile = exports.process.pid + '_video.avi';
-      this.browser_.scheduleStartVideoRecording(videoFile,
-          this.onVideoRecordingExit_.bind(this));
-      this.app_.schedule('Started recording', function() {
-        logger.debug('Video record start succeeded');
-        this.videoFile_ = videoFile;
-      }.bind(this));
-      // Hold orange(500ms)->white: anchor video to DevTools.
-      this.setPageBackground_(frameId, '#DE640D');  // Ghastly orange.
-      this.app_.scheduleTimeout('Hold orange background', 500);
-      // Begin recording DevTools before onTestStarted_ fires,
-      // to make sure we get the paint event from the below switch to white.
-      // This allows us to match the DevTools event timestamp to the
-      // video frame where the background changed from orange to white.
-      this.app_.schedule('Start recording', function() {
-        this.isRecordingDevTools_ = true;
-      }.bind(this));
-      this.setPageBackground_(frameId);  // White
-    }.bind(this));
     if (this.capturePackets_) {
       var pcapFile = exports.process.pid + '_tcpdump.pcap';
       this.browser_.scheduleStartPacketCapture(pcapFile);
