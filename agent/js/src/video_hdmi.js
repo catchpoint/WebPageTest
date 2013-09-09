@@ -77,11 +77,15 @@ VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
     if (!isSupported) {
       throw new Error('!isSupported');
     }
-    process_utils.scheduleGetAll(this.app_, 'Find dangling captures',
-        new RegExp('^' + this.captureCommand_ + '\\s+-f\\s+\\S+\\s+' +
-            (deviceSerial ? ('-s\\s+' + deviceSerial + '\\s') : ''))).then(
-        function(procs) {
-      process_utils.scheduleKillAll(this.app_, 'Kill dangling captures', procs);
+    process_utils.scheduleGetAll(this.app_).then(function(procs) {
+      procs = procs.filter(function(proc) {
+        return (proc.command === this.captureCommand_ &&
+            deviceSerial === (proc.args.indexOf('-s') < 0 ? undefined :
+                proc.args[proc.args.indexOf('-s') + 1]));
+      }.bind(this));
+      if (procs.length > 0) {
+        process_utils.scheduleKillAll(this.app_, 'Kill dangling', procs);
+      }
     }.bind(this));
   }.bind(this));
 };

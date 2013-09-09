@@ -824,7 +824,8 @@ WebDriverServer.prototype.tearDown_ = function() {
 WebDriverServer.prototype.done_ = function(e) {
   'use strict';
   if (this.isDone_) {
-    // We already sent our result
+    // This only happens if our run is aborted or throws an uncaught exception,
+    // or if agent_main tries to abort after we've already finished our run.
     return;
   }
   this.isDone_ = true;
@@ -866,8 +867,8 @@ WebDriverServer.prototype.done_ = function(e) {
         videoFile: videoFile,
         pcapFile: pcapFile
       });
-    } catch (e2) {
-      logger.warn('Unable to send %s message: %s', cmd, e2.message);
+    } catch (eSend) {
+      logger.warn('Unable to send %s message: %s', cmd, eSend.message);
     }
   }.bind(this));
   if (e || this.exitWhenDone_) {

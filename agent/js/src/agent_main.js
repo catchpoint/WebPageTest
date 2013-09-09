@@ -147,9 +147,11 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.videoFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.IMAGE,
-            'video.avi', 'video/avi', buffer));
+        if (undefined !== buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.IMAGE,
+              'video.avi', 'video/avi', buffer));
+        }
       });
       process_utils.scheduleFunctionNoFault(this.app_, 'Delete video file',
           fs.unlink, ipcMsg.videoFile);
@@ -157,9 +159,11 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.pcapFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.PCAP,
-            'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
+        if (undefined !== buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.PCAP,
+              'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
+        }
       });
       process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
           fs.unlink, ipcMsg.pcapFile);
@@ -370,8 +374,7 @@ Agent.prototype.scheduleCleanup_ = function() {
     //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
     // Ideally we could run agent_main as our normal user and do this "sudo -u"
     // when we fork wd_server, but cross-user IPC apparently doesn't work.
-    process_utils.scheduleGetAll(this.app_, 'Get dangling pids').then(
-        function(processes) {
+    process_utils.scheduleGetAll(this.app_).then(function(processes) {
       processes = processes.filter(function(v) {
         return v.pid !== process.pid;
       });

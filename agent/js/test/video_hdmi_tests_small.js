@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var child_process = require('child_process');
 var fs = require('fs');
 var process_utils = require('process_utils');
 var should = require('should');
@@ -70,12 +69,35 @@ describe('video_hdmi small', function() {
     var pid = 7;
 
     var fakeCaptureProc;
+    var killCount = 0;
     var processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
-    processSpawnStub.callback = function(proc, command) {
+    processSpawnStub.callback = function(proc, command, args) {
       if (videoCommand === command) {
         proc.pid = pid;
         fakeCaptureProc = proc;
         return true; // keep alive
+      }
+      var stdout;
+      if ('ps' === command) {
+        stdout = [
+          '1 ' + pid + ' ' + videoCommand + ' -f x -s ' + serial + ' y',
+          '1 ' + (pid + 100) + ' ignoreMe',
+          pid + ' ' + (pid + 10) + ' raw_capture'
+        ].join('\n');
+      } else if ('kill' === command) {
+        if (pid === parseInt(args[args.length - 1], 10) && fakeCaptureProc) {
+          fakeCaptureProc.emit('exit', undefined, 'SIGAGA');
+          fakeCaptureProc = undefined;
+        }
+        killCount += 1;
+        stdout = '';
+      } else {
+        should.fail('Unexpected command: ' + command);
+      }
+      if (undefined !== stdout) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', stdout);
+        }, 1);
       }
     };
     // Check for existence of the video record script
@@ -83,40 +105,6 @@ describe('video_hdmi small', function() {
       global.setTimeout(function() {
         cb(videoCommand === path);
       }, 1);
-    });
-
-    var killCount = 0;
-    sandbox.stub(child_process, 'exec', function(command, callback) {
-      if (/^ps\s/.test(command)) {
-        var want_all = (/^ps(\s+-u\s+\S+)?(\s+-o\s+\S+)*$/.test(command));
-        var want_pid = (want_all ||
-            (new RegExp('^ps\\s+-p\\s' + pid + '\\s')).test(command));
-        var want_ppid = (want_all || (new RegExp(
-            '^ps\\s[^|]*\\|\\s+grep\\s+"\\^\\s+\\*' + pid + '\\s')).test(
-            command));
-        var lines = [];
-        if (want_pid) {
-          lines.push('1 ' + pid + ' ' + videoCommand + ' -f foo -s ' + serial +
-              ' x');
-        }
-        if (want_all) {
-          lines.push('1 ' + (pid + 100) + ' ignoreMe');
-        }
-        if (want_ppid) {
-          lines.push(pid + ' ' + (pid + 10) + ' raw_capture');
-        }
-        callback(undefined, lines.join('\n'), '');
-      } else if (/^kill\s/.test(command)) {
-        if ((new RegExp('^kill\\s+(-\\d+\\s+)?' + pid + '$')).test(command) &&
-            fakeCaptureProc) {
-          fakeCaptureProc.emit('exit', undefined, 'SIGAGA');
-          fakeCaptureProc = undefined;
-        }
-        killCount += 1;
-        callback(undefined, '', '');
-      } else {
-        should.fail('Unexpected command: ' + command);
-      }
     });
 
     should.equal('[]', app.getSchedule());
@@ -127,11 +115,14 @@ describe('video_hdmi small', function() {
     var video = new video_hdmi.VideoHdmi(app, videoCommand);
     should.equal('[]', app.getSchedule());
     video.scheduleStartVideoRecording(videoFile, serial, deviceType, videoCard);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 15);
     should.equal('[]', app.getSchedule());
     should.equal(1, killCount);
-    processSpawnStub.assertCall(videoCommand, '-f', videoFile, '-s', serial,
-         '-t', deviceType, '-d', videoCard, '-w');
+    processSpawnStub.assertCalls(
+        {0: 'ps', 1: '-u', 2: /^\d+$/},
+        ['kill', '-9', ('' + pid)],
+        [videoCommand, '-f', videoFile, '-s', serial, '-t', deviceType, '-d',
+            videoCard, '-w']);
     should.ok(fsExistsStub.calledOnce);
 
     // Watch for IDLE -- make sure the wait for recording exit has finished.
@@ -139,8 +130,12 @@ describe('video_hdmi small', function() {
     app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
     should.equal('[]', app.getSchedule());
     video.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
     should.equal('[]', app.getSchedule());
+    processSpawnStub.assertCalls(
+        {0: 'ps'},
+        ['kill', '-9', ('' + pid)],
+        ['kill', '-9', ('' + (pid + 10))]);
     should.equal(3, killCount);
     should.equal(undefined, fakeCaptureProc);
     processSpawnStub.assertCall();
