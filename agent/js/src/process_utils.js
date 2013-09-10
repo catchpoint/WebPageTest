@@ -43,7 +43,7 @@ var webdriver = require('webdriver');
 function ProcessInfo(psLine) {
   'use strict';
   if (!/^\s*\d+\s+\d+\s+\S.*$/.test(psLine)) {
-    throw new Error('Expected "PPID PID CMD", not ' + psLine);
+    throw new Error('Expected "PPID PID CMD", not "' + psLine + '"');
   }
   var splitLine = psLine.trim().split(/\s+/);
   this.ppid = parseInt(splitLine.shift(), 10);
@@ -53,17 +53,6 @@ function ProcessInfo(psLine) {
 }
 /** Allow test access. */
 exports.ProcessInfo = ProcessInfo;
-
-function parseProcessInfo(psLine) {
-  'use strict';
-  return new exports.ProcessInfo(psLine);
-}
-
-function parseProcessInfos(psOut) {
-  'use strict';
-  psOut = psOut.trim();
-  return (psOut ? psOut.split('\n').map(parseProcessInfo) : []);
-}
 
 /**
  * @param {Process} process the process to signal.
@@ -95,7 +84,6 @@ exports.signalKill = function(process, processName) {
  */
 exports.scheduleKill = function(app, description, processInfo) {
   'use strict';
-  app = app || webdriver.promise.Application.getInstance();
   app.schedule(description, function() {
     logger.debug('Killing %s: %s', processInfo.pid, formatForMessage(
         processInfo.command, processInfo.args));
@@ -107,13 +95,12 @@ exports.scheduleKill = function(app, description, processInfo) {
 /**
  * Kills the given processes.
  *
- * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {webdriver.promise.Application} app the scheduler.
  * @param {string} description debug title.
  * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
  */
 exports.scheduleKillAll = function(app, description, processInfos) {
   'use strict';
-  app = app || webdriver.promise.Application.getInstance();
   app.schedule(description || 'killAll', function() {
     if (processInfos.length > 0) {
       exports.scheduleKill(app, 'kill', processInfos[0]);
@@ -125,20 +112,24 @@ exports.scheduleKillAll = function(app, description, processInfos) {
 /**
  * Gets info for all processes owned by this user.
  *
- * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {webdriver.promise.Application} app the scheduler.
  * @return {webdriver.promise.Promise} resolve({Array} processInfos).
  */
 exports.scheduleGetAll = function(app) {
   'use strict';
   var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
-  return exports.scheduleExec(app, cmd.shift(), cmd).then(
-      parseProcessInfos);
+  return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
+    psOut = psOut.trim();
+    return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
+        return new exports.ProcessInfo(psLine);
+      }));
+  });
 };
 
 /**
  * Gets a process and all child processes (by PID).
  *
- * @param {webdriver.promise.Application=} app the app under which to schedule.
+ * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {string=} description debug title.
  * @param {number} rootPid process id.
  * @return {webdriver.promise.Promise} resolve({Array} processInfos).
@@ -169,7 +160,7 @@ exports.scheduleGetTree = function(app, description, rootPid) {
 /**
  * Kills a process and all child processes (by PID).
  *
- * @param {webdriver.promise.Application=} app the app under which to schedule.
+ * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {string=} description debug title.
  * @param {Process} process the process to getTree then killAll.
  */
@@ -247,7 +238,6 @@ function formatForMessage(command, args) {
  */
 exports.scheduleExec = function(app, command, args, options, timeout) {
   'use strict';
-  app = app || webdriver.promise.Application.getInstance();
   timeout = timeout || 10000;
   var cmd = formatForMessage(command, args);
   return app.schedule(cmd, function() {
