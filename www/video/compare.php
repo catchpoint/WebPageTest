@@ -145,6 +145,7 @@ else
                     <?php
                         echo "color: #$color;\n"
                     ?>
+                    word-wrap: break-word;
                 }
                 .thumb{ border: none; }
                 .thumbChanged{border: 3px solid #FEB301;}
