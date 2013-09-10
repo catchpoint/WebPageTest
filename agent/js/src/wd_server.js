@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var devtools = require('devtools');
+var fs = require('fs');
 var logger = require('logger');
 var process_utils = require('process_utils');
 var vm = require('vm');
@@ -836,6 +837,7 @@ WebDriverServer.prototype.done_ = function(e) {
   }
   var cmd = (e ? 'error' : 'done');
   var videoFile = this.videoFile_;
+  var pcapFile = this.pcapFile_;
   // We must schedule/run a driver quit before we emit 'done', to make sure
   // we take the final screenshot and send it in the 'done' IPC message.
   this.takeScreenshot_('screen', (e ? 'run error' : 'end of run')).then(
@@ -850,11 +852,23 @@ WebDriverServer.prototype.done_ = function(e) {
   }.bind(this));
   if (videoFile) {
     this.browser_.scheduleStopVideoRecording();
+    process_utils.scheduleFunction(this.app_, 'videoFile exists?',
+        fs.exists, this.videoFile_).then(function(exists) {
+      if (!exists) {
+        logger.error('Video recording failed to create output file');
+        this.videoFile_ = undefined;
+      }
+    }.bind(this));
   }
-  var pcapFile = this.pcapFile_;
   if (pcapFile) {
-    this.pcapFile_ = undefined;
     this.browser_.scheduleStopPacketCapture();
+    process_utils.scheduleFunction(this.app_, 'pcapFile exists?',
+        fs.exists, this.pcapFile_).then(function(exists) {
+      if (!exists) {
+        logger.error('Packet capture failed to create output file');
+        this.pcapFile_ = undefined;
+      }
+    }.bind(this));
   }
   this.app_.schedule('Send IPC ' + cmd, function() {
     logger.debug('sending IPC ' + cmd);
@@ -864,8 +878,8 @@ WebDriverServer.prototype.done_ = function(e) {
         e: (e ? e.message : undefined),
         devToolsMessages: this.devToolsMessages_,
         screenshots: this.screenshots_,
-        videoFile: videoFile,
-        pcapFile: pcapFile
+        videoFile: this.videoFile_,
+        pcapFile: this.pcapFile_
       });
     } catch (eSend) {
       logger.warn('Unable to send %s message: %s', cmd, eSend.message);

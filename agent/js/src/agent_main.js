@@ -147,11 +147,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.videoFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
-        if (undefined !== buffer) {
-          job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.IMAGE,
-              'video.avi', 'video/avi', buffer));
-        }
+        job.resultFiles.push(new wpt_client.ResultFile(
+            wpt_client.ResultFile.ResultType.IMAGE,
+            'video.avi', 'video/avi', buffer));
       });
       process_utils.scheduleFunctionNoFault(this.app_, 'Delete video file',
           fs.unlink, ipcMsg.videoFile);
@@ -159,11 +157,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.pcapFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
-        if (undefined !== buffer) {
-          job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.PCAP,
-              'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
-        }
+        job.resultFiles.push(new wpt_client.ResultFile(
+            wpt_client.ResultFile.ResultType.PCAP,
+            'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
       });
       process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
           fs.unlink, ipcMsg.pcapFile);
