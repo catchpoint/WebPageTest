@@ -115,12 +115,14 @@ describe('video_hdmi small', function() {
     var video = new video_hdmi.VideoHdmi(app, videoCommand);
     should.equal('[]', app.getSchedule());
     video.scheduleStartVideoRecording(videoFile, serial, deviceType, videoCard);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 15);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
     should.equal('[]', app.getSchedule());
-    should.equal(1, killCount);
+    should.equal(2, killCount);
     processSpawnStub.assertCalls(
-        {0: 'ps', 1: '-u', 2: /^\d+$/},
+        {0: 'ps', 1: '-u', 2: /^\d+$/}, // Find our leftover capture pid
+        {0: 'ps', 1: '-u', 2: /^\d+$/}, // Get the pid tree
         ['kill', '-9', ('' + pid)],
+        ['kill', '-9', ('' + (pid + 10))],
         [videoCommand, '-f', videoFile, '-s', serial, '-t', deviceType, '-d',
             videoCard, '-w']);
     should.ok(fsExistsStub.calledOnce);
@@ -136,7 +138,7 @@ describe('video_hdmi small', function() {
         {0: 'ps'},
         ['kill', '-9', ('' + pid)],
         ['kill', '-9', ('' + (pid + 10))]);
-    should.equal(3, killCount);
+    should.equal(4, killCount);
     should.equal(undefined, fakeCaptureProc);
     processSpawnStub.assertCall();
     should.ok(idleSpy.calledOnce);

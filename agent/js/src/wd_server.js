@@ -825,8 +825,8 @@ WebDriverServer.prototype.tearDown_ = function() {
 WebDriverServer.prototype.done_ = function(e) {
   'use strict';
   if (this.isDone_) {
-    // This only happens if our run is aborted or throws an uncaught exception,
-    // or if agent_main tries to abort after we've already finished our run.
+    // Our "done_" can be called multiple times, e.g. if we're finishing a
+    // successful run but agent_main races to 'abort' us (vs our 'done' IPC).
     return;
   }
   this.isDone_ = true;

@@ -349,7 +349,7 @@ Agent.prototype.scheduleCleanup_ = function() {
   if (this.wdServer_) {
     this.scheduleNoFault_('Remove message listener',
       this.wdServer_.removeAllListeners.bind(this.wdServer_, 'message'));
-    process_utils.scheduleWait(this.wdServer_, 'wd_server',
+    process_utils.scheduleWait(this.app_, this.wdServer_, 'wd_server',
           WD_SERVER_EXIT_TIMEOUT).then(function() {
       // This assumes a clean exit with no zombies
       this.wdServer_ = undefined;

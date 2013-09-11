@@ -83,9 +83,7 @@ VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
             deviceSerial === (proc.args.indexOf('-s') < 0 ? undefined :
                 proc.args[proc.args.indexOf('-s') + 1]));
       }.bind(this));
-      if (procs.length > 0) {
-        process_utils.scheduleKillAll(this.app_, 'Kill dangling', procs);
-      }
+      process_utils.scheduleKillTrees(this.app_, 'Kill dangling', procs);
     }.bind(this));
   }.bind(this));
 };

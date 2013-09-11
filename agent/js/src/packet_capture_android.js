@@ -157,7 +157,7 @@ PacketCaptureAndroid.prototype.scheduleStop = function() {
       // Soft-kill all tcpdumps running on device. Presumably just one.
       this.adb_.scheduleKill('tcpdump', 'INT');
       // Read the pcap file only after tcpdump exits: avoid incomplete data.
-      process_utils.scheduleWait(proc, 'tcpdump', EXIT_TIMEOUT);
+      process_utils.scheduleWait(this.app_, proc, 'tcpdump', EXIT_TIMEOUT);
       this.adb_.adb(['pull', this.devicePcapFile_, this.localPcapFile_]);
       this.adb_.shell(['rm', this.devicePcapFile_]);
     } else {

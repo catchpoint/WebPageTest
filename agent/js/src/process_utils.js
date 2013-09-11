@@ -113,7 +113,7 @@ exports.scheduleKillAll = function(app, description, processInfos) {
  * Gets info for all processes owned by this user.
  *
  * @param {webdriver.promise.Application} app the scheduler.
- * @return {webdriver.promise.Promise} resolve({Array} processInfos).
+ * @return {webdriver.promise.Promise} resolve({Array.<ProcessInfo>}).
  */
 exports.scheduleGetAll = function(app) {
   'use strict';
@@ -132,7 +132,7 @@ exports.scheduleGetAll = function(app) {
  * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {string=} description debug title.
  * @param {number} rootPid process id.
- * @return {webdriver.promise.Promise} resolve({Array} processInfos).
+ * @return {webdriver.promise.Promise} resolve({Array.<ProcessInfo>}).
  */
 exports.scheduleGetTree = function(app, description, rootPid) {
   'use strict';
@@ -158,17 +158,16 @@ exports.scheduleGetTree = function(app, description, rootPid) {
 };
 
 /**
- * Kills a process and all child processes (by PID).
+ * Kills a process and all child processes.
  *
  * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {string=} description debug title.
- * @param {Process} process the process to getTree then killAll.
+ * @param {(Process|ProcessInfo)} process the process to getTree then killAll.
  */
 exports.scheduleKillTree = function(app, description, process) {
   'use strict';
-  var pid = process.pid;
-  if (pid) {
-    exports.scheduleGetTree(app, 'getTree ' + description, pid).then(
+  if (process.pid) {
+    exports.scheduleGetTree(app, 'getTree ' + description, process.pid).then(
         function(processInfos) {
       exports.scheduleKillAll(app, 'killAll' + description, processInfos);
     });
@@ -178,15 +177,34 @@ exports.scheduleKillTree = function(app, description, process) {
 };
 
 /**
+ * Calls scheduleKillTree for each process in an array.
+ *
+ * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {string=} description debug title.
+ * @param {(Array.<Process>|Array.<ProcessInfo>)} processes processes to
+ *   killTree.
+ */
+exports.scheduleKillTrees = function(app, description, processes) {
+  'use strict';
+  app.schedule(description || 'killTrees', function() {
+    if (processes.length > 0) {
+      exports.scheduleKillTree(app, 'killTree', processes[0]);
+      exports.scheduleKillTrees(app, description, processes.slice(1));
+    }
+  });
+};
+
+/**
  * Wait for process to exit.
  *
+ * @param {webdriver.promise.Application} app the app under which to schedule.
  * @param {Process} proc the process.
  * @param {string} name the process name for logging.
  * @param {number} timeout how many milliseconds to wait.
  * @return {webdriver.promise.Promise} resolve() if the process has already
  *   exited or exits before the timeout.
  */
-exports.scheduleWait = function(proc, name, timeout) {
+exports.scheduleWait = function(app, proc, name, timeout) {
   'use strict';
   var exited = new webdriver.promise.Deferred();
   var exitTimerId;
@@ -199,7 +217,6 @@ exports.scheduleWait = function(proc, name, timeout) {
     exited.reject();
   }, timeout);
   proc.on('exit', onExit);
-  var app = webdriver.promise.Application.getInstance();
   return app.schedule('Wait for ' + name + ' exit', function() {
     return exited.promise;
   });
