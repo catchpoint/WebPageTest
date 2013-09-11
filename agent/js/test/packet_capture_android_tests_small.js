@@ -111,7 +111,8 @@ describe('packet_capture_android small', function() {
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
         ['shell', 'su', '0', 'sh', '-c', 'kill -INT 123'],
-        ['pull', /\/sdcard\/\w+\.pcap/, localPcapFile]);
+        ['pull', /\/sdcard\/\w+\.pcap/, localPcapFile],
+        ['shell', 'rm', /^\/sdcard\/\w+\.pcap$/]);
     assertAdbCall();
   }
 
@@ -123,6 +124,10 @@ describe('packet_capture_android small', function() {
       } else if ('echo x' === args[args.length - 1]) {
         stdout =
            'su: exec failed for echo x Error:No such file or directory';
+      } else if (/^\[\[ -w "\$EXTERNAL_STORAGE"/.test(args[args.length - 1])) {
+        stdout = '';
+      } else if (/^\[\[ -w "\$SECONDARY_STORAGE"/.test(args[args.length - 1])) {
+        stdout = '/sdcard';
       } else if (args.some(function(arg) { return arg === 'netcfg'; })) {
         stdout = 'usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01\r\n';
       } else if (args[3] === 'su' && /^\S*tcpdump /.test(args[7])) {
@@ -160,8 +165,10 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 24);
     assertAdbCalls(
+        ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
+        ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
         ['shell', 'ls', '/system/*bin/tcpdump',
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '0'.
         ['shell', 'ps', 'tcpdump'],  // Output 'USER ...'.
@@ -199,8 +206,10 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 38);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 42);
     assertAdbCalls(
+        ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
+        ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
         ['shell', 'ps', 'tcpdump'],  // Output 'USER ...'.
         ['shell', 'ls', '/data/local/tmp/tcpdump',
          '>', '/dev/null', '2>&1', ';', 'echo', '$?'],  // Output '1'.

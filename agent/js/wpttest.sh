@@ -121,8 +121,12 @@ if [[ ! -z "$lint" ]]; then
   if which gjslint >/dev/null; then
     gjslint src/*.js test/*.js
   else
-    echo 'Missing gjslint.  To install, see:'
-    echo '  https://code.google.com/p/closure-linter/'
+    cat <<"EOF"
+Missing gjslint (code.google.com/p/closure-linter).  To install, run:
+  svn checkout http://closure-linter.googlecode.com/svn/trunk/ closure-linter
+  cd closure-linter
+  sudo python ./setup.py install
+EOF
     exit 1
   fi
 fi

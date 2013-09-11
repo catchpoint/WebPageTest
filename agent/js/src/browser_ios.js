@@ -396,7 +396,8 @@ BrowserIos.prototype.scheduleConfigurePacUI_ = function() {
   var remotePrefs =
       '/private/var/preferences/SystemConfiguration/preferences.plist';
   var scpRemotePrefs = this.deviceSerial_ + ':' + remotePrefs;
-  var localPrefs = this.deviceSerial_ + '.preferences.plist';
+  var localPrefs = os.tmpDir() + '/' + this.deviceSerial_ +
+      '.preferences.plist';
   this.scheduleScp_(scpRemotePrefs, localPrefs);
 
   process_utils.scheduleFunction(this.app_, 'Read plist', fs.readFile,
