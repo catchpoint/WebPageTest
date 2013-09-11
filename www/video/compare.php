@@ -666,7 +666,7 @@ function DisplayStatus()
     echo "<table id=\"statusTable\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {
-        echo "<tr><td><a href="/result/{$test['id']}/">{$test['name']}</a></td><td>";
+        echo "<tr><td><a href=\"/result/{$test['id']}/\">{$test['name']}</a></td><td>";
         if( $test['done'] )
             echo "Done";
         elseif( $test['started'] )
