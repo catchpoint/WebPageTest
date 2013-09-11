@@ -41,13 +41,17 @@ var PAC_PORT = 80;
  *
  * @param {webdriver.promise.Application} app the Application for scheduling.
  * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number. Install helpers on run 1.
+ *     runNumber test run number -- helpers are installed on run 1.
  *     deviceSerial the device to drive.
- *     [chrome] Chrome.apk to install.
- *     [devToolsPort] DevTools port.
- *     [pac] PAC content
- *     [captureDir] capture script dir.
- *     [videoCard] the video card identifier.
+ *     [chrome] Chrome.apk to install, defaults to None.
+ *     [devToolsPort] DevTools port, defaults to dynamic selection.
+ *     [pac] PAC content, defaults to None.
+ *     [captureDir] capture script dir, defaults to ''.
+ *     [videoCard] the video card identifier, defaults to None.
+ *     [chromePackage] package, defaults to
+ *         'com.google.android.apps.chrome_dev'.
+ *     [chromeActivity] activity without the '.Main' suffix, defaults to
+ *         'com.google.android.apps.chrome'.
  * @constructor
  */
 function BrowserAndroidChrome(app, args) {
@@ -61,8 +65,10 @@ function BrowserAndroidChrome(app, args) {
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
-  this.chromePackage_ = 'com.google.android.apps.chrome_dev';
-  this.chromeActivity_ = 'com.google.android.apps.chrome';
+  this.chromePackage_ = (args.chromePackage ||
+      'com.google.android.apps.chrome_dev');
+  this.chromeActivity_ = (args.chromeActivity ||
+      'com.google.android.apps.chrome');
   this.devToolsPort_ = args.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
@@ -118,7 +124,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // We also tried a Page.navigate to "data:text/html;charset=utf-8,", which
   // helped but was insufficient by itself.
   this.adb_.su(['rm',
-      '/data/data/com.google.android.apps.chrome_dev/files/tab*']);
+      '/data/data/' + this.chromePackage_ + '/files/tab*']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error, use `pm list packages` to check pkg
@@ -250,7 +256,7 @@ BrowserAndroidChrome.prototype.stopPacServer_ = function() {
   if (this.pacServer_) {
     var proc = this.pacServer_;
     this.pacServer_ = undefined;
-    process_utils.scheduleKill(this.app_, 'Kill PAC server', proc);
+    process_utils.scheduleKillTree(this.app_, 'Kill PAC server', proc);
   }
   if (this.pacFile_) {
     var file = this.pacFile_;

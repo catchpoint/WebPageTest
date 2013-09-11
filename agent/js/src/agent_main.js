@@ -70,7 +70,7 @@ function Agent(client, flags) {
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
-  this.client_.onJobTimeout = this.jobTimeout_.bind(this);
+  this.client_.onAbortJob = this.abortJob_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -145,25 +145,24 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       }
     }
     if (ipcMsg.videoFile) {
-      process_utils.scheduleFunction(this.app_, 'Read video file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.IMAGE,
             'video.avi', 'video/avi', buffer));
-      }, function() { // ignore errors?
       });
-      process_utils.scheduleFunction(this.app_, 'Delete video file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Delete video file',
           fs.unlink, ipcMsg.videoFile);
     }
     if (ipcMsg.pcapFile) {
-      process_utils.scheduleFunction(this.app_, 'Read pcap file',
+      process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.PCAP,
             'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
       });
-      process_utils.scheduleFunction(this.app_, 'Delete video file',
-          fs.unlink, ipcMsg.videoFile);
+      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
+          fs.unlink, ipcMsg.pcapFile);
     }
   }.bind(this));
 };
@@ -227,7 +226,7 @@ Agent.prototype.startJobRun_ = function(job) {
         script: script,
         url: url,
         pac: pac,
-        timeout: this.client_.jobTimeout - 15000  // 15 seconds to stop+submit.
+        timeout: this.client_.jobTimeout
       };
     Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
       if (!message[flagName]) {
@@ -306,7 +305,9 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
       return;
     }
     throw new ScriptError('WPT script contains unsupported line[' +
-        lineNumber + ']: ' + line);
+        lineNumber + ']: ' + line + '\n' +
+        '--- support is limited to:\n' +
+        'setDnsName H1 H2\\n [overrideHost H1 H3]\\n navigate H4');
   });
   if (!fromHost || !url) {
     throw new ScriptError('WPT script lacks ' +
@@ -322,15 +323,16 @@ Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
 };
 
 /**
- * @param {Object} job the timed-out job to abort.
+ * @param {Object} job the job to abort (e.g. due to timeout).
  * @private
  */
-Agent.prototype.jobTimeout_ = function(job) {
+Agent.prototype.abortJob_ = function(job) {
   'use strict';
   if (this.wdServer_) {
-    this.scheduleNoFault_('Send IPC "abort"', function() {
-      this.wdServer_.send({cmd: 'abort'});
-    }.bind(this));
+    this.scheduleNoFault_('Remove message listener',
+      this.wdServer_.removeAllListeners.bind(this.wdServer_, 'message'));
+    this.scheduleNoFault_('Send IPC "abort"',
+        this.wdServer_.send.bind(this.wdServer_, {cmd: 'abort'}));
   }
   this.scheduleCleanup_();
   this.scheduleNoFault_('Timed out job finished',
@@ -345,12 +347,14 @@ Agent.prototype.jobTimeout_ = function(job) {
 Agent.prototype.scheduleCleanup_ = function() {
   'use strict';
   if (this.wdServer_) {
-    process_utils.scheduleWait(this.wdServer_, 'wd_server',
+    this.scheduleNoFault_('Remove message listener',
+      this.wdServer_.removeAllListeners.bind(this.wdServer_, 'message'));
+    process_utils.scheduleWait(this.app_, this.wdServer_, 'wd_server',
           WD_SERVER_EXIT_TIMEOUT).then(function() {
       // This assumes a clean exit with no zombies
       this.wdServer_ = undefined;
     }.bind(this), function() {
-      process_utils.scheduleKill(this.app_, 'Kill wd_server',
+      process_utils.scheduleKillTree(this.app_, 'Kill wd_server',
           this.wdServer_);
       this.app_.schedule('undef wd_server', function() {
         this.wdServer_ = undefined;
@@ -358,7 +362,27 @@ Agent.prototype.scheduleCleanup_ = function() {
     }.bind(this));
   }
   this.trafficShaper_.scheduleStop();
-  // TODO kill dangling child processes
+  if (1 === parseInt(this.flags_.killall || '0', 10)) {
+    // Kill all processes for this user, except our own agent_main pid.
+    //
+    // This only makes sense if we have per-device user accounts, e.g. we
+    // launch the wptdriver for deviceX as user "deviceX" via:
+    //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
+    // Ideally we could run agent_main as our normal user and do this "sudo -u"
+    // when we fork wd_server, but cross-user IPC apparently doesn't work.
+    process_utils.scheduleGetAll(this.app_).then(function(processes) {
+      processes = processes.filter(function(v) {
+        return v.pid !== process.pid;
+      });
+      if (processes.length > 0) {
+        logger.info('Killing %s pids owned by user %s: %s', processes.length,
+            process.env.USER,
+            processes.map(function(v) { return v.pid; }).join(', '));
+        process_utils.scheduleKillAll(
+            this.app_, 'Kill dangling pids', processes);
+      }
+    }.bind(this));
+  }
 };
 
 /**

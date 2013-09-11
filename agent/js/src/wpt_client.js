@@ -52,6 +52,8 @@ var JOB_TEST_ID = 'Test ID';
 
 var DEFAULT_JOB_TIMEOUT = 80000;
 /** Allow test access. */
+exports.JOB_FINISH_TIMEOUT = 30000;
+/** Allow test access. */
 exports.NO_JOB_PAUSE = 10000;
 var MAX_RUNS = 1000;  // Sanity limit
 
@@ -162,8 +164,8 @@ ResultFile.ResultType = Object.freeze({
  * finishes and pass it to callback
  *
  * @param {Object} response http GET response object.
- * @param {Function} callback Function({string} responseBody) called on
- *   completed http request body.
+ * @param {Function=} callback Function({Error=} err, {string=} HTTP response
+ *     body).
  */
 exports.processResponse = function(response, callback) {
   'use strict';
@@ -175,13 +177,13 @@ exports.processResponse = function(response, callback) {
   response.on('error', function(e) {
     logger.error('Unable to processResponse ' + e.stack);
     if (callback) {
-      callback('');
+      callback(e, responseBody);
     }
   });
   response.on('end', function() {
     logger.extra('Got response: %s', responseBody);
     if (callback) {
-      callback(responseBody);
+      callback(undefined, responseBody);
     }
   });
 };
@@ -193,7 +195,7 @@ exports.processResponse = function(response, callback) {
  * #field {Function=} onStartJobRun called upon a new job run start.
  *     #param {Job} job the job whose run has started.
  *         MUST call job.runFinished() when done, even after an error.
- * #field {Function=} onJobTimeout job timeout callback.
+ * #field {Function=} onAbortJob job timeout callback.
  *     #param {Job} job the job that timed out.
  *         MUST call job.runFinished() after handling the timeout.
  *
@@ -231,7 +233,7 @@ function Client(args) {
   this.currentJob_ = undefined;
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
-  this.onJobTimeout = undefined;
+  this.onAbortJob = undefined;
   this.handlingUncaughtException_ = undefined;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
@@ -290,8 +292,8 @@ Client.prototype.requestNextJob_ = function() {
 
   logger.info('Get work: %s', getWorkUrl);
   var request = http.get(url.parse(getWorkUrl), function(res) {
-    exports.processResponse(res, function(responseBody) {
-      if (responseBody === '') {
+    exports.processResponse(res, function(e, responseBody) {
+      if (e || responseBody === '') {
         this.emit('nojob');
       } else if (responseBody[0] === '<') {
         // '<' is a sign that it's HTML, most likely an error page.
@@ -340,6 +342,20 @@ Client.prototype.processJobResponse_ = function(responseBody) {
  * @param {Job} job the job to start/continue.
  * @private
  */
+Client.prototype.abortJob_ = function(job) {
+  'use strict';
+  logger.error('Aborting job %s: %s', job.id, job.error);
+  if (this.onAbortJob) {
+    this.onAbortJob(job);
+  } else {
+    job.runFinished(/*isRunFinished=*/true);
+  }
+};
+
+/**
+ * @param {Job} job the job to start/continue.
+ * @private
+ */
 Client.prototype.startNextRun_ = function(job) {
   'use strict';
   job.error = undefined;  // Reset previous run's error, if any.
@@ -347,27 +363,20 @@ Client.prototype.startNextRun_ = function(job) {
   this.currentJob_ = job;
   // Set up job timeout
   this.timeoutTimer_ = global.setTimeout(function() {
-    logger.error('job timeout: %s', job.id);
     job.error = 'timeout';
-    if (this.onJobTimeout) {
-      this.onJobTimeout(job);
-    } else {
-      job.runFinished(/*isRunFinished=*/true);
-    }
-  }.bind(this), this.jobTimeout);
+    this.abortJob_(job);
+  }.bind(this), this.jobTimeout + exports.JOB_FINISH_TIMEOUT);
 
   if (this.onStartJobRun) {
     try {
       this.onStartJobRun(job);
     } catch (e) {
-      logger.error('Exception while running the job: %s', e.stack);
       job.error = e.message;
-      job.runFinished(/*isRunFinished=*/true);
+      this.abortJob_(job);
     }
   } else {
-    logger.critical('Client.onStartJobRun must be set');
-    job.error = 'Agent is not configured to process jobs';
-    job.runFinished(/*isRunFinished=*/true);
+    job.error = 'Client.onStartJobRun not set';
+    this.abortJob_(job);
   }
 };
 
@@ -390,11 +399,16 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
     this.currentJob_ = undefined;
-    this.submitResult_(job, isRunFinished, function() {
+    this.submitResult_(job, isRunFinished, function(e) {
       this.handlingUncaughtException_ = undefined;
+      if (e) {
+        logger.error('Unable to submit result: %s', e.stack);
+      }
       // Run until we finish the last iteration.
       // Do not increment job.runNumber past job.runs.
-      if (!(isRunFinished && job.runNumber === job.runs)) {
+      if (e || (isRunFinished && job.runNumber === job.runs)) {
+        this.emit('done', job);
+      } else {
         // Continue running
         if (isRunFinished) {
           job.runNumber += 1;
@@ -434,7 +448,8 @@ function createZip(zipFileMap, fileNamePrefix) {
  * @param {Object} job the result file will be saved for.
  * @param {Object} resultFile of type ResultFile. May be null/undefined.
  * @param {Array=} fields an array of [name, value] text fields to add.
- * @param {Function=} callback will get called with the HTTP response body.
+ * @param {Function=} callback Function({Error=} err, {string=} HTTP response
+ *     body).
  */
 Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   'use strict';
@@ -500,6 +515,9 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   });
   request.on('error', function(e) {
     logger.warn('Unable to post result: ' + e.message);
+    if (callback) {
+      callback(e, '');
+    }
   });
   request.end(mpResponse.bodyBuffer, 'UTF-8');
 };
@@ -509,7 +527,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
  *
  * @param {Object} job that should be completed.
  * @param {boolean} isRunFinished true if finished.
- * @param {Function} callback Function({Error?} err).
+ * @param {Function=} callback Function({Error=} err).
  * @private
  */
 Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
@@ -529,7 +547,13 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
   }
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
-  var submitNextResult = (function() {
+  var submitNextResult = (function(e) {
+    if (e) {
+      if (callback) {
+        callback(e);
+      }
+      return;
+    }
     var resultFile = filesToSubmit.shift();
     var fields = [];
     if (resultFile) {
@@ -543,11 +567,10 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
         if (job.error) {
           fields.push(['testerror', job.error]);
         }
-        this.postResultFile_(job, undefined, fields, function() {
+        this.postResultFile_(job, undefined, fields, function(e2) {
           if (callback) {
-            callback();
+            callback(e2);
           }
-          this.emit('done', job);
         }.bind(this));
       } else if (callback) {
         callback();
