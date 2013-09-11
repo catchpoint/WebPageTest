@@ -67,6 +67,9 @@ else
             <?php
                 if( !$ready )
                 {
+                  $autoRefresh = true;
+                  $noanalytics = true;
+
             ?>
                 <noscript>
                 <meta http-equiv="refresh" content="10" />

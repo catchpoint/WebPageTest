@@ -436,10 +436,10 @@ $page_description = "Website performance test details$testLabel";
             expandRequest($(this));
         });
 
-        $(document).ready(function() {
-            expandRequest($(window.location.hash));
-        });
-
+        if (window.location.hash == '#all') {
+          $(".header_details").each(function( index ) {$(this).show();});
+        } else
+          expandRequest($(window.location.hash));
 
         <?php
         include "waterfall.js";

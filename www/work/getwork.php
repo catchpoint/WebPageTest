@@ -130,6 +130,7 @@ function GetJob() {
                             ProcessTestShard($testInfoJson, $testInfo, $delete);
                             gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
                         }
+                        file_put_contents("./tmp/last-test-{$location}-{$tester}.test", $testId);
                     }
 
                     if ($delete)

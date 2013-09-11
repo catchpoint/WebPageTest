@@ -317,6 +317,8 @@ class Appurify{
       curl_setopt($this->curl, CURLOPT_URL, $command);
       curl_setopt($this->curl, CURLOPT_POST, true);
       if (isset($file)) {
+        if (!is_dir('./tmp'))
+          mkdir('./tmp', 0777);
         $tempFile = "./tmp/{$file['filename']}";
         file_put_contents($tempFile, $file['data']);
         $tempFile = realpath($tempFile);
