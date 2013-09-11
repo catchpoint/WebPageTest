@@ -32,16 +32,23 @@ var logger = require('logger');
 var packet_capture_android = require('packet_capture_android');
 var process_utils = require('process_utils');
 var video_hdmi = require('video_hdmi');
+var webdriver = require('selenium-webdriver');
+var webdriver_proxy = require('selenium-webdriver/proxy');
 
 var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
+var CHROME_FLAGS = [
+  '--disable-fre', '--enable-benchmarking', '--metrics-recording-only'
+];
+
+
 /**
  * Constructs a Chrome Mobile controller for Android.
  *
- * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number -- helpers are installed on run 1.
+ *     runNumber test run number. Install the apk on run 1.
  *     deviceSerial the device to drive.
  *     [chrome] Chrome.apk to install, defaults to None.
  *     [devToolsPort] DevTools port, defaults to dynamic selection.
@@ -64,14 +71,16 @@ function BrowserAndroidChrome(app, args) {
   this.deviceSerial_ = args.deviceSerial;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
-  this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
-  this.chromePackage_ = (args.chromePackage ||
-      'com.google.android.apps.chrome_dev');
-  this.chromeActivity_ = (args.chromeActivity ||
-      'com.google.android.apps.chrome');
+  this.chromedriver_ = args.chromedriver;
+  this.chromePackage_ =
+      args.chromePackage || 'com.google.android.apps.chrome_dev';
+  this.chromeActivity_ =
+      args.chromeActivity || 'com.google.android.apps.chrome';
   this.devToolsPort_ = args.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
+  this.serverPort_ = 4444;
+  this.serverUrl_ = undefined;
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
@@ -80,6 +89,7 @@ function BrowserAndroidChrome(app, args) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
   }
   var captureDir = toDir(args.captureDir);
+  this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
 }
@@ -87,13 +97,47 @@ function BrowserAndroidChrome(app, args) {
 exports.BrowserAndroidChrome = BrowserAndroidChrome;
 
 /**
- * Future webdriver impl.
- * TODO: ... implementation with chromedriver2.
+ * Start chromedriver, 2.x required.
+ *
+ * @param {Object} browserCaps capabilities to be passed to Builder.build():
+ *    #param {string} browserName must be 'chrome'.
  */
-BrowserAndroidChrome.prototype.startWdServer = function() { //browserCaps
+BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   'use strict';
-  throw new Error('Soon: ' +
-      'http://madteam.co/forum/avatars/Android/android-80-domokun.png');
+  var requestedBrowserName = browserCaps[webdriver.Capability.BROWSER_NAME];
+  if (webdriver.Browser.CHROME !== requestedBrowserName) {
+    throw new Error('BrowserLocalChrome called with unexpected browser ' +
+        requestedBrowserName);
+  }
+  if (!this.chromedriver_) {
+    throw new Error('Must set chromedriver before starting it');
+  }
+  var loggingPrefs = {};
+  loggingPrefs[webdriver.logging.Type.PERFORMANCE] =
+      webdriver.logging.LevelName.ALL;  // Capture DevTools events.
+  browserCaps[webdriver.Capability.LOGGING_PREFS] = loggingPrefs;
+  var serverCommand = this.chromedriver_;
+  var serverArgs = ['-port=' + this.serverPort_];
+  browserCaps.chromeOptions = {
+    args: CHROME_FLAGS.slice(),
+    androidPackage: this.chromePackage_,
+    androidActivity: this.chromeActivity_,
+    androidDeviceSerial: this.deviceSerial_
+  };
+  this.scheduleInstallIfNeeded_();
+  if (this.pac_) {
+    if (PAC_PORT !== 80) {
+      logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
+      browserCaps.chromeOptions.args.push(
+          '--explicitly-allowed-ports=' + PAC_PORT);
+    }
+    browserCaps[webdriver.Capability.PROXY] = webdriver_proxy.pac(
+        'http://127.0.0.1:' + PAC_PORT + '/from_netcat');
+  }
+  this.startChildProcess_(serverCommand, serverArgs, 'WD server').then(
+      function() {
+    this.serverUrl_ = 'http://localhost:' + this.serverPort_;
+  }.bind(this));
 };
 
 /**
@@ -104,15 +148,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Stop Chrome at the start of each run.
   // TODO(wrightt): could keep the devToolsPort and pacServer up
   this.kill();
-  if (this.shouldInstall_ && this.chrome_) {
-    // Explicitly uninstall, as "install -r" fails if the installed package
-    // was signed with different keys than the new apk being installed.
-    this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
-      logger.debug('Ignoring failed uninstall');
-    }.bind(this));
-    // Chrome install on an emulator takes a looong time.
-    this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
-  }
+  this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
   // Delete the prior run's tab(s) and start with "about:blank".
@@ -127,14 +163,26 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
       '/data/data/' + this.chromePackage_ + '/files/tab*']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
-  // TODO(wrightt): check start error, use `pm list packages` to check pkg
-  this.scheduleSelectDevToolsPort_();
-  this.app_.schedule('Forward DevTools socket to local port', function() {
-    this.adb_.adb(['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
-  }.bind(this));
-  this.app_.schedule('Set DevTools URL', function() {
-    this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
-  }.bind(this));
+  // TODO(wrightt): check start error
+  this.scheduleConfigureDevToolsPort_();
+};
+
+/**
+ * Installs Chrome apk if this is the first run, and the apk was provided.
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
+  'use strict';
+  if (this.shouldInstall_ && this.chrome_) {
+    // Explicitly uninstall, as "install -r" fails if the installed package
+    // was signed differently than the new apk being installed.
+    this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
+      logger.debug('Ignoring failed uninstall');
+    }.bind(this));
+    // Chrome install on an emulator takes a looong time.
+    this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
+  }
+  // TODO(wrightt): use `pm list packages` to check pkg
 };
 
 /**
@@ -145,10 +193,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   var flagsFile = '/data/local/chrome-command-line';
-  var flags = [
-      '--disable-fre', '--metrics-recording-only', '--enable-remote-debugging'
-    ];
-  // TODO(wrightt): add flags to disable experimental chrome features, if any
+  var flags = CHROME_FLAGS.concat('--enable-remote-debugging');
   if (this.pac_) {
     flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
     if (PAC_PORT !== 80) {
@@ -164,7 +209,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
  *
  * @private
  */
-BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
+BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
   'use strict';
   if (!this.devToolsPort_) {
     process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port').then(
@@ -172,6 +217,12 @@ BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
       logger.debug('Selected DevTools port ' + alloc.port);
       this.devtoolsPortLock_ = alloc;
       this.devToolsPort_ = alloc.port;
+    }.bind(this));
+    this.app_.schedule('Forward DevTools socket to local port', function() {
+      this.adb_.adb(['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
+    }.bind(this));
+    this.app_.schedule('Set DevTools URL', function() {
+      this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
     }.bind(this));
   }
 };

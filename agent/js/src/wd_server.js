@@ -32,7 +32,8 @@ var logger = require('logger');
 var process_utils = require('process_utils');
 var vm = require('vm');
 var wd_sandbox = require('wd_sandbox');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
+var webdriver_http = require('selenium-webdriver/http');
 
 /** Allow tests to stub out. */
 exports.process = process;
@@ -44,6 +45,9 @@ var SUBMIT_TIMEOUT_MS_ = 5000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
+
+var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
+var GHASTLY_ORANGE_ = '#DE640D';
 
 // onDevToolsMessage_ log levels by message.method, defaults to 'debug'
 var DEVTOOLS_METHOD_TO_LEVEL = {
@@ -130,6 +134,31 @@ WebDriverServer.prototype.initIpc = function() {
  */
 WebDriverServer.prototype.init = function(initMessage) {
   'use strict';
+  if (!this.browser_) {
+    // Only set on the first run:
+    //
+    // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
+    // processing in these functions, if they call a WebDriver method.
+    // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
+    // to false upon completion of that method.
+    this.actionCbRecurseGuard_ = false;
+    this.app_ = webdriver.promise.controlFlow();
+    process_utils.injectWdAppLogging('wd_server app', this.app_);
+    // Create the browser via reflection
+    var browserType = (initMessage.browser ||
+        'browser_local_chrome.BrowserLocalChrome');
+    logger.debug('Creating ' + browserType);
+    var lastDot = browserType.lastIndexOf('.');
+    var browserModule = require(browserType.substring(0, lastDot));
+    var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
+    this.browser_ = new BrowserClass(this.app_, initMessage);
+    this.capabilities_ = undefined;
+    this.devTools_ = undefined;
+    this.isCacheCleared_ = false;
+    this.sandboxApp_ = undefined;
+    this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
+    this.wdSandbox_ = undefined;
+  }
   // Reset every run:
   this.isDone_ = false;
   this.abortTimer_ = undefined;
@@ -151,31 +180,6 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.pcapFile_ = undefined;
   this.videoFile_ = undefined;
   this.tearDown_();
-  if (!this.browser_) {
-    // Only set on the first run:
-    //
-    // Prevent WebDriver calls in onAfterDriverAction/Error from recursive
-    // processing in these functions, if they call a WebDriver method.
-    // Set it to true before calling a WebDriver method (e.g. takeScreenshot),
-    // to false upon completion of that method.
-    this.actionCbRecurseGuard_ = false;
-    this.app_ = webdriver.promise.Application.getInstance();
-    process_utils.injectWdAppLogging('wd_server app', this.app_);
-    // Create the browser via reflection
-    var browserType = (initMessage.browser ||
-        'browser_local_chrome.BrowserLocalChrome');
-    logger.debug('Creating ' + browserType);
-    var lastDot = browserType.lastIndexOf('.');
-    var browserModule = require(browserType.substring(0, lastDot));
-    var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-    this.browser_ = new BrowserClass(this.app_, initMessage);
-    this.capabilities_ = undefined;
-    this.devTools_ = undefined;
-    this.isCacheCleared_ = false;
-    this.sandboxApp_ = undefined;
-    this.uncaughtExceptionHandler_ = this.onUncaughtException_.bind(this);
-    this.wdSandbox_ = undefined;
-  }
 };
 
 /**
@@ -191,28 +195,21 @@ WebDriverServer.prototype.startWdServer_ = function(browserCaps) {
     throw new Error('Internal error: prior WD server running unexpectedly');
   }
 
-  // assert getCapabilities() has webdriver === true?
+  // Check for getCapabilities().webdriver? But then what -- exception anyway,
+  // so the Browser's startWdServer may as well throw that exception.
   this.browser_.startWdServer(browserCaps, this.runNumber_ === 1);
-  // Create an executor to simplify querying the server to see if it is ready.
-  var client = new webdriver.http.HttpClient(this.browser_.getServerUrl());
-  var executor = new webdriver.http.Executor(client);
-  var command = new webdriver.command.Command(
-      webdriver.command.CommandName.GET_SERVER_STATUS);
-  var wdReadyPromise = this.app_.scheduleWait('Waiting for WD server',
-      function() {
-    var isReady = new webdriver.promise.Deferred();
-    executor.execute(command, function(error /*, unused_response*/) {
-      if (error) {
-        isReady.resolve(false);
-      } else {
-        isReady.resolve(true);
-      }
-    });
-    return isReady.promise;
-  }, WD_CONNECT_TIMEOUT_MS_);
+  // The following needs to be scheduled() because getServerUrl() returns
+  // the URL only after the startWdServer_() scheduled action finishes.
+  this.app_.schedule('Wait for WD server to become ready', function() {
+    var serverUrl = this.browser_.getServerUrl();
+    logger.info('WD server URL: %s', serverUrl);
+    return webdriver_http.util.waitForServer(serverUrl, WD_CONNECT_TIMEOUT_MS_)
+        .then(function() {
+      logger.info('WD server is ready');
+    }.bind(this));
+  }.bind(this));
 
   logger.info('WD connect promise setup complete');
-  return wdReadyPromise;
 };
 
 /**
@@ -225,21 +222,18 @@ WebDriverServer.prototype.startChrome_ = function(browserCaps) {
     throw new Error('Internal error: prior Chrome running unexpectedly');
   }
   this.browser_.startBrowser(browserCaps, this.runNumber_ === 1);
-  this.connectDevTools_(webdriver);
+  this.connectDevTools_();
 };
 
 /**
  * connectDevTools_ attempts to create a new devtools instance and attempts to
  * connect it to the webdriver server.
  *
- * @param {Object} wdNamespace a sandboxed webdriver object that exposes
- *   only desired properties to the browser.
  * @private
  */
-WebDriverServer.prototype.connectDevTools_ = function(wdNamespace) {
+WebDriverServer.prototype.connectDevTools_ = function() {
   'use strict';
-  this.app_.scheduleWait('Connect DevTools to ' + wdNamespace,
-      function() {
+  this.app_.wait(function() {
     var connected = new webdriver.promise.Deferred();
     var devToolsUrl = this.browser_.getDevToolsUrl();
     if (devToolsUrl) {  // Browser exit resets the URL to undefined.
@@ -247,15 +241,15 @@ WebDriverServer.prototype.connectDevTools_ = function(wdNamespace) {
       devTools.connect(function() {
         this.devTools_ = devTools;
         this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
-        connected.resolve(true);
+        connected.fulfill(true);
       }.bind(this), function() {
-        connected.resolve(false);
+        connected.fulfill(false);
       });
     } else {
-      connected.resolve(false);
+      connected.fulfill(false);
     }
     return connected.promise;
-  }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_);
+  }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
   this.networkCommand_('enable');
   this.pageCommand_('enable');
   this.timelineCommand_('start');
@@ -280,7 +274,7 @@ WebDriverServer.prototype.onPageLoad_ = function(err) {
       logger.warn('Unable to load page: %s', err.message);
       this.pageLoadDonePromise_.reject(err);
     } else {
-      this.pageLoadDonePromise_.resolve(true);
+      this.pageLoadDonePromise_.fulfill(true);
     }
   }
 };
@@ -292,6 +286,9 @@ WebDriverServer.prototype.onPageLoad_ = function(err) {
  */
 WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   'use strict';
+  if (this.driver_) {
+    throw new Error('Internal error: DevTools callback called with WebDriver');
+  }
   var level = DEVTOOLS_METHOD_TO_LEVEL[message.method] || 'debug';
   if (logger.isLogging(level)) {
     logger[level].apply(undefined, ['%sDevTools message: %s',
@@ -299,10 +296,6 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   }
   if (this.isRecordingDevTools_) {
     this.devToolsMessages_.push(message);
-  }
-  if (this.script_) {
-    // WD jobs run until the script finishes -- there's no pageload promise.
-    return;
   }
   if (this.abortTimer_) {
     // We received an 'Inspector.detached' message, as noted below, so ignore
@@ -337,8 +330,7 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
  */
 WebDriverServer.prototype.onTestStarted_ = function() {
   'use strict';
-  this.app_.schedule('Start recording', function() {
-    this.isRecordingDevTools_ = true;
+  this.app_.schedule('Test started', function() {
     if (this.captureVideo_ && !this.videoFile_) {
       this.takeScreenshot_('progress_0', 'test started');
     }
@@ -353,19 +345,20 @@ WebDriverServer.prototype.onTestStarted_ = function() {
  * Called by the sandboxed Builder after the user script calls build().
  *
  * @param {Object} driver the built driver instance (real one, not sandboxed).
- * @param {Object} browserCaps browser capabilities used to build the driver.
- * @param {Object} wdNamespace the sandboxed namespace, for app/promise sync.
+ * #param {Object} browserCaps browser capabilities used to build the driver.
+ * #param {Object} wdNamespace the sandboxed namespace, for app/promise sync.
  */
-WebDriverServer.prototype.onDriverBuild = function(
-    driver, browserCaps, wdNamespace) {
+WebDriverServer.prototype.onDriverBuild = function(driver) {
   'use strict';
-  logger.extra('WD post-build callback, driver=%j', driver);
+  logger.extra('WD post-build callback, driver=%s', driver);
   if (!this.driver_) {
     this.driver_ = driver;
-    if (!this.devTools_ && browserCaps.browserName.indexOf('chrome') !== -1) {
-      this.connectDevTools_(wdNamespace);
-      this.clearPage_();
-    }
+    // The WebDriver server (chromedriver 2.x or ios-driver) is already
+    // connected as the only DevTools client.
+    // We will get the DevTools events via the "performance" log, and we
+    // also cannot use DevTools, only WebDriver API via this.driver_.
+    this.clearPageAndStartVideoWd_();
+    this.scheduleStartPacketCaptureIfRequested_();
     this.onTestStarted_();
   } else if (this.driver_ !== driver) {
     throw new Error('Internal error: repeat onDriverBuild with wrong driver');
@@ -406,6 +399,10 @@ WebDriverServer.prototype.takeScreenshot_ = function(
     fileNameNoExt, description) {
   'use strict';
   return this.getCapabilities_().then(function(caps) {
+    // Screenshots implemented by the browser class are better than DevTools.
+    if (caps.takeScreenshot) {
+      return this.browser_.scheduleTakeScreenshot();
+    }
     // DevTools screenshots were introduced in Chrome 26:
     //   http://trac.webkit.org/changeset/138236
     //   /trunk/Source/WebCore/inspector/Inspector.json
@@ -414,8 +411,8 @@ WebDriverServer.prototype.takeScreenshot_ = function(
         return result.data;
       });
     }
-    if (caps.takeScreenshot) {
-      return this.browser_.scheduleTakeScreenshot();
+    if (this.driver_) {
+      return this.driver_.takeScreenshot();
     }
     return undefined;
   }.bind(this)).then(function(screenshot) {
@@ -450,32 +447,46 @@ WebDriverServer.prototype.onBeforeDriverAction = function(command) {
  */
 WebDriverServer.prototype.onAfterDriverAction = function(command, commandArgs) {
   'use strict';
-  logger.extra('Injected after command: %s', commandArgs[1]);
+  var commandStr = commandArgs[1];
+  logger.extra('Injected after command: %s', commandStr);
+  if (command.getName() === webdriver.command.CommandName.QUIT) {
+    this.driver_ = undefined;
+    return;  // Cannot do anything after quitting the browser.
+  }
   if (this.actionCbRecurseGuard_) {
     logger.extra('Recursion guard: after');
     return;
   }
-  if (command.getName() === webdriver.command.CommandName.QUIT) {
-    this.driver_ = undefined;
-    return;  // Cannot do anything after quitting the browser
+  if (!this.testStartTime_ || this.isDone_) {  // Screenshots only in a test.
+    return;
   }
-  var commandStr = commandArgs[1];
-  if (this.captureVideo_ && !this.videoFile_) {
-    // We operate in milliseconds, WPT wants "tenths of a second" units.
-    var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
-    logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
-    this.takeScreenshot_('progress_' + wptTimestamp,
-        'After ' + commandStr).then(function(screenshot) {
-      if (command.getName() === webdriver.command.CommandName.GET) {
-        // This is also the doc-complete screenshot.
-        this.saveScreenshot_('screen_doc', screenshot, commandStr);
-      }
-    }.bind(this));
-  } else if (command.getName() === webdriver.command.CommandName.GET) {
-    // No video -- just intercept a get() and take a doc-complete screenshot.
-    logger.debug('Doc-complete screenshot after: %s', commandStr);
-    this.takeScreenshot_('screen_doc', commandStr);
-  }
+  this.app_.schedule('After WD action', function() {
+    this.actionCbRecurseGuard_ = true;
+    if (this.captureVideo_ && !this.videoFile_) {
+      // We operate in milliseconds, WPT wants "tenths of a second" units.
+      var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
+      logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
+      this.takeScreenshot_('progress_' + wptTimestamp,
+          'After ' + commandStr).then(function(screenshot) {
+        if (screenshot &&
+            command.getName() === webdriver.command.CommandName.GET) {
+          // This is also the doc-complete screenshot.
+          this.saveScreenshot_('screen_doc', screenshot, commandStr);
+        }
+      }.bind(this));
+    } else if (command.getName() === webdriver.command.CommandName.GET) {
+      // No video -- just intercept a get() and take a doc-complete screenshot.
+      logger.debug('Doc-complete screenshot after: %s', commandStr);
+      this.takeScreenshot_('screen_doc', commandStr);
+    }
+    // In lieu of 'finally': reset actionCbRecurseGuard_.
+  }.bind(this)).then(function(ret) {
+    this.actionCbRecurseGuard_ = false;
+    return ret;
+  }.bind(this), function(e) {
+    this.actionCbRecurseGuard_ = false;
+    throw e;
+  }.bind(this));
 };
 
 /**
@@ -566,7 +577,7 @@ WebDriverServer.prototype.setPageBackground_ = function(frameId, color) {
   'use strict';
   return this.pageCommand_('setDocumentContent', {
       frameId: frameId,
-      html: color ? '<body bgcolor="' + color + '"/>' : ''
+      html: color ? '<body style="background-color:' + color + ';"/>' : ''
     });
 };
 
@@ -579,7 +590,7 @@ WebDriverServer.prototype.getCapabilities_ = function() {
   // Cache the response
   if (this.capabilities_) {
     var done = new webdriver.promise.Deferred();
-    done.resolve(this.capabilities_);
+    done.fulfill(this.capabilities_);
     return done;
   }
   return this.browser_.scheduleGetCapabilities().then(function(caps) {
@@ -589,11 +600,11 @@ WebDriverServer.prototype.getCapabilities_ = function() {
 };
 
 /**
- * Blanks out the browser at the beginning of a test.
+ * Blanks out the browser at the beginning of a test, using DevTools.
  *
  * @private
  */
-WebDriverServer.prototype.clearPage_ = function() {
+WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   'use strict';
   this.getCapabilities_().then(function(caps) {
     if (!this.isCacheCleared_) {
@@ -611,49 +622,98 @@ WebDriverServer.prototype.clearPage_ = function() {
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
-  this.pageCommand_('navigate', {url: 'data:text/html;charset=utf-8,'});
+  this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
   // Get the root frameId
   this.pageCommand_('getResourceTree').then(function(result) {
     var frameId = result.frameTree.frame.id;
     // Paint the page white
     // TODO Verify that this blanking is required and, if not, remove it.
     this.setPageBackground_(frameId);
-    if (this.captureVideo_) {
+    if (this.captureVideo_) {  // Generate video sync sequence, start recording.
       // Hold white(500ms) for our video / 'test started' screenshot
-      this.app_.scheduleTimeout('Hold white background', 500);
+      this.app_.timeout(500, 'Hold white background');
       this.getCapabilities_().then(function(caps) {
         if (!caps.videoRecording) {
           return;
         }
-        var videoFile = exports.process.pid + '_video.avi';
-        this.browser_.scheduleStartVideoRecording(videoFile,
-            this.onVideoRecordingExit_.bind(this));
-        this.app_.schedule('Started recording', function() {
-          logger.debug('Video record start succeeded');
-          this.videoFile_ = videoFile;
-        }.bind(this));
+        this.scheduleStartVideoRecording_();
         // Hold orange(500ms)->white: anchor video to DevTools.
-        this.setPageBackground_(frameId, '#DE640D');  // Ghastly orange.
-        this.app_.scheduleTimeout('Hold orange background', 500);
+        this.setPageBackground_(frameId, GHASTLY_ORANGE_);
+        this.app_.timeout(500, 'Hold orange background');
         // Begin recording DevTools before onTestStarted_ fires,
         // to make sure we get the paint event from the below switch to white.
-        // This allows us to match the DevTools event timestamp to the
-        // video frame where the background changed from orange to white.
-        this.app_.schedule('Start recording', function() {
+        // This allows us to sync the DevTools trace vs. the video by matching
+        // the first DevTools paint event timestamp to the video frame where
+        // the background changed from non-white to white.
+        this.app_.schedule('Start recording DevTools with video', function() {
           this.isRecordingDevTools_ = true;
         }.bind(this));
         this.setPageBackground_(frameId);  // White
       }.bind(this));
     }
-    if (this.capturePackets_) {
-      var pcapFile = exports.process.pid + '_tcpdump.pcap';
-      this.browser_.scheduleStartPacketCapture(pcapFile);
-      this.app_.schedule('Packet capture started', function() {
-        logger.debug('Packet capture start succeeded');
-        this.pcapFile_ = pcapFile;
-      }.bind(this));
-    }
+    // Make sure we start recording DevTools regardless of the video.
+    this.app_.schedule('Start recording DevTools', function() {
+      this.isRecordingDevTools_ = true;
+    }.bind(this));
   }.bind(this));
+};
+
+/**
+ * Blanks out the browser at the beginning of a test via WebDriver API.
+ *
+ * @private
+ */
+WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
+  'use strict';
+  // Navigate to a blank, to make sure we clear the prior page and cancel
+  // all pending events.
+  this.driver_.get(BLANK_PAGE_URL_ + '<body/>');
+  if (this.captureVideo_) {  // Generate video sync sequence, start recording.
+    this.getCapabilities_().then(function(caps) {
+      if (!caps.videoRecording) {
+        return;
+      }
+      this.scheduleStartVideoRecording_();
+      this.app_.timeout(500, 'Hold white background');
+      // Hold ghastly orange(500ms)->white: anchor video to DevTools.
+      this.driver_.executeScript(
+          'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
+      this.app_.timeout(500, 'Hold orange background');
+      this.driver_.executeScript(
+          'document.body.style.backgroundColor="white";');
+    }.bind(this));
+  }
+};
+
+/**
+ * Starts video recording, sets the video file, registers video stop handler.
+ * @private
+ */
+WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
+  'use strict';
+  var videoFile = exports.process.pid + '_video.avi';
+  this.browser_.scheduleStartVideoRecording(videoFile,
+      this.onVideoRecordingExit_.bind(this));
+  this.app_.schedule('Started recording', function() {
+    logger.debug('Video record start succeeded');
+    this.videoFile_ = videoFile;
+  }.bind(this));
+};
+
+/**
+ * Starts packet capture if it was requested, sets the pcap file.
+ * @private
+ */
+WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
+  'use strict';
+  if (this.capturePackets_) {
+    var pcapFile = exports.process.pid + '_tcpdump.pcap';
+    this.browser_.scheduleStartPacketCapture(pcapFile);
+    this.app_.schedule('Packet capture started', function() {
+      logger.debug('Packet capture start succeeded');
+      this.pcapFile_ = pcapFile;
+    }.bind(this));
+  }
 };
 
 /**
@@ -666,7 +726,8 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }
-  this.clearPage_();
+  this.clearPageAndStartVideoDevTools_();
+  this.scheduleStartPacketCaptureIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
     // onDevToolsMessage_ resolves this promise when it detects on-load.
@@ -700,19 +761,23 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
     this.waitForCoalesce_(this.wdSandbox_, exports.WAIT_AFTER_ONLOAD_MS);
   } else {
     this.startWdServer_(browserCaps);
-    wd_sandbox.createSandboxedWdNamespace(
-        this.browser_.getServerUrl(), browserCaps, this).then(
-            function(wdSandbox) {
-      this.wdSandbox_ = wdSandbox;
-      this.sandboxApp_ = wdSandbox.promise.Application.getInstance();
-      this.sandboxApp_.on(
-          wdSandbox.promise.Application.EventType.IDLE, function() {
-        logger.info('The sandbox application has gone idle, history: %j',
-            this.sandboxApp_.getHistory());
+    // The following needs to be scheduled() because getServerUrl() returns
+    // the URL only after the startWdServer_() scheduled action finishes.
+    this.app_.schedule('Sandbox WD namespace and run the script', function() {
+      wd_sandbox.createSandboxedWdNamespace(
+          this.browser_.getServerUrl(), browserCaps, this).then(
+              function(wdSandbox) {
+        this.wdSandbox_ = wdSandbox;
+        this.sandboxApp_ = wdSandbox.promise.controlFlow();
+        this.sandboxApp_.on(
+            wdSandbox.promise.ControlFlow.EventType.IDLE, function() {
+          logger.info('The sandbox control flow has gone idle, history: %j',
+              this.sandboxApp_.getHistory());
+        }.bind(this));
+        // Bring it!
+        this.runScript_(wdSandbox);
+        this.waitForCoalesce_.bind(wdSandbox, exports.WAIT_AFTER_ONLOAD_MS);
       }.bind(this));
-      // Bring it!
-      this.runScript_(wdSandbox);
-      this.waitForCoalesce_.bind(wdSandbox, exports.WAIT_AFTER_ONLOAD_MS);
     }.bind(this));
   }
 };
@@ -724,14 +789,11 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
  */
 WebDriverServer.prototype.connect = function() {
   'use strict';
-  var browserCaps = {
-    browserName: (this.options_.browserName || 'chrome').toLowerCase(),
-    version: this.options_.browserVersion || '',
-    platform: 'ANY',
-    javascriptEnabled: true
-  };
+  var browserCaps = {};
+  browserCaps[webdriver.Capability.BROWSER_NAME] = this.options_.browserName ?
+      this.options_.browserName.toLowerCase() : webdriver.Browser.CHROME;
 
-  this.app_.on(webdriver.promise.Application.EventType.UNCAUGHT_EXCEPTION,
+  this.app_.on(webdriver.promise.ControlFlow.EventType.UNCAUGHT_EXCEPTION,
       function() {
     logger.error('App uncaught exception event: %j',
         Array.prototype.slice.call(arguments));
@@ -743,8 +805,8 @@ WebDriverServer.prototype.connect = function() {
     this.uncaughtExceptionHandler_.apply(this, arguments);
   }.bind(this));
   // When IDLE is emitted, the app no longer runs an event loop.
-  this.app_.on(webdriver.promise.Application.EventType.IDLE, function() {
-    logger.info('The main application has gone idle, history: %j',
+  this.app_.on(webdriver.promise.ControlFlow.EventType.IDLE, function() {
+    logger.info('The main control flow has gone idle, history: %j',
         this.app_.getHistory());
   }.bind(this));
 
@@ -787,8 +849,7 @@ WebDriverServer.prototype.waitForCoalesce_ = function(wdSandbox, timeout) {
   'use strict';
   this.app_.schedule('Wait for browser', function() {
     logger.info('Test finished, waiting for browser to coalesce');
-    this.sandboxApp_.scheduleTimeout(
-        'Waiting for browser to coalesce', timeout);
+    this.sandboxApp_.timeout(timeout, 'Waiting for browser to coalesce');
   }.bind(this));
 };
 
@@ -819,6 +880,52 @@ WebDriverServer.prototype.tearDown_ = function() {
 };
 
 /**
+ * Gets DevTools messages from the WebDriver PERFORMANCE log type.
+ * @private
+ */
+WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
+  'use strict';
+  if (this.driver_) {
+    if (this.devToolsMessages_.length > 0) {  // Must be empty at this point.
+      throw new Error(
+          'Internal error: DevTools messages were collected for WebDriver: ' +
+          this.devToolsMessages_);
+    }
+    this.driver_.manage().logs().get(webdriver.logging.Type.PERFORMANCE).then(
+        function(log) {
+      if (!log) {
+        throw new Error('Unexpectedly empty WebDriver PERFORMANCE log');
+      }
+      // Return just the first WebView's DevTools events.
+      // Additional WebViews may confuse WebPageTest, ignore them for now.
+      var firstWebViewId;
+      this.devToolsMessages_ = log.reduce(function(messages, entry, index) {
+        var wdLoggingMessage;
+        try {
+          wdLoggingMessage = JSON.parse(entry.message);
+        } catch (e) {
+          logger.warn('WebDriver Logging entry #%d message is not JSON text',
+              index);
+          return messages;
+        }
+        if (!wdLoggingMessage.webview || !wdLoggingMessage.message) {
+          logger.warn('WebDriver Logging entry #%d message does not have ' +
+              'webdriver or message properties', index);
+          return messages;
+        }
+        if (!firstWebViewId) {
+          firstWebViewId = wdLoggingMessage.webview;
+        }
+        if (firstWebViewId === wdLoggingMessage.webview) {
+          messages.push(wdLoggingMessage.message);
+        }
+        return messages;
+      }.bind(this), []);  // Initial messages is [].
+    }.bind(this));
+  }
+};
+
+/**
  * @param {Error=} e run error.
  * @private
  */
@@ -836,6 +943,7 @@ WebDriverServer.prototype.done_ = function(e) {
     logger.info('Test run succeeded');
   }
   var cmd = (e ? 'error' : 'done');
+  this.scheduleGetWdDevToolsLog_();
   var videoFile = this.videoFile_;
   var pcapFile = this.pcapFile_;
   // We must schedule/run a driver quit before we emit 'done', to make sure

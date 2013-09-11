@@ -3,6 +3,8 @@ A Node.js based agent that allows WebDriverJS scripts.
 Tested with NodeJS 0.8.16 and 0.8.21 on OSX 10.8 and Ubuntu 12.10 Quantal.
 Does not work with NodeJS 0.6.x.
 
+The current ChromeDriver version is 2.3, supporting Chrome 28-31.
+
 On Linux use https://launchpad.net/~chris-lea/+archive/node.js/+packages,
 ones that come with distros tend to be too old (e.g. 0.6 with Ubuntu Quantal).
 
@@ -76,6 +78,3 @@ resulting in link failures -- haven't figured that out yet, but it's
 going to be moot after we switch to JSCover.
 
 TODO(klm): switch JSCoverage -> JSCover.
-
-TODO(klm): Revamp test/disabled/wd_server_tests_large.js. Currently they have
-too many issues to run.

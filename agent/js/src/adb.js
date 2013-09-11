@@ -41,7 +41,7 @@ var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
 /**
  * Creates an adb runner for a given device serial.
  *
- * @param {webdriver.promise.Application} app the scheduler app.
+ * @param {webdriver.promise.ControlFlow} app the scheduler app.
  * @param {string} serial the device serial.
  * @param {string=} adbCommand the adb command, defaults to 'adb'.
  * @constructor

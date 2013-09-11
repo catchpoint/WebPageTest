@@ -31,7 +31,7 @@ var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -44,7 +44,7 @@ var webdriver = require('webdriver');
 describe('browser_local_chrome small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -71,17 +71,17 @@ describe('browser_local_chrome small', function() {
         app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
-    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
+    should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     should.ok(processSpawnStub.calledOnce);
     processSpawnStub.assertCall(chromedriver, '-port=4444');
     processSpawnStub.assertCall();
 
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
     processSpawnStub.assertCall();
@@ -95,18 +95,18 @@ describe('browser_local_chrome small', function() {
         app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
-    should.equal('http://localhost:1234/json', browser.getDevToolsUrl());
+    should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     should.ok(processSpawnStub.calledOnce);
     processSpawnStub.assertCall(chromedriver, '-port=4444');
     processSpawnStub.assertCall();
     var chromedriverProc = processSpawnStub.firstCall.returnValue;
 
     chromedriverProc.emit('exit', /*code=*/0);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
     processSpawnStub.assertCall();

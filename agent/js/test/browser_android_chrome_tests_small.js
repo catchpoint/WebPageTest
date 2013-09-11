@@ -34,7 +34,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -47,7 +47,7 @@ var webdriver = require('webdriver');
 describe('browser_android_chrome small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -144,7 +144,7 @@ describe('browser_android_chrome small', function() {
         {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
         videoCard: videoCard});
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     test_utils.assertStringsMatch(
@@ -153,7 +153,7 @@ describe('browser_android_chrome small', function() {
     should.ok(videoStop.notCalled);
 
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     should.ok(videoStop.calledOnce);
@@ -197,7 +197,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 34);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 34);
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
@@ -212,8 +212,8 @@ describe('browser_android_chrome small', function() {
       assertAdbCall('shell', 'su', '-c',
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
-    var flags = ['--disable-fre', '--metrics-recording-only',
-       '--enable-remote-debugging'];
+    var flags = ['--disable-fre', '--enable-benchmarking',
+        '--metrics-recording-only', '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
@@ -237,7 +237,7 @@ describe('browser_android_chrome small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 5);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
 

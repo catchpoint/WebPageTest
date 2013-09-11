@@ -38,7 +38,7 @@ var EXIT_TIMEOUT = 5000;
 
 
 /**
- * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {webdriver.promise.ControlFlow=} app the scheduler.
  * @param {Object.<string>} args options with string values:
  *   #param {string} deviceSerial  the device to run tcpdump on.
  *   #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
