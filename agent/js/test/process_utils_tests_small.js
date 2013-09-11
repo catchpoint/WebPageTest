@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var child_process = require('child_process');
 var fs = require('fs');
 var logger = require('logger');
 var process_utils = require('process_utils');
@@ -71,7 +70,7 @@ describe('process_utils small', function() {
       a = a2;
       b = b2;
     });
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 1);
     should.equal('a', a);
     should.equal(undefined, b); // webdriver bug?!
   });
@@ -149,13 +148,15 @@ describe('process_utils small', function() {
     var processInfo = new process_utils.ProcessInfo('123 456 abc def');
     should.equal('123', processInfo.ppid);
     should.equal('456', processInfo.pid);
-    should.equal('abc def', processInfo.command);
+    should.equal('abc', processInfo.command);
+    should.equal('def', processInfo.args.join(' '));
 
     // Moar whitespaces plz!
     processInfo = new process_utils.ProcessInfo('  123   456    abc   def');
     should.equal('123', processInfo.ppid);
     should.equal('456', processInfo.pid);
-    should.equal('abc def', processInfo.command);
+    should.equal('abc', processInfo.command);
+    should.equal('def', processInfo.args.join(' '));
   });
 
   it('should kill all process in killProcesses', function() {
@@ -167,72 +168,50 @@ describe('process_utils small', function() {
         new process_utils.ProcessInfo('0 5 e')
       ];
     var numKilled = 0;
-    sandbox.stub(child_process, 'exec',
-        function(command, callback) {
-      logger.info('Stub exec: %s', command);
-      numKilled += 1;
-      callback(undefined, '', '');
-    });
+    var spawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    spawnStub.callback = function(proc, command) {
+      logger.info('Stub spawn: %s', command);
+      if ('kill' === command) {
+        numKilled += 1;
+      }
+    };
 
-    var doneSpy = sandbox.spy();
-    process_utils.killProcesses(processInfos, doneSpy);
-    should.ok(doneSpy.calledOnce);
+    process_utils.scheduleKillAll(app, 'killAll', processInfos);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
     should.equal(5, numKilled);
   });
 
-  function testKill(pid, psInput, expectedPids) {
-    // ppid pid command
-    var lines = psInput.split('\n');
-
-    var actualPids = [];
-    sandbox.stub(child_process, 'exec',
-        function(command, callback) {
-      logger.info('Stub exec: %s', command);
-      var pid;
-      var ppid;
-      var m = command.match(/^kill\s+(-\d+)?\s+(\d+)$/);
-      if (m) { // kill pid
-        pid = m[2];
-        actualPids.push(parseInt(pid, 10));
-      }
-      m = command.match(/^ps\s+-p\s+(\d+)\s/);
-      if (m) { // get info for pid
-        pid = m[1];
-      }
-      m = command.match(/^ps\s[^|]+\|\s+grep\s+"\^\s+\*(\d+)\s/);
-      if (m) { // find children of ppid
-        ppid = m[1];
-      }
-      var matches = '';
-      if (pid || ppid) {
-        var regex = new RegExp('^\\s*' + (ppid || '\\d+') + '\\s+' +
-            (pid || '\\d+') + '\\s');
-        lines.forEach(function(line) {
-          if (regex.test(line)) {
-            matches += (matches ? '\n' : '') + line;
-          }
-        });
+  function testKillTree(pid, psOutput, expectedPidsToKill) {
+    var actualPidsToKill = [];
+    var spawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    spawnStub.callback = function(proc, command, args) {
+      var stdout = '';
+      if ('kill' === command && /^\d+$/.test(args[args.length - 1])) {
+        var pid = args[args.length - 1]; // kill pid
+        actualPidsToKill.push(parseInt(pid, 10));
+      } else if ('ps' === command) {
+        stdout = psOutput;
       } else {
-        actualPids.push('ERROR(' + command + ')');
+        throw new Error('Unexpected command: ' + command);
       }
-      callback(undefined, matches, '');
-    });
+      global.setTimeout(function() {
+        proc.stdout.emit('data', stdout);
+      }.bind(this), 1);
+    };
 
-    var doneSpy = sandbox.spy();
-    process_utils.kill(pid, doneSpy);
-    should.ok(doneSpy.calledOnce);
-    should.equal(actualPids.sort().toString(),
-        expectedPids.slice().sort().toString());
+    process_utils.scheduleKillTree(app, 'killTree', {'pid': pid});
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    should.equal(actualPidsToKill.toString(), expectedPidsToKill.toString());
   }
 
   it('should kill process and children', function() {
-    testKill(7,
+    testKillTree(7,
       (' 1    7  r0\n' +
        ' 7   12  r0/c0\n' +
        ' 1    3  r1\n' +
        '12  999  r0/c0/g0\n' +
        ' 7   34  r0/c1'),
-      [7, 12, 34, 999]);
+      [7, 34, 12, 999]);
   });
 
   function testAllocPort(expectedPorts, usedPorts, randomSeed) {
