@@ -80,14 +80,14 @@ exports.signalKill = function(process, processName) {
  *
  * @param {webdriver.promise.Application} app the scheduler.
  * @param {string} description debug title.
- * @param {ProcessInfo} processInfo to be killed.
+ * @param {(Process|ProcessInfo)} process process to be killed.
  */
-exports.scheduleKill = function(app, description, processInfo) {
+exports.scheduleKill = function(app, description, process) {
   'use strict';
   app.schedule(description, function() {
-    logger.debug('Killing %s: %s', processInfo.pid, formatForMessage(
-        processInfo.command, processInfo.args));
-    var cmd = system_commands.get('kill', [processInfo.pid]).split(/\s+/);
+    logger.debug('Killing %s: %s', process.pid, formatForMessage(
+        process.command, process.args));
+    var cmd = system_commands.get('kill', [process.pid]).split(/\s+/);
     exports.scheduleExec(app, cmd.shift(), cmd).addErrback(function() { });
   });
 };
@@ -97,14 +97,14 @@ exports.scheduleKill = function(app, description, processInfo) {
  *
  * @param {webdriver.promise.Application} app the scheduler.
  * @param {string} description debug title.
- * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
+ * @param {(Array.<Process>|Array.<ProcessInfo>)} processes processes to kill.
  */
-exports.scheduleKillAll = function(app, description, processInfos) {
+exports.scheduleKillAll = function(app, description, processes) {
   'use strict';
   app.schedule(description || 'killAll', function() {
-    if (processInfos.length > 0) {
-      exports.scheduleKill(app, 'kill', processInfos[0]);
-      exports.scheduleKillAll(app, description, processInfos.slice(1));
+    if (processes.length > 0) {
+      exports.scheduleKill(app, 'kill', processes[0]);
+      exports.scheduleKillAll(app, description, processes.slice(1));
     }
   });
 };
@@ -166,14 +166,10 @@ exports.scheduleGetTree = function(app, description, rootPid) {
  */
 exports.scheduleKillTree = function(app, description, process) {
   'use strict';
-  if (process.pid) {
-    exports.scheduleGetTree(app, 'getTree ' + description, process.pid).then(
-        function(processInfos) {
-      exports.scheduleKillAll(app, 'killAll' + description, processInfos);
-    });
-  } else {
-    app.schedule('Kill non-pid', process.kill); // Unit test?
-  }
+  exports.scheduleGetTree(app, 'getTree ' + description, process.pid).then(
+      function(processInfos) {
+    exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
+  });
 };
 
 /**
@@ -231,7 +227,7 @@ function formatForMessage(command, args) {
   'use strict';
   var ret = [];
   var i;
-  for (i = -1; i < args.length; i++) {
+  for (i = -1; i < (args ? args.length : 0); i++) {
     var s = (i < 0 ? command : args[i]);
     s = (/^[\-_a-zA-Z0-9\.\\\/:]+$/.test(s) ? s : '\'' + s + '\'');
     ret.push(s);

@@ -77,13 +77,13 @@ VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
     if (!isSupported) {
       throw new Error('!isSupported');
     }
-    process_utils.scheduleGetAll(this.app_).then(function(procs) {
-      procs = procs.filter(function(proc) {
-        return (proc.command === this.captureCommand_ &&
-            deviceSerial === (proc.args.indexOf('-s') < 0 ? undefined :
-                proc.args[proc.args.indexOf('-s') + 1]));
+    process_utils.scheduleGetAll(this.app_).then(function(processInfos) {
+      processInfos = processInfos.filter(function(pi) {
+        return (pi.command === this.captureCommand_ &&
+            deviceSerial === (pi.args.indexOf('-s') < 0 ? undefined :
+                pi.args[pi.args.indexOf('-s') + 1]));
       }.bind(this));
-      process_utils.scheduleKillTrees(this.app_, 'Kill dangling', procs);
+      process_utils.scheduleKillTrees(this.app_, 'Kill stray', processInfos);
     }.bind(this));
   }.bind(this));
 };

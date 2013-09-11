@@ -370,16 +370,16 @@ Agent.prototype.scheduleCleanup_ = function() {
     //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
     // Ideally we could run agent_main as our normal user and do this "sudo -u"
     // when we fork wd_server, but cross-user IPC apparently doesn't work.
-    process_utils.scheduleGetAll(this.app_).then(function(processes) {
-      processes = processes.filter(function(v) {
-        return v.pid !== process.pid;
+    process_utils.scheduleGetAll(this.app_).then(function(processInfos) {
+      processInfos = processInfos.filter(function(pi) {
+        return pi.pid !== process.pid;
       });
-      if (processes.length > 0) {
-        logger.info('Killing %s pids owned by user %s: %s', processes.length,
+      if (processInfos.length > 0) {
+        logger.info('Killing %s pids owned by user %s: %s', processInfos.length,
             process.env.USER,
-            processes.map(function(v) { return v.pid; }).join(', '));
+            processInfos.map(function(pi) { return pi.pid; }).join(', '));
         process_utils.scheduleKillAll(
-            this.app_, 'Kill dangling pids', processes);
+            this.app_, 'Kill dangling pids', processInfos);
       }
     }.bind(this));
   }
