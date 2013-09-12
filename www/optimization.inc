@@ -504,13 +504,11 @@ function dumpOptimizationGlossary(&$settings)
         <tr class="blank"></tr>
         <tr><th rowspan=2 colspan=1>Compress Images</th>
             <td class="nowrap">Applicable Objects</td>
-            <td >Any object with a mime type of "image/*"</td>
+            <td >JPEG Images</td>
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >GIF - All pass<br>
-            PNG - Must be 8 bit or lower (no 24-bit PNGs will pass)<br>
-            JPEG - Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
+            <td >Within 10% of a photoshop quality 50 will pass, up to 50% larger will warn and anything larger than that will fail.<br>
             The overall score is the percentage of image bytes that can be saved by re-compressing the images.                        
             </td>
         </tr>
