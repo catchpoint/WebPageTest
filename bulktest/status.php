@@ -43,7 +43,8 @@ if (LoadResults($results)) {
                     !$result['TTFB'] ||
                     $result['TTFB'] > $result['docTime'] ||
                     $stddev > $maxVariancePct || // > 10% variation in results
-                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
+                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
+                    ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
                     if (!array_key_exists($result['label'], $errors))
                         $errors[$result['label']] = 1;
                     else

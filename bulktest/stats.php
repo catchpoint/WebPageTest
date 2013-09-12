@@ -18,7 +18,8 @@ if (LoadResults($results)) {
             !@$result['docTime'] ||
             !@$result['TTFB'] ||
             @$result['TTFB'] > @$result['docTime'] ||
-            (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
+            (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
+            ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
             $valid = false;
             $invalid++;
         }

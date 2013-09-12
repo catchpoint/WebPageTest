@@ -34,7 +34,6 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, computerName(_T(""))
 	, aliveFile(_T(""))
 	, testType(0)
-	, rebootInterval(0)
 	, clearCacheInterval(-1)
 	, labID(0)
 	, dialerID(0)
@@ -280,9 +279,6 @@ void CurlBlastDlg::OnTimer(UINT_PTR nIDEvent)
 				
 				// see if it is time to upload the log files
 				CheckUploadLogs();
-				
-				// see if it is time to reboot
-				CheckReboot();
 				
 				// do we need to exit?
 				CheckExit();
@@ -566,7 +562,6 @@ void CurlBlastDlg::LoadSettings(void)
 	threadCount			    = GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
 	timeout				      = GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
 	testType			      = GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
-	rebootInterval		  = GetPrivateProfileInt(_T("Configuration"), _T("Reboot Interval"), rebootInterval, iniFile);
 	clearCacheInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Cache Interval"), 0, iniFile);
 	labID				        = GetPrivateProfileInt(_T("Configuration"), _T("Lab ID"), -1, iniFile);
 	dialerID			      = GetPrivateProfileInt(_T("Configuration"), _T("Dialer ID"), 0, iniFile);
@@ -789,105 +784,6 @@ void CurlBlastDlg::LoadSettings(void)
 	// adjust the clear cache interval and reboot interval +- 20% to level out the dialers
 	if( clearCacheInterval )
 		clearCacheInterval = clearCacheInterval + (rand() % (int)((double)clearCacheInterval * 0.4)) - (int)((double)clearCacheInterval * 0.2);
-	if( rebootInterval )
-		rebootInterval = rebootInterval + (rand() % (int)((double)rebootInterval * 0.4)) - (int)((double)rebootInterval * 0.2);
-}
-
-/*-----------------------------------------------------------------------------
-	Check to see if it is time to reboot
------------------------------------------------------------------------------*/
-bool CurlBlastDlg::CheckReboot(bool force)
-{
-	bool ret = false;
-
-	// force a reboot if we are having issues (like not checking for work for 30 minutes)
-	if( urlManager.NeedReboot() )
-		force = true;
-	
-	bool reboot = force;
-
-	if( force || (rebootInterval && start && testType != 6) )
-	{
-		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
-		
-		int minutes = (DWORD)(((now - start) / freq) / 60);
-		int remaining = 0;
-		if( minutes < rebootInterval )
-			remaining = rebootInterval - minutes;
-			
-		// check to see if we're having browsing problems and if so, force a reboot
-		// all threads must have had 2 consecutive errors before we decide to reboot
-//		CURLBlaster * blaster;
-		bool rebootErrors = false;
-/*		if( workers.GetCount() )
-		{
-			rebootErrors = true;
-			for( int i = 0; i < workers.GetCount() && rebootErrors; i++ )
-			{
-				blaster = workers[i];
-				if( blaster && blaster->sequentialErrors < 2 )
-					rebootErrors = false;
-			}
-		}
-*/		
-		if( rebootErrors )
-			log.LogEvent(event_SequentialErrors);
-		
-		if( remaining && !rebootErrors )
-		{
-			CString buff;
-			buff.Format(_T("Rebooting in %d minute(s)"), remaining);
-			rebooting.SetWindowText(buff);
-		}
-		else if( running )
-			reboot = true;
-			
-		if( reboot )
-		{
-			ret = true;
-			
-			// shut everything down and reboot
-			CWaitCursor w;
-			
-			KillTimer(1);
-			KillTimer(2);
-
-			rebooting.SetWindowText(_T("Rebooting NOW!"));
-			status.SetWindowText(_T("Preparing to reboot..."));
-			
-			// signal and wait for all of the workers to finish
-			KillWorkers();
-			
-			if( rebootErrors )
-				log.LogEvent(event_Reboot, 1, _T("Error count exceeded"));
-			else
-				log.LogEvent(event_Reboot);
-			
-			// upload our current log files
-			UploadLogs();
-			
-			// ok, do the actual reboot
-			HANDLE hToken;
-			if( OpenProcessToken( GetCurrentProcess() , TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY , &hToken) )
-			{
-				TOKEN_PRIVILEGES tp;
-				
-				if( LookupPrivilegeValue( NULL , SE_SHUTDOWN_NAME , &tp.Privileges[0].Luid ) )
-				{
-					tp.PrivilegeCount = 1;
-					tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-					AdjustTokenPrivileges( hToken , FALSE , &tp , 0 , (PTOKEN_PRIVILEGES) 0 , 0 ) ;
-				}
-				
-				CloseHandle(hToken);
-			}
-			
-			InitiateSystemShutdown( NULL, _T("URL Blast reboot interval expired."), 0, TRUE, TRUE );
-		}
-	}
-	
-	return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -930,28 +826,7 @@ void CurlBlastDlg::CheckUploadLogs(void)
 		QueryPerformanceCounter((LARGE_INTEGER *)&now);
 		int elapsed = (int)(((now - lastUpload) / freq) / 60);
 		if( elapsed >= uploadLogsInterval )
-		{
-			// record this even if it didn't work so we don't try again right away
-			lastUpload = now;	
-
-			// make sure we're not going to reboot soon (which would also upload the log files)
-			// otherwise just let the reboot do the upload
-			bool upload = true;
-			if( rebootInterval && start )
-			{
-				int minutes = (DWORD)(((now - start) / freq) / 60);
-				int remaining = 0;
-				if( minutes < rebootInterval )
-					remaining = rebootInterval - minutes;
-					
-				if( remaining < (uploadLogsInterval / 2) )
-					upload = false;
-			}
-						
-			// upload the actual log files
-			if( upload )
 				UploadLogs();
-		}
 	}
 }
 
@@ -1307,10 +1182,7 @@ void CurlBlastDlg::CheckExit(void)
 			// if we are crawling, do we need to upload logs or reboot?
 			if( testType == 6 )
 			{
-				if( rebootInterval && start )
-					CheckReboot(true);
-				else
-					OnClose();
+				OnClose();
 			}
 			else
 				OnClose();
@@ -1499,99 +1371,95 @@ void CurlBlastDlg::Defrag(void)
 -----------------------------------------------------------------------------*/
 LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
 {
-	// flag as running and see if we need to reboot
-	if( !CheckReboot() )
+	// start up the url manager
+	urlManager.Start();
+	
+	// create all of the workers
+	status.SetWindowText(_T("Starting workers..."));
+	
+	// see if we had enough addresses to use (we need one extra if we are binding to specific addresses)
+	if( addresses.GetCount() <= threadCount )
+		addresses.RemoveAll();
+		
+	CRect desktop(0,0,browserWidth,browserHeight);
+
+	// launch the worker threads	
+	DWORD useBitBlt = 0;
+	if( threadCount == 1 )
+		useBitBlt = 1;
+	HANDLE * cacheHandles = new HANDLE[threadCount];
+	HANDLE * runHandles = new HANDLE[threadCount];
+	for( int i = 0; i < threadCount; i++ )
 	{
-		// start up the url manager
-		urlManager.Start();
+		CString buff;
+		buff.Format(_T("Starting user%d..."), i+1);
+		status.SetWindowText(buff);
 		
-		// create all of the workers
-		status.SetWindowText(_T("Starting workers..."));
+		CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
+		workers.Add(blaster);
 		
-		// see if we had enough addresses to use (we need one extra if we are binding to specific addresses)
-		if( addresses.GetCount() <= threadCount )
-			addresses.RemoveAll();
-			
-		CRect desktop(0,0,browserWidth,browserHeight);
+		cacheHandles[i] = blaster->hClearedCache;
+		runHandles[i] = blaster->hRun;
 
-		// launch the worker threads	
-		DWORD useBitBlt = 0;
-		if( threadCount == 1 )
-			useBitBlt = 1;
-		HANDLE * cacheHandles = new HANDLE[threadCount];
-		HANDLE * runHandles = new HANDLE[threadCount];
-		for( int i = 0; i < threadCount; i++ )
-		{
-			CString buff;
-			buff.Format(_T("Starting user%d..."), i+1);
-			status.SetWindowText(buff);
-			
-			CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
-			workers.Add(blaster);
-			
-			cacheHandles[i] = blaster->hClearedCache;
-			runHandles[i] = blaster->hRun;
-
-			// pass on configuration information
-			blaster->errorLog		  = logFile;
-			blaster->testType		  = testType;
-			blaster->urlManager		= &urlManager;
-			blaster->labID			  = labID;
-			blaster->dialerID		  = dialerID;
-			blaster->connectionType	= connectionType;
-			blaster->timeout		  = timeout;
-			blaster->experimental	= experimental;
-			blaster->desktop		  = desktop;
-			blaster->customEventText= customEventText;
-			blaster->screenShotErrors = screenShotErrors;
-			blaster->accountBase	= accountBase;
-			blaster->password		  = password;
-			blaster->preLaunch		= preLaunch;
-			blaster->postLaunch		= postLaunch;
-			blaster->dynaTrace		= dynaTrace;
-			blaster->pipeIn			  = pipeIn;
-			blaster->pipeOut		  = pipeOut;
-			blaster->useBitBlt		= useBitBlt;
-      blaster->keepDNS      = keepDNS;
-			
-			// force 1024x768 for screen shots
-			blaster->pos.right = browserWidth;
-			blaster->pos.bottom = browserHeight;
-			
-			// hand an address to the thread to use (hand them out backwards)
-			if( !addresses.IsEmpty() )
-				blaster->ipAddress = addresses[addresses.GetCount() - i - 1];
-
-      if( useCurrentAccount )
-        blaster->hProfile = HKEY_CURRENT_USER;
-				
-			blaster->Start(i+1);
-		}
-
-		status.SetWindowText(_T("Clearing caches..."));
-
-		// wait for all of the threads to finish clearing their caches
-		WaitForMultipleObjects(threadCount, cacheHandles, TRUE, INFINITE);
+		// pass on configuration information
+		blaster->errorLog		  = logFile;
+		blaster->testType		  = testType;
+		blaster->urlManager		= &urlManager;
+		blaster->labID			  = labID;
+		blaster->dialerID		  = dialerID;
+		blaster->connectionType	= connectionType;
+		blaster->timeout		  = timeout;
+		blaster->experimental	= experimental;
+		blaster->desktop		  = desktop;
+		blaster->customEventText= customEventText;
+		blaster->screenShotErrors = screenShotErrors;
+		blaster->accountBase	= accountBase;
+		blaster->password		  = password;
+		blaster->preLaunch		= preLaunch;
+		blaster->postLaunch		= postLaunch;
+		blaster->dynaTrace		= dynaTrace;
+		blaster->pipeIn			  = pipeIn;
+		blaster->pipeOut		  = pipeOut;
+		blaster->useBitBlt		= useBitBlt;
+    blaster->keepDNS      = keepDNS;
 		
-		// start the threads running (1/2 second apart)
-		for( int i = 0; i < threadCount; i++ )
-		{
-			CString buff;
-			buff.Format(_T("Starting user%d..."), i+1);
-			status.SetWindowText(buff);
-			
-			SetEvent(runHandles[i]);
-			Sleep(500);
-		}
+		// force 1024x768 for screen shots
+		blaster->pos.right = browserWidth;
+		blaster->pos.bottom = browserHeight;
 		
-		delete [] cacheHandles;
-		delete [] runHandles;
-		
-		// send a UI update message
-		PostMessage(MSG_UPDATE_UI);
+		// hand an address to the thread to use (hand them out backwards)
+		if( !addresses.IsEmpty() )
+			blaster->ipAddress = addresses[addresses.GetCount() - i - 1];
 
-		status.SetWindowText(_T("Running..."));
+    if( useCurrentAccount )
+      blaster->hProfile = HKEY_CURRENT_USER;
+			
+		blaster->Start(i+1);
 	}
+
+	status.SetWindowText(_T("Clearing caches..."));
+
+	// wait for all of the threads to finish clearing their caches
+	WaitForMultipleObjects(threadCount, cacheHandles, TRUE, INFINITE);
+	
+	// start the threads running (1/2 second apart)
+	for( int i = 0; i < threadCount; i++ )
+	{
+		CString buff;
+		buff.Format(_T("Starting user%d..."), i+1);
+		status.SetWindowText(buff);
+		
+		SetEvent(runHandles[i]);
+		Sleep(500);
+	}
+	
+	delete [] cacheHandles;
+	delete [] runHandles;
+	
+	// send a UI update message
+	PostMessage(MSG_UPDATE_UI);
+
+	status.SetWindowText(_T("Running..."));
 	running = true;
 	
 	return 0;
@@ -1699,8 +1567,6 @@ void CurlBlastDlg::GetEC2Config()
 							threadCount = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_timeout")) && value.GetLength() )
 							timeout = _ttol(value); 
-						else if( !key.CompareNoCase(_T("wpt_reboot_interval")) && value.GetLength() )
-							rebootInterval = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_defrag_interval")) && value.GetLength() )
 							clearCacheInterval = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_keep_DNS")) && value.GetLength() )

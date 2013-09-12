@@ -66,7 +66,6 @@ protected:
 	CString aliveFile;
 	CString urlFilesDir;
 	int testType;
-	int rebootInterval;
 	int clearCacheInterval;
 	DWORD screenShotErrors;
 	DWORD checkOpt;
@@ -107,7 +106,6 @@ protected:
 	void LoadSettings(void);
 	CUrlManager urlManager;
 	CString computerName;
-	bool CheckReboot(bool force = false);
 	void WriteAlive(void);
 	void CheckUploadLogs(void);
 	void UploadLogs(void);
