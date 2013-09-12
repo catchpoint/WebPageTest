@@ -59,7 +59,7 @@
             <div id="statusImg">
                 <?php
                     $img = "waiting";
-                    if( array_key_exists('startTime', $status) && $status['startTime'] )
+                    if( array_key_exists('statusCode', $status) && $status['statusCode'] == 100 )
                         $img = "testing";
                     echo "<img id='statusImage' src=\"{$GLOBALS['cdnPath']}/images/status_$img.png\">";
                     echo "<div id=\"statusText\">$statusText</div>\n";

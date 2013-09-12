@@ -620,6 +620,17 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         is_array($rawRequests[$id]['headers']) &&
                         count($rawRequests[$id]['headers']))
                         $rawRequests[$id]['fromNet'] = true;
+                    // if we didn't get explicit bytes, fall back to any responses that had
+                    // content-length headers
+                    if ((!array_key_exists('bytesIn', $rawRequests[$id]) || !$rawRequests[$id]['bytesIn']) &&
+                        array_key_exists('response', $event) &&
+                        is_array($event['response']) &&
+                        array_key_exists('headers', $event['response']) &&
+                        is_array($event['response']['headers']) &&
+                        array_key_exists('Content-Length', $event['response']['headers'])) {
+                      $rawRequests[$id]['bytesIn'] = $event['response']['headers']['Content-Length'];
+                      $rawRequests[$id]['bytesIn'] += strlen(implode("\n", $rawRequests[$id]['headers']));
+                    }
                     $rawRequests[$id]['response'] = $event['response'];
                 }
                 if ($event['method'] == 'Network.loadingFinished') {
