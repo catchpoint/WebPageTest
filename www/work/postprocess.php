@@ -54,15 +54,13 @@ if (array_key_exists('test', $_REQUEST)) {
             $testInfo_dirty = true;
         }
     }
-    if( isset($testInfo) && $testInfo_dirty ) {
-        $testInfo_dirty = false;
-        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-    }
 
     // archive the actual test
-    ArchiveTest($id);
+    if (isset($testInfo))
+      $testInfo['archived'] = ArchiveTest($id, false);
 
-    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if (array_key_exists('archived', $testInfo) && $testInfo['archived'])
+      $testInfo_dirty = true;
 
     // post the test to tsview if requested
     $tsviewdb = GetSetting('tsviewdb');

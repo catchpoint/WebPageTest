@@ -54,19 +54,21 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
           is_array($page_data) &&
           array_key_exists('render', $page_data))
         $renderStart = $page_data['render'];
+/*
       if (isset($page_data) &&
           is_array($page_data) &&
           array_key_exists('start_epoch', $page_data) &&
           array_key_exists('video_start', $test['appurify_tests'][$run])) {
         $test_start = $page_data['start_epoch'];
         $test_end = $test_start + ($page_data['fullyLoaded'] / 1000.0);
-        $video_start = $test['appurify_tests'][$run]['video_start'];
+        $video_start = $test['appurify_tests'][$run]['video_start'] / 1000.0;
         if ($test_start > $video_start) {
           $startOffset = $test_start - $video_start;
           $duration = $test_end - $test_start;
           $trim = '-ss ' . msToHMS($startOffset) . ' -t ' . msToHMS($duration) . ' ';
         }
       }
+*/      
     }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
@@ -126,8 +128,8 @@ function ProcessVideoFrames($videoDir, $orange_leader, $renderStart) {
       $currentFrame = $matches['frame'];
       if (!$startFrame) {
         if (!$orangeDetected) {
-          $orangeDetected = IsOrangeAVIFrame($file);
-        } elseif (IsBlankAVIFrame($file)) {
+          $orangeDetected = IsOrangeAVIFrame($file, $videoDir);
+        } elseif (IsBlankAVIFrame($file, $videoDir)) {
           $startFrame = $currentFrame;
           $lastImage = "$videoDir/frame_0000.jpg";
           CopyAVIFrame($file, $lastImage);
@@ -152,10 +154,11 @@ function CopyAVIFrame($src, $dest) {
   shell_exec("convert \"$src\" -interlace Plane -quality 75 \"$dest\"");
 }
 
-function IsBlankAVIFrame($file) {
+function IsBlankAVIFrame($file, $videoDir) {
   $ret = false;
   $command = "convert \"images/video_white.png\" \\( \"$file\" -crop +0+100 -shave 5x5 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
+  //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
     $ret = true;
   return $ret;
@@ -168,10 +171,11 @@ function IsBlankAVIFrame($file) {
 * 
 * @param mixed $im
 */
-function IsOrangeAVIFrame($file) {
+function IsOrangeAVIFrame($file, $videoDir) {
   $ret = false;
   $command = "convert  \"images/video_orange.png\" \\( \"$file\" -crop +0+100 -shave 5x5 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
+  //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
     $ret = true;
   return $ret;

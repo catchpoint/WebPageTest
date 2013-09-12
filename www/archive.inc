@@ -9,7 +9,7 @@ require_once('logging.inc');
 * 
 * @param mixed $id
 */
-function ArchiveTest($id) {
+function ArchiveTest($id, $store_result = true) {
     global $settings;
     global $api_keys;
     $ret = false;
@@ -99,7 +99,7 @@ function ArchiveTest($id) {
                         // make sure we don't leave a file hanging around
                         if (is_file($zipFile))
                             unlink($zipFile);
-                        if ($ret) {
+                        if ($ret && $store_result) {
                             $testInfo['archived'] = true;
                             gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
                         }
