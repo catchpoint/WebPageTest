@@ -36,6 +36,8 @@ var util = require('util');
 // Exit timeout for 'adb shell tcpdump' after 'adb shell kill <tcpdump-pid>'.
 var EXIT_TIMEOUT = 5000;
 
+// Timeout for tcpdump "listening on IFACE," output.
+var LISTENING_ON_TIMEOUT = 5000;
 
 /**
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
@@ -134,12 +136,27 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
     this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', iface, '-p',
          '-s', '0', '-w', this.devicePcapFile_]).then(function(proc) {
       this.tcpdumpAdbProcess_ = proc;
+      var listenBuffer = ''; // Defined until we get our "listening on" line
+      var listenRegex = new RegExp('\\n?listening on ' + iface + ',');
+      proc.stdout.on('data', function(data) {
+        logger.info('%s STDOUT: %s', this.deviceTcpdumpCommand_, data);
+        if (undefined !== listenBuffer) {
+          listenBuffer += data;
+          listenBuffer = (listenRegex.test(listenBuffer) ?
+              undefined : // Got our "listening on" ack
+              listenBuffer.slice(listenBuffer.lastIndexOf('\n') +
+                  1)); // We only need to keep the pending line, if any
+        }
+      });
       proc.on('exit', function(code) {
         if (this.tcpdumpAdbProcess_) {  // We didn't kill it ourselves
           logger.error('Unexpected tcpdump exited, code: ' + code);
           this.tcpdumpAdbProcess_ = undefined;
         }
       }.bind(this));
+      return this.app_.scheduleWait('Waiting for tcpdump', function() {
+        return (undefined === listenBuffer);
+      }, LISTENING_ON_TIMEOUT);
     }.bind(this));
   }.bind(this));
 };
