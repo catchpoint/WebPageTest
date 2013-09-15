@@ -174,6 +174,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // helped but was insufficient by itself.
   this.adb_.su(['rm',
       '/data/data/' + this.chromePackage_ + '/files/tab*']);
+  // Flush the DNS cache
+  this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error

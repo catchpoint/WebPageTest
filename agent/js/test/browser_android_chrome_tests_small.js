@@ -259,7 +259,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 34);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 41);
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
@@ -285,6 +285,7 @@ describe('browser_android_chrome small', function() {
             '\\" > /data/local/chrome-command-line'],
         ['shell', 'su', '-c',
             'rm /data/data/com.android.chrome/files/tab*'],
+        ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
     assertAdbCall();
