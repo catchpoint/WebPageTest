@@ -220,6 +220,7 @@ Agent.prototype.startJobRun_ = function(job) {
     var urlAndPac = this.decodeUrlAndPacFromScript_(script);
     url = urlAndPac.url;
     pac = urlAndPac.pac;
+    script = undefined;
   }
   url = url.trim();
   if (!((/^https?:\/\//i).test(url))) {
