@@ -425,14 +425,21 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
   }
 };
 
-function createZip(zipFileMap, fileNamePrefix) {
+function createFileName(job, fileName) {
+  'use strict';
+  return job.runNumber + (job.isCacheWarm ? '_Cached' : '') +
+      ('.' !== fileName[0] ? '_' : '') + fileName;
+}
+
+function createZip(zipFileMap, fileNamer) {
   'use strict';
   var zip = new Zip();
-  Object.getOwnPropertyNames(zipFileMap).forEach(function(fileName) {
-    var content = zipFileMap[fileName];
-    logger.debug('Adding %s%s (%d bytes) to results zip',
-        fileNamePrefix, fileName, content.length);
-    zip.file(fileNamePrefix + fileName, content);
+  Object.getOwnPropertyNames(zipFileMap).forEach(function(name) {
+    var content = zipFileMap[name];
+    var fileName = fileNamer(name);
+    logger.debug('Adding %s (%d bytes) to results zip',
+        fileName, content.length);
+    zip.file(fileName, content);
   });
   // Convert back and forth between base64, otherwise corrupts on long content.
   // Unfortunately node-zip does not support passing/returning Buffer.
@@ -479,8 +486,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
       mp.addPart('_runNumber', String(job.runNumber));
       mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
     }
-    var fileName = job.runNumber + (job.isCacheWarm ? '_Cached_' : '_') +
-        resultFile.fileName;
+    var fileName = createFileName(job, resultFile.fileName);
     mp.addFilePart(
         'file', fileName, resultFile.contentType, resultFile.content);
     if (logger.isLogging('debug')) {
@@ -538,12 +544,11 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
   if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
     var zipResultFiles = job.zipResultFiles;
     job.zipResultFiles = {};
-    var fileNamePrefix = job.runNumber + (job.isCacheWarm ? '_Cached_' : '_');
     filesToSubmit.push(new ResultFile(
         /*resultType=*/undefined,
         'results.zip',
         'application/zip',
-        createZip(zipResultFiles, fileNamePrefix)));
+        createZip(zipResultFiles, createFileName.bind(undefined, job))));
   }
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
