@@ -93,8 +93,7 @@ describe('packet_capture_android small', function() {
     '[]'.should.not.equal(app.getSchedule());
     sandbox.clock.tick(listenDelay - 200);
     '[]'.should.not.equal(app.getSchedule());
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
   }
 
   function stop(pcap) {
@@ -119,7 +118,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
+    test_utils.tickUntilIdle(app, sandbox);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
         ['shell', 'su', '0', 'sh', '-c', 'kill -INT 123'],
@@ -163,7 +162,6 @@ describe('packet_capture_android small', function() {
   it('should start and stop with on-device tcpdump', function() {
     var pcap = new packet_capture_android.PacketCaptureAndroid(
         app, {deviceSerial: serial});
-    should.equal('[]', app.getSchedule());
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
@@ -181,7 +179,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 24);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 50);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
@@ -204,7 +202,6 @@ describe('packet_capture_android small', function() {
     var localTcpdump = '/gaga/tcpdump';
     var pcap = new packet_capture_android.PacketCaptureAndroid(
         app, {tcpdumpBinary: localTcpdump, deviceSerial: serial});
-    should.equal('[]', app.getSchedule());
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
@@ -224,7 +221,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 42);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 50);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.

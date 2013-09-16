@@ -132,7 +132,7 @@ describe('browser_android_chrome small', function() {
         {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
         videoCard: videoCard});
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     test_utils.assertStringsMatch(
@@ -141,7 +141,7 @@ describe('browser_android_chrome small', function() {
     should.ok(videoStop.notCalled);
 
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     should.ok(videoStop.calledOnce);
@@ -259,7 +259,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 41);
+    test_utils.tickUntilIdle(app, sandbox);
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
@@ -301,8 +301,7 @@ describe('browser_android_chrome small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 15);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
 
     if (args.pac) {

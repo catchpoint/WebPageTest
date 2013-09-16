@@ -36,6 +36,7 @@ var should = require('should');
 var Stream = require('stream');
 var timers = require('timers');
 var util = require('util');
+var webdriver = require('webdriver');
 
 
 /**
@@ -119,6 +120,37 @@ exports.unfakeTimers = function(sandbox) {
     // The Sinon fake_timers add it, and it trips Mocha global leak detection.
     delete global.timeouts;
   }
+};
+
+/**
+ * Ticks the fake timer until the app is IDLE.
+ *
+ * @param {webdriver.promise.Application} app the scheduler.
+ * @param {!sinon.sandbox} sandbox a SinonJS sandbox used by the test.
+ * @param {number=} maxSteps maximum number of steps to advance until we
+ *   throw an error, defaults to 100 steps.
+ * @param {number=} ticksPerStep number of ticks to advance per step,
+ *   defaults to {webdriver.promise.Application.EVENT_LOOP_FREQUENCY} ticks.
+ */
+exports.tickUntilIdle = function(app, sandbox, maxSteps, ticksPerStep) {
+  'use strict';
+  if ('[]' === app.getSchedule()) {
+    return; // Already idle
+  }
+  maxSteps = (undefined !== maxSteps ? maxSteps : 100);
+  ticksPerStep = (undefined !== ticksPerStep ? ticksPerStep :
+      webdriver.promise.Application.EVENT_LOOP_FREQUENCY);
+  var isIdle = false;
+  function onIdle() { isIdle = true; }
+  app.on(webdriver.promise.Application.EventType.IDLE, onIdle);
+  var steps = 0;
+  while (!isIdle && steps++ < maxSteps) {
+    sandbox.clock.tick(ticksPerStep);
+  }
+  app.removeListener(webdriver.promise.Application.EventType.IDLE, onIdle);
+  should.ok(steps < maxSteps, 'Application still active after ' + steps + '*' +
+      ticksPerStep + ' ticks');
+  should.equal('[]', app.getSchedule());
 };
 
 /**
