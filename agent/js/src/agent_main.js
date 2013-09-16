@@ -399,17 +399,28 @@ Agent.prototype.scheduleCleanup_ = function() {
   }
   this.trafficShaper_.scheduleStop();
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
-    // Kill all processes for this user, except our own agent_main pid.
+    // Kill all processes for this user, except our own process and parent(s).
     //
-    // This only makes sense if we have per-device user accounts, e.g. we
-    // launch the wptdriver for deviceX as user "deviceX" via:
-    //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
+    // This assumes that there are no extra login shells for our user,
+    // otherwise they'll all be killed!  The expected use is to create a custom
+    // user, e.g. "foo", and launch our agent via:
+    //    nohup sudo -u foo -H ./wptdriver.sh --killall 1 ... &
     // Ideally we could run agent_main as our normal user and do this "sudo -u"
     // when we fork wd_server, but cross-user IPC apparently doesn't work.
     process_utils.scheduleGetAll(this.app_).then(function(processInfos) {
-      processInfos = processInfos.filter(function(pi) {
-        return pi.pid !== process.pid;
-      });
+      var pid = process.pid;
+      while (pid) {
+        var pi = void 0; // Set 'pi = undefined' on every loop iteration.
+        for (var i in processInfos) {
+          if (processInfos[i].pid === pid) {
+            pi = processInfos.splice(i, 1)[0];
+            logger.debug('Not killing user %s pid=%s: %s %s', process.env.USER,
+                pid, pi.command, pi.args.join(' '));
+            break;
+          }
+        }
+        pid = (pi ? pi.ppid : undefined);
+      }
       if (processInfos.length > 0) {
         logger.info('Killing %s pids owned by user %s: %s', processInfos.length,
             process.env.USER,
