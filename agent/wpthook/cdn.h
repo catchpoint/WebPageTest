@@ -62,6 +62,8 @@ CDN_PROVIDER cdnList[] = {
   {"youtube.", "Google"},
   {".googleusercontent.com", "Google"},
   {"googlehosted.com", "Google"},
+  {".insnw.net", "Instart Logic"},
+  {".inscname.net", "Instart Logic"},
   {".internapcdn.net", "Internap"},
   {".cloudfront.net", "Amazon CloudFront"},
   {".netdna-cdn.com", "NetDNA"},
@@ -113,5 +115,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "NetDNA", "NetDNA"},
   {"X-CDN-Geo", "", "OVH CDN"},
   {"X-Px", "", "CDNetworks"},
+  {"X-Instart-Request-ID", "instart", "Instart Logic"},
   {"Via", "CloudFront", "Amazon CloudFront"}
 };
