@@ -158,8 +158,8 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.PCAP,
-            'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
+            undefined, // Disable ResultType.PCAP processing
+            '.cap', 'application/vnd.tcpdump.pcap', buffer));
       });
       process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
           fs.unlink, ipcMsg.pcapFile);
