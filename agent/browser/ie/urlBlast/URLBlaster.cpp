@@ -863,8 +863,12 @@ bool CURLBlaster::LaunchBrowser(void)
 									sequentialErrors = 0;
 							}
 						}
+						info.cpu = 0;
+						len = sizeof(info.cpu);
+						RegQueryValueEx(hKey, _T("cpu"), 0, 0, (LPBYTE)&info.cpu, &len);
 								
 						RegDeleteValue(hKey, _T("Result"));
+						RegDeleteValue(hKey, _T("cpu"));
 						
 						// delete a few other keys we don't want to persist
 						RegDeleteValue(hKey, _T("Use Address"));
@@ -964,6 +968,7 @@ void CURLBlaster::ConfigurePagetest(void)
 
 			// delete any old results from the reg key
 			RegDeleteValue(hKey, _T("Result"));
+			RegDeleteValue(hKey, _T("cpu"));
 
 			RegCloseKey(hKey);
 		}

@@ -53,6 +53,7 @@ public:
     currentRun = 0;
     cached = false;
     clearCerts = false;
+    cpu = 0;
     customRules.Empty();
 	}
 	
@@ -107,6 +108,7 @@ public:
   DWORD noscript;
   DWORD  blockads;
   CString tcpdumpFile;
+  DWORD cpu;
 
 	DWORD	reserved;			  // reserved for internal use
 	void *	context;			// contect information for internal use

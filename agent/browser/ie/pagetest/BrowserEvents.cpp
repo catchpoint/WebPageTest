@@ -185,7 +185,7 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
     end = lastActivity;
 		endDoc = end;
 		lastDoc = lastActivity;
-		GetCPUTime(docCPU);
+		GetCPUTime(docCPU, docCPUtotal);
 
 		// throw away any objects that happen outside of a document load
 		currentDoc = 0;

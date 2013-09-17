@@ -1019,11 +1019,17 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
         _T("Image Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\tAFT (ms)\tDOM Elements\tPage Speed Version\t")
 				_T("Page Title\tTime to Title\tLoad Event Start\tLoad Event End\tDOM Content Ready Start\tDOM Content Ready End\tVisually Complete (ms)\t")
         _T("Browser Name\tBrowser Version\tBase Page Server Count\tBase Page Server RTT\tBase Page CDN\tAdult Site\tFixed Viewport\tProgressive JPEG Score\t")
-        _T("First Paint\tPeak Memory\tProcess Count\tDOC CPU Time\tCPU Time\r\n");
+        _T("First Paint\tPeak Memory\tProcess Count\tDOC CPU Time\tCPU Time\tDoc CPU Utilization\tCPU Utilization\r\n");
 	}
 	else
 		buff.Empty();
 
+  int docUtilization = GetCPUUtilization(startCPU, docCPU, startCPUtotal, docCPUtotal);
+  int fullUtilization = GetCPUUtilization(startCPU, endCPU, startCPUtotal, endCPUtotal);
+	if( key.Open(HKEY_CURRENT_USER, _T("Software\\AOL\\ieWatch"), KEY_WRITE) == ERROR_SUCCESS ) {
+		key.SetDWORDValue(_T("cpu"), docUtilization);
+		key.Close();
+	}
 	TCHAR result[10000];
 	_stprintf_s(result, _countof(result), _T("%s\t%s\t%s\t%s\t")
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%d\t")
@@ -1039,7 +1045,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 										_T("%d\t%d\t%d\t%d\t%d\t%d\t%s\t")
                     _T("%s\t%d\t%d\t%d\t%d\t%d\t%d\t")
                     _T("%s\t%s\t%d\t%s\t%s\t%d\t%d\t%d\t")
-                    _T("%d\t%d\t%d\t%0.3f\t%0.3f")
+                    _T("%d\t%d\t%d\t%0.3f\t%0.3f\t%d\t%d")
 										_T("\r\n"),
 			(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPCTSTR)pageUrl,
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
@@ -1055,7 +1061,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, (LPCTSTR)pageSpeedVersion,
 			(LPCTSTR)pageTitle, msTitle, load_start, load_end, dcl_start, dcl_end, msVisualComplete,
       _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore,
-      first_paint, 0, 0, GetElapsedMilliseconds(startCPU, docCPU), GetElapsedMilliseconds(startCPU, endCPU));
+      first_paint, 0, 0, GetElapsedMilliseconds(startCPU, docCPU), GetElapsedMilliseconds(startCPU, endCPU), docUtilization, fullUtilization);
 	buff += result;
 }
 

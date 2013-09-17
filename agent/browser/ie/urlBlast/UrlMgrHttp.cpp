@@ -171,10 +171,13 @@ void CUrlMgrHttp::Start()
 			name[0] = 0;
 			if( GetComputerName(name, &len) && lstrlen(name) )
 			{
+			  pcName = name;
 				TCHAR escaped[INTERNET_MAX_URL_LENGTH];
 				len = _countof(escaped);
-				if( (UrlEscape(name, escaped, &len, URL_ESCAPE_SEGMENT_ONLY | URL_ESCAPE_PERCENT) == S_OK) && lstrlen(escaped) )
+				if( (UrlEscape(name, escaped, &len, URL_ESCAPE_SEGMENT_ONLY | URL_ESCAPE_PERCENT) == S_OK) && lstrlen(escaped) ) {
 					getWork += CString(_T("&pc=")) + CString(escaped);
+					pcName = escaped;
+				}
 			}
 
 			lastSuccess = GetTickCount();
@@ -1085,6 +1088,18 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 		body += "\r\n";
 	}
 
+  if (pcName.GetLength()) {
+    body += CStringA("--") + boundary + "\r\n";
+    body += "Content-Disposition: form-data; name=\"pc\"\r\n\r\n";
+    body += CStringA(CT2A(pcName)) + "\r\n";
+  }
+
+  if (ec2Instance.GetLength()) {
+    body += CStringA("--") + boundary + "\r\n";
+    body += "Content-Disposition: form-data; name=\"ec2\"\r\n\r\n";
+    body += CStringA(CT2A(ec2Instance)) + "\r\n";
+  }
+
 	// DNS Servers
 	if( !dnsServers.IsEmpty() )
 	{
@@ -1094,6 +1109,14 @@ bool CUrlMgrHttp::BuildFormData(CTestInfo &info, CStringA& headers, CStringA& bo
 		body += CStringA(CT2A(dnsServers));
 		body += "\r\n";
 	}
+
+  if (info.cpu > 0) {
+    body += CStringA("--") + boundary + "\r\n";
+    body += "Content-Disposition: form-data; name=\"cpu\"\r\n\r\n";
+    buff.Format("%d", info.cpu);
+    body += buff + "\r\n";
+  }
+
 
 	// if we're done
 	if( info.done )

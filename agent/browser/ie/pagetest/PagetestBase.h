@@ -234,6 +234,9 @@ public:
   FILETIME        startCPU;
   FILETIME        docCPU;
   FILETIME        endCPU;
+  FILETIME        startCPUtotal;
+  FILETIME        docCPUtotal;
+  FILETIME        endCPUtotal;
 
 	// URLBlast support
 	CString	testUrl;
@@ -317,8 +320,9 @@ public:
   virtual void AddAddress(CString host, DWORD address) = 0;
   virtual int GetAddressCount(CString host) = 0;
   virtual void UpdateClientPort(SOCKET s, DWORD id) = 0;
-  void GetCPUTime(FILETIME &cpu_time);
+  void GetCPUTime(FILETIME &cpu_time, FILETIME &total_time);
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
+  int GetCPUUtilization(FILETIME &start, FILETIME &end, FILETIME &startTotal, FILETIME &endTotal);
 
 	typedef enum{
 		equal = 0,

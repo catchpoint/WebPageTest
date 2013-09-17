@@ -20,6 +20,7 @@ public:
 	CString proxy;
 	CString key;
 	CString ec2Instance;
+	CString pcName;
 	bool	noUpdate;
 
 protected:	

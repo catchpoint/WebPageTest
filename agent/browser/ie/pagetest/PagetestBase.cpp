@@ -195,7 +195,9 @@ void CPagetestBase::Reset(void)
     startCPU.dwHighDateTime = startCPU.dwLowDateTime = 0;
     docCPU.dwHighDateTime = docCPU.dwLowDateTime = 0;
     endCPU.dwHighDateTime = endCPU.dwLowDateTime = 0;
-		
+    startCPUtotal.dwHighDateTime = startCPUtotal.dwLowDateTime = 0;
+    docCPUtotal.dwHighDateTime = docCPUtotal.dwLowDateTime = 0;
+    endCPUtotal.dwHighDateTime = endCPUtotal.dwLowDateTime = 0;
 		
 		gzipScore = -1;
 		doctypeScore = -1;
@@ -999,19 +1001,22 @@ void CPagetestBase::ChromeFrame(CComPtr<IChromeFrame> chromeFrame)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CPagetestBase::GetCPUTime(FILETIME &cpu_time) {
+void CPagetestBase::GetCPUTime(FILETIME &cpu_time, FILETIME &total_time) {
   FILETIME idle_time, kernel_time, user_time;
   if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
-    ULARGE_INTEGER k, u, i, combined;
+    ULARGE_INTEGER k, u, i, combined, total;
     k.LowPart = kernel_time.dwLowDateTime;
     k.HighPart = kernel_time.dwHighDateTime;
     u.LowPart = user_time.dwLowDateTime;
     u.HighPart = user_time.dwHighDateTime;
     i.LowPart = idle_time.dwLowDateTime;
     i.HighPart = idle_time.dwHighDateTime;
-    combined.QuadPart = (k.QuadPart + u.QuadPart) - i.QuadPart;
+    total.QuadPart = (k.QuadPart + u.QuadPart);
+    combined.QuadPart = total.QuadPart - i.QuadPart;
     cpu_time.dwHighDateTime = combined.HighPart;
     cpu_time.dwLowDateTime = combined.LowPart;
+    total_time.dwHighDateTime = total.HighPart;
+    total_time.dwLowDateTime = total.LowPart;
   }
 }
 
@@ -1030,3 +1035,13 @@ double CPagetestBase::GetElapsedMilliseconds(FILETIME &start, FILETIME &end) {
   return elapsed;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CPagetestBase::GetCPUUtilization(FILETIME &start, FILETIME &end, FILETIME &startTotal, FILETIME &endTotal) {
+  int utilization = 0;
+  double cpu = GetElapsedMilliseconds(start, end);
+  double total = GetElapsedMilliseconds(startTotal, endTotal);
+  if (cpu > 0.0 && total > 0.0)
+    utilization = min((int)(((cpu / total) * 100) + 0.5), 100);
+  return utilization;
+}
