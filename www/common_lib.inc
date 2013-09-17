@@ -1518,6 +1518,17 @@ function GetTesters($locationId)
                 if( !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
                     $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns']);
+
+                    if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
+                      $total = 0;
+                      $count = 0;
+                      foreach($tester['cpu'] as $cpu) {
+                        $total += $cpu;
+                        $count++;
+                      }
+                      if ($count)
+                        $entry['cpu'] = round($total / $count);
+                    }
                     
                     // last time it checked in
                     if( isset($tester['updated']) )
@@ -1735,7 +1746,7 @@ function SecureDir($path) {
 * @param mixed $tester
 * @param mixed $testerInfo
 */
-function UpdateTester($location, $tester, $testerInfo = null) {
+function UpdateTester($location, $tester, $testerInfo = null, $cpu = null) {
     if ($lock = LockLocation("testers-$location")) {
         $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
         if( !count($testers) )
@@ -1752,6 +1763,13 @@ function UpdateTester($location, $tester, $testerInfo = null) {
         if (!array_key_exists('first_contact', $testers[$tester])) {
             $testers[$tester]['first_contact'] = $now;
         }
+        if (isset($cpu) && $cpu > 0) {
+          if (!array_key_exists('cpu', $testers[$tester]))
+            $testers[$tester]['cpu'] = array();
+          $testers[$tester]['cpu'][] = $cpu;
+          if (count($testers[$tester]['cpu']) > 100)
+            array_shift($testers[$tester]['cpu']);
+        }
         if (isset($testerInfo) && is_array($testerInfo)) {
             // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
             if (array_key_exists('test', $testerInfo) && 
@@ -1761,9 +1779,8 @@ function UpdateTester($location, $tester, $testerInfo = null) {
                 $testers[$tester]['last'] = $now;
             }
             // update any other data passed in for the tester
-            foreach ($testerInfo as $key => $value) {
+            foreach ($testerInfo as $key => $value)
                 $testers[$tester][$key] = $value;
-            }
         }
         // delete any testers in this location that haven't checked in in over an hour
         foreach( $testers as $name => &$data ) {

@@ -21,13 +21,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="10"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="11"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
             <th>Version</th>
             <th>PC</th>
             <th>EC2 Instance</th>
+            <th>CPU Utilization</th>
             <th>Free Disk (GB)</th>
             <th>IE Version</th>
             <th>IP</th>
@@ -41,6 +42,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="version"/></td>
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
+                <td><xsl:value-of select="cpu"/></td>
                 <td><xsl:value-of select="freedisk"/></td>
                 <td><xsl:value-of select="ie"/></td>
                 <td><xsl:value-of select="ip"/></td>

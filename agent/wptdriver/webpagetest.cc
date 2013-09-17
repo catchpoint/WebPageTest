@@ -164,6 +164,7 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
     ret = UploadImages(test, image_files);
     if (ret) {
       ret = UploadData(test, false);
+      SetCPUUtilization(0);
     }
   }
 
@@ -183,6 +184,7 @@ bool WebPagetest::TestDone(WptTestDriver& test){
   ret = UploadImages(test, image_files);
   if (ret) {
     ret = UploadData(test, true);
+    SetCPUUtilization(0);
   }
 
   return ret;
@@ -538,11 +540,31 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += "1\r\n";
   }
 
+  if (_computer_name.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"pc\"\r\n\r\n";
+    form_data += CStringA(CT2A(_computer_name)) + "\r\n";
+  }
+
+  if (_settings._ec2_instance.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"ec2\"\r\n\r\n";
+    form_data += CStringA(CT2A(_settings._ec2_instance)) + "\r\n";
+  }
+
   // DNS servers
   if (!_dns_servers.IsEmpty()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"dns\"\r\n\r\n";
     form_data += CStringA(CT2A(_dns_servers)) + "\r\n";
+  }
+
+  int cpu_utilization = GetCPUUtilization();
+  if (cpu_utilization > 0) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"cpu\"\r\n\r\n";
+    buffA.Format("%d", cpu_utilization);
+    form_data += buffA + "\r\n";
   }
 
   // file

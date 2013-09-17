@@ -111,7 +111,8 @@ public:
   void AddTimedEvent(CString timed_event);
   CString GetConsoleLogJSON();
   CString GetTimedEventsJSON();
-  bool GetElapsedCPUTimes(double &doc, double &end);
+  void GetElapsedCPUTimes(double &doc, double &end,
+                          double &doc_total, double &end_total);
 
   // times
   LARGE_INTEGER _start;
@@ -192,6 +193,9 @@ private:
   FILETIME      _start_cpu_time;
   FILETIME      _doc_cpu_time;
   FILETIME      _end_cpu_time;
+  FILETIME      _start_total_time;
+  FILETIME      _doc_total_time;
+  FILETIME      _end_total_time;
 
   CRITICAL_SECTION  _data_cs;
 
@@ -200,6 +204,6 @@ private:
   void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
-  void GetCPUTime(FILETIME &cpu_time);
+  void GetCPUTime(FILETIME &cpu_time, FILETIME &total_time);
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
 };

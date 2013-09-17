@@ -31,6 +31,7 @@ bool WptTestDriver::Start() {
       SetFileBase();
       SetClearedCache(_clear_cache);
       SetCurrentRun(_run);
+      SetCPUUtilization(0);
       ret = true;
     }
   }

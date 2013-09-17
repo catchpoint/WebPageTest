@@ -42,6 +42,16 @@ if(extension_loaded('newrelic')) {
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $har  = arrayLookupWithDefault('har',  $_REQUEST, false);
 $pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
+$cpu = arrayLookupWithDefault('cpu', $_REQUEST, 0);
+$pc = array_key_exists('pc', $_REQUEST) ? $_REQUEST['pc'] : '';
+$ec2 = array_key_exists('ec2', $_REQUEST) ? $_REQUEST['ec2'] : '';
+$tester = null;
+if (strlen($ec2))
+  $tester = $ec2;
+elseif (strlen($pc))
+  $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
+else
+  $tester = trim($_SERVER['REMOTE_ADDR']);
 
 // Sometimes we need to make changes to the way the client and server
 // communicate, without updating both at the same time.  The following
@@ -127,16 +137,12 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                 $testInfo['last_updated'] = $time;
                 $testInfo_dirty = true;
                 
-                if (array_key_exists('location', $testInfo) &&
-                    strlen($testInfo['location']) &&
-                    array_key_exists('tester', $testInfo) &&
-                    strlen($testInfo['tester'])) {
+                if (strlen($location) && strlen($tester)) {
                     $testerInfo = array();
                     $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-                    if ($done) {
+                    if ($done)
                         $testerInfo['test'] = '';
-                    }
-                    UpdateTester($testInfo['$location'], $testInfo['tester'], $testerInfo);
+                    UpdateTester($location, $tester, $testerInfo, $cpu);
                 }
             }
         }

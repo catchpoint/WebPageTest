@@ -653,7 +653,10 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Doc Complete CPU time
     double doc_cpu_time = 0;
     double full_cpu_time = 0;
-    _test_state.GetElapsedCPUTimes(doc_cpu_time, full_cpu_time);
+    double doc_total_time = 0;
+    double full_total_time = 0;
+    _test_state.GetElapsedCPUTimes(doc_cpu_time, full_cpu_time,
+                                   doc_total_time, full_total_time);
     if (doc_cpu_time > 0.0) {
       buff.Format("%0.3f\t", doc_cpu_time);
       result += buff;
@@ -662,6 +665,23 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Fully Loaded CPU time
     if (full_cpu_time > 0.0) {
       buff.Format("%0.3f\t", full_cpu_time);
+      result += buff;
+    } else
+      result += "\t";
+    // Doc Complete CPU Utilization
+    if (doc_cpu_time > 0.0 && doc_total_time > 0.0) {
+      int utilization =
+          min((int)(((doc_cpu_time / doc_total_time) * 100) + 0.5), 100);
+      shared_cpu_utilization = utilization;
+      buff.Format("%d\t", utilization);
+      result += buff;
+    } else
+      result += "\t";
+    // Fully Loaded CPU Utilization
+    if (full_cpu_time > 0.0 && full_total_time > 0.0) {
+      int utilization =
+          min((int)(((full_cpu_time / full_total_time) * 100) + 0.5), 100);
+      buff.Format("%d\t", utilization);
       result += buff;
     } else
       result += "\t";

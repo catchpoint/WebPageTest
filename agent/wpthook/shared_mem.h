@@ -35,3 +35,4 @@ extern WCHAR  shared_results_file_base[MAX_PATH];
 extern DWORD  shared_test_timeout;
 extern bool   shared_cleared_cache;
 extern DWORD  shared_current_run;
+extern int    shared_cpu_utilization;
