@@ -134,6 +134,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     $show_labels = (bool)@$options['show_labels'];
 
     $row_count = count($rows);
+    if (isset($options) && array_key_exists('rowcount', $options) && $options['rowcount'] > 0)
+      $row_count = $options['rowcount'];
 
     $width = (int)@$_REQUEST['width'];
     if ((int)@$options['width']) {
@@ -1022,14 +1024,14 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
     $data_header_height = intval($row_height * 3 / 2);
     $data_footer_height = $row_height;
     $height = ($data_header_height + ($row_height * $row_count) +
-              $data_footer_height + 2);
+              $data_footer_height + 2) + 100;
     $height += (2 * $row_height) + 2;
     $height_style = "height:{$height}px;";
   }
   echo "<div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
   foreach($waterfalls as $index => &$waterfall) {
     $o = $index ? $opacity : '1.0';
-    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}$waterfall_options\">";
+    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
   }
   echo '<div id="marker"></div>';
   echo '</div>';

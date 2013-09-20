@@ -11,6 +11,7 @@ $is_mime = (bool)@$_REQUEST['mime'];
 $is_state = (bool)@$_REQUEST['state'];
 $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
 $show_labels = (!isset($_REQUEST['labels']) || $_REQUEST['labels'] != 0);
+$rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 
 // Get all of the requests;
 $is_secure = false;
@@ -42,7 +43,8 @@ $options = array(
     'show_labels' => $show_labels,
     'max_bw' => $bwIn,
     'is_mime' => $is_mime,
-    'is_state' => $is_state
+    'is_state' => $is_state,
+    'rowcount' => $rowcount
     );
 $im = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
 

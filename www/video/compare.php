@@ -606,7 +606,7 @@ function ScreenShotTable()
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
-            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
+            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1" );
             echo '<br><br>';
         } else {
           $waterfalls = array();
@@ -616,7 +616,7 @@ function ScreenShotTable()
                                   'run' => $test['run'],
                                   'cached' => $test['cached']);
           }
-          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0");
+          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1");
         }
         ?>
         

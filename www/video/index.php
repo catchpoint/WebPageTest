@@ -2,8 +2,8 @@
 chdir('..');
 include 'common.inc';
 $loc = GetDefaultLocation();
-$tid=$_GET['tid'];
-$run=$_GET['run'];
+$tid= array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
+$run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
 $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 ?>
@@ -71,43 +71,45 @@ $page_description = "Visually compare the performance of multiple websites with 
                         <br>
                         <?php
                         // load the main industry list
-                        $ind = parse_ini_file('./video/industry.ini', true);
-                        $ids = json_decode(file_get_contents('./video/dat/industry.dat'), true);
-                        if( $ind && count($ind) && $ids && count($ids) )
-                        {
-                            $i = 0;
-                            echo '<p><a href="javascript:void(0)" id="advanced_settings">Compare against industry pages <span class="arrow"></span></a></p>';
-                            echo '<div id="advanced_settings-container" class="hidden">';
-                            foreach($ind as $industry => &$pages )
-                            {
-                                if( $ids[$industry] )
-                                {
-                                    echo "<div class=\"industry\">\n";
-                                    echo "<div class=\"indHead\">$industry:</div>\n";
-                                    echo "<div class=\"indBody\">\n";
-                                    foreach( $pages as $page => $url )
-                                    {
-                                        $details = $ids[$industry][$page];
-                                        if( $details )
-                                        {
-                                            $i++;
-                                            $tid = $details['id'];
-                                            $date = $details['last_updated'];
-                                            echo "<input type=\"checkbox\" name=\"t[]\" value=\"$tid\"> $page";
-                                            /*
-                                            if( $date )
-                                            {
-                                                $date = gmdate('m/d/y', strtotime($date));
-                                                echo " ($date)";
-                                            }
-                                            */
-                                            echo "<br>\n";
-                                        }
-                                    }
-                                    echo "</div></div>\n";
-                                }
-                            }
-                            echo '</div>';
+                        if (is_file('./video/industry.ini') && is_file('./video/dat/industry.dat')) {
+                          $ind = parse_ini_file('./video/industry.ini', true);
+                          $ids = json_decode(file_get_contents('./video/dat/industry.dat'), true);
+                          if( $ind && count($ind) && $ids && count($ids) )
+                          {
+                              $i = 0;
+                              echo '<p><a href="javascript:void(0)" id="advanced_settings">Compare against industry pages <span class="arrow"></span></a></p>';
+                              echo '<div id="advanced_settings-container" class="hidden">';
+                              foreach($ind as $industry => &$pages )
+                              {
+                                  if( $ids[$industry] )
+                                  {
+                                      echo "<div class=\"industry\">\n";
+                                      echo "<div class=\"indHead\">$industry:</div>\n";
+                                      echo "<div class=\"indBody\">\n";
+                                      foreach( $pages as $page => $url )
+                                      {
+                                          $details = $ids[$industry][$page];
+                                          if( $details )
+                                          {
+                                              $i++;
+                                              $tid = $details['id'];
+                                              $date = $details['last_updated'];
+                                              echo "<input type=\"checkbox\" name=\"t[]\" value=\"$tid\"> $page";
+                                              /*
+                                              if( $date )
+                                              {
+                                                  $date = gmdate('m/d/y', strtotime($date));
+                                                  echo " ($date)";
+                                              }
+                                              */
+                                              echo "<br>\n";
+                                          }
+                                      }
+                                      echo "</div></div>\n";
+                                  }
+                              }
+                              echo '</div>';
+                          }
                         }
                         ?>
 
