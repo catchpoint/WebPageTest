@@ -210,9 +210,11 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         if (isset($progress) &&
             is_array($progress) &&
             array_key_exists('DevTools', $progress) &&
-            is_array($progress['DevTools']) &&
-            array_key_exists('processing', $progress['DevTools'])) {
-            $ret['processing'] = $progress['DevTools']['processing'];
+            is_array($progress['DevTools'])) {
+            if (array_key_exists('processing', $progress['DevTools']))
+                $ret['processing'] = $progress['DevTools']['processing'];
+            if (array_key_exists('VisualProgress', $progress['DevTools']))
+                $ret['VisualProgress'] = $progress['DevTools']['VisualProgress'];
         }
         
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);

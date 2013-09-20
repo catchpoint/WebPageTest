@@ -282,12 +282,19 @@ else
                     if (isset($progress) &&
                         is_array($progress) &&
                         array_key_exists('DevTools', $progress) &&
-                        is_array($progress['DevTools']) &&
-                        array_key_exists('processing', $progress['DevTools'])) {
-                        echo "<processing>\n";
-                        foreach ($progress['DevTools']['processing'] as $key => $value)
-                          echo "<$key>$value</$key>\n";
-                        echo "</processing>\n";
+                        is_array($progress['DevTools'])) {
+                        if (array_key_exists('processing', $progress['DevTools'])) {
+                          echo "<processing>\n";
+                          foreach ($progress['DevTools']['processing'] as $key => $value)
+                            echo "<$key>$value</$key>\n";
+                          echo "</processing>\n";
+                        }
+                        if (array_key_exists('VisualProgress', $progress['DevTools'])) {
+                          echo "<VisualProgress>\n";
+                          foreach ($progress['DevTools']['VisualProgress'] as $key => $value)
+                            echo "<progress>\n<time>$key</time>\n<VisuallyComplete>$value</VisuallyComplete>\n</progress>\n";
+                          echo "</VisualProgress>\n";
+                        }
                     }
                     
                     xmlDomains($id, $testPath, $i, 0);
