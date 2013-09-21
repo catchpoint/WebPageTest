@@ -33,7 +33,7 @@ var nopt = require('nopt');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
 var traffic_shaper = require('traffic_shaper');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 var wpt_client = require('wpt_client');
 
 /**
@@ -64,7 +64,7 @@ function Agent(client, flags) {
   'use strict';
   this.client_ = client;
   this.flags_ = flags;
-  this.app_ = webdriver.promise.Application.getInstance();
+  this.app_ = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('main app', this.app_);
   this.wdServer_ = undefined;  // The wd_server child process.
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);

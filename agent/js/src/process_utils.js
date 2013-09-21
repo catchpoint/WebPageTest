@@ -30,7 +30,7 @@ var child_process = require('child_process');
 var logger = require('logger');
 var net = require('net');
 var system_commands = require('system_commands');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -42,9 +42,6 @@ var webdriver = require('webdriver');
  */
 function ProcessInfo(psLine) {
   'use strict';
-  if (!/^\s*\d+\s+\d+\s+\S.*$/.test(psLine)) {
-    throw new Error('Expected "PPID PID CMD", not "' + psLine + '"');
-  }
   var splitLine = psLine.trim().split(/\s+/);
   this.ppid = parseInt(splitLine.shift(), 10);
   this.pid = parseInt(splitLine.shift(), 10);
@@ -78,7 +75,7 @@ exports.signalKill = function(process, processName) {
 /**
  * Kills the given process.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
  * @param {ProcessInfo} processInfo to be killed.
  */
@@ -95,7 +92,7 @@ exports.scheduleKill = function(app, description, processInfo) {
 /**
  * Kills the given processes.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
  * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
  */
@@ -112,7 +109,7 @@ exports.scheduleKillAll = function(app, description, processInfos) {
 /**
  * Gets info for all processes owned by this user.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @return {webdriver.promise.Promise} resolve({Array.<ProcessInfo>}).
  */
 exports.scheduleGetAll = function(app) {
@@ -129,7 +126,7 @@ exports.scheduleGetAll = function(app) {
 /**
  * Gets a process and all child processes (by PID).
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string=} description debug title.
  * @param {number} rootPid process id.
  * @return {webdriver.promise.Promise} resolve({Array.<ProcessInfo>}).
@@ -160,7 +157,7 @@ exports.scheduleGetTree = function(app, description, rootPid) {
 /**
  * Kills a process and all child processes.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string=} description debug title.
  * @param {(Process|ProcessInfo)} process the process to getTree then killAll.
  */
@@ -179,7 +176,7 @@ exports.scheduleKillTree = function(app, description, process) {
 /**
  * Calls scheduleKillTree for each process in an array.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string=} description debug title.
  * @param {(Array.<Process>|Array.<ProcessInfo>)} processes processes to
  *   killTree.
@@ -197,7 +194,7 @@ exports.scheduleKillTrees = function(app, description, processes) {
 /**
  * Wait for process to exit.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {Process} proc the process.
  * @param {string} name the process name for logging.
  * @param {number} timeout how many milliseconds to wait.
@@ -210,7 +207,7 @@ exports.scheduleWait = function(app, proc, name, timeout) {
   var exitTimerId;
   var onExit = function(/*code, signal*/) {
     global.clearTimeout(exitTimerId);
-    exited.resolve();
+    exited.fulfill();
   };
   exitTimerId = global.setTimeout(function() {
     proc.removeListener('exit', onExit);
@@ -242,7 +239,7 @@ function formatForMessage(command, args) {
 /**
  * Schedules a command execution, kills it after a timeout.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string} command the command to run, as in process.spawn.
  * @param {Array=} args command args, as in process.spawn.
  * @param {Object=} options command options, as in process.spawn.  Use
@@ -332,7 +329,7 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
           logger.debug(newMsg());
           // TODO webdriver's resolve only saves the first argument, so we can
           // only return the stdout.  For now our clients only need the stdout.
-          done.resolve(binout || stdout);//, stderr, code, signal);
+          done.fulfill(binout || stdout);//, stderr, code, signal);
         }
       } else {
         // The timer has expired, which means that we're already killed our
@@ -347,7 +344,7 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
 /**
  * Spawns a command, logs output.
  *
- * @param {webdriver.promise.Application} app the app under which to schedule.
+ * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string} command the command to run, as in process.spawn.
  * @param {Array} args command args, as in process.spawn.
  * @param {Object=} options spawn options, as in process.spawn.
@@ -376,7 +373,7 @@ exports.scheduleSpawn = function(app, command, args, options,
  * Adds "logger.extra" level logging to all process scheduler tasks.
  *
  * @param {string=} appName log message prefix.
- * @param {webdriver.promise.Application} app The app to inject logging into.
+ * @param {webdriver.promise.ControlFlow} app The app to inject logging into.
  */
 function injectWdAppLogging(appName, app) {
   'use strict';
@@ -392,10 +389,17 @@ function injectWdAppLogging(appName, app) {
       return task;
     };
 
-    var realSchedule = app.schedule;
-    app.schedule = function(description) {
+    var realExecute = app.execute;
+    app.execute = function(fn, opt_description) {
+      logger.extra('%s: %s', appName,
+          opt_description || 'function ' + (fn.name || '<unnamed>'));
+      return realExecute.apply(app, arguments);
+    };
+    // TODO(klm): Migrate all code to execute().
+    // Monkey-patching the old schedule(desc,fn) API just for gradual migration.
+    app.schedule = function(description, fn) {
       logger.extra('%s: %s', appName, description);
-      return realSchedule.apply(app, arguments);
+      return realExecute.call(app, fn, description);
     };
 
     app.isLoggingInjected = true;
@@ -407,7 +411,7 @@ exports.injectWdAppLogging = injectWdAppLogging;
 /**
  * Schedules an action, catches and logs any exceptions instead of propagating.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string=} description debug title.
  * @param {Function} f Function to schedule.
  * @return {webdriver.promise.Promise} will log instead of reject(Error).
@@ -436,7 +440,7 @@ exports.scheduleNoFault = function(app, description, f) {
  *  scheduleFunction(app, 'x', foo, a, b).then(
  *      function(c, d) {...}, function(err) {...});
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
  * @param {Function} f Function({Function} callback, {Function=} errback).
  * @param {string} var_args arguments.
@@ -461,7 +465,7 @@ exports.scheduleFunction = function(app, description, f,
     }
     logger.debug('Callback for %s', description);
     var ok = Array.prototype.slice.apply(arguments).slice(i);
-    done.resolve.apply(undefined, ok);
+    done.fulfill.apply(done, ok);
   }
   var args = Array.prototype.slice.apply(arguments).slice(3).concat([cb]);
   return app.schedule(description, function() {
@@ -475,7 +479,7 @@ exports.scheduleFunction = function(app, description, f,
  * Calls scheduleFunction, catches and logs any exceptions instead of
  * propagating.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
  * @param {Function} f Function({Function} callback, {Function=} errback).
  * @param {string} var_args arguments.
@@ -510,7 +514,7 @@ exports.scheduleFunctionNoFault = function(app, description, f,
  * they will correctly lock ports.  Other non-agent applications are only
  * compatible if they use the above logic.
  *
- * @param {webdriver.promise.Application} app the scheduler.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
  * @param {number=} minPort min port, defaults to 1k.
  * @param {number=} maxPort max port, defaults to 32k.
@@ -571,7 +575,7 @@ exports.scheduleAllocatePort = function(app, description, minPort, maxPort) {
         // when they're done with retPort.
         retServer.close();
         logger.debug('Allocated port ' + retPort);
-        done.resolve({port: retPort, release: function() {
+        done.fulfill({port: retPort, release: function() {
           lockServer.close();
         }});
       });

@@ -32,7 +32,7 @@ var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -45,7 +45,7 @@ var webdriver = require('webdriver');
 describe('packet_capture_android small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -107,7 +107,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
         ['shell', 'su', '0', 'sh', '-c', 'kill -INT 123'],
@@ -165,7 +165,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 24);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 24);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
@@ -206,7 +206,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 42);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 42);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.

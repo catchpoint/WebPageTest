@@ -34,7 +34,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var util = require('util');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 function FakeEmitterWithRun() {
@@ -58,7 +58,7 @@ FakeEmitterWithRun.prototype.run = function() {
 describe('agent_main', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('wd_server app', app);
 
   var sandbox;
@@ -98,7 +98,7 @@ describe('agent_main', function() {
     agent.run();
 
     client.onAbortJob(fakeJob);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 6);
     should.equal('[]', app.getSchedule());
     should.ok(runFinishedSpy.calledOnce);
   });

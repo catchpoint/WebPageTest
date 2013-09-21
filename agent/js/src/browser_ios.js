@@ -33,13 +33,13 @@ var logger = require('logger');
 var os = require('os');
 var process_utils = require('process_utils');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
  * Constructs a Mobile Safari controller for iOS.
  *
- * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object.<string>} args browser options with string values:
  *    runNumber
  *    deviceSerial
@@ -139,7 +139,7 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   }, function(e) {
     var stderr = (e.stderr || e.message || '').trim();
     if (0 === stderr.indexOf('Unknown APPID (check_gdb) is not in:')) {
-      done.resolve('already mounted');
+      done.fulfill('already mounted');
     } else if (stderr !== 'Could not start com.apple.debugserver!') {
       reject('Unexpected stderr: ' + stderr);
     } else {
@@ -159,7 +159,7 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
                 this.app_, this.iDeviceImageMounter_,
                 ['-u', this.deviceSerial_, img, sig], {}, 30000).then(
                 function() {
-              done.resolve('mounted');
+              done.fulfill('mounted');
             }.bind(this), reject);
           }
         }.bind(this));
@@ -182,7 +182,7 @@ BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
           ['-U', this.deviceSerial_, '-i', this.urlOpenerApp_], {},
           20000).then(function(stdout) {
         if (stdout.indexOf('Install - Complete') >= 0) {
-          done.resolve();
+          done.fulfill();
         } else {
           reject('Install failed: ' + stdout);
         }

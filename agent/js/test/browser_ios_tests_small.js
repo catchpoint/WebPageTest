@@ -35,7 +35,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 /**
  * All tests are synchronous, do NOT use Mocha's function(done) async form.
@@ -47,7 +47,7 @@ var webdriver = require('webdriver');
 describe('browser_ios small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -183,7 +183,7 @@ describe('browser_ios small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
     should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
 
@@ -239,7 +239,7 @@ describe('browser_ios small', function() {
 
   function startVideo_() {
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(videoStart.calledOnce);
     spawnStub.assertCall(/ideviceinfo$/, '-k', 'ProductType', '-u',
@@ -253,7 +253,7 @@ describe('browser_ios small', function() {
 
   function stopVideo_() {
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     spawnStub.assertCall();
     should.equal('[]', app.getSchedule());
     should.ok(videoStart.calledOnce);
@@ -263,7 +263,7 @@ describe('browser_ios small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
 
