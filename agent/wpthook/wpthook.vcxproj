@@ -188,6 +188,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test_server.h" />
     <ClInclude Include="test_state.h" />
+    <ClInclude Include="trace.h" />
     <ClInclude Include="track_dns.h" />
     <ClInclude Include="track_sockets.h" />
     <ClInclude Include="window_messages.h" />
@@ -764,6 +765,7 @@
     </ClCompile>
     <ClCompile Include="test_server.cc" />
     <ClCompile Include="test_state.cc" />
+    <ClCompile Include="trace.cc" />
     <ClCompile Include="track_dns.cc" />
     <ClCompile Include="track_sockets.cc" />
     <ClCompile Include="wpthook.cc" />

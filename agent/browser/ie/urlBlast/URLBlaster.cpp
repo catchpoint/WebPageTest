@@ -22,14 +22,7 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testin
 , count(0)
 , hDlg(hWnd)
 , urlManager(NULL)
-, testType(0)
-, labID(0)
-, dialerID(0)
-, connectionType(0)
 , timeout(60)
-, experimental(0)
-, sequentialErrors(0)
-, screenShotErrors(0)
 , browserPID(0)
 , userSID(NULL)
 , log(logRef)
@@ -45,8 +38,6 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testin
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
-	hClearedCache = CreateEvent(0, TRUE, FALSE, NULL );
-	hRun = CreateEvent(0, TRUE, FALSE, NULL );
 	srand(GetTickCount());
 }
 
@@ -75,8 +66,6 @@ CURLBlaster::~CURLBlaster(void)
     CloseHandle(heartbeatEvent);
 		
 	CloseHandle( hMustExit );
-	CloseHandle( hClearedCache );
-	CloseHandle( hRun );
 	EnterCriticalSection(&cs);
 	if( userSID )
 	{
@@ -211,14 +200,6 @@ void CURLBlaster::ThreadProc(void)
 {
 	if( DoUserLogon() )
 	{
-		sequentialErrors = 0;
-		
-		log.Trace(_T("Waiting for startup synchronization"));
-
-		// synchronize all of the threads and don't start testing until they have all cleared out the caches (heavy disk activity)
-		SetEvent(hClearedCache);
-		WaitForSingleObject(hRun, INFINITE);
-
 		log.Trace(_T("Running..."));
 
 		// start off with IPFW in a clean state
@@ -851,38 +832,18 @@ bool CURLBlaster::LaunchBrowser(void)
 					HKEY hKey;
 					if( RegCreateKeyEx((HKEY)hProfile, _T("SOFTWARE\\AOL\\ieWatch"), 0, 0, 0, KEY_READ | KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS )
 					{
-						DWORD len = sizeof(info.testResult);
-						if( RegQueryValueEx(hKey, _T("Result"), 0, 0, (LPBYTE)&info.testResult, &len) == ERROR_SUCCESS )
-						{
-							// only track sequential errors when not running a script
-							if( !info.runningScript )
-							{
-								if( info.testResult & 0x80000000 )
-									sequentialErrors++;
-								else
-									sequentialErrors = 0;
-							}
-						}
 						info.cpu = 0;
-						len = sizeof(info.cpu);
+						DWORD len = sizeof(info.cpu);
 						RegQueryValueEx(hKey, _T("cpu"), 0, 0, (LPBYTE)&info.cpu, &len);
 								
 						RegDeleteValue(hKey, _T("Result"));
 						RegDeleteValue(hKey, _T("cpu"));
-						
-						// delete a few other keys we don't want to persist
-						RegDeleteValue(hKey, _T("Use Address"));
-						RegDeleteValue(hKey, _T("DNS Latency"));
 						
 						RegCloseKey(hKey);
 					}
 
 					// clean up any processes that may have been spawned
 					KillProcs();
-
-					// see if we are running in crawler mode and collected links
-					if( info.harvestLinks )
-						urlManager->HarvestedLinks(info);
 				}
 				else
 				{
@@ -895,8 +856,6 @@ bool CURLBlaster::LaunchBrowser(void)
 					CString msg;
 					msg.Format(_T("Failed to launch browser '%s' - %s"), (LPCTSTR)szMsg, (LPCTSTR)exe);
 					log.LogEvent(event_Error, 0, msg);
-
-					SetEvent(hMustExit);	// something went horribly wrong, this should never happen but don't get stuck in a loop
 				}
 
         // stop the tcpdump if we started one
@@ -961,11 +920,6 @@ void CURLBlaster::ConfigurePagetest(void)
 			val = pos.bottom;
 			RegSetValueEx(hKey, _T("Window Height"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
-			// pass it the IP address to use
-			RegDeleteValue(hKey, _T("Use Address"));
-			if( !ipAddress.IsEmpty() )
-				RegSetValueEx(hKey, _T("Use Address"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)ipAddress, (ipAddress.GetLength() + 1) * sizeof(TCHAR));
-
 			// delete any old results from the reg key
 			RegDeleteValue(hKey, _T("Result"));
 			RegDeleteValue(hKey, _T("cpu"));
@@ -1023,14 +977,9 @@ void CURLBlaster::ConfigurePagetest(void)
 				RegSetValueEx(hKey, _T("Cookies File"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.cookiesFile, (info.cookiesFile.GetLength() + 1) * sizeof(TCHAR));			
 
 			RegSetValueEx(hKey, _T("EventName"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)eventName, (eventName.GetLength() + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("LabID"), 0, REG_DWORD, (const LPBYTE)&labID, sizeof(labID));
-			RegSetValueEx(hKey, _T("DialerID"), 0, REG_DWORD, (const LPBYTE)&dialerID, sizeof(dialerID));
-			RegSetValueEx(hKey, _T("ConnectionType"), 0, REG_DWORD, (const LPBYTE)&connectionType, sizeof(connectionType));
 			RegSetValueEx(hKey, _T("Cached"), 0, REG_DWORD, (const LPBYTE)&isCached, sizeof(isCached));
 			RegSetValueEx(hKey, _T("URL"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.url, (info.url.GetLength() + 1) * sizeof(TCHAR));
 			RegSetValueEx(hKey, _T("DOM Element ID"), 0, REG_SZ, (const LPBYTE)(LPCTSTR)info.domElement, (info.domElement.GetLength() + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("Experimental"), 0, REG_DWORD, (const LPBYTE)&experimental, sizeof(experimental));
-			RegSetValueEx(hKey, _T("Screen Shot Errors"), 0, REG_DWORD, (const LPBYTE)&screenShotErrors, sizeof(screenShotErrors));
 			RegSetValueEx(hKey, _T("Check Optimizations"), 0, REG_DWORD, (const LPBYTE)&info.checkOpt, sizeof(info.checkOpt));
       RegSetValueEx(hKey, _T("No Headers"), 0, REG_DWORD, (const LPBYTE)&info.noHeaders, sizeof(info.noHeaders));
       RegSetValueEx(hKey, _T("No Images"), 0, REG_DWORD, (const LPBYTE)&info.noImages, sizeof(info.noImages));

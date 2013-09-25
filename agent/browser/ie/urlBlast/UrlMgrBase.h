@@ -126,7 +126,6 @@ public:
 	virtual void Stop(void){}
 
 	virtual bool GetNextUrl(CTestInfo &info) = 0;
-	virtual void HarvestedLinks(CTestInfo &info){}
 	virtual bool RunRepeatView(CTestInfo &info){return true;}
 	virtual void UrlFinished(CTestInfo &info){}
 	virtual void GetStatus(CString &status){}

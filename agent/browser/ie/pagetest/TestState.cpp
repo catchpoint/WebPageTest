@@ -230,20 +230,13 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 						len = _countof(logUrl);
 						key.QueryStringValue(_T("URL"), logUrl, &len);
 					}
-					key.QueryDWORDValue(_T("LabID"), labID);
-					key.QueryDWORDValue(_T("DialerID"), dialerID);
-					key.QueryDWORDValue(_T("ConnectionType"), connectionType);
 					key.QueryDWORDValue(_T("Cached"), cached);
-					experimental = 0;
-					key.QueryDWORDValue(_T("Experimental"), experimental);
 					includeObjectData = 1;
 					key.QueryDWORDValue(_T("Include Object Data"), includeObjectData);
 					saveEverything = 0;
 					key.QueryDWORDValue(_T("Save Everything"), saveEverything);
 					captureVideo = 0;
 					key.QueryDWORDValue(_T("Capture Video"), captureVideo);
-					screenShotErrors = 0;
-					key.QueryDWORDValue(_T("Screen Shot Errors"), screenShotErrors);
 					checkOpt = 1;
 					key.QueryDWORDValue(_T("Check Optimizations"), checkOpt);
 					ignoreSSL = 0;
@@ -353,7 +346,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 				if( script_activity_timeout )
 					activityTimeout = script_activity_timeout;
 
-        bindAddr = 0;
 				if( key.Open(HKEY_CURRENT_USER, _T("SOFTWARE\\AOL\\ieWatch"), KEY_READ) == ERROR_SUCCESS )
 				{
 					if( runningScript && script_timeout != -1 )
@@ -361,17 +353,6 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 					else
 						key.QueryDWORDValue(_T("Timeout"), timeout);
 					
-          TCHAR addr[100];
-          addr[0] = 0;
-					ULONG len = _countof(addr);
-					if( key.QueryStringValue(_T("Use Address"), addr, &len) == ERROR_SUCCESS && lstrlen(addr))
-					{
-						CString buff;
-						buff.Format(_T("[Pagetest] - Binding to local address %s\n"), addr);
-						OutputDebugString(buff);
-						bindAddr = inet_addr(CT2A(addr));
-					}
-						
 					key.Close();
 				}		
 				

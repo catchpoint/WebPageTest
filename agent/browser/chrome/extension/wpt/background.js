@@ -466,6 +466,10 @@ function wptExecuteTask(task) {
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;
+      case 'capturetrace':
+        g_processing_task = true;
+        wpt.chromeDebugger.CaptureTrace(wptTaskCallback);
+        break;
       case 'noscript':
         g_commandRunner.doNoScript();
         break;
@@ -474,7 +478,9 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        wpt.chromeDebugger.StopTrace(function(){
+          g_commandRunner.doCollectStats(wptTaskCallback);
+        });
         break;
 
       default:

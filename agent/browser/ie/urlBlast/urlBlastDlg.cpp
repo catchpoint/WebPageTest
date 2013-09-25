@@ -30,26 +30,14 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
 	, lastUserTime(0)
 	, logFile(_T(""))
 	, startupDelay(1000)
-	, threadCount(1)
 	, computerName(_T(""))
-	, aliveFile(_T(""))
-	, testType(0)
-	, clearCacheInterval(-1)
-	, labID(0)
-	, dialerID(0)
-	, connectionType(0)
-	, uploadLogsInterval(0)
 	, lastUpload(0)
 	, testID(0)
 	, configID(0)
 	, timeout(0)
-	, experimental(0)
 	, running(false)
-	, minInterval(5)
-	, screenShotErrors(0)
 	, checkOpt(1)
 	, bDrWatson(false)
-	, ifIndex(0)
 	, accountBase(_T("user"))
 	, password(_T("2dialit"))
 	, browserWidth(1024)
@@ -62,6 +50,7 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
   , useCurrentAccount(0)
   , hHookDll(NULL)
   , keepDNS(0)
+  , worker(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
   testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
@@ -112,9 +101,6 @@ void CurlBlastDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATUS, status);
-	DDX_Control(pDX, IDC_RATE, rate);
-	DDX_Control(pDX, IDC_CPU, cpu);
-	DDX_Control(pDX, IDC_REBOOT, rebooting);
 }
 
 /*-----------------------------------------------------------------------------
@@ -126,7 +112,6 @@ BEGIN_MESSAGE_MAP(CurlBlastDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
 	ON_MESSAGE(MSG_UPDATE_UI, OnUpdateUI)
-	ON_MESSAGE(MSG_CONTINUE_STARTUP, OnContinueStartup)
 END_MESSAGE_MAP()
 
 /*-----------------------------------------------------------------------------
@@ -169,7 +154,6 @@ BOOL CurlBlastDlg::OnInitDialog()
 	SetupScreen();
   ReleaseMutex(testingMutex);
 	
-	rebooting.SetWindowText(_T(""));
 	status.SetWindowText(_T("Starting up..."));
 	SetTimer(1,startupDelay,NULL);
 
@@ -243,11 +227,8 @@ void CurlBlastDlg::OnClose()
 	status.SetWindowText(_T("Waiting to exit..."));
 	
 	// signal and wait for all of the workers to finish
-	KillWorkers();
+	KillWorker();
 
-	// upload our current log files
-	UploadLogs();
-	
 	// shut down the url manager
 	urlManager.Stop();
 
@@ -277,15 +258,6 @@ void CurlBlastDlg::OnTimer(UINT_PTR nIDEvent)
 				// close any open dialog windows
 				CloseDialogs();
 				
-				// see if it is time to upload the log files
-				CheckUploadLogs();
-				
-				// do we need to exit?
-				CheckExit();
-				
-				// see if we need to update the "alive" file
-				WriteAlive();
-				
 				// kill any debug windows that are open
 				KillProcs();
 
@@ -307,25 +279,12 @@ typedef HRESULT (STDAPICALLTYPE* DLLREGISTERSERVER)(void);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-unsigned __stdcall ClearCachesThreadProc( void* arg )
-{
-	CurlBlastDlg * dlg = (CurlBlastDlg *)arg;
-	if( dlg )
-		dlg->ClearCaches();
-		
-	return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 void CurlBlastDlg::DoStartup(void)
 {
 	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
 
   InstallFlash();
 
-	log.dialerId = dialerID;
-	log.labID = labID;
 	log.LogEvent(event_Started);
 	log.LogMachineInfo();
 	
@@ -347,11 +306,8 @@ void CurlBlastDlg::DoStartup(void)
 
   InstallSystemGDIHook();
 
-	// disable the DNS cache
-	status.SetWindowText(_T("Disabling DNS cache..."));
-	DisableDNSCache();
-
   // stop services that can interfere with our measurements
+	status.SetWindowText(_T("Stoping services..."));
   StopService(_T("WinDefend")); // defender
   StopService(_T("wscsvc"));    // security center
 
@@ -396,11 +352,48 @@ void CurlBlastDlg::DoStartup(void)
 		RegCloseKey(hKey);
 	}
 
-	// clear the caches on a background thread
-	HANDLE hThread = (HANDLE)_beginthreadex(0, 0, ::ClearCachesThreadProc, this, 0, 0);
-	if( hThread )
-		CloseHandle(hThread);
+	// start up the url manager
+	urlManager.Start();
 	
+	// create all of the worker
+	status.SetWindowText(_T("Starting worker..."));
+	
+	CRect desktop(0,0,browserWidth,browserHeight);
+
+	// launch the worker thread
+	worker = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
+	
+	// pass on configuration information
+	worker->errorLog		  = logFile;
+	worker->urlManager		= &urlManager;
+	worker->timeout		  = timeout;
+	worker->desktop		  = desktop;
+	worker->customEventText= customEventText;
+	worker->accountBase	= accountBase;
+	worker->password		  = password;
+	worker->preLaunch		= preLaunch;
+	worker->postLaunch		= postLaunch;
+	worker->dynaTrace		= dynaTrace;
+	worker->pipeIn			  = pipeIn;
+	worker->pipeOut		  = pipeOut;
+	worker->useBitBlt		= 1;
+  worker->keepDNS      = keepDNS;
+	
+	// force 1024x768 for screen shots
+	worker->pos.right = browserWidth;
+	worker->pos.bottom = browserHeight;
+	
+  if( useCurrentAccount )
+    worker->hProfile = HKEY_CURRENT_USER;
+		
+	worker->Start(1);
+
+	// send a UI update message
+	PostMessage(MSG_UPDATE_UI);
+
+	status.SetWindowText(_T("Running..."));
+	running = true;
+
 	// run a periodic timer for doing housekeeping work
 	SetTimer(2, 500, NULL);
   SetTimer(3, 20000, NULL);
@@ -408,139 +401,37 @@ void CurlBlastDlg::DoStartup(void)
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CurlBlastDlg::KillWorkers(void)
+void CurlBlastDlg::KillWorker(void)
 {
   // kill the watchdog
   HWND watchdog = ::FindWindow(_T("Urlblast_Watchdog"), NULL);
   if (watchdog)
     ::SendMessageTimeout(watchdog, WM_CLOSE, 0, 0, 0, 10000, NULL);
 
-  // signal all of the workers to stop
-	CURLBlaster * blaster;
-	for( int i = 0; i < workers.GetCount(); i++ )
-	{
-		blaster = workers[i];
-		if( blaster )
-			blaster->Stop();
-	}
-	
-	// now delete all of the workers (which will cause a blocking wait until it is actually finished)
-	for( int i = 0; i < workers.GetCount(); i++ )
-	{
-		blaster = workers[i];
-		if( blaster )
-			delete blaster;
-	}
-	
-	// clear the array
-	workers.RemoveAll();
-	
-	// wipe out any IP addresses we added
-	while( !ipContexts.IsEmpty() )
-	{
-		ULONG context = ipContexts.RemoveHead();
-		DeleteIPAddress(context);
-	}
+  // signal the worker to stop
+  if (worker) {
+    worker->Stop();
+    delete worker;
+    worker = NULL;
+  }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 LRESULT CurlBlastDlg::OnUpdateUI(WPARAM wParal, LPARAM lParam)
 {
-	// only update every 100ms at most
-	static DWORD lastTime = 0;
-	static DWORD lastCount = 0;
-	DWORD tick = GetTickCount();
-	if( lastTime && (tick - lastTime > 100) )
-	{
-		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+	// update the count of url's hit so far
+	DWORD count = 0;
+	if (worker)
+	  count = worker->count;
+	CString buff;
+	buff.Format(_T("Completed %d URLs...\n"), count);
 
-		// update the count of url's hit so far
-		DWORD count = 0;
-		for( int i = 0; i < workers.GetCount(); i++ )
-		{
-			CURLBlaster * blaster = workers[i];
-			if( blaster )
-				count += blaster->count;
-		}
-		
-		// calculate the rate
-		if( start )
-		{
-			if( count != lastCount )
-			{
-				lastCount = count;
-				
-				CString buff;
-				buff.Format(_T("Completed %d URLs...\n"), count);
-				
-				CString stat;
-				urlManager.GetStatus(stat);
-				buff += stat;
+	CString stat;
+	urlManager.GetStatus(stat);
+	buff += stat;
 
-				status.SetWindowText(buff);
-			
-				double sec = (double)(now - start) / (double)freq;
-				if( sec != 0.0 )
-				{
-					double ups = (double)count / sec;
-					DWORD upd = (DWORD)(ups * 60.0 * 60.0 * 24.0);
-
-					buff.Format(_T("Rate: %d urls/day"), upd);
-					rate.SetWindowText(buff);
-				}
-			}
-		}
-		else
-		{
-			start = now;
-			lastUpload = start;
-		}
-			
-		// calculate the CPU usage
-		__int64 idleTime, kernelTime, userTime;
-		if( GetSystemTimes((FILETIME*)&idleTime, (FILETIME*)&kernelTime, (FILETIME*)&userTime) )
-		{
-			if( firstIdleTime )
-			{
-				__int64 idle = idleTime - firstIdleTime;
-				__int64 kernel = kernelTime - firstKernelTime;
-				__int64 user = userTime - firstUserTime;
-				__int64 sys = kernel + user;
-				if( sys )
-				{
-					int avg = (int)( (sys - idle) * 100 / sys );
-
-					idle = idleTime - lastIdleTime;
-					kernel = kernelTime - lastKernelTime;
-					user = userTime - lastUserTime;
-					sys = kernel + user;
-
-					if( sys )
-					{
-						int last = (int)( ((kernel + user) - idle) * 100 / (kernel + user) );
-						
-						CString buff;
-						buff.Format(_T("CPU Usage: %d%% (%d%% instantaneous)"), avg, last);
-						cpu.SetWindowText(buff);
-					}
-				}
-			}
-			else
-			{
-				firstIdleTime = idleTime;
-				firstKernelTime = kernelTime;
-				firstUserTime = userTime;
-			}
-			
-			lastIdleTime = idleTime;
-			lastKernelTime = kernelTime;
-			lastUserTime = userTime;
-		}
-	}
-	
-	lastTime = tick;
+	status.SetWindowText(buff);
 
 	return 0;
 }
@@ -559,17 +450,7 @@ void CurlBlastDlg::LoadSettings(void)
 	lstrcpy( PathFindFileName(iniFile), _T("urlBlast.ini") );
 
 	startupDelay		    = GetPrivateProfileInt(_T("Configuration"), _T("Startup Delay"), 10, iniFile) * 1000;
-	threadCount			    = GetPrivateProfileInt(_T("Configuration"), _T("Thread Count"), 1, iniFile);
 	timeout				      = GetPrivateProfileInt(_T("Configuration"), _T("Timeout"), 120, iniFile);
-	testType			      = GetPrivateProfileInt(_T("Configuration"), _T("Test Type"), 4, iniFile);
-	clearCacheInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Clear Cache Interval"), 0, iniFile);
-	labID				        = GetPrivateProfileInt(_T("Configuration"), _T("Lab ID"), -1, iniFile);
-	dialerID			      = GetPrivateProfileInt(_T("Configuration"), _T("Dialer ID"), 0, iniFile);
-	connectionType		  = GetPrivateProfileInt(_T("Configuration"), _T("Connection Type"), -1, iniFile);
-	uploadLogsInterval	= GetPrivateProfileInt(_T("Configuration"), _T("Upload logs interval"), 0, iniFile);
-	experimental		    = GetPrivateProfileInt(_T("Configuration"), _T("Experimental"), 0, iniFile);
-	minInterval			    = GetPrivateProfileInt(_T("Configuration"), _T("Min Interval"), 5, iniFile);
-	screenShotErrors	  = GetPrivateProfileInt(_T("Configuration"), _T("Screen Shot Errors"), 0, iniFile);
 	checkOpt			      = GetPrivateProfileInt(_T("Configuration"), _T("Check Optimizations"), 1, iniFile);
 	browserWidth		    = GetPrivateProfileInt(_T("Configuration"), _T("Browser Width"), 1024, iniFile);
 	browserHeight		    = GetPrivateProfileInt(_T("Configuration"), _T("Browser Height"), 768, iniFile);
@@ -581,10 +462,6 @@ void CurlBlastDlg::LoadSettings(void)
   keepDNS		          = GetPrivateProfileInt(_T("Configuration"), _T("Keep DNS"), keepDNS, iniFile);
 
 	log.debug = debug;
-
-	// Default to 1 thread if it was set to zero
-	if( !threadCount )
-		threadCount = 1;
 
 	// stop using these as soon as is humanly possible - it's an ugly hack and we now have the connection type
 	// explicitly in the config file
@@ -622,59 +499,6 @@ void CurlBlastDlg::LoadSettings(void)
 	if( GetPrivateProfileString(_T("Configuration"), _T("Object Sample Rate"), _T("100.0"), buff, _countof(buff), iniFile ) )
 		objectSampleRate = _tstof(buff);
 
-	if( GetPrivateProfileString(_T("Configuration"), _T("Upload log file"), _T(""), buff, _countof(buff), iniFile ) )
-	{
-		CString uploadLogFile = buff;
-
-		// add the test ID and config ID as necessary
-		CString id;
-		id.Format(_T("%d"), testID);
-		uploadLogFile.Replace(_T("%TESTID%"), id);
-		id.Format(_T("%d"), configID);
-		uploadLogFile.Replace(_T("%CONFIGID%"), id);
-
-		uploadLogFiles.Add(uploadLogFile);
-	}
-
-	// get any additional upload log files
-	int index = 2;
-	TCHAR val[34];
-	while( GetPrivateProfileString(_T("Configuration"), CString(_T("Upload log file ")) + _itot(index, val, 10), _T(""), buff, _countof(buff), iniFile ) )
-	{
-		CString uploadLogFile = buff;
-
-		// add the test ID and config ID as necessary
-		CString id;
-		id.Format(_T("%d"), testID);
-		uploadLogFile.Replace(_T("%TESTID%"), id);
-		id.Format(_T("%d"), configID);
-		uploadLogFile.Replace(_T("%CONFIGID%"), id);
-
-		uploadLogFiles.Add(uploadLogFile);
-
-		index++;
-	}
-
-	if( GetPrivateProfileString(_T("Configuration"), _T("Alive File"), _T(""), buff, _countof(buff), iniFile ) )
-	{
-		aliveFile = buff;
-		aliveFile.Replace(_T("%MACHINE%"), computerName);
-	}
-
-	if( GetPrivateProfileString(_T("Configuration"), _T("Url List"), _T(""), buff, _countof(buff), iniFile ) )
-	{
-		urlManager.SetUrlList(buff);
-		urlManager.SetObjectSampleRate(objectSampleRate);
-	}
-
-	if( GetPrivateProfileString(_T("Configuration"), _T("Url Files Dir"), _T(""), buff, _countof(buff), iniFile ) )
-	{
-		CString dir = buff;
-		if( dir.Right(1) != '\\' )
-			dir += "\\";
-		urlManager.SetFilesDir(dir);
-	}
-
 	if( GetPrivateProfileString(_T("Configuration"), _T("Url Files Url"), _T(""), buff, _countof(buff), iniFile ) )
 	{
 		CString http = buff;
@@ -695,37 +519,9 @@ void CurlBlastDlg::LoadSettings(void)
 	if( GetPrivateProfileString(_T("Configuration"), _T("Location"), _T(""), buff, _countof(buff), iniFile ) )
 		urlManager.SetHttpLocation(buff);
 
-	if( GetPrivateProfileString(_T("Configuration"), _T("Crawler Config"), _T(""), buff, _countof(buff), iniFile ) )
-		urlManager.SetCrawlerConfig(buff);
-
-	if( GetPrivateProfileString(_T("Configuration"), _T("Crawler Files Dir"), _T(""), buff, _countof(buff), iniFile ) )
-		urlManager.SetCrawlerFilesDir(buff);
-
 	// set up the global url manager settings
-	urlManager.SetMinInterval(minInterval);
-	urlManager.SetTestType(testType);
 	urlManager.SetCheckOpt(checkOpt);
 
-	// see if we need to figure out the Dialer ID or Lab ID from the machine name
-	if( !dialerID )
-	{
-		// find the index of the first number in the machine name
-		int index = -1;
-		int len = computerName.GetLength();
-		for( int i = 0; i < len && index == -1; i++ )
-			if( _istdigit(computerName[i]) )
-				index = i;
-				
-		if( !dialerID && index != -1 )
-			dialerID = _ttol(computerName.Right(len - index));
-			
-		if( !labID )
-		{
-			CString baseName = computerName.Left(index);
-			labID = GetPrivateProfileInt(_T("Labs"), baseName, -1, iniFile);
-		}
-	}
-	
 	// make sure the directory for the log file exists
 	TCHAR szDir[MAX_PATH];
 	lstrcpy(szDir, (LPCTSTR)logFile);
@@ -734,274 +530,9 @@ void CurlBlastDlg::LoadSettings(void)
 	if( lstrlen(szDir) > 3 )
 		SHCreateDirectoryEx(NULL, szDir, NULL);
 
-	// get the machine's IP addresses
-	addresses.RemoveAll();
-  if( threadCount > 1 )
-  {
-	  PMIB_IPADDRTABLE pIPAddrTable;
-	  DWORD dwSize = sizeof(MIB_IPADDRTABLE);
-	  pIPAddrTable = (MIB_IPADDRTABLE*)malloc(dwSize);
-	  if( pIPAddrTable )
-	  {
-		  DWORD ret = GetIpAddrTable(pIPAddrTable, &dwSize, TRUE);
-		  if( ret == ERROR_INSUFFICIENT_BUFFER) 
-		  {
-			  free( pIPAddrTable );
-			  pIPAddrTable = (MIB_IPADDRTABLE *) malloc ( dwSize );
-			  if(pIPAddrTable)
-				  ret = GetIpAddrTable(pIPAddrTable, &dwSize, TRUE);
-		  }
-  		
-		  if( ret == NO_ERROR )
-		  {
-			  // figure out which interface has the default gateway on it (we only want those addresses)
-			  IPAddr ipAddr = 0x0100A398;	// 152.163.0.1
-			  DWORD iface;
-			  if( GetBestInterface(ipAddr, &iface) == NO_ERROR )
-			  {
-				  ifIndex = iface;
-				  for( DWORD i = 0; i < pIPAddrTable->dwNumEntries; i++ )
-				  {
-					  if( pIPAddrTable->table[i].dwIndex == iface )
-					  {
-						  in_addr addr;
-						  addr.S_un.S_addr = pIPAddrTable->table[i].dwAddr;
-						  addresses.Add(A2T(inet_ntoa(addr)));
-					  }
-				  }
-			  }
-		  }
-  		
-		  if( pIPAddrTable )
-			  free(pIPAddrTable);
-	  }
-  }
-
 	// see if we need to get the EC2 configuration
 	if( ec2 )
 		GetEC2Config();
-
-	// adjust the clear cache interval and reboot interval +- 20% to level out the dialers
-	if( clearCacheInterval )
-		clearCacheInterval = clearCacheInterval + (rand() % (int)((double)clearCacheInterval * 0.4)) - (int)((double)clearCacheInterval * 0.2);
-}
-
-/*-----------------------------------------------------------------------------
-	Check to see if we need to write out the alive file 
-	(every 60 seconds if one is configured)
------------------------------------------------------------------------------*/
-void CurlBlastDlg::WriteAlive(void)
-{
-	static DWORD lastWrite = 0;
-
-	if( aliveFile.GetLength() )
-	{
-		DWORD now = GetTickCount();
-		if( now < lastWrite || now - lastWrite > 60000 || !lastWrite )
-		{
-			// make sure the directory for the alive file exists
-			TCHAR szDir[MAX_PATH];
-			lstrcpy(szDir, (LPCTSTR)aliveFile);
-			LPTSTR szFile = PathFindFileName(szDir);
-			*szFile = 0;
-			if( lstrlen(szDir) > 3 )
-				SHCreateDirectoryEx(NULL, szDir, NULL);
-
-			lastWrite = now;
-			HANDLE hFile = CreateFile(aliveFile, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, &nullDacl, CREATE_ALWAYS, 0, 0);
-			if( hFile != INVALID_HANDLE_VALUE )
-				CloseHandle(hFile);
-		}
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Check to see if we need to upload our log files
------------------------------------------------------------------------------*/
-void CurlBlastDlg::CheckUploadLogs(void)
-{
-	if( uploadLogsInterval && lastUpload && testType != 6 )
-	{
-		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
-		int elapsed = (int)(((now - lastUpload) / freq) / 60);
-		if( elapsed >= uploadLogsInterval )
-				UploadLogs();
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Upload the log files
------------------------------------------------------------------------------*/
-void CurlBlastDlg::UploadLogs(void)
-{
-	bool ok = false;
-	
-	status.SetWindowText(_T("Uploading log files..."));
-
-	// make sure they are really supposed to be uploaded
-	if( uploadLogsInterval && uploadLogFiles.GetCount() )
-	{
-		// make sure all of the logs exist (even if they are empty)
-		HANDLE hFile = CreateFile(logFile + _T("_IEWPG.txt"), GENERIC_READ | GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-		if( hFile != INVALID_HANDLE_VALUE )
-			CloseHandle(hFile);
-		hFile = CreateFile(logFile + _T("_IEWTR.txt"), GENERIC_READ | GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-		if( hFile != INVALID_HANDLE_VALUE )
-			CloseHandle(hFile);
-		hFile = CreateFile(logFile + _T("_log.txt"), GENERIC_READ | GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-		if( hFile != INVALID_HANDLE_VALUE )
-			CloseHandle(hFile);
-			
-		// build the date part of the file name
-		CTime t = CTime::GetCurrentTime();
-
-		// open (and lock) the local log files
-		DWORD startMS = GetTickCount();
-		HANDLE hSrc1 = INVALID_HANDLE_VALUE;
-		do
-		{
-			hSrc1 = CreateFile(logFile + _T("_IEWPG.txt"), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-			if( hSrc1 == INVALID_HANDLE_VALUE )
-				Sleep(100);
-		}while( hSrc1 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-		
-		if( hSrc1 != INVALID_HANDLE_VALUE )
-		{
-			startMS = GetTickCount();
-			HANDLE hSrc2 = INVALID_HANDLE_VALUE;
-			do
-			{
-				hSrc2 = CreateFile(logFile + _T("_IEWTR.txt"), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-				if( hSrc2 == INVALID_HANDLE_VALUE )
-					Sleep(100);
-			}while( hSrc2 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-			
-			if( hSrc2 != INVALID_HANDLE_VALUE )
-			{
-				startMS = GetTickCount();
-				HANDLE hSrc3 = INVALID_HANDLE_VALUE;
-				do
-				{
-					hSrc3 = CreateFile(logFile + _T("_log.txt"), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-					if( hSrc3 == INVALID_HANDLE_VALUE )
-						Sleep(100);
-				}while( hSrc3 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-				
-				if( hSrc3 != INVALID_HANDLE_VALUE )
-				{
-					// loop through all of the log files
-					for( int index = 0; index < uploadLogFiles.GetCount(); index++ )
-					{
-						CString uploadLogFile = uploadLogFiles[index];
-						
-						// build the destination log file root
-						CString destFile = uploadLogFile;
-						
-						destFile.Replace(_T("%MACHINE%"), computerName);
-						
-						destFile.Replace(_T("%DATE%"), (LPCTSTR)t.Format(_T("%Y%m%d")));
-						destFile.Replace(_T("%TIME%"), (LPCTSTR)t.Format(_T("%H%M%S")));
-						
-						// make sure the directory for the log file exists
-						TCHAR szDir[MAX_PATH];
-						lstrcpy(szDir, (LPCTSTR)destFile);
-						LPTSTR szFile = PathFindFileName(szDir);
-						*szFile = 0;
-						if( lstrlen(szDir) > 3 )
-							SHCreateDirectoryEx(NULL, szDir, NULL);
-
-						// open (and lock) the remote log files
-						startMS = GetTickCount();
-						HANDLE hDest1 = INVALID_HANDLE_VALUE;
-						do
-						{
-							hDest1 = CreateFile(destFile + _T("_IEWPG.txt"), GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-							if( hDest1 == INVALID_HANDLE_VALUE )
-								Sleep(100);
-						}while( hDest1 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-
-						if( hDest1 != INVALID_HANDLE_VALUE )
-						{
-							startMS = GetTickCount();
-							HANDLE hDest2 = INVALID_HANDLE_VALUE;
-							do
-							{
-								hDest2 = CreateFile(destFile + _T("_IEWTR.txt"), GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-								if( hDest2 == INVALID_HANDLE_VALUE )
-									Sleep(100);
-							}while( hDest2 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-							
-							if( hDest2 != INVALID_HANDLE_VALUE )
-							{
-								startMS = GetTickCount();
-								HANDLE hDest3 = INVALID_HANDLE_VALUE;
-								do
-								{
-									hDest3 = CreateFile(destFile + _T("_log.txt"), GENERIC_WRITE, 0, &nullDacl, OPEN_ALWAYS, 0, 0);
-									if( hDest3 == INVALID_HANDLE_VALUE )
-										Sleep(100);
-								}while( hDest3 == INVALID_HANDLE_VALUE && GetTickCount() < startMS + 10000 );
-								
-								if( hDest3 != INVALID_HANDLE_VALUE )
-								{
-									// move to the beginning of the source files
-									SetFilePointer(hSrc1, 0, 0, FILE_BEGIN);
-									SetFilePointer(hSrc2, 0, 0, FILE_BEGIN);
-									SetFilePointer(hSrc3, 0, 0, FILE_BEGIN);
-
-									// move to the end of the output files (in case they already existed)
-									SetFilePointer(hDest1, 0, 0, FILE_END);
-									SetFilePointer(hDest2, 0, 0, FILE_END);
-									SetFilePointer(hDest3, 0, 0, FILE_END);
-									
-									// copy the log files over
-									BYTE buff[8192];
-									DWORD bytes, written;
-
-									while( ReadFile(hSrc1, buff, sizeof(buff), &bytes, 0) && bytes )
-										WriteFile(hDest1, buff, bytes, &written, 0);
-
-									while( ReadFile(hSrc2, buff, sizeof(buff), &bytes, 0) && bytes )
-										WriteFile(hDest2, buff, bytes, &written, 0);
-
-									while( ReadFile(hSrc3, buff, sizeof(buff), &bytes, 0) && bytes )
-										WriteFile(hDest3, buff, bytes, &written, 0);
-										
-									ok = true;
-										
-									CloseHandle(hDest3);
-								}
-								CloseHandle(hDest2);
-							}
-							CloseHandle(hDest1);
-						}
-					}
-
-					// truncate the source files (only if the upload was successful)
-					if( ok )
-					{
-						SetFilePointer(hSrc1, 0, 0, FILE_BEGIN);
-						SetFilePointer(hSrc2, 0, 0, FILE_BEGIN);
-						SetFilePointer(hSrc3, 0, 0, FILE_BEGIN);
-						SetEndOfFile(hSrc1);
-						SetEndOfFile(hSrc2);
-						SetEndOfFile(hSrc3);
-					}
-
-					CloseHandle(hSrc3);
-				}
-				CloseHandle(hSrc2);
-			}
-			CloseHandle(hSrc1);
-		}
-	}
-	
-	if( ok )
-		log.LogEvent(event_LogUpload);
-	else
-		log.LogEvent(event_LogUpload, 1);
-	log.LogMachineInfo();
 }
 
 /*-----------------------------------------------------------------------------
@@ -1031,26 +562,19 @@ void CurlBlastDlg::KillProcs(void)
 			}
 			else if(lstrcmpi(PathFindFileName(proc[i].pProcessName), _T("iexplore.exe")))
 			{
-				// kill any processes that belong to our test users thaat we did not launch (and that aren't IE)
-				CURLBlaster * blaster;
-				for( int j = 0; j < workers.GetCount() && !terminate; j++ )
-				{
-					blaster = workers[j];
-					if( blaster )
+			  if (worker) {
+					EnterCriticalSection( &(worker->cs) );
+					// make sure it's not the browser we launched
+					if( proc[i].ProcessId != worker->browserPID 
+						&& worker->userSID && proc[i].pUserSid 
+						&& IsValidSid(worker->userSID) && IsValidSid(proc[i].pUserSid) )
 					{
-						EnterCriticalSection( &(blaster->cs) );
-						// make sure it's not the browser we launched
-						if( proc[i].ProcessId != blaster->browserPID 
-							&& blaster->userSID && proc[i].pUserSid 
-							&& IsValidSid(blaster->userSID) && IsValidSid(proc[i].pUserSid) )
-						{
-							// see if the SID matches
-							if( EqualSid(proc[i].pUserSid, blaster->userSID ) )
-								terminate = true;
-						}
-						LeaveCriticalSection( &(blaster->cs) );
+						// see if the SID matches
+						if( EqualSid(proc[i].pUserSid, worker->userSID ) )
+							terminate = true;
 					}
-				}
+					LeaveCriticalSection( &(worker->cs) );
+			  }
 			}
 
 			if( terminate )
@@ -1170,61 +694,6 @@ void CurlBlastDlg::CloseDialogs(void)
 }
 
 /*-----------------------------------------------------------------------------
-	See if we need to exit
------------------------------------------------------------------------------*/
-void CurlBlastDlg::CheckExit(void)
-{
-	if( running && testType == 6 )
-		if( urlManager.Done() )
-		{
-			log.Trace(_T("CheckExit() - exiting"));
-			
-			// if we are crawling, do we need to upload logs or reboot?
-			if( testType == 6 )
-			{
-				OnClose();
-			}
-			else
-				OnClose();
-		}
-}
-
-/*-----------------------------------------------------------------------------
-	Disable the DNS caching service
------------------------------------------------------------------------------*/
-void CurlBlastDlg::DisableDNSCache(void)
-{
-	// only disable the DNS cache if we are running more than one thread, otherwise we'll just rely on the dns flush
-	if( threadCount > 1 )
-	{
-		SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-		if( scm )
-		{
-			SC_HANDLE svc = OpenService(scm, _T("dnscache"), GENERIC_READ | GENERIC_EXECUTE);
-			if( svc )
-			{
-				// stop the service
-				SERVICE_STATUS status;
-				if( ControlService(svc, SERVICE_CONTROL_STOP, &status) )
-				{
-					// wait for it to actually stop
-					while( status.dwCurrentState != SERVICE_STOPPED )
-					{
-						Sleep(500);
-						if( !QueryServiceStatus(svc, &status) )
-							status.dwCurrentState = SERVICE_STOPPED;
-					}
-				}
-				
-				CloseServiceHandle(svc);
-			}
-			
-			CloseServiceHandle(scm);
-		}
-	}
-}
-
-/*-----------------------------------------------------------------------------
   Stop the given service
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::StopService(CString serviceName)
@@ -1253,216 +722,6 @@ void CurlBlastDlg::StopService(CString serviceName)
 		
 		CloseServiceHandle(scm);
 	}
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void CurlBlastDlg::ClearCaches(void)
-{
-	bool forceClear = false;
-	
-	// find any user.machine name directories that indicate a user profile gone bad
-	WIN32_FIND_DATA fd;
-	CString dir = _T("C:\\Documents and Settings");
-	TCHAR path[MAX_PATH];
-	DWORD len = _countof(path);
-	if( GetProfilesDirectory( path, &len ) )
-		dir = path;
-	dir += _T("\\");
-	HANDLE hFind = FindFirstFile(dir + _T("user*.*"), &fd);
-	if( hFind != INVALID_HANDLE_VALUE )
-	{
-		do
-		{
-			if( lstrlen(PathFindExtension(fd.cFileName)) > 1 )
-				forceClear = true;
-		}while(!forceClear && FindNextFile(hFind, &fd));
-		FindClose(hFind);
-	}
-	
-	if( forceClear || clearCacheInterval > 0 )
-	{
-		COleDateTime currentDate(time(0));
-		DATE date = 1;
-		
-		HKEY hKey;
-		if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AOL\\UrlBlast"), 0, 0, 0, KEY_READ | KEY_WRITE, 0, &hKey, 0)))
-		{
-			bool clear = true;
-			DWORD bytes = sizeof(date);
-			if( SUCCEEDED(RegQueryValueEx(hKey, _T("Cache Cleared Date"), 0, 0, (LPBYTE)&date, &bytes)) )
-			{
-				COleDateTime lastClear(date);
-				COleDateTimeSpan elapsed = currentDate - lastClear;
-				if(elapsed.GetDays() < clearCacheInterval)
-					clear = false;
-			}
-				
-			if( forceClear || clear )
-			{
-				// delete the user profiles
-				status.SetWindowText(_T("Clearing browser caches..."));
-				
-				hFind = FindFirstFile(dir + _T("user*.*"), &fd);
-				if( hFind != INVALID_HANDLE_VALUE )
-				{
-					do
-					{
-						TCHAR path[MAX_PATH + 1];
-						DWORD len = sizeof(path);
-						memset(path, 0, sizeof(path));
-						lstrcpy(path, dir);
-						lstrcat(path, fd.cFileName);
-						
-						SHFILEOPSTRUCT op;
-						memset(&op, 0, sizeof(op));
-						op.wFunc = FO_DELETE;
-						op.pFrom = path;
-						op.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
-						
-						SHFileOperation(&op);
-					}while(FindNextFile(hFind, &fd));
-					FindClose(hFind);
-				}
-				
-				// defrag the hard drive
-				status.SetWindowText(_T("Defragmenting the hard drive..."));
-				Defrag();
-				
-				// store the time things were cleared
-				date = currentDate;
-				RegSetValueEx(hKey, _T("Cache Cleared Date"), 0, REG_BINARY, (LPBYTE)&date, sizeof(date));
-				
-				log.LogEvent(event_ProfilesReset);
-				log.LogMachineInfo();
-			}
-
-			RegCloseKey(hKey);
-		}
-	}
-	
-	// continue the startup process
-	PostMessage(MSG_CONTINUE_STARTUP);
-}
-
-/*-----------------------------------------------------------------------------
-	Defrag the hard drive
------------------------------------------------------------------------------*/
-void CurlBlastDlg::Defrag(void)
-{
-	TCHAR cmd[100];
-	lstrcpy( cmd, _T("defrag c: -f -v") );
-	
-	STARTUPINFO si;
-	memset(&si, 0, sizeof(si));
-	si.cb = sizeof(si);
-	
-	PROCESS_INFORMATION pi;
-	if( CreateProcess(NULL, cmd, 0, 0, FALSE, 0, 0, 0, &si, &pi) )
-	{
-		WaitForSingleObject(pi.hProcess, INFINITE);
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Background processing is complete, start up the actual testing
------------------------------------------------------------------------------*/
-LRESULT CurlBlastDlg::OnContinueStartup(WPARAM wParal, LPARAM lParam)
-{
-	// start up the url manager
-	urlManager.Start();
-	
-	// create all of the workers
-	status.SetWindowText(_T("Starting workers..."));
-	
-	// see if we had enough addresses to use (we need one extra if we are binding to specific addresses)
-	if( addresses.GetCount() <= threadCount )
-		addresses.RemoveAll();
-		
-	CRect desktop(0,0,browserWidth,browserHeight);
-
-	// launch the worker threads	
-	DWORD useBitBlt = 0;
-	if( threadCount == 1 )
-		useBitBlt = 1;
-	HANDLE * cacheHandles = new HANDLE[threadCount];
-	HANDLE * runHandles = new HANDLE[threadCount];
-	for( int i = 0; i < threadCount; i++ )
-	{
-		CString buff;
-		buff.Format(_T("Starting user%d..."), i+1);
-		status.SetWindowText(buff);
-		
-		CURLBlaster * blaster = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
-		workers.Add(blaster);
-		
-		cacheHandles[i] = blaster->hClearedCache;
-		runHandles[i] = blaster->hRun;
-
-		// pass on configuration information
-		blaster->errorLog		  = logFile;
-		blaster->testType		  = testType;
-		blaster->urlManager		= &urlManager;
-		blaster->labID			  = labID;
-		blaster->dialerID		  = dialerID;
-		blaster->connectionType	= connectionType;
-		blaster->timeout		  = timeout;
-		blaster->experimental	= experimental;
-		blaster->desktop		  = desktop;
-		blaster->customEventText= customEventText;
-		blaster->screenShotErrors = screenShotErrors;
-		blaster->accountBase	= accountBase;
-		blaster->password		  = password;
-		blaster->preLaunch		= preLaunch;
-		blaster->postLaunch		= postLaunch;
-		blaster->dynaTrace		= dynaTrace;
-		blaster->pipeIn			  = pipeIn;
-		blaster->pipeOut		  = pipeOut;
-		blaster->useBitBlt		= useBitBlt;
-    blaster->keepDNS      = keepDNS;
-		
-		// force 1024x768 for screen shots
-		blaster->pos.right = browserWidth;
-		blaster->pos.bottom = browserHeight;
-		
-		// hand an address to the thread to use (hand them out backwards)
-		if( !addresses.IsEmpty() )
-			blaster->ipAddress = addresses[addresses.GetCount() - i - 1];
-
-    if( useCurrentAccount )
-      blaster->hProfile = HKEY_CURRENT_USER;
-			
-		blaster->Start(i+1);
-	}
-
-	status.SetWindowText(_T("Clearing caches..."));
-
-	// wait for all of the threads to finish clearing their caches
-	WaitForMultipleObjects(threadCount, cacheHandles, TRUE, INFINITE);
-	
-	// start the threads running (1/2 second apart)
-	for( int i = 0; i < threadCount; i++ )
-	{
-		CString buff;
-		buff.Format(_T("Starting user%d..."), i+1);
-		status.SetWindowText(buff);
-		
-		SetEvent(runHandles[i]);
-		Sleep(500);
-	}
-	
-	delete [] cacheHandles;
-	delete [] runHandles;
-	
-	// send a UI update message
-	PostMessage(MSG_UPDATE_UI);
-
-	status.SetWindowText(_T("Running..."));
-	running = true;
-	
-	return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -1563,12 +822,8 @@ void CurlBlastDlg::GetEC2Config()
 							location = value; 
 						else if( !key.CompareNoCase(_T("wpt_key")) )
 							locationKey = value; 
-						else if( !key.CompareNoCase(_T("wpt_threads")) && value.GetLength() )
-							threadCount = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_timeout")) && value.GetLength() )
 							timeout = _ttol(value); 
-						else if( !key.CompareNoCase(_T("wpt_defrag_interval")) && value.GetLength() )
-							clearCacheInterval = _ttol(value); 
 						else if( !key.CompareNoCase(_T("wpt_keep_DNS")) && value.GetLength() )
 							keepDNS = _ttol(value); 
 					}

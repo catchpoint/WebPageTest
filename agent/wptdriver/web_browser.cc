@@ -39,8 +39,6 @@ static const TCHAR * FLASH_CACHE_DIR =
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
-static const TCHAR * CHROME_TRACE = _T(" --trace-startup")
-    _T(" --trace-startup-duration=240 --trace-startup-file=\"%s_trace.json\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
 static const TCHAR * CHROME_GPU = 
     _T(" --force-compositing-mode")
@@ -138,11 +136,6 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             CString netlog;
             netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
             lstrcat(cmdLine, netlog);
-          }
-          if (_test._trace) {
-            CString trace;
-            trace.Format(CHROME_TRACE, (LPCTSTR)_test._file_base);
-            lstrcat(cmdLine, trace);
           }
           if (_test._spdy3)
             lstrcat(cmdLine, CHROME_SPDY3);

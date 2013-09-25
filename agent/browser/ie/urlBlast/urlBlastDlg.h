@@ -28,7 +28,6 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg LRESULT OnUpdateUI(WPARAM wParal, LPARAM lParam);
-	afx_msg LRESULT OnContinueStartup(WPARAM wParal, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 	virtual void OnCancel();
 	virtual void OnOK();
@@ -37,12 +36,11 @@ public:
 	afx_msg void OnClose();
 	CStatic status;
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	void ClearCaches(void);
 
 protected:
 	void DoStartup(void);
-	CArray<CURLBlaster *> workers;
-	void KillWorkers(void);
+	CURLBlaster * worker;
+	void KillWorker(void);
   void InstallFlash();
 
 	CStatic rate;
@@ -59,30 +57,14 @@ protected:
 
 	CString logFile;
 	int startupDelay;
-	int threadCount;
 	int testID;
 	int configID;
 	DWORD timeout;
-	CString aliveFile;
-	CString urlFilesDir;
-	int testType;
-	int clearCacheInterval;
-	DWORD screenShotErrors;
 	DWORD checkOpt;
-	CStatic rebooting;
-	DWORD labID;
-	DWORD dialerID;
-	DWORD connectionType;
-	int uploadLogsInterval;
-	CStringArray uploadLogFiles;
-	CStringArray addresses;
 	CLog	log;
 	bool	running;
-	DWORD	minInterval;
 	CString customEventText;
 	bool bDrWatson;
-	DWORD	ifIndex;			// interface to add IP addresses to
-	CList<ULONG>	ipContexts;	// added IP address contexts we need to delete when we exit
 	CString	accountBase;
 	CString	password;
 	CString preLaunch;
@@ -106,18 +88,11 @@ protected:
 	void LoadSettings(void);
 	CUrlManager urlManager;
 	CString computerName;
-	void WriteAlive(void);
-	void CheckUploadLogs(void);
-	void UploadLogs(void);
 	void KillProcs(void);
   void ClearTemp(void);
 
 	void CloseDialogs(void);
-	DWORD experimental;
-	void CheckExit(void);
-	void DisableDNSCache(void);
   void StopService(CString serviceName);
-	void Defrag(void);
 	void SetupScreen(void);
 	void GetEC2Config();
 	bool GetUrlText(CString url, CString &response);

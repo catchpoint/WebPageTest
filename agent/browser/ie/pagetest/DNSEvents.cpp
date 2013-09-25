@@ -35,8 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ares.h>
 
 
-CDNSEvents::CDNSEvents(void):
-	bindAddr(0)
+CDNSEvents::CDNSEvents(void)
 {
 	ares_library_init(ARES_LIB_INIT_ALL);
 }

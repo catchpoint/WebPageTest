@@ -4,9 +4,7 @@
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CLog::CLog(void):
-	dialerId(0)
-	,labID(0)
-	,logFile(_T(""))
+	logFile(_T(""))
 	,debug(0)
 {
 	// create a NULL DACL we will re-use everywhere we do file access
@@ -77,7 +75,7 @@ void CLog::LogEvent(LOG_EVENT eventId, DWORD result, LPCTSTR txt)
 			TCHAR buff[5000];
 			wsprintf(buff, _T("%s\t%d\t%d\t%d\t%d\t%d\t%s\t%s\r\n"), 
 					(LPCTSTR)(CTime::GetCurrentTime().Format("%Y/%m/%d %H:%M:%S")),
-					labID, dialerId, 1, eventId, result, events[eventId], val);
+					0, 0, 1, eventId, result, events[eventId], val);
 
 			// open and lock the log file
 			DWORD startMS = GetTickCount();

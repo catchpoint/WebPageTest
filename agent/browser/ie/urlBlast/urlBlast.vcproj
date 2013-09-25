@@ -262,27 +262,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\UrlMgrCrawler.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrCrawlerBase.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrCrawlerDemand.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrFile.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\UrlMgrHttp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrList.cpp"
 				>
 			</File>
 			<File
@@ -344,27 +324,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\UrlMgrCrawler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrCrawlerBase.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrCrawlerDemand.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrFile.h"
-				>
-			</File>
-			<File
 				RelativePath=".\UrlMgrHttp.h"
-				>
-			</File>
-			<File
-				RelativePath=".\UrlMgrList.h"
 				>
 			</File>
 			<File
@@ -434,11 +394,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\pagetest\winpcap\Include\pcap.h"
+				RelativePath="..\pagetest\winpcap\Include\pcap\pcap.h"
 				>
 			</File>
 			<File

@@ -59,8 +59,6 @@ public:
 	void SetLogFile(CString file);
 
 	CString logFile;
-	DWORD	dialerId;
-	DWORD	labID;
 	DWORD	debug;
 	void LogMachineInfo(void);
 protected:

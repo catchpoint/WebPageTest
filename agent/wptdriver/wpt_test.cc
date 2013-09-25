@@ -194,10 +194,10 @@ bool WptTest::Load(CString& test) {
           _tcpdump = true;
         else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
           _timeline = true;
-        else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
-          _netlog = true;
         else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
           _trace = true;
+        else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
+          _netlog = true;
         else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim()))
           _spdy3 = true;
         else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim()))
@@ -450,6 +450,13 @@ void WptTest::BuildScript() {
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
+  if (_trace) {
+    ScriptCommand command;
+    command.command = _T("captureTrace");
     command.record = false;
     _script_commands.AddHead(command);
   }

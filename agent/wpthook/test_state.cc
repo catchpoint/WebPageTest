@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <WtsApi32.h>
 #include "wpt_test_hook.h"
 #include "dev_tools.h"
+#include "trace.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 100;
 static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
@@ -48,7 +49,7 @@ static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test, DevTools& dev_tools):
+                      WptTestHook &test, DevTools& dev_tools, Trace& trace):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
@@ -58,6 +59,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_data_timer(NULL)
   ,_test(test)
   ,_dev_tools(dev_tools)
+  ,_trace(trace)
   ,no_gdi_(false)
   ,gdi_only_(false)
   ,navigated_(false)

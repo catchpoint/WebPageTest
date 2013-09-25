@@ -14023,9 +14023,30 @@ wpt.chromeDebugger.CaptureTimeline = function() {
 };
 
 /**
+ * Capture a trace
+ */
+wpt.chromeDebugger.CaptureTrace = function(callback) {
+  console.log('TRACING STARTING ****************************************');
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', null, function(){
+    console.log('TRACING STARTED ****************************************');
+    callback();
+  });
+};
+
+wpt.chromeDebugger.StopTrace = function(callback) {
+  console.log('TRACING Stopping ****************************************');
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end', null, function(){
+    callback();
+  });
+};
+
+
+/**
  * Actual message callback
  */
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
+  if (message === 'Tracing.dataCollected')
+    console.log(params);
   if (g_instance.active) {
     // keep track of all of the dev tools messages
     if (g_instance.timeline) {
@@ -14120,6 +14141,7 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable', null, function(){
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable', null, function(){
         g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+          console.log('Debugger Started');
           g_instance.startedCallback();
         });
       });
@@ -14749,6 +14771,10 @@ function wptExecuteTask(task) {
       case 'capturetimeline':
         wpt.chromeDebugger.CaptureTimeline();
         break;
+      case 'capturetrace':
+        g_processing_task = true;
+        wpt.chromeDebugger.CaptureTrace(wptTaskCallback);
+        break;
       case 'noscript':
         g_commandRunner.doNoScript();
         break;
@@ -14757,7 +14783,9 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        wpt.chromeDebugger.StopTrace(function(){
+          g_commandRunner.doCollectStats(wptTaskCallback);
+        });
         break;
 
       default:

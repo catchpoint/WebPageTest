@@ -48,20 +48,10 @@ public:
 
 	CString errorLog;
 	CUrlManager * urlManager;
-	int testType;
-	DWORD labID;
-	DWORD dialerID;
-	DWORD connectionType;
 	DWORD timeout;
-	CString ipAddress;
-	DWORD experimental;
 	CRect pos;
-	DWORD sequentialErrors;
-	HANDLE	hClearedCache;
-	HANDLE	hRun;
 	CRect	desktop;
 	CString customEventText;
-	DWORD screenShotErrors;
 	CTestInfo info;
 	CString preLaunch;
 	CString postLaunch;
@@ -75,7 +65,6 @@ public:
 	CRITICAL_SECTION cs;
 	DWORD browserPID;
 	PSID userSID;
-
 
 protected:
 	bool DoUserLogon(void);

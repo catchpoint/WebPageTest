@@ -401,26 +401,7 @@ void CSocketEvents::SocketConnect(SOCKET s, struct sockaddr_in * addr)
 		ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketConnect - socket %d, currentDoc = %d\n"), GetCurrentThreadId(), s, currentDoc);
 		
 		CheckStuff();
-		
-		// see if we have to bind the socket to a particular interface
-		// make sure it's not the loopback socket
-		if( bindAddr && addr->sin_addr.S_un.S_addr != 0x0100007F )
-		{
-			sockaddr_in name;
-			name.sin_family = AF_INET;
-			name.sin_addr.S_un.S_addr = bindAddr;
-			name.sin_port = 0;
-			
-			if (!bind(s, (sockaddr *)&name, sizeof(name)))
-			{
-				ATLTRACE(_T("[Pagetest] - bind successful\n"));
-			}
-			else
-			{
-				ATLTRACE(_T("[Pagetest] - bind failed : %d\n"), WSAGetLastError());
-			}
-		}
-		
+
 		EnterCriticalSection(&cs);
 
 		// find which DNS entry this socket came from (only the first socket to claim a DNS entry wins)
@@ -505,17 +486,6 @@ void CSocketEvents::SocketConnected(SOCKET s)
 -----------------------------------------------------------------------------*/
 void CSocketEvents::SocketBind(SOCKET s, struct sockaddr_in * addr)
 {
-	// make sure we are timing something
-	if( active )
-	{
-		// see if we have to bind the socket to a particular interface
-		// make sure it's not the loopback socket
-		if( bindAddr && addr && addr->sin_addr.S_un.S_addr != 0x0100007F )
-		{
-			ATLTRACE(_T("[Pagetest] - changing bind address\n"));
-			addr->sin_addr.S_un.S_addr = bindAddr;
-		}
-	}
 }
 
 /*-----------------------------------------------------------------------------

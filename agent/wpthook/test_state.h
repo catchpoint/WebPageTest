@@ -32,6 +32,7 @@ class Results;
 class ScreenCapture;
 class WptTestHook;
 class DevTools;
+class Trace;
 
 const int TEST_RESULT_NO_ERROR = 0;
 const int TEST_RESULT_TIMEOUT = 99997;
@@ -82,7 +83,7 @@ public:
 class TestState {
 public:
   TestState(Results& results, ScreenCapture& screen_capture,
-            WptTestHook &test, DevTools& dev_tools);
+            WptTestHook &test, DevTools& dev_tools, Trace& trace);
   ~TestState(void);
 
   void Start();
@@ -173,6 +174,7 @@ private:
   Results&  _results;
   ScreenCapture& _screen_capture;
   DevTools &_dev_tools;
+  Trace &_trace;
   HANDLE  _render_check_thread;
   HANDLE  _check_render_event;
   HANDLE  _data_timer;

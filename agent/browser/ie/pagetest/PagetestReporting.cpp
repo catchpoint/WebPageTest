@@ -64,17 +64,12 @@ static const DWORD BOTTOM_MARGIN = 25;
 
 CPagetestReporting::CPagetestReporting(void):
 	reportSt(NONE)
-	, experimental(0)
 	, includeHeader(0)
-	, labID(-1)
-	, dialerID(-1)
-	, connectionType(-1)
 	, build(0)
 	, guid(_T(""))
 	, includeObjectData(1)
 	, saveEverything(0)
 	, captureVideo(0)
-	, screenShotErrors(0)
 	, checkOpt(1)
   , noHeaders(0)
   , noImages(0)
@@ -1051,8 +1046,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			msLoad, msTTFB, 0, out, in, nDns, nConnect, 
 			nRequest, nReq200, nReq302, nReq304, nReq404, nReqOther, 
 			errorCode, msStartRender, tcpStats.dwOutSegs, tcpStats.dwRetransSegs, tcpRetrans,
-			msActivity, descriptor, labID, dialerID, connectionType, cached, logUrl, build,
-			measurementType, experimental, msLoadDoc, (LPCTSTR)guid, msDomElement, includeObjectData_Now ? 1 : 0, 
+			msActivity, descriptor, -1, -1, 0, cached, logUrl, build,
+			measurementType, 0, msLoadDoc, (LPCTSTR)guid, msDomElement, includeObjectData_Now ? 1 : 0, 
 			cacheScore, staticCdnScore, oneCdnScore, gzipScore, cookieScore, keepAliveScore, doctypeScore, minifyScore, combineScore,
 			out_doc, in_doc, nDns_doc, nConnect_doc, 
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc, compressionScore,
@@ -1192,8 +1187,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							(LPCTSTR)w->response.expires, (LPCTSTR)w->response.cacheControl,
 							(LPCTSTR)w->response.contentType, (LPCTSTR)w->response.contentEncoding, 
 							reqType, w->socketId, w->docID, msEndOffset,
-							descriptor, labID, dialerID, connectionType, cached, logUrl, build,
-							measurementType, experimental, (LPCTSTR)guid, sequence++,
+							descriptor, -1, -1, 0, cached, logUrl, build,
+							measurementType, 0, (LPCTSTR)guid, sequence++,
 							w->cacheScore, w->staticCdnScore, w->gzipScore, w->cookieScore, w->keepAliveScore, 
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,

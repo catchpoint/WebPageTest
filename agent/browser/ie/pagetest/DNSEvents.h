@@ -67,7 +67,6 @@ class CDNSEvents :
 public:
 	CDNSEvents(void);
 	virtual ~CDNSEvents(void);
-	DWORD	bindAddr;
   CAtlList<DnsHostAddresses>  _host_addresses;
 
 	virtual bool DnsLookupStart(CString & name, void *&context, CAtlArray<DWORD> &addresses);

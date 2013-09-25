@@ -38,12 +38,13 @@ class CxImage;
 class WptTest;
 class OptimizationChecks;
 class DevTools;
+class Trace;
 
 class Results {
 public:
   Results(TestState& test_state, WptTest& test, Requests& requests, 
           TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture,
-          DevTools &dev_tools);
+          DevTools &dev_tools, Trace &trace);
   ~Results(void);
 
   void Reset(void);
@@ -61,6 +62,7 @@ private:
   ScreenCapture& _screen_capture;
   WptTest&      _test;
   DevTools      &_dev_tools;
+  Trace         &_trace;
   bool          _saved;
   LARGE_INTEGER _visually_complete;
 

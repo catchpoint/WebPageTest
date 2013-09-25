@@ -121,15 +121,10 @@ public:
 	MIB_TCPSTATS	tcpStatsStart;	// TCP stats at the start of the document
 	MIB_TCPSTATS	tcpStats;		// TCP stats calculated
 	double			tcpRetrans;		// rate of TCP retransmits (basically packet loss)
-	DWORD			labID;
-	DWORD			dialerID;
-	DWORD			connectionType;
 	TCHAR			descriptor[100];
 	TCHAR			logUrl[1000];
 	DWORD			build;
 	CString			version;
-	DWORD			experimental;
-	DWORD			screenShotErrors;
 	DWORD			includeHeader;
 	DWORD			includeObjectData;
 	DWORD			includeObjectData_Now;

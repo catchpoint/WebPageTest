@@ -78,9 +78,6 @@ CAPTION "URL Blaster"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Status",IDC_STATUS,7,7,177,33
-    LTEXT           "Rate: N/A",IDC_RATE,7,56,177,8
-    LTEXT           "CPU Usage: N/A",IDC_CPU,7,67,177,8
-    LTEXT           "Rebooting in X Minutes",IDC_REBOOT,7,45,177,8
 END
 
 
