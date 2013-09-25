@@ -21,7 +21,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
     foreach( $_GET as $key => $value )
         if( $key != 't' )
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");    
+    header("Location: http://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -29,7 +29,7 @@ else
     include 'common.inc';
     require_once('page_data.inc');
     include 'video/filmstrip.inc.php';  // include the commpn php shared across the filmstrip code
-    include 'object_detail.inc'; 
+    include 'object_detail.inc';
     require_once('waterfall.inc');
 
     $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
@@ -49,7 +49,7 @@ else
         } else {
             $location = '';
         }
-        
+
         if( strlen($test['name']) )
         {
             if( strlen($labels) )
@@ -96,7 +96,7 @@ else
                     overflow-y: hidden;
                     position: relative;
                     overflow: auto;
-                    width: 100%; 
+                    width: 100%;
                     height: 100%;
                     padding-bottom: 1em;
                 }
@@ -126,8 +126,8 @@ else
                 }
                 th{ font-weight: normal; }
                 #videoLabels td
-                { 
-                    padding: 2px; 
+                {
+                    padding: 2px;
                 }
                 #video td{ padding: 2px; }
                 div.content
@@ -139,7 +139,7 @@ else
                     ?>
                     font-family: arial,sans-serif
                 }
-                .pagelink
+                .pagelinks a
                 {
                     text-decoration: none;
                     <?php
@@ -198,8 +198,8 @@ else
                 }
                 #image
                 {
-                    margin-left:auto; 
-                    margin-right:auto; 
+                    margin-left:auto;
+                    margin-right:auto;
                     clear: both;
                 }
                 #advanced
@@ -273,7 +273,7 @@ else
                     DisplayStatus();
                 }
                 ?>
-            
+
                 <?php include('footer.inc'); ?>
             </div>
 
@@ -295,7 +295,7 @@ else
                     $('#marker').css('left', marker + 'px');
                 }
                 UpdateScrollPosition();
-                
+
                 <?php
                 include "waterfall.js";
                 ?>
@@ -308,7 +308,7 @@ else
 
 /**
 * Build a side-by-side table with the captured frames from each test
-* 
+*
 */
 function ScreenShotTable()
 {
@@ -331,7 +331,7 @@ function ScreenShotTable()
         foreach( $tests as &$test )
             if( $test['video']['end'] > $end )
                 $end = $test['video']['end'];
-        
+
         if (!defined('EMBED')) {
             echo '<br>';
         }
@@ -359,7 +359,7 @@ function ScreenShotTable()
             $break = '';
             if( !strpos($test['name'], ' ') )
                 $break = ' style="word-break: break-all;"';
-            echo "<tr width=10% height={$height}px ><td$break>";
+            echo "<tr width=10% height={$height}px ><td$break class=\"pagelinks\">";
             $name = urlencode($test['name']);
             $cached = 0;
             if( $test['cached'] )
@@ -370,25 +370,35 @@ function ScreenShotTable()
                 $testEnd = (int)(($test['end'] + 99) / 100);
                 $testEnd = (float)$testEnd / 10.0;
             }
+
+            // Print the index outside of the link tag
+            echo $test['index'] . ': ';
+
             if (!defined('EMBED')) {
                 //echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
                 $cached = '';
                 if( $test['cached'] )
                     $cached = 'cached/';
                 if( FRIENDLY_URLS )
-                    echo "<a class=\"pagelink\" href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">";
+                    $href = "/result/{$test['id']}/{$test['run']}/details/$cached";
                 else
-                    echo "<a class=\"pagelink\" href=\"/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}\">";
+                    $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
+
+                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">";
             }
             echo WrapableString($test['name']);
+
+            // Print out a link to edit the test
+            echo '<br/><a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . $test['name'];
+            echo '" data-date="20' . substr($test['id'], 0, 6) . '">(Edit)</a>'; // Note that the hardcoded '20' will stop working in 87 years
             if (!defined('EMBED')) {
                 echo "</a>";
             }
             echo "</td></tr>\n";
         }
         echo '</table></td>';
-        
-        // the actual video frames        
+
+        // the actual video frames
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
         $skipped = $interval;
         $last = $end + $interval - 1;
@@ -403,12 +413,12 @@ function ScreenShotTable()
             }
         }
         echo "</tr></thead><tbody>\n";
-        
+
         $firstFrame = 0;
         foreach( $tests as &$test )
         {
             $aft = (int)$test['aft'] / 100;
-            
+
             // figure out the height of the image
             $height = 0;
             $width = $thumbSize;
@@ -422,7 +432,7 @@ function ScreenShotTable()
                 }
             }
             echo "<tr>";
-            
+
             $lastThumb = null;
             $frameCount = 0;
             $skipped = $interval;
@@ -444,14 +454,14 @@ function ScreenShotTable()
                 }
 
                 $ms = $frame * 100;
-                if (array_key_exists('progress', $test['video']) 
+                if (array_key_exists('progress', $test['video'])
                     && array_key_exists('frames', $test['video']['progress'])
                     && array_key_exists($ms, $test['video']['progress']['frames']))
                     $progress = $test['video']['progress']['frames'][$ms]['progress'];
 
                 if( !$lastThumb )
                     $lastThumb = $path;
-                
+
                 $skipped++;
                 if( $skipped >= $interval )
                 {
@@ -485,11 +495,11 @@ function ScreenShotTable()
                         if( $height )
                             echo " height=\"$height\"";
                         echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
-                        
+
                         if (isset($progress)) {
                             echo "<br>$progress%";
                         }
-                        
+
                         $lastThumb = $path;
                     }
                     $frameCount++;
@@ -499,10 +509,10 @@ function ScreenShotTable()
             echo "</tr>\n";
         }
         echo "</tr>\n";
-        
+
         // end of the table
         echo "</tbody></table></div>\n";
-        
+
         // end of the container table
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
@@ -538,7 +548,7 @@ function ScreenShotTable()
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"thumbSize\" value=\"200\"$checked onclick=\"this.form.submit();\"> Large";
                         echo "</td>";
-                        
+
                         // fill in the interval selection
                         echo "<td>";
                         $checked = '';
@@ -602,7 +612,7 @@ function ScreenShotTable()
             InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$filmstrip_end_time&mime=1&state=1&cpu=0&bw=0" );
         }
         ?>
-        
+
         <div id="advanced" style="display:none;">
             <h3>Advanced Visual Comparison Configuration</h3>
             <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
@@ -640,12 +650,12 @@ function ScreenShotTable()
 
 /**
 * Not all of the tests are done yet so display a progress update
-* 
+*
 */
 function DisplayStatus()
 {
     global $tests;
-    
+
     echo "<h1>Please wait while the tests are run...</h1>\n";
     echo "<table id=\"statusTable\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
@@ -657,7 +667,7 @@ function DisplayStatus()
             echo "Testing...";
         else
             echo "Waiting to be tested...";
-        
+
         echo "</td></tr>";
     }
     echo "</table>";
@@ -665,7 +675,7 @@ function DisplayStatus()
 
 /**
 * Create a wrapable string from what was passed in
-* 
+*
 * @param mixed $in
 */
 function WrapableString($in)
@@ -674,13 +684,13 @@ function WrapableString($in)
         $out = $in;
     else
         $out = join("&#8203;",str_split($in,1));
-    
+
     return $out;
 }
 
 /**
 * Display the comparison graph with the various time metrics
-* 
+*
 */
 function DisplayGraphs() {
     global $tests;
@@ -689,12 +699,12 @@ function DisplayGraphs() {
     $mimeTypes = array('html', 'js', 'css', 'text', 'image', 'flash', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
                         'VisuallyCompleteDT' => 'Visually Complete (Dev Tools)',
-                        'docTime' => 'Load Time (onload)', 
+                        'docTime' => 'Load Time (onload)',
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
                         'SpeedIndex' => 'Speed Index',
                         'SpeedIndexDT' => 'Speed Index (Dev Tools)',
-                        'TTFB' => 'Time to First Byte', 
-                        'titleTime' => 'Time to Title', 
+                        'TTFB' => 'Time to First Byte',
+                        'titleTime' => 'Time to Title',
                         'render' => 'Time to Start Render');
     $progress_end = 0;
     $has_speed_index_dt = false;
@@ -702,7 +712,7 @@ function DisplayGraphs() {
     foreach($tests as &$test) {
         $requests;
         $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
-        if (array_key_exists('progress', $test['video']) 
+        if (array_key_exists('progress', $test['video'])
             && array_key_exists('frames', $test['video']['progress'])) {
             foreach ($test['video']['progress']['frames'] as $ms => &$data) {
                 if ($ms > $progress_end && array_key_exists('progress', $data)) {
@@ -773,7 +783,7 @@ function DisplayGraphs() {
                         if (array_key_exists('last_progress', $test)) {
                             $progress = $test['last_progress'];
                         }
-                        if (array_key_exists('progress', $test['video']) 
+                        if (array_key_exists('progress', $test['video'])
                             && array_key_exists('frames', $test['video']['progress'])
                             && array_key_exists($ms, $test['video']['progress']['frames'])) {
                             $progress = $test['video']['progress']['frames'][$ms]['progress'];
@@ -879,7 +889,7 @@ function DisplayGraphs() {
                     echo "var progressChartDT = new google.visualization.LineChart(document.getElementById('compare_visual_progress_dt'));\n";
                     echo "progressChartDT.draw(dataProgressDT, {title: 'Visual Progress - Dev Tools (%)', hAxis: {title: 'Time (seconds)'}});\n";
                 }
-            }            
+            }
             ?>
             var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
             timesChart.draw(dataTimes, {title: 'Timings (ms)'});

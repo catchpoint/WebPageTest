@@ -1325,7 +1325,7 @@ var getScrollbarWidth = function() {
                 newLabel = inputNode.val();
 
                 var request = $.ajax({
-                    url: 'testlog.php',
+                    url: '/modifytest.php',
                     type: 'POST',
                     data: {testID: testguid, label: newLabel, date: currentDate},
                     dataType: 'html'

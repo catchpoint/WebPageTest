@@ -1906,9 +1906,12 @@ function tokenizeLogLine($line) {
 * Update data for a test in the log file.  Currently only allows updating the label for security reasons,
 * but could easily be extended.
 *
-* @param string $test_id   The ID of the test to update
-* @param int    $test_date The date of the test (YYYYMMDD)
-* @param array  $data      A key/value array of the data to update
+* @param string $test_guid  The ID of the test to update
+* @param int    $test_date  The date of the test (YYYYMMDD)
+* @param array  $data       A key/value array of the data to update
+* @param string $test_uid   The test UID
+* @param string $test_user  The current user
+* @param string $test_owner The user who created the test
 */
 function updateTestLog($test_guid, $test_date, $data, $test_uid, $test_user, $test_owner) {
     // Get the log file for this date
@@ -1947,6 +1950,32 @@ function updateTestLog($test_guid, $test_date, $data, $test_uid, $test_user, $te
     }
 
     return false;
+}
+
+/**
+ * Update the test data in testinfo.json.  Currently only allows updating the label for security reasons,
+ * but could easily be extended.
+ *
+ * @param string $test_id The ID of the test to update
+ * @param array  $data    A key/value array of the data to update
+*/
+function updateTestInfo($test_id, $data) {
+    $result = false;
+    $testPath = './' . GetTestPath($test_id);
+
+    if (gz_is_file("$testPath/testinfo.json")) {
+        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+
+        foreach ($data as $key => $value) {
+            if ($key == 'label') { // Only allowing label to be updated at the moment
+                $testInfo[$key] = $value;
+            }
+        }
+
+        $result = gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+    }
+
+    return $result;
 }
 
 ?>

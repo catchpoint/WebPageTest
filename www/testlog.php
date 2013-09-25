@@ -38,17 +38,6 @@ if( !strcasecmp($_GET["f"], 'csv') )
     $csv = true;
 
 
-// Handle an Ajax call to update a test ID
-if (isset($_POST['label'])) {
-    $data = array('label' => htmlentities($_POST['label']));
-    $update_result = updateTestLog($_POST['testID'], (int)$_POST['date'], $data, $uid, $user, $owner);
-    if ($update_result !== false) {
-        die('Success');
-    } else {
-        die('Failed to save file!');
-    }
-}
-
 if( $csv )
 {
     header ("Content-type: text/csv");
