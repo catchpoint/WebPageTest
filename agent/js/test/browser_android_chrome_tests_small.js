@@ -178,17 +178,32 @@ describe('browser_android_chrome small', function() {
 
     ncProc = undefined;
     spawnStub.callback = function(proc, command, args) {
-      if (/adb$/.test(command) && 'echo x' === args[args.length - 1]) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'x');
-        }, 1);
-        return false;
+      var keepAlive = false;
+      var stdout;
+      if (/adb$/.test(command)) {
+        if (args.some(function(arg) {
+                return (/^while true; do nc /).test(arg);
+              })) {
+          ncProc = proc;
+          ncProc.pid = 123;
+          keepAlive = true;
+        } else if ('echo x' === args[args.length - 1]) {
+          stdout = 'x';
+        }
+      } else if ('ps' === command) {
+        stdout = (ncProc ? ('1 ' + ncProc.pid + ' adb ... nc ...') : '');
+      } else if ('kill' === command && ncProc &&
+          ncProc.pid === parseInt(args[args.length - 1], 10)) {
+        ncProc.kill();
+      } else {
+        should.fail('Unexpected ' + command + ' ' + args.join(' '));
       }
-      var isNetcat = (/adb$/.test(command) && args.some(function(arg) {
-        return (/^while true; do nc /.test(arg));
-      }));
-      ncProc = (isNetcat ? proc : ncProc);
-      return isNetcat; // keep alive
+      if (undefined !== stdout) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', stdout);
+        }, 1);
+      }
+      return keepAlive;
     };
 
     should.equal(undefined, browser);
@@ -237,11 +252,12 @@ describe('browser_android_chrome small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 15);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
 
     if (args.pac) {
+      spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
