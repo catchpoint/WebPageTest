@@ -43,6 +43,11 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
         buff, _countof(buff), settings_ini)) {
     _software_url = buff;
   }
+  CString program_files_dir;
+  TCHAR path[4096];
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES,
+                                NULL, SHGFP_TYPE_CURRENT, path)))
+    program_files_dir = path;
   if (GetPrivateProfileSectionNames(sections, _countof(sections), 
       settings_ini)) {
     TCHAR * section = sections;
@@ -54,6 +59,8 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
         if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
             _countof(buff), settings_ini)) {
           info._exe = buff;
+          if (program_files_dir.GetLength())
+            info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
         }
         _browsers.AddTail(info);
       }
