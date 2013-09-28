@@ -102,7 +102,7 @@
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
             $test['swrender'] = $req_swrender;
-            $test['trace'] = $req_trace;
+            $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;;
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
@@ -138,6 +138,17 @@
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             if (array_key_exists('tsview_id', $_REQUEST))
               $test['tsview_id'] = $_REQUEST['tsview_id'];
+            if (array_key_exists('custom_browser', $_REQUEST) &&
+                strlen($_REQUEST['custom_browser']) &&
+                is_dir('./browsers') &&
+                is_file('./browsers/browsers.ini') &&
+                is_file("./browsers/{$_REQUEST['custom_browser']}.zip")) {
+              $customBrowsers = parse_ini_file('/browsers/browsers.ini');
+              if (array_key_exists($_REQUEST['custom_browser'], $customBrowsers)) {
+                $test['customBrowserUrl'] = "http://{$_SERVER['HTTP_HOST']}/browsers/{$_REQUEST['custom_browser']}.zip";
+                $test['customBrowserMD5'] = $customBrowsers[$_REQUEST['custom_browser']];
+              }
+            }
             
             // custom options
             $test['cmdLine'] = '';
@@ -893,7 +904,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['standards'] = $test['standards'] ? 1 : 0;
             $test['timeline'] = $test['timeline'] ? 1 : 0;
             $test['swrender'] = $test['swrender'] ? 1 : 0;
-            $test['trace'] = $test['trace'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
             $test['spdy3'] = $test['spdy3'] ? 1 : 0;
             $test['noscript'] = $test['noscript'] ? 1 : 0;
@@ -1633,10 +1643,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nstandards=1";
             if( $test['timeline'] )
                 $testFile .= "\r\ntimeline=1";
-            if( $test['swrender'] )
-                $testFile .= "\r\nswRender=1";
             if( $test['trace'] )
                 $testFile .= "\r\ntrace=1";
+            if( $test['swrender'] )
+                $testFile .= "\r\nswRender=1";
             if( $test['netlog'] )
                 $testFile .= "\r\nnetlog=1";
             if( $test['spdy3'] )
@@ -1701,6 +1711,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "cmdLine={$test['cmdLine']}\r\n";
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
                 $testFile .= "addCmdLine={$test['addCmdLine']}\r\n";
+            if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl']))
+                $testFile .= "customBrowserUrl={$test['customBrowserUrl']}\r\n";
+            if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
+                $testFile .= "customBrowserMD5={$test['customBrowserMD5']}\r\n";
             
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

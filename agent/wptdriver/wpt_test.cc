@@ -111,6 +111,8 @@ void WptTest::Reset(void) {
   _latency = 0;
   _plr = 0.0;
   _browser.Empty();
+  _browser_url.Empty();
+  _browser_md5.Empty();
   _basic_auth.Empty();
   _script.Empty();
   _run = 0;
@@ -224,6 +226,10 @@ bool WptTest::Load(CString& test) {
           _plr = _ttof(value.Trim());
         else if (!key.CompareNoCase(_T("browser")))
           _browser = value.Trim();
+        else if (!key.CompareNoCase(_T("customBrowserUrl")))
+          _browser_url = value.Trim();
+        else if (!key.CompareNoCase(_T("customBrowserMD5")))
+          _browser_md5 = value.Trim();
         else if (!key.CompareNoCase(_T("Basic Auth")))
           _basic_auth = value.Trim();
         else if (!key.CompareNoCase(_T("imageQuality")))

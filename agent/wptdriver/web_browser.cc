@@ -66,7 +66,7 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--allow-running-insecure-content"),
     _T("--enable-npn")
 };
-
+ 
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
     _T("-no-remote")
 };

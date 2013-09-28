@@ -52,6 +52,7 @@ public:
   BrowserSettings(){}
   ~BrowserSettings(){}
   bool Load(const TCHAR * browser, const TCHAR * iniFile, CString client);
+  bool Install(CString browser, CString url, CString md5);
   void ResetProfile(bool clear_certs);
   void GetStandardDirectories();
   void ClearWinInetCache();
@@ -90,7 +91,7 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
-  bool SetBrowser(CString browser, CString client);
+  bool SetBrowser(CString browser, CString url, CString md5, CString client);
   bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response);
   bool UpdateSoftware();

@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_settings.h"
 #include "wpt_status.h"
 #include <WinInet.h>
+#include "zlib/contrib/minizip/unzip.h"
+
+bool Unzip(CString file, CStringA dir);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -219,17 +222,24 @@ bool WptSettings::GetUrlText(CString url, CString &response)
   (this will be done on every test run in order to support 
   multi-browser testing)
 -----------------------------------------------------------------------------*/
-bool WptSettings::SetBrowser(CString browser, CString client) {
-  TCHAR buff[1024];
-  if (!browser.GetLength()) {
-    browser = _T("chrome");  // default to "chrome" to support older ini file
-    if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
-      _countof(buff), _ini_file )) {
-      browser = buff;
+bool WptSettings::SetBrowser(CString browser, CString url,
+                             CString md5, CString client) {
+  bool ret = false;
+  if (!url.IsEmpty() && !md5.IsEmpty()) {
+    // we are running a custom chrome browser
+    ret = _browser.Install(browser, url, md5);
+  } else {
+    // try loading the settings for the specified browser
+    TCHAR buff[1024];
+    if (!browser.GetLength()) {
+      browser = _T("chrome");  // default to "chrome" to support older ini file
+      if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
+        _countof(buff), _ini_file )) {
+        browser = buff;
+      }
     }
+    ret = _browser.Load(browser, _ini_file, client);
   }
-  // try loading the settings for the specified browser
-  bool ret = _browser.Load(browser, _ini_file, client);
   return ret;
 }
 
@@ -259,7 +269,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _exe_directory.Empty();
   _options.Empty();
 
-  AtlTrace(_T("Loading settings for %s"), browser);
+  AtlTrace(_T("Loading settings for %s"), (LPCTSTR)browser);
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
@@ -322,6 +332,80 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     }
     if (_cache_directory.IsEmpty()) {
       _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
+    }
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Download and install a custom Chrome build
+-----------------------------------------------------------------------------*/
+bool BrowserSettings::Install(CString browser, CString url, CString md5) {
+  bool ret = false;
+  TCHAR buff[10240];
+  _browser = browser;
+  _template = _browser;
+  _exe.Empty();
+  _exe_directory.Empty();
+  _options.Empty();
+
+  AtlTrace(_T("Checking custom browser: %s"), (LPCTSTR)browser);
+
+  GetModuleFileName(NULL, buff, _countof(buff));
+  *PathFindFileName(buff) = NULL;
+  _wpt_directory = buff;
+  _wpt_directory.Trim(_T("\\"));
+  CString browsers_directory = _wpt_directory + CString(_T("\\browsers"));
+  CreateDirectory(browsers_directory, NULL);
+  _exe_directory = browsers_directory + CString(_T("\\")) + browser;
+  CreateDirectory(_exe_directory, NULL);
+  _exe = _exe_directory + _T("\\chrome.exe");
+
+  GetStandardDirectories();
+
+  // create a profile directory for the given browser
+  _profile_directory = _wpt_directory + _T("\\profiles\\");
+  if (!app_data_dir_.IsEmpty()) {
+    lstrcpy(buff, app_data_dir_);
+    PathAppend(buff, _T("webpagetest_profiles\\"));
+    _profile_directory = buff;
+  }
+  _profile_directory += browser;
+
+  _options = _T("--load-extension=\"%WPTDIR%\\extension\" ")
+             _T("--user-data-dir=\"%PROFILE%\" ")
+             _T("--no-proxy-server");
+  _options.Replace(_T("%WPTDIR%"), _wpt_directory);
+  _options.Replace(_T("%PROFILE%"), _profile_directory);
+
+  if (FileExists(_exe)) {
+    AtlTrace(_T("Custom browser already installed: %s"), (LPCTSTR)_exe);
+    ret = true;
+  } else {
+    AtlTrace(_T("Downloading: %s"), (LPCTSTR)url);
+    CString browser_zip = _exe_directory + _T(".zip");
+    if (HttpSaveFile(url, browser_zip)) {
+      AtlTrace(_T("Checking md5 hash of %s against %s"),
+               (LPCTSTR)browser_zip, (LPCTSTR)md5);
+      if (!HashFileMD5(browser_zip).CompareNoCase(md5)) {
+        AtlTrace(_T("Extracting %s to %s"), (LPCTSTR)browser_zip,
+                 (LPCTSTR)_exe_directory);
+        if (Unzip(browser_zip, (LPCSTR)CT2A(_exe_directory))) {
+          if (FileExists(_exe)) {
+            ret = true;
+            AtlTrace(_T("Browser installed: %s"), (LPCTSTR)_exe);
+          } else {
+            AtlTrace(_T("Browser exe not found: %s"), (LPCTSTR)_exe);
+          }
+        } else {
+          AtlTrace(_T("Unzip FAILED"));
+        }
+      } else {
+        AtlTrace(_T("MD5 check FAILED"));
+      }
+    } else {
+      AtlTrace(_T("Download FAILED: %s"), (LPCTSTR)url);
     }
   }
 
@@ -597,4 +681,59 @@ void BrowserSettings::ClearWebCache() {
   }
 
   DeleteDirectory(webcache_dir_, false);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+static bool Unzip(CString file, CStringA dir) {
+  bool ret = false;
+
+  dir = dir.Trim("\\") + "\\";
+  unzFile zip_file_handle = unzOpen(CT2A(file));
+  if (zip_file_handle) {
+    ret = true;
+    if (unzGoToFirstFile(zip_file_handle) == UNZ_OK) {
+      DWORD len = 4096;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        do {
+          char file_name[MAX_PATH];
+          unz_file_info info;
+          if (unzGetCurrentFileInfo(zip_file_handle, &info, (char *)&file_name,
+              _countof(file_name), 0, 0, 0, 0) == UNZ_OK) {
+              CStringA dest_file_name = dir + file_name;
+
+            // make sure the directory exists
+            char szDir[MAX_PATH];
+            lstrcpyA(szDir, (LPCSTR)dest_file_name);
+            *PathFindFileNameA(szDir) = 0;
+            if( lstrlenA(szDir) > 3 )
+              SHCreateDirectoryExA(NULL, szDir, NULL);
+
+            HANDLE dest_file = CreateFileA(dest_file_name, GENERIC_WRITE, 0, 
+                                          NULL, CREATE_ALWAYS, 0, 0);
+            if (dest_file != INVALID_HANDLE_VALUE) {
+              if (unzOpenCurrentFile(zip_file_handle) == UNZ_OK) {
+                int bytes = 0;
+                DWORD written;
+                do {
+                  bytes = unzReadCurrentFile(zip_file_handle, buff, len);
+                  if( bytes > 0 )
+                    WriteFile( dest_file, buff, bytes, &written, 0);
+                } while( bytes > 0 );
+                unzCloseCurrentFile(zip_file_handle);
+              }
+              CloseHandle( dest_file );
+            }
+          }
+        } while (unzGoToNextFile(zip_file_handle) == UNZ_OK);
+
+        free(buff);
+      }
+    }
+
+    unzClose(zip_file_handle);
+  }
+
+  return ret;
 }

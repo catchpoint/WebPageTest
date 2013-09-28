@@ -164,6 +164,8 @@ public:
   DWORD   _latency;
   double  _plr;
   CString _browser;
+  CString _browser_url;
+  CString _browser_md5;
   CString _basic_auth;
   CString _script;
   CString _test_file;
