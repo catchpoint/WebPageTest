@@ -143,7 +143,7 @@
                 is_dir('./browsers') &&
                 is_file('./browsers/browsers.ini') &&
                 is_file("./browsers/{$_REQUEST['custom_browser']}.zip")) {
-              $customBrowsers = parse_ini_file('/browsers/browsers.ini');
+              $customBrowsers = parse_ini_file('./browsers/browsers.ini');
               if (array_key_exists($_REQUEST['custom_browser'], $customBrowsers)) {
                 $test['customBrowserUrl'] = "http://{$_SERVER['HTTP_HOST']}/browsers/{$_REQUEST['custom_browser']}.zip";
                 $test['customBrowserMD5'] = $customBrowsers[$_REQUEST['custom_browser']];
