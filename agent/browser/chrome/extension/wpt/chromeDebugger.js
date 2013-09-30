@@ -37,6 +37,8 @@ var g_instance = {connected: false,
                   timeline: false,
                   active: false};
 var TIMELINE_AGGREGATION_INTERVAL = 500;
+var TIMELINE_START_TIMEOUT = 10000;
+var TRACING_START_TIMEOUT = 10000;
 
 /**
  * Construct an object that connectes to the Chrome debugger.
@@ -55,6 +57,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
+    g_instance.timelineStartedCallback = undefined;
+    g_instance.tracingStartedCallback = undefined;
     g_instance.devToolsData = '';
     g_instance.devToolsTimer = undefined;
     var version = '1.0';
@@ -74,35 +78,54 @@ wpt.chromeDebugger.SetActive = function(active) {
 /**
  * Capture the network timeline
  */
-wpt.chromeDebugger.CaptureTimeline = function() {
+wpt.chromeDebugger.CaptureTimeline = function(callback) {
   g_instance.timeline = true;
+  g_instance.timelineStartedCallback = callback;
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+    setTimeout(function(){
+      if (g_instance.timelineStartedCallback) {
+        g_instance.timelineStartedCallback();
+        g_instance.timelineStartedCallback = undefined;
+      }
+    }, TIMELINE_START_TIMEOUT);
+  });
 };
 
 /**
  * Capture a trace
  */
 wpt.chromeDebugger.CaptureTrace = function(callback) {
-  console.log('TRACING STARTING ****************************************');
+  g_instance.tracingStartedCallback = callback;
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', null, function(){
-    console.log('TRACING STARTED ****************************************');
-    callback();
+    setTimeout(function(){
+      if (g_instance.tracingStartedCallback) {
+        g_instance.tracingStartedCallback();
+        g_instance.tracingStartedCallback = undefined;
+      }
+    }, TRACING_START_TIMEOUT);
   });
 };
-
-wpt.chromeDebugger.StopTrace = function(callback) {
-  console.log('TRACING Stopping ****************************************');
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end', null, function(){
-    callback();
-  });
-};
-
 
 /**
  * Actual message callback
  */
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
+  // timeline and tracing starts seem to have a delay in startup
+  // and don't really start when the callback completes
+  if (g_instance.timelineStartedCallback &&
+      message === 'Timeline.eventRecorded') {
+    g_instance.timelineStartedCallback();
+    g_instance.timelineStartedCallback = undefined;
+  }
+  if (g_instance.tracingStartedCallback &&
+      message === 'Tracing.dataCollected') {
+    g_instance.tracingStartedCallback();
+    g_instance.tracingStartedCallback = undefined;
+  }
   if (message === 'Tracing.dataCollected')
     console.log(params);
+
+    // actual message recording
   if (g_instance.active) {
     // keep track of all of the dev tools messages
     if (g_instance.timeline) {
@@ -113,12 +136,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
     }
     
-    // check for paint events
-    if (message === 'Timeline.eventRecorded' &&
-        wpt.chromeDebugger.isPaintEvent(params)) {
-      wpt.chromeDebugger.sendEvent('paint', '');
-    }
-	
     // Network events
     if (message === 'Network.requestWillBeSent') {
       if (params.request.url.indexOf('http') == 0) {
@@ -196,10 +213,7 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.enable', null, function(){
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Console.enable', null, function(){
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.enable', null, function(){
-        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
-          console.log('Debugger Started');
-          g_instance.startedCallback();
-        });
+        g_instance.startedCallback();
       });
     });
   });
@@ -336,26 +350,6 @@ wpt.chromeDebugger.sendEvent = function(event, data) {
   } catch (err) {
     wpt.LOG.warning('Error sending request data XHR: ' + err);
   }
-};
-
-/**
- * See if the trace event is a paint event (recursively)
- */
-wpt.chromeDebugger.isPaintEvent = function(event) {
-  var isPaint = false;
-  if (event['type'] != undefined &&
-      event['type'] == 'Paint')
-    isPaint = true;
-  else {
-    if (event['record'] != undefined)
-      isPaint = wpt.chromeDebugger.isPaintEvent(event.record);
-    if (!isPaint &&
-        event['children'] != undefined) {
-      for (var i = 0; i < event.children.length && !isPaint; i++)
-        isPaint = wpt.chromeDebugger.isPaintEvent(event.children[i]);
-    }
-  }
-  return isPaint;
 };
 
 })());  // namespace

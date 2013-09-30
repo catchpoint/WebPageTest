@@ -464,7 +464,8 @@ function wptExecuteTask(task) {
         g_commandRunner.doClearCache(task.target, wptTaskCallback);
         break;
       case 'capturetimeline':
-        wpt.chromeDebugger.CaptureTimeline();
+        g_processing_task = true;
+        wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
         break;
       case 'capturetrace':
         g_processing_task = true;
@@ -478,9 +479,7 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        wpt.chromeDebugger.StopTrace(function(){
-          g_commandRunner.doCollectStats(wptTaskCallback);
-        });
+        g_commandRunner.doCollectStats(wptTaskCallback);
         break;
 
       default:
