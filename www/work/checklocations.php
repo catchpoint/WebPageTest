@@ -13,6 +13,9 @@ BuildLocations($locations);
 
 $settings = parse_ini_file('./settings/settings.ini', true);
 
+$count = 0;
+$collected = '';
+
 $files = scandir('./tmp');
 foreach( $files as $file )
 {
@@ -34,17 +37,20 @@ foreach( $files as $file )
             // if it has been over 3 days, stop sending alerts
             if( $minutes < 4320 && $minutes > 60 && array_key_exists($loc, $locations) && !$locations[$loc]['hidden'])
             {
+                $collected .= "$loc - $minutes minutes";
+                $count++;
+
                 // if it has been over 60 minutes, send out a notification    
                 // figure out who to notify
-                $to = $settings['settings']['notify'];
+                $to = '';
                 if( $locations[$loc]['notify'] )
                 {
-                    if( $to )
-                        $to .= ',';
-                    $to .= $locations[$loc]['notify'];
+                    $to = $locations[$loc]['notify'];
+                    $collected .= " : notified $to";
                 }
+                $collected .= "\r\n";
                 
-                if( $to )
+                if( strlen($to) )
                 {
                     $subject = "$loc WebPagetest ALERT";
                     $body = "The $loc location has not checked for new jobs in $minutes minutes.";
@@ -60,9 +66,12 @@ foreach( $files as $file )
     }
 }
 
-// send the slow logs from the last hour
 if (array_key_exists('notify', $settings['settings'])) {
     $to = $settings['settings']['notify'];
+    if ($count && strlen($collected))
+      SendMessage($to, "$count locations offline - WebPagetest ALERT", $collected);
+    
+    // send the slow logs from the last hour
     if (strlen($to) && is_file('./tmp/slow_tests.log')) {
         $slow = file_get_contents('./tmp/slow_tests.log');
         unlink('./tmp/slow_tests.log');
