@@ -119,6 +119,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 
                             'server_rtt' => 'Estimated RTT to Server',
+                            'docCPUms' => 'CPU Busy Time',
                             'domElements' => 'Number of DOM Elements', 
                             'connections' => 'Connections', 
                             'requests' => 'Requests (Fully Loaded)', 
