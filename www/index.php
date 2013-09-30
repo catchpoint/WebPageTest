@@ -198,13 +198,9 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chrome</a></li>
-                                <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
-                                <?php if (isset($settings['enableVideo'])) { ?>
-                                <li><a href="#video">Video</a></li>
-                                <?php } ?>
                                 <?php if (!$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
@@ -267,6 +263,15 @@ $loc = ParseLocations($locations);
                                         ?>
                                         <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
                                         <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
+                                    </li>
+                                    <li>
+                                      <label for="videoCheck">Capture Video</label>
+                                      <?php
+                                      $video = 0;
+                                      if (array_key_exists('video', $_REQUEST))
+                                          $video = (int)$_REQUEST['video'];
+                                      ?>
+                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox" <?php if( $video ) echo 'checked=checked'; ?>>
                                     </li>
                                     <li>
                                         <label for="keep_test_private">Keep Test Private</label>
@@ -431,28 +436,6 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
-                            <div id="auth" class="test_subbox ui-tabs-hide">
-                                <div class="notification-container">
-                                    <div class="notification"><div class="warning">
-                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
-                                        Utilizing this feature will make this test Private. Thus, it will not appear in Test History.
-                                    </div></div>
-                                </div>
-                                
-                                <ul class="input_fields">
-                                    <li>
-                                        HTTP Basic Authentication
-                                    </li>
-                                    <li>
-                                        <label for="username" style="width: auto;">Username</label>
-                                        <input type="text" name="login" id="username" class="text" style="width: 200px;">
-                                    </li>
-                                    <li>
-                                        <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" class="text" style="width: 200px;">
-                                    </li>
-                                </ul>
-                            </div>
 
                             <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
@@ -520,38 +503,6 @@ $loc = ParseLocations($locations);
                                     }
                                 ?></textarea>
                             </div>
-                            
-                            <?php if($settings['enableVideo']) { ?>
-                            <div id="video" class="test_subbox ui-tabs-hide">
-                                <div class="notification-container">
-                                    <div class="notification"><div class="message">
-                                        Video will appear in the Screenshot page of your results
-                                    </div></div>
-                                </div>
-                                <?php
-                                $video = 0;
-                                if (array_key_exists('video', $_REQUEST)) {
-                                    $video = (int)$_REQUEST['video'];
-                                }
-                                ?>
-                                <ul class="input_fields">
-                                    <li>
-                                      <input type="checkbox" name="video" id="videoCheck" class="checkbox before_label" <?php if( $video ) echo 'checked=checked'; ?>>
-                                      <label for="videoCheck" class="auto_width">Capture Video</label>
-                                    </li>
-                                    <?php
-                                    /*
-                                    <li>
-                                      <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox before_label">
-                                      <label for="continuousVideo" class="auto_width">Continuous Video Capture (may crash the browser)</label>
-                                    </li>
-                                    */
-                                    ?>
-                                </ul>
-                                <br>
-                                <br>
-                            </div>
-                            <?php } ?>
 
                             <?php if (!$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
