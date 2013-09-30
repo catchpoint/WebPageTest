@@ -48,8 +48,14 @@ class Appurify{
       $list = $this->Get('https://live.appurify.com/resource/devices/list/');
       if ($list !== false && is_array($list)) {
         foreach($list as $device) {
-          $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']}";
-          $devices[$device['device_type_id']] = $name;
+          if ($device['os_name'] == 'iOS') {
+            $id = $device['device_type_id'] . '-safari';
+            $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Safari";
+            $devices[$id] = $name;
+          }
+          $id = $device['device_type_id'] . '-chrome';
+          $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Chrome";
+          $devices[$id] = $name;
         }
       }
       file_put_contents("./tmp/appurify_{$this->key}.devices", json_encode(array('devices' => $devices, 'time' => time())));
@@ -62,38 +68,39 @@ class Appurify{
   * Submit a test to the Appurify system
   */
   public function SubmitTest(&$test, &$error) {
-    $ret = false;
-    $result = $this->Post('https://live.appurify.com/resource/apps/upload/',
-                          array('source_type' => 'url',
-                                'app_test_type' => 'browser_test'));
-    if ($result !== false && is_array($result) && array_key_exists('app_id', $result)) {
-      $app_id = $result['app_id'];
-      $result = $this->Post('https://live.appurify.com/resource/tests/upload/',
+    $ret = true;
+    for ($i = 1; $i <= $test['runs'] && $ret; $i++) {
+      $result = $this->Post('https://live.appurify.com/resource/apps/upload/',
                             array('source_type' => 'url',
-                                  'test_type' => 'browser_test'));
-      if ($result !== false && is_array($result) && array_key_exists('test_id', $result)) {
-        $test_id = $result['test_id'];
-        $pcap = $test['tcpdump'] ? "pcap=1\r\n" : '';
-        $video = $test['video'] ? "videocapture=1\r\n" : '';
-        $result = $this->Post('https://live.appurify.com/resource/config/upload/',
-                              array('test_id' => $test_id),
-                              array('name' => 'source',
-                                    'filename' => 'browsertest.conf',
-                                    'data' => "[appurify]\r\n" .
-                                              "profiler=1\r\n" .
-                                              $pcap .
-                                              $video .
-                                              "[browser_test]\r\n" .
-                                              "url={$test['url']}\r\n" .
-                                              "browser=chrome"));
+                                  'app_test_type' => 'browser_test'));
+      if ($result !== false && is_array($result) && array_key_exists('app_id', $result)) {
+        $app_id = $result['app_id'];
+        $result = $this->Post('https://live.appurify.com/resource/tests/upload/',
+                              array('source_type' => 'url',
+                                    'test_type' => 'browser_test'));
         if ($result !== false && is_array($result) && array_key_exists('test_id', $result)) {
-          $ret = true;
-          for ($i = 1; $i <= $test['runs']; $i++) {
+          $test_id = $result['test_id'];
+          $video = $test['video'] ? "videocapture=1\r\n" : '';
+          $browser = 'chrome';
+          $device = $test['browser'];
+          if (stripos($device, '-') !== false)
+            list($device, $browser) = explode('-', $device);
+          $result = $this->Post('https://live.appurify.com/resource/config/upload/',
+                                array('test_id' => $test_id),
+                                array('name' => 'source',
+                                      'filename' => 'browsertest.conf',
+                                      'data' => "[appurify]\r\n" .
+                                                "profiler=0\r\n" .
+                                                "videocapture=0\r\n" .
+                                                "[browser_test]\r\n" .
+                                                "url={$test['url']}\r\n" .
+                                                "browser=$browser"));
+          if ($result !== false && is_array($result) && array_key_exists('test_id', $result)) {
             $result = $this->Post('https://live.appurify.com/resource/tests/run/',
                                   array('source_type' => 'url',
                                         'app_id' => $app_id,
                                         'async' => 1,
-                                        'device_type_id' => $test['browser'],
+                                        'device_type_id' => $device,
                                         'test_id' => $test_id));
             if ($result !== false && is_array($result) && array_key_exists('test_run_id', $result)) {
               $test['appurify_tests'][$i] = array('id' => $result['test_run_id']);
@@ -101,13 +108,19 @@ class Appurify{
               $ret = false;
               $error = "Error submitting test run $i through Appurify API";
             }
+          } else {
+            $ret = false;
+            $error = "Error configuring URL and browser through Appurify API for test ID $test_id";
           }
-        } else
-          $error = "Error configuring URL and browser through Appurify API for test ID $test_id";
-      } else
-        $error = "Error configuring test through Appurify API for App ID $app_id";
-    } else
-      $error = "Error configuring application through Appurify API";
+        } else {
+          $ret = false;
+          $error = "Error configuring test through Appurify API for App ID $app_id";
+        }
+      } else {
+        $ret = false;
+        $error = "Error configuring application through Appurify API";
+      }
+    }
     return $ret;
   }
   
