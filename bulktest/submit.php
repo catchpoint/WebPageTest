@@ -65,6 +65,7 @@ function SubmitTests(&$results, $testCount) {
     global $key;
     global $options;
     global $permutations;
+    global $priority;
 
     $count = 0;
     foreach ($results as &$result) {
@@ -92,6 +93,13 @@ function SubmitTests(&$results, $testCount) {
                 $request .= '&web10=1';
             if($fvonly)
                 $request .= '&fvonly=1';
+            if(isset($priority)) {
+                if ($priority > 0 && array_key_exists('resubmit', $result) && $result['resubmit']) {
+                  $p = $priority - 1;
+                  $request .= "&priority=$p";
+                } else
+                  $request .= "&priority=$priority";
+            }
             if(strlen($key))
                 $request .= "&k=$key";
             if (isset($options) && strlen($options))

@@ -27,6 +27,7 @@ if (LoadResults($results)) {
     $complete = 0;
     $stillTesting = 0;
     $failed = 0;
+    $minRuns = ceil($runs / 2);
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && strlen($result['id'])) {
             if (array_key_exists('result', $result) && strlen($result['result'])) {
@@ -41,6 +42,7 @@ if (LoadResults($results)) {
                     !$result['bytesInDoc'] ||
                     !$result['docTime'] ||
                     !$result['TTFB'] ||
+                    $result['successfulRuns'] < $minRuns ||
                     $result['TTFB'] > $result['docTime'] ||
                     $stddev > $maxVariancePct || // > 10% variation in results
                     (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
