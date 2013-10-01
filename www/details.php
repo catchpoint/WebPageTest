@@ -436,8 +436,14 @@ $page_description = "Website performance test details$testLabel";
             expandRequest($(this));
         });
 
+        function expandAll() {
+          $(".header_details").each(function(index) {
+            $(this).show();
+          });
+        }
+        
         if (window.location.hash == '#all') {
-          $(".header_details").each(function( index ) {$(this).show();});
+          expandAll();
         } else
           expandRequest($(window.location.hash));
 

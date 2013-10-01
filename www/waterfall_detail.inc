@@ -180,6 +180,7 @@ echo '<div id="headers">';
         array_key_exists(0, $requests) &&
         array_key_exists('headers', $requests[0])) {
         echo '<br><hr><h2>Request Headers</h2>';
+        echo '<p>+ <a id="all" href="javascript:expandAll();">Expand All</a></p>';
         foreach($requests as $reqNum => $request) {
             if($request) {
                 $requestNum = $reqNum + 1;
