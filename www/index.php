@@ -198,6 +198,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chrome</a></li>
+                                <li><a href="#auth">Auth</a></li>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
@@ -433,6 +434,28 @@ $loc = ParseLocations($locations);
                                         <small>Custom options</small>
                                         </label>
                                         <input type="text" name="cmdline" id="cmdline" class="text" style="width: 400px;">
+                                    </li>
+                                </ul>
+                            </div>
+                            <div id="auth" class="test_subbox ui-tabs-hide">
+                                <div class="notification-container">
+                                    <div class="notification"><div class="warning">
+                                        PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
+                                        Utilizing this feature will make this test Private. Thus, it will not appear in Test History.
+                                    </div></div>
+                                </div>
+                                
+                                <ul class="input_fields">
+                                    <li>
+                                        HTTP Basic Authentication
+                                    </li>
+                                    <li>
+                                        <label for="username" style="width: auto;">Username</label>
+                                        <input type="text" name="login" id="username" class="text" style="width: 200px;">
+                                    </li>
+                                    <li>
+                                        <label for="password" style="width: auto;">Password</label>
+                                        <input type="text" name="password" id="password" class="text" style="width: 200px;">
                                     </li>
                                 </ul>
                             </div>
