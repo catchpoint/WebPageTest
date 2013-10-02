@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'common.inc';
 set_time_limit(0);
 
@@ -129,7 +129,7 @@ else
 			        {
 				        // figure out the name of the log file
 				        $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
-				        
+
 				        // load the log file into an array of lines
                         $ok = true;
                         $file = file_get_contents($fileName);
@@ -149,9 +149,9 @@ else
                                 $ok = true;
                                 if($filterstr && stristr($line, $filterstr) === false)
                                     $ok = false;
-                                
+
                                 if ($ok)
-                                {                                
+                                {
 						            $date = NULL;
 						            $location = NULL;
 						            $url = NULL;
@@ -163,38 +163,11 @@ else
                                     $video = false;
                                     $label = NULL;
                                     $count = '';
-						            
+
 						            // tokenize the line
-						            $parseLine = str_replace("\t", "\t ", $line);
-						            $token = strtok($parseLine, "\t");
-						            $column = 0;
-						            while($token)
-						            {
-							            $column++;
-							            $token = trim($token);
-							            if( strlen($token) > 0)
-							            {
-								            switch($column)
-								            {
-									            case 1: $date = strtotime($token); break;
-                                                case 2: $ip = $token; break;
-									            case 5: $guid = $token; break;
-									            case 6: $url = htmlspecialchars($token); break;
-									            case 7: $location = $token; break;
-                                                case 8: $private = ($token == '1' ); break;
-                                                case 9: $testUID = $token; break;
-                                                case 10: $testUser = $token; break;
-                                                case 11: $video = ($token == '1'); break;
-                                                case 12: $label = htmlspecialchars($token); break;
-                                                case 13: $o = $token; break;
-                                                case 15: $count = $token; break;
-								            }
-							            }
-							            
-							            // on to the next token
-							            $token = strtok("\t");
-						            }
-						            
+                                    $line_data = tokenizeLogLine($line);
+                                    extract($line_data);
+
                                     if (!$location) {
                                         $location = '';
                                     }
@@ -205,33 +178,33 @@ else
                                             $ok = false;
                                             if ($includePrivate) {
                                                 $ok = true;
-                                            } elseif ((isset($uid) && $uid == $testUID) || 
+                                            } elseif ((isset($uid) && $uid == $testUID) ||
                                                 (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
                                             }
                                         }
-                                            
+
                                         if( $onlyVideo and !$video )
                                             $ok = false;
-                                            
+
                                         if ($ok && !$all) {
                                             $ok = false;
-                                            if ((isset($uid) && $uid == $testUID) || 
+                                            if ((isset($uid) && $uid == $testUID) ||
                                                 (isset($user) && strlen($user) && !strcasecmp($user, $testUser))) {
                                                 $ok = true;
                                             } elseif (isset($owner) && strlen($owner) && $owner == $o) {
                                                 $ok = true;
                                             }
                                         }
-                                        
+
                                         if( $ok )
                                         {
                                             $rowCount++;
                                             $totalCount++;
                                             $newDate = strftime('%x %X', $date + ($tz_offset * 60));
-							                
+
                                             if( $csv )
                                             {
                                                 // only track local tests
@@ -266,7 +239,7 @@ else
                                                 echo '</td>';
                                                 if($includeip)
                                                     echo '<td class="ip">' . $ip . '</td>';
-                                                
+
                                                 if( $admin )
                                                 {
                                                     if( isset($testUID) )
@@ -280,14 +253,18 @@ else
                                                     $link = "/result/$guid/";
                                                 if( !strncasecmp($guid, 'http:', 5) || !strncasecmp($guid, 'https:', 6) )
                                                     $link = $guid;
-                                                    
+
                                                 $labelTxt = $label;
                                                 if( strlen($labelTxt) > 30 )
                                                     $labelTxt = substr($labelTxt, 0, 27) . '...';
-                                                echo "<td title=\"$label\" class=\"label\"><a href=\"$link\">$labelTxt</a></td>";
-                                                
+                                                echo "<td title=\"$label\" class=\"label\">";
+                                                echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
+                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label;
+                                                echo '" data-date="' . $targetDate->format("Ymd") . '">(Edit)</a>';
+                                                echo "</td>";
+
 							                    echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
-                                                
+
                                                 // split the tables every 30 rows so the browser doesn't wait for ALL the results
                                                 if( $rowCount % 30 == 0 )
                                                 {
@@ -296,7 +273,7 @@ else
                                                     ob_flush();
                                                 }
                                             }
-                                            
+
                                             if (!$nolimit && $totalCount > 100) {
                                                 $done = true;
                                                 break;
@@ -306,7 +283,7 @@ else
 						        }
 					        }
 				        }
-				        
+
 				        // on to the previous day
 				        $targetDate->modify('-1 day');
 			        }
@@ -316,7 +293,7 @@ else
 		        </table>
                 </form>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
