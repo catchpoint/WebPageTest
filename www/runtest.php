@@ -712,6 +712,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
   elseif( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
       $error = "Invalid Location, please try submitting your test request again.";
 
+  // see if we need to pick the default connectivity
   if (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
     if (!empty($locations[$test['location']]['default_connectivity'])) {
         $test['connectivity'] = $locations[$test['location']]['default_connectivity'];
@@ -970,8 +971,13 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             else
             {
                 // see if we need to pick the default connectivity
-                if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-                    $test['connectivity'] = 'Cable';
+                if (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
+                    if (!empty($locations[$test['location']]['default_connectivity'])) {
+                        $test['connectivity'] = $locations[$test['location']]['default_connectivity'];
+                    } else {
+                        $test['connectivity'] = 'Cable';
+                    }
+                }
 
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";
