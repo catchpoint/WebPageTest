@@ -55,17 +55,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   UNREFERENCED_PARAMETER(lpCmdLine);
   int ret = 0;
 
-  // make sure to only allow one instance to be running from a given directory
+  // make sure to only allow one instance to be running at a time
   bool ok = true;
-  TCHAR name[MAX_PATH];
-  lstrcpy(name, _T("wptdriver"));
-  if (GetModuleFileName(NULL, name, _countof(name))) {
-    for (int i = 0; i < MAX_PATH && name[i] != _T('\0'); i++) {
-      if (!_istalnum(name[i]))
-        name[i] = _T('_');
-    }
-  }
-  CreateMutex(NULL, TRUE, name);
+  CreateMutex(NULL, TRUE, _T("wptdriver-execution"));
   if (GetLastError() == ERROR_ALREADY_EXISTS)
     ok = false;
 
