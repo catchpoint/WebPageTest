@@ -35,13 +35,16 @@ protected:
 public:
 	afx_msg void OnClose();
 	CStatic status;
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	void ThreadProc(void);
+	void SetStatus(CString status);
 
 protected:
 	void DoStartup(void);
 	CURLBlaster * worker;
 	void KillWorker(void);
   void InstallFlash();
+  HANDLE hRunningThread;
+  HANDLE hMustExit;
 
 	CStatic rate;
 	__int64 start;
@@ -84,6 +87,7 @@ protected:
   DWORD clearShortTermCacheSecs;
   CIpfw ipfw;
   HANDLE testingMutex;
+  CString m_status;
 
 	void LoadSettings(void);
 	CUrlManager urlManager;

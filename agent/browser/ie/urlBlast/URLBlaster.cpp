@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "URLBlaster.h"
+#include "urlBlast.h"
+#include "urlBlastDlg.h"
 #include <process.h>
 #include <shlwapi.h>
 #include <Userenv.h>
@@ -11,7 +13,7 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef)
+CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef, CurlBlastDlg &dlgRef)
 : userName(_T(""))
 , hLogonToken(NULL)
 , hProfile(NULL)
@@ -35,6 +37,7 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testin
 , heartbeatEvent(NULL)
 , ipfw(ipfwRef)
 , testingMutex(testingMutexRef)
+, dlg(dlgRef)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -201,6 +204,7 @@ void CURLBlaster::ThreadProc(void)
 	if( DoUserLogon() )
 	{
 		log.Trace(_T("Running..."));
+		dlg.SetStatus(_T("Running..."));
 
 		// start off with IPFW in a clean state
 		ResetIpfw();
@@ -209,9 +213,9 @@ void CURLBlaster::ThreadProc(void)
 		{
 			// get the url to test
       WaitForSingleObject(testingMutex, INFINITE);
+      dlg.SetStatus(_T("Checking for work..."));
 			if(	GetUrl() )
 			{
-        OutputDebugString(_T("[UrlBlast] - Got test"));
         if( info.testType.GetLength() )
         {
           // running a custom test
@@ -237,12 +241,14 @@ void CURLBlaster::ThreadProc(void)
 					do
 					{
             OutputDebugString(_T("[UrlBlast] - Clearing Cache"));
+            dlg.SetStatus(_T("[UrlBlast] - Clearing Cache"));
 						ClearCache();
 
 						if( Launch(preLaunch) )
 						{
 							LaunchBrowser();
-
+              dlg.SetStatus(_T("Uploading test run..."));
+              
 							// record the cleared cache view
 							if( urlManager->RunRepeatView(info) )
 								LaunchBrowser();
@@ -250,15 +256,18 @@ void CURLBlaster::ThreadProc(void)
 							Launch(postLaunch);
 						}
 
+            dlg.SetStatus(_T("Uploading test run..."));
 						urlManager->UrlFinished(info);
 					}while( !info.done );
 				}
         ReleaseMutex(testingMutex);
         OutputDebugString(_T("[UrlBlast] - Test complete"));
+        dlg.SetStatus(_T("[UrlBlast] - Test complete"));
 			}
 			else
       {
         ReleaseMutex(testingMutex);
+        dlg.SetStatus(_T("Waiting for next test..."));
 				Sleep(500 + (rand() % 500));
       }
 		}
@@ -657,8 +666,10 @@ bool CURLBlaster::LaunchBrowser(void)
 
 	// flush the DNS cache
   OutputDebugString(_T("[UrlBlast] - Flushing DNS"));
-  if( !keepDNS )
+  if( !keepDNS ) {
+    dlg.SetStatus(_T("Flushing DNS..."));
 	  FlushDNS();
+	}
 
   // move the cursor to the top-left corner
   SetCursorPos(0,0);
@@ -671,6 +682,7 @@ bool CURLBlaster::LaunchBrowser(void)
 		si.cb = sizeof(si);
 
     OutputDebugString(_T("[UrlBlast] - Configuring IPFW"));
+    dlg.SetStatus(_T("Configuring IPFW..."));
 		if( ConfigureIpfw() )
 		{
 			if( ConfigureIE() )
@@ -752,6 +764,7 @@ bool CURLBlaster::LaunchBrowser(void)
 				log.Trace(_T("Launching... user='%s', path='%s', command line='%s'"), (LPCTSTR)userName, (LPCTSTR)exe, (LPCTSTR)commandLine);
 				
         OutputDebugString(_T("[UrlBlast] - Launching Browser"));
+        dlg.SetStatus(_T("Launching Browser..."));
 
 				// launch internet explorer as our user
         if( heartbeatEvent )
@@ -771,6 +784,8 @@ bool CURLBlaster::LaunchBrowser(void)
 
         if( ok )
 				{
+				  dlg.SetStatus(_T("Waiting for test to complete..."));
+				  
 					// keep track of the process ID for the browser we care about
 					browserPID = pi.dwProcessId;
 					LeaveCriticalSection(&cs);

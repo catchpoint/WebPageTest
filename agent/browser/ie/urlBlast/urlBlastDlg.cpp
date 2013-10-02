@@ -51,8 +51,11 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
   , hHookDll(NULL)
   , keepDNS(0)
   , worker(NULL)
+  , hRunningThread(NULL)
+  , hMustExit(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	hMustExit = CreateEvent(NULL, TRUE, FALSE, NULL);
   testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
 	
 	// handle crash events
@@ -110,9 +113,20 @@ BEGIN_MESSAGE_MAP(CurlBlastDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
 	ON_WM_CLOSE()
-	ON_WM_TIMER()
 	ON_MESSAGE(MSG_UPDATE_UI, OnUpdateUI)
 END_MESSAGE_MAP()
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+static unsigned __stdcall ThreadProc( void* arg )
+{
+	CurlBlastDlg * dlg = (CurlBlastDlg *)arg;
+	if( dlg )
+		dlg->ThreadProc();
+		
+	return 0;
+}
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -132,6 +146,28 @@ BOOL CurlBlastDlg::OnInitDialog()
 	// disable font smoothing
 	SystemParametersInfo(SPI_SETFONTSMOOTHING, FALSE, NULL, SPIF_UPDATEINIFILE);
 
+	// spawn the worker thread
+	ResetEvent(hMustExit);
+	hRunningThread = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
+
+	// start up minimized
+	ShowWindow(SW_MINIMIZE);
+  ClipCursor(NULL);
+  SetCursorPos(0,0);
+	
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void CurlBlastDlg::SetStatus(CString status) {
+  m_status = status;
+  PostMessage(MSG_UPDATE_UI);
+}
+
+/*-----------------------------------------------------------------------------
+  Background thread for managing the state of the agent
+-----------------------------------------------------------------------------*/
+void CurlBlastDlg::ThreadProc(void)
+{
   // launch the watchdog
   TCHAR path[MAX_PATH];
   GetModuleFileName(NULL, path, MAX_PATH);
@@ -143,21 +179,53 @@ BOOL CurlBlastDlg::OnInitDialog()
   if (process)
     CloseHandle(process);
 
-	// start up minimized
-	ShowWindow(SW_MINIMIZE);
-  ClipCursor(NULL);
-  SetCursorPos(0,0);
-	
 	LoadSettings();
 
+  // configure the desktop resolution
   WaitForSingleObject(testingMutex, INFINITE);
 	SetupScreen();
   ReleaseMutex(testingMutex);
 	
-	status.SetWindowText(_T("Starting up..."));
-	SetTimer(1,startupDelay,NULL);
+	// wait for the statup delay
+	SetStatus(_T("Starting up..."));
+	DWORD ms = startupDelay;
+	while( ms > 0 && WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT) {
+	  Sleep(500);
+	  ms -= 500;
+	}
+	
+	if (WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT) {
+	  DoStartup();
+	}
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+  // handle the periodic cleanup until it is time to exit  
+  DWORD msCleanup = 500;
+  DWORD msTemp = 20000;
+  while(WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT) {
+    if (!msCleanup) {
+				CloseDialogs();
+				KillProcs();
+				msCleanup = 500;
+    } else
+      msCleanup -= 500;
+    
+    if (!msTemp) {
+      if (WaitForSingleObject(testingMutex, 0) != WAIT_TIMEOUT) {
+        ClearTemp();
+        msTemp = 20000;
+        ReleaseMutex(testingMutex);
+      }
+    } else
+      msTemp -= 500;
+
+    Sleep(500);
+  }
+
+	// signal and wait for all of the workers to finish
+	KillWorker();
+
+	// shut down the url manager
+	urlManager.Stop();
 }
 
 /*-----------------------------------------------------------------------------
@@ -220,59 +288,19 @@ void CurlBlastDlg::OnClose()
 	
 	CWaitCursor w;
 	
-	KillTimer(1);
-	KillTimer(2);
-	KillTimer(3);
-
-	status.SetWindowText(_T("Waiting to exit..."));
+	SetStatus(_T("Waiting to exit..."));
+	SetEvent(hMustExit);
+	if (hRunningThread) {
+	  WaitForSingleObject(hRunningThread, INFINITE);
+	  CloseHandle(hRunningThread);
+	}
 	
-	// signal and wait for all of the workers to finish
-	KillWorker();
-
-	// shut down the url manager
-	urlManager.Stop();
-
   RemoveSystemGDIHook();
 
 	crashLog = NULL;
   CloseHandle( testingMutex );
 	
 	CDialog::OnOK();
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void CurlBlastDlg::OnTimer(UINT_PTR nIDEvent)
-{
-	switch( nIDEvent )
-	{
-		case 1: // startup delay
-			{
-				KillTimer(nIDEvent);
-				DoStartup();
-			}
-			break;
-			
-		case 2:	// periodic timer
-			{
-				// close any open dialog windows
-				CloseDialogs();
-				
-				// kill any debug windows that are open
-				KillProcs();
-
-				// update the UI
-				PostMessage(MSG_UPDATE_UI);
-			}
-			break;
-
-    case 3: // slow periodic timer
-      {
-        // clear the temp folder
-        ClearTemp();
-      }
-      break;
-	}
 }
 
 typedef HRESULT (STDAPICALLTYPE* DLLREGISTERSERVER)(void);
@@ -296,7 +324,7 @@ void CurlBlastDlg::DoStartup(void)
 		HMODULE hPagetest = LoadLibrary(pagetest);
 		if( hPagetest )
 		{
-			status.SetWindowText(_T("Registering pagetest..."));
+			SetStatus(_T("Registering pagetest..."));
 			DLLREGISTERSERVER proc = (DLLREGISTERSERVER)GetProcAddress(hPagetest, "DllRegisterServer");
 			if( proc )
 				proc();
@@ -307,7 +335,7 @@ void CurlBlastDlg::DoStartup(void)
   InstallSystemGDIHook();
 
   // stop services that can interfere with our measurements
-	status.SetWindowText(_T("Stoping services..."));
+	SetStatus(_T("Stoping services..."));
   StopService(_T("WinDefend")); // defender
   StopService(_T("wscsvc"));    // security center
 
@@ -356,12 +384,12 @@ void CurlBlastDlg::DoStartup(void)
 	urlManager.Start();
 	
 	// create all of the worker
-	status.SetWindowText(_T("Starting worker..."));
+	SetStatus(_T("Starting worker..."));
 	
 	CRect desktop(0,0,browserWidth,browserHeight);
 
 	// launch the worker thread
-	worker = new CURLBlaster(m_hWnd, log, ipfw, testingMutex);
+	worker = new CURLBlaster(m_hWnd, log, ipfw, testingMutex, *this);
 	
 	// pass on configuration information
 	worker->errorLog		  = logFile;
@@ -388,15 +416,8 @@ void CurlBlastDlg::DoStartup(void)
 		
 	worker->Start(1);
 
-	// send a UI update message
-	PostMessage(MSG_UPDATE_UI);
-
-	status.SetWindowText(_T("Running..."));
+	SetStatus(_T("Running..."));
 	running = true;
-
-	// run a periodic timer for doing housekeeping work
-	SetTimer(2, 500, NULL);
-  SetTimer(3, 20000, NULL);
 }
 
 /*-----------------------------------------------------------------------------
@@ -420,19 +441,8 @@ void CurlBlastDlg::KillWorker(void)
 -----------------------------------------------------------------------------*/
 LRESULT CurlBlastDlg::OnUpdateUI(WPARAM wParal, LPARAM lParam)
 {
-	// update the count of url's hit so far
-	DWORD count = 0;
-	if (worker)
-	  count = worker->count;
-	CString buff;
-	buff.Format(_T("Completed %d URLs...\n"), count);
-
-	CString stat;
-	urlManager.GetStatus(stat);
-	buff += stat;
-
-	status.SetWindowText(buff);
-
+  // update the status message from the main thread
+  status.SetWindowText(m_status);
 	return 0;
 }
 

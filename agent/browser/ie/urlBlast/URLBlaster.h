@@ -6,6 +6,8 @@
 #define MSG_UPDATE_UI (WM_APP + 1)
 #define MSG_CONTINUE_STARTUP (WM_APP + 2)
 
+class CurlBlastDlg;
+
 class CSpeed
 {
 public:
@@ -29,7 +31,7 @@ public:
 class CURLBlaster
 {
 public:
-	CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef);
+	CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testingMutexRef, CurlBlastDlg &dlgRef);
 	~CURLBlaster(void);
 	bool Start(int userIndex);
 	void Stop(void);
@@ -88,6 +90,7 @@ protected:
   HANDLE &testingMutex;
   CString heartbeatEventName;
   HANDLE  heartbeatEvent;
+  CurlBlastDlg &dlg;
 	
 	// directories
 	CString	profile;
