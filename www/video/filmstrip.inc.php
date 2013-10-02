@@ -22,7 +22,7 @@ foreach($compTests as $t) {
         if (ValidateTestId($test['id'])) {
             $test['cached'] = 0;
             $test['end'] = $endTime;
-            
+
             for ($i = 1; $i < count($parts); $i++) {
                 $p = explode(':', $parts[$i]);
                 if (count($p) >= 2) {
@@ -36,22 +36,22 @@ foreach($compTests as $t) {
                         $test['end'] = trim($p[1]);
                 }
             }
-            
+
             RestoreTest($test['id']);
             $test['path'] = GetTestPath($test['id']);
             $test['pageData'] = loadAllPageData($test['path']);
-            
+
             $info = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
             if (isset($info) && is_array($info)) {
-                if (array_key_exists('discard', $info) && 
-                    $info['discard'] >= 1 && 
+                if (array_key_exists('discard', $info) &&
+                    $info['discard'] >= 1 &&
                     array_key_exists('priority', $info) &&
                     $info['priority'] >= 1) {
                     $defaultInterval = 100;
                 }
                 $test['url'] = $info['url'];
             }
-            
+
             $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
             if ($testInfo !== FALSE) {
                 if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
@@ -92,13 +92,13 @@ foreach($compTests as $t) {
                 } else {
                     $test['done'] = false;
                     $ready = false;
-                    
+
                     if( isset($testInfo['test']) && isset($testInfo['test']['startTime']) )
                         $test['started'] = true;
                     else
                         $test['started'] = false;
                 }
-                
+
                 $tests[] = $test;
             }
         }
@@ -144,7 +144,7 @@ $interval /= 100;
 
 /**
 * Load information about each of the tests (particularly about the video frames)
-* 
+*
 */
 function LoadTestData() {
     global $tests;
@@ -160,7 +160,7 @@ function LoadTestData() {
         if (strlen($url)) {
             $test['url'] = $url;
         }
-        
+
         if( array_key_exists('label', $test) && strlen($test['label']) )
             $test['name'] = $test['label'];
         else {
@@ -173,12 +173,11 @@ function LoadTestData() {
             $test['name'] = str_replace('https://', '', $test['name']);
         }
         $test['index'] = $count;
-        $test['name'] = "$count: {$test['name']}";
-        
+
         $videoPath = "./$testPath/video_{$test['run']}";
         if( $test['cached'] )
             $videoPath .= '_cached';
-            
+
         $test['video'] = array();
         if( is_dir($videoPath) ) {
             $test['video']['start'] = 20000;
@@ -189,7 +188,7 @@ function LoadTestData() {
                 $end = $test['end'] / 1000.0;
             }
             $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end);
-            
+
             // get the path to each of the video files
             $dir = opendir($videoPath);
             if( $dir ) {
@@ -200,13 +199,13 @@ function LoadTestData() {
                         if( count($parts) >= 2 ) {
                             $index = (int)$parts[1];
                             $ms = $index * 100;
-                            
+
                             if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
                                 if( $index < $test['video']['start'] )
                                     $test['video']['start'] = $index;
                                 if( $index > $test['video']['end'] )
                                     $test['video']['end'] = $index;
-                                
+
                                 // figure out the dimensions of the source image
                                 if( !array_key_exists('width', $test['video']) ||
                                     !$test['video']['width'] ||
@@ -216,13 +215,13 @@ function LoadTestData() {
                                     $test['video']['width'] = $size[0];
                                     $test['video']['height'] = $size[1];
                                 }
-                                
+
                                 $test['video']['frames'][$index] = "$file";
                             }
                         }
                     }
                 }
-                
+
                 if ($test['end'] == -1)
                     $test['end'] = $test['video']['end'] * 100;
                 elseif ($test['end'])
@@ -230,7 +229,7 @@ function LoadTestData() {
 
                 closedir($dir);
             }
-            
+
             if( !isset($test['video']['frames'][0]) )
                 $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']];
         }
