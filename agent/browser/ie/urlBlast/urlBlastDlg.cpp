@@ -168,17 +168,6 @@ void CurlBlastDlg::SetStatus(CString status) {
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::ThreadProc(void)
 {
-  // launch the watchdog
-  TCHAR path[MAX_PATH];
-  GetModuleFileName(NULL, path, MAX_PATH);
-  lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
-  CString watchdog;
-  watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
-  HANDLE process = NULL;
-  LaunchProcess(watchdog, &process);
-  if (process)
-    CloseHandle(process);
-
 	LoadSettings();
 
   // configure the desktop resolution
@@ -193,6 +182,17 @@ void CurlBlastDlg::ThreadProc(void)
 	  Sleep(500);
 	  ms -= 500;
 	}
+
+  // launch the watchdog
+  TCHAR path[MAX_PATH];
+  GetModuleFileName(NULL, path, MAX_PATH);
+  lstrcpy(PathFindFileName(path), _T("wptwatchdog.exe"));
+  CString watchdog;
+  watchdog.Format(_T("\"%s\" %d"), path, GetCurrentProcessId());
+  HANDLE process = NULL;
+  LaunchProcess(watchdog, &process);
+  if (process)
+    CloseHandle(process);
 	
 	if (WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT) {
 	  DoStartup();
