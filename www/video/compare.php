@@ -299,7 +299,13 @@ else
                     var position = $("#videoDiv").scrollLeft();
                     var viewable = $("#videoDiv").width();
                     var width = $("#video").width();
-                    var marker = parseInt(250 + ((position / width) * 680));
+                    <?php
+                    $padding = 250;
+                    if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
+                      $padding = 30;
+                    echo "var padLeft = $padding;\n";
+                    ?>
+                    var marker = parseInt(padLeft + ((position / width) * (930 - padLeft)));
                     $('#marker').css('left', marker + 'px');
                 }
                 UpdateScrollPosition();
@@ -616,7 +622,10 @@ function ScreenShotTable()
                                   'run' => $test['run'],
                                   'cached' => $test['cached']);
           }
-          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1");
+          $labels='';
+          if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
+            $labels = '&labels=0';
+          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1$labels");
         }
         ?>
         
