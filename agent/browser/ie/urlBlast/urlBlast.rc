@@ -87,8 +87,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,12,0,369
- PRODUCTVERSION 2,12,0,369
+ FILEVERSION 2,12,0,370
+ PRODUCTVERSION 2,12,0,370
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -105,12 +105,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "WPO Foundation, Inc."
             VALUE "FileDescription", "URL Blaster"
-            VALUE "FileVersion", "2.12.0.369"
+            VALUE "FileVersion", "2.12.0.370"
             VALUE "InternalName", "urlBlast.exe"
             VALUE "LegalCopyright", "(c) 2012 WPO Foundation, Inc.,  All rights reserved."
             VALUE "OriginalFilename", "urlBlast.exe"
             VALUE "ProductName", "URL Blaster"
-            VALUE "ProductVersion", "2.12.0.369"
+            VALUE "ProductVersion", "2.12.0.370"
         END
     END
     BLOCK "VarFileInfo"
