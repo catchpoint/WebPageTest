@@ -46,4 +46,5 @@ protected:
 	void	InstallUpdate(CString path);
   void  DeleteResults(CTestInfo &info);
   void  UpdateDNSServers();
+  bool  CrackUrl(CString url, CString &host, unsigned short &port, CString& object, DWORD &secure_flag);
 };

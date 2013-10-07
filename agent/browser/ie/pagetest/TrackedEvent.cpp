@@ -85,7 +85,7 @@ void CWinInetRequest::Done(bool updateFirstByte)
 void CWinInetRequest::Process(void)
 {
 	__int64 freq;
-	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
+	QueryPerfFrequency(freq);
 
 	if( fromNet )
 	{

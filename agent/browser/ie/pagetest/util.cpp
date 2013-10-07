@@ -50,3 +50,20 @@ CStringA JSONEscape(CString src) {
   return JSONEscapeA((LPCSTR)CT2A(src, CP_UTF8));
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void QueryPerfCounter(__int64 &counter) {
+  LARGE_INTEGER counter_struct;
+  counter_struct.QuadPart = 0;
+  QueryPerformanceCounter(&counter_struct);
+  counter = counter_struct.QuadPart;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void QueryPerfFrequency(__int64 &freq) {
+  LARGE_INTEGER freq_struct;
+  freq_struct.QuadPart = 0;
+  QueryPerformanceFrequency(&freq_struct);
+  freq = freq_struct.QuadPart;
+}

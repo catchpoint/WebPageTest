@@ -585,190 +585,118 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 
 	// make sure we are configured to check
-	if( !host.IsEmpty() && !getWork.IsEmpty())
-	{
+	if( !host.IsEmpty() && !getWork.IsEmpty()) {
 		// fetch a job from the server
-		try
-		{
-			log.Trace(_T("Requesting work from %s%s"), (LPCTSTR)host, (LPCTSTR)getWork);
+		log.Trace(_T("Requesting work from %s%s"), (LPCTSTR)host, (LPCTSTR)getWork);
 
-			// set up the session
-			CInternetSession * session;
-			if( proxy.IsEmpty() )
-				session = new CInternetSession();
-			else	
-				session = new CInternetSession(_T("urlBlast"), 1, INTERNET_OPEN_TYPE_PROXY, proxy, NULL, INTERNET_FLAG_DONT_CACHE);
-			
-			if( session )
-			{
-				DWORD timeout = 300000;
-				session->SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout), 0);
-				session->SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout), 0);
+		// set up the session
+    HINTERNET internet = InternetOpen(_T("urlBlast"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (internet) {
+      DWORD timeout = 240000;
+      InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT, &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
 
-        CString diskSpace;
-        ULARGE_INTEGER fd;
-        if( GetDiskFreeSpaceEx(_T("C:\\"), NULL, NULL, &fd) )
-        {
-          double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
-          diskSpace.Format(_T("&freedisk=%0.3f"), freeDisk);
-        }
-        
-        CString dns = _T("");
-        if (!dnsServers.IsEmpty())
-          dns = CString(_T("&dns=")) + dnsServers;
+      CString diskSpace;
+      ULARGE_INTEGER fd;
+      if( GetDiskFreeSpaceEx(_T("C:\\"), NULL, NULL, &fd) )
+      {
+        double freeDisk = (double)(fd.QuadPart / (1024 * 1024)) / 1024.0;
+        diskSpace.Format(_T("&freedisk=%0.3f"), freeDisk);
+      }
+      
+      CString dns = _T("");
+      if (!dnsServers.IsEmpty())
+        dns = CString(_T("&dns=")) + dnsServers;
 
-        // IE Version
-	      CRegKey key;
-        CString IEVer;
-	      if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
+      // IE Version
+      CRegKey key;
+      CString IEVer;
+      if( SUCCEEDED(key.Open(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer"), KEY_READ)) )
+      {
+        TCHAR iebuff[1024];
+        ULONG iebufflen = _countof(iebuff);
+	      if( SUCCEEDED(key.QueryStringValue(_T("Version"), iebuff, &iebufflen)) && iebufflen )
 	      {
-	        TCHAR iebuff[1024];
-	        ULONG iebufflen = _countof(iebuff);
-		      if( SUCCEEDED(key.QueryStringValue(_T("Version"), iebuff, &iebufflen)) && iebufflen )
-		      {
-            IEVer.Format(_T("&ie=%s"), iebuff);
-            IEVer.Trim();
-		      }
-          key.Close();
+          IEVer.Format(_T("&ie=%s"), iebuff);
+          IEVer.Trim();
 	      }
+        key.Close();
+      }
 
-				CHttpConnection * connection = session->GetHttpConnection(host, port);
-				if( connection )
-				{
-					CHttpFile * file = connection->OpenRequest(_T("GET"), getWork + verString + diskSpace + IEVer + dns, 0, 1, 0, 0, requestFlags);
-					if( file )
-					{
-						if( file->SendRequest() )
-						{
-							// Get the request return code
-							DWORD dwRetCode = HTTP_STATUS_BAD_REQUEST;
-							file->QueryInfoStatusCode(dwRetCode); 			
-							if( dwRetCode == HTTP_STATUS_OK )
-							{
-								// update the timestamp for when we successfully talked to the server
-								lastSuccess = GetTickCount();
-
-								// get the mime type
-								CString mime;
-								zip = false;
-								if( file->QueryInfo(HTTP_QUERY_CONTENT_TYPE, mime) )
-								{
-									log.Trace(_T("Job of type '%s' received"), (LPCTSTR)mime);
-									if( !mime.CompareNoCase(_T("application/zip")) )
-									{
-										zip = true;
-
-										// create the temporary file
-										TCHAR tmp[MAX_PATH];
-										if( GetTempFileName(workDir, _T("zip"), 0, tmp) )
-										{
-											log.Trace(_T("Writing zip file to %s"), tmp);
-											job = tmp;
-											DeleteFileA(job);
-											CreateDirectoryA(job, NULL);
-											hFile = CreateFileA(job + "\\tmp.zip", GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
-											if( hFile == INVALID_HANDLE_VALUE )
-											{
-												job.Empty();
-											}
-										}
-									}
-								}
-
-								char buff[4097];
-								DWORD len = sizeof(buff) - 1;
-								UINT bytes = 0;
-								do
-								{
-									bytes = file->Read(buff, len);
-									if( bytes )
-									{
-										ret = true;
-										if( zip )
-										{
-											// write it to the temporary file
-											if( hFile != INVALID_HANDLE_VALUE )
-											{
-												DWORD written;
-												WriteFile(hFile, buff, bytes, &written, 0);
-											}
-										}
-										else
-										{
-											buff[bytes] = 0;	// NULL-terminate it
-											job += buff;
-										}
-									}
-								}while( bytes );
-
-								if( hFile != INVALID_HANDLE_VALUE )
-									CloseHandle( hFile );
-
-								if( job.IsEmpty() )
-									log.Trace(_T("Work request response was empty"));
-							}
-							else
-								log.Trace(_T("Work request responded with %d"), dwRetCode);
-						}
-						else
-							log.Trace(_T("SendRequest Failed"));
-
-						file->Close();
-						delete file;
-					}
-					connection->Close();
-					delete connection;
-				}
-
-				session->Close();
-				delete session;
-			}
+      CString url = CString("http://") + host + getWork + verString + diskSpace + IEVer + dns;
+      HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+                                  INTERNET_FLAG_NO_CACHE_WRITE | 
+                                  INTERNET_FLAG_NO_UI | 
+                                  INTERNET_FLAG_PRAGMA_NOCACHE | 
+                                  INTERNET_FLAG_RELOAD, NULL);
+      if (http_request) {
+        TCHAR mime_type[1024] = TEXT("\0");
+        DWORD len = _countof(mime_type);
+        if (HttpQueryInfo(http_request,HTTP_QUERY_CONTENT_TYPE, mime_type, 
+                            &len, NULL)) {
+          ret = true;
+				  zip = false;
+          char buff[4097];
+          DWORD bytes_read, bytes_written;
+          HANDLE file = INVALID_HANDLE_VALUE;
+          if (!lstrcmpi(mime_type, _T("application/zip"))) {
+						TCHAR tmp[MAX_PATH];
+						if( GetTempFileName(workDir, _T("zip"), 0, tmp) ) {
+							log.Trace(_T("Writing zip file to %s"), tmp);
+							job = tmp;
+						  DeleteFileA(job);
+						  CreateDirectoryA(job, NULL);
+						  hFile = CreateFileA(job + "\\tmp.zip", GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
+							if( hFile == INVALID_HANDLE_VALUE )
+								job.Empty();
+            }
+            zip = true;
+          }
+          while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
+                  &bytes_read) && bytes_read) {
+            if (zip) {
+              if( hFile != INVALID_HANDLE_VALUE )
+                WriteFile(hFile, buff, bytes_read, &bytes_written, 0);
+            } else {
+              // NULL-terminate it and add it to our response string
+              buff[bytes_read] = 0;
+              job += buff;
+            }
+          }
+          if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle(hFile);
+        }
+        InternetCloseHandle(http_request);
+      }
 		}
-		catch(CInternetException * e)
-		{
-			TCHAR err[1024];
-			if( e->GetErrorMessage(err, _countof(err)) )
-				log.Trace(_T("Error requesting work: %d - %s"), e->m_dwError, err);
-			else
-				log.Trace(_T("Error requesting work: %d"), e->m_dwError);
-			e->Delete();
-		}	
-		catch(...)
-		{
-			log.Trace(_T("Unknown error requesting work"));
-		}
+		InternetCloseHandle(internet);
 	}
 
 	// see if there was a script in the job as well
-	if( ret && !zip && !job.IsEmpty() )
-	{
+	if( ret && !zip && !job.IsEmpty() ) {
 		int index = job.Find("[Script]");
-		if( index >= 0 )
-		{
+		if( index >= 0 ) {
 			script = job.Mid(index + 8).Trim();
 			job = job.Left(index);
 		}
 	}
 
 	// see if we need to extract a zip file
-	if( ret && zip && !job.IsEmpty() )
-	{
+	if( ret && zip && !job.IsEmpty() ) {
 		unzFile zipFile = unzOpen(job + "\\tmp.zip");
-		if( zipFile )
-		{
-			if( unzGoToFirstFile(zipFile) == UNZ_OK )
-			{
+		if( zipFile ) {
+			if( unzGoToFirstFile(zipFile) == UNZ_OK ) {
 				DWORD len = 4096;
 				LPBYTE buff = (LPBYTE)malloc(len);
-				if( buff )
-				{
-					do
-					{
+				if( buff ) {
+					do {
 						char fileName[MAX_PATH];
 						unz_file_info info;
 
-						if( unzGetCurrentFileInfo(zipFile, &info, (char *)&fileName, _countof(fileName), 0, 0, 0, 0) == UNZ_OK )
-						{
+						if( unzGetCurrentFileInfo(zipFile, &info, (char *)&fileName, _countof(fileName), 0, 0, 0, 0) == UNZ_OK ) {
 							CStringA destFile = job + CStringA("\\") + fileName;
 
 							if( !lstrcmpiA(fileName, "update.ini") )
@@ -782,14 +710,11 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
 								SHCreateDirectoryExA(NULL, szDir, NULL);
 
 							HANDLE hOutFile = CreateFileA( destFile, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0 );
-							if( hOutFile != INVALID_HANDLE_VALUE )
-							{
-								if( unzOpenCurrentFile(zipFile) == UNZ_OK )
-								{
+							if( hOutFile != INVALID_HANDLE_VALUE ) {
+								if( unzOpenCurrentFile(zipFile) == UNZ_OK ) {
 									int bytes = 0;
 									DWORD written;
-									do
-									{
+									do {
 										bytes = unzReadCurrentFile(zipFile, buff, len);
 										if( bytes > 0 )
 											WriteFile( hOutFile, buff, bytes, &written, 0);
@@ -909,88 +834,67 @@ bool CUrlMgrHttp::UploadFile(CString url, CTestInfo &info, CString& file, CStrin
 				  fileSize = GetFileSize(hFile,0);
       }
 			
-      log.Trace(_T("Uploading %d byte file %s"), fileSize, (LPCTSTR)file);
+      log.Trace(_T("Uploading %d byte file %s to %s"), fileSize, (LPCTSTR)file, (LPCTSTR)url);
 
       // build up the post data
 			CStringA headers, body, footer;	
 			DWORD requestLen = 0;
-			if( BuildFormData( info, headers, body, footer, fileSize, requestLen, fileName ) )
-			{
-				// upload the results
-				try
-				{
-					// set up the session
-					CInternetSession * session;
-					if( proxy.IsEmpty() )
-						session = new CInternetSession();
-					else	
-						session = new CInternetSession(_T("urlBlast"), 1, INTERNET_OPEN_TYPE_PROXY, proxy, NULL, INTERNET_FLAG_DONT_CACHE);
+			if( BuildFormData( info, headers, body, footer, fileSize, requestLen, fileName ) ) {
+        HINTERNET internet = InternetOpen(_T("urlBlast"), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        if (internet) {
+          DWORD timeout = 240000;
+          InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout));
+          InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
+          InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout));
+          InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT, &timeout, sizeof(timeout));
+          InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &timeout, sizeof(timeout));
 
-					if( session )
-					{
-						DWORD timeout = 240000;
-						session->SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout), 0);
-						session->SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout), 0);
+          HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+          if (connect){
+            HINTERNET request = HttpOpenRequest(connect, _T("POST"), url, 
+                                                  NULL, NULL, NULL, 
+                                                  INTERNET_FLAG_NO_CACHE_WRITE |
+                                                  INTERNET_FLAG_NO_UI |
+                                                  INTERNET_FLAG_PRAGMA_NOCACHE |
+                                                  INTERNET_FLAG_RELOAD |
+                                                  INTERNET_FLAG_KEEP_CONNECTION, NULL);
+            if (request){
+              if (HttpAddRequestHeadersA(request, headers, headers.GetLength(), 
+                                        HTTP_ADDREQ_FLAG_ADD |
+                                        HTTP_ADDREQ_FLAG_REPLACE)) {
+                INTERNET_BUFFERS buffers;
+                memset( &buffers, 0, sizeof(buffers) );
+                buffers.dwStructSize = sizeof(buffers);
+                buffers.dwBufferTotal = requestLen;
+                if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
+                  DWORD bytes_written;
+                  if (InternetWriteFile(request, (LPCSTR)body, body.GetLength(), &bytes_written)) {
+                    // upload the file itself
+                    if (hFile != INVALID_HANDLE_VALUE && fileSize) {
+                        DWORD chunkSize = min(64 * 1024, fileSize);
+                        LPBYTE mem = (LPBYTE)malloc(chunkSize);
+                        if (mem) {
+                          DWORD bytes;
+                          while (ReadFile(hFile, mem, chunkSize, &bytes, 0) && bytes)
+                            InternetWriteFile(request, mem, bytes, &bytes_written);
+                          free(mem);
+                        }
+                    }
 
-						CHttpConnection * connection = session->GetHttpConnection(host, port);
-						if( connection )
-						{
-							CHttpFile * httpFile = connection->OpenRequest(CHttpConnection::HTTP_VERB_POST, url, 0, 1, 0, 0, requestFlags);
-							if( httpFile )
-							{
-								if( httpFile->AddRequestHeaders(CA2T(headers)) )
-								{
-									if( httpFile->SendRequestEx(requestLen) )
-									{
-										httpFile->Write( (LPCVOID)(LPCSTR)body, body.GetLength() );
-										
-										// upload the actual file
-										if( hFile != INVALID_HANDLE_VALUE )
-										{
-											// update the timestamp for when we successfully talked to the server
-											lastSuccess = GetTickCount();
-
-											DWORD chunkSize = 64 * 1024;
-											LPBYTE mem = (LPBYTE)malloc(chunkSize);
-											if( mem )
-											{
-												DWORD bytes;
-												while( ReadFile(hFile, mem, chunkSize, &bytes, 0) && bytes )
-													httpFile->Write(mem, bytes);
-												free(mem);
-											}
-										}
-										
-										httpFile->Write( (LPCVOID)(LPCSTR)footer, footer.GetLength() );
-
-										if( httpFile->EndRequest() )
-										{
-											DWORD dwRetCode = HTTP_STATUS_BAD_REQUEST;
-											httpFile->QueryInfoStatusCode(dwRetCode); 			
-											if( dwRetCode == HTTP_STATUS_OK )
-												ret = true;
-										}
-									}
-								}
-								httpFile->Close();
-								delete httpFile;
-							}
-
-							connection->Close();
-							delete connection;
-						}
-
-						session->Close();
-						delete session;
-					}
-				}
-				catch(CInternetException * e)
-				{
-					e->Delete();
-				}
-				catch(...)
-				{
-				}
+                    // upload the end of the form data
+                    if (InternetWriteFile(request, (LPCSTR)footer, footer.GetLength(), &bytes_written)) {
+                      if (HttpEndRequest(request, NULL, 0, 0))
+                        ret = true;
+                    }
+                  }
+                }
+              }
+              InternetCloseHandle(request);
+            }
+            InternetCloseHandle(connect);
+          }
+          InternetCloseHandle(internet);
+        }
 			}
 
 			if( hFile != INVALID_HANDLE_VALUE )
@@ -1377,4 +1281,54 @@ void CUrlMgrHttp::UpdateDNSServers() {
     if (addresses)
       free(addresses);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Helper function to crack an url into it's component parts
+-----------------------------------------------------------------------------*/
+bool CUrlMgrHttp::CrackUrl(CString url, CString &host, unsigned short &port,
+                           CString& object, DWORD &secure_flag){
+  bool ret = false;
+
+  secure_flag = 0;
+  URL_COMPONENTS parts;
+  memset(&parts, 0, sizeof(parts));
+  TCHAR szHost[10000];
+  TCHAR path[10000];
+  TCHAR extra[10000];
+  TCHAR scheme[100];
+    
+  memset(szHost, 0, sizeof(szHost));
+  memset(path, 0, sizeof(path));
+  memset(extra, 0, sizeof(extra));
+  memset(scheme, 0, sizeof(scheme));
+
+  parts.lpszHostName = szHost;
+  parts.dwHostNameLength = _countof(szHost);
+  parts.lpszUrlPath = path;
+  parts.dwUrlPathLength = _countof(path);
+  parts.lpszExtraInfo = extra;
+  parts.dwExtraInfoLength = _countof(extra);
+  parts.lpszScheme = scheme;
+  parts.dwSchemeLength = _countof(scheme);
+  parts.dwStructSize = sizeof(parts);
+
+  if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) ){
+      ret = true;
+      host = szHost;
+      port = parts.nPort;
+      object = path;
+      object += extra;
+      if (!host.CompareNoCase(_T("www.webpagetest.org")))
+        host = _T("agent.webpagetest.org");
+      if (!lstrcmpi(scheme, _T("https"))) {
+        secure_flag = INTERNET_FLAG_SECURE |
+                      INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
+                      INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+        if (!port)
+          port = INTERNET_DEFAULT_HTTPS_PORT;
+      } else if (!port)
+        port = INTERNET_DEFAULT_HTTP_PORT;
+  }
+  return ret;
 }

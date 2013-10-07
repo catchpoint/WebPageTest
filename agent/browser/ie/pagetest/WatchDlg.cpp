@@ -505,7 +505,7 @@ void CWatchDlg::DestroyDlg(void)
 		{
 			tmp->reportSt = QUIT_NOEND;
 			if ( !tmp->end )
-				QueryPerformanceCounter((LARGE_INTEGER *)&(tmp->end));
+				QueryPerfCounter(tmp->end);
 
 			tmp->FlushResults();
 		}
@@ -1797,7 +1797,7 @@ void CWatchDlg::CheckStuff(void)
 
 	// only check every 50 ms at most to avoid pounding the browser
 	__int64 now;
-	QueryPerformanceCounter((LARGE_INTEGER *)&now);
+	QueryPerfCounter(now);
 	if( now < lastCheck || (now - lastCheck) / msFreq > 50 )
 	{
 		// post messages to all of the thread windows

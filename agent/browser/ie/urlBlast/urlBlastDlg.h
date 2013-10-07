@@ -37,12 +37,14 @@ public:
 	CStatic status;
 	void ThreadProc(void);
 	void SetStatus(CString status);
+	void Alive();
 
 protected:
 	void DoStartup(void);
 	CURLBlaster * worker;
 	void KillWorker(void);
   void InstallFlash();
+  void CheckAlive();
   HANDLE hRunningThread;
   HANDLE hMustExit;
 
@@ -57,6 +59,8 @@ protected:
 	__int64 lastKernelTime;
 	__int64 lastUserTime;
 	__int64 lastUpload;
+	__int64 lastAlive;
+	CRITICAL_SECTION cs;
 
 	CString logFile;
 	int startupDelay;

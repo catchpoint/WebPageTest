@@ -81,10 +81,10 @@ public:
 		, highlighted(false)
 		, ignore(false)
 	{ 
-		QueryPerformanceCounter((LARGE_INTEGER *)&start); 
+		QueryPerfCounter(start); 
 	}
 	virtual ~CTrackedEvent(void){}
-	virtual void Done(void){ QueryPerformanceCounter((LARGE_INTEGER *)&end); }
+	virtual void Done(void){ QueryPerfCounter(end); }
 	
 	__int64		start;
 	__int64		end;
@@ -238,7 +238,7 @@ public:
 	{
 		memset(&peer, 0, sizeof(peer));
 
-		QueryPerformanceFrequency((LARGE_INTEGER *)&msFreq);
+		QueryPerfFrequency(msFreq);
 		msFreq = msFreq / (__int64)1000;
 	}
 	

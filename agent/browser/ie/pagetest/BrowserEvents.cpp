@@ -108,7 +108,7 @@ void CBrowserEvents::BeforeNavigate(CString & szUrl)
 			currentDoc = nextDoc;
 			nextDoc++;
 
-			QueryPerformanceCounter((LARGE_INTEGER *)&lastRequest);
+			QueryPerfCounter(lastRequest);
 			lastActivity = lastRequest;
 		}
 
@@ -181,7 +181,7 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 			errorCode = code;
 
     // update the end time
-		QueryPerformanceCounter((LARGE_INTEGER *)&lastActivity);
+		QueryPerfCounter(lastActivity);
     end = lastActivity;
 		endDoc = end;
 		lastDoc = lastActivity;
@@ -273,7 +273,7 @@ void CBrowserEvents::StatusUpdate(CString status)
 	if( active )
 	{
 		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+		QueryPerfCounter(now);
 		CStatusUpdate stat(status, now);
 
 		EnterCriticalSection(&cs);
@@ -296,7 +296,7 @@ void CBrowserEvents::TitleChange(CString title)
 	if( active )
 	{
 		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+		QueryPerfCounter(now);
 
 		EnterCriticalSection(&cs);
     if( !titleTime )
@@ -311,7 +311,7 @@ void CBrowserEvents::TitleChange(CString title)
 -----------------------------------------------------------------------------*/
 void CBrowserEvents::JSDone(void)
 {
-	QueryPerformanceCounter((LARGE_INTEGER *)&lastRequest);
+	QueryPerfCounter(lastRequest);
   if( end )
     end = lastRequest;
 

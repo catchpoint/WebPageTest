@@ -114,7 +114,7 @@ public:
 class CStatusUpdate
 {
 public:
-	CStatusUpdate(CString stat, __int64 statTime = 0):status(stat), tm(statTime){if(!tm) QueryPerformanceCounter((LARGE_INTEGER *)&tm);}
+	CStatusUpdate(CString stat, __int64 statTime = 0):status(stat), tm(statTime){if(!tm) QueryPerfCounter(tm);}
 	CStatusUpdate(const CStatusUpdate& src){*this = src;}
 	~CStatusUpdate(){}
 	const CStatusUpdate& operator =(const CStatusUpdate& src)

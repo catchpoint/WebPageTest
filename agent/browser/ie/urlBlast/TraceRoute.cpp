@@ -26,7 +26,7 @@ CTraceRoute::~CTraceRoute(void)
 void CTraceRoute::Run()
 {
   __int64 freq, start, end;
-  QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
+  QueryPerfFrequency(freq);
   freq = freq / 1000;
 
   CStringA result = "Hop,IP,ms,FQDN\r\n-1,";
@@ -69,9 +69,9 @@ void CTraceRoute::Run()
         options.Ttl = (UCHAR)hop;
 
         // time the actual ping
-        QueryPerformanceCounter((LARGE_INTEGER *)&start);
+        QueryPerfCounter(start);
         count = IcmpSendEcho(hIcmpFile, ipaddr, SendData, sizeof(SendData), &options, reply, ReplySize, _timeout);
-        QueryPerformanceCounter((LARGE_INTEGER *)&end);
+        QueryPerfCounter(end);
 
         double elapsed = (double)(end - start) / (double)freq;
 

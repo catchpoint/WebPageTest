@@ -320,7 +320,7 @@ void CSocketEvents::SocketRecv(SOCKET s, DWORD len, LPBYTE buff)
 		if( !IsFakeSocket(s,0,0) )
 		{
 			__int64 now;
-			QueryPerformanceCounter((LARGE_INTEGER *)&now);
+			QueryPerfCounter(now);
 
       ATLTRACE(_T("[Pagetest] - (0x%08X) CWatchDlg::SocketRecv - socket %d, %d bytes, open requests = %d\n"), GetCurrentThreadId(), s, len, openRequests);
 

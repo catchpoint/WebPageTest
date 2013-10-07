@@ -66,7 +66,7 @@ CPagetestBase::CPagetestBase(void):
   , titleTime(0)
   , currentRun(0)
 {
-	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
+	QueryPerfFrequency(freq);
 	msFreq = freq / (__int64)1000;
 	
 	winInetRequests.InitHashTable(257);

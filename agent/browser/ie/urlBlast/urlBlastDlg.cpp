@@ -53,10 +53,12 @@ CurlBlastDlg::CurlBlastDlg(CWnd* pParent /*=NULL*/)
   , worker(NULL)
   , hRunningThread(NULL)
   , hMustExit(NULL)
+  , lastAlive(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	hMustExit = CreateEvent(NULL, TRUE, FALSE, NULL);
   testingMutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
+  InitializeCriticalSection(&cs);
 	
 	// handle crash events
 	crashLog = &log;
@@ -199,6 +201,7 @@ void CurlBlastDlg::ThreadProc(void)
 	}
 
   // handle the periodic cleanup until it is time to exit  
+  Alive();
   DWORD msCleanup = 500;
   DWORD msTemp = 20000;
   while(WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT) {
@@ -218,6 +221,7 @@ void CurlBlastDlg::ThreadProc(void)
     } else
       msTemp -= 500;
 
+    CheckAlive();
     Sleep(500);
   }
 
@@ -309,7 +313,7 @@ typedef HRESULT (STDAPICALLTYPE* DLLREGISTERSERVER)(void);
 -----------------------------------------------------------------------------*/
 void CurlBlastDlg::DoStartup(void)
 {
-	QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
+	QueryPerfFrequency(freq);
 
   InstallFlash();
 
@@ -916,6 +920,9 @@ bool CurlBlastDlg::GetUrlText(CString url, CString &response)
 			DWORD timeout = 10000;
 			session->SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, &timeout, sizeof(timeout), 0);
 			session->SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, &timeout, sizeof(timeout), 0);
+			session->SetOption(INTERNET_OPTION_SEND_TIMEOUT, &timeout, sizeof(timeout), 0);
+			session->SetOption(INTERNET_OPTION_DATA_SEND_TIMEOUT, &timeout, sizeof(timeout), 0);
+			session->SetOption(INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &timeout, sizeof(timeout), 0);
 
 			CInternetFile * file = (CInternetFile *)session->OpenURL(url);
 			if( file )
@@ -1032,4 +1039,28 @@ void CurlBlastDlg::InstallFlash()
 			  log.Trace(_T("Updated/installed flash"), (LPCTSTR)cmd);
 		  }
 	  }
+}
+
+void CurlBlastDlg::CheckAlive()
+{
+  EnterCriticalSection(&cs);
+  if (lastAlive && freq) {
+    __int64 now;
+    QueryPerfCounter(now);
+    int elapsed = 0;
+    if (now > lastAlive)
+      elapsed = (int)((now - lastAlive) / freq);
+    // If we haven't seen an alive ping from the worker in the last 30 minutes,
+    // force quite and let the watchdog restart us
+    if (elapsed > 1800)
+      exit(1);
+  }
+  LeaveCriticalSection(&cs);
+}
+
+void CurlBlastDlg::Alive()
+{
+  EnterCriticalSection(&cs);
+  QueryPerfCounter(lastAlive);
+  LeaveCriticalSection(&cs);
 }

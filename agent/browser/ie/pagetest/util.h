@@ -29,3 +29,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 CStringA JSONEscape(CString src);
 CStringA JSONEscapeA(CStringA src);
+void QueryPerfCounter(__int64 &counter);
+void QueryPerfFrequency(__int64 &freq);

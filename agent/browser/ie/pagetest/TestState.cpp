@@ -532,7 +532,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			GetTcpStatistics(&tcpStatsStart);
 
 			// keep the activity tracking up to date
-			QueryPerformanceCounter((LARGE_INTEGER *)&lastRequest);
+			QueryPerfCounter(lastRequest);
 			lastActivity = lastRequest;
 
       startTime = CTime::GetCurrentTime();
@@ -568,7 +568,7 @@ void CTestState::CheckComplete()
     bool done = false;
 
 	  __int64 now;
-	  QueryPerformanceCounter((LARGE_INTEGER *)&now);
+	  QueryPerfCounter(now);
 	  DWORD elapsed =  (DWORD)((now - start) / freq);
 
     bool keepOpen = false;
@@ -816,7 +816,7 @@ void CTestState::CheckDOM(void)
 	{
 		if( FindDomElementByAttribute(domElementId) )
 		{
-			QueryPerformanceCounter((LARGE_INTEGER *)&domElement);
+			QueryPerfCounter(domElement);
 			lastRequest = lastActivity = domElement;
 		
 			CString buff;
@@ -856,7 +856,7 @@ void CTestState::CheckWindowPainted()
     screenCapture.Lock();
     SetBrowserWindowUpdated(false);
 		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER *)&now);
+		QueryPerfCounter(now);
     const DWORD START_RENDER_MARGIN = 30;
 
     // grab a screen shot
@@ -1057,7 +1057,7 @@ void CTestState::BackgroundTimer(void)
 	const DWORD imageIncrements = 20;	// allow for X screen shots at each increment
 
 	__int64 now;
-	QueryPerformanceCounter((LARGE_INTEGER *)&now);
+	QueryPerfCounter(now);
 	if( active )
 	{
 		CProgressData data;

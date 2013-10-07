@@ -211,6 +211,8 @@ void CURLBlaster::ThreadProc(void)
 
 		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT )
 		{
+		  dlg.Alive();
+		  
 			// get the url to test
       WaitForSingleObject(testingMutex, INFINITE);
       dlg.SetStatus(_T("Checking for work..."));
@@ -244,14 +246,17 @@ void CURLBlaster::ThreadProc(void)
             dlg.SetStatus(_T("[UrlBlast] - Clearing Cache"));
 						ClearCache();
 
+						dlg.Alive();
 						if( Launch(preLaunch) )
 						{
 							LaunchBrowser();
               dlg.SetStatus(_T("Uploading test run..."));
               
 							// record the cleared cache view
-							if( urlManager->RunRepeatView(info) )
+							if( urlManager->RunRepeatView(info) ) {
+							  dlg.Alive();
 								LaunchBrowser();
+							}
 
 							Launch(postLaunch);
 						}
@@ -261,12 +266,14 @@ void CURLBlaster::ThreadProc(void)
 					}while( !info.done );
 				}
         ReleaseMutex(testingMutex);
+        dlg.Alive();
         OutputDebugString(_T("[UrlBlast] - Test complete"));
         dlg.SetStatus(_T("[UrlBlast] - Test complete"));
 			}
 			else
       {
         ReleaseMutex(testingMutex);
+        dlg.Alive();
         dlg.SetStatus(_T("Waiting for next test..."));
 				Sleep(500 + (rand() % 500));
       }

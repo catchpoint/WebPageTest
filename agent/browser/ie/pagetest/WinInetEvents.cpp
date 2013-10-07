@@ -113,7 +113,7 @@ void CWinInetEvents::OnInternetCloseHandle(HINTERNET hInternet)
 	if( active )
 	{
 		__int64 now;
-		QueryPerformanceCounter((LARGE_INTEGER*)&now);
+		QueryPerfCounter(now);
 
 		CheckStuff();
 
@@ -227,7 +227,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 								r->hostName = (LPCSTR)lpvStatusInformation;
 								
 							if( !r->dnsStart )
-								QueryPerformanceCounter((LARGE_INTEGER*)&(r->dnsStart));
+								QueryPerfCounter(r->dnsStart);
 
 							if( !r->start )
 							{
@@ -245,7 +245,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 						{
 							ATLTRACE(_T("[Pagetest] - (0x%08X) *** 0x%p - INTERNET_STATUS_NAME_RESOLVED\n"), GetCurrentThreadId(), r->hRequest);
 							__int64 now;
-							QueryPerformanceCounter((LARGE_INTEGER*)&now);
+							QueryPerfCounter(now);
 
 							EnterCriticalSection(&cs);
 							if( r->dnsStart )
@@ -264,7 +264,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							r->valid = true;
 							r->fromNet = true;
 							if( !r->socketConnect )
-								QueryPerformanceCounter((LARGE_INTEGER*)&(r->socketConnect));
+								QueryPerfCounter(r->socketConnect);
 
 							if( !r->start )
 							{
@@ -284,7 +284,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 				case INTERNET_STATUS_CONNECTED_TO_SERVER:
 						{
 							__int64 now;
-							QueryPerformanceCounter((LARGE_INTEGER*)&now);
+							QueryPerfCounter(now);
 
 							EnterCriticalSection(&cs);
 							if( r->socketConnect )
@@ -308,7 +308,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 							r->fromNet = true;
               OverrideHost(r);
 							if( !r->requestSent )
-								QueryPerformanceCounter((LARGE_INTEGER*)&(r->requestSent));
+								QueryPerfCounter(r->requestSent);
 								
 							// see if this is the base page that is being requested
 							if( !haveBasePage )
@@ -633,7 +633,7 @@ void CWinInetEvents::OnInternetStatusCallback(HINTERNET hInternet, DWORD_PTR dwC
 
 			// update the activity time
 			if( !r->ignore )
-				QueryPerformanceCounter((LARGE_INTEGER *)&lastActivity);
+				QueryPerfCounter(lastActivity);
 		}
 
 		CheckStuff();
@@ -740,7 +740,7 @@ void * CWinInetEvents::BeforeHttpOpenRequest(HINTERNET hConnect, CString &verb, 
 
 				// update the activity time
 				if( !r->ignore )
-					QueryPerformanceCounter((LARGE_INTEGER *)&lastActivity);
+					QueryPerfCounter(lastActivity);
 			}
 			LeaveCriticalSection(&cs);
 		}
@@ -819,7 +819,7 @@ void CWinInetEvents::AfterHttpOpenRequest(HINTERNET hRequest, void * context)
 			
 			// update the activity time
 			if( active && !r->ignore )
-				QueryPerformanceCounter((LARGE_INTEGER *)&lastActivity);
+				QueryPerfCounter(lastActivity);
 		}
 	}__except(1)
 	{
@@ -962,7 +962,7 @@ void CWinInetEvents::OnHttpSendRequest(HINTERNET hRequest, CString &headers, LPV
 		}
 		
 		if( r && !r->ignore )
-			QueryPerformanceCounter((LARGE_INTEGER *)&lastActivity);
+			QueryPerfCounter(lastActivity);
 	}
 
 	ATLTRACE(_T("[Pagetest] - *** (0x%08X) 0x%p - OnHttpSendRequest - complete\n"), GetCurrentThreadId(), hRequest);

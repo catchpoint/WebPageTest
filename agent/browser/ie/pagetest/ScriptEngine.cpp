@@ -850,7 +850,7 @@ bool CScriptEngine::IncrementStep(bool waitForActivity)
 		  CString url(_T("Script Event"));
 		  DoStartup(url);
 		  StartMeasuring();
-		  QueryPerformanceCounter((LARGE_INTEGER *)&start);
+		  QueryPerfCounter(start);
 		  firstByte = 0;
 	  }
   }
