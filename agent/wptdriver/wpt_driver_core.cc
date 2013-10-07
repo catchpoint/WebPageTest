@@ -107,6 +107,7 @@ void WptDriverCore::Start(void){
 
     WaitForSingleObject(_testing_mutex, INFINITE);
     SetupScreen();
+    LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
     ReleaseMutex(_testing_mutex);
 
     // start a background thread to do all of the actual test management

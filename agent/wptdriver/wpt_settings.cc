@@ -657,6 +657,27 @@ void BrowserSettings::ClearWinInetCache() {
   }
   if (info)
     free(info);
+
+  // This magic value is the combination of the following bitflags:
+  // #define CLEAR_HISTORY         0x0001 // Clears history
+  // #define CLEAR_COOKIES         0x0002 // Clears cookies
+  // #define CLEAR_CACHE           0x0004 // Clears Temporary Internet Files folder
+  // #define CLEAR_CACHE_ALL       0x0008 // Clears offline favorites and download history
+  // #define CLEAR_FORM_DATA       0x0010 // Clears saved form data for form auto-fill-in
+  // #define CLEAR_PASSWORDS       0x0020 // Clears passwords saved for websites
+  // #define CLEAR_PHISHING_FILTER 0x0040 // Clears phishing filter data
+  // #define CLEAR_RECOVERY_DATA   0x0080 // Clears webpage recovery data
+  // #define CLEAR_PRIVACY_ADVISOR 0x0800 // Clears tracking data
+  // #define CLEAR_SHOW_NO_GUI     0x0100 // Do not show a GUI when running the cache clearing
+  //
+  // Bitflags available but not used in this magic value are as follows:
+  // #define CLEAR_USE_NO_THREAD      0x0200 // Do not use multithreading for deletion
+  // #define CLEAR_PRIVATE_CACHE      0x0400 // Valid only when browser is in private browsing mode
+  // #define CLEAR_DELETE_ALL         0x1000 // Deletes data stored by add-ons
+  // #define CLEAR_PRESERVE_FAVORITES 0x2000 // Preserves cached data for "favorite" websites
+
+  // Use the command-line version of cache clearing in case WinInet didn't work
+  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
 }
 
 /*-----------------------------------------------------------------------------
