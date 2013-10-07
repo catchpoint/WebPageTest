@@ -31,19 +31,21 @@ var fs = require('fs');
 var http = require('http');
 var logger = require('logger');
 var os = require('os');
+var path = require('path');
 var process_utils = require('process_utils');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
  * Constructs a Mobile Safari controller for iOS.
  *
- * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object.<string>} args browser options with string values:
- *    runNumber
- *    deviceSerial
- *    ...
+ *     runNumber test run number. Install the apk on run 1.
+ *     deviceSerial the device to drive.
+ *     runTempDir the directory to store per-run files like screenshots.
+ *     ...
  * @constructor
  */
 function BrowserIos(app, args) {
@@ -89,6 +91,7 @@ function BrowserIos(app, args) {
   var capturePath = process_utils.concatPath(args.captureDir,
       args.captureScript || 'capture');
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
+  this.runTempDir_ = args.runTempDir;
 }
 /** Public class. */
 exports.BrowserIos = BrowserIos;
@@ -133,13 +136,15 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   }
   logger.debug('Checking iOS debugserver');
   process_utils.scheduleExec(this.app_, this.iDeviceAppRunner_,
-      ['-U', this.deviceSerial_, '-r', 'check_gdb'], {},
+      ['-U', this.deviceSerial_, '-r', 'check_gdb'],
+      undefined,  // Use default spawn options.
       20000).then(function(stdout) {
     reject('Expecting an error from check_gdb, not ' + stdout);
   }, function(e) {
     var stderr = (e.stderr || e.message || '').trim();
     if (0 === stderr.indexOf('Unknown APPID (check_gdb) is not in:')) {
-      done.resolve('already mounted');
+      logger.debug('Dev image already mounted');
+      done.fulfill();
     } else if (stderr !== 'Could not start com.apple.debugserver!') {
       reject('Unexpected stderr: ' + stderr);
     } else {
@@ -157,9 +162,10 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
             var sig = img + '.signature';
             process_utils.scheduleExec(
                 this.app_, this.iDeviceImageMounter_,
-                ['-u', this.deviceSerial_, img, sig], {}, 30000).then(
-                function() {
-              done.resolve('mounted');
+                ['-u', this.deviceSerial_, img, sig],
+                undefined,  // Use default spawn options.
+                30000).then(function() {
+              done.fulfill();
             }.bind(this), reject);
           }
         }.bind(this));
@@ -179,10 +185,11 @@ BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
         done.reject(e instanceof Error ? e : new Error(e));
       }
       process_utils.scheduleExec(this.app_, this.iDeviceInstaller_,
-          ['-U', this.deviceSerial_, '-i', this.urlOpenerApp_], {},
+          ['-U', this.deviceSerial_, '-i', this.urlOpenerApp_],
+          undefined,  // Use default spawn options.
           20000).then(function(stdout) {
         if (stdout.indexOf('Install - Complete') >= 0) {
-          done.resolve();
+          done.fulfill();
         } else {
           reject('Install failed: ' + stdout);
         }
@@ -283,34 +290,32 @@ BrowserIos.prototype.getSshArgs_ = function(var_args) { // jshint unused:false
 };
 
 /**
+ * Runs an ssh command, treats exit code of 0 or 1 as success.
  * @param {string} var_args arguments.
- * @return {webdriver.promise.Promise}
+ * @return {webdriver.promise.Promise} fulfill({string} stdout).
  * @private
  */
 BrowserIos.prototype.scheduleSsh_ = function(var_args) { // jshint unused:false
   'use strict';
-  var args = this.getSshArgs_.apply(this,
-      [this.deviceSerial_].concat(
-          Array.prototype.slice.call(arguments)));
+  var args = this.getSshArgs_.apply(
+      this, [this.deviceSerial_].concat(Array.prototype.slice.call(arguments)));
   return process_utils.scheduleExec(this.app_, 'ssh', args).addErrback(
-    function(e) {
-      if (!e.signal && 1 === e.code) {
-        return e.stdout;
-      }
-      throw e;
-    });
+      function(e) {
+    if (!e.signal && 1 === e.code) {
+      return e.stdout;
+    }
+    throw e;
+  }.bind(this));
 };
 
 /**
  * @param {string} var_args arguments.
- * @return {webdriver.promise.Promise}
  * @private
  */
 BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
   'use strict';
-  var args = this.getSshArgs_.apply(this, arguments);
-  return process_utils.scheduleExec(
-      this.app_, 'scp', args);
+  process_utils.scheduleExec(
+      this.app_, 'scp', this.getSshArgs_.apply(this, arguments));
 };
 
 /** @private */
@@ -336,7 +341,8 @@ BrowserIos.prototype.scheduleOpenUrl_ = function(url) {
     process_utils.scheduleExec(
         this.app_, this.iDeviceAppRunner_,
         ['-u', this.deviceSerial_, '-r', 'com.google.openURL', '--args', url],
-        {}, 20000);
+        undefined,  // Use default spawn options.
+        20000);
   }
 };
 
@@ -396,8 +402,7 @@ BrowserIos.prototype.scheduleConfigurePacUI_ = function() {
   var remotePrefs =
       '/private/var/preferences/SystemConfiguration/preferences.plist';
   var scpRemotePrefs = this.deviceSerial_ + ':' + remotePrefs;
-  var localPrefs = os.tmpDir() + '/' + this.deviceSerial_ +
-      '.preferences.plist';
+  var localPrefs = path.join(this.runTempDir_, '.preferences.plist');
   this.scheduleScp_(scpRemotePrefs, localPrefs);
 
   process_utils.scheduleFunction(this.app_, 'Read plist', fs.readFile,
@@ -439,9 +444,6 @@ BrowserIos.prototype.scheduleConfigurePacUI_ = function() {
   }.bind(this));
 
   this.scheduleScp_(localPrefs, scpRemotePrefs);
-  this.app_.schedule('Remove preferences.plist', function() {
-    fs.unlink(localPrefs);
-  });
 };
 
 /** @private */
@@ -595,32 +597,29 @@ BrowserIos.prototype.scheduleGetDeviceInfo_ = function(key) {
 };
 
 /**
- * @return {webdriver.promise.Promise} The scheduled promise, where the
- *   resolved value is a Buffer of base64-encoded PNG data.
+ * @param {string} fileNameNoExt filename without the '.png' suffix.
+ * @return {webdriver.promise.Promise} resolve(diskPath) of the written file.
  */
-BrowserIos.prototype.scheduleTakeScreenshot = function() {
+BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
   'use strict';
-  var localPng = this.deviceSerial_ + '.png';
-  process_utils.scheduleExec(this.app_, this.iDeviceScreenshot_,
-      ['-u', this.deviceSerial_]).then(function(stdout) {
+  return process_utils.scheduleExec(this.app_, this.iDeviceScreenshot_,
+      ['-u', this.deviceSerial_],
+      // The idevicescreenshot writes the tiff file into the current dir.
+      // Run with runTempDir as the current, to avoid garbage files if we crash.
+      {cwd: this.runTempDir_}).then(function(stdout) {
     var m = stdout.match(/^Screenshot\s+saved\s+to\s+(\S+\.tiff)(\s|$)/i);
     if (!m) {
       throw new Error('Unable to take screenshot: ' + stdout);
     }
     return m[1];
-  }).then(function(localTiff) {
+  }).then(function(localTiffFilename) {
+    var localTiff = path.join(this.runTempDir_, localTiffFilename);
+    var localPng = path.join(this.runTempDir_, fileNameNoExt + '.png');
     process_utils.scheduleExec(this.app_, this.imageConverter_,
         (/sips$/.test(this.imageConverter_) ?
          ['-s', 'format', 'png', localTiff, '–out', localPng] :
          [localTiff, '-format', 'png', localPng]));
-    process_utils.scheduleFunction(this.app_, 'rm ' + localTiff, fs.unlink,
-        localTiff);
-  }.bind(this));
-  return process_utils.scheduleFunction(this.app_, 'read ' + localPng,
-        fs.readFile, localPng).then(function(data) {
-    process_utils.scheduleFunction(this.app_, 'rm ' + localPng, fs.unlink,
-        localPng);
-    return new Buffer(data, 'base64');
+    return localPng;
   }.bind(this));
 };
 

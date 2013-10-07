@@ -1,0 +1,17 @@
+----------ChromeDriver v2.4 (2013-09-30)----------
+Supports Chrome v29-32
+Resolved issue 444: chromedriver sometimes hangs when launching chrome (chrome fails to bind to debug port) [Pri-0]
+Resolved issue 529: WebDriver clients fail when attempting to use empty chromeOption binary string [Pri-0]
+Resolved issue 536: remote debugging port taken during startup [Pri-0]
+Resolved issue 520: Some commands hangs if the target window already crashes. []
+Resolved issue 519: Support JS heap snapshot []
+
+----------ChromeDriver v2.3 (2013-09-02)----------
+Resolved issue 309: Screenshot is blank from an VM instance without an open RDC connection [Pri-1]
+Resolved issue 445: chromedriver crashes when port is in use [Pri-1]
+Resolved issue 461: TouchUp, TouchDown, and TouchMove commands [OS-All, Pri-1]
+Resolved issue 489: No longer using packed extension id when loading custom extensions [Pri-3]
+Resolved issue 491: Extension does not have its _id_ [Pri-3]
+Resolved issue 497: unrecognized chrome option: useExistingBrowser [Pri-3]
+
+----------ChromeDriver v2.2 (2013-08-06)----------

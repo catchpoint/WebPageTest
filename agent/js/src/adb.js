@@ -41,7 +41,7 @@ var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
 /**
  * Creates an adb runner for a given device serial.
  *
- * @param {webdriver.promise.Application} app the scheduler app.
+ * @param {webdriver.promise.ControlFlow} app the scheduler app.
  * @param {string} serial the device serial.
  * @param {string=} adbCommand the adb command, defaults to 'adb'.
  * @constructor
@@ -52,6 +52,7 @@ function Adb(app, serial, adbCommand) {
   this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
   this.serial = serial;
   this.isUserDebug_ = undefined;
+  this.storagePath_ = undefined;
 }
 /** Public class. */
 exports.Adb = Adb;
@@ -60,16 +61,17 @@ exports.Adb = Adb;
  * Schedules an adb command, resolves with its stdout.
  *
  * @param {Array} args command args, as in process.spawn.
- * @param {Object=} options command options, as in process.spawn.
  * @param {number=} timeout milliseconds to wait before killing the process,
  *   defaults to DEFAULT_TIMEOUT.
  * @return {webdriver.promise.Promise} The scheduled promise.
  * @private
  */
-Adb.prototype.command_ = function(args, options, timeout) {
+Adb.prototype.command_ = function(args, timeout) {
   'use strict';
   return process_utils.scheduleExec(this.app_,
-      this.adbCommand, args, options, timeout || exports.DEFAULT_TIMEOUT);
+      this.adbCommand, args,
+      undefined,  // Use default spawn options.
+      timeout || exports.DEFAULT_TIMEOUT);
 };
 
 /**
@@ -225,34 +227,36 @@ Adb.prototype.exists = function(path) {
 /**
  * Gets the device's writable storage path.
  *
- * @param {Array=} pathsToTry string paths to try, e.g. ['$TEMP', '/sdcard'].
- *   Defaults to STORAGE_PATHS_.
  * @return {webdriver.promise.Promise} resolve(String path).
  */
-Adb.prototype.getStoragePath = function(pathsToTry) {
+Adb.prototype.getStoragePath = function() {
   'use strict';
-  if (undefined === pathsToTry) {
-    pathsToTry = STORAGE_PATHS_;
-  }
-  return this.app_.schedule('getStoragePath', function() {
-    var path = (pathsToTry.length >= 0 ? pathsToTry[0] : undefined);
-    if (undefined === path) {
-      throw new Error('Unable to find storage path');
-    }
-    return this.shell(['[[ -w "' + path + '" ]] && (' +
-        'touch "' + path + '/adb_test" && rm "' + path + '/adb_test"' +
-        ') &>/dev/null && echo "' + path + '"']).then(
-        function(stdout) {
-      var resolvedPath = stdout.trim(); // remove newline.
-      if (!resolvedPath) {
-        return this.getStoragePath(pathsToTry.slice(1));
+  var tryRemainingPaths = (function(pathsToTry) {  // Modifies pathsToTry
+    return this.app_.schedule('getStoragePath', function() {
+      if (this.storagePath_) {
+        return this.storagePath_;
       }
-      logger.info('Found storage path %s --> %s', path, resolvedPath);
-      // Return the resolved path (e.g. '/sdcard' not '$EXTERNAL_STORAGE'),
-      // so the caller can `adb push/pull` files to the absolute path.
-      return resolvedPath;
+      var path = pathsToTry.shift();
+      if (!path) {
+        throw new Error('Unable to find storage path');
+      }
+      return this.shell(['[[ -w "' + path + '" ]] && (' +
+          'touch "' + path + '/adb_test" && rm "' + path + '/adb_test"' +
+          ') &>/dev/null && echo "' + path + '"']).then(
+          function(stdout) {
+        var resolvedPath = stdout.trim(); // remove newline.
+        if (!resolvedPath) {
+          return tryRemainingPaths(pathsToTry);
+        }
+        logger.debug('Found storage path %s --> %s', path, resolvedPath);
+        // Return the resolved path (e.g. '/sdcard' not '$EXTERNAL_STORAGE'),
+        // so the caller can `adb push/pull` files to the absolute path.
+        this.storagePath_ = resolvedPath;
+        return resolvedPath;
+      }.bind(this));
     }.bind(this));
   }.bind(this));
+  return tryRemainingPaths(STORAGE_PATHS_.slice());
 };
 
 /**
@@ -304,68 +308,4 @@ Adb.prototype.scheduleKill = function(processName, signal) {
       this.su(['kill', '-' + (signal || 'INT'), pid]);
     }.bind(this));
   }.bind(this));
-};
-
-/**
- * Remove trailing '^M's from adb's output.
- *
- * E.g.
- *   adb shell ls | cat -v
- * returns
- *   acct^M
- *   cache^M
- *   ...
- *
- * @param {string|Buffer} origBuf  string or Buffer with '\r\n's.
- * @return {string|Buffer} string or Buffer with '\n's.
- */
-Adb.prototype.dos2unix = function(origBuf) {
-  'use strict';
-  if (!origBuf) {
-    return origBuf;
-  }
-  if (!(origBuf instanceof Buffer)) {
-    return origBuf.replace(/\r\n/g, '\n');
-  }
-  // Tricky binary buffer case.
-  //
-  // UTF-8 won't work for PNGs, so we can't do:
-  //   return new Buffer(s.toString('utf8').replace(/\r\n/g, '\n'), 'utf8');
-  // Hex is awkward due to character alignment, e.g.:
-  //   return new Buffer(s.toString('hex').replace(/0d0a/g, '0a'), 'hex');
-  // will mangle '70d0a6'.  Instead, we'll do this the hard way:
-  var origPos;
-  // Imaginary newline before buffer start, always < origPos - 1.
-  var origPosAfterNewline = 0;
-  var origLen = origBuf.length;
-  var retLen = 0;
-  var retBuf = new Buffer(origLen);
-  for (origPos = 1; origPos < origLen; ++origPos) {
-    if (10 === origBuf[origPos] && 13 === origBuf[origPos - 1]) {
-      // At \r\n, copy up to (but omit) this \r\n.
-      var copyLen = origPos - origPosAfterNewline - 1;
-      if (copyLen > 0) {
-        origBuf.copy(
-            retBuf,  // targetBuffer
-            retLen,  // targetStart
-            origPosAfterNewline,  // sourceStart
-            origPos - 1); // sourceEnd (exclusive)
-        retLen += copyLen;
-      }
-      // Explicitly add the \n.
-      retBuf[retLen++] = 10;
-      origPosAfterNewline = origPos + 1;
-    }
-  }
-  var tailLen = origLen - origPosAfterNewline;
-  if (tailLen > 0) {
-    // origBuf did not end with \r\n.
-    origBuf.copy(retBuf, retLen, origPosAfterNewline, origLen);
-    retLen += tailLen;
-  }
-  if (retLen < retBuf.length) {
-    // Trim result buffer.
-    retBuf = retBuf.slice(0, retLen);
-  }
-  return retBuf;
 };

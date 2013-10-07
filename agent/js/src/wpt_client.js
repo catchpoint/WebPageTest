@@ -487,12 +487,12 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
       logger.debug('Writing a local copy of %s', fileName);
       var body = resultFile.content;
       var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
-      fs.mkdir('results/', parseInt('0755', 8), function(e) {
+      fs.mkdir('results', parseInt('0755', 8), function(e) {
         if (!e || 'EEXIST' === e.code) {
-          var subdir = 'results/' + job.id + '/';
+          var subdir = path.join('results', job.id);
           fs.mkdir(subdir, parseInt('0755', 8), function(e) {
             if (!e || 'EEXIST' === e.code) {
-              fs.writeFile(subdir + fileName, bodyBuffer);
+              fs.writeFile(path.join(subdir, fileName), bodyBuffer);
             }
           });
         }

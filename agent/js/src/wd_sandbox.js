@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var vm = require('vm');
 var logger = require('logger');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 /**
  * createSandboxedWebDriverModule creates a sandboxed webdriver Object
@@ -70,11 +70,11 @@ exports.createSandboxedWebDriverModule = function() {
           wdSourceWithExports, wdModuleSandbox, 'sandboxed webdriver module');
       var wdNamespaceSandboxed = {};
       wdModuleSandboxed.call(wdNamespaceSandboxed, wdNamespaceSandboxed);
-      result.resolve(wdNamespaceSandboxed);
+      result.fulfill(wdNamespaceSandboxed);
     });
   } else {
     // Running in a browser, cannot re-read the module, and no need as well.
-    result.resolve(webdriver);
+    result.fulfill(webdriver);
   }
 
   return result.promise;
@@ -93,9 +93,9 @@ function SandboxedDriver(driver, wdSandbox, sandboxedDriverListener) {
 
   var realSchedule = driver.schedule;
   driver.schedule = function(command, description) {
-    logger.extra('User script: %s', description);
+    logger.extra('(user script) %s', description);
     var commandArgs = arguments;
-    wdSandbox.promise.Application.getInstance().schedule(
+    wdSandbox.promise.controlFlow().schedule(
         'onBeforeDriverAction: ' + description, function() {
       sandboxedDriverListener.onBeforeDriverAction(
           command, commandArgs);
@@ -105,6 +105,7 @@ function SandboxedDriver(driver, wdSandbox, sandboxedDriverListener) {
       return result;  // Don't mess with the result.
     }, function(e) {
       sandboxedDriverListener.onAfterDriverError(command, arguments, e);
+      throw e;
     });
   };
 
@@ -165,8 +166,9 @@ exports.createSandboxedWdNamespace = function(
         }
       }
 
-      // The driver is a singleton across
-      this.build = function() {
+      // The driver is a singleton -- user scripts cannot call quit(),
+      // and we call quit() ourselves only at the end of last run.
+      this.build = (function() {
         if (!builtDriver) {
           builtDriver = builder.build();
           sandboxedDriver = new SandboxedDriver(
@@ -175,7 +177,7 @@ exports.createSandboxedWdNamespace = function(
         sandboxedDriverListener.onDriverBuild(
             builtDriver, capabilities, wdSandbox);
         return sandboxedDriver;
-      };
+      }.bind(this));
     }
 
     return {

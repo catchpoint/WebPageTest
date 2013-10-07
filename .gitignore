@@ -26,3 +26,4 @@ webpagetest.vsmdi
 *.idx
 *.ncb
 *.$wrk
+debug.log

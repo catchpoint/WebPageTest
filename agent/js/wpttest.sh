@@ -89,14 +89,10 @@ while [[ ! -d "$wpt_root/agent/js/src" ]]; do
   fi
 done
 declare agent="$wpt_root/agent/js"
-declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)
-declare -a selenium_jar=(--selenium_jar "${selenium_jars[${#selenium_jars[@]}-1]}")
 declare -a chromedrivers=("$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
 declare -a chromedriver=(--chromedriver "${chromedrivers[${#chromedrivers[@]}-1]}")
-declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)
-declare wdjs_dir="${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
 declare src_dir="src${cov:+-cov}"
-export NODE_PATH="${agent}:${agent}/src${cov:+-cov}:${wdjs_dir}"
+export NODE_PATH="${agent}:${agent}/src${cov:+-cov}"
 
 export PATH="${agent}/node_modules/.bin:${PATH}"
 

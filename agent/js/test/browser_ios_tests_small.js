@@ -35,7 +35,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 /**
  * All tests are synchronous, do NOT use Mocha's function(done) async form.
@@ -47,10 +47,8 @@ var webdriver = require('webdriver');
 describe('browser_ios small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
-  process_utils.injectWdAppLogging('WD app', app);
-
   var sandbox;
+  var app;
   var spawnStub;
   var videoStart;
   var videoStop;
@@ -59,7 +57,10 @@ describe('browser_ios small', function() {
     sandbox = sinon.sandbox.create();
 
     test_utils.fakeTimers(sandbox);
-    app.reset();  // We reuse the app across tests, clean it up.
+    // Create a new ControlFlow for each test.
+    app = new webdriver.promise.ControlFlow();
+    webdriver.promise.setDefaultFlow(app);
+    process_utils.injectWdAppLogging('browser_ios', app);
 
     spawnStub = test_utils.stubOutProcessSpawn(sandbox);
     spawnStub.callback = spawnCallback_;
@@ -70,13 +71,11 @@ describe('browser_ios small', function() {
     [http, net].forEach(function(mod) {
       test_utils.stubCreateServer(sandbox, mod);
     });
-    sandbox.stub(fs, 'exists', function(path, cb) { if (cb) { cb(false); } });
+    sandbox.stub(fs, 'exists', function(path, cb) { cb(false); });
     sandbox.stub(fs, 'readFile', function(path, cb) {
-      if (cb) {
-        cb(new Error('no plist'));
-      }
+      cb(new Error('no plist'));
     });
-    sandbox.stub(fs, 'unlink', function(path, cb) { if (cb) { cb(); } });
+    sandbox.stub(fs, 'unlink', function(path, cb) { cb(); });
     reset_();
   });
 
@@ -114,9 +113,25 @@ describe('browser_ios small', function() {
     killBrowser_();
   });
 
-  //
-  // IosBrowser wrapper:
-  //
+  it('should take a screenshot', function() {
+    var screenshotCbSpy = sandbox.spy();
+    browser = new browser_ios.BrowserIos(app,
+        {deviceSerial: 'GAGA123', runNumber: 1, runTempDir: 'runtmp'});
+    browser.scheduleTakeScreenshot('gaga').then(screenshotCbSpy);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+
+    should.ok(screenshotCbSpy.calledOnce);
+    ['runtmp/gaga.png'].should.eql(screenshotCbSpy.firstCall.args);
+    spawnStub.assertCalls(
+        ['idevicescreenshot', '-u', 'GAGA123'],
+        {0: /convert$/, '-1': 'runtmp/gaga.png'}
+      );
+    spawnStub.assertCall();
+  });
+
+  /*
+   * IosBrowser wrapper:
+   */
 
   var args;
   var browser;
@@ -158,9 +173,13 @@ describe('browser_ios small', function() {
       } else if (/ideviceinfo$/.test(cmd) &&
           (-1 !== argv.indexOf('ProductType'))) {
         stdout = 'iPhone666';
+      } else if (/idevicescreenshot$/.test(cmd)) {
+        stdout = 'Screenshot saved to screenshot-2012-12-24-00-00-00.tiff';
       }
     } else if (/ios_webkit_debug_proxy$/.test(cmd)) {
       return true; // keep alive
+    } else if (/convert$/.test(cmd)) {  // Convert tiff -> png.
+      stdout = '';
     }
     if (undefined === stdout) {
       should.fail('Unexpected ' + cmd + ' ' + (argv || []).join(' '));
@@ -183,7 +202,7 @@ describe('browser_ios small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
     should.equal('[]', app.getSchedule());
     should.ok(browser.isRunning());
 
@@ -239,7 +258,7 @@ describe('browser_ios small', function() {
 
   function startVideo_() {
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.equal('[]', app.getSchedule());
     should.ok(videoStart.calledOnce);
     spawnStub.assertCall(/ideviceinfo$/, '-k', 'ProductType', '-u',
@@ -253,7 +272,7 @@ describe('browser_ios small', function() {
 
   function stopVideo_() {
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     spawnStub.assertCall();
     should.equal('[]', app.getSchedule());
     should.ok(videoStart.calledOnce);
@@ -263,7 +282,7 @@ describe('browser_ios small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
 

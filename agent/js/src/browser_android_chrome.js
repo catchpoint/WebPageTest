@@ -27,22 +27,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var adb = require('adb');
+var browser_base = require('browser_base');
 var fs = require('fs');
 var logger = require('logger');
 var packet_capture_android = require('packet_capture_android');
+var path = require('path');
 var process_utils = require('process_utils');
+var util = require('util');
 var video_hdmi = require('video_hdmi');
+var webdriver = require('selenium-webdriver');
+var webdriver_proxy = require('selenium-webdriver/proxy');
 
 var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
+var CHROME_FLAGS = [
+    // Stabilize Chrome performance.
+    '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
+    // Suppress location JS API to avoid a location prompt obscuring the page.
+    '--disable-geolocation'
+  ];
+
+
 /**
  * Constructs a Chrome Mobile controller for Android.
  *
- * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number -- helpers are installed on run 1.
+ *     runNumber test run number. Install the apk on run 1.
  *     deviceSerial the device to drive.
+ *     runTempDir the directory to store per-run files like screenshots.
  *     [chrome] Chrome.apk to install, defaults to None.
  *     [devToolsPort] DevTools port, defaults to dynamic selection.
  *     [pac] PAC content, defaults to None.
@@ -56,22 +70,24 @@ var PAC_PORT = 80;
  */
 function BrowserAndroidChrome(app, args) {
   'use strict';
+  browser_base.BrowserBase.call(this, app);
   logger.info('BrowserAndroidChrome(%j)', args);
   if (!args.deviceSerial) {
     throw new Error('Missing deviceSerial');
   }
-  this.app_ = app;
   this.deviceSerial_ = args.deviceSerial;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
-  this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
-  this.chromePackage_ = (args.chromePackage ||
-      'com.google.android.apps.chrome_dev');
-  this.chromeActivity_ = (args.chromeActivity ||
-      'com.google.android.apps.chrome');
+  this.chromedriver_ = args.chromedriver;
+  this.chromePackage_ = args.chromePackage || 'com.android.chrome';
+  this.chromeActivity_ =
+      args.chromeActivity || 'com.google.android.apps.chrome';
   this.devToolsPort_ = args.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
+  this.serverPort_ = args.serverPort;
+  this.serverPortLock_ = undefined;
+  this.serverUrl_ = undefined;
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
@@ -80,20 +96,61 @@ function BrowserAndroidChrome(app, args) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
   }
   var captureDir = toDir(args.captureDir);
+  this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
+  this.runTempDir_ = args.runTempDir;
 }
+util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
 exports.BrowserAndroidChrome = BrowserAndroidChrome;
 
 /**
- * Future webdriver impl.
- * TODO: ... implementation with chromedriver2.
+ * Start chromedriver, 2.x required.
+ *
+ * @param {Object} browserCaps capabilities to be passed to Builder.build():
+ *    #param {string} browserName must be 'chrome'.
  */
-BrowserAndroidChrome.prototype.startWdServer = function() { //browserCaps
+BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   'use strict';
-  throw new Error('Soon: ' +
-      'http://madteam.co/forum/avatars/Android/android-80-domokun.png');
+  var requestedBrowserName = browserCaps[webdriver.Capability.BROWSER_NAME];
+  if (webdriver.Browser.CHROME !== requestedBrowserName) {
+    throw new Error('BrowserLocalChrome called with unexpected browser ' +
+        requestedBrowserName);
+  }
+  if (!this.chromedriver_) {
+    throw new Error('Must set chromedriver before starting it');
+  }
+  browserCaps.chromeOptions = {
+    args: CHROME_FLAGS.slice(),
+    androidPackage: this.chromePackage_,
+    androidDeviceSerial: this.deviceSerial_
+  };
+  if (this.pac_) {
+    if (PAC_PORT !== 80) {
+      logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
+      browserCaps.chromeOptions.args.push(
+          '--explicitly-allowed-ports=' + PAC_PORT);
+    }
+    browserCaps[webdriver.Capability.PROXY] = webdriver_proxy.pac(
+        'http://127.0.0.1:' + PAC_PORT + '/from_netcat');
+  }
+  this.kill();
+  this.scheduleInstallIfNeeded_();
+  this.scheduleConfigureServerPort_();
+  // Needs to be scheduled, as it uses values assigned in scheduled functions.
+  this.app_.schedule('Launch WD server', function() {
+    var chromeDriverArgs = ['-port=' + this.serverPort_];
+    if (logger.isLogging(logger.LEVELS.extra)) {
+      chromeDriverArgs.push('--verbose');
+    }
+    this.startChildProcess(
+        this.chromedriver_, chromeDriverArgs, 'WD server');
+    // Make sure we set serverUrl_ only after the child process start success.
+    this.app_.schedule('Set DevTools URL', function() {
+      this.serverUrl_ = 'http://localhost:' + this.serverPort_;
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -104,15 +161,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Stop Chrome at the start of each run.
   // TODO(wrightt): could keep the devToolsPort and pacServer up
   this.kill();
-  if (this.shouldInstall_ && this.chrome_) {
-    // Explicitly uninstall, as "install -r" fails if the installed package
-    // was signed with different keys than the new apk being installed.
-    this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
-      logger.debug('Ignoring failed uninstall');
-    }.bind(this));
-    // Chrome install on an emulator takes a looong time.
-    this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
-  }
+  this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
   // Delete the prior run's tab(s) and start with "about:blank".
@@ -127,14 +176,36 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
       '/data/data/' + this.chromePackage_ + '/files/tab*']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
-  // TODO(wrightt): check start error, use `pm list packages` to check pkg
-  this.scheduleSelectDevToolsPort_();
-  this.app_.schedule('Forward DevTools socket to local port', function() {
-    this.adb_.adb(['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
-  }.bind(this));
-  this.app_.schedule('Set DevTools URL', function() {
-    this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
-  }.bind(this));
+  // TODO(wrightt): check start error
+  this.scheduleConfigureDevToolsPort_();
+};
+
+/**
+ * Callback when the child chromedriver process exits.
+ * @override
+ */
+BrowserAndroidChrome.prototype.onChildProcessExit = function() {
+  'use strict';
+  logger.info('chromedriver exited, resetting WD server URL');
+  this.serverUrl_ = undefined;
+};
+
+/**
+ * Installs Chrome apk if this is the first run, and the apk was provided.
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
+  'use strict';
+  if (this.shouldInstall_ && this.chrome_) {
+    // Explicitly uninstall, as "install -r" fails if the installed package
+    // was signed differently than the new apk being installed.
+    this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
+      logger.debug('Ignoring failed uninstall');
+    }.bind(this));
+    // Chrome install on an emulator takes a looong time.
+    this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
+  }
+  // TODO(wrightt): use `pm list packages` to check pkg
 };
 
 /**
@@ -145,10 +216,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   var flagsFile = '/data/local/chrome-command-line';
-  var flags = [
-      '--disable-fre', '--metrics-recording-only', '--enable-remote-debugging'
-    ];
-  // TODO(wrightt): add flags to disable experimental chrome features, if any
+  var flags = CHROME_FLAGS.concat('--enable-remote-debugging');
   if (this.pac_) {
     flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
     if (PAC_PORT !== 80) {
@@ -160,20 +228,23 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
 };
 
 /**
- * Selects the DevTools port.
+ * Selects the chromedriver port.
  *
  * @private
  */
-BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
+BrowserAndroidChrome.prototype.scheduleConfigureServerPort_ = function() {
   'use strict';
-  if (!this.devToolsPort_) {
-    process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port').then(
-      function(alloc) {
-      logger.debug('Selected DevTools port ' + alloc.port);
-      this.devtoolsPortLock_ = alloc;
-      this.devToolsPort_ = alloc.port;
+  this.app_.schedule('Configure WD port', function() {
+    if (this.serverPort_) {
+      return;
+    }
+    process_utils.scheduleAllocatePort(this.app_, 'Select WD port').then(
+        function(alloc) {
+      logger.debug('Selected WD port ' + alloc.port);
+      this.serverPortLock_ = alloc;
+      this.serverPort_ = alloc.port;
     }.bind(this));
-  }
+  }.bind(this));
 };
 
 /**
@@ -181,7 +252,54 @@ BrowserAndroidChrome.prototype.scheduleSelectDevToolsPort_ = function() {
  *
  * @private
  */
-BrowserAndroidChrome.prototype.releaseDevToolsPort_ = function() {
+BrowserAndroidChrome.prototype.releaseServerPortIfNeeded_ = function() {
+  'use strict';
+  if (this.serverPortLock_) {
+    logger.debug('Releasing WD port ' + this.serverPort_);
+    this.serverPort_ = undefined;
+    this.serverPortLock_.release();
+    this.serverPortLock_ = undefined;
+  }
+};
+
+/**
+ * Selects the DevTools port.
+ *
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
+  'use strict';
+  this.app_.schedule('Configure DevTools port', function() {
+    if (!this.devToolsPort_) {
+      process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port')
+          .then(function(alloc) {
+        logger.debug('Selected DevTools port ' + alloc.port);
+        this.devtoolsPortLock_ = alloc;
+        this.devToolsPort_ = alloc.port;
+      }.bind(this));
+    }
+    // The following must be done even if devToolsPort_ is fixed, not allocated.
+    if (!this.devToolsUrl_) {
+      // The adb call must be scheduled, because devToolsPort_ is only assigned
+      // when the above scheduled port allocation completes.
+      this.app_.schedule('Forward DevTools socket to local port', function() {
+        this.adb_.adb(
+            ['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
+      }.bind(this));
+      // Make sure we set devToolsUrl_ only after the adb forward succeeds.
+      this.app_.schedule('Set DevTools URL', function() {
+        this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
+/**
+ * Releases the DevTools port.
+ *
+ * @private
+ */
+BrowserAndroidChrome.prototype.releaseDevToolsPortIfNeeded_ = function() {
   'use strict';
   if (this.devtoolsPortLock_) {
     logger.debug('Releasing DevTools port ' + this.devToolsPort_);
@@ -221,8 +339,8 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   //
   // Lastly, to verify that the proxy was set, visit:
   //   chrome://net-internals/proxyservice.config#proxy
-  var localPac = this.deviceSerial_ + '.pac_body';
-  this.pacFile_ = '/data/local/tmp/pac_body';
+  var localPac = path.join(this.runTempDir_, 'wpt_proxy.pac');
+  this.pacFile_ = '/data/local/tmp/wpt_proxy.pac';
   var response = 'HTTP/1.1 200 OK\n' +
       'Content-Length: ' + this.pac_.length + '\n' +
       'Content-Type: application/x-ns-proxy-autoconfig\n' +
@@ -230,8 +348,6 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   process_utils.scheduleFunction(this.app_, 'Write local PAC file',
       fs.writeFile, localPac, response);
   this.adb_.adb(['push', localPac, this.pacFile_]);
-  process_utils.scheduleFunction(this.app_, 'Remove local PAC file',
-      fs.unlink, localPac);
   // Start netcat server
   logger.debug('Starting pacServer on device port %s', PAC_PORT);
   this.adb_.spawnSu(['while true; do nc -l ' + PAC_PORT + ' < ' +
@@ -251,7 +367,7 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
  *
  * @private
  */
-BrowserAndroidChrome.prototype.stopPacServer_ = function() {
+BrowserAndroidChrome.prototype.stopPacServerIfNeeded_ = function() {
   'use strict';
   if (this.pacServer_) {
     var proc = this.pacServer_;
@@ -270,9 +386,12 @@ BrowserAndroidChrome.prototype.stopPacServer_ = function() {
  */
 BrowserAndroidChrome.prototype.kill = function() {
   'use strict';
+  this.killChildProcessIfNeeded();
   this.devToolsUrl_ = undefined;
-  this.releaseDevToolsPort_();
-  this.stopPacServer_();
+  this.serverUrl_ = undefined;
+  this.releaseDevToolsPortIfNeeded_();
+  this.releaseServerPortIfNeeded_();
+  this.stopPacServerIfNeeded_();
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
@@ -281,7 +400,8 @@ BrowserAndroidChrome.prototype.kill = function() {
  */
 BrowserAndroidChrome.prototype.isRunning = function() {
   'use strict';
-  return undefined !== this.devToolsUrl_;
+  return browser_base.BrowserBase.prototype.isRunning.call(this) ||
+      !!this.devToolsUrl_ || !!this.serverUrl_;
 };
 
 /**
@@ -289,7 +409,7 @@ BrowserAndroidChrome.prototype.isRunning = function() {
  */
 BrowserAndroidChrome.prototype.getServerUrl = function() {
   'use strict';
-  return undefined;
+  return this.serverUrl_;
 };
 
 /**
@@ -318,22 +438,19 @@ BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
 };
 
 /**
- * @return {webdriver.promise.Promise} The scheduled promise, where the
- *   resolved value is a Buffer of base64-encoded PNG data.
+ * @param {string} fileNameNoExt filename without the '.png' suffix.
+ * @return {webdriver.promise.Promise} resolve(diskPath) of the written file.
  */
-BrowserAndroidChrome.prototype.scheduleTakeScreenshot = function() {
+BrowserAndroidChrome.prototype.scheduleTakeScreenshot =
+    function(fileNameNoExt) {
   'use strict';
-  return this.adb_.shell(['screencap', '-p'],
-      {encoding: 'binary', maxBuffer: 5000 * 1024}).then(function(binout) {
-    // Adb shell incorrectly thinks that the binary PNG stdout is text and
-    // mangles it by translating all 0x0a '\n's into 0x0d0a '\r\n's.  For
-    // details, see:
-    //   http://stackoverflow.com/questions/13578416
-    // We use "dos2unix" to un-mangle these 0x0d0a's back into 0x0a's.
-    //
-    // Another option would be to write the screencap to a remote temp file
-    // (e.g. in /mnt/sdcard/) and `adb pull` it to a local temp file.
-    return new Buffer(this.adb_.dos2unix(binout), 'base64');
+  return this.adb_.getStoragePath().then(function(storagePath) {
+    var localPath = path.join(this.runTempDir_, fileNameNoExt + '.png');
+    var devicePath = storagePath + '/wpt_screenshot.png';
+    this.adb_.shell(['screencap', '-p', devicePath]);
+    return this.adb_.adb(['pull', devicePath, localPath]).then(function() {
+      return localPath;
+    }.bind(this));
   }.bind(this));
 };
 

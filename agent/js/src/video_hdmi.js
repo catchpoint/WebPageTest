@@ -29,11 +29,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var fs = require('fs');
 var logger = require('logger');
 var process_utils = require('process_utils');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 /**
- * @param {webdriver.promise.Application=} app the scheduler.
- * @param {string=} captureCommand the capture command.
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param {string} captureCommand the capture command.
  * @constructor
  */
 function VideoHdmi(app, captureCommand) {
@@ -47,7 +47,7 @@ function VideoHdmi(app, captureCommand) {
 exports.VideoHdmi = VideoHdmi;
 
 /**
- * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
+ * @return {webdriver.promise.Promise} fulfill({boolean} isSupported).
  */
 VideoHdmi.prototype.scheduleIsSupported = function() {
   'use strict';
@@ -59,7 +59,7 @@ VideoHdmi.prototype.scheduleIsSupported = function() {
       var isSupportedPromise = new webdriver.promise.Deferred();
       fs.exists(this.captureCommand_, function(exists) {
         this.isSupported_ = exists;
-        isSupportedPromise.resolve(exists);
+        isSupportedPromise.fulfill(exists);
       }.bind(this));
       result = isSupportedPromise.promise;
     }

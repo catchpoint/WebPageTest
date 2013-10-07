@@ -32,12 +32,12 @@ var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 describe('process_utils small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -64,13 +64,13 @@ describe('process_utils small', function() {
     var a, b;
     app.schedule('x', function() {
       var done = new webdriver.promise.Deferred();
-      done.resolve('a', 'b');
+      done.fulfill('a', 'b');
       return done;
     }).then(function(a2, b2) {
       a = a2;
       b = b2;
     });
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 1);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 1);
     should.equal('a', a);
     should.equal(undefined, b); // webdriver bug?!
   });
@@ -104,7 +104,7 @@ describe('process_utils small', function() {
       re = ce;
     });
     should.equal(0, rn);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY *
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY *
         (delay > 0 ? delay : 1));
     should.equal(1, rn);
     should.equal(err, re);
@@ -133,14 +133,14 @@ describe('process_utils small', function() {
     process_utils.scheduleFunction(app, 'x', fs.exists, 'y').then(function(v) {
       exists = v;
     });
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal(true, exists);
 
     exists = undefined;
     process_utils.scheduleFunction(app, 'x', fs.exists, 'n').then(function(v) {
       exists = v;
     });
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal(false, exists);
   });
 
@@ -174,10 +174,11 @@ describe('process_utils small', function() {
       if ('kill' === command) {
         numKilled += 1;
       }
+      return false;
     };
 
     process_utils.scheduleKillAll(app, 'killAll', processInfos);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
     should.equal(5, numKilled);
   });
 
@@ -197,10 +198,11 @@ describe('process_utils small', function() {
       global.setTimeout(function() {
         proc.stdout.emit('data', stdout);
       }.bind(this), 1);
+      return false;
     };
 
     process_utils.scheduleKillTree(app, 'killTree', {'pid': pid});
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
     should.equal(actualPidsToKill.toString(), expectedPidsToKill.toString());
   }
 
@@ -224,7 +226,7 @@ describe('process_utils small', function() {
       return ret;
     });
     process_utils.scheduleAllocatePort(app, 'alloc port');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal(JSON.stringify(serverStub.ports),
        JSON.stringify(expectedPorts));
   }

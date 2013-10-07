@@ -34,7 +34,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var util = require('util');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 function FakeEmitterWithRun() {
@@ -58,10 +58,8 @@ FakeEmitterWithRun.prototype.run = function() {
 describe('agent_main', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
-  process_utils.injectWdAppLogging('wd_server app', app);
-
   var sandbox;
+  var app;
 
   before(function() {
     agent_main.setSystemCommands();
@@ -71,9 +69,26 @@ describe('agent_main', function() {
     sandbox = sinon.sandbox.create();
     test_utils.fakeTimers(sandbox);
 
+    // Stub out fs functions for the temp dir cleanup and ipfw check.
     sandbox.stub(fs, 'exists', function(path, cb) {
-      cb(false);
+      path.should.match(/ipfw$|runtmp$/);
+      global.setTimeout(function() {
+        cb(/runtmp$/.test(path));
+      }, 1);
     });
+    sandbox.stub(fs, 'readdir', function(path, cb) {
+      path.should.match(/runtmp$/);
+      global.setTimeout(function() {
+        cb(undefined, ['tmp1', 'tmp2']);
+      }, 1);
+    });
+    sandbox.stub(fs, 'unlink', function(path, cb) {
+      path.should.match(/runtmp[\/\\]tmp\d$/);
+      global.setTimeout(function() {
+        cb();
+      }, 1);
+    });
+
     ['scheduleExec', 'scheduleWait', 'scheduleGetAll',
          'scheduleAllocatePort'].forEach(function(functionName) {
       sandbox.stub(process_utils, functionName, function() {
@@ -81,7 +96,10 @@ describe('agent_main', function() {
       });
     });
 
-    app.reset();  // We reuse the app across tests, clean it up.
+    // Create a new ControlFlow for each test.
+    app = new webdriver.promise.ControlFlow();
+    webdriver.promise.setDefaultFlow(app);
+    process_utils.injectWdAppLogging('agent_main', app);
   });
 
   afterEach(function() {
@@ -98,7 +116,7 @@ describe('agent_main', function() {
     agent.run();
 
     client.onAbortJob(fakeJob);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 6);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 15);
     should.equal('[]', app.getSchedule());
     should.ok(runFinishedSpy.calledOnce);
   });

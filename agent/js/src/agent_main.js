@@ -30,10 +30,11 @@ var child_process = require('child_process');
 var fs = require('fs');
 var logger = require('logger');
 var nopt = require('nopt');
+var path = require('path');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
 var traffic_shaper = require('traffic_shaper');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 var wpt_client = require('wpt_client');
 
 /**
@@ -64,8 +65,15 @@ function Agent(client, flags) {
   'use strict';
   this.client_ = client;
   this.flags_ = flags;
-  this.app_ = webdriver.promise.Application.getInstance();
-  process_utils.injectWdAppLogging('main app', this.app_);
+  this.app_ = webdriver.promise.controlFlow();
+  process_utils.injectWdAppLogging('agent_main', this.app_);
+  // The directory to store run result files. Clean it up before+after each run.
+  // We want a fixed name, to avoid leaving junk after agent crashes/restarts.
+  var runTempSuffix = flags.deviceSerial || '';
+  if (!/^[a-z0-9]*$/i.test(runTempSuffix)) {
+    throw new Error('--deviceSerial may contain only letters and digits');
+  }
+  this.runTempDir_ = 'runtmp' + (runTempSuffix ? '_' + runTempSuffix : '');
   this.wdServer_ = undefined;  // The wd_server child process.
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
@@ -96,13 +104,31 @@ Agent.prototype.scheduleNoFault_ = function(description, f) {
 
 /**
  * Starts a child process with the wd_server module.
- *
+ * @param {Job} job the job for which we are starting the server process.
  * @private
  */
-Agent.prototype.startWdServer_ = function() {
+Agent.prototype.startWdServer_ = function(job) {
   'use strict';
   this.wdServer_ = child_process.fork('./src/wd_server.js',
       [], {env: process.env});
+  this.wdServer_.on('message', function(ipcMsg) {
+    logger.debug('got IPC: %s', ipcMsg.cmd);
+    if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
+      var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+      if ('error' === ipcMsg.cmd) {
+        job.error = ipcMsg.e;
+        // Error in a first-view run: can't do a repeat run.
+        isRunFinished = true;
+      }
+      this.scheduleProcessDone_(ipcMsg, job);
+      if (isRunFinished) {
+        this.scheduleCleanup_();
+      }
+      // Do this only at the very end, as it starts a new run of the job.
+      this.scheduleNoFault_('Job finished',
+          job.runFinished.bind(job, isRunFinished));
+    }
+  }.bind(this));
   this.wdServer_.on('exit', function(code, signal) {
     logger.info('wd_server child process exit code %s signal %s', code, signal);
     this.wdServer_ = undefined;
@@ -127,19 +153,22 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {
         logger.debug('Adding screenshot %s', screenshot.fileName);
-        var contentBuffer = new Buffer(screenshot.base64, 'base64');
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.IMAGE,
-            screenshot.fileName,
-            screenshot.contentType,
-            contentBuffer));
-        if (screenshot.description) {
-          imageDescriptors.push({
-            filename: screenshot.fileName,
-            description: screenshot.description
-          });
-        }
-      });
+        process_utils.scheduleFunctionNoFault(this.app_,
+            'Read ' + screenshot.diskPath,
+            fs.readFile, screenshot.diskPath).then(function(buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.IMAGE,
+              screenshot.fileName,
+              screenshot.contentType,
+              buffer));
+          if (screenshot.description) {
+            imageDescriptors.push({
+              filename: screenshot.fileName,
+              description: screenshot.description
+            });
+          }
+        }.bind(this));
+      }.bind(this));
       if (imageDescriptors.length > 0) {
         job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
@@ -150,9 +179,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.IMAGE,
             'video.avi', 'video/avi', buffer));
-      });
-      process_utils.scheduleFunctionNoFault(this.app_, 'Delete video file',
-          fs.unlink, ipcMsg.videoFile);
+      }.bind(this));
     }
     if (ipcMsg.pcapFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
@@ -160,9 +187,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.PCAP,
             'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
-      });
-      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
-          fs.unlink, ipcMsg.pcapFile);
+      }.bind(this));
     }
   }.bind(this));
 };
@@ -180,28 +205,11 @@ Agent.prototype.startJobRun_ = function(job) {
   job.isCacheWarm = !!this.wdServer_;
   logger.info('Running job %s run %d/%d cacheWarm=%s',
       job.id, job.runNumber, job.runs, job.isCacheWarm);
+  this.scheduleCleanRunTempDir_();
   if (!this.wdServer_) {
     this.trafficShaper_.scheduleStart(
         job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
-    this.startWdServer_();
-    this.wdServer_.on('message', function(ipcMsg) {
-      logger.debug('got IPC: %s', ipcMsg.cmd);
-      if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
-        var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
-        if ('error' === ipcMsg.cmd) {
-          job.error = ipcMsg.e;
-          // Error in a first-view run: can't do a repeat run.
-          isRunFinished = true;
-        }
-        this.scheduleProcessDone_(ipcMsg, job);
-        if (isRunFinished) {
-          this.scheduleCleanup_();
-        }
-        // Do this only at the very end, as it starts a new run of the job.
-        this.scheduleNoFault_('Job finished',
-            job.runFinished.bind(job, isRunFinished));
-      }
-    }.bind(this));
+    this.startWdServer_(job);
   }
   var script = job.task.script;
   var url = job.task.url;
@@ -226,7 +234,8 @@ Agent.prototype.startJobRun_ = function(job) {
         script: script,
         url: url,
         pac: pac,
-        timeout: this.client_.jobTimeout
+        timeout: this.client_.jobTimeout,
+        runTempDir: this.runTempDir_
       };
     Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
       if (!message[flagName]) {
@@ -234,6 +243,31 @@ Agent.prototype.startJobRun_ = function(job) {
       }
     }.bind(this));
     this.wdServer_.send(message);
+  }.bind(this));
+};
+
+/**
+ * Makes sure the run temp dir exists and is empty, but ignores deletion errors.
+ * Currently supports only flat files, no subdirectories.
+ * @private
+ */
+Agent.prototype.scheduleCleanRunTempDir_ = function() {
+  'use strict';
+  process_utils.scheduleFunctionNoFault(this.app_, 'Tmp check',
+      fs.exists, this.runTempDir_).then(function(exists) {
+    if (exists) {
+      process_utils.scheduleFunction(this.app_, 'Tmp read',
+          fs.readdir, this.runTempDir_).then(function(files) {
+        files.forEach(function(fileName) {
+          var filePath = path.join(this.runTempDir_, fileName);
+          process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + filePath,
+              fs.unlink, filePath);
+        }.bind(this));
+      }.bind(this));
+    } else {
+      process_utils.scheduleFunction(this.app_, 'Tmp create',
+          fs.mkdir, this.runTempDir_);
+    }
   }.bind(this));
 };
 
@@ -383,6 +417,7 @@ Agent.prototype.scheduleCleanup_ = function() {
       }
     }.bind(this));
   }
+  this.scheduleCleanRunTempDir_();
 };
 
 /**
@@ -428,7 +463,7 @@ if (require.main === module) {
   try {
     exports.main(nopt(knownOpts, {}, process.argv, 2));
   } catch (e) {
-    console.log(e);
+    console.error(e);
     process.exit(-1);
   }
 }

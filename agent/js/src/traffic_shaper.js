@@ -34,7 +34,7 @@ var MIN_RULE_ID = 10000;
 var MAX_RULE_ID = 20000;
 
 /**
- * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {webdriver.promise.ControlFlow=} app the scheduler.
  * @param {Object.<string>} args options with string values:
  *   #param {string=} deviceAddr IP or MAC address, defaults to 'any'.
  *   #param {string=} ipfwCommand ipfw command, defaults to '/sbin/ipfw'.
