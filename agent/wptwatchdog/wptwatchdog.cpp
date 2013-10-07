@@ -121,14 +121,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     if (process_handle) {
       GetModuleFileNameEx(process_handle, NULL, command_line, 
                           _countof(command_line));
-      if (!lstrcmpi(PathFindFileName(command_line), _T("urlblast.exe"))) {
+      if (!lstrcmpi(PathFindFileName(command_line), _T("urlblast.exe")))
         window_class = _T("Urlblast_Watchdog");
-      }
     }
   }
 
+  bool ok = true;
+  CreateMutex(NULL, TRUE, window_class);
+  if (GetLastError() == ERROR_ALREADY_EXISTS)
+    ok = false;
+
   // only allow a single instance to run
-  if (process_handle && lstrlen(command_line)) {
+  if (ok && process_handle && lstrlen(command_line)) {
     MSG msg;
 
     // create the hidden main window
