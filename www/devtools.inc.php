@@ -162,9 +162,10 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
     if (!gz_is_file($timelineFile))
         $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
     if (gz_is_file($timelineFile)){
-        $timeline = json_decode(gz_file_get_contents($timelineFile), true);
-        if ($timeline)
-            $ok = true;
+      // 
+      $timeline = json_decode(gz_file_get_contents($timelineFile), true);
+      if ($timeline)
+          $ok = true;
     }
     return $ok;
 }
@@ -713,10 +714,27 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
         $cachedText = '_Cached';
     $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
     if (gz_is_file($devToolsFile)){
-        $messages = json_decode(gz_file_get_contents($devToolsFile), true);
+        $raw = gz_file_get_contents($devToolsFile);
+        $messages = json_decode($raw, true);
+        $START_MESSAGE = '{"message":"WPT start"}';
+        $STOP_MESSAGE = '{"message":"WPT stop"}';
+        if (strpos($raw, $START_MESSAGE) !== false)
+          $endTime = 0;
+        unset($raw);
         if ($messages && is_array($messages)) {
+            // see if we need to extract the valid start and end times from the waterfall
+            if (isset ($endTime)) {
+              foreach($messages as &$message) {
+                $encoded = json_encode($message);
+                if (strpos(json_encode($message), $START_MESSAGE) !== false) {
+                  $startTime = DevToolsEventTime($message);
+                } elseif (strpos(json_encode($message), $STOP_MESSAGE) !== false) {
+                  $endTime = DevToolsEventTime($message);
+                }
+              }
+            }
             foreach($messages as &$message) {
-              if (DevToolsMatchEvent($filter, $message)) {
+              if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
                 $event = $message['params'];
                 $event['method'] = $message['method'];
                 $events[] = $event;
@@ -729,13 +747,33 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
     return $ok;
 }
 
-function DevToolsMatchEvent($filter, &$event) {
+function DevToolsEventTime(&$event) {
+  $time = null;
+  if (is_array($event) &&
+      array_key_exists('params', $event) &&
+      is_array($event['params'])) {
+    if (array_key_exists('record', $event['params']) &&
+        is_array($event['params']['record']) &&
+        array_key_exists('startTime', $event['params']['record']))
+      $time = $event['params']['record']['startTime'];
+    elseif (array_key_exists('timestamp', $event['params']))
+      $time = $event['params']['timestamp'] * 1000;
+  }
+  return $time;
+}
+
+function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null) {
   $match = false;
   if (is_array($event) &&
       array_key_exists('method', $event) &&
       array_key_exists('params', $event)) {
     $match = true;
-    if (isset($filter)) {
+    if (isset($startTime)) {
+      $time = DevToolsEventTime($event);
+      if ($time < $startTime || (isset($endTime) && $endTime && $time > $endTime))
+        $match = false;
+    }
+    if ($match && isset($filter)) {
         $match = false;
         if (is_string($filter)) {
             if (stripos($event['method'], $filter) !== false)
