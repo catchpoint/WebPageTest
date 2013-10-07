@@ -107,7 +107,6 @@ void WptDriverCore::Start(void){
 
     WaitForSingleObject(_testing_mutex, INFINITE);
     SetupScreen();
-    LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
     ReleaseMutex(_testing_mutex);
 
     // start a background thread to do all of the actual test management
@@ -143,9 +142,11 @@ void WptDriverCore::Stop(void) {
 -----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
   Sleep(_settings._startup_delay * SECONDS_TO_MS);
+
   WaitForSingleObject(_testing_mutex, INFINITE);
   Init();  // do initialization and machine configuration
   ReleaseMutex(_testing_mutex);
+
   _status.Set(_T("Running..."));
   while (!_exit) {
     WaitForSingleObject(_testing_mutex, INFINITE);
@@ -279,6 +280,10 @@ typedef HRESULT (STDAPICALLTYPE* DLLREG)(void);
   Do any startup initialization (settings have already loaded)
 -----------------------------------------------------------------------------*/
 void WptDriverCore::Init(void){
+
+  // Clear IE's caches
+  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
+
   // set the OS to not boost foreground processes
   HKEY hKey;
   if (SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
