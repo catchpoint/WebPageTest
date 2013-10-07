@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class DataChunk;
 class Requests;
 class TestState;
+class WptTest;
 struct PRFileDesc;
 
 class SocketInfo {
@@ -67,7 +68,7 @@ public:
 
 class TrackSockets {
 public:
-  TrackSockets(Requests& requests, TestState& test_state);
+  TrackSockets(Requests& requests, TestState& test_state, WptTest& test);
   ~TrackSockets(void);
 
   void Create(SOCKET s);
@@ -108,6 +109,7 @@ private:
   CRITICAL_SECTION cs;
   Requests&                   _requests;
   TestState&                  _test_state;
+  WptTest&                    _test;
   DWORD	_nextSocketId;	// ID to assign to the next socket
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;

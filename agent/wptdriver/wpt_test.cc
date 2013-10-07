@@ -73,6 +73,7 @@ WptTest::WptTest(void):
     _test_file = CString(path) + _T("\\test.dat");
   }
   InitializeCriticalSection(&cs_);
+  _tcp_port_override.InitHashTable(257);
 
   Reset();
 }
@@ -715,6 +716,11 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
     } else if (cmd == _T("setdns")) {
       CDNSEntry entry(command.target, command.value);
       _dns_override.AddTail(entry);
+    } else if (cmd == _T("setport")) {
+      USHORT original = (USHORT)_ttoi(command.target);
+      USHORT replacement = (USHORT)_ttoi(command.value);
+      if (original && replacement)
+        _tcp_port_override.SetAt(original, replacement);
     } else if (cmd == _T("setdnsname")) {
       CDNSName entry(command.target, command.value);
       if (entry.name.GetLength() && entry.realName.GetLength())
@@ -791,6 +797,24 @@ ULONG WptTest::OverrideDNSAddress(CString& name) {
   }
 
   return addr;
+}
+
+/*-----------------------------------------------------------------------------
+  See if we need to override the Port
+-----------------------------------------------------------------------------*/
+void WptTest::OverridePort(const struct sockaddr FAR * name, int namelen) {
+  if (!_tcp_port_override.IsEmpty() &&
+      name &&
+      namelen >= sizeof(struct sockaddr_in) &&
+      name->sa_family == AF_INET) {
+    struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
+    USHORT current_port = htons(ip_name->sin_port);
+    USHORT new_port = 0;
+    if (_tcp_port_override.Lookup(current_port, new_port) && new_port) {
+      new_port = htons(new_port);
+      ip_name->sin_port = new_port;
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

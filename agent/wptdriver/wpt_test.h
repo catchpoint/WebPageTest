@@ -128,10 +128,11 @@ public:
   bool  Done();
   void  OverrideDNSName(CString& name);
   ULONG OverrideDNSAddress(CString& name);
+  void  OverridePort(const struct sockaddr FAR * name, int namelen);
   bool  ModifyRequestHeader(CStringA& header) const;
   bool  BlockRequest(CString host, CString object);
   void  CollectData();
-  void CollectDataDone();
+  void  CollectDataDone();
   virtual void  ReportData();
   void Lock();
   void Unlock();
@@ -238,4 +239,6 @@ protected:
   CAtlList<HttpHeaderValue> _add_headers;
   CAtlList<HttpHeaderValue> _set_headers;
   CAtlList<HttpHeaderValue> _override_hosts;
+
+  CAtlMap<USHORT, USHORT> _tcp_port_override;
 };

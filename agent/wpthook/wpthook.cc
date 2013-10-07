@@ -55,7 +55,7 @@ WptHook::WptHook(void):
   ,schannel_hook_(sockets_, test_state_)
   ,wininet_hook_(sockets_, test_state_, test_)
   ,gdi_hook_(test_state_)
-  ,sockets_(requests_, test_state_)
+  ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
             dev_tools_, trace_)

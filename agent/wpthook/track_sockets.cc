@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "requests.h"
 #include "test_state.h"
+#include "../wptdriver/wpt_test.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 
@@ -42,10 +43,12 @@ bool SocketInfo::IsLocalhost() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TrackSockets::TrackSockets(Requests& requests, TestState& test_state):
+TrackSockets::TrackSockets(Requests& requests,
+    TestState& test_state, WptTest& test):
   _nextSocketId(1)
   , _requests(requests)
-  , _test_state(test_state) {
+  , _test_state(test_state)
+  , _test(test) {
   InitializeCriticalSection(&cs);
   _openSockets.InitHashTable(257);
   _socketInfo.InitHashTable(257);
@@ -104,8 +107,10 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     localhost = info->IsLocalhost();
     LeaveCriticalSection(&cs);
 
-    if (!localhost)
+    if (!localhost) {
+      _test.OverridePort(name, namelen);
       _test_state.ActivityDetected();
+    }
   }
 }
 
