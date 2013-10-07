@@ -78,37 +78,32 @@ done
 
 declare agent="$wpt_root/agent/js"
 
-# Use the latest WebDriver javascript
-declare -a wdjs_dirs=("${wpt_root}/lib/webdriver/javascript/node-"*)
-declare wdjs_dir="${wdjs_dirs[${#wdjs_dirs[@]}-1]}"
-export NODE_PATH="${agent}:${agent}/src:${wdjs_dir}"
-echo "NODE_PATH=$NODE_PATH"
+export NODE_PATH="${agent}:${agent}/src"
 
-case "${browser}" in 
+# Find the latest platform-specific chromedriver
+declare -a chromedrivers=( \
+  "$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
+declare chromedriver="${chromedrivers[@]:+${chromedrivers[${#chromedrivers[@]}-1]}}"
+
+case "${browser}" in
   chrome | osx)
-    # Find the latest, platform-specific Selenium and chromedriver
-    declare -a selenium_jars=("${wpt_root}/lib/webdriver/java/selenium-standalone-"*.jar)
-    declare selenium_jar="${selenium_jars[@]:+${selenium_jars[${#selenium_jars[@]}-1]}}"
-    declare -a chromedrivers=( \
-      "$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
-    declare chromedriver="${chromedrivers[@]:+${chromedrivers[${#chromedrivers[@]}-1]}}"
     # Select chrome binary
     declare chrome=
     if [[ "$browser" = "osx" ]]; then
       declare -a chromes=( \
          "/Applications/Google Chrome"*".app/Contents/MacOS/Google Chrome"*)
-      chrome="${chromes[@]:+${chromes[${#chromes[@]}-1]}}"
+      chrome="${chromes[@]:+${chromes[0]}}"
     fi
     declare -a browser_args=( \
         --browser 'browser_local_chrome.BrowserLocalChrome' \
         ${chromedriver:+--chromedriver "${chromedriver}"} \
-        ${selenium_jar:+--seleniumJar "${selenium_jar}"} \
         ${chrome:+--chrome "${chrome}"});;
   android:*)
     declare deviceSerial="${browser#*:}"
     declare -a browser_args=( \
         --browser 'browser_android_chrome.BrowserAndroidChrome' \
         --deviceSerial "$deviceSerial" \
+        ${chromedriver:+--chromedriver "${chromedriver}"} \
         --captureDir "$wpt_root/lib/capture");;
   ios:*)
     declare deviceSerial="${browser#*:}"

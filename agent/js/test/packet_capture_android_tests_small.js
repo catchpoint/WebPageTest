@@ -32,7 +32,7 @@ var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -45,7 +45,7 @@ var webdriver = require('webdriver');
 describe('packet_capture_android small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -104,10 +104,11 @@ describe('packet_capture_android small', function() {
           proc.stdout.emit('data', stdout);
         }.bind(this), 1);
       }
+      return false;
     };
 
     pcap.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
         ['shell', 'su', '0', 'sh', '-c', 'kill -INT 123'],
@@ -152,20 +153,21 @@ describe('packet_capture_android small', function() {
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
-      if (ret === undefined) {
-        if (/adb$/.test(command) &&
-            args.some(function(arg) { return arg === 'ls'; }) &&
-            args.some(new RegExp().test.bind(/^\/system[\/\w\*]+\/tcpdump$/))) {
-          global.setTimeout(function() {
-            proc.stdout.emit('data', '0');
-          }, 1);
-        }
+      if (ret !== undefined) {
+        return ret;
       }
-      return ret;
+      if (/adb$/.test(command) &&
+          args.some(function(arg) { return arg === 'ls'; }) &&
+          args.some(new RegExp().test.bind(/^\/system[\/\w\*]+\/tcpdump$/))) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', '0');
+        }, 1);
+      }
+      return false;
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 24);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 24);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
@@ -191,22 +193,23 @@ describe('packet_capture_android small', function() {
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
-      if (ret === undefined) {
-        if (/adb$/.test(command) &&
-            args.some(function(arg) { return arg === 'ls'; }) &&
-            args.some(function(arg) {
-                return arg === '/data/local/tmp/tcpdump';
-              })) {
-          global.setTimeout(function() {
-            proc.stdout.emit('data', '1');
-          }.bind(this), 1);
-        }
+      if (ret !== undefined) {
+        return ret;
       }
-      return ret;
+      if (/adb$/.test(command) &&
+          args.some(function(arg) { return arg === 'ls'; }) &&
+          args.some(function(arg) {
+              return arg === '/data/local/tmp/tcpdump';
+            })) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', '1');
+        }.bind(this), 1);
+      }
+      return false;
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 42);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 42);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.

@@ -32,7 +32,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils');
 var traffic_shaper = require('traffic_shaper');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -42,10 +42,10 @@ var webdriver = require('webdriver');
  * 1) sinon's fake timers -- timer callbacks triggered explicitly via tick().
  * 2) stubbing out anything else with async callbacks, e.g. process or network.
  */
-describe('traffic shaper small', function() {
+describe('traffic_shaper small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -88,17 +88,18 @@ describe('traffic shaper small', function() {
           isAfter = true;
         }
       }
+      return false;
     };
     test_utils.stubCreateServer(sandbox);
 
     var ts = new traffic_shaper.TrafficShaper(app, {deviceAddr: deviceAddr});
     ts.scheduleStart(bwIn, bwOut, latency, plr);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
     should.equal('[]', app.getSchedule());
     spawnStub.assertCalls.apply(spawnStub, expectedStartCalls);
 
     ts.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 10);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     should.equal('[]', app.getSchedule());
     spawnStub.assertCalls.apply(spawnStub, expectedStopCalls);
   }

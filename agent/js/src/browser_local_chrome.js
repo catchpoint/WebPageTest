@@ -27,12 +27,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var logger = require('logger');
-var process_utils = require('process_utils');
+var browser_base = require('browser_base');
+var util = require('util');
+var webdriver = require('selenium-webdriver');
+
+var CHROME_FLAGS = [
+    '--disable-fre', '--enable-benchmarking', '--metrics-recording-only'
+  ];
+
 
 /**
  * Desktop Chrome browser.
  *
- * @param {webdriver.promise.Application} app the Application for scheduling.
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object.<string>} args browser options with string values:
  *    chromedriver
  *    chrome= Chrome binary
@@ -41,116 +48,83 @@ var process_utils = require('process_utils');
  */
 function BrowserLocalChrome(app, args) {
   'use strict';
+  browser_base.BrowserBase.call(this, app);
   logger.info('BrowserLocalChrome(%s, %s)', args.chromedriver, args.chrome);
-  this.app_ = app;
-  this.chromedriver_ = args.chromedriver;
+  this.chromedriver_ = args.chromedriver;  // Requires chromedriver 2.x.
   this.chrome_ = args.chrome;
-  this.serverPort_ = 4444;
-  this.serverUrl_ = undefined;
-  this.devToolsPort_ = 1234;
-  this.devToolsUrl_ = undefined;
-  this.childProcess_ = undefined;
-  this.childProcessName_ = undefined;
+  this.serverPort_ = 4444;  // Chromedriver listen port.
+  this.serverUrl_ = undefined;  // WebDriver server URL for WebDriver tests.
+  this.devToolsPort_ = 1234;  // If running without chromedriver.
+  this.devToolsUrl_ = undefined;    // If running without chromedriver.
 }
-/** Public class. */
+util.inherits(BrowserLocalChrome, browser_base.BrowserBase);
+/** @constructor */
 exports.BrowserLocalChrome = BrowserLocalChrome;
 
 /**
- * Start Chrome as a direct chromedriver, which supports sandboxed scripts.
+ * Starts chromedriver, 2.x required.
  *
  * @param {Object} browserCaps capabilities to be passed to Builder.build():
  *    #param {string} browserName must be 'chrome'.
  */
 BrowserLocalChrome.prototype.startWdServer = function(browserCaps) {
   'use strict';
-  var serverCommand, serverArgs;
-  if ('chrome' === browserCaps.browserName) {
-    if (!this.chromedriver_) {
-      throw new Error('Must set chromedriver before starting it');
-    }
-    // Run chromedriver directly.
-    serverCommand = this.chromedriver_;
-    serverArgs = ['-port=' + this.serverPort_];
-    browserCaps['chrome.switches'] = [
-      '-remote-debugging-port=' + this.devToolsPort_,
-      '--enable-benchmarking'  // Suppress randomized field trials.
-    ];
-    if (this.chrome_) {
-      browserCaps['chrome.binary'] = this.chrome_;
-    }
-  } else {
+  var requestedBrowserName = browserCaps[webdriver.Capability.BROWSER_NAME];
+  if (webdriver.Browser.CHROME !== requestedBrowserName) {
     throw new Error('BrowserLocalChrome called with unexpected browser ' +
-        browserCaps.browserName);
+        requestedBrowserName);
   }
-  // TODO set serverUrl after startChildProcess_ succeeds
-  this.serverUrl_ = 'http://localhost:' + this.serverPort_;
-  this.startChildProcess_(serverCommand, serverArgs, 'WD server');
+  if (!this.chromedriver_) {
+    throw new Error('Must set chromedriver before starting it');
+  }
+
+  var serverCommand = this.chromedriver_;
+  var serverArgs = ['--port=' + this.serverPort_];
+  if (logger.isLogging(logger.LEVELS.extra)) {
+    serverArgs.push('--verbose');
+  }
+  browserCaps.chromeOptions = {args: CHROME_FLAGS.slice()};
+  if (this.chrome_) {
+    browserCaps.chromeOptions.binary = this.chrome_;
+  }
+  this.startChildProcess(serverCommand, serverArgs, 'WD server');
+  // Make sure we set serverUrl_ only after the child process start success.
+  this.app_.schedule('Set WD server URL', function() {
+    this.serverUrl_ = 'http://localhost:' + this.serverPort_;
+  }.bind(this));
 };
 
 /**
- * Start the standard non-webdriver Chrome, which can't run scripts.
+ * Starts the standard non-webdriver Chrome, which can't run scripts.
  */
 BrowserLocalChrome.prototype.startBrowser = function() {
   'use strict';
   // TODO(klm): clean profile, see how ChromeDriver does it.
-  this.startChildProcess_(this.chrome_ || 'chrome', [
-      '-remote-debugging-port=' + this.devToolsPort_,
-      '--enable-benchmarking'  // Suppress randomized field trials.
-    ], 'Chrome');
+  this.startChildProcess(this.chrome_ || 'chrome',
+      CHROME_FLAGS.concat('-remote-debugging-port=' + this.devToolsPort_),
+      'Chrome');
+  // Make sure we set devToolsUrl_ only after the child process start success.
+  this.app_.schedule('Set DevTools URL', function() {
+    this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
+  }.bind(this));
 };
 
 /**
- * @param {string} command process name.
- * @param {Array} args process args.
- * @param {string} name description for debugging.
- * @private
+ * Callback when the child chromedriver process exits.
+ * @override
  */
-BrowserLocalChrome.prototype.startChildProcess_ = function(
-    command, args, name) {
+BrowserLocalChrome.prototype.onChildProcessExit = function() {
   'use strict';
-  // We expect startWdServer or startBrowser, but not both!
-  if (this.childProcess_) {
-    throw new Error('Internal error: WD server already running');
-  }
-  process_utils.scheduleSpawn(this.app_, command, args).then(
-      function(proc) {
-    this.childProcessName_ = name;
-    this.childProcess_ = proc;
-    proc.on('exit', function(code, signal) {
-      logger.info('Chrome EXIT code %s signal %s', code, signal);
-      this.childProcess_ = undefined;
-      this.serverUrl_ = undefined;
-      this.devToolsUrl_ = undefined;
-    }.bind(this));
-    proc.stdout.on('data', function(data) {
-      logger.info('Chrome STDOUT: %s', data);
-    });
-    // WD STDERR only gets log level warn because it outputs a lot of harmless
-    // information over STDERR
-    proc.stderr.on('data', function(data) {
-      logger.warn('Chrome STDERR: %s', data);
-    });
-    this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
-  }.bind(this));
+  this.serverUrl_ = undefined;
+  this.devToolsUrl_ = undefined;
 };
 
 /** Kill. */
 BrowserLocalChrome.prototype.kill = function() {
   'use strict';
-  if (this.childProcess_) {
-    process_utils.signalKill(this.childProcess_, this.childProcessName_);
-  } else {
-    logger.debug('%s process already unset', this.childProcessName_);
-  }
-  this.childProcess_ = undefined;
-  this.serverUrl_ = undefined;
+  this.killChildProcessIfNeeded();
   this.devToolsUrl_ = undefined;
-};
-
-/** @return {boolean} */
-BrowserLocalChrome.prototype.isRunning = function() {
-  'use strict';
-  return undefined !== this.childProcess_;
+  this.serverUrl_ = undefined;
 };
 
 /** @return {string} WebDriver Server URL. */
@@ -170,8 +144,8 @@ BrowserLocalChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
   return this.app_.schedule('get capabilities', function() {
     return {
-        webdriver: (!!this.chromedriver_),
-        'wkrdp.Page.captureScreenshot': true,  // TODO(klm): check before-26.
+        webdriver: !!this.chromedriver_,
+        'wkrdp.Page.captureScreenshot': true,
         'wkrdp.Network.clearBrowserCache': true,
         'wkrdp.Network.clearBrowserCookies': true
       };

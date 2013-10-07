@@ -38,7 +38,7 @@ var EXIT_TIMEOUT = 5000;
 
 
 /**
- * @param {webdriver.promise.Application=} app the scheduler.
+ * @param {webdriver.promise.ControlFlow=} app the scheduler.
  * @param {Object.<string>} args options with string values:
  *   #param {string} deviceSerial  the device to run tcpdump on.
  *   #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
@@ -60,12 +60,11 @@ function PacketCaptureAndroid(app, args) {
 exports.PacketCaptureAndroid = PacketCaptureAndroid;
 
 /**
- * @return {webdriver.promise.Promise} resolve({boolean} isSupported).
  * @private
  */
 PacketCaptureAndroid.prototype.schedulePrepare_ = function() {
   'use strict';
-  return this.app_.schedule('isSupported', function() {
+  this.app_.schedule('isSupported', function() {
     if (this.localTcpdumpBinary_ !== undefined) {
       process_utils.scheduleFunction(this.app_, 'Check local tcpdump',
           fs.exists, this.localTcpdumpBinary_).then(function(exists) {

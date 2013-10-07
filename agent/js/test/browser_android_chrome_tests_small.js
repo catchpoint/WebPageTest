@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var adb = require('adb');
 var browser_android_chrome = require('browser_android_chrome');
 var fs = require('fs');
 var process_utils = require('process_utils');
@@ -34,7 +33,7 @@ var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
 var video_hdmi = require('video_hdmi');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -47,12 +46,11 @@ var webdriver = require('webdriver');
 describe('browser_android_chrome small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
-  process_utils.injectWdAppLogging('WD app', app);
-
   var sandbox;
+  var app;
   var spawnStub;
   var serverStub;
+  var chromedriver = '/gaga/chromedriver-v2.4';
   var chromeApk = '/gaga/Chrome.apk';
   var serial = 'GAGA123';
   var videoCard = '2';
@@ -60,12 +58,12 @@ describe('browser_android_chrome small', function() {
   /**
    * @param {Object} var_args
    */
-  function assertAdbCall(var_args) { // jshint unused:false
+  function assertAdbCall(var_args) {  // jshint unused:false
     spawnStub.assertCall.apply(spawnStub, (0 === arguments.length ? [] :
         ['adb', '-s', serial].concat(Array.prototype.slice.call(arguments))));
   }
 
-  function assertAdbCalls(var_args) { // jshint unused:false
+  function assertAdbCalls(var_args) {  // jshint unused:false
     var i;
     for (i = 0; i < arguments.length; i += 1) {
       assertAdbCall.apply(undefined, arguments[i]);
@@ -76,9 +74,15 @@ describe('browser_android_chrome small', function() {
     sandbox = sinon.sandbox.create();
 
     test_utils.fakeTimers(sandbox);
-    app.reset();  // We reuse the app across tests, clean it up.
+    // Create a new ControlFlow for each test.
+    app = new webdriver.promise.ControlFlow();
+    webdriver.promise.setDefaultFlow(app);
+    process_utils.injectWdAppLogging('browser_android', app);
 
     spawnStub = test_utils.stubOutProcessSpawn(sandbox);
+    spawnStub.callback = function(proc, command) {
+      return (/chromedriver/).test(command);  // Keep alive.
+    };
     serverStub = test_utils.stubCreateServer(sandbox);
     sandbox.stub(fs, 'exists', function(path, cb) { cb(true); });
     sandbox.stub(fs, 'unlink', function(path, cb) { cb(); });
@@ -91,21 +95,6 @@ describe('browser_android_chrome small', function() {
     // Call unfakeTimers before verifyAndRestore, which may throw.
     test_utils.unfakeTimers(sandbox);
     sandbox.verifyAndRestore();
-  });
-
-  it('should remove \\r\'s from adb binout', function() {
-    // unit tests as pairs of hexIn: hexOut
-    var in2out = {'12': '12', '': '', '0d': '0d', '0a': '0a', '0a0d': '0a0d',
-        '0d0a': '0a', '0d0a0d0a' : '0a0a', '70d0a6': '70d0a6', 'ab0d': 'ab0d',
-        '120d0a34': '120a34', '0d0a0d0aff0d0a0d0a': '0a0aff0a0a',
-        '120d0a340d0a560d780d0d0a90': '120a340a560d780d0a90'
-    };
-    var adb_ = new adb.Adb();
-    var hexIn;
-    for (hexIn in in2out) {
-      var hexOut = adb_.dos2unix(new Buffer(hexIn, 'hex')).toString('hex');
-      should.equal(hexOut, in2out[hexIn], hexIn);
-    }
   });
 
   it('should install on first run, start, get killed', function() {
@@ -125,16 +114,15 @@ describe('browser_android_chrome small', function() {
   });
 
   it('should record video with the correct device type', function() {
-    // Simulate adb shell getprop ro.product.device -> shmantra
+    // Simulate adb shell getprop ro.product.device -> shmantra.
     spawnStub.callback = function(proc, command, args) {
       if (/adb$/.test(command) && -1 !== args.indexOf('ro.product.device')) {
         global.setTimeout(function() {
           proc.stdout.emit('data', 'shmantra');
         }, 1);
         return false;
-      } else {
-        return true; // keep capture alive
       }
+      return true;  // Keep capture alive.
     };
     var videoStart = sandbox.stub(
         video_hdmi.VideoHdmi.prototype, 'scheduleStartVideoRecording');
@@ -144,7 +132,7 @@ describe('browser_android_chrome small', function() {
         {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
         videoCard: videoCard});
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     test_utils.assertStringsMatch(
@@ -153,15 +141,74 @@ describe('browser_android_chrome small', function() {
     should.ok(videoStop.notCalled);
 
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 4);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     should.ok(videoStop.calledOnce);
   });
 
-  //
-  // BrowserAndroidChrome wrapper:
-  //
+  it('should start and kill chromedriver', function() {
+    browser = new browser_android_chrome.BrowserAndroidChrome(app, {
+        deviceSerial: serial,
+        runNumber: 1,
+        chromedriver: chromedriver,
+        runTempDir: 'runtmp'
+      });
+    should.ok(!browser.isRunning());
+    browser.startWdServer({browserName: 'chrome'});
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 40);
+    should.equal('[]', app.getSchedule());
+    should.ok(browser.isRunning());
+    browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
+    should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
+    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    spawnStub.assertCall(chromedriver, /^\-port=\d+/);
+    var chromedriverProcess = spawnStub.secondCall.returnValue;
+    spawnStub.assertCall();
+
+    browser.kill();
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    should.equal('[]', app.getSchedule());
+    should.ok(!browser.isRunning());
+    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    spawnStub.assertCall();
+    should.equal(undefined, browser.getServerUrl());
+    should.equal(undefined, browser.getDevToolsUrl());
+    should.ok(chromedriverProcess.kill.calledOnce);
+  });
+
+  it('should take a screenshot', function() {
+    spawnStub.callback = function(proc, command, args) {
+      if (/adb$/.test(command) &&
+          args.some(new RegExp().test.bind(/STORAGE/))) {  // Find storage dir.
+        global.setTimeout(function() {
+          proc.stdout.emit('data', '/gagacard');
+        }, 1);
+      }
+      return false;
+    };
+    var screenshotCbSpy = sandbox.spy();
+    browser = new browser_android_chrome.BrowserAndroidChrome(app, {
+      deviceSerial: serial,
+      runNumber: 1,
+      chromedriver: chromedriver,
+      runTempDir: 'runtmp'
+    });
+    browser.scheduleTakeScreenshot('gaga').then(screenshotCbSpy);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+
+    should.ok(screenshotCbSpy.calledOnce);
+    ['runtmp/gaga.png'].should.eql(screenshotCbSpy.firstCall.args);
+    assertAdbCalls(
+        ['shell', /STORAGE/],  // Find storage dir.
+        ['shell', 'screencap', '-p', /^\/gagacard/],
+        ['pull', /^\/gagacard/, 'runtmp/gaga.png']);
+    assertAdbCall();
+  });
+
+  /*
+   * BrowserAndroidChrome wrapper:
+   */
 
   var args;
   var browser;
@@ -188,7 +235,7 @@ describe('browser_android_chrome small', function() {
         return (/^while true; do nc /.test(arg));
       }));
       ncProc = (isNetcat ? proc : ncProc);
-      return isNetcat; // keep alive
+      return isNetcat;  // Keep alive.
     };
 
     should.equal(undefined, browser);
@@ -197,7 +244,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 34);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 34);
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
@@ -205,15 +252,16 @@ describe('browser_android_chrome small', function() {
           ['install', '-r', chromeApk]);
     }
     if (args.pac) {
-      assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);
+      assertAdbCall('push', /^[^\/]+\.pac$/, /^\/.*\.pac$/);
     }
     assertAdbCall('shell', 'su', '-c', 'echo x');
     if (args.pac) {
       assertAdbCall('shell', 'su', '-c',
-          /^while true; do nc -l \d+ < \S+pac_body; done$/);
+          /^while true; do nc -l \d+ < \S+\.pac; done$/);
     }
-    var flags = ['--disable-fre', '--metrics-recording-only',
-       '--enable-remote-debugging'];
+    var flags = ['--disable-fre', '--enable-benchmarking',
+        '--metrics-recording-only', '--disable-geolocation',
+        '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
@@ -221,7 +269,7 @@ describe('browser_android_chrome small', function() {
         ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
             '\\" > /data/local/chrome-command-line'],
         ['shell', 'su', '-c',
-            'rm /data/data/com.google.android.apps.chrome_dev/files/tab*'],
+            'rm /data/data/com.android.chrome/files/tab*'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
     assertAdbCall();
@@ -237,12 +285,12 @@ describe('browser_android_chrome small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 5);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 5);
     should.equal('[]', app.getSchedule());
     should.ok(!browser.isRunning());
 
     if (args.pac) {
-      assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
+      assertAdbCall('shell', 'rm', /^\/.*\.pac$/);
     }
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     assertAdbCall();

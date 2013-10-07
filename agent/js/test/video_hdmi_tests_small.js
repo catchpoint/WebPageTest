@@ -31,7 +31,7 @@ var process_utils = require('process_utils');
 var should = require('should');
 var sinon = require('sinon');
 var test_utils = require('./test_utils.js');
-var webdriver = require('webdriver');
+var webdriver = require('selenium-webdriver');
 var video_hdmi = require('video_hdmi');
 
 
@@ -45,7 +45,7 @@ var video_hdmi = require('video_hdmi');
 describe('video_hdmi small', function() {
   'use strict';
 
-  var app = webdriver.promise.Application.getInstance();
+  var app = webdriver.promise.controlFlow();
   process_utils.injectWdAppLogging('WD app', app);
 
   var sandbox;
@@ -115,7 +115,7 @@ describe('video_hdmi small', function() {
     var video = new video_hdmi.VideoHdmi(app, videoCommand);
     should.equal('[]', app.getSchedule());
     video.scheduleStartVideoRecording(videoFile, serial, deviceType, videoCard);
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 30);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
     should.equal('[]', app.getSchedule());
     should.equal(2, killCount);
     processSpawnStub.assertCalls(
@@ -129,10 +129,10 @@ describe('video_hdmi small', function() {
 
     // Watch for IDLE -- make sure the wait for recording exit has finished.
     var idleSpy = sandbox.spy();
-    app.on(webdriver.promise.Application.EventType.IDLE, idleSpy);
+    app.on(webdriver.promise.ControlFlow.EventType.IDLE, idleSpy);
     should.equal('[]', app.getSchedule());
     video.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.Application.EVENT_LOOP_FREQUENCY * 20);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
     should.equal('[]', app.getSchedule());
     processSpawnStub.assertCalls(
         {0: 'ps'},
