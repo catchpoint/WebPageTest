@@ -1042,7 +1042,6 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
     foreach ($sortedEntries as $entind => $entry)
     {
         // See http://www.softwareishard.com/blog/har-12-spec/#entries
-
         $pageref = $entry['pageref'];
         $startedDateTime = $entry['startedDateTime'];
         $entryTime = $entry['time'];
@@ -1051,6 +1050,9 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         $cacheEnt = $entry['cache'];
         $timingsEnt = $entry['timings'];
 
+        if ($reqEnt['method'] == 'HEAD')
+          continue;
+                  
         // pcap2har doesn't set the server's IP address, so it may be unset:
         $reqIpAddr = arrayLookupWithDefault('serverIPAddress', $entry, null);
 
