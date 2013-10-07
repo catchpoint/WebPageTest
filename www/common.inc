@@ -53,7 +53,7 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 64);           // version of the sitewide css file
+define('VER_CSS', 65);           // version of the sitewide css file
 define('VER_JS', 30);            // version of the sitewide javascript file
 define('VER_JS_TEST', 27);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
