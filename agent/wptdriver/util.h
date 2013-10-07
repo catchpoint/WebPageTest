@@ -69,3 +69,5 @@ bool FileExists(CString file);
 bool  RegexMatch(CStringA str, CStringA regex);
 CStringA JSONEscape(CString src);
 CStringA JSONEscapeA(CStringA src);
+void QueryPerfCounter(__int64 &counter);
+void QueryPerfFrequency(__int64 &freq);

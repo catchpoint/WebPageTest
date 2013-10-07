@@ -272,8 +272,16 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    DWORD timeout = 30000;
+    DWORD timeout = 240000;
     InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, 
                       &timeout, sizeof(timeout));
     CString host, object;
     unsigned short port;
@@ -353,6 +361,18 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
               INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (internet) {
+      DWORD timeout = 240000;
+      InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
+                        &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
+                        &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
+                        &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
+                        &timeout, sizeof(timeout));
+      InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
+                        &timeout, sizeof(timeout));
+
       CString host, object;
       unsigned short port;
       DWORD secure_flag;

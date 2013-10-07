@@ -390,6 +390,12 @@ CString HttpGetText(CString url) {
                       &timeout, sizeof(timeout));
     InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, 
                       &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, 
+                      &timeout, sizeof(timeout));
     HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
                                 INTERNET_FLAG_NO_UI | 
@@ -428,8 +434,16 @@ DWORD HttpSaveFile(CString url, CString file) {
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    DWORD timeout = 30000;
+    DWORD timeout = 240000;
     InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT, 
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, 
                       &timeout, sizeof(timeout));
     HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
@@ -608,4 +622,22 @@ void TerminateProcessById(DWORD pid) {
     WaitForSingleObject(process, 120000);
     CloseHandle(process);
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void QueryPerfCounter(__int64 &counter) {
+  LARGE_INTEGER counter_struct;
+  counter_struct.QuadPart = 0;
+  QueryPerformanceCounter(&counter_struct);
+  counter = counter_struct.QuadPart;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void QueryPerfFrequency(__int64 &freq) {
+  LARGE_INTEGER freq_struct;
+  freq_struct.QuadPart = 0;
+  QueryPerformanceFrequency(&freq_struct);
+  freq = freq_struct.QuadPart;
 }
