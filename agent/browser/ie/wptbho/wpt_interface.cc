@@ -122,10 +122,6 @@ bool WptInterface::HttpGet(CString url, CString& response) {
     DWORD timeout = 30000;
     InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
                       &timeout, sizeof(timeout));
-    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                      &timeout, sizeof(timeout));
-    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
-                      &timeout, sizeof(timeout));
     InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
                       &timeout, sizeof(timeout));
     InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
@@ -165,12 +161,8 @@ bool WptInterface::HttpPost(CString url, const char * body) {
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    DWORD timeout = 1000;
+    DWORD timeout = 30000;
     InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
-                      &timeout, sizeof(timeout));
-    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                      &timeout, sizeof(timeout));
-    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
                       &timeout, sizeof(timeout));
     InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
                       &timeout, sizeof(timeout));
