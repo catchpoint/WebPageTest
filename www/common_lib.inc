@@ -1591,6 +1591,39 @@ function UnlockLocation($lock)
   }
 }
 
+function Lock($name) {
+  $lock = null;
+  if (strlen($name)) {
+    if( !is_dir('./tmp') )
+      mkdir('./tmp');
+    $lockFile = './tmp' . sha1($name) . '.lock';
+    $file = fopen( "./tmp/$location.lock", 'w',  false);
+    if( $file ) {
+      if( flock($file, LOCK_EX) ) {
+        $lock = array('lock' => $file, 'file' => $lockFile);
+      } else {
+        fclose($file);
+      }
+    }
+  }
+  return $lock;
+}
+
+function UnLock(&$lock) {
+  if( isset($lock) && is_array($lock) ) {
+    if (array_key_exists('lock', $lock) && $lock['lock']) {
+      flock($lock['lock'], LOCK_UN);
+      fclose($lock['lock']);
+    }
+    if (array_key_exists('file', $lock) &&
+        strlen($lock['file']) &&
+        is_file($lock['file'])) {
+      unlink($lock['file']);
+    }
+  }
+}
+
+
 /**
 * Load and sort the video frame files into an arrray
 * 

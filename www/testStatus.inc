@@ -314,11 +314,14 @@ function GetAppurifyStatus($id, $testPath, &$test) {
       if (!$completed) {
         if ($appurify->CheckTestRun($test, $run, $index, $testPath)) {
           if (array_key_exists('status', $run)) {
-            if ($run['status'] == 'in_progress' || $run['status'] == 'in-progress')
-              $started = true;
-            elseif ($run['status'] == 'scheduled')
-              $waiting = true;
-            else
+            if ($run['status'] == 'in_progress' ||
+                $run['status'] == 'in-progress') {
+              if (array_key_exists('detailed_status', $run) &&
+                  $run['detailed_status'] == 'queueing')
+                $waiting = true;
+              else
+                $started = true;
+            } else
               $waiting = true;
           }
           if (array_key_exists('completed', $run) && $run['completed']) {
@@ -330,36 +333,36 @@ function GetAppurifyStatus($id, $testPath, &$test) {
           break;
         }
       }
-      if ($ok) {
-        if (!$completed)
-          $all_complete = false;
-        if ($all_complete) {
-          $now = time();
-          $test['completed'] = $now;
-          gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
-          $ini = file_get_contents("$testPath/testinfo.ini");
-          $date = gmdate("m/d/y G:i:s", $now);
-
-          // update the completion time if it isn't already set
-          if (!strpos($ini, 'completeTime')) {
-              $complete = "[test]\r\ncompleteTime=$date";
-              $out = str_replace('[test]', $complete, $ini);
-              file_put_contents("$testPath/testinfo.ini", $out);
-          }
-          $ret['statusCode'] = 200;
-          $ret['statusText'] = 'Test Complete';
-          $ret['completeTime'] = $date;
-          SendAsyncRequest("/work/postprocess.php?test=$id");
-        } elseif ($started) {
-          $ret['statusCode'] = 100;
-          $ret['statusText'] = 'Test Started';
-        } elseif ($waiting) {
-          $ret['statusCode'] = 101;
-          $ret['statusText'] = 'Test Pending';
-        }
-      }
-      if ($dirty)
+      if (!$completed)
+        $all_complete = false;
+    }
+    if ($dirty)
+      gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+    if ($ok) {
+      if ($all_complete) {
+        $now = time();
+        $test['completed'] = $now;
         gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+        $ini = file_get_contents("$testPath/testinfo.ini");
+        $date = gmdate("m/d/y G:i:s", $now);
+
+        // update the completion time if it isn't already set
+        if (!strpos($ini, 'completeTime')) {
+            $complete = "[test]\r\ncompleteTime=$date";
+            $out = str_replace('[test]', $complete, $ini);
+            file_put_contents("$testPath/testinfo.ini", $out);
+        }
+        $ret['statusCode'] = 200;
+        $ret['statusText'] = 'Test Complete';
+        $ret['completeTime'] = $date;
+        SendAsyncRequest("/work/postprocess.php?test=$id");
+      } elseif ($started) {
+        $ret['statusCode'] = 100;
+        $ret['statusText'] = 'Test Started';
+      } elseif ($waiting) {
+        $ret['statusCode'] = 101;
+        $ret['statusText'] = 'Test Pending';
+      }
     }
   }
   return $ret;

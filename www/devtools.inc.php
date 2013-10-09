@@ -718,6 +718,8 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
         $messages = json_decode($raw, true);
         $START_MESSAGE = '{"message":"WPT start"}';
         $STOP_MESSAGE = '{"message":"WPT stop"}';
+        $startTime = null;
+        $endTime = null;
         if (strpos($raw, $START_MESSAGE) !== false)
           $endTime = 0;
         unset($raw);

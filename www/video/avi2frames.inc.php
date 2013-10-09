@@ -156,7 +156,7 @@ function CopyAVIFrame($src, $dest) {
 
 function IsBlankAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert \"images/video_white.png\" \\( \"$file\" -crop +0+100 -shave 5x5 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert \"images/video_white.png\" \\( \"$file\" -shave 5x125 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -173,7 +173,7 @@ function IsBlankAVIFrame($file, $videoDir) {
 */
 function IsOrangeAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -crop +0+100 -shave 5x5 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -shave 5x125 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -197,7 +197,7 @@ function EliminateDuplicateAVIFiles($videoDir) {
     if ($currentMD5 !== false && $currentMD5 == $previousMD5)    
       $duplicate = true;
     elseif (isset($previousFile)) {
-      $command = "convert  \"$previousFile\" \"$file\" -crop +0+100 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+      $command = "convert  \"$previousFile\" \"$file\" -crop +0+125 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
       $differentPixels = shell_exec($command);
       if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
         $duplicate = true;

@@ -16,11 +16,13 @@ class Appurify{
       curl_setopt($this->curl, CURLOPT_MAXREDIRS, 10);
       curl_setopt($this->curl, CURLOPT_TIMEOUT, 600);
       curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
+/*
       $log = fopen("./log/appurify-curl-post.txt", 'a+');
       if ($log) {
         curl_setopt($this->curl, CURLOPT_VERBOSE, true);
         curl_setopt($this->curl, CURLOPT_STDERR, $log);
       }
+*/      
     }
     $this->GenerateToken();
   }
@@ -90,7 +92,7 @@ class Appurify{
                                 array('name' => 'source',
                                       'filename' => 'browsertest.conf',
                                       'data' => "[appurify]\r\n" .
-                                                "profiler=0\r\n" .
+                                                "profiler=1\r\n" .
                                                 "videocapture=0\r\n" .
                                                 "[browser_test]\r\n" .
                                                 "url={$test['url']}\r\n" .
@@ -130,32 +132,34 @@ class Appurify{
   public function CheckTestRun(&$test, &$run, $index, $testPath) {
     $ret = false;
     if (array_key_exists('id', $run)) {
+      $lock = Lock($testPath);
       $file = "$testPath/{$index}_appurify.zip";
       if (!is_file($file)) {
         $status = $this->Get('https://live.appurify.com/resource/tests/check/', array('test_run_id' => $run['id']));
         if ($status !== false &&
             is_array($status) &&
             array_key_exists('status', $status)) {
+          logMsg(json_encode($status), "$testPath/{$index}_appurify_status.txt", true);
           $run['status'] = $status['status'];
+          if (array_key_exists('detailed_status', $status))
+            $run['detailed_status'] = $status['detailed_status'];
           if ($status['status'] == 'complete') {
-            if (array_key_exists('results', $status) &&
-                is_array($status['results']) &&
-                array_key_exists('output', $status['results']) &&
-                preg_match('/Video start time: (?P<video>[0-9\.]+)/i', $status['results']['output'], $matches) &&
-                is_array($matches) &&
-                array_key_exists('video', $matches))
-              $run['video_start'] = floatval($matches['video']);
+            set_time_limit(1200);
+            ignore_user_abort(true);
             $this->GetFile('https://live.appurify.com/resource/tests/result/', $file, array('run_id' => $run['id']));
           }
           $ret = true;
         }
       }
       if (is_file($file)) {
+        set_time_limit(1200);
+        ignore_user_abort(true);
         $ret = true;
         if ($this->ProcessResult($test, $run, $index, $testPath))
           $run['completed'] = true;
         //unlink($file);
       }
+      UnLock($lock);
     }
     return $ret;
   }
@@ -174,9 +178,6 @@ class Appurify{
     }
     if (isset($tempdir) && is_dir($tempdir)) {
       $ok = true;
-      $this->ProcessScreenShot($test, $tempdir, $testPath, $index);
-      $this->ProcessVideo($test, $tempdir, $testPath, $index);
-      $this->ProcessPcap($test, $tempdir, $testPath, $index);
       $devtools = array();
       $files = glob("$tempdir/appurify_results/WSData*");
       if (isset($files) && is_array($files) && count($files)) {
@@ -192,6 +193,9 @@ class Appurify{
             unlink("$testPath/{$index}_devtools.json");
         }
       }
+      $this->ProcessScreenShot($test, $tempdir, $testPath, $index);
+      $this->ProcessPcap($test, $tempdir, $testPath, $index);
+      $this->ProcessVideo($test, $tempdir, $testPath, $index);
       delTree($tempdir);
     }
     return $ok;
