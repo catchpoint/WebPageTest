@@ -63,10 +63,11 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,no_gdi_(false)
   ,gdi_only_(false)
   ,navigated_(false)
-  ,_started(false) {
+  ,_started(false)
+  ,received_data_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
-  _check_render_event = CreateEvent(NULL, FALSE, FALSE, NULL);
+  _check_render_event = CreateEvent(NULL, TRUE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
@@ -147,7 +148,6 @@ void TestState::Reset(bool cascade) {
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
     navigating_ = false;
-    _pre_render_paints.RemoveAll();
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -515,39 +515,27 @@ void TestState::GrabVideoFrame(bool force) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::PaintEvent(int x, int y, int width, int height) {
-    _screen_updated = true;
-    if (width || height) {
-      if (_render_start.QuadPart) {
-        bool valid = true;
-        if (_screen_capture.IsViewportSet()) {
-          int left = max(x - _screen_capture._viewport.left, 0);
-          int top = max(y - _screen_capture._viewport.top, 0);
-          int right = max(min(x + width, _screen_capture._viewport.right)
-                          - _screen_capture._viewport.left, 0);
-          int bottom = max(min(y + height, _screen_capture._viewport.bottom)
-                           - _screen_capture._viewport.top, 0);
-          x = left;
-          y = top;
-          width = right - left;
-          height = bottom - top;
-          if (width <= 0 || height <= 0)
-            valid = false;
-        }
-        if (valid) {
-          _dev_tools.AddPaintEvent(x, y, width, height);
-        }
-      } else {
-        RECT paint_rect;
-        paint_rect.left = x;
-        paint_rect.top = y;
-        paint_rect.right = x + width;
-        paint_rect.bottom = y + height;
-        EnterCriticalSection(&_data_cs);
-        _pre_render_paints.AddTail(paint_rect);
-        LeaveCriticalSection(&_data_cs);
-      }
+  if (received_data_) {
+    bool valid = true;
+    if (width && height && _screen_capture.IsViewportSet()) {
+      int left = max(x - _screen_capture._viewport.left, 0);
+      int top = max(y - _screen_capture._viewport.top, 0);
+      int right = max(min(x + width, _screen_capture._viewport.right)
+                      - _screen_capture._viewport.left, 0);
+      int bottom = max(min(y + height, _screen_capture._viewport.bottom)
+                        - _screen_capture._viewport.top, 0);
+      x = left;
+      y = top;
+      width = right - left;
+      height = bottom - top;
+      if (width <= 0 || height <= 0)
+        valid = false;
     }
-    CheckStartRender();
+    if (valid) {
+      _screen_updated = true;
+      CheckStartRender();
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -620,24 +608,14 @@ void TestState::RenderCheckThread() {
 
       if (found) {
         _render_start.QuadPart = now.QuadPart;
-        EnterCriticalSection(&_data_cs);
-        while (!_pre_render_paints.IsEmpty()) {
-          RECT rect = _pre_render_paints.RemoveHead();
-          PaintEvent(rect.left, rect.top,
-                     rect.right - rect.left,
-                     rect.bottom - rect.top);
-        }
-        LeaveCriticalSection(&_data_cs);
         _screen_capture._captured_images.AddTail(captured_img);
       } else {
         captured_img.Free();
-        EnterCriticalSection(&_data_cs);
-        _pre_render_paints.RemoveAll();
-        LeaveCriticalSection(&_data_cs);
       }
 
       _screen_capture.Unlock();
     }
+    ResetEvent(_check_render_event);
   }
 }
 

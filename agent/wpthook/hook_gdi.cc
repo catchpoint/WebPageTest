@@ -150,14 +150,14 @@ void CGDIHook::Init() {
   if (!pHook)
     pHook = this;
 
-  EndPaint_ = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
-  ReleaseDC_ = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
+//  EndPaint_ = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+//  ReleaseDC_ = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
   SetWindowTextA_ = hook.createHookByName("user32.dll", "SetWindowTextA", 
                                           SetWindowTextA_Hook);
   SetWindowTextW_ = hook.createHookByName("user32.dll", "SetWindowTextW", 
                                           SetWindowTextW_Hook);
-  InvalidateRect_ = hook.createHookByName("user32.dll", "InvalidateRect", 
-                                          InvalidateRect_Hook);
+//  InvalidateRect_ = hook.createHookByName("user32.dll", "InvalidateRect", 
+//                                          InvalidateRect_Hook);
 //  InvalidateRgn_ = hook.createHookByName("user32.dll", "InvalidateRgn", 
 //                                         InvalidateRgn_Hook);
   DrawTextA_ = hook.createHookByName("user32.dll", "DrawTextA", 
@@ -186,21 +186,23 @@ void CGDIHook::SendPaintEvent(int x, int y, int width, int height) {
   y = max(y,0);
   height = max(height,0);
   width = max(width,0);
-  if (!test_state_._exit && test_state_._active)
-    test_state_.PaintEvent(x, y, width, height);
-
   if (test_state_.gdi_only_)
     PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
                 MAKEWPARAM(x,y), MAKELPARAM(width, height));
+  else if (!test_state_._exit && test_state_._active)
+    test_state_.PaintEvent(x, y, width, height);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool CGDIHook::IsDocumentWindow(HWND hWnd) {
   bool is_document = false;
-  if (!document_windows_.Lookup(hWnd, is_document)) {
-    is_document = IsBrowserDocument(hWnd);
-    document_windows_.SetAt(hWnd, is_document);
+
+  if (test_state_.gdi_only_ || (!test_state_._exit && test_state_._active)) {
+    if (!document_windows_.Lookup(hWnd, is_document)) {
+      is_document = IsBrowserDocument(hWnd);
+      document_windows_.SetAt(hWnd, is_document);
+    }
   }
 
   return is_document;
@@ -223,7 +225,7 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
 
   if (EndPaint_)
     ret = EndPaint_(hWnd, lpPaint);
-
+/*
   if (IsDocumentWindow(hWnd)) {
     WORD x = 0, y = 0, width = 0, height = 0;
     if (lpPaint) {
@@ -234,6 +236,7 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
     }
     SendPaintEvent(x, y, width, height);
   }
+*/
 
   return ret;
 }
@@ -247,11 +250,12 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
   if( ReleaseDC_ )
     ret = ReleaseDC_(hWnd, hDC);
 
+/*
   if (!wpt_capturing_screen && !test_state_._exit && test_state_._active && 
       IsDocumentWindow(hWnd)) {
-    test_state_._screen_updated = true;
-    test_state_.CheckStartRender();
+    SendPaintEvent(0, 0, 0, 0);
   }
+*/
 
   return ret;
 }
@@ -301,6 +305,7 @@ BOOL CGDIHook::InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase) {
   BOOL ret = false;
   if (InvalidateRect_)
     ret = InvalidateRect_(hWnd, lpRect, bErase);
+/*
   if (IsDocumentWindow(hWnd)) {
     WORD x = 0, y = 0, width = 0, height = 0;
     if (lpRect) {
@@ -309,8 +314,11 @@ BOOL CGDIHook::InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase) {
       width = (WORD)abs(lpRect->right - lpRect->left);
       height = (WORD)abs(lpRect->bottom - lpRect->top);
     }
+    CStringA buff;
+    buff.Format("InvalidateRect - %d,%d : %dx%d", x, y, width, height);
     SendPaintEvent(x, y, width, height);
   }
+*/
   return ret;
 }
 

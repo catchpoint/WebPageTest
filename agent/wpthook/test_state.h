@@ -158,6 +158,7 @@ public:
   bool no_gdi_;
   bool gdi_only_;
   UINT paint_msg_;
+  bool received_data_;
 
   HWND  _frame_window;
   HWND  _document_window;
@@ -191,7 +192,6 @@ private:
   ULARGE_INTEGER _last_cpu_user;
   DWORD _video_capture_count;
   LARGE_INTEGER  _last_video_time;
-  CAtlList<RECT> _pre_render_paints;
   FILETIME      _start_cpu_time;
   FILETIME      _doc_cpu_time;
   FILETIME      _end_cpu_time;

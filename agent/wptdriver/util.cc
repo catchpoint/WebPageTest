@@ -168,15 +168,15 @@ void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove) {
 
 
 /*-----------------------------------------------------------------------------
-  Recursively check to see if the given window has a child of the same class
-  A buffer is passed so we don't have to keep re-allocating it on the stack
+  Recursively check to see if the given window has a child that is also a
+  browser document.
 -----------------------------------------------------------------------------*/
 static bool HasVisibleChildDocument(HWND parent) {
   bool has_child_document = false;
   HWND wnd = ::GetWindow(parent, GW_CHILD);
   while (wnd && !has_child_document) {
     if (IsWindowVisible(wnd)) {
-      if (IsBrowserDocument(wnd))
+      if (IsBrowserDocument(wnd, false))
         has_child_document = true;
       else
         has_child_document = HasVisibleChildDocument(wnd);
@@ -192,13 +192,15 @@ static bool HasVisibleChildDocument(HWND parent) {
   - Having a window class of a known type
   - Not having any visible child windows of the same type
 -----------------------------------------------------------------------------*/
-bool IsBrowserDocument(HWND wnd) {
+bool IsBrowserDocument(HWND wnd, bool recurse) {
   bool is_document = false;
   TCHAR class_name[100];
   if (GetClassName(wnd, class_name, _countof(class_name))) {
-    for (int i = 0; i < _countof(DOCUMENT_WINDOW_CLASSES); i++) {
+    for (int i = 0;
+         i < _countof(DOCUMENT_WINDOW_CLASSES) && !is_document;
+         i++) {
       if (!lstrcmp(class_name, DOCUMENT_WINDOW_CLASSES[i])) {
-        if (!HasVisibleChildDocument(wnd)) {
+        if (!recurse || !HasVisibleChildDocument(wnd)) {
           is_document = true;
         }
       }
