@@ -1,6 +1,6 @@
 browser=Chrome
-url=http://s3.amazonaws.com/wpt-software/chrome_29.msi
-md5=90D9CCD6BE5CD5699375D6F2708BE26D
-version=29.0.1547.57
-command=Msiexec /q /I chrome_29.msi
+url=http://s3.amazonaws.com/wpt-software/chrome_30.msi
+md5=6CDE11819D97BCA323308174E99DAB5F
+version=30.0.1599.69
+command=Msiexec /q /I chrome_30.msi
 update=0
