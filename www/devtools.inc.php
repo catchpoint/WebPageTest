@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.2';
+$DevToolsCacheVersion = '1.3';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -162,9 +162,10 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
     if (!gz_is_file($timelineFile))
         $timelineFile = "$testPath/$run{$cachedText}_timeline.json";
     if (gz_is_file($timelineFile)){
-      // 
-      $timeline = json_decode(gz_file_get_contents($timelineFile), true);
-      if ($timeline)
+      $timeline = array();
+      $raw = gz_file_get_contents($timelineFile);
+      ParseDevToolsEvents($raw, $timeline, null, false);
+      if (isset($timeline) && is_array($timeline) && count($timeline))
           $ok = true;
     }
     return $ok;
@@ -707,46 +708,63 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
 * @param mixed $events
 */
 function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
-    $ok = false;
-    $events = array();
-    $cachedText = '';
-    if( $cached )
-        $cachedText = '_Cached';
-    $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
-    if (gz_is_file($devToolsFile)){
-        $raw = gz_file_get_contents($devToolsFile);
-        $messages = json_decode($raw, true);
-        $START_MESSAGE = '{"message":"WPT start"}';
-        $STOP_MESSAGE = '{"message":"WPT stop"}';
-        $startTime = null;
-        $endTime = null;
-        if (strpos($raw, $START_MESSAGE) !== false)
-          $endTime = 0;
-        unset($raw);
-        if ($messages && is_array($messages)) {
-            // see if we need to extract the valid start and end times from the waterfall
-            if (isset ($endTime)) {
-              foreach($messages as &$message) {
-                $encoded = json_encode($message);
-                if (strpos(json_encode($message), $START_MESSAGE) !== false) {
-                  $startTime = DevToolsEventTime($message);
-                } elseif (strpos(json_encode($message), $STOP_MESSAGE) !== false) {
-                  $endTime = DevToolsEventTime($message);
-                }
-              }
-            }
-            foreach($messages as &$message) {
-              if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
-                $event = $message['params'];
-                $event['method'] = $message['method'];
-                $events[] = $event;
-              }
-            }
+  $ok = false;
+  $events = array();
+  $cachedText = '';
+  if( $cached )
+      $cachedText = '_Cached';
+  $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
+  if (gz_is_file($devToolsFile)){
+    $raw = gz_file_get_contents($devToolsFile);
+    ParseDevToolsEvents($raw, $events, $filter, true);
+  }
+  if (count($events))
+      $ok = true;
+  return $ok;
+}
+
+/**
+* Parse and trim raw timeline data
+* 
+* @param mixed $json
+* @param mixed $events
+*/
+function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams) {
+  $messages = json_decode($json, true);
+  $START_MESSAGE = '{"message":"WPT start"}';
+  $STOP_MESSAGE = '{"message":"WPT stop"}';
+  $startTime = null;
+  $endTime = null;
+  if (strpos($json, $START_MESSAGE) !== false)
+    $endTime = 0;
+  unset($json);
+  if ($removeParams || isset($filter) || isset($endTime)) {
+    if ($messages && is_array($messages)) {
+      // see if we need to extract the valid start and end times from the waterfall
+      if (isset ($endTime)) {
+        foreach($messages as &$message) {
+          $encoded = json_encode($message);
+          if (strpos(json_encode($message), $START_MESSAGE) !== false) {
+            $startTime = DevToolsEventTime($message);
+          } elseif (strpos(json_encode($message), $STOP_MESSAGE) !== false) {
+            $endTime = DevToolsEventTime($message);
+          }
         }
+      }
+      foreach($messages as &$message) {
+        if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
+          if ($removeParams) {
+            $event = $message['params'];
+            $event['method'] = $message['method'];
+            $events[] = $event;
+          } else {
+            $events[] = $message;
+          }
+        }
+      }
     }
-    if (count($events))
-        $ok = true;
-    return $ok;
+  } else
+    $events = $messages;
 }
 
 function DevToolsEventTime(&$event) {
