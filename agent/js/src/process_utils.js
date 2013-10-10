@@ -237,7 +237,7 @@ function formatForMessage(command, args) {
  * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string} command the command to run, as in process.spawn.
  * @param {Array=} args command args, as in process.spawn.
- * @param {Object=} options command options, as in process.spawn.  Use
+ * @param {Object=} options command options, as in process.spawn.
  * @param {number=} timeout milliseconds to wait before killing the process,
  *   defaults to 100000.
  * @return {webdriver.promise.Promise} fulfill({string} stdout) if the

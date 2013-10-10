@@ -154,9 +154,9 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
           this.tcpdumpAdbProcess_ = undefined;
         }
       }.bind(this));
-      return this.app_.scheduleWait('Waiting for tcpdump', function() {
+      return this.app_.wait(function() {
         return (undefined === listenBuffer);
-      }, LISTENING_ON_TIMEOUT);
+      }, LISTENING_ON_TIMEOUT, 'Waiting for tcpdump');
     }.bind(this));
   }.bind(this));
 };

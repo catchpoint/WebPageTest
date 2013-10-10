@@ -56,7 +56,8 @@ var CHROME_FLAGS = [
  * @param {Object.<string>} args browser options with string values:
  *     runNumber test run number. Install the apk on run 1.
  *     deviceSerial the device to drive.
- *     runTempDir the directory to store per-run files like screenshots.
+ *     [runTempDir] the directory to store per-run files like screenshots,
+ *         defaults to ''.
  *     [chrome] Chrome.apk to install, defaults to None.
  *     [devToolsPort] DevTools port, defaults to dynamic selection.
  *     [pac] PAC content, defaults to None.
@@ -99,7 +100,7 @@ function BrowserAndroidChrome(app, args) {
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
-  this.runTempDir_ = args.runTempDir;
+  this.runTempDir_ = args.runTempDir || '';
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -341,8 +342,8 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   //
   // Lastly, to verify that the proxy was set, visit:
   //   chrome://net-internals/proxyservice.config#proxy
-  var localPac = path.join(this.runTempDir_, 'wpt_proxy.pac');
-  this.pacFile_ = '/data/local/tmp/wpt_proxy.pac';
+  var localPac = this.deviceSerial_ + '.pac_body';
+  this.pacFile_ = '/data/local/tmp/pac_body';
   var response = 'HTTP/1.1 200 OK\n' +
       'Content-Length: ' + this.pac_.length + '\n' +
       'Content-Type: application/x-ns-proxy-autoconfig\n' +

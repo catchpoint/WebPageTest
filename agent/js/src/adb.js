@@ -61,16 +61,17 @@ exports.Adb = Adb;
  * Schedules an adb command, resolves with its stdout.
  *
  * @param {Array} args command args, as in process.spawn.
+ * @param {Object=} options command options, as in process.spawn.
  * @param {number=} timeout milliseconds to wait before killing the process,
  *   defaults to DEFAULT_TIMEOUT.
  * @return {webdriver.promise.Promise} The scheduled promise.
  * @private
  */
-Adb.prototype.command_ = function(args, timeout) {
+Adb.prototype.command_ = function(args, options, timeout) {
   'use strict';
   return process_utils.scheduleExec(this.app_,
       this.adbCommand, args,
-      undefined,  // Use default spawn options.
+      options,
       timeout || exports.DEFAULT_TIMEOUT);
 };
 

@@ -55,8 +55,14 @@ describe('browser_local_chrome small', function() {
     sandbox = sinon.sandbox.create();
     test_utils.fakeTimers(sandbox);
     processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
-    processSpawnStub.callback = function() {
-      return true; // keep running
+    var shellStub = test_utils.stubShell();
+    processSpawnStub.callback = function(proc, command, args) {
+      if ((/chromedriver/).test(command)) {
+        shellStub.addKeepAlive(proc);
+        return true; // keepAlive
+      } else {
+        return shellStub.callback(proc, command, args);
+      }
     };
   });
 
@@ -82,6 +88,7 @@ describe('browser_local_chrome small', function() {
     browser.kill();
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
+    processSpawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
     processSpawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());

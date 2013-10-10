@@ -121,7 +121,7 @@ WebDriverServer.prototype.initIpc = function() {
  *         {string} browserName Selenium name of the browser
  *         {string} browserVersion Selenium version of the browser
  *     {number} runNumber run number.
- *     {string} runTempDir a directory for run-specific temporary files.
+ *     {string=} runTempDir a directory for run-specific temporary files.
  *     {string=} script webdriverjs script.
  *     {string=} url non-script url.
  *     {string=} browser browser_* object name.
@@ -179,7 +179,7 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.url_ = initMessage.url;
   this.pcapFile_ = undefined;
   this.videoFile_ = undefined;
-  this.runTempDir_ = initMessage.runTempDir;
+  this.runTempDir_ = initMessage.runTempDir || '';
   this.tearDown_();
 };
 
@@ -751,7 +751,7 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
 WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
   'use strict';
   if (this.capturePackets_) {
-    var pcapFile = path.join(this.runTempDir, 'tcpdump.pcap');
+    var pcapFile = path.join(this.runTempDir_, 'tcpdump.pcap');
     this.browser_.scheduleStartPacketCapture(pcapFile);
     this.app_.schedule('Packet capture started', function() {
       logger.debug('Packet capture start succeeded');
