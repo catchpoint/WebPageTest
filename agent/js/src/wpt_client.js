@@ -475,11 +475,10 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
     });
   }
   if (resultFile) {
-    // A part with name="resultType" and then the content with name="file"
     if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
         exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
-      // Images and pcaps go to a different servlet and don't need the
-      // resultType part
+      // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
+      // resultType or run/cache parts.
       servlet = RESULT_IMAGE_SERVLET;
     } else {
       if (resultFile.resultType) {

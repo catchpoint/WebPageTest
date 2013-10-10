@@ -77,16 +77,15 @@ exports.LOG_TO_CONSOLE = ('true' === (process.env.WPT_VERBOSE || 'true'));
 /**
  * Lets the caller verify if the given log level is active.
  *
- * @param {string} level log name, e.g. 'info'.
+ * @param {string} levelName log name, e.g. 'info'.
  * @return {boolean}
  */
-exports.isLogging = function(level) {
+exports.isLogging = function(levelName) {
   'use strict';
-  var levelAndPrinter = exports.LEVELS[level];
+  var levelAndPrinter = exports.LEVELS[levelName];
   if (undefined === levelAndPrinter) {
-    levelAndPrinter = exports.LEVELS.debug;
+    throw new Error('Unknown levelName: ' + levelName);
   }
-
   return levelAndPrinter[0] <= exports.MAX_LOG_LEVEL;
 };
 

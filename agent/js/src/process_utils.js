@@ -365,7 +365,7 @@ function injectWdAppLogging(appName, app) {
   'use strict';
   if (!app.isLoggingInjected) {
     var realExecute = app.execute;
-    if (logger.isLogging(logger.LEVELS.extra)) {
+    if (logger.isLogging('extra')) {
       var realGetNextTask = app.getNextTask_;
       app.getNextTask_ = function() {
         var task = realGetNextTask.apply(app, arguments);

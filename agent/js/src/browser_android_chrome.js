@@ -142,7 +142,7 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   // Needs to be scheduled, as it uses values assigned in scheduled functions.
   this.app_.schedule('Launch WD server', function() {
     var chromeDriverArgs = ['-port=' + this.serverPort_];
-    if (logger.isLogging(logger.LEVELS.extra)) {
+    if (logger.isLogging('extra')) {
       chromeDriverArgs.push('--verbose');
     }
     this.startChildProcess(

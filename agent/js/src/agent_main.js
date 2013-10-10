@@ -410,8 +410,9 @@ Agent.prototype.scheduleCleanup_ = function() {
     // when we fork wd_server, but cross-user IPC apparently doesn't work.
     process_utils.scheduleGetAll(this.app_).then(function(processInfos) {
       var pid = process.pid;
+      var pi; // Declare outside the loop, to avoid a jshint warning
       while (pid) {
-        var pi = void 0; // Set 'pi = undefined' on every loop iteration.
+        pi = undefined;
         for (var i in processInfos) {
           if (processInfos[i].pid === pid) {
             pi = processInfos.splice(i, 1)[0];
