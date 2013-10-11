@@ -133,16 +133,18 @@ else
               $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
               echo "<$key>" . xml_entities($val) . "</$key>\n";
             }
-            if( $pagespeed )
-            {
-                $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
-                if( strlen($score) )
-                    echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+            if (gz_is_file("$testPath/{$fvMedian}_pagespeed.txt")) {
+              if( $pagespeed )
+              {
+                  $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+                  if( strlen($score) )
+                      echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+              }
+              if( FRIENDLY_URLS )
+                  echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
+              else
+                  echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             }
-            if( FRIENDLY_URLS )
-                echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
-            else
-                echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             xmlDomains($id, $testPath, $fvMedian, 0);
             xmlBreakdown($id, $testPath, $fvMedian, 0);
             xmlRequests($id, $testPath, $fvMedian, 0);
@@ -161,16 +163,18 @@ else
                       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
                       echo "<$key>" . xml_entities($val) . "</$key>\n";
                     }
-                    if( $pagespeed )
-                    {
-                        $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
-                        if( strlen($score) )
-                            echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+                    if (gz_is_file("$testPath/{$fvMedian}_Cached_pagespeed.txt")) {
+                      if( $pagespeed )
+                      {
+                          $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+                          if( strlen($score) )
+                              echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+                      }
+                      if( FRIENDLY_URLS )
+                          echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
+                      else
+                          echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     }
-                    if( FRIENDLY_URLS )
-                        echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
-                    else
-                        echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     xmlDomains($id, $testPath, $fvMedian, 1);
                     xmlBreakdown($id, $testPath, $fvMedian, 1);
                     xmlRequests($id, $testPath, $fvMedian, 1);
@@ -231,28 +235,34 @@ else
                     echo "<thumbnails>\n";
                     echo "<waterfall>http://$host$uri/result/$id/{$i}_waterfall_thumb.png</waterfall>\n";
                     echo "<checklist>http://$host$uri/result/$id/{$i}_optimization_thumb.png</checklist>\n";
-                    echo "<screenShot>http://$host$uri/result/$id/{$i}_screen_thumb.jpg</screenShot>\n";
+                    if( is_file("$testPath/{$i}_screen.jpg") )
+                      echo "<screenShot>http://$host$uri/result/$id/{$i}_screen_thumb.jpg</screenShot>\n";
                     echo "</thumbnails>\n";
 
                     echo "<images>\n";
                     echo "<waterfall>http://$host$uri$path/{$i}_waterfall.png</waterfall>\n";
                     echo "<connectionView>http://$host$uri$path/{$i}_connection.png</connectionView>\n";
                     echo "<checklist>http://$host$uri$path/{$i}_optimization.png</checklist>\n";
-                    echo "<screenShot>http://$host$uri$path/{$i}_screen.jpg</screenShot>\n";
+                    if( is_file("$testPath/{$i}_screen.jpg") )
+                      echo "<screenShot>http://$host$uri$path/{$i}_screen.jpg</screenShot>\n";
                     if( is_file("$testPath/{$i}_screen.png") )
                         echo "<screenShotPng>http://$host$uri$path/{$i}_screen.png</screenShotPng>\n";
                     echo "</images>\n";
 
                     // raw results
                     echo "<rawData>";
-                    echo "<headers>http://$host$uri$path/{$i}_report.txt</headers>\n";
-                    if (is_file("$testPath/{$i}_bodies.zip")) {
+                    if (gz_is_file("$testPath/{$i}_report.txt"))
+                      echo "<headers>http://$host$uri$path/{$i}_report.txt</headers>\n";
+                    if (is_file("$testPath/{$i}_bodies.zip"))
                         echo "<bodies>http://$host$uri$path/{$i}_bodies.zip</bodies>\n";
-                    }
-                    echo "<pageData>http://$host$uri$path/{$i}_IEWPG.txt</pageData>\n";
-                    echo "<requestsData>http://$host$uri$path/{$i}_IEWTR.txt</requestsData>\n";
-                    echo "<utilization>http://$host$uri$path/{$i}_progress.csv</utilization>\n";
-                    echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_pagespeed.txt</PageSpeedData>\n";
+                    if (gz_is_file("$testPath/{$i}_IEWPG.txt"))
+                      echo "<pageData>http://$host$uri$path/{$i}_IEWPG.txt</pageData>\n";
+                    if (gz_is_file("$testPath/{$i}_IEWTR.txt"))
+                      echo "<requestsData>http://$host$uri$path/{$i}_IEWTR.txt</requestsData>\n";
+                    if (gz_is_file("$testPath/{$i}_progress.csv"))
+                      echo "<utilization>http://$host$uri$path/{$i}_progress.csv</utilization>\n";
+                    if (gz_is_file("$testPath/{$i}_pagespeed.txt"))
+                      echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_pagespeed.txt</PageSpeedData>\n";
                     echo "</rawData>\n";
                     
                     // video frames
@@ -336,28 +346,34 @@ else
                     echo "<thumbnails>\n";
                     echo "<waterfall>http://$host$uri/result/$id/{$i}_Cached_waterfall_thumb.png</waterfall>\n";
                     echo "<checklist>http://$host$uri/result/$id/{$i}_Cached_optimization_thumb.png</checklist>\n";
-                    echo "<screenShot>http://$host$uri/result/$id/{$i}_Cached_screen_thumb.jpg</screenShot>\n";
+                    if( is_file("$testPath/{$i}_Cached_screen.jpg") )
+                      echo "<screenShot>http://$host$uri/result/$id/{$i}_Cached_screen_thumb.jpg</screenShot>\n";
                     echo "</thumbnails>\n";
 
                     echo "<images>\n";
                     echo "<waterfall>http://$host$uri$path/{$i}_Cached_waterfall.png</waterfall>\n";
                     echo "<connectionView>http://$host$uri$path/{$i}_Cached_connection.png</connectionView>\n";
                     echo "<checklist>http://$host$uri$path/{$i}_Cached_optimization.png</checklist>\n";
-                    echo "<screenShot>http://$host$uri$path/{$i}_Cached_screen.jpg</screenShot>\n";
+                    if( is_file("$testPath/{$i}_Cached_screen.jpg") )
+                      echo "<screenShot>http://$host$uri$path/{$i}_Cached_screen.jpg</screenShot>\n";
                     if( is_file("$testPath/{$i}_Cached_screen.png") )
                         echo "<screenShotPng>http://$host$uri$path/{$i}_Cached_screen.png</screenShotPng>\n";
                     echo "</images>\n";
 
                     // raw results
                     echo "<rawData>\n";
-                    echo "<headers>http://$host$uri$path/{$i}_Cached_report.txt</headers>\n";
-                    if (is_file("$testPath/{$i}_Cached_bodies.zip")) {
+                    if (gz_is_file("$testPath/{$i}_Cached_report.txt"))
+                      echo "<headers>http://$host$uri$path/{$i}_Cached_report.txt</headers>\n";
+                    if (is_file("$testPath/{$i}_Cached_bodies.zip"))
                         echo "<bodies>http://$host$uri$path/{$i}_Cached_bodies.zip</bodies>\n";
-                    }
-                    echo "<pageData>http://$host$uri$path/{$i}_Cached_IEWPG.txt</pageData>\n";
-                    echo "<requestsData>http://$host$uri$path/{$i}_Cached_IEWTR.txt</requestsData>\n";
-                    echo "<utilization>http://$host$uri$path/{$i}_Cached_progress.csv</utilization>\n";
-                    echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_Cached_pagespeed.txt</PageSpeedData>\n";
+                    if (gz_is_file("$testPath/{$i}_Cached_IEWPG.txt"))
+                      echo "<pageData>http://$host$uri$path/{$i}_Cached_IEWPG.txt</pageData>\n";
+                    if (gz_is_file("$testPath/{$i}_Cached_IEWTR.txt"))
+                      echo "<requestsData>http://$host$uri$path/{$i}_Cached_IEWTR.txt</requestsData>\n";
+                    if (gz_is_file("$testPath/{$i}_Cached_progress.csv"))
+                      echo "<utilization>http://$host$uri$path/{$i}_Cached_progress.csv</utilization>\n";
+                    if (gz_is_file("$testPath/{$i}_Cached_pagespeed.txt"))
+                      echo "<PageSpeedData>http://$host$uri/result/$id/{$i}_Cached_pagespeed.txt</PageSpeedData>\n";
                     echo "</rawData>\n";
                     
                     // video frames
