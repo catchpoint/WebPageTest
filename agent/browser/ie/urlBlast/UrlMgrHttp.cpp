@@ -138,12 +138,10 @@ void CUrlMgrHttp::Start()
     parts.lpszScheme = scheme;
     parts.dwSchemeLength = sizeof(scheme);
 
+    urlFilesUrl.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
 		if( InternetCrackUrl((LPCTSTR)urlFilesUrl, urlFilesUrl.GetLength(), 0, &parts) )
 		{
 			host = szHost;
-      if (!host.CompareNoCase(_T("www.webpagetest.org"))) {
-        host = _T("agent.webpagetest.org");
-      }
 			port = parts.nPort;
       if (!lstrcmpi(parts.lpszScheme, _T("https"))) {
         requestFlags |= INTERNET_FLAG_SECURE |
@@ -161,7 +159,7 @@ void CUrlMgrHttp::Start()
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;
-			getWork = CString(object) + CString(_T("getwork.php?shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
+			getWork = CString(_T("getwork.php?shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
 			workDone = CString(object) + _T("workdone.php");
 			resultImage = CString(object) + _T("resultimage.php");
 
@@ -626,7 +624,7 @@ bool CUrlMgrHttp::GetJob(CStringA &job, CStringA &script, bool& zip, bool& updat
         key.Close();
       }
 
-      CString url = CString("http://") + host + getWork + verString + diskSpace + IEVer + dns;
+      CString url = urlFilesUrl + getWork + verString + diskSpace + IEVer + dns;
       HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
                                   INTERNET_FLAG_NO_CACHE_WRITE | 
                                   INTERNET_FLAG_NO_UI | 
