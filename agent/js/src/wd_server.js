@@ -203,7 +203,7 @@ WebDriverServer.prototype.startWdServer_ = function(browserCaps) {
   this.app_.schedule('Wait for WD server to become ready', function() {
     var serverUrl = this.browser_.getServerUrl();
     logger.info('WD server URL: %s', serverUrl);
-    webdriver_http.util.waitForServer(serverUrl, WD_CONNECT_TIMEOUT_MS_)
+    return webdriver_http.util.waitForServer(serverUrl, WD_CONNECT_TIMEOUT_MS_)
         .then(function() {
       logger.info('WD server is ready');
     }.bind(this));

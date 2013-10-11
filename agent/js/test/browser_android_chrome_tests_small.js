@@ -90,6 +90,10 @@ describe('browser_android_chrome small', function() {
           return 'force-stop' === arg;
         })) {
         // Ignore `adb force-stop`
+      } else if ('xset' === command) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', 'has display');
+        }, 1);
       } else {
         keepAlive = shellStub.callback(proc, command, args);
       }
@@ -173,8 +177,11 @@ describe('browser_android_chrome small', function() {
     browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    if (process.platform === 'linux') {
+      spawnStub.assertCall('xset', 'q');
+    }
     spawnStub.assertCall(chromedriver, /^\-port=\d+/);
-    var chromedriverProcess = spawnStub.secondCall.returnValue;
+    var chromedriverProcess = spawnStub.lastCall.returnValue;
     spawnStub.assertCall();
 
     browser.kill();

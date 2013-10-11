@@ -101,6 +101,7 @@ function BrowserAndroidChrome(app, args) {
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
   this.runTempDir_ = args.runTempDir || '';
+  this.useXvfb_ = undefined;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -139,14 +140,21 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   this.kill();
   this.scheduleInstallIfNeeded_();
   this.scheduleConfigureServerPort_();
-  // Needs to be scheduled, as it uses values assigned in scheduled functions.
-  this.app_.schedule('Launch WD server', function() {
-    var chromeDriverArgs = ['-port=' + this.serverPort_];
+  // Must be scheduled, since serverPort_ is assigned in a scheduled function.
+  this.scheduleNeedsXvfb_().then(function(useXvfb) {
+    var cmd = this.chromedriver_;
+    var args = ['-port=' + this.serverPort_];
     if (logger.isLogging('extra')) {
-      chromeDriverArgs.push('--verbose');
+      args.push('--verbose');
     }
-    this.startChildProcess(
-        this.chromedriver_, chromeDriverArgs, 'WD server');
+    if (useXvfb) {
+      // Use a fake X display, otherwise a scripted "sendKeys" fails with:
+      //   an X display is required for keycode conversions, consider using Xvfb
+      // TODO(wrightt) submit a crbug; Android shouldn't use the host's keymap!
+      args.splice(0, 0, '-a', cmd);
+      cmd = 'xvfb-run';
+    }
+    this.startChildProcess(cmd, args, 'WD server');
     // Make sure we set serverUrl_ only after the child process start success.
     this.app_.schedule('Set DevTools URL', function() {
       this.serverUrl_ = 'http://localhost:' + this.serverPort_;
@@ -209,6 +217,34 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
   }
   // TODO(wrightt): use `pm list packages` to check pkg
+};
+
+/**
+ * Test if we have a host-side display.
+ *
+ * @return {webdriver.promise.Promise} resolve({boolean} useXvfb).
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
+  'use strict';
+  if (undefined === this.useXvfb_) {
+    if (process.platform !== 'linux') {
+      this.useXvfb_ = false;
+    } else {
+      process_utils.scheduleExec(this.app_, 'xset', ['q']).then(
+          function() {
+        this.useXvfb_ = false;
+      }.bind(this), function(e) {
+        this.useXvfb_ = true;
+        if (!(/unable to open|no such file/i).test(e.message)) {
+          throw e;
+        }
+      }.bind(this));
+    }
+  }
+  return this.app_.schedule('needsXvfb', function() {
+    return this.useXvfb_;
+  }.bind(this));
 };
 
 /**
