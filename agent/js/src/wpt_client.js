@@ -479,6 +479,9 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
         exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
       // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
       // resultType or run/cache parts.
+      //
+      // If we submit the pcap via the regular servlet, it would be used for
+      // the waterfall instead of the DevTools trace, which we don't want.
       servlet = RESULT_IMAGE_SERVLET;
     } else {
       if (resultFile.resultType) {
