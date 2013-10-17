@@ -186,8 +186,10 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
               fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.PCAP,
-            'tcpdump.pcap', 'application/vnd.tcpdump.pcap', buffer));
-      }.bind(this));
+            '.cap', 'application/vnd.tcpdump.pcap', buffer));
+      });
+      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
+          fs.unlink, ipcMsg.pcapFile);
     }
   }.bind(this));
 };
@@ -218,6 +220,7 @@ Agent.prototype.startJobRun_ = function(job) {
     var urlAndPac = this.decodeUrlAndPacFromScript_(script);
     url = urlAndPac.url;
     pac = urlAndPac.pac;
+    script = undefined;
   }
   url = url.trim();
   if (!((/^https?:\/\//i).test(url))) {
@@ -397,23 +400,35 @@ Agent.prototype.scheduleCleanup_ = function() {
   }
   this.trafficShaper_.scheduleStop();
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
-    // Kill all processes for this user, except our own agent_main pid.
+    // Kill all processes for this user, except our own process and parent(s).
     //
-    // This only makes sense if we have per-device user accounts, e.g. we
-    // launch the wptdriver for deviceX as user "deviceX" via:
-    //   sudo -u deviceX -H ./wptdriver.sh --killall 1 ...
+    // This assumes that there are no extra login shells for our user,
+    // otherwise they'll all be killed!  The expected use is to create a custom
+    // user, e.g. "foo", and launch our agent via:
+    //    nohup sudo -u foo -H ./wptdriver.sh --killall 1 ... &
     // Ideally we could run agent_main as our normal user and do this "sudo -u"
     // when we fork wd_server, but cross-user IPC apparently doesn't work.
-    process_utils.scheduleGetAll(this.app_).then(function(processes) {
-      processes = processes.filter(function(v) {
-        return v.pid !== process.pid;
-      });
-      if (processes.length > 0) {
-        logger.info('Killing %s pids owned by user %s: %s', processes.length,
+    process_utils.scheduleGetAll(this.app_).then(function(processInfos) {
+      var pid = process.pid;
+      var pi; // Declare outside the loop, to avoid a jshint warning
+      while (pid) {
+        pi = undefined;
+        for (var i in processInfos) {
+          if (processInfos[i].pid === pid) {
+            pi = processInfos.splice(i, 1)[0];
+            logger.debug('Not killing user %s pid=%s: %s %s', process.env.USER,
+                pid, pi.command, pi.args.join(' '));
+            break;
+          }
+        }
+        pid = (pi ? pi.ppid : undefined);
+      }
+      if (processInfos.length > 0) {
+        logger.info('Killing %s pids owned by user %s: %s', processInfos.length,
             process.env.USER,
-            processes.map(function(v) { return v.pid; }).join(', '));
+            processInfos.map(function(pi) { return pi.pid; }).join(', '));
         process_utils.scheduleKillAll(
-            this.app_, 'Kill dangling pids', processes);
+            this.app_, 'Kill dangling pids', processInfos);
       }
     }.bind(this));
   }

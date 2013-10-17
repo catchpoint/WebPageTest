@@ -94,13 +94,11 @@ describe('traffic_shaper small', function() {
 
     var ts = new traffic_shaper.TrafficShaper(app, {deviceAddr: deviceAddr});
     ts.scheduleStart(bwIn, bwOut, latency, plr);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     spawnStub.assertCalls.apply(spawnStub, expectedStartCalls);
 
     ts.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     spawnStub.assertCalls.apply(spawnStub, expectedStopCalls);
   }
 

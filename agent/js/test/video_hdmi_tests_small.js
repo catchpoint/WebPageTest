@@ -113,10 +113,8 @@ describe('video_hdmi small', function() {
     var videoCard = '2';
 
     var video = new video_hdmi.VideoHdmi(app, videoCommand);
-    should.equal('[]', app.getSchedule());
     video.scheduleStartVideoRecording(videoFile, serial, deviceType, videoCard);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(2, killCount);
     processSpawnStub.assertCalls(
         {0: 'ps', 1: '-u', 2: /^\d+$/}, // Find our leftover capture pid
@@ -128,12 +126,9 @@ describe('video_hdmi small', function() {
     should.ok(fsExistsStub.calledOnce);
 
     // Watch for IDLE -- make sure the wait for recording exit has finished.
-    var idleSpy = sandbox.spy();
-    app.on(webdriver.promise.ControlFlow.EventType.IDLE, idleSpy);
     should.equal('[]', app.getSchedule());
     video.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     processSpawnStub.assertCalls(
         {0: 'ps'},
         ['kill', '-9', ('' + pid)],
@@ -141,6 +136,5 @@ describe('video_hdmi small', function() {
     should.equal(4, killCount);
     should.equal(undefined, fakeCaptureProc);
     processSpawnStub.assertCall();
-    should.ok(idleSpy.calledOnce);
   });
 });
