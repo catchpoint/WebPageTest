@@ -55,8 +55,14 @@ describe('browser_local_chrome small', function() {
     sandbox = sinon.sandbox.create();
     test_utils.fakeTimers(sandbox);
     processSpawnStub = test_utils.stubOutProcessSpawn(sandbox);
-    processSpawnStub.callback = function() {
-      return true; // keep running
+    var shellStub = test_utils.stubShell();
+    processSpawnStub.callback = function(proc, command, args) {
+      if ((/chromedriver/).test(command)) {
+        shellStub.addKeepAlive(proc);
+        return true; // keepAlive
+      } else {
+        return shellStub.callback(proc, command, args);
+      }
     };
   });
 
@@ -71,8 +77,7 @@ describe('browser_local_chrome small', function() {
         app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
@@ -81,9 +86,9 @@ describe('browser_local_chrome small', function() {
     processSpawnStub.assertCall();
 
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
+    processSpawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
     processSpawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
@@ -95,8 +100,7 @@ describe('browser_local_chrome small', function() {
         app, {chromedriver: chromedriver});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(browser.isRunning());
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
@@ -106,8 +110,7 @@ describe('browser_local_chrome small', function() {
     var chromedriverProc = processSpawnStub.firstCall.returnValue;
 
     chromedriverProc.emit('exit', /*code=*/0);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
     processSpawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());

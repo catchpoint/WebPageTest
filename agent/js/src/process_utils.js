@@ -55,10 +55,10 @@ function ProcessInfo(psLine) {
 exports.ProcessInfo = ProcessInfo;
 
 /**
- * @param {Process} process the process to signal.
+ * @param {Process} proc the process to signal.
  * @param {string=} processName name for debugging.
  */
-exports.signalKill = function(process, processName) {
+exports.signalKill = function(proc, processName) {
   // TODO replace with scheduleKill w/ signal
   'use strict';
   logger.debug('Killing %s', processName);
@@ -69,7 +69,7 @@ exports.signalKill = function(process, processName) {
     killSignal = undefined;
   }
   try {
-    process.kill(killSignal);
+    proc.kill(killSignal);
   } catch (killException) {
     logger.error('%s kill failed: %s', processName, killException);
   }
@@ -80,14 +80,14 @@ exports.signalKill = function(process, processName) {
  *
  * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
- * @param {ProcessInfo} processInfo to be killed.
+ * @param {(Process|ProcessInfo)} proc process to be killed.
  */
-exports.scheduleKill = function(app, description, processInfo) {
+exports.scheduleKill = function(app, description, proc) {
   'use strict';
   app.schedule(description, function() {
-    logger.debug('Killing %s: %s', processInfo.pid, formatForMessage(
-        processInfo.command, processInfo.args));
-    var cmd = system_commands.get('kill', [processInfo.pid]).split(/\s+/);
+    logger.debug('Killing %s: %s', proc.pid, formatForMessage(
+        proc.command, proc.args));
+    var cmd = system_commands.get('kill', [proc.pid]).split(/\s+/);
     exports.scheduleExec(app, cmd.shift(), cmd).addErrback(function() { });
   });
 };
@@ -97,15 +97,12 @@ exports.scheduleKill = function(app, description, processInfo) {
  *
  * @param {webdriver.promise.ControlFlow} app the scheduler.
  * @param {string} description debug title.
- * @param {ProcessInfo[]} processInfos an array of process info's to be killed.
+ * @param {(Array.<Process>|Array.<ProcessInfo>)} procs processes to kill.
  */
-exports.scheduleKillAll = function(app, description, processInfos) {
+exports.scheduleKillAll = function(app, description, procs) {
   'use strict';
-  app.schedule(description || 'killAll', function() {
-    if (processInfos.length > 0) {
-      exports.scheduleKill(app, 'kill', processInfos[0]);
-      exports.scheduleKillAll(app, description, processInfos.slice(1));
-    }
+  procs.forEach(function(proc) {
+    exports.scheduleKill(app, 'kill', proc);
   });
 };
 
@@ -164,18 +161,14 @@ exports.scheduleGetTree = function(app, description, rootPid) {
  *
  * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string=} description debug title.
- * @param {(Process|ProcessInfo)} process the process to getTree then killAll.
+ * @param {(Process|ProcessInfo)} proc the process to getTree then killAll.
  */
-exports.scheduleKillTree = function(app, description, process) {
+exports.scheduleKillTree = function(app, description, proc) {
   'use strict';
-  if (process.pid) {
-    exports.scheduleGetTree(app, 'getTree ' + description, process.pid).then(
-        function(processInfos) {
-      exports.scheduleKillAll(app, 'killAll' + description, processInfos);
-    });
-  } else {
-    app.schedule('Kill non-pid', process.kill);  // Unit test?
-  }
+  exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
+      function(processInfos) {
+    exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
+  });
 };
 
 /**
@@ -183,16 +176,13 @@ exports.scheduleKillTree = function(app, description, process) {
  *
  * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string=} description debug title.
- * @param {(Array.<Process>|Array.<ProcessInfo>)} processes processes to
+ * @param {(Array.<Process>|Array.<ProcessInfo>)} procs processes to
  *   killTree.
  */
-exports.scheduleKillTrees = function(app, description, processes) {
+exports.scheduleKillTrees = function(app, description, procs) {
   'use strict';
-  app.schedule(description || 'killTrees', function() {
-    if (processes.length > 0) {
-      exports.scheduleKillTree(app, 'killTree', processes[0]);
-      exports.scheduleKillTrees(app, description, processes.slice(1));
-    }
+  procs.forEach(function(proc) {
+    exports.scheduleKillTree(app, 'killTree', proc);
   });
 };
 
@@ -233,7 +223,7 @@ function formatForMessage(command, args) {
   'use strict';
   var ret = [];
   var i;
-  for (i = -1; i < args.length; i++) {
+  for (i = -1; i < (args ? args.length : 0); i++) {
     var s = (i < 0 ? command : args[i]);
     s = (/^[\-_a-zA-Z0-9\.\\\/:]+$/.test(s) ? s : '\'' + s + '\'');
     ret.push(s);
@@ -247,7 +237,7 @@ function formatForMessage(command, args) {
  * @param {webdriver.promise.ControlFlow} app the app under which to schedule.
  * @param {string} command the command to run, as in process.spawn.
  * @param {Array=} args command args, as in process.spawn.
- * @param {Object=} options command options, as in process.spawn.  Use
+ * @param {Object=} options command options, as in process.spawn.
  * @param {number=} timeout milliseconds to wait before killing the process,
  *   defaults to 100000.
  * @return {webdriver.promise.Promise} fulfill({string} stdout) if the
@@ -375,7 +365,7 @@ function injectWdAppLogging(appName, app) {
   'use strict';
   if (!app.isLoggingInjected) {
     var realExecute = app.execute;
-    if (logger.isLogging(logger.LEVELS.extra)) {
+    if (logger.isLogging('extra')) {
       var realGetNextTask = app.getNextTask_;
       app.getNextTask_ = function() {
         var task = realGetNextTask.apply(app, arguments);

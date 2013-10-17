@@ -116,8 +116,7 @@ describe('agent_main', function() {
     agent.run();
 
     client.onAbortJob(fakeJob);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 15);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(runFinishedSpy.calledOnce);
   });
 });
