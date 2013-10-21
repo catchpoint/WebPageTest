@@ -310,6 +310,33 @@ void WptDriverCore::Init(void){
     }
   }
 
+  // Disable IE auto-updates
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\9.0"), 0, 0, 0,
+      KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DoNotAllowIE90"), 0, REG_DWORD,
+                  (LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\10.0"), 0, 0, 0,
+      KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DoNotAllowIE10"), 0, REG_DWORD,
+                  (LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\11.0"), 0, 0, 0,
+      KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DoNotAllowIE11"), 0, REG_DWORD,
+                  (LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+
+
   // Get WinPCap ready (install it if necessary)
   _winpcap.Initialize();
 

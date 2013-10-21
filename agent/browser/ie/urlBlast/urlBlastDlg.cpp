@@ -384,6 +384,13 @@ void CurlBlastDlg::DoStartup(void)
 		RegCloseKey(hKey);
 	}
 
+  // block IE11 automatic install
+	if( SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Internet Explorer\\Setup\\11.0"), 0, 0, 0, KEY_READ | KEY_WRITE, NULL, &hKey, NULL)) ) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DoNotAllowIE11"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+
 	// start up the url manager
 	urlManager.Start();
 	
