@@ -1,5 +1,5 @@
 <?php
-include 'common.inc';
+include 'common.inc'; 
 $ok = false;
 if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
   $ok = true;
@@ -7,7 +7,9 @@ if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
   header ("Content-type: application/json");
   gz_readfile_chunked("$testPath/$run{$cachedText}_timeline.json");
 } elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
-  $devTools = json_decode(gz_file_get_contents("$testPath/$run{$cachedText}_devtools.json"), true);
+  include 'devtools.inc.php';
+  $devTools = array();
+  GetTimeline($testPath, $run, $cached, $devTools);
   if (isset($devTools) && is_array($devTools) && count($devTools)) {
     $timeline = array();
     foreach ($devTools as &$entry) {

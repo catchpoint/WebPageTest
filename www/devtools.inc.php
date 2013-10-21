@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.3';
+$DevToolsCacheVersion = '1.4';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -745,7 +745,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams) {
         foreach($messages as &$message) {
           $encoded = json_encode($message);
           if (strpos(json_encode($message), $START_MESSAGE) !== false) {
-            $startTime = DevToolsEventTime($message);
+            $startTime = FindNextNetworkRequest($messages, DevToolsEventTime($message));
           } elseif (strpos(json_encode($message), $STOP_MESSAGE) !== false) {
             $endTime = DevToolsEventTime($message);
           }
@@ -775,11 +775,28 @@ function DevToolsEventTime(&$event) {
     if (array_key_exists('record', $event['params']) &&
         is_array($event['params']['record']) &&
         array_key_exists('startTime', $event['params']['record']))
-      $time = $event['params']['record']['startTime'];
+      $time = floatval($event['params']['record']['startTime']);
     elseif (array_key_exists('timestamp', $event['params']))
       $time = $event['params']['timestamp'] * 1000;
   }
   return $time;
+}
+
+function FindNextNetworkRequest(&$events, $startTime) {
+  $netTime = null;
+  foreach ($events as &$event) {
+    $eventTime = DevToolsEventTime($event);
+    if (isset($eventTime) &&
+        $eventTime >= $startTime &&
+        array_key_exists('method', $event) &&
+        $event['method'] == 'Network.requestWillBeSent' &&
+        (!isset($netTime) || $eventTime < $netTime)) {
+      $netTime = $eventTime;
+    }
+  }
+  if (!isset($netTime))
+    $netTime = $startTime;
+  return $netTime;
 }
 
 function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null) {
@@ -790,7 +807,7 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
     $match = true;
     if (isset($startTime)) {
       $time = DevToolsEventTime($event);
-      if ($time < $startTime || (isset($endTime) && $endTime && $time > $endTime))
+      if ($time < $startTime || (isset($endTime) && $endTime && $time >= $endTime))
         $match = false;
     }
     if ($match && isset($filter)) {
