@@ -8,14 +8,16 @@ require_once('devtools.inc.php');
 /**
 * Calculate the progress for all of the images in a given directory
 */
-function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null) {
+function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';
     $cache_file = "$testPath/$run.$cached.visual.dat";
+    if (!isset($startOffset))
+      $startOffset = 0;
     $dirty = false;
-    $current_version = 3;
+    $current_version = 4;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
@@ -28,7 +30,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             unset($frames);
         elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
             unset($frames);
-    }
+    }    
     if ((!isset($frames) || !count($frames)) && is_dir($video_directory)) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
@@ -37,18 +39,24 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         $files = scandir($video_directory);
         $last_file = null;
         $first_file = null;
+        $previous_file = null;
         foreach ($files as $file) {
             if (strpos($file,'frame_') !== false && strpos($file,'.hist') === false) {
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
-                    if (!isset($first_file))
+                    $time = (((int)$parts[1]) * 100) - $startOffset;
+                    if ($time >= 0 && (!isset($end) || $time <= $end)) {
+                      if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
+                        $frames['frames'][0] = array('path' => "$base_path/$previous_file",
+                                                     'file' => $previous_file);
+                        $first_file = $previous_file;
+                      } elseif (!isset($first_file))
                         $first_file = $file;
-                    $time = ((int)$parts[1]) * 100;
-                    if (!isset($end) || $time <= $end) {
-                        $last_file = $file;
-                        $frames['frames'][$time] = array( 'path' => "$base_path/$file",
-                                                'file' => $file);
+                      $last_file = $file;
+                      $frames['frames'][$time] = array('path' => "$base_path/$file",
+                                                       'file' => $file);
                     }
+                    $previous_file = $file;
                 }
             }
         }
@@ -57,22 +65,21 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                 $frame['progress'] = 100;
                 $frames['complete'] = $time;
             }
-        } elseif (  isset($first_file) && strlen($first_file) &&
-                    isset($last_file) && strlen($last_file) && count($frames['frames'])) {
+        } elseif (isset($first_file) && strlen($first_file) &&
+                  isset($last_file) && strlen($last_file) && count($frames['frames'])) {
             $start_histogram = GetImageHistogram("$video_directory/$first_file", $options);
             $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
             foreach($frames['frames'] as $time => &$frame) {
                 $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
                 $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, $options);
-                if ($frame['progress'] == 100 && !array_key_exists('complete', $frames)) {
+                if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                     $frames['complete'] = $time;
-                }
             }
         }
     }
     if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
         $dirty = true;
-        $frames['SpeedIndex'] = $frames['FLI'] = CalculateFeelsLikeIndex($frames);
+        $frames['SpeedIndex'] = CalculateSpeedIndex($frames);
     }
     if (isset($frames)) {
         $frames['visualComplete'] = 0;
@@ -224,7 +231,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
 /**
 * Boil the frame loading progress down to a single number
 */
-function CalculateFeelsLikeIndex(&$frames) {
+function CalculateSpeedIndex(&$frames) {
     $index = null;
     if (array_key_exists('frames', $frames)) {
         $last_ms = 0;

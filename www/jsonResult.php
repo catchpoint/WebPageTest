@@ -188,7 +188,8 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
           $ret['rawData']['bodies'] = "http://$host$uri$path/$run{$cachedText}_bodies.zip";
 
       if (!$basic_results) {
-        $progress = GetVisualProgress($testPath, $run, $cached);
+        $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
+        $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
         if (array_key_exists('video', $testInfo) && $testInfo['video']) {
             $cachedTextLower = strtolower($cachedText);
             loadVideo("$testPath/video_{$run}$cachedTextLower", $frames);

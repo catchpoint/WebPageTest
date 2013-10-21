@@ -457,11 +457,9 @@ function ScreenShotTable()
                         $path = $test['video']['frames'][0];
                 }
 
-                $ms = $frame * 100;
-                if (array_key_exists('progress', $test['video']) 
-                    && array_key_exists('frames', $test['video']['progress'])
-                    && array_key_exists($ms, $test['video']['progress']['frames']))
-                    $progress = $test['video']['progress']['frames'][$ms]['progress'];
+                if (array_key_exists('frame_progress', $test['video']) &&
+                    array_key_exists($frame, $test['video']['frame_progress']))
+                  $progress = $test['video']['frame_progress'][$frame];
 
                 if( !$lastThumb )
                     $lastThumb = $path;
@@ -805,6 +803,14 @@ function DisplayGraphs() {
                             $progress = $test['video']['progress']['frames'][$ms]['progress'];
                         }
                         $test['last_progress'] = $progress;
+                        if (array_key_exists('video', $test) &&
+                            array_key_exists('progress', $test['video']) &&
+                            array_key_exists('frames', $test['video']['progress'])) {
+                            foreach ($test['video']['progress']['frames'] as $time => $frameInfo) {
+                                if ($time <= $ms)
+                                    $progress = floatval($frameInfo['progress']);
+                            }
+                        }
                         echo ", $progress";
                     }
                     if ($has_speed_index_dt && $testCount == 1) {

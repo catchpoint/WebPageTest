@@ -1,5 +1,6 @@
 <?php
 include 'common.inc';
+require_once('page_data.inc');
 require_once('./video/visualProgress.inc.php');
 
 // make sure the test has finished, otherwise return a 404
@@ -95,9 +96,11 @@ else
 
 function SpeedIndex($testPath, $run, $cached) {
     $speed_index = '';
-    $progress = GetVisualProgress($testPath, $run, $cached);
-    if (isset($progress) && is_array($progress) && array_key_exists('FLI', $progress)) {
-        $speed_index = $progress['FLI'];
+    $pageData = loadPageRunData($testPath, $run, $cached);
+    $startOffset = array_key_exists('testStartOffset', $pageData) ? intval(round($pageData['testStartOffset'])) : 0;
+    $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
+    if (isset($progress) && is_array($progress) && array_key_exists('SpeedIndex', $progress)) {
+        $speed_index = $progress['SpeedIndex'];
     }
     return $speed_index;
 }

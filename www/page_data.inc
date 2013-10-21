@@ -87,14 +87,13 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
             }
         }
         require_once('./video/visualProgress.inc.php');
-        $progress = GetVisualProgress($testPath, $run, $cached);
+        $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
+        $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
         if (isset($progress) && is_array($progress)) {
-            if (array_key_exists('FLI', $progress)) {
-                $ret['SpeedIndex'] = $progress['FLI'];
-            }
-            if (array_key_exists('visualComplete', $progress)) {
+            if (array_key_exists('SpeedIndex', $progress))
+                $ret['SpeedIndex'] = $progress['SpeedIndex'];
+            if (array_key_exists('visualComplete', $progress))
                 $ret['visualComplete'] = $progress['visualComplete'];
-            }
             if (array_key_exists('DevTools', $progress) && is_array($progress['DevTools'])) {
                 if (array_key_exists('SpeedIndex', $progress['DevTools'])) {
                     $ret['SpeedIndexDT'] = intval($progress['DevTools']['SpeedIndex']);
@@ -119,11 +118,10 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
         $end = null;
         if (isset($options) && array_key_exists('end', $options)) {
             $end = $options['end'];
-            $progress = GetVisualProgress($testPath, $run, $cached, null, $end);
+            $progress = GetVisualProgress($testPath, $run, $cached, null, $end, $startOffset);
             if (isset($progress) && is_array($progress)) {
-                if (array_key_exists('FLI', $progress)) {
-                    $ret['SpeedIndexCustom'] = $progress['FLI'];
-                }
+                if (array_key_exists('SpeedIndex', $progress))
+                    $ret['SpeedIndexCustom'] = $progress['SpeedIndex'];
                 $ret['visualCompleteCustom'] = $progress['visualComplete'];
             }
         }

@@ -266,7 +266,8 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    $progress = GetVisualProgress($testPath, $i, 0);
+                    $startOffset = array_key_exists('testStartOffset', $pageData[$i][0]) ? intval(round($pageData[$i][0]['testStartOffset'])) : 0;
+                    $progress = GetVisualProgress($testPath, $i, 0, null, null, $startOffset);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {
@@ -377,7 +378,8 @@ else
                     echo "</rawData>\n";
                     
                     // video frames
-                    $progress = GetVisualProgress($testPath, $i, 1);
+                    $startOffset = array_key_exists('testStartOffset', $pageData[$i][1]) ? intval(round($pageData[$i][1]['testStartOffset'])) : 0;
+                    $progress = GetVisualProgress($testPath, $i, 1, null, null, $startOffset);
                     if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
                         (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
                     {

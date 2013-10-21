@@ -9,7 +9,8 @@ if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
 } elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
   include 'devtools.inc.php';
   $devTools = array();
-  GetTimeline($testPath, $run, $cached, $devTools);
+  $startOffset = null;
+  GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
   if (isset($devTools) && is_array($devTools) && count($devTools)) {
     $timeline = array();
     foreach ($devTools as &$entry) {

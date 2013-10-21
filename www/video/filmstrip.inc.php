@@ -184,55 +184,43 @@ function LoadTestData() {
             $test['video']['start'] = 20000;
             $test['video']['end'] = 0;
             $test['video']['frames'] = array();
+            $test['video']['frame_progress'] = array();
             $end = null;
-            if (is_numeric($test['end']) && $test['end'] > 0) {
+            if (is_numeric($test['end']) && $test['end'] > 0)
                 $end = $test['end'] / 1000.0;
-            }
-            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end);
-            
-            // get the path to each of the video files
-            $dir = opendir($videoPath);
-            if( $dir ) {
-                while($file = readdir($dir)) {
-                    $path = $videoPath  . "/$file";
-                    if( is_file($path) && !strncmp($file, 'frame_', 6) && strpos($file, '.thm') === false && strpos($file, '.hist') === false ) {
-                        $parts = explode('_', $file);
-                        if( count($parts) >= 2 ) {
-                            $index = (int)$parts[1];
-                            $ms = $index * 100;
-                            
-                            if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
-                                if( $index < $test['video']['start'] )
-                                    $test['video']['start'] = $index;
-                                if( $index > $test['video']['end'] )
-                                    $test['video']['end'] = $index;
-                                
-                                // figure out the dimensions of the source image
-                                if( !array_key_exists('width', $test['video']) ||
-                                    !$test['video']['width'] ||
-                                    !array_key_exists('height', $test['video']) ||
-                                    !$test['video']['height'] ) {
-                                    $size = getimagesize($path);
-                                    $test['video']['width'] = $size[0];
-                                    $test['video']['height'] = $size[1];
-                                }
-                                
-                                $test['video']['frames'][$index] = "$file";
-                            }
-                        }
-                    }
+            $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
+            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end, $startOffset);
+            if (array_key_exists('frames', $test['video']['progress'])) {
+              foreach($test['video']['progress']['frames'] as $ms => $frame) {
+                if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
+                  $index = round($ms / 100);
+                  $path = "$videoPath/{$frame['file']}";
+                  if( $index < $test['video']['start'] )
+                      $test['video']['start'] = $index;
+                  if( $index > $test['video']['end'] )
+                      $test['video']['end'] = $index;
+                  // figure out the dimensions of the source image
+                  if( !array_key_exists('width', $test['video']) ||
+                      !$test['video']['width'] ||
+                      !array_key_exists('height', $test['video']) ||
+                      !$test['video']['height'] ) {
+                      $size = getimagesize($path);
+                      $test['video']['width'] = $size[0];
+                      $test['video']['height'] = $size[1];
+                  }
+                  $test['video']['frames'][$index] = $frame['file'];
+                  $test['video']['frame_progress'][$index] = $frame['progress'];
                 }
-                
-                if ($test['end'] == -1)
-                    $test['end'] = $test['video']['end'] * 100;
-                elseif ($test['end'])
-                    $test['video']['end'] = ($test['end'] + 99) / 100;
-
-                closedir($dir);
+              }
+              if ($test['end'] == -1)
+                  $test['end'] = $test['video']['end'] * 100;
+              elseif ($test['end'])
+                  $test['video']['end'] = ($test['end'] + 99) / 100;
             }
-            
-            if( !isset($test['video']['frames'][0]) )
-                $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']];
+            if( !isset($test['video']['frames'][0]) ) {
+                $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']]['file'];
+                $test['video']['frame_progress'][0] = $test['video']['frames'][$test['video']['start']]['progress'];
+            }
         }
     }
 }

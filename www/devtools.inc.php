@@ -21,7 +21,8 @@ if(extension_loaded('newrelic')) {
 function GetDevToolsProgress($testPath, $run, $cached) {
     $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
     if (!isset($progress) || !is_array($progress)) {
-      if (GetTimeline($testPath, $run, $cached, $timeline)) {
+      $startOffset = null;
+      if (GetTimeline($testPath, $run, $cached, $timeline, $startOffset)) {
         $cachedText = '';
         if( $cached )
             $cachedText = '_Cached';
@@ -153,7 +154,7 @@ function GetDevToolsProgress($testPath, $run, $cached) {
 * @param mixed $cached
 * @param mixed $timeline
 */
-function GetTimeline($testPath, $run, $cached, &$timeline) {
+function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
     $ok = false;
     $cachedText = '';
     if( $cached )
@@ -164,7 +165,7 @@ function GetTimeline($testPath, $run, $cached, &$timeline) {
     if (gz_is_file($timelineFile)){
       $timeline = array();
       $raw = gz_file_get_contents($timelineFile);
-      ParseDevToolsEvents($raw, $timeline, null, false);
+      ParseDevToolsEvents($raw, $timeline, null, false, $startOffset);
       if (isset($timeline) && is_array($timeline) && count($timeline))
           $ok = true;
     }
@@ -302,7 +303,8 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $ok = false;
     $requests = null;
     $pageData = null;
-    if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events)) {
+    $startOffset = null;
+    if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events, $startOffset)) {
         if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
             $requests = array();
             $pageData = array();
@@ -321,6 +323,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
             $pageData['responses_404'] = 0;
             $pageData['responses_other'] = 0;
             $pageData['result'] = 0;
+            $pageData['testStartOffset'] = isset($startOffset) && $startOffset > 0 ? $startOffset : 0;
             $pageData['cached'] = $cached;
             $pageData['optimization_checked'] = 0;
             $pageData['start_epoch'] = $rawPageData['startTime'];
@@ -707,7 +710,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
 * @param mixed $cached
 * @param mixed $events
 */
-function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
+function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset) {
   $ok = false;
   $events = array();
   $cachedText = '';
@@ -716,7 +719,7 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
   $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
   if (gz_is_file($devToolsFile)){
     $raw = gz_file_get_contents($devToolsFile);
-    ParseDevToolsEvents($raw, $events, $filter, true);
+    ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);
   }
   if (count($events))
       $ok = true;
@@ -729,12 +732,13 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events) {
 * @param mixed $json
 * @param mixed $events
 */
-function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams) {
+function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset) {
   $messages = json_decode($json, true);
   $START_MESSAGE = '{"message":"WPT start"}';
   $STOP_MESSAGE = '{"message":"WPT stop"}';
   $startTime = null;
   $endTime = null;
+  $firstEvent = null;
   if (strpos($json, $START_MESSAGE) !== false)
     $endTime = 0;
   unset($json);
@@ -752,6 +756,22 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams) {
         }
       }
       foreach($messages as &$message) {
+        if (isset($startTime)) {
+          $eventTime = DevToolsEventTime($message);
+          if (isset($eventTime) &&
+              $eventTime > 0 &&
+              array_key_exists('method', $message) &&
+              $message['method'] == 'Network.requestWillBeSent' &&
+              array_key_exists('params', $message) &&
+              is_array($message['params']) &&
+              array_key_exists('request', $message['params']) &&
+              is_array($message['params']['request']) &&
+              array_key_exists('url', $message['params']['request']) &&
+              !strncmp('http', $message['params']['request']['url'], 4) &&
+              parse_url($message['params']['request']['url']) !== false &&
+              (!isset($firstEvent) || $eventTime < $firstEvent))
+            $firstEvent = $eventTime;
+        }
         if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
           if ($removeParams) {
             $event = $message['params'];
@@ -765,6 +785,8 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams) {
     }
   } else
     $events = $messages;
+  if (isset($startTime) && $startTime > 0 && isset($firstEvent) && $firstEvent > 0 && $startTime > $firstEvent)
+    $startOffset = $startTime - $firstEvent;
 }
 
 function DevToolsEventTime(&$event) {
@@ -885,7 +907,8 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
       $console_log = json_decode(gz_file_get_contents($console_log_file), true);
   elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
     $console_log = array();
-    if (GetDevToolsEvents('Console.messageAdded', $testPath, $run, $cached, $events) &&
+    $startOffset = null;
+    if (GetDevToolsEvents('Console.messageAdded', $testPath, $run, $cached, $events, $startOffset) &&
           is_array($events) &&
           count($events)) {
       foreach ($events as $event) {
