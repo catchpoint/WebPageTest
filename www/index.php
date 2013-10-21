@@ -104,7 +104,7 @@ $loc = ParseLocations($locations);
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <?php
-                    if (isset($settings['mobile']))
+                    if (GetSetting('mobile'))
                         echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
                     ?>
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
