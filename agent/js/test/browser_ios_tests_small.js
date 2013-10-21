@@ -202,8 +202,7 @@ describe('browser_ios small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(browser.isRunning());
 
     var serial = args.deviceSerial;
@@ -258,8 +257,7 @@ describe('browser_ios small', function() {
 
   function startVideo_() {
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(videoStart.calledOnce);
     spawnStub.assertCall(/ideviceinfo$/, '-k', 'ProductType', '-u',
         args.deviceSerial);
@@ -272,9 +270,8 @@ describe('browser_ios small', function() {
 
   function stopVideo_() {
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    test_utils.tickUntilIdle(app, sandbox);
     spawnStub.assertCall();
-    should.equal('[]', app.getSchedule());
     should.ok(videoStart.calledOnce);
     should.ok(videoStop.calledOnce);
   }
@@ -282,8 +279,7 @@ describe('browser_ios small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
 
     should.equal(undefined, browser.getServerUrl());

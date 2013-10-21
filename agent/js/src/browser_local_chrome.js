@@ -80,7 +80,7 @@ BrowserLocalChrome.prototype.startWdServer = function(browserCaps) {
 
   var serverCommand = this.chromedriver_;
   var serverArgs = ['--port=' + this.serverPort_];
-  if (logger.isLogging(logger.LEVELS.extra)) {
+  if (logger.isLogging('extra')) {
     serverArgs.push('--verbose');
   }
   browserCaps.chromeOptions = {args: CHROME_FLAGS.slice()};

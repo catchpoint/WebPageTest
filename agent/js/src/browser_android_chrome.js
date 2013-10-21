@@ -56,7 +56,8 @@ var CHROME_FLAGS = [
  * @param {Object.<string>} args browser options with string values:
  *     runNumber test run number. Install the apk on run 1.
  *     deviceSerial the device to drive.
- *     runTempDir the directory to store per-run files like screenshots.
+ *     [runTempDir] the directory to store per-run files like screenshots,
+ *         defaults to ''.
  *     [chrome] Chrome.apk to install, defaults to None.
  *     [devToolsPort] DevTools port, defaults to dynamic selection.
  *     [pac] PAC content, defaults to None.
@@ -99,7 +100,8 @@ function BrowserAndroidChrome(app, args) {
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
-  this.runTempDir_ = args.runTempDir;
+  this.runTempDir_ = args.runTempDir || '';
+  this.useXvfb_ = undefined;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -138,14 +140,21 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   this.kill();
   this.scheduleInstallIfNeeded_();
   this.scheduleConfigureServerPort_();
-  // Needs to be scheduled, as it uses values assigned in scheduled functions.
-  this.app_.schedule('Launch WD server', function() {
-    var chromeDriverArgs = ['-port=' + this.serverPort_];
-    if (logger.isLogging(logger.LEVELS.extra)) {
-      chromeDriverArgs.push('--verbose');
+  // Must be scheduled, since serverPort_ is assigned in a scheduled function.
+  this.scheduleNeedsXvfb_().then(function(useXvfb) {
+    var cmd = this.chromedriver_;
+    var args = ['-port=' + this.serverPort_];
+    if (logger.isLogging('extra')) {
+      args.push('--verbose');
     }
-    this.startChildProcess(
-        this.chromedriver_, chromeDriverArgs, 'WD server');
+    if (useXvfb) {
+      // Use a fake X display, otherwise a scripted "sendKeys" fails with:
+      //   an X display is required for keycode conversions, consider using Xvfb
+      // TODO(wrightt) submit a crbug; Android shouldn't use the host's keymap!
+      args.splice(0, 0, '-a', cmd);
+      cmd = 'xvfb-run';
+    }
+    this.startChildProcess(cmd, args, 'WD server');
     // Make sure we set serverUrl_ only after the child process start success.
     this.app_.schedule('Set DevTools URL', function() {
       this.serverUrl_ = 'http://localhost:' + this.serverPort_;
@@ -174,6 +183,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // helped but was insufficient by itself.
   this.adb_.su(['rm',
       '/data/data/' + this.chromePackage_ + '/files/tab*']);
+  // Flush the DNS cache
+  this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error
@@ -206,6 +217,34 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
   }
   // TODO(wrightt): use `pm list packages` to check pkg
+};
+
+/**
+ * Test if we have a host-side display.
+ *
+ * @return {webdriver.promise.Promise} resolve({boolean} useXvfb).
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
+  'use strict';
+  if (undefined === this.useXvfb_) {
+    if (process.platform !== 'linux') {
+      this.useXvfb_ = false;
+    } else {
+      process_utils.scheduleExec(this.app_, 'xset', ['q']).then(
+          function() {
+        this.useXvfb_ = false;
+      }.bind(this), function(e) {
+        this.useXvfb_ = true;
+        if (!(/unable to open|no such file/i).test(e.message)) {
+          throw e;
+        }
+      }.bind(this));
+    }
+  }
+  return this.app_.schedule('needsXvfb', function() {
+    return this.useXvfb_;
+  }.bind(this));
 };
 
 /**
@@ -339,8 +378,8 @@ BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
   //
   // Lastly, to verify that the proxy was set, visit:
   //   chrome://net-internals/proxyservice.config#proxy
-  var localPac = path.join(this.runTempDir_, 'wpt_proxy.pac');
-  this.pacFile_ = '/data/local/tmp/wpt_proxy.pac';
+  var localPac = this.deviceSerial_ + '.pac_body';
+  this.pacFile_ = '/data/local/tmp/pac_body';
   var response = 'HTTP/1.1 200 OK\n' +
       'Content-Length: ' + this.pac_.length + '\n' +
       'Content-Type: application/x-ns-proxy-autoconfig\n' +

@@ -53,6 +53,7 @@ describe('packet_capture_android small', function() {
   var adbTcpdumpProc;
   var serial = 'GAGA123';
   var localPcapFile = '/gaga/ulala.pcap';
+  var listenDelay = 1000;
 
   /**
    * @param {Object} var_args
@@ -86,6 +87,15 @@ describe('packet_capture_android small', function() {
     sandbox.verifyAndRestore();
   });
 
+  function waitForListening() {
+    // Wait for "listening on"
+    should.exist(adbTcpdumpProc);
+    '[]'.should.not.equal(app.getSchedule());
+    sandbox.clock.tick(listenDelay - 200);
+    '[]'.should.not.equal(app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
+  }
+
   function stop(pcap) {
     spawnStub.callback = function(proc, command, args) {
       var stdout;
@@ -108,7 +118,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStop();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
+    test_utils.tickUntilIdle(app, sandbox);
     assertAdbCalls(
         ['shell', 'ps', 'tcpdump'],  // Output PID 123.
         ['shell', 'su', '0', 'sh', '-c', 'kill -INT 123'],
@@ -134,6 +144,9 @@ describe('packet_capture_android small', function() {
       } else if (args[3] === 'su' && /^\S*tcpdump /.test(args[7])) {
         // adb -s GAGA shell su 0 sh -c 'tcpdump -i ...'
         adbTcpdumpProc = proc;
+        global.setTimeout(function() {
+          proc.stdout.emit('data', 'listening on usb0,');
+        }, listenDelay);
         return true;  // Keep alive -- don't fake-exit.
       }
     }
@@ -149,7 +162,6 @@ describe('packet_capture_android small', function() {
   it('should start and stop with on-device tcpdump', function() {
     var pcap = new packet_capture_android.PacketCaptureAndroid(
         app, {deviceSerial: serial});
-    should.equal('[]', app.getSchedule());
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
@@ -167,7 +179,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 24);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 50);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
@@ -180,6 +192,7 @@ describe('packet_capture_android small', function() {
             /^tcpdump -i usb0 -p -s 0 -w \/sdcard\/\w+\.pcap$/]);
     assertAdbCall();
 
+    waitForListening();
     stop(pcap);
   });
 
@@ -189,7 +202,6 @@ describe('packet_capture_android small', function() {
     var localTcpdump = '/gaga/tcpdump';
     var pcap = new packet_capture_android.PacketCaptureAndroid(
         app, {tcpdumpBinary: localTcpdump, deviceSerial: serial});
-    should.equal('[]', app.getSchedule());
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
@@ -209,7 +221,7 @@ describe('packet_capture_android small', function() {
     };
 
     pcap.scheduleStart(localPcapFile);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 42);
+    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 50);
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
         ['shell', /^\[\[ -w "\$SECONDARY_STORAGE"/], // Output '/sdcard'.
@@ -226,6 +238,7 @@ describe('packet_capture_android small', function() {
                 ' \\/sdcard\\/\\w+\\.pcap$')]);
     assertAdbCall();
 
+    waitForListening();
     stop(pcap);
   });
 });

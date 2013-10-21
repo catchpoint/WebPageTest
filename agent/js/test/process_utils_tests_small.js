@@ -70,7 +70,7 @@ describe('process_utils small', function() {
       a = a2;
       b = b2;
     });
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 1);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal('a', a);
     should.equal(undefined, b); // webdriver bug?!
   });
@@ -104,8 +104,7 @@ describe('process_utils small', function() {
       re = ce;
     });
     should.equal(0, rn);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY *
-        (delay > 0 ? delay : 1));
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(1, rn);
     should.equal(err, re);
     should.equal(v1, rv1);
@@ -133,14 +132,14 @@ describe('process_utils small', function() {
     process_utils.scheduleFunction(app, 'x', fs.exists, 'y').then(function(v) {
       exists = v;
     });
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(true, exists);
 
     exists = undefined;
     process_utils.scheduleFunction(app, 'x', fs.exists, 'n').then(function(v) {
       exists = v;
     });
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(false, exists);
   });
 
@@ -178,7 +177,7 @@ describe('process_utils small', function() {
     };
 
     process_utils.scheduleKillAll(app, 'killAll', processInfos);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(5, numKilled);
   });
 
@@ -202,7 +201,7 @@ describe('process_utils small', function() {
     };
 
     process_utils.scheduleKillTree(app, 'killTree', {'pid': pid});
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(actualPidsToKill.toString(), expectedPidsToKill.toString());
   }
 
@@ -226,7 +225,7 @@ describe('process_utils small', function() {
       return ret;
     });
     process_utils.scheduleAllocatePort(app, 'alloc port');
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+    test_utils.tickUntilIdle(app, sandbox);
     should.equal(JSON.stringify(serverStub.ports),
        JSON.stringify(expectedPorts));
   }

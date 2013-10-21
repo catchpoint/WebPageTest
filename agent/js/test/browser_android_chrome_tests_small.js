@@ -80,8 +80,24 @@ describe('browser_android_chrome small', function() {
     process_utils.injectWdAppLogging('browser_android', app);
 
     spawnStub = test_utils.stubOutProcessSpawn(sandbox);
-    spawnStub.callback = function(proc, command) {
-      return (/chromedriver/).test(command);  // Keep alive.
+    var shellStub = test_utils.stubShell();
+    spawnStub.callback = function(proc, command, args) {
+      var keepAlive = false;
+      if ((/chromedriver/).test(command)) {
+        shellStub.addKeepAlive(proc);
+        keepAlive = true;
+      } else if ((/adb/).test(command) && args.some(function(arg) {
+          return 'force-stop' === arg;
+        })) {
+        // Ignore `adb force-stop`
+      } else if ('xset' === command) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', 'has display');
+        }, 1);
+      } else {
+        keepAlive = shellStub.callback(proc, command, args);
+      }
+      return keepAlive;
     };
     serverStub = test_utils.stubCreateServer(sandbox);
     sandbox.stub(fs, 'exists', function(path, cb) { cb(true); });
@@ -132,7 +148,7 @@ describe('browser_android_chrome small', function() {
         {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
         videoCard: videoCard});
     browser.scheduleStartVideoRecording('test.avi');
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     test_utils.assertStringsMatch(
@@ -141,7 +157,7 @@ describe('browser_android_chrome small', function() {
     should.ok(videoStop.notCalled);
 
     browser.scheduleStopVideoRecording();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
     should.ok(videoStart.calledOnce);
     should.ok(videoStop.calledOnce);
@@ -156,20 +172,22 @@ describe('browser_android_chrome small', function() {
       });
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 40);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(browser.isRunning());
     browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    if (process.platform === 'linux') {
+      spawnStub.assertCall('xset', 'q');
+    }
     spawnStub.assertCall(chromedriver, /^\-port=\d+/);
-    var chromedriverProcess = spawnStub.secondCall.returnValue;
+    var chromedriverProcess = spawnStub.lastCall.returnValue;
     spawnStub.assertCall();
 
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 4);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
+    spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     spawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
@@ -195,7 +213,7 @@ describe('browser_android_chrome small', function() {
       runTempDir: 'runtmp'
     });
     browser.scheduleTakeScreenshot('gaga').then(screenshotCbSpy);
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
+    test_utils.tickUntilIdle(app, sandbox);
 
     should.ok(screenshotCbSpy.calledOnce);
     ['runtmp/gaga.png'].should.eql(screenshotCbSpy.firstCall.args);
@@ -224,18 +242,29 @@ describe('browser_android_chrome small', function() {
     args = argv;
 
     ncProc = undefined;
+    var shellStub = test_utils.stubShell();
     spawnStub.callback = function(proc, command, args) {
-      if (/adb$/.test(command) && 'echo x' === args[args.length - 1]) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'x');
-        }, 1);
-        return false;
+      var keepAlive = false;
+      var stdout;
+      if (/adb$/.test(command)) {
+        if (args.some(function(arg) {
+                return (/^while true; do nc /).test(arg);
+              })) {
+          ncProc = proc;
+          shellStub.addKeepAlive(ncProc);
+          keepAlive = true;
+        } else if ('echo x' === args[args.length - 1]) {
+          stdout = 'x';
+        }
+      } else {
+        keepAlive = shellStub.callback(proc, command, args);
       }
-      var isNetcat = (/adb$/.test(command) && args.some(function(arg) {
-        return (/^while true; do nc /.test(arg));
-      }));
-      ncProc = (isNetcat ? proc : ncProc);
-      return isNetcat;  // Keep alive.
+      if (undefined !== stdout) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', stdout);
+        }, 1);
+      }
+      return keepAlive;
     };
 
     should.equal(undefined, browser);
@@ -244,7 +273,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     browser.startBrowser();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 34);
+    test_utils.tickUntilIdle(app, sandbox);
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
@@ -252,12 +281,12 @@ describe('browser_android_chrome small', function() {
           ['install', '-r', chromeApk]);
     }
     if (args.pac) {
-      assertAdbCall('push', /^[^\/]+\.pac$/, /^\/.*\.pac$/);
+      assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);
     }
     assertAdbCall('shell', 'su', '-c', 'echo x');
     if (args.pac) {
       assertAdbCall('shell', 'su', '-c',
-          /^while true; do nc -l \d+ < \S+\.pac; done$/);
+          /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
     var flags = ['--disable-fre', '--enable-benchmarking',
         '--metrics-recording-only', '--disable-geolocation',
@@ -270,6 +299,7 @@ describe('browser_android_chrome small', function() {
             '\\" > /data/local/chrome-command-line'],
         ['shell', 'su', '-c',
             'rm /data/data/com.android.chrome/files/tab*'],
+        ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
     assertAdbCall();
@@ -285,12 +315,12 @@ describe('browser_android_chrome small', function() {
   function killBrowser_() {
     should.exist(browser);
     browser.kill();
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 5);
-    should.equal('[]', app.getSchedule());
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
 
     if (args.pac) {
-      assertAdbCall('shell', 'rm', /^\/.*\.pac$/);
+      spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
+      assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
     assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     assertAdbCall();

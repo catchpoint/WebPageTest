@@ -91,7 +91,7 @@ function BrowserIos(app, args) {
   var capturePath = process_utils.concatPath(args.captureDir,
       args.captureScript || 'capture');
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
-  this.runTempDir_ = args.runTempDir;
+  this.runTempDir_ = args.runTempDir || '';
 }
 /** Public class. */
 exports.BrowserIos = BrowserIos;

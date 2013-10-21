@@ -36,6 +36,7 @@ var should = require('should');
 var Stream = require('stream');
 var timers = require('timers');
 var util = require('util');
+var webdriver = require('selenium-webdriver');
 
 
 /**
@@ -122,6 +123,37 @@ exports.unfakeTimers = function(sandbox) {
 };
 
 /**
+ * Ticks the fake timer until the app is IDLE.
+ *
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param {!sinon.sandbox} sandbox a SinonJS sandbox used by the test.
+ * @param {number=} maxSteps maximum number of steps to advance until we
+ *   throw an error, defaults to 100 steps.
+ * @param {number=} ticksPerStep number of ticks to advance per step,
+ *   defaults to {webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY} ticks.
+ */
+exports.tickUntilIdle = function(app, sandbox, maxSteps, ticksPerStep) {
+  'use strict';
+  if ('[]' === app.getSchedule()) {
+    return; // Already idle
+  }
+  maxSteps = (undefined !== maxSteps ? maxSteps : 100);
+  ticksPerStep = (undefined !== ticksPerStep ? ticksPerStep :
+      webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY);
+  var isIdle = false;
+  function onIdle() { isIdle = true; }
+  app.on(webdriver.promise.ControlFlow.EventType.IDLE, onIdle);
+  var steps = 0;
+  while (!isIdle && steps++ < maxSteps) {
+    sandbox.clock.tick(ticksPerStep);
+  }
+  app.removeListener(webdriver.promise.ControlFlow.EventType.IDLE, onIdle);
+  should.ok(steps < maxSteps, 'ControlFlow still active after ' + steps + '*' +
+      ticksPerStep + ' ticks');
+  should.equal('[]', app.getSchedule());
+};
+
+/**
  * Stubs out logger.log for all isMatch calls to log 'stubLog.E(msg...)'.
  *
  * @param {Object} sandbox Sinon.JS sandbox object.
@@ -178,7 +210,7 @@ exports.assertStringsMatch = function(expected, actual) {
   'use strict';
   if (!actual || expected.length !== actual.length) {
     assert.fail(actual, expected,
-        util.format('[%s] does not match [%s]', actual, expected));
+        util.format('%j does not match %j', actual, expected));
   } else {
     expected.forEach(function(expValue, i) {
       var matches = expValue instanceof RegExp ?
@@ -186,7 +218,7 @@ exports.assertStringsMatch = function(expected, actual) {
           expValue === actual[i];
       if (!matches) {
         assert.fail(actual[i], expValue,
-            util.format('element #%d of [%s] does not match [%s]',
+            util.format('element #%d of %j does not match %j',
                 i, actual, expected));
       }
     });
@@ -328,6 +360,61 @@ exports.stubOutProcessSpawn = function(sandbox) {
   };
 
   return stub;
+};
+
+/**
+ * Creates a spawnStub.callback that can handle basic 'ps' and 'kill' requests.
+ *
+ * @return {Object} a callback with 'callback(proc, command, args)' and
+ *    'addKeepAlive(proc)' functions.
+ */
+exports.stubShell = function() {
+  'use strict';
+  var ret = {};
+  var pidToProc = [];
+  var nextPid = 2;
+  ret.addKeepAlive = function(proc) {
+    should.equal(undefined, proc.pid);
+    var pid = nextPid++;
+    proc.pid = pid;
+    pidToProc[pid] = proc;
+    proc.on('exit', function() {
+      delete pidToProc[pid];
+    });
+    return pid;
+  };
+  ret.ps_ = function(args) {
+    exports.assertMatch(['-u', /^\d+$/, '-o', 'ppid=', '-o', 'pid=', '-o',
+        'command='], args);
+    return Object.keys(pidToProc).map(function(pid) {
+          return '1 ' + pid + ' cmd';
+        }).join('\n');
+  };
+  ret.kill_ = function(args) {
+    exports.assertMatch(['-9', /^\d+$/], args);
+    var pid = args[args.length - 1];
+    var proc = pidToProc[pid];
+    if (undefined !== proc) {
+      delete pidToProc[pid];
+      proc.kill();
+    }
+  };
+  ret.callback = function(proc, command, args) {
+    if ('ps' === command) {
+      var stdout = ret.ps_(args);
+      if (!!stdout) {
+        global.setTimeout(function() {
+          proc.stdout.emit('data', stdout);
+        }, 1);
+      }
+    } else if ('kill' === command) {
+      ret.kill_(args);
+    } else {
+      throw new Error(util.format('Unexpected command: %s %j', command, args));
+    }
+    return false;
+  };
+  return ret;
 };
 
 /**
