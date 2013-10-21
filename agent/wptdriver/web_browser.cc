@@ -419,7 +419,7 @@ bool WebBrowser::FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,
           if (proc.th32ParentProcessID == pid) {
             CString exe(proc.szExeFile);
             exe.MakeLower();
-            if (exe.Find(browser_exe >= 0)) {
+            if (exe.Find(browser_exe) >= 0) {
               pi.hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | 
                                         PROCESS_CREATE_THREAD |
                                         PROCESS_SET_INFORMATION |
@@ -526,7 +526,7 @@ HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process,
                                              CString exe) {
   HANDLE hook_process = NULL;
 
-  if (exe.Find(_T("safari.exe"))) {
+  if (exe.Find(_T("safari.exe")) >= 0) {
     DWORD parent_pid = GetProcessId(launched_process);
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snap != INVALID_HANDLE_VALUE) {
@@ -538,7 +538,7 @@ HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process,
           if (proc.th32ParentProcessID == parent_pid) {
             CString exe(proc.szExeFile);
             exe.MakeLower();
-            if (exe.Find(_T("webkit2webprocess.exe") >= 0)) {
+            if (exe.Find(_T("webkit2webprocess.exe")) >= 0) {
               found = true;
               hook_process = OpenProcess(PROCESS_QUERY_INFORMATION | 
                                          PROCESS_CREATE_THREAD |
