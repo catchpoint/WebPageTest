@@ -831,15 +831,29 @@ function DevToolsIsValidNetRequest(&$event) {
   return $isValid;
 }
 
+function DevToolsIsNetRequest(&$event) {
+  $isValid = false;
+  if (array_key_exists('method', $event)) {
+    if ($event['method'] == 'Network.requestWillBeSent')
+      $isValid = true;
+    elseif ($event['method'] == 'Timeline.eventRecorded') {
+      $NET_REQUEST = ',"type":"ResourceSendRequest",';
+      $encoded = json_encode($event);
+      if (strpos($encoded, $NET_REQUEST) !== false)
+        $isValid = true;
+    }
+  }
+  return $isValid;
+}
+
 function FindNextNetworkRequest(&$events, $startTime) {
   $netTime = null;
   foreach ($events as &$event) {
     $eventTime = DevToolsEventTime($event);
     if (isset($eventTime) &&
         $eventTime >= $startTime &&
-        array_key_exists('method', $event) &&
-        $event['method'] == 'Network.requestWillBeSent' &&
-        (!isset($netTime) || $eventTime < $netTime)) {
+        (!isset($netTime) || $eventTime < $netTime) &&
+        DevToolsIsNetRequest($event)) {
       $netTime = $eventTime;
     }
   }

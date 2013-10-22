@@ -71,7 +71,6 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
     // figure out the frame range and actual file names
     $start = null;
     $end = null;
-    $previousFile = null;
     $frames = array();
     if( $endTime )
         $endTime = (int)(($endTime + 99) / 100);
@@ -79,35 +78,40 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
     $dir = null;
     if (is_dir($videoDir))
         $dir = opendir($videoDir);
-    if( isset($dir) && $dir !== false )
-    {
-        while($file = readdir($dir)) 
-        {
+    $files = array();
+    if( isset($dir) && $dir !== false ) {
+        while($file = readdir($dir)) {
             $path = $videoDir  . "/$file";
-            if( is_file($path) && !strncmp($file, 'frame_', 6)  &&  strpos($file, '.thm') === false && strpos($file, '.hist') === false)
-            {
+            if( is_file($path) && !strncmp($file, 'frame_', 6)  &&  strpos($file, '.thm') === false && strpos($file, '.hist') === false) {
                 $parts = explode('_', $file);
-                if( count($parts) >= 2 )
-                {
+                if( count($parts) >= 2 ) {
                     $index = (int)$parts[1];
-                    if (isset($startOffset) && $startOffset)
-                      $index = round((($index * 100) - $startOffset) / 100);
-                    if ($index < 0) {
-                      $previousFile = $file;
-                    } elseif( $extend || !$endTime || $index <= $endTime ) {
-                        if ($index > 0 && !count($frames) && isset($previousFile))
-                          $frames[0] = $previousFile;
-                        if( !isset($start) || $index < $start )
-                            $start = $index;
-                        if( !isset($end) || $index > $end )
-                            $end = $index;
-                        $frames[$index] = $file;
-                    }
+                    $files[$index] = $file;
                 }
             }
         }
-
         closedir($dir);
+    }
+
+    // sort the files by time first, then build the list of frames    
+    $previousFile = null;
+    if (count($files)) {
+      ksort($files, SORT_NUMERIC);
+      foreach($files as $index => $file) {
+        if (isset($startOffset) && $startOffset)
+          $index = round((($index * 100) - $startOffset) / 100);
+        if ($index < 0) {
+          $previousFile = $file;
+        } elseif( $extend || !$endTime || $index <= $endTime ) {
+          if ($index > 0 && !count($frames) && isset($previousFile))
+            $frames[0] = $previousFile;
+          if( !isset($start) || $index < $start )
+              $start = $index;
+          if( !isset($end) || $index > $end )
+              $end = $index;
+          $frames[$index] = $file;
+        }
+      }
     }
     
     // make sure all of the images are the same size - if not, fix it
@@ -136,24 +140,18 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
     }
     
     // build the actual script
-    if( count($frames) >= 1 )
-    {
+    if (count($frames) >= 1) {
         $script = '';
-        ksort($frames, SORT_NUMERIC);
         
         // build out all of the frames
         $lastIndex = 0;
         $lastFrame;
-        foreach( $frames as $index => $file )
-        {
+        foreach( $frames as $index => $file ) {
             // see if this is the first frame
-            if( !isset($lastFrame) )
-            {
+            if( !isset($lastFrame) ) {
                 if( $index > 0 )
                     $script .= "ImageSource(\"$file\", start = 1, end = $index, fps = 10) + \\ \r\n";
-            }
-            elseif( $index > $lastIndex )
-            {
+            } elseif( $index > $lastIndex ) {
                 $count = $index - $lastIndex;
                 $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
             }
@@ -163,12 +161,10 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
         }
         
         // put in the last frame
-        if( $endTime )
-        {
+        if( $endTime ) {
             $count = max((int)($endTime - $lastIndex + 1), 1);
             $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = $count, fps = 10)\r\n";
-        }
-        else
+        } else
             $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
         
         // write out the script file

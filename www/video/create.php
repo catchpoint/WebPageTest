@@ -1,5 +1,5 @@
 <?php
-$version = 4;
+$version = 5;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
