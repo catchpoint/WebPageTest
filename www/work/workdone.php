@@ -294,7 +294,6 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             require_once('video.inc');
             require_once('./video/visualProgress.inc.php');
             MoveVideoFiles($testPath);
-            BuildVideoScripts($testPath);
             
             if (!isset($pageData))
               $pageData = loadAllPageData($testPath);

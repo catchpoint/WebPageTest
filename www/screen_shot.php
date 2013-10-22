@@ -13,10 +13,6 @@ if( $cached )
 $messages = LoadStatusMessages($testPath . '/' . $run . $cachedText . '_status.txt');
 $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
     
-// re-build the videos
-MoveVideoFiles($testPath);
-BuildVideoScript($testPath, $videoPath);
-
 $page_keywords = array('Screen Shot','Webpagetest','Website Speed Test');
 $page_description = "Website performance test screen shots$testLabel.";
 $userImages = true;

@@ -163,10 +163,7 @@ else
                     $test['videoPath'] .= '_cached';
                     
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
-                {
-                    BuildRunVideoStatsScript($test['path'], $test['run'], $test['cached'], $test ['videoPath'], $test['syncStartRender'], $test['syncDocTime'], $test['syncFullyLoaded']);
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
-                }
 
                 $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
                 if( !strlen($test['label']) ) {
@@ -233,7 +230,12 @@ else
                         foreach( $tests as $index => &$test )
                         {
                             // build an appropriate script file for this test
-                            BuildVideoScript(null, $test['videoPath'], $test['end'], $test['extend']);
+                            $startOffset = array_key_exists('pageData', $test) &&
+                                           array_key_exists($test['run'], $test['pageData']) &&
+                                           array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
+                                           array_key_exists('testStartOffset', $test['pageData'][$test['run']][$test['cached']])
+                                           ? $test['pageData'][$test['run']][$test['cached']]['testStartOffset'] : null;
+                            BuildVideoScript(null, $test['videoPath'], $test['end'], $test['extend'], $startOffset);
 
                             $files = array();
                             $dir = opendir($test['videoPath']);

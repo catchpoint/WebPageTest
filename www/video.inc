@@ -66,11 +66,12 @@ function BuildVideoScripts($testPath)
 * 
 * @param mixed $videoDir
 */
-function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
+function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $startOffset = null)
 {
     // figure out the frame range and actual file names
-    $start = 20000;
-    $end = 0;
+    $start = null;
+    $end = null;
+    $previousFile = null;
     $frames = array();
     if( $endTime )
         $endTime = (int)(($endTime + 99) / 100);
@@ -89,11 +90,16 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
                 if( count($parts) >= 2 )
                 {
                     $index = (int)$parts[1];
-                    if( $extend || !$endTime || $index <= $endTime )
-                    {
-                        if( $index < $start )
+                    if (isset($startOffset) && $startOffset)
+                      $index = round((($index * 100) - $startOffset) / 100);
+                    if ($index < 0) {
+                      $previousFile = $file;
+                    } elseif( $extend || !$endTime || $index <= $endTime ) {
+                        if ($index > 0 && !count($frames) && isset($previousFile))
+                          $frames[0] = $previousFile;
+                        if( !isset($start) || $index < $start )
                             $start = $index;
-                        if( $index > $end )
+                        if( !isset($end) || $index > $end )
                             $end = $index;
                         $frames[$index] = $file;
                     }
@@ -167,85 +173,6 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false)
         
         // write out the script file
         file_put_contents("$videoDir/video.avs", $script);
-    }
-    
-    // create the summary stats script
-    if( isset($testPath) && strlen($testPath) )
-        BuildVideoStatsScript($testPath, $videoDir);
-}
-
-/**
-* Create a script with the video stats
-* 
-* @param mixed $videoDir
-*/
-function BuildVideoStatsScript($testPath, $videoDir)
-{
-    $pathParts = explode('/', $videoDir);
-    $count = count($pathParts);
-    if( $count )
-    {
-        $dir = $pathParts[$count - 1];
-        $dirParts = explode('_', $dir);
-        if( count($dirParts) >= 2 )
-        {
-            $run = (int)$dirParts[1];
-            if( $run )
-            {
-                $cached = 0;
-                if( strstr($dir, '_cached') !== false )
-                    $cached = 1;
-                    
-                BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, "", "", "");
-            }
-        }
-    }
-}
-
-/**
-* Create a script with the video stats
-*
-* @param mixed $videoDir
-*/
-function BuildRunVideoStatsScript($testPath, $run, $cached, $videoDir, $syncStartRender, $syncDocTime, $syncFullyLoaded)
-{
-    // load the page-level data for the run
-    require_once('./page_data.inc');
-    $pageData = loadPageRunData($testPath, $run, $cached);
-    if( $pageData && count($pageData) && is_dir($videoDir))
-    {
-        if (!$syncStartRender && array_key_exists('render', $pageData))
-            $syncStartRender = $pageData['render'];
-        if (!$syncDocTime && array_key_exists('docTime', $pageData))
-            $syncDocTime = $pageData['docTime'];
-        if (!$syncFullyLoaded && array_key_exists('fullyLoaded', $pageData))
-            $syncFullyLoaded = $pageData['fullyLoaded'];
-        if (array_key_exists('URL', $pageData))
-          $script = "test_url=\"{$pageData['URL']}\"\r\n";
-        if (array_key_exists('loadTime', $pageData))
-          $script .= "test_loadTime={$pageData['loadTime']}\r\n";
-        if (array_key_exists('TTFB', $pageData))
-          $script .= "test_TTFB={$pageData['TTFB']}\r\n";
-        if (array_key_exists('render', $pageData))
-          $script .= "test_startRender={$pageData['render']}\r\n";
-        if (array_key_exists('fullyLoaded', $pageData))
-          $script .= "test_fullyLoaded={$pageData['fullyLoaded']}\r\n";
-        if (array_key_exists('docTime', $pageData))
-          $script .= "test_documentComplete={$pageData['docTime']}\r\n";
-        if (array_key_exists('domTime', $pageData))
-          $script .= "test_domTime={$pageData['domTime']}\r\n";
-        if (array_key_exists('bytesIn', $pageData))
-          $script .= "test_bytesIn={$pageData['bytesIn']}\r\n";
-        if (array_key_exists('requests', $pageData))
-          $script .= "test_requests={$pageData['requests']}\r\n";
-        if (array_key_exists('result', $pageData))
-          $script .= "test_result={$pageData['result']}\r\n";
-        if (array_key_exists('cached', $pageData))
-          $script .= "test_cached={$pageData['cached']}\r\n";
-        $script .= "test_syncStartRender={$syncStartRender}\r\n";
-        $script .= "test_syncDocumentComplete={$syncDocTime}\r\n";
-        $script .= "test_syncFullyLoaded={$syncFullyLoaded}\r\n";
-        file_put_contents("$videoDir/stats.avs", $script);
     }
 }
 
