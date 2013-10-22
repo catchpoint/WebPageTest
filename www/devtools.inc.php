@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.4';
+$DevToolsCacheVersion = '1.5';
 $eventList = array();
 
 if(extension_loaded('newrelic')) { 
@@ -736,42 +736,35 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $messages = json_decode($json, true);
   $START_MESSAGE = '{"message":"WPT start"}';
   $STOP_MESSAGE = '{"message":"WPT stop"}';
+  $PAINT_EVENT = ',"type":"Paint",';
   $startTime = null;
   $endTime = null;
   $firstEvent = null;
+  $firstNetEvent = null;
   if (strpos($json, $START_MESSAGE) !== false)
     $endTime = 0;
   unset($json);
   if ($removeParams || isset($filter) || isset($endTime)) {
     if ($messages && is_array($messages)) {
-      // see if we need to extract the valid start and end times from the waterfall
-      if (isset ($endTime)) {
-        foreach($messages as &$message) {
-          $encoded = json_encode($message);
-          if (strpos(json_encode($message), $START_MESSAGE) !== false) {
-            $startTime = FindNextNetworkRequest($messages, DevToolsEventTime($message));
-          } elseif (strpos(json_encode($message), $STOP_MESSAGE) !== false) {
-            $endTime = DevToolsEventTime($message);
+      // figure out the overall start offset and time of the first event
+      // aligning the video to the last paint event before the first navigation
+      $previousPaint = null;
+      foreach($messages as &$message) {
+        $encoded = json_encode($message);
+        if (strpos($encoded, $START_MESSAGE) !== false)
+          $startTime = FindNextNetworkRequest($messages, DevToolsEventTime($message));
+        elseif (strpos($encoded, $STOP_MESSAGE) !== false)
+          $endTime = DevToolsEventTime($message);
+        if (!isset($firstEvent)) {
+          if (strpos($encoded, $PAINT_EVENT) !== false)
+            $previousPaint = DevToolsEventEndTime($message);
+          if (DevToolsIsValidNetRequest($message)) {
+            $firstNetEvent = DevToolsEventTime($message);
+            $firstEvent = isset($previousPaint) ? $previousPaint : $firstNetEvent;
           }
         }
       }
       foreach($messages as &$message) {
-        if (isset($startTime)) {
-          $eventTime = DevToolsEventTime($message);
-          if (isset($eventTime) &&
-              $eventTime > 0 &&
-              array_key_exists('method', $message) &&
-              $message['method'] == 'Network.requestWillBeSent' &&
-              array_key_exists('params', $message) &&
-              is_array($message['params']) &&
-              array_key_exists('request', $message['params']) &&
-              is_array($message['params']['request']) &&
-              array_key_exists('url', $message['params']['request']) &&
-              !strncmp('http', $message['params']['request']['url'], 4) &&
-              parse_url($message['params']['request']['url']) !== false &&
-              (!isset($firstEvent) || $eventTime < $firstEvent))
-            $firstEvent = $eventTime;
-        }
         if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
           if ($removeParams) {
             $event = $message['params'];
@@ -787,6 +780,8 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     $events = $messages;
   if (isset($startTime) && $startTime > 0 && isset($firstEvent) && $firstEvent > 0 && $startTime > $firstEvent)
     $startOffset = $startTime - $firstEvent;
+  elseif (isset($firstEvent) && isset($firstNetEvent) && $firstNetEvent > $firstEvent)
+    $startOffset = $firstNetEvent - $firstEvent;
 }
 
 function DevToolsEventTime(&$event) {
@@ -802,6 +797,38 @@ function DevToolsEventTime(&$event) {
       $time = $event['params']['timestamp'] * 1000;
   }
   return $time;
+}
+
+function DevToolsEventEndTime(&$event) {
+  $time = null;
+  if (is_array($event) &&
+      array_key_exists('params', $event) &&
+      is_array($event['params'])) {
+    if (array_key_exists('record', $event['params']) &&
+        is_array($event['params']['record']) &&
+        array_key_exists('endTime', $event['params']['record']))
+      $time = floatval($event['params']['record']['endTime']);
+    elseif (array_key_exists('timestamp', $event['params']))
+      $time = $event['params']['timestamp'] * 1000;
+  }
+  return $time;
+}
+
+function DevToolsIsValidNetRequest(&$event) {
+  $isValid = false;
+
+  if (array_key_exists('method', $event) &&
+      $event['method'] == 'Network.requestWillBeSent' &&
+      array_key_exists('params', $event) &&
+      is_array($event['params']) &&
+      array_key_exists('request', $event['params']) &&
+      is_array($event['params']['request']) &&
+      array_key_exists('url', $event['params']['request']) &&
+      !strncmp('http', $event['params']['request']['url'], 4) &&
+      parse_url($event['params']['request']['url']) !== false)
+    $isValid = true;
+    
+  return $isValid;
 }
 
 function FindNextNetworkRequest(&$events, $startTime) {
