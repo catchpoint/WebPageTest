@@ -54,21 +54,6 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
           is_array($page_data) &&
           array_key_exists('render', $page_data))
         $renderStart = $page_data['render'];
-/*
-      if (isset($page_data) &&
-          is_array($page_data) &&
-          array_key_exists('start_epoch', $page_data) &&
-          array_key_exists('video_start', $test['appurify_tests'][$run])) {
-        $test_start = $page_data['start_epoch'];
-        $test_end = $test_start + ($page_data['fullyLoaded'] / 1000.0);
-        $video_start = $test['appurify_tests'][$run]['video_start'] / 1000.0;
-        if ($test_start > $video_start) {
-          $startOffset = $test_start - $video_start;
-          $duration = $test_end - $test_start;
-          $trim = '-ss ' . msToHMS($startOffset) . ' -t ' . msToHMS($duration) . ' ';
-        }
-      }
-*/      
     }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);

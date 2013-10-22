@@ -50,7 +50,7 @@ class Appurify{
       $list = $this->Get('https://live.appurify.com/resource/devices/list/');
       if ($list !== false && is_array($list)) {
         foreach($list as $device) {
-          if ($device['os_name'] == 'iOS') {
+          if ($device['os_name'] == 'iOS' && intval($device['os_version']) < 7) {
             $id = $device['device_type_id'] . '-safari';
             $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Safari";
             $devices[$id] = $name;
@@ -178,27 +178,31 @@ class Appurify{
     }
     if (isset($tempdir) && is_dir($tempdir)) {
       $ok = true;
-      $devtools = array();
-      $files = glob("$tempdir/appurify_results/WSData*");
-      if (isset($files) && is_array($files) && count($files)) {
-        $outfile = fopen("$testPath/{$index}_devtools.json", 'w');
-        if ($outfile) {
-          fwrite($outfile, "[");
-          foreach ($files as $file)
-            $this->ProcessDevTools($file, $outfile);
-          fwrite($outfile, "{}]");
-          fclose($outfile);
-          gz_compress("$testPath/{$index}_devtools.json");
-          if (is_file("$testPath/{$index}_devtools.json.gz"))
-            unlink("$testPath/{$index}_devtools.json");
-        }
-      }
+      $this->ProcessDevTools($test, $tempdir, $testPath, $index);
       $this->ProcessScreenShot($test, $tempdir, $testPath, $index);
       $this->ProcessPcap($test, $tempdir, $testPath, $index);
       $this->ProcessVideo($test, $tempdir, $testPath, $index);
       delTree($tempdir);
     }
     return $ok;
+  }
+  
+  protected function ProcessDevTools(&$test, $tempdir, $testPath, $index) {
+    $devtools = array();
+    $files = glob("$tempdir/appurify_results/WSData*");
+    if (isset($files) && is_array($files) && count($files)) {
+      $outfile = fopen("$testPath/{$index}_devtools.json", 'w');
+      if ($outfile) {
+        fwrite($outfile, "[");
+        foreach ($files as $file)
+          $this->ProcessDevToolsFile($file, $outfile);
+        fwrite($outfile, "{}]");
+        fclose($outfile);
+        gz_compress("$testPath/{$index}_devtools.json");
+        if (is_file("$testPath/{$index}_devtools.json.gz"))
+          unlink("$testPath/{$index}_devtools.json");
+      }
+    }
   }
   
   protected function ProcessScreenShot(&$test, $tempdir, $testPath, $index) {
@@ -241,7 +245,7 @@ class Appurify{
       rename("$tempdir/appurify_results/network.pcap", "$testPath/{$index}.cap");
   }
   
-  protected function ProcessDevTools($file, $outfile) {
+  protected function ProcessDevToolsFile($file, $outfile) {
     $started = false;
     $events = json_decode(file_get_contents($file), true);
     if (isset($events) && is_array($events)) {
