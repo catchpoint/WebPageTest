@@ -698,6 +698,8 @@ function FilterLocations(&$locations, $includeHidden = '',
                     $minutes = (int)($elapsed / 60);
                     if( $minutes > 30 )
                         unset($locations[$name]);
+                } else {
+                  unset($locations[$name]);
                 }
             }
         }
