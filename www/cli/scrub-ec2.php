@@ -33,6 +33,8 @@ if( $ec2 )
 {
     foreach( $regions as $region => &$amiData )
     {
+        $ec2->set_region($region);
+
         // clean up any orphaned volumes
         $volumes = $ec2->describe_volumes();
         if (isset($volumes)) {
@@ -48,7 +50,6 @@ if( $ec2 )
         {
             $location = $regionData['location'];
             echo "\n$region ($location):\n";
-            $ec2->set_region($region);
             
             // load the valid testers in this location
             $testers = array();
@@ -159,27 +160,35 @@ if( $ec2 )
             $needed = $targetCount - $counts["$region.$ami"];
             echo "Needed: $needed\n";
             if( $needed > 0 ) {
-                echo "Adding $needed spot instances in $region...";
-                $size = $instanceType;
-                if (array_key_exists('size', $regionData)) {
-                    $size = $regionData['size'];
+                // see how many open pending spot requests we already have
+                $spotCount = CountOpenSpotRequests($ec2, $ami);
+                if ($spotCount) {
+                  echo "Already have $spotCount spot requests pending in $region\n";
+                  $needed -= $spotCount;
                 }
-                $response = $ec2->request_spot_instances($regionData['price'], array(
-                    'InstanceCount' => (int)$needed,
-                    'Type' => 'one-time',
-                    'LaunchSpecification' => array(
-                        'ImageId' => $ami,
-                        'InstanceType' => $size,
-                        'UserData' => base64_encode($regionData['userdata'])
-                    ),
-                ));
-                if( $response->isOK() )
-                {
-                    echo "ok\n";
-                    $counts["$region.$ami"] += $needed;
+                if( $needed > 0 ) {
+                  echo "Adding $needed spot instances in $region...";
+                  $size = $instanceType;
+                  if (array_key_exists('size', $regionData)) {
+                      $size = $regionData['size'];
+                  }
+                  $response = $ec2->request_spot_instances($regionData['price'], array(
+                      'InstanceCount' => (int)$needed,
+                      'Type' => 'one-time',
+                      'LaunchSpecification' => array(
+                          'ImageId' => $ami,
+                          'InstanceType' => $size,
+                          'UserData' => base64_encode($regionData['userdata'])
+                      ),
+                  ));
+                  if( $response->isOK() )
+                  {
+                      echo "ok\n";
+                      $counts["$region.$ami"] += $needed;
+                  }
+                  else
+                      echo "failed\n";
                 }
-                else
-                    echo "failed\n";
             } elseif( $needed < 0 && !$addOnly ) {
                 // lock the location while we mark some free instances for decomm
                 $count = abs($needed);
@@ -244,4 +253,16 @@ $detail = ob_get_flush();
 // send out a mail message if we are not running at the minimum levels
 if( !$addOnly && !$minimum )
     mail('pmeenan@webpagetest.org', $summary, $detail );
+    
+function CountOpenSpotRequests(&$ec2, $ami) {
+  $count = 0;
+  $response = $ec2->describe_spot_instance_requests();
+  if( $response->isOK() ) {
+    foreach( $response->body->spotInstanceRequestSet->item as $item ) {
+      if ($item->state == 'open' && $item->launchSpecification->imageId == $ami)
+        $count++;
+    }
+  }
+  return $count;
+}
 ?>
