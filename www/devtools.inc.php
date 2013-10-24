@@ -1,6 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.5';
-$eventList = array();
+$DevToolsCacheVersion = '1.6';
 
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetCachedDevToolsProgress');
@@ -32,15 +31,14 @@ function GetDevToolsProgress($testPath, $run, $cached) {
         $startTime = 0;
         $fullScreen = 0;
         $regions = array();
-        if (DevToolsHasLayout($timeline)) {
+        $viewport = null;
+        if (DevToolsHasLayout($timeline, $viewport)) {
           $didLayout = false;
           $didReceiveResponse = false;
         } else {
           $didLayout = true;
           $didReceiveResponse = true;
         }
-        global $eventList;
-        $eventList = array();
         $startTimes = array();
         $progress['processing'] = array();
         foreach($timeline as &$entry) {
@@ -57,7 +55,7 @@ function GetDevToolsProgress($testPath, $run, $cached) {
               !array_key_exists('timestamp', $startTimes))
               $startTimes['timestamp'] = $entry['timestamp'];
             $frame = '0';
-            ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
+            ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
             GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
             if (DevToolsMatchEvent('Console.messageAdded', $entry) &&
                 array_key_exists('message', $entry['params']) &&
@@ -133,12 +131,6 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                 }
             }
         }
-        if (count($eventList)) {
-            ksort($eventList, SORT_NUMERIC);
-            @unlink('./log/timeline.txt');
-            foreach($eventList as $time => $event)
-                logMsg("$time - {$event['type']} : " . json_encode($event), './log/timeline.txt', true);
-        }
         if (isset($progress) && is_array($progress))
             SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
       }
@@ -180,7 +172,7 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
 * @param mixed $fullScreen
 * @param mixed $regions
 */
-function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse) {
+function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse, $viewport) {
     $ret = false;
     if (isset($entry) && is_array($entry)) {
         $hadPaintChildren = false;
@@ -198,11 +190,11 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
         if (array_key_exists('frameId', $entry))
             $frame = $entry['frameId'];
         if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-            ProcessPaintEntry($entry['params']['record'], $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse);
+            ProcessPaintEntry($entry['params']['record'], $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
         if(array_key_exists('children', $entry) &&
            is_array($entry['children'])) {
             foreach($entry['children'] as &$child)
-                if (ProcessPaintEntry($child, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse))
+                if (ProcessPaintEntry($child, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport))
                     $hadPaintChildren = true;
         } 
         if (array_key_exists('type', $entry) &&
@@ -217,7 +209,8 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
           if (array_key_exists('width', $entry['data']) &&
               array_key_exists('height', $entry['data']) &&
               array_key_exists('x', $entry['data']) &&
-              array_key_exists('y', $entry['data'])) {
+              array_key_exists('y', $entry['data']) &&
+              ClipPaintRectToViewport($entry['data'], $viewport)) {
             $ret = true;
             $area = $entry['data']['width'] * $entry['data']['height'];
             if ($area > $fullScreen)
@@ -237,6 +230,31 @@ function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout
         }
     }
     return $ret;
+}
+
+/**
+* Clip the provided paint rect to the viewport and return true if the resulting rect is valid
+* 
+* @param mixed $paintRect
+* @param mixed $viewport
+*/
+function ClipPaintRectToViewport(&$paintRect, $viewport) {
+  $isInside = true;
+  if (isset($viewport)) {
+    $isInside = false;
+    $left = max($paintRect['x'], $viewport['x']);
+    $top = max($paintRect['y'], $viewport['y']);
+    $right = min($paintRect['x'] + $paintRect['width'], $viewport['x'] + $viewport['width']);
+    $bottom = min($paintRect['y'] + $paintRect['height'], $viewport['y'] + $viewport['height']);
+    if ($right > $left && $bottom > $top) {
+      $paintRect['x'] = $left;
+      $paintRect['y'] = $top;
+      $paintRect['width'] = $right - $left;
+      $paintRect['height'] = $bottom - $top;
+      $isInside = true;
+    }
+  }
+  return $isInside;
 }
 
 /**
@@ -896,12 +914,12 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
 * 
 * @param mixed $timeline
 */
-function DevToolsHasLayout(&$timeline) {
+function DevToolsHasLayout(&$timeline, &$viewport) {
   $hasLayout = false;
   $hasResponse = false;
   $ret = false;
   foreach ($timeline as &$entry) {
-    DevToolsEventHasLayout($entry, $hasLayout, $hasResponse);
+    DevToolsEventHasLayout($entry, $hasLayout, $hasResponse, $viewport);
     if ($hasLayout && $hasResponse) {
       $ret = true;
       break;
@@ -915,7 +933,7 @@ function DevToolsHasLayout(&$timeline) {
 * 
 * @param mixed $event
 */
-function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse) {
+function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse, &$viewport) {
   if (isset($entry) && is_array($entry)) {
       if (!$hasResponse &&
           array_key_exists('type', $entry) &&
@@ -926,14 +944,31 @@ function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse) {
           !$hasLayout &&
           array_key_exists('type', $entry) &&
           !strcasecmp($entry['type'], 'Layout')) {
-          $hasLayout = true;
+          if (array_key_exists('data', $entry) &&
+              is_array($entry['data']) &&
+              array_key_exists('partialLayout', $entry['data'])) {
+            if (!$entry['data']['partialLayout']) {
+              if (array_key_exists('root', $entry['data'])) {
+                $x = $entry['data']['root'][0];
+                $y = $entry['data']['root'][1];
+                $width = $entry['data']['root'][2] - $x;
+                $height = $entry['data']['root'][5] - $y;
+                if ($width > 0 && $height > 0) {
+                  $hasLayout = true;
+                  $viewport = array('x' => $x, 'y' => $y, 'width' => $width, 'height' => $height);
+                }
+              } else
+                $hasLayout = true;
+            }
+          } else
+            $hasLayout = true;
       }
       if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-          DevToolsEventHasLayout($entry['params']['record'], $hasLayout, $hasResponse);
+          DevToolsEventHasLayout($entry['params']['record'], $hasLayout, $hasResponse, $viewport);
       if(array_key_exists('children', $entry) &&
          is_array($entry['children'])) {
           foreach($entry['children'] as &$child)
-              DevToolsEventHasLayout($child, $hasLayout, $hasResponse);
+              DevToolsEventHasLayout($child, $hasLayout, $hasResponse, $viewport);
       } 
   }
 }
