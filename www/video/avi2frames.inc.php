@@ -37,12 +37,11 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
     $crop = '';
     if (!is_file($videoFile)) {
-      $crop = '-vf crop=in_w:in_h-80:0:80 ';
+      $crop = ',crop=in_w:in_h-80:0:80';
       $orange_leader = false;
       $videoFile = "$testPath/$run{$cachedText}_video.mp4";
     }
     // trim the video to align with the capture if we have timestamps for both
-    $trim = '';
     $renderStart = null;
     if (array_key_exists('appurify_tests', $test) &&
         is_array($test['appurify_tests']) &&
@@ -57,12 +56,15 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        if (!is_dir($videoDir)) {
-            mkdir($videoDir, 0777, true);
+        if (!is_dir($videoDir) || !is_file("$videoDir/frame_0000.jpg")) {
+            if (is_dir($videoDir))
+              delTree($videoDir);
+            if (!is_dir($videoDir))
+              mkdir($videoDir, 0777, true);
             $videoFile = realpath($videoFile);
             $videoDir = realpath($videoDir);
             if (strlen($videoFile) && strlen($videoDir)) {
-                if (Video2PNG($videoFile, $videoDir, $crop, $trim)) {
+                if (Video2PNG($videoFile, $videoDir, $crop)) {
                     EliminateDuplicateAVIFiles($videoDir);
                     $lastImage = ProcessVideoFrames($videoDir, $orange_leader, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
@@ -82,15 +84,44 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
 * @param mixed $infile
 * @param mixed $outdir
 */
-function Video2PNG($infile, $outdir, $crop, $trim) {
-    $ret = false;
-    $result;
-    $command = "ffmpeg -i \"$infile\" -r 10 $crop$trim\"$outdir/image-%4d.png\"";
-    $retStr = exec($command, $output, $result);
-    $files = glob("$outdir/image*.png");
-    if (count($files))
-        $ret = true;
-    return $ret;
+function Video2PNG($infile, $outdir, $crop) {
+  $ret = false;
+  $oldDir = getcwd();
+  chdir($outdir);
+
+  $command = "ffmpeg -report -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=10$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\"";
+  $result;
+  exec($command, $output, $result);
+  $logFiles = glob("$outdir/ffmpeg*.log");
+  if ($logFiles && count($logFiles)) {
+    $logFile = $logFiles[0];
+    $lines = file($logFile);
+    if ($lines && is_array($lines) && count($lines)) {
+      $frameCount = 0;
+      foreach ($lines as $line) {
+        if (preg_match('/decimate.*pts:(?P<timecode>[0-9]+).*drop_count:-[0-9]+/', $line, $matches)) {
+          $frameCount++;
+          $frameTime = sprintf("%04d", intval($matches['timecode']) + 1);
+          $src = "$outdir/img-$frameCount.png";
+          $dest = "$outdir/image-$frameTime.png";
+          if (is_file($src)) {
+            $ret = true;
+            rename($src, $dest);
+          }
+        }
+      }
+    }
+    foreach ($logFiles as $logFile)
+      unlink($logFile);
+  }
+  $junkImages = glob("$outdir/img*.png");
+  if ($junkImages && is_array($junkImages) && count($junkImages)) {
+    foreach ($junkImages as $img)
+      unlink($img);
+  }
+
+  chdir($oldDir);
+  return $ret;
 }
 
 /**
@@ -141,7 +172,7 @@ function CopyAVIFrame($src, $dest) {
 
 function IsBlankAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert \"images/video_white.png\" \\( \"$file\" -shave 5x125 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert \"images/video_white.png\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -158,7 +189,7 @@ function IsBlankAVIFrame($file, $videoDir) {
 */
 function IsOrangeAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -shave 5x125 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -174,25 +205,19 @@ function IsOrangeAVIFrame($file, $videoDir) {
 */
 function EliminateDuplicateAVIFiles($videoDir) {
   $previousFile = null;
-  $previousMD5 = null;
   $files = glob("$videoDir/image*.png");
   foreach ($files as $file) {
     $duplicate = false;
-    $currentMD5 = md5_file($file);
-    if ($currentMD5 !== false && $currentMD5 == $previousMD5)    
-      $duplicate = true;
-    elseif (isset($previousFile)) {
-      $command = "convert  \"$previousFile\" \"$file\" -crop +0+125 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+    if (isset($previousFile)) {
+      $command = "convert  \"$previousFile\" \"$file\" -crop +0+55 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
       $differentPixels = shell_exec($command);
       if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
         $duplicate = true;
     }
-    if ($duplicate) {
+    if ($duplicate)
       unlink($file);
-    } else {
+    else
       $previousFile = $file;
-      $previousMD5 = $currentMD5;
-    }
   }
 }
 
