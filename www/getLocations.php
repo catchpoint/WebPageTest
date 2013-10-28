@@ -23,16 +23,72 @@ foreach( $locations as $id => &$location )
 }
 
 // kick out the data
-if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' )
-{
+if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret = array();
   $ret['statusCode'] = 200;
   $ret['statusText'] = 'Ok';
   $ret['data'] = $locations;
   json_response($ret);
-}
-else
-{
+} elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
+  echo "<!DOCTYPE html>\n";
+  echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
+  echo "<style type=\"text/css\">\n";
+  echo "th,td{text-align:center; padding: 0px 20px;}\n";
+  echo ".location{text-align: left;}\n";
+  echo ".warning{background-color: yellow}\n";
+  echo ".error{background-color: red}\n";
+  echo "</style>\n";
+  echo "</head>\n<body>\n";
+  echo "<table>\n";
+  echo "<tr>
+          <th class=\"location\">Location</th>
+          <th>Idle Testers</th>
+          <th>Total Tests</th>
+          <th>Being Tested</th>
+          <th>High Priority</th>
+          <th>P1</th>
+          <th>P2</th>
+          <th>P3</th>
+          <th>P4</th>
+          <th>P5</th>
+          <th>P6</th>
+          <th>P7</th>
+          <th>P8</th>
+          <th>P9</th>
+        </tr>\n";
+  foreach( $locations as $name => &$location ) {
+    $error = '';
+    if (array_key_exists('PendingTests', $location) &&
+        array_key_exists('Total', $location['PendingTests']) &&
+        array_key_exists('HighPriority', $location['PendingTests']) &&
+        array_key_exists('Testing', $location['PendingTests'])) {
+        if ($location['PendingTests']['HighPriority'] > $location['PendingTests']['Testing'] * 10)
+          $error = ' error';
+        elseif ($location['PendingTests']['Total'] > 1)
+          $error = ' warning';
+    }
+    echo "<tr id=\"$name\">";
+    echo "<td class=\"location$error\">" . @htmlspecialchars($name) . "</td>";
+    if (array_key_exists('PendingTests', $location)) {
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Testing']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['HighPriority']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p1']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p2']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p3']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p4']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p5']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p6']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p7']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p8']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p9']) . "</td>";
+    }
+    echo "</tr>";
+  }
+  echo "</table>\n";
+  echo "</body>\n</html>";
+} else {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getLocations.xsl\" version=\"1.0\"?>\n";

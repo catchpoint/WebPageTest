@@ -11,16 +11,56 @@ if ($CURL_CONTEXT !== false) {
 $locations = GetAllTesters();
 
 // kick out the data
-if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' )
-{
+if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret = array();
   $ret['statusCode'] = 200;
   $ret['statusText'] = 'Ok';
   $ret['data'] = $locations;
   json_response($ret);
-}
-else
-{
+} elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
+  echo "<!DOCTYPE html>\n";
+  echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
+  echo "<style type=\"text/css\">\n";
+  echo "th,td{text-align:center; padding: 0px 15px;}\n";
+  echo ".tester{text-align: left;}\n";
+  echo ".header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}\n";
+  echo ".error{background-color: red}\n";
+  echo "</style>\n";
+  echo "</head>\n<body>\n";
+  echo "<table>\n";
+  foreach( $locations as $name => &$location ) {
+    $error = ' error';
+    $elapsed = '';
+    if (array_key_exists('elapsed', $location)) {
+      $elapsed = " ({$location['elapsed']} minutes)";
+      if ($location['elapsed'] < 30)
+        $error = '';
+    }
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"11\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    if (array_key_exists('testers', $location)) {
+      echo "<tr><th class=\"tester\">Tester</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
+      echo "<th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
+      $count = 0;
+      foreach($location['testers'] as $tester) {
+        $count++;
+        echo "<tr><td class=\"tester\">$count</td>";
+        echo "<td>" . @htmlspecialchars($tester['version']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "</tr>";
+      }
+    }
+  }
+  echo "</table>\n";
+  echo "</body>\n</html>";
+} else {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getTesters.xsl\" version=\"1.0\"?>\n";
