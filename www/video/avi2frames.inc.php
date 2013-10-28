@@ -11,7 +11,7 @@ function ProcessAllAVIVideos($testPath) {
       $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
     $files = scandir($testPath);
     foreach ($files as $file) {
-      if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?_video.(?P<ext>avi|mp4)$/', $file, $matches)) {
+      if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?(_video|_appurify).(?P<ext>avi|mp4)$/', $file, $matches)) {
         $run = $matches['run'];
         $cached = 0;
         if (array_key_exists('cached', $matches) && strlen($matches['cached']))
@@ -36,10 +36,12 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     $orange_leader = true;
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
     $crop = '';
+    if (!is_file($videoFile))
+      $videoFile = "$testPath/$run{$cachedText}_video.mp4";
     if (!is_file($videoFile)) {
       $crop = ',crop=in_w:in_h-80:0:80';
       $orange_leader = false;
-      $videoFile = "$testPath/$run{$cachedText}_video.mp4";
+      $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
     }
     // trim the video to align with the capture if we have timestamps for both
     $renderStart = null;

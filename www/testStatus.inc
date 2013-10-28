@@ -303,6 +303,7 @@ function GetAppurifyStatus($id, $testPath, &$test) {
     $ret['statusCode'] = 102;
     $ret['statusText'] = 'Server Unreachable';
     $waiting = false;
+    $installing = false;
     $started = false;
     require_once('./lib/appurify.inc.php');
     $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
@@ -319,6 +320,9 @@ function GetAppurifyStatus($id, $testPath, &$test) {
               if (array_key_exists('detailed_status', $run) &&
                   $run['detailed_status'] == 'queueing')
                 $waiting = true;
+              elseif (array_key_exists('detailed_status', $run) &&
+                  $run['detailed_status'] == 'installing')
+                $installing = true;
               else
                 $started = true;
             } else
@@ -358,10 +362,13 @@ function GetAppurifyStatus($id, $testPath, &$test) {
         SendAsyncRequest("/work/postprocess.php?test=$id");
       } elseif ($started) {
         $ret['statusCode'] = 100;
-        $ret['statusText'] = 'Test Started';
+        $ret['statusText'] = 'Running Test';
+      } elseif ($installing) {
+        $ret['statusCode'] = 100;
+        $ret['statusText'] = 'Preparing Device';
       } elseif ($waiting) {
         $ret['statusCode'] = 101;
-        $ret['statusText'] = 'Test Pending';
+        $ret['statusText'] = 'Waiting for Available Device';
       }
     }
   }

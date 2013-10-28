@@ -234,7 +234,7 @@ class Appurify{
   
   protected function ProcessVideo(&$test, $tempdir, $testPath, $index) {
     if (is_file("$tempdir/appurify_results/video.mp4")) {
-      rename("$tempdir/appurify_results/video.mp4", "$testPath/{$index}_video.mp4");
+      rename("$tempdir/appurify_results/video.mp4", "$testPath/{$index}_appurify.mp4");
       require_once('./video/avi2frames.inc.php');
       ProcessAVIVideo($test, $testPath, $index, 0);
     }
