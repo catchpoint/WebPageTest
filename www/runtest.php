@@ -16,13 +16,13 @@
     require_once('common.inc');
     set_time_limit(300);
 
-    if(extension_loaded('newrelic')) { 
+    if(extension_loaded('newrelic')) {
         newrelic_add_custom_tracer('WriteJob');
         newrelic_add_custom_tracer('AddJobFile');
         newrelic_add_custom_tracer('LogTest');
     }
 
-    $redirect_cache = array();     
+    $redirect_cache = array();
     $error = NULL;
     $xml = false;
     $usingAPI = false;
@@ -56,7 +56,7 @@
             unset($test['started']);
             unset($test['tester']);
         }
-        
+
         // pull in the test parameters
         if( !isset($test) )
         {
@@ -149,7 +149,7 @@
                 $test['customBrowserMD5'] = $customBrowsers[$_REQUEST['custom_browser']];
               }
             }
-            
+
             // custom options
             $test['cmdLine'] = '';
             $test['addCmdLine'] = $req_cmdline;
@@ -163,7 +163,7 @@
                 $test['addCmdLine'] .= ' ';
               $test['addCmdLine'] .= '--use-spdy=no-ssl';
             }
-            
+
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
                 $keys = parse_ini_file('./settings/keys.ini', true);
@@ -173,7 +173,7 @@
                         include("./templates/$template.php");
                 }
             }
-            
+
             // Extract the location, browser and connectivity.
             // location:browser.connectivity
             if( preg_match('/([^\.:]+)[:]*(.*)[\.]+([^\.]*)/i', trim($req_location), $matches) ||
@@ -187,9 +187,9 @@
             } else {
                 $test['location'] = trim($req_location);
             }
-            
+
             // Extract the multiple locations.
-            if ( isset($req_multiple_locations)) 
+            if ( isset($req_multiple_locations))
             {
                 $test['multiple_locations'] = array();
                 foreach ($req_multiple_locations as $location_string)
@@ -198,7 +198,7 @@
                 }
                 $test['batch_locations'] = 1;
             }
-            
+
             // modify the script to include additional headers (if appropriate)
             if( strlen($req_addheaders) && strlen($test['script']) )
             {
@@ -210,17 +210,17 @@
                         $test['script'] = "addHeader\t$header\r\n" . $test['script'];
                 }
             }
-            
+
             // see if it is a batch test
             $test['batch'] = 0;
-            if( (isset($req_bulkurls) && strlen($req_bulkurls)) || 
+            if( (isset($req_bulkurls) && strlen($req_bulkurls)) ||
                 (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) )
                 $test['batch'] = 1;
 
             // force the webperf contest entries to be private (hack)
             if( strstr( $test['url'], 'entries.webperf-contest.com') !== false )
                 $test['private'] = 1;
-            
+
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
@@ -233,11 +233,11 @@
                 elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json )
                     $test['priority'] =  5;
             }
-            
+
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
             if( $settings['noPriority'] )
                 $test['priority'] =  0;
-            
+
             // take the ad-blocking request and create a custom block from it
             if( $req_ads == 'blocked' )
                 $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
@@ -281,7 +281,7 @@
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
         }
-        
+
         // the API key requirements are for all test paths
         $test['vd'] = $req_vd;
         $test['vh'] = $req_vh;
@@ -291,7 +291,7 @@
         }
         $test['owner'] = $req_vo;
         $test['key'] = $req_k;
-            
+
         // some myBB integration to get the requesting user
         if( isset($user) && !array_key_exists('user', $test) )
             $test['user'] = $user;
@@ -302,13 +302,13 @@
         // create an owner string (for API calls, this should already be set as a cookie for normal visitors)
         if( !isset($test['owner']) || !strlen($test['owner']) )
           $test['owner'] = sha1(uniqid(uniqid('', true), true));
-          
+
         // special case locations
         $use_closest = false;
         if ($test['location'] == 'closest' && is_file('./settings/closest.ini') ) {
             $use_closest = true;
         }
-        
+
         // populate the IP address of the user who submitted it
         if (!array_key_exists('ip', $test) || !strlen($test['ip'])) {
             $test['ip'] = $_SERVER['REMOTE_ADDR'];
@@ -316,7 +316,7 @@
                 $test['ip'] = @getenv("HTTP_X_FORWARDED_FOR");
             }
         }
-        
+
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
         ValidateKey($test, $error);
@@ -333,7 +333,7 @@
 
             if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
-              
+
             if( !strlen($error) && !array_key_exists('id', $test) )
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
@@ -404,7 +404,7 @@
                         $bulkUrls = $req_bulkurls . "\n";
                     if( isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name']) )
                         $bulkUrls .= file_get_contents($_FILES['bulkfile']['tmp_name']);
-                    
+
                     $current_mode = 'urls';
                     if( strlen($bulkUrls) )
                     {
@@ -449,7 +449,7 @@
                                                 $bulk['urls'][] = $entry;
                                             unset($script);
                                         }
-                                        
+
                                         if( !strcasecmp($line, '[urls]') )
                                             $current_mode = 'urls';
                                         elseif(!strcasecmp($line, '[variations]'))
@@ -473,7 +473,7 @@
                                 }
                             }
                         }
-                        
+
                         if (count($script)) {
                             $entry = ParseBulkScript($script);
                             if( $entry )
@@ -481,12 +481,12 @@
                             unset($script);
                         }
                     }
-                    
+
                     if( count($bulk['urls']) )
                     {
                         $test['id'] = CreateTest($test, $test['url'], 1);
                         $test['batch_id'] = $test['id'];
-                        
+
                         $testCount = 0;
                         foreach( $bulk['urls'] as &$entry )
                         {
@@ -522,7 +522,7 @@
                                 $testCount++;
                             }
                         }
-                        
+
                         // write out the list of urls and the test ID for each
                         if( $testCount )
                         {
@@ -542,7 +542,7 @@
                         $error = 'Error submitting url for testing';
                 }
             }
-                
+
             // redirect the browser to the test results page
             if( !strlen($error) )
             {
@@ -581,7 +581,7 @@
                     echo "<jsonUrl>http://$host$uri/jsonResult.php?test={$test['id']}/</jsonUrl>\n";
                     echo "</data>\n";
                     echo "</response>\n";
-                    
+
                 }
                 elseif( $json )
                 {
@@ -616,7 +616,7 @@
                     } else {
                         // redirect regardless if it is a bulk test or not
                         if( FRIENDLY_URLS )
-                            header("Location: http://$host$uri/result/{$test['id']}/");    
+                            header("Location: http://$host$uri/result/{$test['id']}/");
                         else
                             header("Location: http://$host$uri/results.php?test={$test['id']}");
                     }
@@ -683,19 +683,19 @@
 * submitting multiple-locations tests in one-shot.
 *   This also involves updating the locationText, browser and connectivity
 * values that are applicable for the new location.
-* 
+*
 * @param mixed $test
 * @param mixed $new_location
 */
-function UpdateLocation(&$test, &$locations, $new_location)    
+function UpdateLocation(&$test, &$locations, $new_location)
 {
   // Update the location.
   $test['location'] = $new_location;
-    
+
   // see if we need to override the browser
   if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
     $test['browserExe'] = $locations[$test['location']]['browserExe'];
-                
+
   // figure out what the location working directory and friendly name are
   $test['locationText'] = $locations[$test['location']]['label'];
   $test['workdir'] = $locations[$test['location']]['localDir'];
@@ -713,8 +713,13 @@ function UpdateLocation(&$test, &$locations, $new_location)
       $error = "Invalid Location, please try submitting your test request again.";
 
   // see if we need to pick the default connectivity
-  if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-      $test['connectivity'] = 'Cable';
+  if (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
+    if (!empty($locations[$test['location']]['default_connectivity'])) {
+        $test['connectivity'] = $locations[$test['location']]['default_connectivity'];
+    } else {
+        $test['connectivity'] = 'Cable';
+    }
+  }
 
   if( isset($test['browser']) && strlen($test['browser']) )
       $test['locationText'] .= " - <b>{$test['browser']}</b>";
@@ -740,11 +745,11 @@ function UpdateLocation(&$test, &$locations, $new_location)
       $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
 
 }
-    
-    
+
+
 /**
 * See if we are requiring key validation and if so, enforce the restrictions
-* 
+*
 * @param mixed $test
 * @param mixed $error
 */
@@ -755,7 +760,7 @@ function ValidateKey(&$test, &$error, $key = null)
   $keys = parse_ini_file('./settings/keys.ini', true);
   if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
     $secret = trim($keys['server']['secret']);
-    
+
   if( strlen($secret) ){
     // ok, we require key validation, see if they have an hmac (user with form)
     // or API key
@@ -766,15 +771,15 @@ function ValidateKey(&$test, &$error, $key = null)
       $hashStr .= $test['owner'];
       $hashStr .= $test['vd'];
       $hmac = sha1($hashStr);
-      
+
       // check the elapsed time since the hmac was issued
       $now = time();
       $origTime = strtotime($test['vd']);
       $elapsed = abs($now - $origTime);
-      
+
       if( $hmac != $test['vh'] || $elapsed > 86400 )
         $error = 'Your test request could not be validated (this can happen if you leave the browser window open for over a day before submitting a test).  Please try submitting it again.';
-      
+
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
@@ -792,7 +797,7 @@ function ValidateKey(&$test, &$error, $key = null)
             // update the number of tests they have submitted today
             if( !is_dir('./dat') )
               mkdir('./dat', 0777, true);
-              
+
           $lock = fopen( "./dat/keys.lock", 'w',  false);
           if( $lock ) {
             if( flock($lock, LOCK_EX) ) {
@@ -810,7 +815,7 @@ function ValidateKey(&$test, &$error, $key = null)
                 $runcount = max(1, $test['runs']);
                 if( !$test['fvonly'] )
                   $runcount *= 2;
-                  
+
               if( $limit > 0 ){
                 if( $used + $runcount <= $limit ){
                   $used += $runcount;
@@ -846,24 +851,24 @@ function ValidateKey(&$test, &$error, $key = null)
     }
   }
 }
-    
+
 /**
 * Validate the test options and set intelligent defaults
-*     
+*
 * @param mixed $test
 * @param mixed $locations
 */
 function ValidateParameters(&$test, $locations, &$error, $destination_url = null)
 {
     global $use_closest;
-    
+
     if( strlen($test['script']) )
     {
         $url = ValidateScript($test['script'], $error);
         if( isset($url) )
             $test['url'] = $url;
     }
-    
+
     if( strlen($test['url']) || $test['batch'] )
     {
         $settings = parse_ini_file('./settings/settings.ini');
@@ -874,10 +879,10 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
         $maxruns = (int)$settings['maxruns'];
         if( !$maxruns )
             $maxruns = 10;
-        
+
         if( !$test['batch'] )
             ValidateURL($test['url'], $error, $settings);
-            
+
         if( !$error )
         {
             if ($use_closest) {
@@ -891,7 +896,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $test['runs'] = $maxruns;
             elseif( $test['runs'] < 1 )
                 $test['runs'] = 1;
-                
+
             // if fvonly is set, make sure it is to an explicit value of 1
             if( $test['fvonly'] > 0 )
                 $test['fvonly'] = 1;
@@ -930,15 +935,15 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
             }
-            
+
             // see if we are blocking API access at the given location
             if( $locations[$test['location']]['noscript'] && $test['priority'] )
                 $error = 'API Automation is currently disabled for that location.';
-            
+
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
                 $test['browserExe'] = $locations[$test['location']]['browserExe'];
-                
+
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
             $test['workdir'] = $locations[$test['location']]['localDir'];
@@ -964,11 +969,16 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
             }
             else
-            {                
+            {
                 // see if we need to pick the default connectivity
-                if( (!isset($locations[$test['location']]['connectivity']) || !strlen($locations[$test['location']]['connectivity'])) && !isset($test['connectivity']) )
-                    $test['connectivity'] = 'Cable';
-                    
+                if (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
+                    if (!empty($locations[$test['location']]['default_connectivity'])) {
+                        $test['connectivity'] = $locations[$test['location']]['default_connectivity'];
+                    } else {
+                        $test['connectivity'] = 'Cable';
+                    }
+                }
+
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";
                 if( isset($test['connectivity']) )
@@ -982,30 +992,30 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                         $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['plr'] = $connectivity[$test['connectivity']]['plr'];
-                        
+
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
                             $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
                     }
                 }
-                
+
                 // adjust the latency for any last-mile latency at the location
                 if( isset($test['latency']) && $locations[$test['location']]['latency'] )
                     $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
-            
+
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
         }
     }
     elseif( !strlen($error) )
         $error = "Invalid URL, please try submitting your test request again.";
-    
+
     return $ret;
 }
 
 /**
 * Validate the uploaded script to make sure it should be run
-* 
+*
 * @param mixed $test
 * @param mixed $error
 */
@@ -1016,7 +1026,7 @@ function ValidateScript(&$script, &$error)
     if (stripos($script, 'webdriver.Builder(') === false) {
         global $test;
         FixScript($test, $script);
-        
+
         $navigateCount = 0;
         $ok = false;
         $lines = explode("\n", $script);
@@ -1039,25 +1049,25 @@ function ValidateScript(&$script, &$error)
             elseif( !strcasecmp($command, 'fileDialog') )
                 $error = "fileDialog is not a supported command for uploaded scripts.";
         }
-        
+
         $test['navigateCount'] = $navigateCount;
-        
+
         if( !$ok )
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
         else if( $navigateCount > 20 )
             $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
-        
+
         if( strlen($error) )
             unset($url);
     }
-    
+
     return $url;
 }
 
 /**
 * Extract the server side configuration.
 * Try to automaticaly fix a script that used spaces instead of tabs.
-* 
+*
 * @param mixed $script
 */
 function FixScript(&$test, &$script)
@@ -1076,7 +1086,7 @@ function FixScript(&$test, &$script)
                         if ($command == "csiVariable") {
                             $target = strtok("\r\n");
 			                if (isset($test['extract_csi'])) {
-				                array_push($test['extract_csi'], $target);                                
+				                array_push($test['extract_csi'], $target);
 			                } else {
 				                $test['extract_csi'] = array($target);
 			                }
@@ -1102,7 +1112,7 @@ function FixScript(&$test, &$script)
                 }
             }
         }
-        
+
         $script = $newScript;
     }
 }
@@ -1111,31 +1121,31 @@ function FixScript(&$test, &$script)
 * Figure out how many parameters are expected for the given script step
 * in case we're trying to fix a script with no tabs the command count
 * will help us allow commands with spaces in them
-* 
+*
 * @param mixed $command
 */
 function ScriptParameterCount($command)
 {
     // default to 2 - 3 is the special case
     $count = 2;
-    
+
     if( !strcasecmp($command, 'setDOMRequest') ||
-        !strcasecmp($command, 'setValue') || 
-        !strcasecmp($command, 'setInnerText') || 
-        !strcasecmp($command, 'setInnerHTML') || 
-        !strcasecmp($command, 'selectValue') || 
-        !strcasecmp($command, 'loadFile') || 
-        !strcasecmp($command, 'fileDialog') || 
-        !strcasecmp($command, 'sendKeyPress') || 
-        !strcasecmp($command, 'sendKeyPressAndWait') || 
-        !strcasecmp($command, 'sendKeyDown') || 
-        !strcasecmp($command, 'sendKeyDownAndWait') || 
-        !strcasecmp($command, 'sendKeyUp') || 
-        !strcasecmp($command, 'sendKeyUpAndWait') || 
-        !strcasecmp($command, 'sendCommand') || 
-        !strcasecmp($command, 'sendCommandAndWait') || 
-        !strcasecmp($command, 'setCookie') || 
-        !strcasecmp($command, 'setDNS') || 
+        !strcasecmp($command, 'setValue') ||
+        !strcasecmp($command, 'setInnerText') ||
+        !strcasecmp($command, 'setInnerHTML') ||
+        !strcasecmp($command, 'selectValue') ||
+        !strcasecmp($command, 'loadFile') ||
+        !strcasecmp($command, 'fileDialog') ||
+        !strcasecmp($command, 'sendKeyPress') ||
+        !strcasecmp($command, 'sendKeyPressAndWait') ||
+        !strcasecmp($command, 'sendKeyDown') ||
+        !strcasecmp($command, 'sendKeyDownAndWait') ||
+        !strcasecmp($command, 'sendKeyUp') ||
+        !strcasecmp($command, 'sendKeyUpAndWait') ||
+        !strcasecmp($command, 'sendCommand') ||
+        !strcasecmp($command, 'sendCommandAndWait') ||
+        !strcasecmp($command, 'setCookie') ||
+        !strcasecmp($command, 'setDNS') ||
         !strcasecmp($command, 'setDnsName') ||
         !strcasecmp($command, 'setBrowserSize') ||
         !strcasecmp($command, 'setViewportSize') ||
@@ -1145,27 +1155,27 @@ function ScriptParameterCount($command)
     {
         $count = 3;
     }
-    
+
     return $count;
 }
 
 /**
 * Make sure the URL they requested looks valid
-* 
+*
 * @param mixed $test
 * @param mixed $error
 */
 function ValidateURL(&$url, &$error, &$settings)
 {
     $ret = false;
-    
+
     // make sure the url starts with http://
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
         $url = 'http://' . $url;
-        
+
     $parts = parse_url($url);
     $host = $parts['host'];
-    
+
     if( strpos($url, ' ') !== FALSE || strpos($url, '>') !== FALSE || strpos($url, '<') !== FALSE )
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
     elseif( strpos($host, '.') === FALSE )
@@ -1182,7 +1192,7 @@ function ValidateURL(&$url, &$error, &$settings)
 
 /**
 * Submit the test request file to the server
-* 
+*
 * @param mixed $run
 * @param mixed $testRun
 * @param mixed $test
@@ -1199,7 +1209,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
       $ret = $appurify->SubmitTest($test, $error);
     } else {
       $script = ProcessTestScript($url, $test);
-      
+
       $out = "Test ID=$testId\r\nurl=";
       if (isset($script) && strlen($script))
           $out .= "script://$testId.pts";
@@ -1211,17 +1221,17 @@ function SubmitUrl($testId, $testData, &$test, $url)
 
       if (isset($script) && strlen($script))
         $out .= "\r\n[Script]\r\n" . $script;
-      
+
       // write out the actual test file
       $ext = 'url';
       if( $test['priority'] )
           $ext = "p{$test['priority']}";
       $test['job'] = "$testId.$ext";
-      
+
       $location = $test['location'];
       $ret = WriteJob($location, $test, $out, $testId);
     }
-        
+
     return $ret;
 }
 
@@ -1290,7 +1300,7 @@ function WriteJob($location, &$test, &$job, $testId)
             fclose($lockFile);
         }
     }
-    
+
     return $ret;
 }
 
@@ -1302,7 +1312,7 @@ function SendToRelay(&$test, &$out)
     $ret = false;
     global $error;
     global $locations;
-    
+
     $url = $locations[$test['location']]['relayServer'] . 'runtest.php';
     $key = $locations[$test['location']]['relayKey'];
     $location = $locations[$test['location']]['relayLocation'];
@@ -1312,17 +1322,17 @@ function SendToRelay(&$test, &$out)
     $data = "--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"rkey\"\r\n\r\n$key";
 
-    $data .= "\r\n--$boundary\r\n"; 
+    $data .= "\r\n--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"location\"\r\n\r\n$location";
-    
-    $data .= "\r\n--$boundary\r\n"; 
+
+    $data .= "\r\n--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"job\"\r\n\r\n$out";
-    
-    $data .= "\r\n--$boundary\r\n"; 
+
+    $data .= "\r\n--$boundary\r\n";
     $data .= "Content-Disposition: form-data; name=\"ini\"\r\n\r\n$ini";
 
-    $data .= "\r\n--$boundary\r\n"; 
-    $data .= "Content-Disposition: form-data; name=\"testinfo\"\r\n\r\n" . json_encode($test); 
+    $data .= "\r\n--$boundary\r\n";
+    $data .= "Content-Disposition: form-data; name=\"testinfo\"\r\n\r\n" . json_encode($test);
 
     $data .= "\r\n--$boundary--\r\n";
 
@@ -1337,7 +1347,7 @@ function SendToRelay(&$test, &$out)
     if( $fp )
     {
         $response = @stream_get_contents($fp);
-        if( $response && strlen($response) ) 
+        if( $response && strlen($response) )
         {
             $result = json_decode($response, true);
             if( $result['statusCode'] == 200 )
@@ -1349,7 +1359,7 @@ function SendToRelay(&$test, &$out)
                 $error = $result['statusText'];
         }
     }
-    
+
     return $ret;
 }
 
@@ -1362,7 +1372,7 @@ function GetRedirect($url, &$rhost, &$rurl)
     $redirected = false;
     $rhost = '';
     $rurl = '';
-    
+
     if (strlen($url)) {
         if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
             $url = 'http://' . $url;
@@ -1388,7 +1398,7 @@ function GetRedirect($url, &$rhost, &$rurl)
             curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
             $headers = curl_exec($curl);
-            curl_close($curl);            
+            curl_close($curl);
             $lines = explode("\n", $headers);
             foreach($lines as $line) {
                 $line = trim($line);
@@ -1415,14 +1425,14 @@ function GetRedirect($url, &$rhost, &$rurl)
 
 /**
 * Log the actual test in the test log file
-* 
+*
 * @param mixed $test
 */
 function LogTest(&$test, $testId, $url)
 {
     if( !is_dir('./logs') )
         mkdir('./logs', 0777, true);
-        
+
     // open the log file
     $filename = "./logs/" . gmdate("Ymd") . ".log";
     $video = 0;
@@ -1436,7 +1446,7 @@ function LogTest(&$test, $testId, $url)
         $pageLoads *= 2;
     if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
         $pageLoads *= $test['navigateCount'];
-    
+
     $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
     $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
     $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
@@ -1448,7 +1458,7 @@ function LogTest(&$test, $testId, $url)
 
 /**
 * Make sure the requesting IP isn't on our block list
-* 
+*
 */
 function CheckIp(&$test)
 {
@@ -1468,7 +1478,7 @@ function CheckIp(&$test)
                     $ok = false;
                     break;
                 }
-                
+
                 if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
                     logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
                     $ok = false;
@@ -1477,13 +1487,13 @@ function CheckIp(&$test)
             }
         }
     }
-    
+
     return $ok;
 }
 
 /**
 * Make sure the url isn't on our block list
-* 
+*
 * @param mixed $url
 */
 function CheckUrl($url)
@@ -1514,7 +1524,7 @@ function CheckUrl($url)
                 $host = trim($parts['host']);
                 foreach( $blockHosts as $block ) {
                     $block = trim($block);
-                    if( strlen($block) && 
+                    if( strlen($block) &&
                         (!strcasecmp($host, $block) ||
                          !strcasecmp($host, "www.$block"))) {
                          logMsg("{$_SERVER['REMOTE_ADDR']}: host $url matched $block", "./log/{$date}-blocked.log", true);
@@ -1537,13 +1547,13 @@ function CheckUrl($url)
             }
         }
     }
-    
+
     return $ok;
 }
 
 /**
 * Create a single test and return the test ID
-* 
+*
 * @param mixed $test
 * @param mixed $url
 */
@@ -1551,7 +1561,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
     global $settings;
     $testId = null;
-    
+
     if (CheckUrl($url) && WptHookValidateTest($test)) {
         // generate the test ID
         $test_num;
@@ -1563,7 +1573,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
-        
+
         // make absolutely CERTAIN that this test ID doesn't already exist
         while( is_dir($test['path']) )
         {
@@ -1576,7 +1586,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // create the folder for the test results
         if( !is_dir($test['path']) )
             mkdir($test['path'], 0777, true);
-        
+
         // write out the ini file
         $testInfo = "[test]\r\n";
         $testInfo .= "fvonly={$test['fvonly']}\r\n";
@@ -1617,7 +1627,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $testInfo .= "latency={$test['latency']}\r\n";
             $testInfo .= "plr={$test['plr']}\r\n";
         }
-        
+
         $testInfo .= "\r\n[runs]\r\n";
         if( $test['median_video'] )
             $testInfo .= "median_video=1\r\n";
@@ -1670,7 +1680,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if( $test['discard'] )
                 $testFile .= "\r\ndiscard={$test['discard']}";
             $testFile .= "\r\nruns={$test['runs']}\r\n";
-            
+
             if( isset($test['connectivity']) )
             {
                 $testFile .= "bwIn={$test['bwIn']}\r\n";
@@ -1715,7 +1725,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "customBrowserUrl={$test['customBrowserUrl']}\r\n";
             if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
                 $testFile .= "customBrowserMD5={$test['customBrowserMD5']}\r\n";
-            
+
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
                 foreach($test['custom_rules'] as &$rule) {
@@ -1735,7 +1745,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $test['url'] = $url;
         gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
         $test['url'] = $oldUrl;
-        
+
         // log the test
         if( isset($testId) )
         {
@@ -1755,7 +1765,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         global $error;
         $error = 'Your test request was intercepted by our spam filters (or because we need to talk to you about how you are submitting tests)';
     }
-    
+
     return $testId;
 }
 
@@ -1764,7 +1774,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 * <url>
 * or
 * <label>=<url>
-* 
+*
 * @param mixed $line
 */
 function ParseBulkUrl($line)
@@ -1773,14 +1783,14 @@ function ParseBulkUrl($line)
     global $settings;
     $err;
     $noscript = 0;
-    
+
     $pos = stripos($line, 'noscript');
     if( $pos !== false )
     {
         $line = trim(substr($line, 0, $pos));
         $noscript = 1;
     }
-    
+
     $equals = strpos($line, '=');
     $query = strpos($line, '?');
     $slash = strpos($line, '/');
@@ -1793,7 +1803,7 @@ function ParseBulkUrl($line)
         $label = trim(substr($line, 0, $equals));
         $url = trim(substr($line, $equals + 1));
     }
-    
+
     if( $url && ValidateURL($url, $err, $settings) )
     {
         $entry = array();
@@ -1802,7 +1812,7 @@ function ParseBulkUrl($line)
             $entry['l'] = $label;
         $entry['ns'] = $noscript;
     }
-    
+
     return $entry;
 }
 
@@ -1810,7 +1820,7 @@ function ParseBulkUrl($line)
 * Parse the url variation from the bulk data
 * in the format:
 * <label>=<query param>
-* 
+*
 * @param mixed $line
 */
 function ParseBulkVariation($line)
@@ -1831,13 +1841,13 @@ function ParseBulkVariation($line)
 
 /**
 * Parse a bulk script entry and create a test configuration from it
-* 
+*
 * @param mixed $script
 */
 function ParseBulkScript(&$script, $current_entry = null) {
     global $test;
     $entry = null;
-    
+
     if (count($script)) {
         $s = '';
         if (isset($current_entry))
@@ -1860,13 +1870,13 @@ function ParseBulkScript(&$script, $current_entry = null) {
             unset($entry);
         }
     }
-    
+
     return $entry;
 }
 
 /**
 * A relay test came in, should include a job file already
-* 
+*
 */
 function RelayTest()
 {
@@ -1882,7 +1892,7 @@ function RelayTest()
     $ini = trim($_POST['ini']);
     $location = trim($_POST['location']);
     $test['workdir'] = $locations[$location]['localDir'];
-    
+
     ValidateKey($test, $error, $rkey);
     if( !isset($error) )
     {
@@ -1896,20 +1906,20 @@ function RelayTest()
         WriteJob($location, $test, $job, $id);
         gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
     }
-    
+
     if( isset($error) )
     {
         $ret['statusCode'] = 400;
         $ret['statusText'] = "Relay: $error";
     }
-    
+
     header ("Content-type: application/json");
     echo json_encode($ret);
 }
 
 /**
 * Find the closest location in the list to the destination server
-* 
+*
 * @param mixed $url
 */
 function GetClosestLocation($url, $browser) {
@@ -1962,15 +1972,15 @@ function GetClosestLocation($url, $browser) {
                         if ($host_location) {
                             $lat = $host_location->latitude;
                             $lng = $host_location->longitude;
-                            
+
                             // calculate the distance to each location and see which is closest
                             $distance = 0;
                             foreach( $locations as $loc => $pos ) {
                                 $r = 6371; // km
                                 $dLat = deg2rad($pos['lat']-$lat);
                                 $dLon = deg2rad($pos['lng']-$lng);
-                                $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat'])); 
-                                $c = 2 * atan2(sqrt($a), sqrt(1-$a)); 
+                                $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat']));
+                                $c = 2 * atan2(sqrt($a), sqrt(1-$a));
                                 $dist = $r * $c;
                                 if (!isset($location) || $dist < $distance) {
                                     $location = $loc;
@@ -1998,10 +2008,10 @@ function GetClosestLocation($url, $browser) {
 function uniqueId(&$test_num) {
     $id = NULL;
     $test_num = 0;
-    
+
     if( !is_dir('./work/jobs') )
         mkdir('./work/jobs', 0777, true);
-    
+
     // try locking the context file
     $filename = './work/jobs/uniqueId.dat';
     $file = fopen( $filename, "a+b",  false);
@@ -2014,17 +2024,17 @@ function uniqueId(&$test_num) {
             $testData = array('day' => $day, 'num' => 0);
             if ($json !== false) {
                 $newData = json_decode($json, true);
-                if (isset($newData) && is_array($newData) && 
-                    array_key_exists('day', $newData) && 
+                if (isset($newData) && is_array($newData) &&
+                    array_key_exists('day', $newData) &&
                     array_key_exists('num', $newData) &&
                     $newData['day'] == $day) {
                     $testData['num'] = $newData['num'];
                 }
             }
-            
+
             $testData['num']++;
             $test_num = $testData['num'];
-            
+
             // convert the number to a base-32 string for shorter text
             $id = NumToString($testData['num']);
 
@@ -2037,18 +2047,18 @@ function uniqueId(&$test_num) {
 
         fclose($file);
     }
-    
+
     if (!isset($id)) {
         $test_num = rand();
         $id = md5(uniqid($test_num, true));
     }
-    
+
     return $id;
-} 
+}
 
 /**
 * Convert a number to a base-32 string
-* 
+*
 * @param mixed $num
 */
 function NumToString($num) {
@@ -2092,7 +2102,7 @@ function ErrorPage($error) {
 
 /**
 * Automatically create a script if we have test options that need to be translated
-* 
+*
 * @param mixed $test
 */
 function ProcessTestScript($url, &$test) {
@@ -2128,7 +2138,7 @@ function ProcessTestScript($url, &$test) {
       }
     }
   }
-  
+
   // Handle HTTP Basic Auth
   if (strlen($test['login']) && strlen($test['password'])) {
     $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
