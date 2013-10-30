@@ -94,6 +94,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                 $ret['SpeedIndex'] = $progress['SpeedIndex'];
             if (array_key_exists('visualComplete', $progress))
                 $ret['visualComplete'] = $progress['visualComplete'];
+            if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $ret) || !$ret['render']))
+                $ret['render'] = $progress['startRender'];
             if (array_key_exists('DevTools', $progress) && is_array($progress['DevTools'])) {
                 if (array_key_exists('SpeedIndex', $progress['DevTools'])) {
                     $ret['SpeedIndexDT'] = intval($progress['DevTools']['SpeedIndex']);
@@ -105,9 +107,11 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                     if (!array_key_exists('visualComplete', $ret))
                         $ret['visualComplete'] = $ret['VisuallyCompleteDT'];
                 }
-                if (array_key_exists('StartRender', $progress['DevTools']) &&
-                    (!array_key_exists('render', $ret) || !$ret['render']))
-                    $ret['render'] = $progress['DevTools']['StartRender'];
+                if (array_key_exists('StartRender', $progress['DevTools'])) {
+                    $ret['renderDT'] = $progress['DevTools']['StartRender'];
+                    if (!array_key_exists('render', $ret) || !$ret['render'])
+                      $ret['render'] = $ret['renderDT'];
+                }
             }
             if ((!array_key_exists('lastVisualChange', $ret) ||
                  !$ret['lastVisualChange']) &&

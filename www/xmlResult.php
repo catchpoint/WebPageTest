@@ -268,27 +268,16 @@ else
                     // video frames
                     $startOffset = array_key_exists('testStartOffset', $pageData[$i][0]) ? intval(round($pageData[$i][0]['testStartOffset'])) : 0;
                     $progress = GetVisualProgress($testPath, $i, 0, null, null, $startOffset);
-                    if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
-                        (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
-                    {
-                        loadVideo("$testPath/video_{$i}", $frames);
-                        if( $frames && count($frames) )
-                        {
-                            echo "<videoFrames>\n";
-                            foreach( $frames as $time => $frameFile )
-                            {
-                                echo "<frame>\n";
-                                echo "<time>" . number_format((double)$time / 10.0, 1) . "</time>\n";
-                                echo "<image>http://$host$uri$path/video_{$i}/$frameFile</image>\n";
-                                $ms = $time * 100;
-                                if (isset($progress) && is_array($progress) && 
-                                    array_key_exists('frames', $progress) && array_key_exists($ms, $progress['frames'])) {
-                                    echo "<VisuallyComplete>{$progress['frames'][$ms]['progress']}</VisuallyComplete>\n";
-                                }
-                                echo "</frame>\n";
-                            }
-                            echo "</videoFrames>\n";
-                        }
+                    if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
+                      echo "<videoFrames>\n";
+                      foreach($progress['frames'] as $ms => $frame) {
+                          echo "<frame>\n";
+                          echo "<time>$ms</time>\n";
+                          echo "<image>http://$host$uri$path/video_{$i}/{$frame['file']}</image>\n";
+                          echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
+                          echo "</frame>\n";
+                      }
+                      echo "</videoFrames>\n";
                     }
                     if (isset($progress) &&
                         is_array($progress) &&
@@ -380,27 +369,16 @@ else
                     // video frames
                     $startOffset = array_key_exists('testStartOffset', $pageData[$i][1]) ? intval(round($pageData[$i][1]['testStartOffset'])) : 0;
                     $progress = GetVisualProgress($testPath, $i, 1, null, null, $startOffset);
-                    if( (array_key_exists('video', $test['test']) && $test['test']['video']) ||
-                        (array_key_exists('video', $test['testinfo']) && $test['testinfo']['video']) )
-                    {
-                        loadVideo("$testPath/video_{$i}_cached", $frames);
-                        if( $frames && count($frames) )
-                        {
-                            echo "<videoFrames>\n";
-                            foreach( $frames as $time => $frameFile )
-                            {
-                                echo "<frame>\n";
-                                echo "<time>" . number_format((double)$time / 10.0, 1) . "</time>\n";
-                                echo "<image>http://$host$uri$path/video_{$i}_cached/$frameFile</image>\n";
-                                $ms = $time * 100;
-                                if (isset($progress) && is_array($progress) && 
-                                    array_key_exists('frames', $progress) && array_key_exists($ms, $progress['frames'])) {
-                                    echo "<VisuallyComplete>{$progress['frames'][$ms]['progress']}</VisuallyComplete>\n";
-                                }
-                                echo "</frame>\n";
-                            }
-                            echo "</videoFrames>\n";
-                        }
+                    if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
+                      echo "<videoFrames>\n";
+                      foreach($progress['frames'] as $ms => $frame) {
+                          echo "<frame>\n";
+                          echo "<time>$ms</time>\n";
+                          echo "<image>http://$host$uri$path/video_{$i}_cached/{$frame['file']}</image>\n";
+                          echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
+                          echo "</frame>\n";
+                      }
+                      echo "</videoFrames>\n";
                     }
                     if (isset($progress) &&
                         is_array($progress) &&

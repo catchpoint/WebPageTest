@@ -190,6 +190,15 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
+        if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
+          $ret['videoFrames'] = array();
+          foreach($progress['frames'] as $ms => $frame) {
+              $frame = array('time' => $ms);
+              $frame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/{$frame['file']}";
+              $frame['VisuallyComplete'] = $frame['progress'];
+          }
+        }
+
         if (array_key_exists('video', $testInfo) && $testInfo['video']) {
             $cachedTextLower = strtolower($cachedText);
             loadVideo("$testPath/video_{$run}$cachedTextLower", $frames);

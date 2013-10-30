@@ -84,6 +84,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (isset($frames)) {
         $frames['visualComplete'] = 0;
         foreach($frames['frames'] as $time => &$frame) {
+            if ($frame['progress'] > 0 && !array_key_exists('startRender', $frames))
+              $frames['startRender'] = $time;
             if ($frame['progress'] == 100) {
                 $frames['visualComplete'] = $time;
                 break;
