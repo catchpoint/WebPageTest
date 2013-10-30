@@ -35,7 +35,8 @@ goog.provide('wpt.chromeDebugger');
 
 var g_instance = {connected: false,
                   timeline: false,
-                  active: false};
+                  active: false,
+                  receivedData: false};
 var TIMELINE_AGGREGATION_INTERVAL = 500;
 var TIMELINE_START_TIMEOUT = 10000;
 var TRACING_START_TIMEOUT = 10000;
@@ -72,6 +73,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
 wpt.chromeDebugger.SetActive = function(active) {
   g_instance.devToolsData = '';
   g_instance.requests = {};
+  g_instance.receivedData = false;
   g_instance.active = active;
 };
 
@@ -150,6 +152,8 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
     } else if (message === 'Network.dataReceived') {
       if (g_instance.requests[params.requestId] !== undefined) {
+        if (!g_instance.receivedData)
+          wpt.chromeDebugger.SendReceivedData();
         if (g_instance.requests[params.requestId]['firstByteTime'] === undefined)
           g_instance.requests[params.requestId].firstByteTime = params.timestamp;
         if (g_instance.requests[params.requestId]['bytesIn'] === undefined)
@@ -158,6 +162,8 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
           g_instance.requests[params.requestId]['bytesIn'] += params.encodedDataLength;
       }
     } else if (message === 'Network.responseReceived') {
+      if (!g_instance.receivedData)
+        wpt.chromeDebugger.SendReceivedData();
       if (!params.response.fromDiskCache &&
           g_instance.requests[params.requestId] !== undefined &&
           g_instance.requests[params.requestId]['fromNet'] !== false) {
@@ -168,9 +174,13 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         g_instance.requests[params.requestId].response = params.response;
       }
     } else if (message === 'Network.requestServedFromCache') {
+      if (!g_instance.receivedData)
+        wpt.chromeDebugger.SendReceivedData();
       if (g_instance.requests[params.requestId] !== undefined)
         g_instance.requests[params.requestId].fromNet = false;
     } else if (message === 'Network.loadingFinished') {
+      if (!g_instance.receivedData)
+        wpt.chromeDebugger.SendReceivedData();
       if (g_instance.requests[params.requestId] !== undefined &&
           g_instance.requests[params.requestId]['fromNet']) {
         request = g_instance.requests[params.requestId];
@@ -336,6 +346,10 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
   wpt.chromeDebugger.sendEvent('request_data', eventData);
 };
 
+wpt.chromeDebugger.SendReceivedData = function() {
+  g_instance.receivedData = true;
+  wpt.chromeDebugger.sendEvent('received_data', '');
+};
 
 /**
  * Send an event to the c++ code
