@@ -191,31 +191,14 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
         if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
+          $cachedTextLower = strtolower($cachedText);
           $ret['videoFrames'] = array();
           foreach($progress['frames'] as $ms => $frame) {
-              $frame = array('time' => $ms);
-              $frame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/{$frame['file']}";
-              $frame['VisuallyComplete'] = $frame['progress'];
+              $videoFrame = array('time' => $ms);
+              $videoFrame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/{$frame['file']}";
+              $videoFrame['VisuallyComplete'] = $frame['progress'];
+              $ret['videoFrames'][] = $videoFrame;
           }
-        }
-
-        if (array_key_exists('video', $testInfo) && $testInfo['video']) {
-            $cachedTextLower = strtolower($cachedText);
-            loadVideo("$testPath/video_{$run}$cachedTextLower", $frames);
-            if (isset($frames) && count($frames)) {
-                $ret['videoFrames'] = array();
-                foreach ($frames as $time => $frameFile) {
-                    $seconds = $time / 10.0;
-                    $frame = array('time' => $seconds);
-                    $frame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/$frameFile";
-                    $ms = $time * 100;
-                    if (isset($progress) && is_array($progress) && 
-                        array_key_exists('frames', $progress) && array_key_exists($ms, $progress['frames'])) {
-                        $frame['VisuallyComplete'] = $progress['frames'][$ms]['progress'];
-                    }
-                    $ret['videoFrames'][] = $frame;
-                }
-            }
         }
         if (isset($progress) &&
             is_array($progress) &&
