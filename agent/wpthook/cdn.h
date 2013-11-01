@@ -124,5 +124,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-CDN-Geo", "", "OVH CDN"},
   {"X-Px", "", "CDNetworks"},
   {"X-Instart-Request-ID", "instart", "Instart Logic"},
-  {"Via", "CloudFront", "Amazon CloudFront"}
+  {"Via", "CloudFront", "Amazon CloudFront"},
+  {"X-Edge-IP", "", "CDN"},
+  {"X-Edge-Location", "", "CDN"}
 };
