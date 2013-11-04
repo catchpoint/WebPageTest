@@ -2,6 +2,7 @@
 /custom/
 /dat/*.dat
 /dat/*.lock
+/dat/*.db
 /images/sponsors/
 /log/
 /log.txt

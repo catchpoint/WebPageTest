@@ -1,15 +1,14 @@
 <?php
 include 'common.inc';
 
-// Handle an Ajax call to update a test ID
-if (isset($_POST['label'])) {
-    $data = array('label' => htmlspecialchars($_POST['label']));
-    $update_log_result = updateTestLog($_POST['testID'], (int)$_POST['date'], $data, $uid, $user, $owner);
-    $update_info_result = updateTestInfo($_POST['testID'], $data);
+error_reporting(-1);
 
-    var_dump($update_log_result);
-    var_dump($update_info_result);
-    if ($update_log_result !== false && $update_info_result !== false) {
+// Handle an Ajax call to update a test ID
+if (isset($_POST['label']) && isset($_POST['testID'])) {
+    $new_label = htmlspecialchars($_POST['label']);
+    $update_label_result = updateLabel($_POST['testID'], $new_label, $uid, $user, $owner);
+
+    if ($update_label_result !== false) {
         $result = 'Success';
     } else {
         $result = 'Failed to save new label!';
@@ -20,3 +19,5 @@ if (isset($_POST['label'])) {
 
 header('Content-type: application/json');
 echo json_encode($result);
+
+$label = getLabel('bar');

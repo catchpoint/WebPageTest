@@ -152,21 +152,28 @@ else
 
                                 if ($ok)
                                 {
-						            $date = NULL;
-						            $location = NULL;
-						            $url = NULL;
-						            $guid = NULL;
-                                    $ip = NULL;
-                                    $testUID = NULL;
-                                    $testUser = NULL;
-                                    $private = false;
-                                    $video = false;
-                                    $label = NULL;
-                                    $count = '';
-
 						            // tokenize the line
                                     $line_data = tokenizeLogLine($line);
-                                    extract($line_data);
+
+                                    $date       = $line_data['date'];
+                                    $ip         = $line_data['ip'];
+                                    $guid       = $line_data['guid'];
+                                    $url        = $line_data['url'];
+                                    $location   = $line_data['location'];
+                                    $private    = $line_data['private'];
+                                    $testUID    = $line_data['testUID'];
+                                    $testUser   = $line_data['testUser'];
+                                    $video      = $line_data['video'];
+                                    $label      = $line_data['label'];
+                                    $o          = $line_data['o'];
+                                    $key        = $line_data['key'];
+                                    $count      = $line_data['count'];
+
+                                    // See if we have to override the label
+                                    $new_label = getLabel($guid);
+                                    if (!empty($new_label)) {
+                                        $label = $new_label;
+                                    }
 
                                     if (!$location) {
                                         $location = '';

@@ -1962,79 +1962,51 @@ function tokenizeLogLine($line) {
 }
 
 /**
-* Update data for a test in the log file.  Currently only allows updating the label for security reasons,
-* but could easily be extended.
+* Update label for a test in a sqlite DB.
 *
 * @param string $test_guid  The ID of the test to update
-* @param int    $test_date  The date of the test (YYYYMMDD)
-* @param array  $data       A key/value array of the data to update
+* @param string $label      The new label
 * @param string $test_uid   The test UID
 * @param string $test_user  The current user
 * @param string $test_owner The user who created the test
 */
-function updateTestLog($test_guid, $test_date, $data, $test_uid, $test_user, $test_owner) {
-    // Get the log file for this date
-    $fileName = './logs/' . $test_date . '.log';
-    $file = file_get_contents($fileName);
-
-    $lines = explode("\n", $file);
-
-    if (count($lines)) {
-        foreach ($lines as $old_line) {
-            $line_data = tokenizeLogLine($old_line);
-
-            // Only update the line we care about
-            if ($line_data['guid'] === $test_guid) {
-                // If the current user can't update this test then just return
-                if ($test_uid != $line_data['testUID']
-                    && $test_user != $line_data['testUser']
-                    && $test_owner != $line_data['o']
-                ) {
-                    return false;
-                }
-
-                foreach ($data as $key => $value) {
-                    if ($key == 'label') { // Only allowing label to be updated at the moment
-                        $line_data[$key] = $value;
-                        $line_data['date'] = gmdate("Y-m-d G:i:s", $line_data['date']);
-                    }
-                }
-
-                // Now write the new line back to the log file
-                $new_line = makeLogLine($line_data);
-                $new_file = str_replace($old_line, $new_line, $file);
-                return file_put_contents($fileName, $new_file);
-            }
-        }
+function updateLabel($test_guid, $label, $test_uid, $test_user, $test_owner) {
+    if (!class_exists("SQLite3")) {
+        return "SQLite3 must be installed to update test labels";
     }
 
-    return false;
+    // Connect to the SQLite DB, and make sure that the table exists
+    $db = new SQLite3('./dat/labels.db');
+    $result = $db->query("CREATE TABLE IF NOT EXISTS labels (test_id STRING, label STRING);");
+
+    $result = $db->query('INSERT OR IGNORE INTO labels (test_id, label)
+        VALUES ("' . $db->escapeString($test_guid) . '", "' . $db->escapeString($label) . '")');
+
+    $result = $db->query('UPDATE labels SET label="' . $db->escapeString($label) . '" WHERE test_id="' . $db->escapeString($test_guid) . '"');
+
+    return $result !== false;
 }
 
+
 /**
- * Update the test data in testinfo.json.  Currently only allows updating the label for security reasons,
- * but could easily be extended.
- *
- * @param string $test_id The ID of the test to update
- * @param array  $data    A key/value array of the data to update
+* Get an updated test label
+*
+* @param string $test_guid  The ID of the test to update
 */
-function updateTestInfo($test_id, $data) {
-    $result = false;
-    $testPath = './' . GetTestPath($test_id);
-
-    if (gz_is_file("$testPath/testinfo.json")) {
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-
-        foreach ($data as $key => $value) {
-            if ($key == 'label') { // Only allowing label to be updated at the moment
-                $testInfo[$key] = $value;
-            }
-        }
-
-        $result = gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+function getLabel($test_guid) {
+    if (!class_exists("SQLite3")) {
+        return "SQLite3 must be installed to get updated test labels";
     }
 
-    return $result;
+    $db = new SQLite3('./dat/labels.db');
+    $result = $db->query('SELECT label from labels where test_id = "' . $db->escapeString($test_guid) . '"');
+    $result = $result->fetchArray();
+
+    if (!empty($result)) {
+        return $result['label'];
+    } else {
+        return false;
+    }
 }
 
 ?>

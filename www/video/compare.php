@@ -397,8 +397,9 @@ function ScreenShotTable()
             echo WrapableString($test['name']);
 
             // Print out a link to edit the test
-            echo '<br/><a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . $test['name'];
-            echo '" data-date="20' . substr($test['id'], 0, 6) . '">(Edit)</a>'; // Note that the hardcoded '20' will stop working in 87 years
+            echo '<br/>';
+            echo '<a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . $test['name'] . '>';
+            echo '(Edit)</a>';
 
             if (!defined('EMBED')) {
                 echo "</a>";

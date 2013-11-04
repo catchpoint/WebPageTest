@@ -167,6 +167,13 @@ function LoadTestData() {
             $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
             $test['name'] = trim($testInfo['label']);
         }
+
+        // See if we have an overridden test label in the sqlite DB
+        $new_label = getLabel($test['id']);
+        if (!empty($new_label)) {
+            $test['name'] = $new_label;
+        }
+
         if( !strlen($test['name']) ) {
             $test['name'] = $test['url'];
             $test['name'] = str_replace('http://', '', $test['name']);
