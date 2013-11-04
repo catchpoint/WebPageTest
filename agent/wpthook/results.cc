@@ -155,6 +155,7 @@ void Results::Save(void) {
 -----------------------------------------------------------------------------*/
 void Results::SaveProgressData(void) {
   CStringA progress;
+  _test_state.Lock();
   POSITION pos = _test_state._progress_data.GetHeadPosition();
   peak_memory_ = 0;
   peak_process_count_ = 0;
@@ -172,6 +173,7 @@ void Results::SaveProgressData(void) {
     if (data._process_count > peak_process_count_)
       peak_process_count_ = data._process_count;
   }
+  _test_state.UnLock();
   HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, 
                                 NULL, CREATE_ALWAYS, 0, 0);
   if (hFile != INVALID_HANDLE_VALUE) {
@@ -186,6 +188,7 @@ void Results::SaveProgressData(void) {
 -----------------------------------------------------------------------------*/
 void Results::SaveStatusMessages(void) {
   CStringA status;
+  _test_state.Lock();
   POSITION pos = _test_state._status_messages.GetHeadPosition();
   while( pos )
   {
@@ -194,6 +197,7 @@ void Results::SaveStatusMessages(void) {
     status += CT2A(data._status, CP_UTF8);
     status += "\r\n";
   }
+  _test_state.UnLock();
   HANDLE hFile = CreateFile(_file_base + STATUS_MESSAGE_DATA_FILE, 
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
   if( hFile != INVALID_HANDLE_VALUE )
@@ -1233,6 +1237,7 @@ void Results::SaveTimedEvents(void) {
   See if a version of the same request exists but not from the browser.
   This is so we can fall-back to using browser-reported requests just for
   any that we didn't catch at the socket level.
+  This is called from inside of a requests lock (critical section)
 -----------------------------------------------------------------------------*/
 bool Results::NativeRequestExists(Request * browser_request) {
   bool ret = false;

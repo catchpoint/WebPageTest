@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "hook_gdi.h"
 #include "test_state.h"
+#include "wpthook.h"
 
 static CGDIHook * pHook = NULL;
 extern bool wpt_capturing_screen;
@@ -138,8 +139,9 @@ BOOL __stdcall BitBlt_Hook(HDC hdcDest, int nXDest, int nYDest, int nWidth,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CGDIHook::CGDIHook(TestState& test_state):
-  test_state_(test_state) {
+CGDIHook::CGDIHook(TestState& test_state, WptHook& wpthook):
+  test_state_(test_state)
+  ,wpthook_(wpthook) {
   document_windows_.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -181,28 +183,16 @@ CGDIHook::~CGDIHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CGDIHook::SendPaintEvent(int x, int y, int width, int height) {
-  x = max(x,0);
-  y = max(y,0);
-  height = max(height,0);
-  width = max(width,0);
-  if (test_state_.gdi_only_)
-    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
-                MAKEWPARAM(x,y), MAKELPARAM(width, height));
-  else if (!test_state_._exit && test_state_._active)
-    test_state_.PaintEvent(x, y, width, height);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 bool CGDIHook::IsDocumentWindow(HWND hWnd) {
   bool is_document = false;
 
   if (test_state_.gdi_only_ || (!test_state_._exit && test_state_._active)) {
+    EnterCriticalSection(&cs);
     if (!document_windows_.Lookup(hWnd, is_document)) {
       is_document = IsBrowserDocument(hWnd);
       document_windows_.SetAt(hWnd, is_document);
     }
+    LeaveCriticalSection(&cs);
   }
 
   return is_document;
@@ -234,7 +224,7 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
       width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
       height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
     }
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
 */
 
@@ -253,7 +243,7 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
 /*
   if (!wpt_capturing_screen && !test_state_._exit && test_state_._active && 
       IsDocumentWindow(hWnd)) {
-    SendPaintEvent(0, 0, 0, 0);
+    wpthook_.SendPaintEvent(0, 0, 0, 0);
   }
 */
 
@@ -316,7 +306,7 @@ BOOL CGDIHook::InvalidateRect(HWND hWnd, const RECT *lpRect, BOOL bErase) {
     }
     CStringA buff;
     buff.Format("InvalidateRect - %d,%d : %dx%d", x, y, width, height);
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
 */
   return ret;
@@ -347,7 +337,7 @@ int CGDIHook::DrawTextA(HDC hDC, LPCSTR lpchText, int nCount, LPRECT lpRect,
       width = (WORD)abs(lpRect->right - lpRect->left);
       height = (WORD)abs(lpRect->bottom - lpRect->top);
     }
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
   return height;
 }
@@ -367,7 +357,7 @@ int CGDIHook::DrawTextW(HDC hDC, LPCWSTR lpchText, int nCount, LPRECT lpRect,
       width = (WORD)abs(lpRect->right - lpRect->left);
       height = (WORD)abs(lpRect->bottom - lpRect->top);
     }
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
   return height;
 }
@@ -388,7 +378,7 @@ int CGDIHook::DrawTextExA(HDC hdc, LPSTR lpchText, int cchText, LPRECT lpRect,
       width = (WORD)abs(lpRect->right - lpRect->left);
       height = (WORD)abs(lpRect->bottom - lpRect->top);
     }
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
   return height;
 }
@@ -409,7 +399,7 @@ int CGDIHook::DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
       width = (WORD)abs(lpRect->right - lpRect->left);
       height = (WORD)abs(lpRect->bottom - lpRect->top);
     }
-    SendPaintEvent(x, y, width, height);
+    wpthook_.SendPaintEvent(x, y, width, height);
   }
   return height;
 }
@@ -423,6 +413,6 @@ BOOL CGDIHook::BitBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth,
     ret = BitBlt_(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc,
                   nYSrc, dwRop);
   if (IsDocumentDC(hdcDest))
-    SendPaintEvent(nXDest, nYDest, nWidth, nHeight);
+    wpthook_.SendPaintEvent(nXDest, nYDest, nWidth, nHeight);
   return ret;
 }

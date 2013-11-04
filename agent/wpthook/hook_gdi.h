@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "ncodehook/NCodeHookInstantiation.h"
 
+class WptHook;
 class TestState;
 
 /******************************************************************************
@@ -69,7 +70,7 @@ typedef BOOL(__stdcall * LPBITBLT)(HDC hdcDest, int nXDest, int nYDest,
 ******************************************************************************/
 class CGDIHook {
 public:
-  CGDIHook(TestState& test_state);
+  CGDIHook(TestState& test_state, WptHook& wpthook);
   ~CGDIHook(void);
   void Init();
   
@@ -96,6 +97,7 @@ private:
   bool IsDocumentDC(HDC hdc);
 
   NCodeHookIA32	hook;
+  WptHook&  wpthook_;
   TestState&  test_state_;
   CRITICAL_SECTION	cs;
   CAtlMap<HWND, bool>	document_windows_;

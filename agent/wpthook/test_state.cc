@@ -767,7 +767,9 @@ void TestState::FindViewport(bool force) {
 -----------------------------------------------------------------------------*/
 void TestState::OnStatusMessage(CString status) {
   StatusMessage stat(status);
+  EnterCriticalSection(&_data_cs);
   _status_messages.AddTail(stat);
+  LeaveCriticalSection(&_data_cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -953,4 +955,16 @@ void TestState::GetElapsedCPUTimes(double &doc, double &end,
   end = GetElapsedMilliseconds(_start_cpu_time, _end_cpu_time);
   doc_total = GetElapsedMilliseconds(_start_total_time, _doc_total_time);
   end_total = GetElapsedMilliseconds(_start_total_time, _end_total_time);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::Lock() {
+  EnterCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::UnLock() {
+  LeaveCriticalSection(&_data_cs);
 }

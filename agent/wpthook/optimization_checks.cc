@@ -616,6 +616,7 @@ void OptimizationChecks::CheckCustomRules() {
         }
       }
     }
+    _requests.Unlock();
   }
 }
 

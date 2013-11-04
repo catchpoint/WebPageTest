@@ -114,6 +114,8 @@ public:
   CString GetTimedEventsJSON();
   void GetElapsedCPUTimes(double &doc, double &end,
                           double &doc_total, double &end_total);
+  void Lock();
+  void UnLock();
 
   // times
   LARGE_INTEGER _start;

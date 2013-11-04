@@ -78,6 +78,7 @@ void * TrackDns::LookupStart(CString& name) {
 void TrackDns::LookupAddress(void * context, ULONG &addr) {
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
+    EnterCriticalSection(&cs);
     AddAddress(info->_name, addr);
     CString host;
     if (info->_tracked && !_dns_hosts.Lookup(addr, host) || host.IsEmpty()) {
@@ -85,6 +86,7 @@ void TrackDns::LookupAddress(void * context, ULONG &addr) {
     }
     if( info->_override_addr.S_un.S_addr )
       addr = info->_override_addr.S_un.S_addr;
+    LeaveCriticalSection(&cs);
     IN_ADDR address;
     address.S_un.S_addr = addr;
     WptTrace(loglevel::kFrequentEvent, 
@@ -200,7 +202,9 @@ LONGLONG TrackDns::GetEarliest(LONGLONG& after) {
 -----------------------------------------------------------------------------*/
 CString TrackDns::GetHost(ULONG addr) {
   CString host;
+  EnterCriticalSection(&cs);
   _dns_hosts.Lookup(addr, host);
+  LeaveCriticalSection(&cs);
   return host;
 }
 
@@ -208,6 +212,7 @@ CString TrackDns::GetHost(ULONG addr) {
 -----------------------------------------------------------------------------*/
 void TrackDns::AddAddress(CString host, DWORD address) {
   bool found = false;
+  EnterCriticalSection(&cs);
   POSITION pos = _host_addresses.GetHeadPosition();
   while (pos && !found) {
     DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
@@ -222,6 +227,7 @@ void TrackDns::AddAddress(CString host, DWORD address) {
     host_addresses.AddAddress(address);
     _host_addresses.AddTail(host_addresses);
   }
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -229,6 +235,7 @@ void TrackDns::AddAddress(CString host, DWORD address) {
 int TrackDns::GetAddressCount(CString host) {
   int count = 0;
   bool found = false;
+  EnterCriticalSection(&cs);
   POSITION pos = _host_addresses.GetHeadPosition();
   while (pos && !found) {
     DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
@@ -237,6 +244,7 @@ int TrackDns::GetAddressCount(CString host) {
       found = true;
     }
   }
+  LeaveCriticalSection(&cs);
   return count;
 }
 

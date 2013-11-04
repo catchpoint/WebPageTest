@@ -54,7 +54,7 @@ WptHook::WptHook(void):
   ,nspr_hook_(sockets_, test_state_)
   ,schannel_hook_(sockets_, test_state_)
   ,wininet_hook_(sockets_, test_state_, test_)
-  ,gdi_hook_(test_state_)
+  ,gdi_hook_(test_state_, *this)
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
@@ -304,4 +304,19 @@ void WptHook::BackgroundThread() {
 
   test_server_.Stop();
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread() Stopped\n"));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::SendPaintEvent(int x, int y, int width, int height) {
+  x = max(x,0);
+  y = max(y,0);
+  height = max(height,0);
+  width = max(width,0);
+  if (test_state_.gdi_only_)
+    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
+                MAKEWPARAM(x,y), MAKELPARAM(width, height));
+  else if (message_window_)
+    PostMessage(message_window_, test_state_.paint_msg_,
+                MAKEWPARAM(x,y), MAKELPARAM(width, height));
 }

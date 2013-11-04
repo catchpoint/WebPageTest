@@ -315,8 +315,10 @@ CWsHook::~CWsHook(void) {
   if( pHook == this )
     pHook = NULL;
 
+  EnterCriticalSection(&cs);
   _send_buffers.RemoveAll();
   _send_buffer_original_length.RemoveAll();
+  LeaveCriticalSection(&cs);
 
   DeleteCriticalSection(&cs);
 }
@@ -442,9 +444,8 @@ BOOL CWsHook::ConnectEx(SOCKET s, const struct sockaddr FAR *name, int namelen,
 -----------------------------------------------------------------------------*/
 int	CWsHook::recv(SOCKET s, char FAR * buf, int len, int flags) {
   int ret = SOCKET_ERROR;
-  if (_recv) {
+  if (_recv)
     ret = _recv(s, buf, len, flags);
-  }
   if (!_test_state._exit) {
     if (ret == SOCKET_ERROR && len == 1) {
       _sockets.SetSslSocket(s);
@@ -466,10 +467,10 @@ int	CWsHook::WSARecv(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
                      LPWSAOVERLAPPED lpOverlapped, 
                      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine) {
   int ret = SOCKET_ERROR;
-  if (_WSARecv) {
+  if (_WSARecv)
     ret = _WSARecv(s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd, lpFlags, 
                                             lpOverlapped, lpCompletionRoutine);
-  }
+
   if (!_test_state._exit && lpBuffers && dwBufferCount) {
     if (ret == 0 && lpNumberOfBytesRecvd && *lpNumberOfBytesRecvd) {
       DWORD num_bytes = *lpNumberOfBytesRecvd;
@@ -614,7 +615,9 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
 
   if (!ret && !_test_state._exit) {
     PADDRINFOA addr = *ppResult;
-    while (addr) {
+    int count = 0;
+    while (addr && count < 100) {
+      count++;
       if (addr->ai_canonname)
         _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname));
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
@@ -650,7 +653,9 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
 
   if (!ret && !_test_state._exit) {
     PADDRINFOW addr = (PADDRINFOW)*ppResult;
-    while (addr) {
+    int count = 0;
+    while (addr && count < 100) {
+      count++;
       if (addr->ai_canonname)
         _dns.LookupAlias(name, addr->ai_canonname);
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
@@ -686,7 +691,9 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
     if (ret->h_name)
       _dns.LookupAlias(name, (LPCTSTR)CA2T(ret->h_name));
     char ** alias = ret->h_aliases;
-    while( *alias ) {
+    int count = 0;
+    while (*alias && count < 100) {
+      count++;
       _dns.LookupAlias(name, (LPCTSTR)CA2T(*alias));
       alias++;
     }    
@@ -813,7 +820,9 @@ int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
   int err = WSAHOST_NOT_FOUND;
   if (ret == NO_ERROR && ppResult && *ppResult) {
     PADDRINFOEXA addr = *ppResult;
-    while (addr) {
+    int count = 0;
+    while (addr && count < 100) {
+      count++;
       if (addr->ai_canonname)
         _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname));
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
@@ -858,7 +867,9 @@ int CWsHook::GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace
   int err = WSAHOST_NOT_FOUND;
   if (ret == NO_ERROR && ppResult && *ppResult) {
     PADDRINFOEXW addr = *ppResult;
-    while (addr) {
+    int count = 0;
+    while (addr && count < 100) {
+      count++;
       if (addr->ai_canonname)
         _dns.LookupAlias(name, addr->ai_canonname);
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 

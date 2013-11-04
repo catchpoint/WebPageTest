@@ -66,6 +66,9 @@ public:
   void Report();
   void OnReport();
 
+  // hook interfaces (for marshalling to the processing thread)
+  void SendPaintEvent(int x, int y, int width, int height);
+
 private:
   CGDIHook  gdi_hook_;
   CWsHook   winsock_hook_;

@@ -67,22 +67,19 @@ public:
     name_ = src.name_;
     addresses_.RemoveAll();
     POSITION pos = src.addresses_.GetHeadPosition();
-    while (pos) {
+    while (pos)
       addresses_.AddTail(src.addresses_.GetNext(pos));
-    }
     return src;
   }
   void AddAddress(DWORD address){
     bool found = false;
     POSITION pos = addresses_.GetHeadPosition();
     while (pos && !found) {
-      if (address == addresses_.GetNext(pos)) {
+      if (address == addresses_.GetNext(pos))
         found = true;
-      }
     }
-    if (!found) {
+    if (!found)
       addresses_.AddTail(address);
-    }
   }
   CString          name_;
   CAtlList<DWORD>  addresses_;

@@ -224,8 +224,10 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id,
 Request * Requests::NewRequest(DWORD socket_id, bool is_spdy) {
   Request * request = new Request(_test_state, socket_id, _sockets, _dns,
                                   _test, is_spdy, *this);
+  EnterCriticalSection(&cs);
   _active_requests.SetAt(socket_id, request);
   _requests.AddTail(request);
+  LeaveCriticalSection(&cs);
   return request;
 }
 
