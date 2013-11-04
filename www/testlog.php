@@ -266,8 +266,7 @@ else
                                                     $labelTxt = substr($labelTxt, 0, 27) . '...';
                                                 echo "<td title=\"$label\" class=\"label\">";
                                                 echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
-                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label;
-                                                echo '" data-date="' . $targetDate->format("Ymd") . '">(Edit)</a>';
+                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
                                                 echo "</td>";
 
 							                    echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';

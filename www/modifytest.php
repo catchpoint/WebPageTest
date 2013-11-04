@@ -1,8 +1,6 @@
 <?php
 include 'common.inc';
 
-error_reporting(-1);
-
 // Handle an Ajax call to update a test ID
 if (isset($_POST['label']) && isset($_POST['testID'])) {
     $new_label = htmlspecialchars($_POST['label']);
@@ -19,5 +17,3 @@ if (isset($_POST['label']) && isset($_POST['testID'])) {
 
 header('Content-type: application/json');
 echo json_encode($result);
-
-$label = getLabel('bar');

@@ -1303,7 +1303,6 @@ var getScrollbarWidth = function() {
                 testguid = element_clicked.attr('data-test-guid'),
                 labelNode = $('#label_' + testguid),
                 currentLabelText = element_clicked.attr('data-current-label'),
-                currentDate = element_clicked.attr('data-date'),
                 inputNode;
 
             inputNode = $('<input id="label_input_' + testguid + '" type="text" value="' + currentLabelText + '" />');
@@ -1320,7 +1319,7 @@ var getScrollbarWidth = function() {
                 var request = $.ajax({
                     url: '/modifytest.php',
                     type: 'POST',
-                    data: {testID: testguid, label: newLabel, date: currentDate},
+                    data: {testID: testguid, label: newLabel},
                     dataType: 'html'
                 });
 
