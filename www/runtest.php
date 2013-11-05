@@ -700,6 +700,7 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   // figure out what the location working directory and friendly name are
   $test['locationText'] = $locations[$test['location']]['label'];
+  $test['locationLabel'] = $locations[$test['location']]['label'];
   $test['workdir'] = $locations[$test['location']]['localDir'];
   $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
   $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
@@ -948,6 +949,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
+            $test['locationLabel'] = $locations[$test['location']]['label'];
             $test['workdir'] = $locations[$test['location']]['localDir'];
             $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
             $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
@@ -1575,6 +1577,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
+        
+        // fix up the location text for Appurify tests
+        if (array_key_exists('loc_type', $test) && $test['loc_type'] == 'Appurify') {
+          require_once('./lib/appurify.inc.php');
+          $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
+          $appurify->FixLocation($test);
+        }
 
         // make absolutely CERTAIN that this test ID doesn't already exist
         while( is_dir($test['path']) )

@@ -101,6 +101,26 @@ class Appurify{
   }
   
   /**
+  * Fix up the location string
+  * 
+  * @param mixed $test
+  */
+  public function FixLocation(&$test) {
+    $test['locationText'] = $test['locationLabel'];
+    $devices = $this->GetDevices();
+    if (array_key_exists($test['browser'], $devices))
+      $test['locationText'] .= " - {$devices[$test['browser']]}";
+    if (array_key_exists('requested_connectivity', $test) && is_numeric($test['requested_connectivity'])) {
+      $connections = $this->GetConnections();
+      foreach ($connections as $connection)
+        if ($connection['id'] == $test['requested_connectivity']) {
+          $test['locationText'] .= " - {$connection['group']} - {$connection['label']}";
+          break;
+        }
+    }
+  }
+  
+  /**
   * Submit a test to the Appurify system
   */
   public function SubmitTest(&$test, &$error) {
