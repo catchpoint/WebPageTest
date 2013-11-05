@@ -103,6 +103,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .test_box select {width: 270px;}
 .pending_tests {margin-left: 10px;color: #dcb315;font-size: 10px;}
 #addheaders {width: 400px;}
+#location {width: 370px;}
 
 #simplemodal-overlay {background-color:#000;}
 #simplemodal-container {background-color:#fff; border:2px solid #444; padding:4px;}
