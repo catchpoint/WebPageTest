@@ -319,6 +319,10 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         WaitForSingleObject(additional_process, 120000);
         CloseHandle(additional_process);
       }
+	  // Execute browser cleanup batch file
+	  if(_browser._cleanupBatch && _browser._cleanupBatch.GetLength() > 0){
+		  system(CT2A(_browser._cleanupBatch));
+	  }
       LeaveCriticalSection(&cs);
       ResetIpfw();
       RemoveGlobalHook();
