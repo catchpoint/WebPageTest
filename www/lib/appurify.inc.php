@@ -42,7 +42,7 @@ class Appurify{
           array_key_exists('devices', $cache) &&
           array_key_exists('time', $cache) &&
           $now >= $cache['time'] &&
-          $now - $cache['time'] < $ttl / 2)
+          $now - $cache['time'] < $ttl)
         $devices = $cache['devices'];
     }
     if (!isset($devices)) {
@@ -67,6 +67,40 @@ class Appurify{
   }
   
   /**
+  * Get the list of supported connectivity profiles
+  * 
+  */
+  public function GetConnections() {
+    $connections = null;
+    $this->Lock();
+    $ttl = 900;
+    if (is_file("./tmp/appurify_{$this->key}.connections")) {
+      $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.connections"), true);
+      $now = time();
+      if ($cache &&
+          is_array($cache) &&
+          array_key_exists('connections', $cache) &&
+          array_key_exists('time', $cache) &&
+          $now >= $cache['time'] &&
+          $now - $cache['time'] < $ttl)
+        $connections = $cache['connections'];
+    }
+    if (!isset($connections)) {
+      $connections = array();
+      $list = $this->Get('https://live.appurify.com/resource/devices/config/networks/list/');
+      if ($list !== false && is_array($list)) {
+        foreach($list as $connection)
+          $connections[] = array('id' => $connection['network_id'],
+                                 'group' => $connection['network_group'],
+                                 'label' => str_replace('_', ' ', $connection['network_name']));
+      }
+      file_put_contents("./tmp/appurify_{$this->key}.connections", json_encode(array('connections' => $connections, 'time' => time())));
+    }
+    $this->Unlock();
+    return $connections;
+  }
+  
+  /**
   * Submit a test to the Appurify system
   */
   public function SubmitTest(&$test, &$error) {
@@ -85,6 +119,9 @@ class Appurify{
           $video = $test['video'] ? "videocapture=1\r\n" : '';
           $browser = 'chrome';
           $device = $test['browser'];
+          $network = '';
+          if (array_key_exists('requested_connectivity', $test) && is_numeric($test['requested_connectivity']))
+            $network = "network={$test['requested_connectivity']}\r\n";
           if (stripos($device, '-') !== false)
             list($device, $browser) = explode('-', $device);
           $result = $this->Post('https://live.appurify.com/resource/config/upload/',
@@ -94,6 +131,7 @@ class Appurify{
                                       'data' => "[appurify]\r\n" .
                                                 "profiler=1\r\n" .
                                                 "videocapture=0\r\n" .
+                                                $network .
                                                 "[browser_test]\r\n" .
                                                 "url={$test['url']}\r\n" .
                                                 "browser=$browser"));
@@ -157,7 +195,7 @@ class Appurify{
         $ret = true;
         if ($this->ProcessResult($test, $run, $index, $testPath))
           $run['completed'] = true;
-        //unlink($file);
+        unlink($file);
       }
       UnLock($lock);
     }
@@ -175,6 +213,7 @@ class Appurify{
       $tempdir = realpath($tempdir);
       $zip->extractTo($tempdir);
       $zip->close();
+      unset($zip);
     }
     if (isset($tempdir) && is_dir($tempdir)) {
       $ok = true;

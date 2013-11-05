@@ -3,6 +3,10 @@ if (window['wptForgetSettings'])
 else  
   var wptStorage = window.localStorage || {};
 
+function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+  
 function ValidateInput(form)
 {
     if( (form.url.value == "" || form.url.value == "Enter a Website URL") &&
@@ -142,7 +146,7 @@ function LocationChanged()
         var display=browser;
         if (display == 'Safari')
             display = 'Safari (Windows)';
-        browserHtml += '<option value="' + key + '"' + selected + '>' + display + '</option>';
+        browserHtml += '<option value="' + htmlEntities(key) + '"' + selected + '>' + htmlEntities(display) + '</option>';
     }
     $('#browser').html(browserHtml);
     
@@ -179,20 +183,27 @@ function BrowserChanged()
             {
                 if( locations[config]['connectivity'] != undefined )
                 {
-                    connections[config] = locations[config]['connectivity'];
+                    connections[config] = {'label': locations[config]['connectivity']};
                     if( config == defaultConfig )
                         selectedConfig = config;
-                }
-                else
-                {
+                } else if( locations[config]['connections'] != undefined ) {
+                    for( var conn in locations[config]['connections'] ) {
+                        var conn_id = locations[config]['connections'][conn]['id'];
+                        var conn_group = locations[config]['connections'][conn]['group'];
+                        var conn_label = locations[config]['connections'][conn]['label'];
+                        if( selectedConfig == undefined )
+                            selectedConfig = config + '.' + conn_id;
+                        connections[config + '.' + conn_id] = {'group': conn_group, 'label': conn_group + ' - ' + conn_label};
+                    }
+                } else {
                     for( var conn in connectivity )
                     {
                         if( selectedConfig == undefined )
                             selectedConfig = config + '.' + conn;
-                        connections[config + '.' + conn] = connectivity[conn]['label'];
+                        connections[config + '.' + conn] = {'label': connectivity[conn]['label']};
                     }
                     
-                    connections[config + '.custom'] = 'Custom';
+                    connections[config + '.custom'] = {'label': 'Custom'};
                     if( selectedConfig == undefined )
                         selectedConfig = config + '.custom';
                 }
@@ -212,12 +223,21 @@ function BrowserChanged()
     
     // build the actual list
     connectionHtml = '';
-    for( var config in connections )
-    {
+    var lastGroup = undefined;
+    for( var config in connections ) {
         var selected = '';
         if( config == selectedConfig )
             selected = ' selected';
-        connectionHtml += '<option value="' + config + '"' + selected + '>' + connections[config] + '</option>';
+        if (connections[config]['group'] != undefined && connections[config]['group'] != lastGroup) {
+          if (lastGroup != undefined)
+            connectionHtml += "</optgroup>";
+          if (connections[config]['group'].length) {
+            lastGroup = connections[config]['group'];
+            connectionHtml += '<optgroup label="' + htmlEntities(connections[config]['group']) + '">';
+          } else
+            lastGroup = undefined;
+        }
+        connectionHtml += '<option value="' + htmlEntities(config) + '"' + selected + '>' + htmlEntities(connections[config]['label']) + '</option>';
     }
     $('#connection').html(connectionHtml);
     

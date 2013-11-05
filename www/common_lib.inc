@@ -627,6 +627,7 @@ function BuildLocations( &$locations )
                                   unset($configuration['key']);
                                   unset($configuration['secret']);
                                   $devices = $appurify->GetDevices();
+                                  $connections = $appurify->GetConnections();
                                   if (count($devices)) {
                                     $configuration['browser'] = '';
                                     foreach($devices as $app_id => $app_name) {
@@ -636,6 +637,8 @@ function BuildLocations( &$locations )
                                       $cfg = $configuration;
                                       $cfg['browser'] = $app_name;
                                       $cfg['label'] = $cfg['label'] . " - $app_name";
+                                      if (isset($connections))
+                                        $cfg['connections'] = $connections;
                                       $locations[$label] = $cfg;
                                     }
                                   }
@@ -699,7 +702,8 @@ function FilterLocations(&$locations, $includeHidden = '',
                     if( $minutes > 30 )
                         unset($locations[$name]);
                 } else {
-                  unset($locations[$name]);
+                  // TODO: Fix this so it only hides local locations, not relay and API
+                  //unset($locations[$name]);
                 }
             }
         }
@@ -809,7 +813,7 @@ function FilterLocations(&$locations, $includeHidden = '',
 */
 function GetLocationFromConfig(&$locations, $config)
 {
-    $ret;
+    $ret = null;
     
     foreach($locations as $location => &$values)
         foreach($values as $cfg)

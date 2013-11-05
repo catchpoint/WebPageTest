@@ -77,6 +77,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
                 }
             }
         }
+        unlink($videoFile);
     }
 }
 

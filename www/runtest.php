@@ -182,8 +182,10 @@
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2])))
                     $test['browser'] = trim($matches[2]);
-                if (strlen(trim($matches[3])))
+                if (strlen(trim($matches[3]))) {
                     $test['connectivity'] = trim($matches[3]);
+                    $test['requested_connectivity'] = $test['connectivity'];
+                }
             } else {
                 $test['location'] = trim($req_location);
             }
