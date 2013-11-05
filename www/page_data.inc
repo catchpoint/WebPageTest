@@ -132,7 +132,24 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     }
 
     if (isset($ret)) {
-        // clean up any insane values (from negative numbes as unsigned most likely)
+        // calculate the effective bps
+        if (array_key_exists('fullyLoaded', $ret) &&
+            array_key_exists('TTFB', $ret) &&
+            array_key_exists('bytesIn', $ret) &&
+            $ret['fullyLoaded'] > 0 &&
+            $ret['TTFB'] > 0 &&
+            $ret['bytesIn'] > 0 &&
+            $ret['fullyLoaded'] > $ret['TTFB'])
+            $ret['effectiveBps'] = intval($ret['bytesIn'] / (($ret['fullyLoaded'] - $ret['TTFB']) / 1000.0));
+        if (array_key_exists('docTime', $ret) &&
+            array_key_exists('TTFB', $ret) &&
+            array_key_exists('bytesInDoc', $ret) &&
+            $ret['docTime'] > 0 &&
+            $ret['TTFB'] > 0 &&
+            $ret['bytesInDoc'] > 0 &&
+            $ret['docTime'] > $ret['TTFB'])
+            $ret['effectiveBpsDoc'] = intval($ret['bytesInDoc'] / (($ret['docTime'] - $ret['TTFB']) / 1000.0));
+        // clean up any insane values (from negative numbers as unsigned most likely)
         $times = array('loadTime',
                        'TTFB',
                        'render',
