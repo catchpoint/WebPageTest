@@ -107,9 +107,11 @@ describe('traffic_shaper small', function() {
     testIpfw(undefined, 123, 456, 789, 10,
       '65535 allow ip from any to any',
       [[ipfw, 'list'], // isSupported test
-       [ipfw, 'add', 19999, 'pipe', 19999, 'ip', 'from', 'any', 'to', 'any'],
+       [ipfw, 'add', 19999, 'pipe', 19999, 'ip', 'from', 'any', 'to', 'any',
+           'in'],
        [ipfw, 'pipe', 19999, 'config', 'bw', '123Kbit/s', 'delay', '394ms'],
-       [ipfw, 'add', 20000, 'pipe', 20000, 'ip', 'from', 'any', 'to', 'any'],
+       [ipfw, 'add', 20000, 'pipe', 20000, 'ip', 'from', 'any', 'to', 'any',
+           'out'],
        [ipfw, 'pipe', 20000, 'config', 'bw', '456Kbit/s', 'delay', '395ms',
            'plr', '10'],
        []],
