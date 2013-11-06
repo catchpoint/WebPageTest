@@ -1,4 +1,4 @@
-Debug/
+PageSpeed/lib/Debug/
 Release/
 lib-release/
 lib-debug/
@@ -26,4 +26,9 @@ webpagetest.vsmdi
 *.idx
 *.ncb
 *.$wrk
-debug.log
+agent/js/*.log
+agent/js/node_modules/.bin/jshint
+agent/js/node_modules/jshint/
+agent/js/results/
+agent/js/src-cov/
+agent/js/runtmp_*
