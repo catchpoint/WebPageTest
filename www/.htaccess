@@ -31,7 +31,7 @@
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization/cached$ /result/$1/$2/performance_optimization/cached/ [R]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization/cached/$ /result/$1/$2/performance_optimization/cached/ [R]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/performance_optimization/cached/$ /performance_optimization.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/screen_shot/$ /screen_shot.php?test=$1&run=$2 [qsa]
+	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/screen_shot/$ /screen_shot.php?test=$1&run=$2 [qsa]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/screen_shot/cached/$ /screen_shot.php?test=$1&run=$2&cached=1 [qsa]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/breakdown/$ /breakdown.php?test=$1&run=$2 [qsa]
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/breakdown/cached/$ /breakdown.php?test=$1&run=$2&cached=1 [qsa]
@@ -57,12 +57,19 @@
     RewriteRule ^result/([a-zA-Z0-9_]+)/.*requests.csv$ /csv.php?test=$1&requests=1
 
     #thumbnails
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&file=$2_screen.jpg
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_screen.jpg
+	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&file=$2_1_screen.jpg
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_1_screen.jpg
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&file=$2_$3_screen.jpg
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_$3_screen.jpg
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&file=$2_waterfall.png
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_waterfall.png
+    	# Param1 = TestId, Param2 = RunNumber, Param3 = EventName, Param4 = EventNameId
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/(.+)/(.+)/waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&eventName=$3&file=$2_$4_waterfall.png
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/(.+)/(.+)/Cached_waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&eventName=$3&file=$2_Cached_$4_waterfall.png
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&file=$2_optimization.png
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_optimization.png
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/(.+)/optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&eventName=$3&file=$2_$3_optimization.png
+    	RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/(.+)/Cached_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&eventName=$3&file=$2_Cached_$3_optimization.png
 
     #old direct thumbnail paths
     RewriteRule ^results/old/([a-zA-Z0-9_]+)/([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&file=$2_screen.jpg
@@ -190,6 +197,5 @@ Options -Indexes
 	AddOutputFilterByType DEFLATE application/javascript
 	AddOutputFilterByType DEFLATE application/x-javascript
     AddOutputFilterByType DEFLATE application/json
-    AddOutputFilterByType DEFLATE image/x-icon
 </IfModule>
 

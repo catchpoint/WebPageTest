@@ -1,11 +1,12 @@
 <?php
+require_once('utils.inc');
 require_once('draw.inc');
 require_once('contentColors.inc');
 
 /**
-* Regroup requests into connection rows.
-*
-* @param mixed $requests
+ * Regroup requests into connection rows.
+ *
+ * @param mixed $requests
 */
 function GetConnectionRows(&$requests, $show_labels = true) {
     $host_connections = array();  // group connections by host
@@ -45,8 +46,8 @@ function GetConnectionRows(&$requests, $show_labels = true) {
 }
 
 /**
-* Return a row to indicate filtered requests. Helper for GetRequestRows.
-*/
+ * Return a row to indicate filtered requests. Helper for GetRequestRows.
+ */
 function _GetDotsRow() {
     return array(
         'is_connection' => false,
@@ -59,8 +60,8 @@ function _GetDotsRow() {
 }
 
 /**
-* Return an array of rows to use in waterfall view.
-*/
+ * Return an array of rows to use in waterfall view.
+ */
 function GetRequestRows($requests, $use_dots, $show_labels = true) {
     $rows = array();
     $filtered_requests = FilterRequests($requests);
@@ -86,8 +87,8 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
 }
 
 /**
-* Return an array of page events selected from the page data.
-*/
+ * Return an array of page events selected from the page data.
+ */
 function GetPageEvents($page_data) {
     return array(
         'render' => $page_data['render'],
@@ -103,8 +104,8 @@ function GetPageEvents($page_data) {
 }
 
 /**
-* Return data for an image map of the given rows.
-*/
+ * Return data for an image map of the given rows.
+ */
 function GetWaterfallMap($rows, $url, $options, &$page_data) {
     $page_events = array();
     $is_image_map = true;
@@ -112,20 +113,20 @@ function GetWaterfallMap($rows, $url, $options, &$page_data) {
 }
 
 /**
-* Return an image identifier (from imagecreate) for a waterfall chart.
-*
-* @return resource
-*/
+ * Return an image identifier (from imagecreate) for a waterfall chart.
+ *
+ * @return resource
+ */
 function GetWaterfallImage($rows, $url, $page_events, $options, &$page_data) {
     $is_image_map = false;
     return _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data);
 }
 
 /**
-* Draw the waterfall view image.
-*
-* @return resource
-*/
+ * Draw the waterfall view image.
+ *
+ * @return resource
+ */
 function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$page_data) {
     global $settings;
     $is_mime = (bool)@$options['is_mime'];
@@ -589,19 +590,38 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
         }
     }
 
-    if ($is_image_map)
-      return $map;
-    else
-      return $im;
+	if ($is_image_map) {
+		return $map;
+	} else {
+		return $im;
+	}
 }
 
 /**
-* Filter the requests we choose to display
-*
-* @param mixed $requests
-*/
+ * Checks if a request hostname contains string of requested hosts
+ * @param array $requestHost
+ * 		request hostname
+ * @param string $hosts
+ * 		array that contains requested hosts substrings
+ * @return boolean
+ * 		Does the request hostname belong to the requested hostnames?
+ */
+function checksRequestHost($requestHost, $hosts){
+	$result = false;
+	foreach($hosts as $host){
+		$host = trim($host);
+		$result |= (strlen(stristr($requestHost, $host)) > 0);
+	}
+	return $result;
+}
+
+/**
+ * Filter the requests we choose to display
+ *
+ * @param mixed $requests
+ */
 function FilterRequests($requests) {
-    $filtered_requests = array();
+	$filtered_requests_number = array();
     if (array_key_exists('requests', $_REQUEST) && strlen(trim($_REQUEST['requests']))) {
         $rlist = explode(',', urldecode($_REQUEST['requests']));
         foreach ($rlist as $r) {
@@ -614,20 +634,33 @@ function FilterRequests($requests) {
                     $end = min(count($requests) - 1, $range[1] - 1);
                     if ($end > $start)  {
                         for ($i = $start; $i <= $end; $i++) {
-                          $filtered_requests[$i] = &$requests[$i];
+							$filtered_requests_number[$i] = &$requests[$i];
                         }
                     }
                 } elseif ($r > 0 && $r <= count($requests)) {
-                    $filtered_requests[$r - 1] = &$requests[$r - 1];
+					$filtered_requests_number[$r - 1] = &$requests[$r - 1];
                 }
             }
         }
     }
+	
+	if (!count($filtered_requests_number))
+		$filtered_requests_number = $requests;
+	
+	$filtered_requests_hosts = array();
+	if (array_key_exists('hosts', $_REQUEST) && strlen(trim($_REQUEST['hosts']))) {	
+		$hostList = explode(',', urldecode($_REQUEST['hosts']));
+ 		foreach($filtered_requests_number as $index => $request){
+  			if(array_key_exists('host', $request) && checksRequestHost($request['host'], $hostList)){
+  				$filtered_requests_hosts[$index] = $request;
+  			}
+  		}
+	}
 
-    if (!count($filtered_requests))
-        $filtered_requests = $requests;
-        
-    return $filtered_requests;
+	if (!count($filtered_requests_hosts))
+		$filtered_requests_hosts = $filtered_requests_number;
+
+	return $filtered_requests_hosts;
 }
 
 class ColorAlternator
@@ -667,8 +700,8 @@ class XScaler
 }
 
 /**
-*
-*/
+ *
+ */
 function AddRowCoordinates(&$rows, $y1, $row_height) {
     foreach ($rows as &$r) {
         $r['y1'] = $y1;
@@ -678,7 +711,7 @@ function AddRowCoordinates(&$rows, $y1, $row_height) {
 }
 
 /* Add 'bg_color' to each row.
-*/
+ */
 function SetRowColors(&$rows, $is_page_loaded, $bg_colors) {
     $row_color_alternator = new ColorAlternator($bg_colors['alt'],
                                                 $bg_colors['default']);
@@ -698,14 +731,14 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors) {
 }
 
 /**
-* Draw performance chart label.
-*
-* @param resource $im is an image resource.
-* @param string $key is which performance chart (e.g. 'cpu' or 'bw').
-* @param mixed $perf is an array of performance parameters.
-* @param int $font is the label's font indentifier.
-* @param int $label_color color identifier
-*/
+ * Draw performance chart label.
+ *
+ * @param resource $im is an image resource.
+ * @param string $key is which performance chart (e.g. 'cpu' or 'bw').
+ * @param mixed $perf is an array of performance parameters.
+ * @param int $font is the label's font indentifier.
+ * @param int $label_color color identifier
+ */
 function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
   $x = $perf['x1'];
   $height = $perf['height'];
@@ -725,14 +758,14 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
 }
 
 /**
-* Draw performance chart background.
-*
-* @param resource $im is an image resource.
-* @param mixed $perf is an array of performance parameters.
-* @param int $data_x is where the data area of the chart begins.
-* @param int $border_color color identifier
-* @param int $bg_color color identifier
-*/
+ * Draw performance chart background.
+ *
+ * @param resource $im is an image resource.
+ * @param mixed $perf is an array of performance parameters.
+ * @param int $data_x is where the data area of the chart begins.
+ * @param int $border_color color identifier
+ * @param int $bg_color color identifier
+ */
 function DrawPerfBackground($im, $perf, $data_x, $border_color, $bg_color) {
     $x1 = $perf['x1'];
     $x2 = $perf['x2'];
@@ -752,8 +785,8 @@ function DrawPerfBackground($im, $perf, $data_x, $border_color, $bg_color) {
 }
 
 /**
-* Return marker interval best fit.
-*/
+ * Return marker interval best fit.
+ */
 function TimeScaleInterval($max_ms, $target_count) {
     $target_interval = (float)$max_ms / (float)$target_count;
     $interval = $target_interval;
@@ -771,9 +804,9 @@ function TimeScaleInterval($max_ms, $target_count) {
 }
 
 /**
-* Format the label for the time scale.
-* @return string
-*/
+ * Format the label for the time scale.
+ * @return string
+ */
 function TimeScaleLabel($ms, $interval) {
     $places = 2;
     if ($interval >= 1000) {
@@ -785,17 +818,17 @@ function TimeScaleLabel($ms, $interval) {
 }
 
 /**
-* Draw $label centered at $x.
-*/
+ * Draw $label centered at $x.
+ */
 function DrawCenteredText($im, $x, $y, $label, $font, $font_width, $color) {
     $x -= (int)((double)$font_width * (double)strlen($label) / 2.0);
     imagestring($im, $font, $x, $y, $label, $color);
 }
 
 /**
-* Format the label for a request.
-* @return string
-*/
+ * Format the label for a request.
+ * @return string
+ */
 function GetRequestLabel($request, $show_labels = true) {
     $path = parse_url('http://' . $request['host'] . $request['url'],
                       PHP_URL_PATH);
@@ -813,8 +846,8 @@ function GetRequestLabel($request, $show_labels = true) {
 }
 
 /**
-* Append imagemap data for the main document url.
-*/
+ * Append imagemap data for the main document url.
+ */
 function AddMapUrl(&$map, $x1, $y1, $x2, $y2, $url) {
     $map[] = array(
         'url' => $url,
@@ -825,8 +858,8 @@ function AddMapUrl(&$map, $x1, $y1, $x2, $y2, $url) {
 }
 
 /**
-* Append imagemap data for a single request.
-*/
+ * Append imagemap data for a single request.
+ */
 function AddMapRequest(&$map, $x1, $y1, $x2, $y2, $request) {
     $scheme = $request['is_secure'] ? 'https://' : 'http://';
     $map[] = array(
@@ -852,9 +885,9 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 
 
 /**
-* Return an array of 'bars' which define the coordinates and colors
-* for the parts of a request.
-*/
+ * Return an array of 'bars' which define the coordinates and colors
+ * for the parts of a request.
+ */
 function GetBars($request, $x_scaler, $y1, $y2,
                  $is_thumbnail, $is_mime, $is_state) {
     $bars = array();
@@ -879,8 +912,8 @@ function GetBars($request, $x_scaler, $y1, $y2,
 }
 
 /**
-* Append a bar for a request part if it exists and is valid.
-*/
+ * Append a bar for a request part if it exists and is valid.
+ */
 function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
     $start_key = $key . '_start';
     $end_key = $key . '_end';
@@ -900,12 +933,12 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 }
 
 /**
-* Insert an interactive waterfall into the current page
-* 
-*/
-function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '') {
-    global $settings;
-    
+ * Insert an interactive waterfall into the current page
+ *
+ */
+function InsertWaterfall($url, &$requests, $id, $run, $cached, $waterfall_options = '', $eventName = null) {
+	global $settings;	
+
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
     echo '<map name="waterfall_map">';
@@ -918,8 +951,12 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         'show_labels' => true,
         'width' => 930
         );
+	if($eventName != null){
+		$rows = GetRequestRows($requests[$eventName], false);
+	} else {
     $rows = GetRequestRows($requests, false);
-    $map = GetWaterfallMap($rows, $url, $options, $page_data);
+	}
+	$map = GetWaterfallMap($rows, $url, $options);
     foreach($map as $entry) {
         if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
@@ -932,10 +969,10 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         }
     }
     echo '</map>';
-    
+
     // main container for the waterfall
     echo '<div class="waterfall-container">';
-    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options&eventName=".urlencode($eventName)."\">";
 
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {
@@ -950,39 +987,63 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
                     $tooltip = substr($tooltip, 0, $split) . '...';
                 $tooltip = FitText($tooltip, 100);
             }
-            echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+			echo "<div class=\"transparent request-overlay\" id=\"request-overlay-".getEventNameID($eventName)."-$index\" title=\"$tooltip\" onclick=\"SelectRequest('$eventName', $index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
         }
-    }
-
+	}	
     ?>
-    <div id="request-dialog" class="jqmDialog">
-        <div id="dialog-header" class="jqmdTC jqDrag">
-            <div id="dialog-title"></div>
-            <div id="request-dialog-radio">
-                <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
-                <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
-                <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
-                <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Object</label></span>
+<div id="request-dialog<?php echo getEventNameID($eventName); ?>" class="jqmDialog">
+	<div id="dialog-header<?php echo getEventNameID($eventName); ?>" class="jqmdTC jqDrag">
+		<div id="dialog-title<?php echo getEventNameID($eventName); ?>" class="dialog-title"></div>
+		<div id="request-dialog-radio<?php echo getEventNameID($eventName); ?>"
+			class="request-dialog-radio">
+			<span id="request-details-button<?php echo getEventNameID($eventName); ?>"><input
+				type="radio" id="radio<?php echo getEventNameID($eventName); ?>1"
+				value="request-details<?php echo getEventNameID($eventName); ?>" name="radio"
+				checked="checked" /><label for="radio<?php echo getEventNameID($eventName); ?>1">Details</label>
+			</span> <span id="request-headers-button<?php echo getEventNameID($eventName); ?>"><input
+				type="radio" id="radio<?php echo getEventNameID($eventName); ?>2"
+				value="request-headers<?php echo getEventNameID($eventName); ?>" name="radio" /><label
+				for="radio<?php echo getEventNameID($eventName); ?>2">Request</label> </span> <span
+				id="response-headers-button<?php echo getEventNameID($eventName); ?>"><input
+				type="radio" id="radio<?php echo getEventNameID($eventName); ?>3"
+				value="response-headers<?php echo getEventNameID($eventName); ?>" name="radio" /><label
+				for="radio<?php echo getEventNameID($eventName); ?>3">Response</label> </span> <span
+				id="response-body-button<?php echo getEventNameID($eventName); ?>"><input
+				type="radio" id="radio<?php echo getEventNameID($eventName); ?>4"
+				value="response-body<?php echo getEventNameID($eventName); ?>" name="radio" /><label
+				for="radio<?php echo getEventNameID($eventName); ?>4">Object</label> </span>
             </div>
         </div>
         <div class="jqmdBC">
-            <div id="dialog-contents" class="jqmdMSG">
-                <div id="request-details" class="dialog-tab-content"></div>
-                <div id="request-headers" class="dialog-tab-content"></div>
-                <div id="response-headers" class="dialog-tab-content"></div>
-                <div id="response-body" class="dialog-tab-content"></div>
+		<div id="dialog-contents<?php echo getEventNameID($eventName); ?>" class="jqmdMSG">
+			<div id="request-details<?php echo getEventNameID($eventName); ?>"
+				class="dialog-tab-content"></div>
+			<div id="request-headers<?php echo getEventNameID($eventName); ?>"
+				class="dialog-tab-content request-headers"></div>
+			<div id="response-headers<?php echo getEventNameID($eventName); ?>"
+				class="dialog-tab-content response-headers"></div>
+			<div id="response-body<?php echo getEventNameID($eventName); ?>"
+				class="dialog-tab-content response-body"></div>
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>
-    </div>
-    <div id="marker"></div>
-    <?php
+</div>
+<div id="marker"></div>
+<?php
 
-    echo '</div>'; // container
-    
-    // script support
+echo '</div>'; // container
+
+// script support
+	if($eventName != null){
+		$eventCount = array();
+		foreach(array_keys($requests) as $page){
+			$eventCount[$page] = count($requests[$eventName]);
+		}
+	} else {
+		$eventCount = count($requests);
+	}
     echo "<script type=\"text/javascript\">\n";
-    echo "var wptRequestCount=" . count($requests) . ";\n";
+	echo "var wptRequestCount=" . $eventCount. ";\n";
     echo "var wptRequestData=" . json_encode($requests) . ";\n";
     echo "var wptNoLinks={$settings['nolinks']};\n";
     echo "</script>";

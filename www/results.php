@@ -27,11 +27,12 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             include 'testcancelled.inc';
         elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 )
         {
-            if( @$test['test']['type'] == 'traceroute' )
+        if( @$test['test']['type'] == 'traceroute' ){
                 include 'resultTraceroute.inc';
-            else
+        } else {
                 include 'result.inc';
         }
+    }
         else
             include 'running.inc';
     }

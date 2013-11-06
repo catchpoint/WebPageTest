@@ -1,9 +1,11 @@
 <?php 
 include 'common.inc';
+include 'utils.inc';
 require_once('video.inc');
 require_once('page_data.inc');
 require_once('devtools.inc.php');
-$pageRunData = loadPageRunData($testPath, $run, $cached);
+
+$pageRunDataArray = loadPageRunData($testPath, $run, $cached, null, true);
 
 $videoPath = "$testPath/video_{$run}";
 if( $cached )
@@ -91,7 +93,47 @@ $userImages = true;
             $subtab = 'Screen Shot';
             include 'header.inc';
             ?>
+            <hr>
+            <h1 style="text-align:center; font-size:2.8em">
+              	<?php 
+ 				if($cached){
+					echo "Repeat View";
+				} else {
+					echo "First View";
+				}      
+               	?>
+            </h1>
+            <hr>
+            <br>
+            <a name="quicklinks"></a><h3>Quicklinks</h3><a href="#">Back to page top</a>
+           	<div style="text-align:center;">
+           		<table class="pretty">
+               		<thead>
+               			<th>Event Name</th>
+               			<th>Screenshots</th>
+               		</thead>
+               		<tbody>
+               			<?php foreach(array_keys($pageRunDataArray) as $eventName)
+						{ ?>
+							<tr>
+								<td><?php echo $eventName; ?></td>
+								<td><a href="#<?php echo getEventNameID($eventName); ?>">ScSh #<?php echo getShortEventName($eventName); ?></a></td>
+							</tr>
             <?php
+						}
+              			?>
+               		</tbody>
+             	</table>
+           	</div>
+           	<br><br>
+            <?php
+           	 	echo "<hr><hr>";
+            	foreach($pageRunDataArray as $eventName => $pageRunData){
+            		echo "<h1><a name=".getEventNameID($eventName)." style=\"color:blue\">".$eventName."</a></h1>";
+            		echo "<a href=\"#quicklinks\">Back to Quicklinks</a>";
+            		$pageString = "_" . $pageRunData['pageNumber'];
+	            	echo "<hr><hr><br>";
+            		
                 if( is_dir("./$videoPath") )
                 {
                     $createPath = "/video/create.php?tests=$id-r:$run-c:$cached&id={$id}.{$run}.{$cached}";
@@ -101,18 +143,18 @@ $userImages = true;
                     
                 if($cached == 1)
                     $cachedText='_Cached';
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen.png') )
+	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen.png') )
                 {
                     echo '<h1>Fully Loaded</h1>';
-                    echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
-                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
+	                    echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen.png">';
+	                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen.png">';
                     echo '</a>';
                 }
-                elseif( is_file($testPath . '/' . $run . $cachedText . '_screen.jpg') )
+	                elseif( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen.jpg') )
                 {
                     echo '<h1>Fully Loaded</h1>';
-		            echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
-                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
+			            echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen.jpg">';
+	                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen.jpg">';
                     echo '</a>';
                 }
                 // display the last status message if we have one
@@ -123,38 +165,38 @@ $userImages = true;
                         echo "\n<br>Last Status Message: \"{$lastMessage['message']}\"\n";
                 }
                 
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_render.jpg') )
+	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_render.jpg') )
                 {
                     echo '<br><br><a name="start_render"><h1>Start Render';
                     if( isset($pageRunData) && isset($pageRunData['render']) )
                         echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
-                    echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_render.jpg">';
+	                    echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_render.jpg">';
                 }
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_dom.jpg') )
+	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_dom.jpg') )
                 {
                     echo '<br><br><a name="dom_element"><h1>DOM Element';
                     if( isset($pageRunData) && isset($pageRunData['domTime']) )
                         echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
-                    echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_dom.jpg">';
+	                    echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_dom.jpg">';
                 }
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_doc.jpg') )
+	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_doc.jpg') )
                 {
                     echo '<br><br><a name="doc_complete"><h1>Document Complete';
                     if( isset($pageRunData) && isset($pageRunData['docTime']) )
                         echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
-                    echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_doc.jpg">';
+	                    echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_doc.jpg">';
                 }
-                if( is_file($testPath . '/' . $run . $cachedText . '_aft.png') )
+	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_aft.png') )
                 {
                     echo '<br><br><a name="aft"><h1>AFT Details';
                     if( isset($pageRunData) && isset($pageRunData['aft']) )
                         echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
                     echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
-                    echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
+	                    echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_aft.png">';
                 }
                 
                 // display all of the status messages
@@ -185,6 +227,9 @@ $userImages = true;
                     }
                     echo "</table>\n";
                 }
+	            echo "<br><br>";
+	            echo "<hr><hr>";
+            	}
             ?>
             
             </div>

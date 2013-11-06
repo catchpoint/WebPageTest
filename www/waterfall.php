@@ -5,7 +5,14 @@ include 'object_detail.inc';
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
-$page_data = loadPageRunData($testPath, $run, $cached);
+$eventName = urldecode($_REQUEST["eventName"]);
+if(isset($eventName)){
+	$pageDataArray = loadPageRunData($testPath, $run, $cached, null, true);
+	$page_data = $pageDataArray[$eventName];
+} else {
+	$page_data = loadPageRunData($testPath, $run, $cached);
+	$eventName = null;
+}
 
 $is_mime = (bool)@$_REQUEST['mime'];
 $is_state = (bool)@$_REQUEST['state'];
@@ -14,16 +21,16 @@ $show_labels = (!isset($_REQUEST['labels']) || $_REQUEST['labels'] != 0);
 $rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 
 // Get all of the requests;
+$requests = getRequests($id, $testPath, $run, $cached,
+		$is_secure, $has_locations, $use_location_check, false, true);
 $is_secure = false;
 $has_locations = false;
 $use_location_check = false;
-$requests = getRequests($id, $testPath, $run, $cached,
-                        $is_secure, $has_locations, $use_location_check);
 if (@$_REQUEST['type'] == 'connection') {
     $is_state = true;
-    $rows = GetConnectionRows($requests, $show_labels);
+    $rows = GetConnectionRows($requests[$eventName], $show_labels);
 } else {
-    $rows = GetRequestRows($requests, $use_dots, $show_labels);
+    $rows = GetRequestRows($requests[$eventName], $use_dots, $show_labels);
 }
 $page_events = GetPageEvents($page_data);
 $bwIn=0;

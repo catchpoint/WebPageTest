@@ -2,6 +2,7 @@
 include 'common.inc';
 $page_keywords = array('Custom','Waterfall','Webpagetest','Website Speed Test');
 $page_description = "Website speed test custom waterfall$testLabel";
+$eventName = urldecode($_GET['eventName']);
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,7 +26,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                      &nbsp; <input type="radio" name="coloring" value="mime"> By MIME Type<br>
                      Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)<br>
                      Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)<br>
-                     Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
+                     Event Name: <input id="event" type="text" name="event" disabled="disabled" style="width:20em" value="<?php echo $eventName; ?>"><br>                     
+                     Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value=""><br>   
+                     Hosts (i.e. hostA,hostB): <input id="hosts" type="text" name="hosts" style="width:20em" value="">                  
                     <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
                     <input id="showCPU" type="checkbox" checked> Show CPU Utilization 
                     <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization 
@@ -38,7 +41,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached\">";
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&eventName=$eventName\">";
             ?>
             
             <?php include('footer.inc'); ?>
@@ -83,7 +86,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     mime = 1;
                 var width = $('#width').val();
                 var max = $('#max').val();
+                var event = $('#event').val();
                 var requests = $('#requests').val();
+                var hosts = $('#hosts').val();
                 var showCPU = 0;
                 if( $('#showCPU').attr('checked') )
                     showCPU = 1;
@@ -101,20 +106,22 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var testRun='$run';\n";
                 echo "var cached='$cached';\n";
                 echo "var extension='$extension';\n";
-                ?>
-                
-                var src = '/waterfall.' + extension + '?test=' + testId + 
-                          '&run=' + testRun + 
-                          '&cached=' + cached + 
-                          '&max=' + max + 
-                          '&width=' + width + 
-                          '&type=' + type + 
-                          '&mime=' + mime + 
-                          '&cpu=' + showCPU + 
-                          '&bw=' + showBW + 
-                          '&dots=' + showDots + 
-                          '&labels=' + showLabels + 
-                          '&requests=' + requests;
+                ?>				
+
+                var src = 	'/waterfall.' + extension + 
+							'?test=' + testId + 
+							'&run=' + testRun + 
+							'&cached=' + cached + 
+							'&max=' + max + 
+							'&width=' + width + 
+							'&type=' + type + 
+							'&cpu=' + showCPU + 
+							'&bw=' + showBW + 
+							'&dots=' + showDots + 
+							'&labels=' + showLabels + 
+							'&requests=' + requests + 
+							'&eventName=' + event + 
+							'&hosts=' + hosts;
                 $('#waterfallImage').attr("src", src);
             };
         </script>

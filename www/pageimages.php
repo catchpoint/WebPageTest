@@ -4,7 +4,8 @@ include 'object_detail.inc';
 require_once('page_data.inc');
 $secure = false;
 $haveLocations = false;
-$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, true);
+$eventName = urldecode($_GET['eventName']);
+$requests = getRequests($id, $testPath, $run, $_GET["cached"], $secure, $haveLocations, true, false, true);
 $page_keywords = array('Images','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website speed test images$testLabel.";
 $userImages = true;
@@ -33,7 +34,7 @@ $userImages = true;
                 <p>Images are what are currently being served from the given url and may not necessarily match what was loaded at the time of the test.</p>
                 <table class="images">
                 <?php
-                foreach( $requests as &$request ) {
+                foreach( $requests[$eventName] as &$request )
                     if( array_key_exists('contentType', $request) &&
                         !strncasecmp($request['contentType'], 'image/', 6)) {
                         $index = $request['index'] + 1;
