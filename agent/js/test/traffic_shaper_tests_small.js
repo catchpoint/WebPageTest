@@ -90,6 +90,7 @@ describe('traffic_shaper small', function() {
       }
       return false;
     };
+    test_utils.stubRandom(sandbox);
     test_utils.stubCreateServer(sandbox);
 
     var ts = new traffic_shaper.TrafficShaper(app, {deviceAddr: deviceAddr});
@@ -102,27 +103,27 @@ describe('traffic_shaper small', function() {
     spawnStub.assertCalls.apply(spawnStub, expectedStopCalls);
   }
 
-  it('should run ipfw for any address', function() {
+  it('should run ipfw for static address', function() {
     var ipfw = /ipfw$/;
-    testIpfw(undefined, 123, 456, 789, 10,
+    testIpfw('1.2.3.4', 123, 456, 789, 10,
       '65535 allow ip from any to any',
       [[ipfw, 'list'], // isSupported test
-       [ipfw, 'add', 19999, 'pipe', 19999, 'ip', 'from', 'any', 'to', 'any',
+       [ipfw, 'add', 11232, 'pipe', 11232, 'ip', 'from', 'any', 'to', '1.2.3.4',
            'in'],
-       [ipfw, 'pipe', 19999, 'config', 'bw', '123Kbit/s', 'delay', '394ms'],
-       [ipfw, 'add', 20000, 'pipe', 20000, 'ip', 'from', 'any', 'to', 'any',
+       [ipfw, 'pipe', 11232, 'config', 'bw', '123Kbit/s', 'delay', '394ms'],
+       [ipfw, 'add', 18252, 'pipe', 18252, 'ip', 'from', '1.2.3.4', 'to', 'any',
            'out'],
-       [ipfw, 'pipe', 20000, 'config', 'bw', '456Kbit/s', 'delay', '395ms',
+       [ipfw, 'pipe', 18252, 'config', 'bw', '456Kbit/s', 'delay', '395ms',
            'plr', '10'],
        []],
-      ('19999 pipe 19999 ip from any to any\n' +
-       '20000 pipe 20000 ip from any to any\n' +
+      ('11232 pipe 11232 ip from 1.2.3.4 to any\n' +
+       '18252 pipe 18252 ip from any to 1.2.3.4\n' +
        '65535 allow ip from any to any'),
       [[ipfw, 'list'],
-       [ipfw, 'delete', '19999'],
-       [ipfw, 'delete', '20000'],
-       [ipfw, 'pipe', 'delete', '19999'],
-       [ipfw, 'pipe', 'delete', '20000'],
+       [ipfw, 'delete', '11232'],
+       [ipfw, 'delete', '18252'],
+       [ipfw, 'pipe', 'delete', '11232'],
+       [ipfw, 'pipe', 'delete', '18252'],
        []]);
   });
 });
