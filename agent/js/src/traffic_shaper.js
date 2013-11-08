@@ -121,6 +121,7 @@ TrafficShaper.prototype.scheduleIsSupported_ = function() {
  * Apply shaping options.
  *
  * @param {Object} opts Traffic shaping options:
+ *   #param {string=} dir 'in' or 'out'.
  *   #param {string} from 'any', MAC, or IP.
  *   #param {string} to 'any', MAC, or IP.
  *   #param {number} ruleId
@@ -140,7 +141,7 @@ TrafficShaper.prototype.scheduleIpfw_ = function(opts) {
         ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
     }
   }.bind(this));
-  // ipfw add 100 pipe 1 ip from any to ip
+  // ipfw add 100 pipe 1 ip from any to ip in
   var addr = (opts.from === 'any' ? opts.to : opts.from);
   // TODO for now we support both IP and MAC, but in practice we only use the
   // IP, so MAC support may be deprecated and removed in a future release.
@@ -151,7 +152,8 @@ TrafficShaper.prototype.scheduleIpfw_ = function(opts) {
   process_utils.scheduleExec(this.app_, this.ipfwCommand_,
       ['add', opts.ruleId, 'pipe', opts.pipeId].concat(
       'mac' === proto ? ['mac', opts.to, opts.from] :
-          [proto, 'from', opts.from, 'to', opts.to]));
+          [proto, 'from', opts.from, 'to', opts.to]).concat(
+      opts.dir ? [opts.dir] : []));
   // ipfw pipe 1 config bw 1234Kbit/s delay 1000ms plr 0.05
   process_utils.scheduleExec(this.app_, this.ipfwCommand_,
       ['pipe', opts.pipeId, 'config'].concat(
@@ -173,8 +175,8 @@ TrafficShaper.prototype.scheduleStart = function(bwIn, bwOut, latency, plr) {
   // Cleanup
   this.scheduleStop();
 
-  var inOpts = {from: 'any', to: this.deviceAddr_, bw: bwIn};
-  var outOpts = {from: this.deviceAddr_, to: 'any', bw: bwOut};
+  var inOpts = {dir: 'in', from: 'any', to: this.deviceAddr_, bw: bwIn};
+  var outOpts = {dir: 'out', from: this.deviceAddr_, to: 'any', bw: bwOut};
 
   // Divide latency equally
   if (latency) {
@@ -219,7 +221,7 @@ TrafficShaper.prototype.scheduleStart = function(bwIn, bwOut, latency, plr) {
 TrafficShaper.prototype.newIpfwListRegex_ = function(addr) {
   'use strict';
   // e.g.:
-  //   2 pipe 3 ip from X to any
+  //   2 pipe 3 ip from X to any out
   //   17 pipe 42 ip from any to any MAC any X
   function join(src, sep, dest) {
     return '(' + src + sep + dest +
@@ -234,7 +236,7 @@ TrafficShaper.prototype.newIpfwListRegex_ = function(addr) {
       pair('any', 'any') + '*' +
       ('any' === addr ? '' :
         (pair('any', addr)) + pair('any', 'any') + '*') +
-      '\\s*$', 'i');
+      '(\\s+(in|out))?\\s*$', 'i');
 };
 
 /**

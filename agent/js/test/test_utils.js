@@ -418,12 +418,30 @@ exports.stubShell = function() {
 };
 
 /**
+ * Stubs out Math.random with a fixed seed.
+ *
+ * @param {Object} sandbox a SinonJS sandbox object.
+ * @param {Object=} seed optional seed, defaults to 0.1234.
+ * @return {Object} a SinonJS stub.
+ */
+exports.stubRandom = function(sandbox, seed) {
+  'use strict';
+  var nextRandom = (seed || 0.1234);
+  return sandbox.stub(Math, 'random', function() {
+    var ret = nextRandom;
+    nextRandom = (31 * ret) % 1;
+    return ret;
+  });
+};
+
+/**
  * Stubs out net.createServer, fakes a listener socket that can bind any port
  * but never accepts clients.
  *
  * @param {Object} sandbox a SinonJS sandbox object.
  * @param {Object=} mod require'd module, e.g. net or http.  Defaults to net.
  * @return {Object} a SinonJS stub.
+ * @see stubRandom process_utils.scheduleAllocatePort uses Math.random().
  */
 exports.stubCreateServer = function(sandbox, mod) {
   'use strict';
