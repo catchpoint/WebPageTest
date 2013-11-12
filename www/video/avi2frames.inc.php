@@ -70,14 +70,14 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
                     EliminateDuplicateAVIFiles($videoDir);
                     $lastImage = ProcessVideoFrames($videoDir, $orange_leader, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
-                    if (isset($lastImage) &&
-                        !is_file($screenShot) &&
-                        is_file($lastImage))
-                        copy($lastImage, $screenShot);
+                    if (isset($lastImage) && is_file($lastImage)) {
+                      unlink($videoFile);
+                      if (!is_file($screenShot))
+                          copy($lastImage, $screenShot);
+                    }
                 }
             }
         }
-        unlink($videoFile);
     }
 }
 
