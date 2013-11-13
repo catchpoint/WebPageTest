@@ -252,7 +252,7 @@ table.details td.error {
                         }
                         if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
                         	echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
-                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0 )
+                        if (array_key_exists('domElements', $data))
                         	echo "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
 	                        $resultCode = $data['result'];
 	                        if(!isset($resultCode) || $resultCode === null || $resultCode === ""){

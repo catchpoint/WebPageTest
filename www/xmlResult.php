@@ -54,7 +54,7 @@ else
 			$pageStatsArray[$eventName] = calculatePageStats($pageData, $fvArray[$eventName], $rvArray[$eventName]);
 			if(empty($fvArray[$eventName])){
 				unset($fvArray[$eventName]);
-		}
+			}
 			if(empty($rvArray[$eventName])){
 				unset($rvArray[$eventName]);
 			}
@@ -172,11 +172,11 @@ else
 					if( strlen($score) )
 						echo "<PageSpeedScore>$score</PageSpeedScore>\n";
 				}
-				if( FRIENDLY_URLS )
-					echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
-				else
-					echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             }
+            if( FRIENDLY_URLS )
+            	echo "<PageSpeedData>http://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
+            else
+            	echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
             xmlDomains($id, $testPath, $fvMedian, 0);
             xmlBreakdown($id, $testPath, $fvMedian, 0);
             xmlRequests($id, $testPath, $fvMedian, 0);
@@ -208,11 +208,11 @@ else
 							if( strlen($score) )
 								echo "<PageSpeedScore>$score</PageSpeedScore>\n";
 						}
-						if( FRIENDLY_URLS )
-							echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
-						else
-							echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     }
+                    if( FRIENDLY_URLS )
+                    	echo "<PageSpeedData>http://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
+                    	else
+                    echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     xmlDomains($id, $testPath, $fvMedian, 1);
                     xmlBreakdown($id, $testPath, $fvMedian, 1);
                     xmlRequests($id, $testPath, $fvMedian, 1);
@@ -243,13 +243,12 @@ else
 						echo "<eventName>".$eventName. "</eventName>";
 						foreach( $pageData[$i][0] as $key => $val )
 							echo "<$key>" . xml_entities($val) . "</$key>\n";
-                    }
-                    if( $pagespeed )
-                    {
-                        $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
-                        if( strlen($score) )
-                            echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                    }
+	                    if( $pagespeed )
+	                    {
+	                        $score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
+	                        if( strlen($score) )
+	                            echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+	                    }
 						echo "</testStep>";
 					}
                     echo "</results>\n";
@@ -385,7 +384,7 @@ else
                           foreach ($progress['DevTools']['processing'] as $key => $value)
                             echo "<$key>$value</$key>\n";
                           echo "</processing>\n";
-					}
+						}
                         if (array_key_exists('VisualProgress', $progress['DevTools'])) {
                           echo "<VisualProgress>\n";
                           foreach ($progress['DevTools']['VisualProgress'] as $key => $value)
@@ -412,15 +411,14 @@ else
 						echo "<eventName>".$eventName. "</eventName>";
 						foreach( $pageData[$i][1] as $key => $val )
 							echo "<$key>" . xml_entities($val) . "</$key>\n";
-                    }
-                    if( $pagespeed )
-                    {
-                        $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
-                        if( strlen($score) )
-                            echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                    }
-						echo "</testStep>";
-					}
+	                    if( $pagespeed )
+	                    {
+	                        $score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
+	                        if( strlen($score) )
+	                            echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+	                    }
+							echo "</testStep>";
+						}
                     echo "</results>\n";
 
                     // links to the relevant pages

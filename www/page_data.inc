@@ -9,6 +9,8 @@ require_once('utils.inc');
  * @param mixed $testPath
  * @param mixed $run
  * @param mixed $cached
+ * @param bool $allEvents
+ * 		boolean if data for all events shall be used
 */
 function loadAllPageData($testPath, $options = null, $allEvents = false)
 {
@@ -61,8 +63,12 @@ function loadAllPageData($testPath, $options = null, $allEvents = false)
 	 * @param mixed $run
 	 * @param mixed $fv
 	 * @param mixed $rv
+	 * @param bool  $allEvents
+	 * 		boolean if data for all events shall be used
+	 * @param bool	$allLevels (only with $allEvents = true)
+	 * 		boolean if all array levels shall be added (eventName, run and cached)
 	 */
-	function loadPageRunData($testPath, $run, $cached, $options = null, $allEvents = false)
+	function loadPageRunData($testPath, $run, $cached, $options = null, $allEvents = false, $allLevels = false)
 	{
 		$ret = null;
 
@@ -137,6 +143,19 @@ function loadAllPageData($testPath, $options = null, $allEvents = false)
 				}
 			}
 			$ret[$eventName] = $data;
+		}		
+		if($allLevels){
+			$tmp = array();
+			if($allEvents){
+				foreach($ret as $eventName => $data){
+					$tmp[$eventName][$run][$cached] = $data;
+				}
+			} else {
+				foreach($ret as $eventName => $data){
+					$tmp[$eventName][$run][$cached] = $data;
+				}
+			}
+			$ret = $tmp;
 		}
 		return $ret;
 	}
@@ -145,6 +164,10 @@ function loadAllPageData($testPath, $options = null, $allEvents = false)
 	 * Load the page data from the specified file
 	 *
 	 * @param mixed $file
+	 * @param mixed $testPath
+	 * @param mixed $options
+	 * @param bool $allEvents
+ 	 * 		boolean if data for all events shall be used
 	 */
 	function loadPageData($file, $testPath, $options = null, $allEvents = false)
 	{

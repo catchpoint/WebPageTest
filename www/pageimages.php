@@ -34,7 +34,7 @@ $userImages = true;
                 <p>Images are what are currently being served from the given url and may not necessarily match what was loaded at the time of the test.</p>
                 <table class="images">
                 <?php
-                foreach( $requests[$eventName] as &$request )
+                foreach( $requests[$eventName] as &$request ){
                     if( array_key_exists('contentType', $request) &&
                         !strncasecmp($request['contentType'], 'image/', 6)) {
                         $index = $request['index'] + 1;

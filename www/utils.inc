@@ -19,7 +19,7 @@
 		} else {
 			$job = $jobLabel;
 		}			
-		$event = $job . ' ' . ($eventNumber + 1);
+		$event = $job . ': Event ' . ($eventNumber + 1);
 		
 		// Use eventString if set and not already in use
 		if(trim($eventString) != ""){

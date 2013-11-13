@@ -1,7 +1,20 @@
 var wptBodyRequest;
 
-function initDialog(eventName) {
+/**
+ * Delivers an ID for the given event name
+ * (javascript version of method in utilc.inc)
+ * @param $eventName
+ * @returns
+ * 		$eventName as id
+ */
+function getEventNameID(eventName){
 	var eventNameID = eventName.replace(/ /g, "_");
+	eventNameID = eventNameID.replace(/[^a-zA-Z0-9_-]/g, "");
+	return eventNameID;
+}
+
+function initDialog(eventName) {
+	var eventNameID = getEventNameID(eventName);
 	var CloseRequestDialog = function(hash) {
     hash.w.hide();
 		if (eventName != -1) {
@@ -239,7 +252,7 @@ function getRequestDetails(eventName, request, resultType) {
 }
 
 function SelectRequest(eventName, request) {
-	var eventNameID = eventName.replace(/ /g, "_");
+	var eventNameID = getEventNameID(eventName);
 	initDialog(eventName);
 	$('#request-dialog' + eventNameID)
 			.css(

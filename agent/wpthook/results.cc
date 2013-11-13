@@ -214,8 +214,8 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  CString page("_");
-  page.AppendChar(char(currentPage + '0'));
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
     SaveImage(image, _file_base + page + IMAGE_START_RENDER,
               _test._image_quality);
