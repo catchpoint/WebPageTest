@@ -144,6 +144,7 @@ function SelectRequest(request) {
             }
         }
         if (r['body_url'] !== undefined && r['body_url'].length) {
+            details += '<a href="' + r['body_url'] + '" target="_blank">Open response body in new window</a><br>'
             try {
                 $("#response-body").text('Loading...');
                 $('#response-body-button').show();
