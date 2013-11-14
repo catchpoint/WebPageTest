@@ -216,14 +216,9 @@ describe('process_utils small', function() {
   });
 
   function testAllocPort(expectedPorts, usedPorts, randomSeed) {
+    test_utils.stubRandom(sandbox, randomSeed);
     var serverStub = test_utils.stubCreateServer(sandbox);
     serverStub.ports = (usedPorts || {});
-    var nextRandom = (randomSeed || 0.1234);
-    sandbox.stub(Math, 'random', function() {
-      var ret = nextRandom;
-      nextRandom = (31 * ret) % 1;
-      return ret;
-    });
     process_utils.scheduleAllocatePort(app, 'alloc port');
     test_utils.tickUntilIdle(app, sandbox);
     should.equal(JSON.stringify(serverStub.ports),
