@@ -32,6 +32,7 @@ bool WptTestDriver::Start() {
       SetClearedCache(_clear_cache);
       SetCurrentRun(_run);
       SetCPUUtilization(0);
+      SetHasGPU(has_gpu_);
       ret = true;
     }
   }

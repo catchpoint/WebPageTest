@@ -37,6 +37,7 @@ public:
   bool TestDone(WptTestDriver& test);
 
   bool _exit;
+  bool has_gpu_;
 
 private:
   WptSettings&  _settings;

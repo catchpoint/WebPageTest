@@ -998,8 +998,19 @@ function GetTestInfoHtml($includeScript = true)
     global $admin;
     global $privateInstall;
     $html = '';
-    if( ($admin || $privateInstall) && isset($test['testinfo']['tester']) )
+    if($admin || $privateInstall) {
+      $run = null;
+      if (array_key_exists('run', $_REQUEST))
+        $run = $_REQUEST['run'];
+      if (isset($run) &&
+          array_key_exists('testinfo', $test) &&
+          array_key_exists('test_runs', $test['testinfo']) &&
+          array_key_exists($run, $test['testinfo']['test_runs']) &&
+          array_key_exists('tester', $test['testinfo']['test_runs'][$run]))
+        $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
+      elseif (isset($test['testinfo']['tester']) )
         $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
+    }
     if( $dom ) 
         $html .= 'DOM Element: <b>' . $dom . '</b><br>';
     if( $test['test']['fvonly'] ) 
@@ -1525,7 +1536,7 @@ function GetTesters($locationId)
             {
                 if( !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
-                    $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns']);
+                    $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns'], 'GPU' => @$tester['GPU']);
 
                     if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
                       $total = 0;

@@ -44,7 +44,8 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   _settings(settings)
   ,_status(status)
   ,_version(0)
-  ,_exit(false) {
+  ,_exit(false)
+  ,has_gpu_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the binary (for software updates)
   TCHAR file[MAX_PATH];
@@ -114,6 +115,7 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     buff.Format(_T("&freedisk=%0.3f"), freeDisk);
     url += buff;
   }
+  url += has_gpu_ ? _T("&GPU=1") : _T("&GPU=0");
 
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {

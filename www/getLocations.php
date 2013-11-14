@@ -32,6 +32,13 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
   echo "<!DOCTYPE html>\n";
   echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
+  echo "<head>
+        <noscript>
+        <meta http-equiv=\"refresh\" content=\"240\" />
+        </noscript>
+        <script language=\"JavaScript\">
+        setTimeout( \"window.location.reload(true)\", 240000 );
+        </script>\n";
   echo "<style type=\"text/css\">\n";
   echo "th,td{text-align:center; padding: 0px 20px;}\n";
   echo ".location{text-align: left;}\n";

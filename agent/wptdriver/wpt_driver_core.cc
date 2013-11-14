@@ -68,6 +68,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
   has_gpu_ = DetectGPU();
+  _webpagetest.has_gpu_ = has_gpu_;
 }
 
 

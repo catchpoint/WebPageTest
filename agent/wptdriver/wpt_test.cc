@@ -44,10 +44,12 @@ static const DWORD BROWSER_HEIGHT = 768;
 static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
 static const DWORD DEFAULT_MOBILE_WIDTH = 540;
 static const DWORD DEFAULT_MOBILE_HEIGHT = 900;
+static const DWORD CHROME_PADDING_HEIGHT = 115;
+static const DWORD CHROME_PADDING_WIDTH = 4;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.1.2; DROID RAZR Build/9.8.2O-72_VZW-16) "
-    "AppleWebKit/537.33 (KHTML, like Gecko) Chrome/27.0.1441.0 "
-    "Mobile Safari/537.33";
+    "Mozilla/5.0 (Linux; Android 4.0.4; DROID RAZR "
+    "Build/6.7.2-180_DHD-16_M4-31) AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/31.0.1631.1 Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -479,21 +481,24 @@ void WptTest::BuildScript() {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
     if (!_viewport_width && !_viewport_height) {
-      _viewport_width = DEFAULT_MOBILE_WIDTH;
-      _viewport_height = DEFAULT_MOBILE_HEIGHT;
+      DWORD padding_width = CHROME_PADDING_WIDTH;
+      DWORD padding_height = CHROME_PADDING_HEIGHT;
+      double scale = _ttof(_device_scale_factor);
+      if (scale >= 0.5 && scale <= 10.0) {
+        padding_width = (int)((double)padding_width * scale);
+        padding_height = (int)((double)padding_height * scale);
+      }
+      _browser_width = DEFAULT_MOBILE_WIDTH + padding_width;
+      _browser_height = DEFAULT_MOBILE_HEIGHT + padding_height;
     }
-    if (_user_agent.IsEmpty()) {
+    if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
-      CStringA ver;
-      ver.Format(" PTST/%d", _version);
-      _user_agent += ver;
-    }
   }
 
   // Scale the viewport or browser size by the scale factor.
   // Once the viewport scaling is ACTUALLY working in Chrome then we can ues it
   // but as of right now it isn't.
-  if (_device_scale_factor.GetLength()) {
+  if (!has_gpu_ && _device_scale_factor.GetLength()) {
     double scale = _ttof(_device_scale_factor);
     _device_scale_factor.Empty();
     if (scale >= 0.5 && scale <= 10.0) {

@@ -197,10 +197,10 @@ function GetJob() {
             $testerInfo['ie'] = @$_GET['ie'];
             $testerInfo['dns'] = $dnsServers;
             $testerInfo['video'] = @$_GET['video'];
+            $testerInfo['GPU'] = @$_GET['GPU'];
             $testerInfo['test'] = '';
-            if (isset($testId)) {
+            if (isset($testId))
                 $testerInfo['test'] = $testId;
-            }
             UpdateTester($location, $tester, $testerInfo);
       }
     }

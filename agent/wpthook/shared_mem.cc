@@ -40,6 +40,7 @@ DWORD shared_current_run = 0;
 WCHAR shared_log_file[MAX_PATH] = {NULL};
 int   shared_debug_level = 0;
 int   shared_cpu_utilization = 0;
+bool  shared_has_gpu = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -74,6 +75,13 @@ bool WINAPI GetClearedCache() {
 void WINAPI SetCurrentRun(DWORD run) {
   shared_current_run = run;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetHasGPU(bool has_gpu) {
+  shared_has_gpu = has_gpu;
+}
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/

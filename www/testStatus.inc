@@ -1,6 +1,10 @@
 <?php
 require_once('common.inc');
 require_once('page_data.inc');
+if(extension_loaded('newrelic')) { 
+    newrelic_add_custom_tracer('GetRelayStatus');
+    newrelic_add_custom_tracer('GetAppurifyStatus');
+}
 
 $testQueue = array();
 

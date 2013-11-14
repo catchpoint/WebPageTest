@@ -44,4 +44,5 @@ _import void WINAPI SetCurrentRun(DWORD run);
 _import void WINAPI SetDebugLevel(int level, const WCHAR * log_file);
 _import int  WINAPI GetCPUUtilization();
 _import void WINAPI SetCPUUtilization(int utilization);
+_import void WINAPI SetHasGPU(bool has_gpu);
 }

@@ -20,6 +20,13 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
   echo "<!DOCTYPE html>\n";
   echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
+  echo "<head>
+        <noscript>
+        <meta http-equiv=\"refresh\" content=\"240\" />
+        </noscript>
+        <script language=\"JavaScript\">
+        setTimeout( \"window.location.reload(true)\", 240000 );
+        </script>\n";
   echo "<style type=\"text/css\">\n";
   echo "th,td{text-align:center; padding: 0px 15px;}\n";
   echo ".tester{text-align: left;}\n";
@@ -36,10 +43,10 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       if ($location['elapsed'] < 30)
         $error = '';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"11\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"12\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
       echo "<tr><th class=\"tester\">Tester</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
-      echo "<th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
+      echo "<th>GPU?</th><th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
@@ -50,6 +57,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
