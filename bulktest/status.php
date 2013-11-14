@@ -5,6 +5,8 @@ $results = array();
 $errors = array();
 $urlErrors = array();
 
+$statsVer = 2;
+
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
     // count the number of tests that don't have status yet
@@ -12,7 +14,10 @@ if (LoadResults($results)) {
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
-            (!array_key_exists('result', $result) || !strlen($result['result'])))
+            (!array_key_exists('statsVer', $result) ||
+              $result['statsVer'] != $statsVer ||
+             !array_key_exists('result', $result) ||
+             !strlen($result['result'])))
             $testCount++;
     }
             
@@ -45,8 +50,7 @@ if (LoadResults($results)) {
                     $result['successfulRuns'] < $minRuns ||
                     $result['TTFB'] > $result['docTime'] ||
                     $stddev > $maxVariancePct || // > 10% variation in results
-                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
-                    ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
+                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
                     if (!array_key_exists($result['label'], $errors))
                         $errors[$result['label']] = 1;
                     else
@@ -67,12 +71,12 @@ if (LoadResults($results)) {
     }
     
     if( $failed ) {
-        echo "Errors by location:\r\n";
-        foreach ($errors as $label => $count)
-            echo "  $label: $count\r\n";
         echo "\r\n\r\nErrors by URL:\r\n";
         foreach ($urlErrors as $url => $count)
             echo "  $url: $count\r\n";
+        echo "Errors by location:\r\n";
+        foreach ($errors as $label => $count)
+            echo "  $label: $count\r\n";
     }
     echo "\r\nUpdate complete (and the results are in results.txt):\r\n";
     echo "\t$testCount tests in total (each url across all locations)\r\n";
@@ -96,35 +100,36 @@ if (LoadResults($results)) {
 */
 function UpdateResults(&$results, $testCount) {
     global $server;
+    global $statsVer;
 
     $count = 0;
     $changed = false;
     foreach ($results as &$result) {
         if (array_key_exists('id', $result) && 
             strlen($result['id']) && 
-            (!array_key_exists('result', $result) || !strlen($result['result']))) {
+            (!array_key_exists('statsVer', $result) ||
+             $result['statsVer'] != $statsVer ||
+             !array_key_exists('result', $result) ||
+             !strlen($result['result']))) {
             $count++;
             echo "\rUpdating the status of test $count of $testCount...                  ";
 
-            $doc = new MyDOMDocument();
-            if ($doc) {
-                $url = "{$server}xmlResult/{$result['id']}/";
-                $response = http_fetch($url);
-                if (strlen($response)) {
-                    $response = preg_replace('/[^(\x20-\x7F)]*/','', $response);
-                    $doc->loadXML($response);
-                    $data = $doc->toArray();
-                    $status = (int)$data['response']['statusCode'];
-                    
-                    if ($status == 200) {
-                        $changed = true;
-                        
-                        // test is complete, get the actual result
-                        GetTestResult($data['response']['data'], $result);
-                    }
-
-                    unset( $doc );
-                }
+            $url = "{$server}jsonResult.php?test={$result['id']}&medianRun=fastest";
+            $response = http_fetch($url);
+            if (strlen($response)) {
+              $data = json_decode($response, true);
+              unset($response);
+              if (isset($data) &&
+                  is_array($data) &&
+                  array_key_exists('data', $data) &&
+                  is_array($data['data']) &&
+                  array_key_exists('statusCode', $data) &&
+                  $data['statusCode'] == 200) {
+                $changed = true;
+                GetTestResult($data['data'], $result);
+                $result['statsVer'] = $statsVer;
+              }
+              unset($data);
             }
         }
     }
@@ -143,6 +148,8 @@ function GetTestResult(&$data, &$result) {
     if (array_key_exists('median', $data) && array_key_exists('firstView', $data['median'])) {
         $result['result'] = (int)$data['median']['firstView']['result'];
         $result['successfulRuns'] =(int)$data['successfulFVRuns'];
+        if (array_key_exists('run', $data['median']['firstView']))
+          $result['run'] = (int)$data['median']['firstView']['run'];
         foreach ($metrics as $metric) {
             if (array_key_exists($metric, $data['median']['firstView']))
               $result[$metric] = (int)$data['median']['firstView'][$metric];
@@ -156,6 +163,8 @@ function GetTestResult(&$data, &$result) {
         
         if (array_key_exists('repeatView', $data['median'])) {
             $result['rv_result'] = (int)$data['median']['repeatView']['result'];
+            if (array_key_exists('run', $data['median']['repeatView']))
+              $result['rv_run'] = (int)$data['median']['repeatView']['run'];
             foreach ($metrics as $metric) {
                 $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
                 if (array_key_exists('standardDeviation', $data) &&
@@ -170,68 +179,5 @@ function GetTestResult(&$data, &$result) {
     }
 }
 
-class MyDOMDocument extends DOMDocument
-{
-    public function toArray(DOMNode $oDomNode = null)
-    {
-        // return empty array if dom is blank
-        if (is_null($oDomNode) && !$this->hasChildNodes()) {
-            return array();
-        }
-        $oDomNode = (is_null($oDomNode)) ? $this->documentElement : $oDomNode;
-        if (!$oDomNode->hasChildNodes()) {
-            $mResult = $oDomNode->nodeValue;
-        } else {
-            $mResult = array();
-            foreach ($oDomNode->childNodes as $oChildNode) {
-                // how many of these child nodes do we have?
-                // this will give us a clue as to what the result structure should be
-                $oChildNodeList = $oDomNode->getElementsByTagName($oChildNode->nodeName); 
-                $iChildCount = 0;
-                // there are x number of childs in this node that have the same tag name
-                // however, we are only interested in the # of siblings with the same tag name
-                foreach ($oChildNodeList as $oNode) {
-                    if ($oNode->parentNode->isSameNode($oChildNode->parentNode)) {
-                        $iChildCount++;
-                    }
-                }
-                $mValue = $this->toArray($oChildNode);
-                $sKey   = ($oChildNode->nodeName{0} == '#') ? 0 : $oChildNode->nodeName;
-                $mValue = is_array($mValue) ? $mValue[$oChildNode->nodeName] : $mValue;
-                // how many of thse child nodes do we have?
-                if ($iChildCount > 1) {  // more than 1 child - make numeric array
-                    $mResult[$sKey][] = $mValue;
-                } else {
-                    $mResult[$sKey] = $mValue;
-                }
-            }
-            // if the child is <foo>bar</foo>, the result will be array(bar)
-            // make the result just 'bar'
-            if (count($mResult) == 1 && isset($mResult[0]) && !is_array($mResult[0])) {
-                $mResult = $mResult[0];
-            }
-        }
-        // get our attributes if we have any
-        $arAttributes = array();
-        if ($oDomNode->hasAttributes()) {
-            foreach ($oDomNode->attributes as $sAttrName=>$oAttrNode) {
-                // retain namespace prefixes
-                $arAttributes["@{$oAttrNode->nodeName}"] = $oAttrNode->nodeValue;
-            }
-        }
-        // check for namespace attribute - Namespaces will not show up in the attributes list
-        if ($oDomNode instanceof DOMElement && $oDomNode->getAttribute('xmlns')) {
-            $arAttributes["@xmlns"] = $oDomNode->getAttribute('xmlns');
-        }
-        if (count($arAttributes)) {
-            if (!is_array($mResult)) {
-                $mResult = (trim($mResult)) ? array($mResult) : array();
-            }
-            $mResult = array_merge($mResult, $arAttributes);
-        }
-        $arResult = array($oDomNode->nodeName=>$mResult);
-        return $arResult;
-    }
-}
 ?>
 

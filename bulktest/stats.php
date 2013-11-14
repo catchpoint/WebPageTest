@@ -13,6 +13,7 @@ if (LoadResults($results)) {
     $minRuns = ceil($runs / 2);
     foreach($results as &$result) {
         $valid = true;
+        $validVisual = true;
         $total++;
         if ((@$result['result'] != 0 && @$result['result'] != 99999 ) ||
             !@$result['bytesInDoc'] ||
@@ -20,41 +21,44 @@ if (LoadResults($results)) {
             !@$result['TTFB'] ||
             $result['successfulRuns'] < $minRuns ||
             @$result['TTFB'] > @$result['docTime'] ||
-            (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
-            ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
+            (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
             $valid = false;
             $invalid++;
         }
-        if ($valid) {
-            $url = $result['url'];
-            $label = $result['label'];
-            $index = 1;
-            $key = $url;
-            while (array_key_exists($key, $data) && array_key_exists($label, $data[$key])) {
-              $index++;
-              $key = "$url ($index)";
+        if ($valid && $video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete'])) {
+          $validVisual = false;
+        }
+        $url = $result['url'];
+        $label = $result['label'];
+        $index = 1;
+        $key = $url;
+        while (array_key_exists($key, $data) && array_key_exists($label, $data[$key])) {
+          $index++;
+          $key = "$url ($index)";
+        }
+        if( !array_key_exists($key, $data) )
+            $data[$key] = array();
+        $data[$key]['url'] = $url;
+        $data[$key][$label] = array();
+        $data[$key][$label]['id'] = $result['id'];
+        $data[$key][$label]['result'] = $result['result'];
+        if (array_key_exists('run', $result))
+          $data[$key][$label]['run'] = $result['run'];
+        $data[$key][$label]['valid'] = $valid;
+        $data[$key][$label]['validVisual'] = $validVisual;
+        if( $valid ) {
+            if (!array_key_exists($label, $stats)) {
+                $stats[$label] = array();
+                foreach ($metrics as $metric)
+                    $stats[$label][$metric] = array();
             }
-            if( !array_key_exists($key, $data) )
-                $data[$key] = array();
-            $data[$key]['url'] = $url;
-            $data[$key][$label] = array();
-            $data[$key][$label]['id'] = $result['id'];
-            $data[$key][$label]['result'] = $result['result'];
-            if( $result['result'] == 0 || $result['result'] == 99999 ) {
-                if (!array_key_exists($label, $stats)) {
-                    $stats[$label] = array();
-                    foreach ($metrics as $metric) {
-                        $stats[$label][$metric] = array();
-                    }
-                }
-                foreach ($metrics as $metric) {
-                  if (array_key_exists($metric, $result)) {
-                    $data[$key][$label][$metric] = $result[$metric];
-                    if (array_key_exists("$metric.stddev", $result))
-                      $data[$key][$label]["$metric.stddev"] = $result["$metric.stddev"];
-                    $stats[$label][$metric][] = $result[$metric];
-                  }
-                }
+            foreach ($metrics as $metric) {
+              if (array_key_exists($metric, $result) && IsMetricValid($metric, $valid, $validVisual)) {
+                $data[$key][$label][$metric] = $result[$metric];
+                if (array_key_exists("$metric.stddev", $result))
+                  $data[$key][$label]["$metric.stddev"] = $result["$metric.stddev"];
+                $stats[$label][$metric][] = $result[$metric];
+              }
             }
         }
     }
@@ -103,37 +107,38 @@ if (LoadResults($results)) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
-                if ($valid) {
-                    $compare = "\"http://www.webpagetest.org/video/compare.php?tests=";
-                    $first = true;
-                    $baseline = null;
-                    foreach($permutations as $label => &$permutation) {
-                        $value = '';
-                        if (array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
-                            $value = $urlData[$label][$metric];
-                        fwrite($file, "$value,");
-                        $stddev = '';
-                        if (array_key_exists($label, $urlData) && array_key_exists("$metric.stddev", $urlData[$label]))
-                            $stddev = $urlData[$label]["$metric.stddev"];
-                        fwrite($file, "$stddev,");
-                        if ($first)
-                            $baseline = $value;
-                        else {
-                            $delta = '';
-                            if (strlen($value) && strlen($baseline))
-                                $delta = $value - $baseline;
-                            fwrite($file, "$delta,");
-                        }
-                        if (strlen($value))
-                            $metricData[$label][] = $value;
-                        if (array_key_exists($label, $urlData) && array_key_exists('id', $urlData[$label]))
-                            $compare .= $urlData[$label]['id'] . '-l:' . urlencode($label) . ',';
-                        $first = false;
+                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full&tests=";
+                $first = true;
+                $baseline = null;
+                foreach($permutations as $label => &$permutation) {
+                    $value = '';
+                    if ($valid && array_key_exists($label, $urlData) && array_key_exists($metric, $urlData[$label]))
+                        $value = $urlData[$label][$metric];
+                    fwrite($file, "$value,");
+                    $stddev = '';
+                    if ($valid && array_key_exists($label, $urlData) && array_key_exists("$metric.stddev", $urlData[$label]))
+                        $stddev = $urlData[$label]["$metric.stddev"];
+                    fwrite($file, "$stddev,");
+                    if ($first)
+                        $baseline = $value;
+                    else {
+                        $delta = '';
+                        if ($valid && strlen($value) && strlen($baseline))
+                            $delta = $value - $baseline;
+                        fwrite($file, "$delta,");
                     }
-                    $compare .= '"';
-                    fwrite($file, $compare);
+                    if (strlen($value))
+                        $metricData[$label][] = $value;
+                    if (array_key_exists($label, $urlData) && array_key_exists('id', $urlData[$label])) {
+                      $run = '';
+                      if (array_key_exists('run', $urlData[$label]))
+                        $run = "-r:{$urlData[$label]['run']}";
+                      $compare .= $urlData[$label]['id'] . $run . '-l:' . urlencode($label) . ',';
+                    }
+                    $first = false;
                 }
-                fwrite($file, "\r\n");
+                $compare .= "\"\r\n";
+                fwrite($file, $compare);
             }
             fclose($file);
             $summary = fopen("./{$metric}_Summary.csv", 'w+');
@@ -207,6 +212,12 @@ if (LoadResults($results)) {
             }
         }
     }
+}
+
+function IsMetricValid($metric, $valid, $validVisual) {
+  if ($valid && !$validVisual && ($metric == 'SpeedIndex' || $metric == 'render' || $metric == 'visualComplete'))
+    $valid = false;
+  return $valid;
 }
 
 function Avg(&$data) {
