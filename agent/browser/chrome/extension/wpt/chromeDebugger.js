@@ -235,6 +235,7 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
  * @param {object} request Request data.
  */
 wpt.chromeDebugger.sendRequestDetails = function(request) {
+  var valid = false;
   var eventData = 'browser=chrome\n';
   eventData += 'url=' + request.url + '\n';
   if (request['errorCode'] !== undefined)
@@ -276,6 +277,8 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
     if (request.response['connectionId'] !== undefined)
         eventData += 'connectionId=' + request.response.connectionId + '\n';
     if (request.response['timing'] !== undefined) {
+      if (request.response.timing['sendStart'] !== undefined && request.response.timing.sendStart > 0)
+        valid = true;
       eventData += 'timing.dnsStart=' + request.response.timing.dnsStart + '\n';
       eventData += 'timing.dnsEnd=' + request.response.timing.dnsEnd + '\n';
       eventData += 'timing.connectStart=' + request.response.timing.connectStart + '\n';
@@ -343,7 +346,8 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
     }
     eventData += '\n';
   }
-  wpt.chromeDebugger.sendEvent('request_data', eventData);
+  if (valid)
+    wpt.chromeDebugger.sendEvent('request_data', eventData);
 };
 
 wpt.chromeDebugger.SendReceivedData = function() {
