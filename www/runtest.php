@@ -138,17 +138,6 @@
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             if (array_key_exists('tsview_id', $_REQUEST))
               $test['tsview_id'] = $_REQUEST['tsview_id'];
-            if (array_key_exists('custom_browser', $_REQUEST) &&
-                strlen($_REQUEST['custom_browser']) &&
-                is_dir('./browsers') &&
-                is_file('./browsers/browsers.ini') &&
-                is_file("./browsers/{$_REQUEST['custom_browser']}.zip")) {
-              $customBrowsers = parse_ini_file('./browsers/browsers.ini');
-              if (array_key_exists($_REQUEST['custom_browser'], $customBrowsers)) {
-                $test['customBrowserUrl'] = "http://{$_SERVER['HTTP_HOST']}/browsers/{$_REQUEST['custom_browser']}.zip";
-                $test['customBrowserMD5'] = $customBrowsers[$_REQUEST['custom_browser']];
-              }
-            }
 
             // custom options
             $test['cmdLine'] = '';
@@ -180,8 +169,20 @@
                 preg_match('/([^\.:]+)[:]*(.*)/i', trim($req_location), $matches))
             {
                 $test['location'] = trim($matches[1]);
-                if (strlen(trim($matches[2])))
+                if (strlen(trim($matches[2]))) {
                     $test['browser'] = trim($matches[2]);
+                    
+                    // see if the requested browser is a custom browser
+                  if (is_dir('./browsers') &&
+                      is_file('./browsers/browsers.ini') &&
+                      is_file("./browsers/{$test['browser']}.zip")) {
+                    $customBrowsers = parse_ini_file('./browsers/browsers.ini');
+                    if (array_key_exists($test['browser'], $customBrowsers)) {
+                      $test['customBrowserUrl'] = "http://{$_SERVER['HTTP_HOST']}/browsers/{$test['browser']}.zip";
+                      $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
+                    }
+                  }
+                }
                 if (strlen(trim($matches[3]))) {
                     $test['connectivity'] = trim($matches[3]);
                     $test['requested_connectivity'] = $test['connectivity'];
