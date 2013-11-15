@@ -1,14 +1,14 @@
 [FlashAX]
-url=http://s3.amazonaws.com/wpt-software/flashplayer11_8r800_94_winax.exe
-version=11.8.800.94
-md5=B04EDA6509FF1196F8F796D6B9377C4D
-command=flashplayer11_8r800_94_winax.exe -install
+url=http://s3.amazonaws.com/wpt-software/flashplayer11_9r900_152_winax.exe
+version=11.9.900.152
+md5=8A56647FAB4555A90CE51A3B9891C8D8
+command=flashplayer11_9r900_152_winax.exe -install
 
 [Flash]
-url=http://s3.amazonaws.com/wpt-software/flashplayer11_8r800_94_win.exe
-version=11.8.800.94
-md5=E78F1633DEA52D04508F306EEA1D1250
-command=flashplayer11_8r800_94_win.exe -install
+url=http://s3.amazonaws.com/wpt-software/flashplayer11_9r900_152_win.exe
+version=11.9.900.152
+md5=A178DA64FD1F1031D965175CBBC7F481
+command=flashplayer11_9r900_152_win.exe -install
 
 [Silverlight]
 url=http://s3.amazonaws.com/wpt-software/silverlight_5.exe
