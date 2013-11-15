@@ -4,20 +4,22 @@
 static AngleHook *g_hook = NULL;
 
 unsigned int __stdcall eglSwapBuffers_Hook(void * dpy, void * surface) {
-  return g_hook ? g_hook->eglSwapBuffers(dpy, surface) :
-                  0;
+  return g_hook ? g_hook->eglSwapBuffers(dpy, surface) : 0;
 }
 
-void __stdcall glViewport_Hook(int x, int y, int width, int height) {
-  if (g_hook)
-    g_hook->glViewport(x, y, width, height);
+unsigned int __stdcall eglPostSubBufferNV_Hook(void * dpy, void * surface,
+                   int x, int y, int width, int height) {
+  return g_hook ?
+      g_hook->eglPostSubBufferNV(dpy, surface, x, y, width, height) : 0;
 }
+
+typedef FARPROC (__stdcall * LPEGLGETPROCADDRESS)(const char *procname);
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 AngleHook::AngleHook(void):
   eglSwapBuffers_(NULL)
-  ,glViewport_(NULL)
+  ,eglPostSubBufferNV_(NULL)
   ,hook_(NULL) {
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
 }
@@ -30,16 +32,40 @@ AngleHook::~AngleHook(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void AngleHook::NotifyPaint(int x, int y, int width, int height) {
+  x = max(x,0);
+  y = max(y,0);
+  height = max(height,0);
+  width = max(width,0);
+  PostMessage(HWND_BROADCAST, paint_msg_, MAKEWPARAM(x,y),
+              MAKELPARAM(width, height));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void AngleHook::Init() {
-  //OutputDebugStringA("AngleHook::Init");
   if (hook_ || g_hook)
     return;
   hook_ = new NCodeHookIA32();
   g_hook = this;
+
+  // hook the static exported functions
   eglSwapBuffers_ = hook_->createHookByName("libegl.dll", "eglSwapBuffers",
                                             eglSwapBuffers_Hook);
-  glViewport_ = hook_->createHookByName("libegl.dll", "glViewport",
-                                        glViewport_Hook);
+
+  // Hook the not-exported functions
+  HMODULE hAngle = LoadLibrary(_T("libegl.dll"));
+  if (hAngle) {
+    LPEGLGETPROCADDRESS eglGetProcAddress =
+        (LPEGLGETPROCADDRESS)GetProcAddress(hAngle, "eglGetProcAddress");
+    if (eglGetProcAddress) {
+      LPEGLPOSTSUBBUFFERNV postSub =
+          (LPEGLPOSTSUBBUFFERNV)eglGetProcAddress("eglPostSubBufferNV");
+      if (postSub)
+        eglPostSubBufferNV_ = hook_->createHook(postSub,
+                                                eglPostSubBufferNV_Hook);
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -59,16 +85,20 @@ unsigned int AngleHook::eglSwapBuffers(void * dpy, void * surface) {
   unsigned int ret = 0;
   if (eglSwapBuffers_)
     ret = eglSwapBuffers_(dpy, surface);
-  PostMessage(HWND_BROADCAST, paint_msg_, 0, 0);
+  NotifyPaint();
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void AngleHook::glViewport(int x, int y, int width, int height) {
-  //char buff[1024];
-  //wsprintfA(buff, "glViewport - %d,%d : %d x %d", x, y, width, height);
-  //OutputDebugStringA(buff);
-  if (glViewport_)
-    glViewport_(x, y, width, height);
+unsigned int AngleHook::eglPostSubBufferNV(void * dpy, void * surface,
+                int x, int y, int width, int height) {
+  unsigned int ret = 0;
+  if (eglPostSubBufferNV_)
+    ret = eglPostSubBufferNV_(dpy, surface, x, y, width, height);
+  // special-case the progress spinner (16x16 scaled by whatever DPI scaling)
+  if (width != height || width > 32)
+    NotifyPaint(x, y, width, height);
+  return ret;
 }
+
