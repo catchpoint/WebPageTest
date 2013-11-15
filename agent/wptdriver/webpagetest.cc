@@ -91,8 +91,6 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
 
   DeleteDirectory(test._directory, false);
 
-  ATLTRACE(_T("WebPagetest::GetTest"));
-
   // build the url for the request
   CString buff;
   CString url = _settings._server + _T("work/getwork.php?shards=1");
@@ -120,7 +118,6 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {
     if (test_string.GetLength()) {
-      ATLTRACE(_T("WebPagetest::GetTest - Processing test"));
       if (test.Load(test_string)) {
         if (!test._client.IsEmpty())
           ret = GetClient(test);
@@ -129,11 +126,7 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
       }
     } else if (zip_file.GetLength()) {
       ret = ProcessZipFile(zip_file, test);
-    } else {
-      ATLTRACE(_T("WebPagetest::GetTest - No test available"));
     }
-  } else {
-    ATLTRACE(_T("WebPagetest::GetTest - No test available"));
   }
 
   return ret;
@@ -248,9 +241,8 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   CString file = NO_FILE;
   CString dir = test._directory + CString(_T("\\"));
   ret = CompressResults(dir, dir + _T("results.zip"));
-  if (ret) {
+  if (ret)
     file = dir + _T("results.zip");
-  }
 
   if (ret || done) {
     CString url = _settings._server + _T("work/workdone.php");
@@ -551,6 +543,18 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   form_data += "Content-Disposition: form-data; name=\"cached\"\r\n\r\n";
   form_data += test._clear_cache ? "0" : "1";
   form_data += "\r\n";
+
+  // error string
+  if (test._test_error.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"testerror\"\r\n\r\n";
+    form_data += test._test_error + "\r\n";
+  }
+  if (test._run_error.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"error\"\r\n\r\n";
+    form_data += test._run_error + "\r\n";
+  }
 
   // done flag
   if (done) {

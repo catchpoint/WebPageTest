@@ -71,3 +71,4 @@ CStringA JSONEscape(CString src);
 CStringA JSONEscapeA(CStringA src);
 void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
+int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);

@@ -153,6 +153,8 @@ void WptTest::Reset(void) {
   _continuous_video = false;
   _browser_command_line.Empty();
   _browser_additional_command_line.Empty();
+  _run_error.Empty();
+  _test_error.Empty();
 }
 
 /*-----------------------------------------------------------------------------

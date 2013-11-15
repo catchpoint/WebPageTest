@@ -210,6 +210,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
           ok = false;
           critical_error = true;
           _status.Set(_T("Error waiting for browser to launch\n"));
+          _test._run_error = "Failed while waiting for the browser to launch.";
         }
 
         // wait for the child process to start if we are expecting one (Safari)
@@ -230,6 +231,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             ok = false;
             critical_error = true;
             _status.Set(_T("Error instrumenting browser\n"));
+            _test._run_error = "Failed to instrument the browser.";
           }
           if (additional_process)
             InstallHook(additional_process);
@@ -239,6 +241,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
       } else {
         _status.Set(_T("Error Launching: %s\n"), cmdLine);
+        _test._run_error = "Failed to launch the browser.";
         critical_error = true;
       }
       LeaveCriticalSection(&cs);
@@ -323,8 +326,10 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       ResetIpfw();
       RemoveGlobalHook();
     } else {
-      AtlTrace(_T("Browser exe not defined"));
+      _test._run_error = "Browser configured incorrectly (exe not defined).";
     }
+  } else {
+    _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
 
   if (active_event)

@@ -57,7 +57,8 @@ public:
   void GetStandardDirectories();
   void ClearWinInetCache();
   void ClearWebCache();
-
+  void CleanupCustomBrowsers(CString browser);
+  
   CString _browser;
   CString _template;
   CString _exe;

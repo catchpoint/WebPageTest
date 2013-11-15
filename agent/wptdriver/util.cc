@@ -636,3 +636,19 @@ void QueryPerfFrequency(__int64 &freq) {
   QueryPerformanceFrequency(&freq_struct);
   freq = freq_struct.QuadPart;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
+  int elapsed = -1;
+  ULARGE_INTEGER c, n, e;
+  c.HighPart = check.dwHighDateTime;
+  c.LowPart = check.dwLowDateTime;
+  n.HighPart = now.dwHighDateTime;
+  n.LowPart = now.dwLowDateTime;
+  if (n.QuadPart > c.QuadPart) {
+    e.QuadPart = (n.QuadPart - c.QuadPart) / 10000000;
+    elapsed = (int)e.QuadPart;
+  }
+  return elapsed;
+}

@@ -157,6 +157,7 @@ void WptDriverCore::WorkThread(void) {
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
     if (_webpagetest.GetTest(test)) {
       PreTest();
+      test._run = test._specific_run ? test._specific_run : 1;
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser, test._browser_url,
                                test._browser_md5, test._client)) {
@@ -166,10 +167,12 @@ void WptDriverCore::WorkThread(void) {
             !TracerouteTest(test)) {
           test._index = test._specific_index ? test._specific_index : 1;
           for (test._run = 1; test._run <= test._runs; test._run++) {
+            test._run_error.Empty();
             test._run = test._specific_run ? test._specific_run : test._run;
             test._clear_cache = true;
             BrowserTest(test, browser);
             if (!test._fv_only) {
+              test._run_error.Empty();
               test._clear_cache = false;
               BrowserTest(test, browser);
             }
@@ -182,6 +185,9 @@ void WptDriverCore::WorkThread(void) {
           }
         }
         test._run = test._specific_run ? test._specific_run : test._runs;
+      } else {
+        test._test_error = test._run_error =
+            CStringA("Invalid Browser Selected: ") + CT2A(test._browser);
       }
       bool uploaded = false;
       for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
@@ -251,9 +257,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       _winpcap.StopCapture();
     KillBrowsers();
 
-    if (test._discard) {
+    if (test._discard)
       _webpagetest.DeleteIncrementalResults(test);
-    }
     if (attempt < 2 && critical_error) {
       WptTrace(loglevel::kWarning, 
         _T("[wptdriver] Critical error, re-installing browser (attempt %d)\n"),
@@ -261,11 +266,10 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       _webpagetest.DeleteIncrementalResults(test);
       _settings.ReInstallBrowser();
     } else {
-      if (test._upload_incremental_results && !test._discard) {
+      if (test._upload_incremental_results && !test._discard)
         _webpagetest.UploadIncrementalResults(test);
-      } else {
+      else
         _webpagetest.DeleteIncrementalResults(test);
-      }
     }
   } while (attempt < 2 && critical_error);
 

@@ -25,7 +25,6 @@ set_time_limit(60*5);
 require_once('harTiming.inc');
 require_once('./video/avi2frames.inc.php');
 
-
 $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
@@ -160,9 +159,8 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
 
         if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
             ProcessUploadedHAR($testPath);
-        }
-        elseif(isset($pcap) && $pcap &&
-               isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
+        } elseif(isset($pcap) && $pcap &&
+                 isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
             // The results page allows a user to download a pcap file.  It
             // expects the file to be at a specific path, which encodes the
             // run number and cache state.
@@ -174,8 +172,7 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
                               $testPath, $finalPcapFileName);
 
             ProcessPCAP($testPath, $finalPcapFileName);
-        }
-        elseif( isset($_FILES['file']) ) {
+        } elseif( isset($_FILES['file']) ) {
             // extract the zip file
             logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
             $archive = new PclZip($_FILES['file']['tmp_name']);
@@ -183,18 +180,14 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
         }
 
         // compress the text data files
-        if( isset($_FILES['file']) )
-        {
+        if( isset($_FILES['file']) ) {
             $f = scandir($testPath);
-            foreach( $f as $textFile )
-            {
+            foreach( $f as $textFile ) {
                 logMsg("Checking $textFile\n");
-                if( is_file("$testPath/$textFile") )
-                {
+                if( is_file("$testPath/$textFile") ) {
                     $parts = pathinfo($textFile);
                     $ext = $parts['extension'];
-                    if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') )
-                    {
+                    if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') ) {
                         // delete the optimization file (generated dynamically now)
                         // or any files with sensitive data if we were asked to
                         if( $ini['sensitive'] && strpos($textFile, '_report') ) {

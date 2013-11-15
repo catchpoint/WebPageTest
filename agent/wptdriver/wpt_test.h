@@ -192,6 +192,8 @@ public:
   CString _browser_additional_command_line;
   CStringA  _user_agent;
   CString _navigated_url;
+  CStringA _test_error;
+  CStringA _run_error;
   
   // current state
   int     _run;
