@@ -1388,7 +1388,8 @@ void CURLBlaster::EncodeVideo(void)
 		log.Trace(_T("Executing '%s' in '%s'"), (LPCTSTR)cmd, (LPCTSTR)info.zipFileDir);
 		if( CreateProcess((LPCTSTR)exe, (LPTSTR)(LPCTSTR)cmd, 0, 0, FALSE, IDLE_PRIORITY_CLASS , 0, (LPCTSTR)info.zipFileDir, &si, &pi) )
 		{
-			WaitForSingleObject(pi.hProcess, 60 * 60 * 1000);
+			if (WaitForSingleObject(pi.hProcess, 5 * 60 * 1000) == WAIT_ABANDONED)
+			  TerminateProcess(pi.hProcess, 0);
 			CloseHandle(pi.hThread);
 			CloseHandle(pi.hProcess);
 			log.Trace(_T("Successfully ran '%s'"), (LPCTSTR)cmd);
