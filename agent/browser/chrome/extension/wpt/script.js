@@ -39,6 +39,15 @@ goog.provide('wpt.contentScript');
 
 var DOM_ELEMENT_POLL_INTERVAL = 100;
 
+// override alert boxes
+var injected = document.createElement("script");
+injected.type = "text/javascript";
+injected.innerHTML =
+  "window.alert = function(msg){console.log('Blocked alert: ' + msg);};\n" +
+  "window.confirm = function(msg){console.log('Blocked confirm: ' + msg); return false;};\n" + 
+  "window.prompt = function(msg,def){console.log('Blocked prompt: ' + msg); return null;};\n";
+document.documentElement.appendChild(injected);
+
 // If the namespace is not set up by goog.provide, define the objects
 // it would set up.  We could avoid this sort of hackery by injecting
 // base.js before injecting this script, but the script injection
