@@ -6,6 +6,7 @@ $errors = array();
 $urlErrors = array();
 
 $statsVer = 2;
+$statusCounts = array();
 
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
@@ -78,6 +79,11 @@ if (LoadResults($results)) {
         foreach ($errors as $label => $count)
             echo "  $label: $count\r\n";
     }
+    if (count($statusCounts)) {
+      echo "\r\n\r\nTest Status Codes:\r\n";
+      foreach ($statusCounts as $code => $count)
+        echo "  $code: $count\r\n";
+    }
     echo "\r\nUpdate complete (and the results are in results.txt):\r\n";
     echo "\t$testCount tests in total (each url across all locations)\r\n";
     echo "\t$complete tests have completed\r\n";
@@ -91,6 +97,14 @@ if (LoadResults($results)) {
     StoreResults($results);
 } else {
     echo "No tests found in results.txt\r\n";  
+}
+
+function IncrementStatus($code) {
+  global $statusCounts;
+  if (array_key_exists($code, $statusCounts))
+    $statusCounts[$code]++;
+  else
+    $statusCounts[$code] = 1;
 }
 
 /**
@@ -121,17 +135,26 @@ function UpdateResults(&$results, $testCount) {
               unset($response);
               if (isset($data) &&
                   is_array($data) &&
-                  array_key_exists('data', $data) &&
-                  is_array($data['data']) &&
-                  array_key_exists('statusCode', $data) &&
-                  $data['statusCode'] == 200) {
-                $changed = true;
-                GetTestResult($data['data'], $result);
-                $result['statsVer'] = $statsVer;
-              }
+                  array_key_exists('statusCode', $data)) {
+                if (array_key_exists('data', $data) &&
+                    is_array($data['data']) &&
+                    $data['statusCode'] == 200) {
+                  $changed = true;
+                  GetTestResult($data['data'], $result);
+                  $result['statsVer'] = $statsVer;
+                } elseif ($data['statusCode'] >= 400) {
+                  $changed = true;
+                  $result['statsVer'] = $statsVer;
+                  $result['result'] = -1;
+                }
+                IncrementStatus($data['statusCode']);
+              } else
+                IncrementStatus(-2);
               unset($data);
-            }
-        }
+            } else
+              IncrementStatus(-1);
+        } else
+          IncrementStatus(0);
     }
 
     // clear the progress text
@@ -176,7 +199,8 @@ function GetTestResult(&$data, &$result) {
             }
             $result['rv_successfulRuns'] =(int)$data['successfulRVRuns'];
         }
-    }
+    } else
+      $result['result'] = -1;
 }
 
 ?>
