@@ -1,6 +1,8 @@
 /ads/
+/browsers/
 /custom/
 /dat/*.dat
+/dat/*.json
 /dat/*.lock
 /images/sponsors/
 /log/
@@ -18,3 +20,4 @@
 /settings/block*.txt
 /settings/whitelist.txt
 /settings/customrules.txt
+*.log
