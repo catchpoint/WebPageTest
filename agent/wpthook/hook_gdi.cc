@@ -122,11 +122,25 @@ int __stdcall DrawTextExW_Hook(HDC hdc, LPWSTR lpchText, int cchText,
 
 BOOL __stdcall BitBlt_Hook(HDC hdcDest, int nXDest, int nYDest, int nWidth,
     int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop) {
-  BOOL ret = false;
+  BOOL ret = FALSE;
   if(pHook)
     ret = pHook->BitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc,
                         nXSrc, nYSrc, dwRop);
   return ret;
+}
+
+BOOL __stdcall StretchBlt_Hook(HDC hdcDest, int xDest, int yDest, int wDest,
+    int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
+  return pHook ? pHook->StretchBlt(hdcDest, xDest, yDest, wDest, hDest, hdcSrc,
+                                   xSrc, ySrc, wSrc, hSrc, rop) : FALSE;
+}
+
+int __stdcall StretchDIBits_Hook(HDC hdc, int xDest, int yDest, int DestWidth,
+    int DestHeight, int xSrc, int ySrc, int SrcWidth, int SrcHeight,
+    CONST VOID * lpBits, CONST BITMAPINFO * lpbmi, UINT iUsage, DWORD rop) {
+  return pHook ? pHook->StretchDIBits(hdc, xDest, yDest, DestWidth, DestHeight,
+                                      xSrc, ySrc, SrcWidth, SrcHeight,
+                                      lpBits, lpbmi, iUsage, rop) : 0;
 }
 
 /******************************************************************************
@@ -141,7 +155,21 @@ BOOL __stdcall BitBlt_Hook(HDC hdcDest, int nXDest, int nYDest, int nWidth,
 -----------------------------------------------------------------------------*/
 CGDIHook::CGDIHook(TestState& test_state, WptHook& wpthook):
   test_state_(test_state)
-  ,wpthook_(wpthook) {
+  , wpthook_(wpthook)
+  , EndPaint_(NULL)
+  , ReleaseDC_(NULL)
+  , SetWindowTextA_(NULL)
+  , SetWindowTextW_(NULL)
+  , InvalidateRect_(NULL)
+  , InvalidateRgn_(NULL)
+  , DrawTextA_(NULL)
+  , DrawTextW_(NULL)
+  , DrawTextExA_(NULL)
+  , DrawTextExW_(NULL)
+  , BitBlt_(NULL)
+  , StretchBlt_(NULL)
+  , StretchDIBits_(NULL)
+  , didDraw_(false) {
   document_windows_.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -152,16 +180,12 @@ void CGDIHook::Init() {
   if (!pHook)
     pHook = this;
 
-//  EndPaint_ = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
-//  ReleaseDC_ = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
+  EndPaint_ = hook.createHookByName("user32.dll", "EndPaint", EndPaint_Hook);
+  ReleaseDC_ = hook.createHookByName("user32.dll","ReleaseDC",ReleaseDC_Hook);
   SetWindowTextA_ = hook.createHookByName("user32.dll", "SetWindowTextA", 
                                           SetWindowTextA_Hook);
   SetWindowTextW_ = hook.createHookByName("user32.dll", "SetWindowTextW", 
                                           SetWindowTextW_Hook);
-//  InvalidateRect_ = hook.createHookByName("user32.dll", "InvalidateRect", 
-//                                          InvalidateRect_Hook);
-//  InvalidateRgn_ = hook.createHookByName("user32.dll", "InvalidateRgn", 
-//                                         InvalidateRgn_Hook);
   DrawTextA_ = hook.createHookByName("user32.dll", "DrawTextA", 
                                      DrawTextA_Hook);
   DrawTextW_ = hook.createHookByName("user32.dll", "DrawTextW", 
@@ -171,6 +195,10 @@ void CGDIHook::Init() {
   DrawTextExW_ = hook.createHookByName("user32.dll", "DrawTextExW", 
                                        DrawTextExW_Hook);
   BitBlt_ = hook.createHookByName("gdi32.dll", "BitBlt", BitBlt_Hook);
+  StretchBlt_ = hook.createHookByName("gdi32.dll", "StretchBlt",
+                                      StretchBlt_Hook);
+  StretchDIBits_ = hook.createHookByName("gdi32.dll", "StretchDIBits",
+                                         StretchDIBits_Hook);
 }
 
 /*-----------------------------------------------------------------------------
@@ -215,18 +243,24 @@ BOOL CGDIHook::EndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint) {
 
   if (EndPaint_)
     ret = EndPaint_(hWnd, lpPaint);
-/*
+
   if (IsDocumentWindow(hWnd)) {
-    WORD x = 0, y = 0, width = 0, height = 0;
-    if (lpPaint) {
-      x = (WORD)lpPaint->rcPaint.left;
-      y = (WORD)lpPaint->rcPaint.top;
-      width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
-      height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
+    if (didDraw_) {
+      didDraw_ = false;
+    } else {
+      WORD x = 0, y = 0, width = 0, height = 0;
+      if (lpPaint) {
+        x = (WORD)lpPaint->rcPaint.left;
+        y = (WORD)lpPaint->rcPaint.top;
+        width = (WORD)abs(lpPaint->rcPaint.right - lpPaint->rcPaint.left);
+        height = (WORD)abs(lpPaint->rcPaint.bottom - lpPaint->rcPaint.top);
+      }
+      //TCHAR buff[1024];
+      //wsprintf(buff, _T("EndPaint - %d,%d - %d x %d"), x, y, width, height);
+      //OutputDebugString(buff);
+      wpthook_.SendPaintEvent(x, y, width, height);
     }
-    wpthook_.SendPaintEvent(x, y, width, height);
   }
-*/
 
   return ret;
 }
@@ -240,12 +274,14 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
   if( ReleaseDC_ )
     ret = ReleaseDC_(hWnd, hDC);
 
-/*
-  if (!wpt_capturing_screen && !test_state_._exit && test_state_._active && 
-      IsDocumentWindow(hWnd)) {
-    wpthook_.SendPaintEvent(0, 0, 0, 0);
+  if (IsDocumentWindow(hWnd)) {
+    if (didDraw_) {
+      didDraw_ = false;
+    } else {
+      OutputDebugStringA("ReleaseDC");
+      wpthook_.SendPaintEvent(0, 0, 0, 0);
+    }
   }
-*/
 
   return ret;
 }
@@ -408,11 +444,53 @@ int CGDIHook::DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
 -----------------------------------------------------------------------------*/
 BOOL CGDIHook::BitBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth,
     int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop) {
-  BOOL ret = false;
+  BOOL ret = FALSE;
   if (BitBlt_)
     ret = BitBlt_(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc,
                   nYSrc, dwRop);
-  if (IsDocumentDC(hdcDest))
+  if (IsDocumentDC(hdcDest)) {
+    //TCHAR buff[1024];
+    //wsprintf(buff, _T("BitBlt - %d,%d - %d x %d"), nXDest, nYDest, nWidth, nHeight);
+    //OutputDebugString(buff);
+    didDraw_ = true;
     wpthook_.SendPaintEvent(nXDest, nYDest, nWidth, nHeight);
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+BOOL CGDIHook::StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest,
+    int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop) {
+  BOOL ret = FALSE;
+  if (StretchBlt_)
+    ret = StretchBlt_(hdcDest, xDest, yDest, wDest, hDest, hdcSrc, xSrc, ySrc,
+                      wSrc, hSrc, rop);
+  if (IsDocumentDC(hdcDest)) {
+    //TCHAR buff[1024];
+    //wsprintf(buff, _T("StretchBlt - %d,%d - %d x %d"), xDest, yDest, wDest, hDest);
+    //OutputDebugString(buff);
+    didDraw_ = true;
+    wpthook_.SendPaintEvent(xDest, yDest, wDest, hDest);
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int CGDIHook::StretchDIBits(HDC hdc, int xDest, int yDest, int DestWidth,
+    int DestHeight, int xSrc, int ySrc, int SrcWidth, int SrcHeight,
+    CONST VOID * lpBits, CONST BITMAPINFO * lpbmi, UINT iUsage, DWORD rop) {
+  int ret = 0;
+  if (StretchDIBits_)
+    ret = StretchDIBits_(hdc, xDest, yDest, DestWidth, DestHeight, xSrc, ySrc,
+                         SrcWidth, SrcHeight, lpBits, lpbmi, iUsage, rop);
+  if (IsDocumentDC(hdc)) {
+    //TCHAR buff[1024];
+    //wsprintf(buff, _T("StretchDIBits - %d,%d - %d x %d"), xDest, yDest, DestWidth, DestHeight);
+    //OutputDebugString(buff);
+    didDraw_ = true;
+    wpthook_.SendPaintEvent(xDest, yDest, DestWidth, DestHeight);
+  }
   return ret;
 }

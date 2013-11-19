@@ -97,8 +97,14 @@ unsigned int AngleHook::eglPostSubBufferNV(void * dpy, void * surface,
   if (eglPostSubBufferNV_)
     ret = eglPostSubBufferNV_(dpy, surface, x, y, width, height);
   // special-case the progress spinner (16x16 scaled by whatever DPI scaling)
-  if (width != height || width > 32)
-    NotifyPaint(x, y, width, height);
+  // and cursor (3 x height with some padding for DPI scaling)
+  if ((width > 5 && width != height) || width > 32) {
+    //TCHAR buff[1024];
+    //wsprintf(buff, _T("eglPostSubBufferNV - %d,%d - %d x %d"), x, y, width, height);
+    //OutputDebugString(buff);
+    // the dimensions don't match the actual screen dimensions so don't use them
+    NotifyPaint();
+  }
   return ret;
 }
 

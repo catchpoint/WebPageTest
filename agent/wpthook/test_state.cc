@@ -616,6 +616,10 @@ void TestState::RenderCheckThread() {
       _screen_capture.Unlock();
     }
     ResetEvent(_check_render_event);
+
+    // prevent a tight loop
+    if (!_render_start.QuadPart && !_exit)
+      Sleep(20);
   }
 }
 

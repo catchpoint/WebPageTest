@@ -243,8 +243,14 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
     default:
         if (message == test_state_.paint_msg_) {
           if (!test_state_._exit && test_state_._active) {
-            test_state_.PaintEvent(LOWORD(wParam), HIWORD(wParam),
-                                   LOWORD(lParam), HIWORD(lParam));
+            int x = LOWORD(wParam);
+            int y = HIWORD(wParam);
+            int width = LOWORD(lParam);
+            int height = HIWORD(lParam);
+            //TCHAR buff[1024];
+            //wsprintf(buff, _T("Paint Event - %d,%d - %d x %d"), x, y, width, height);
+            //OutputDebugString(buff);
+            test_state_.PaintEvent(x, y, width, height);
           }
         } else if (message == report_message_) {
           OnReport();
@@ -313,10 +319,16 @@ void WptHook::SendPaintEvent(int x, int y, int width, int height) {
   y = max(y,0);
   height = max(height,0);
   width = max(width,0);
-  if (test_state_.gdi_only_)
-    PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
-                MAKEWPARAM(x,y), MAKELPARAM(width, height));
-  else if (message_window_)
-    PostMessage(message_window_, test_state_.paint_msg_,
-                MAKEWPARAM(x,y), MAKELPARAM(width, height));
+  bool ok = true;
+  // ignore cursor and spinners
+  if (width && height && ((width <= 5) || (width == height && width <= 32)))
+    ok = false;
+  if (ok) {
+    if (test_state_.gdi_only_)
+      PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
+                  MAKEWPARAM(x,y), MAKELPARAM(width, height));
+    else if (message_window_)
+      PostMessage(message_window_, test_state_.paint_msg_,
+                  MAKEWPARAM(x,y), MAKELPARAM(width, height));
+  }
 }

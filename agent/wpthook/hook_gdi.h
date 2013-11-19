@@ -60,6 +60,13 @@ typedef int(__stdcall * LPDRAWTEXTEXW)(HDC hdc, LPWSTR lpchText, int cchText,
                                        LPDRAWTEXTPARAMS lpDTParams);
 typedef BOOL(__stdcall * LPBITBLT)(HDC hdcDest, int nXDest, int nYDest,
     int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
+typedef BOOL(__stdcall * LPSTRETCHBLT)(HDC hdcDest, int xDest, int yDest,
+    int wDest, int hDest, HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc,
+    DWORD rop);
+typedef int(__stdcall * LPSTRETCHDIBITS)(HDC hdc, int xDest, int yDest,
+    int DestWidth, int DestHeight, int xSrc, int ySrc, int SrcWidth,
+    int SrcHeight, CONST VOID * lpBits, CONST BITMAPINFO * lpbmi, UINT iUsage,
+    DWORD rop);
 
 /******************************************************************************
 *******************************************************************************
@@ -89,7 +96,12 @@ public:
   int   DrawTextExW(HDC hdc, LPWSTR lpchText, int cchText, LPRECT lpRect,
                     UINT dwDTFormat, LPDRAWTEXTPARAMS lpDTParams);
   BOOL  BitBlt(HDC hdcDest, int nXDest, int nYDest,
-    int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
+      int nWidth, int nHeight, HDC hdcSrc, int nXSrc, int nYSrc, DWORD dwRop);
+  BOOL  StretchBlt(HDC hdcDest, int xDest, int yDest, int wDest, int hDest,
+      HDC hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, DWORD rop);
+  int   StretchDIBits(HDC hdc, int xDest, int yDest, int DestWidth,
+      int DestHeight, int xSrc, int ySrc, int SrcWidth, int SrcHeight,
+      CONST VOID * lpBits, CONST BITMAPINFO * lpbmi, UINT iUsage, DWORD rop);
 
 private:
   void SendPaintEvent(int x, int y, int width, int height);
@@ -101,6 +113,7 @@ private:
   TestState&  test_state_;
   CRITICAL_SECTION	cs;
   CAtlMap<HWND, bool>	document_windows_;
+  bool didDraw_;
 
   LPENDPAINT		    EndPaint_;
   LPRELEASEDC       ReleaseDC_;
@@ -113,4 +126,6 @@ private:
   LPDRAWTEXTEXA     DrawTextExA_;
   LPDRAWTEXTEXW     DrawTextExW_;
   LPBITBLT          BitBlt_;
+  LPSTRETCHBLT      StretchBlt_;
+  LPSTRETCHDIBITS   StretchDIBits_;
 };
