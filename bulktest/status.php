@@ -5,7 +5,7 @@ $results = array();
 $errors = array();
 $urlErrors = array();
 
-$statsVer = 2;
+$statsVer = 3;
 $statusCounts = array();
 
 // see if there is an existing test we are working with
@@ -51,7 +51,8 @@ if (LoadResults($results)) {
                     $result['successfulRuns'] < $minRuns ||
                     $result['TTFB'] > $result['docTime'] ||
                     $stddev > $maxVariancePct || // > 10% variation in results
-                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth)) {
+                    (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
+                    ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
                     if (!array_key_exists($result['label'], $errors))
                         $errors[$result['label']] = 1;
                     else
@@ -115,6 +116,7 @@ function IncrementStatus($code) {
 function UpdateResults(&$results, $testCount) {
     global $server;
     global $statsVer;
+    global $video;
 
     $count = 0;
     $changed = false;
@@ -129,6 +131,8 @@ function UpdateResults(&$results, $testCount) {
             echo "\rUpdating the status of test $count of $testCount...                  ";
 
             $url = "{$server}jsonResult.php?test={$result['id']}&medianRun=fastest";
+            if ($video)
+              $url .= "&medianMetric=SpeedIndex";
             $response = http_fetch($url);
             if (strlen($response)) {
               $data = json_decode($response, true);
