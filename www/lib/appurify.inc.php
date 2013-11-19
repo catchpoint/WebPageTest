@@ -50,7 +50,7 @@ class Appurify{
       $list = $this->Get('https://live.appurify.com/resource/devices/list/');
       if ($list !== false && is_array($list)) {
         foreach($list as $device) {
-          if ($device['os_name'] == 'iOS' && intval($device['os_version']) < 7) {
+          if ($device['os_name'] == 'iOS' /* && intval($device['os_version']) < 7 */) {
             $id = $device['device_type_id'] . '-safari';
             $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Safari";
             $devices[$id] = $name;
@@ -142,6 +142,9 @@ class Appurify{
           $network = '';
           if (array_key_exists('requested_connectivity', $test) && is_numeric($test['requested_connectivity']))
             $network = "network={$test['requested_connectivity']}\r\n";
+          $timeline = '';
+          if (array_key_exists('timeline', $test) && $test['timeline'])
+            $timeline = "timeline=1\r\n";
           if (stripos($device, '-') !== false)
             list($device, $browser) = explode('-', $device);
           $result = $this->Post('https://live.appurify.com/resource/config/upload/',
@@ -152,6 +155,7 @@ class Appurify{
                                                 "profiler=1\r\n" .
                                                 "videocapture=0\r\n" .
                                                 $network .
+                                                $timeline .
                                                 "[browser_test]\r\n" .
                                                 "url={$test['url']}\r\n" .
                                                 "browser=$browser"));
