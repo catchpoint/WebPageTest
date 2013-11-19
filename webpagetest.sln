@@ -17,6 +17,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptwatchdog", "agent\wptwat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptglobal", "agent\wptglobal\wptglobal.vcxproj", "{652CFCC5-D014-4D46-9D46-DCC587743A48}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testGlobalHook", "agent\wptglobal\testGlobalHook\testGlobalHook.vcxproj", "{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}"
+	ProjectSection(ProjectDependencies) = postProject
+		{652CFCC5-D014-4D46-9D46-DCC587743A48} = {652CFCC5-D014-4D46-9D46-DCC587743A48}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +92,16 @@ Global
 		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Win32.ActiveCfg = Release|Win32
 		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Win32.Build.0 = Release|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Win32.Build.0 = Debug|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Any CPU.ActiveCfg = Release|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Win32.ActiveCfg = Release|Win32
+		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
