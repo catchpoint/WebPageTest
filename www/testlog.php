@@ -41,7 +41,7 @@ if( !strcasecmp($_GET["f"], 'csv') )
 if( $csv )
 {
     header ("Content-type: text/csv");
-    echo '"Date/Time","Location","Test ID","URL"' . "\r\n";
+    echo '"Date/Time","Location","Test ID","URL","Label"' . "\r\n";
 }
 else
 {
@@ -237,7 +237,7 @@ else
                                                 // only track local tests
                                                 if( strncasecmp($guid, 'http:', 5) && strncasecmp($guid, 'https:', 6) )
                                                 {
-                                                    echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '"' . "\r\n";
+                                                    echo '"' . $newDate . '","' . $location . '","' . $guid . '","' . str_replace('"', '""', $url) . '","' . $label . '"' . "\r\n";
                                                     // flush every 30 rows of data
                                                     if( $rowCount % 30 == 0 )
                                                     {
