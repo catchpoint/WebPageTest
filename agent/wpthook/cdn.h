@@ -112,6 +112,7 @@ CDN_PROVIDER cdnList[] = {
   {".cdncloud.net.au", "MediaCloud"},
   {".rncdn1.com", "Reflected Networks"},
   {".cdnsun.net", "CDNsun"},
+  {"cdn.seravo.fi", "Seravo"},
   {"END_MARKER", "END_MARKER"}
 };
 
