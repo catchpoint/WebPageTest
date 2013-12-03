@@ -141,6 +141,25 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     // Network events
     if (message === 'Network.requestWillBeSent') {
       if (params.request.url.indexOf('http') == 0) {
+        // see if it is a redirect
+        if (params['redirectResponse'] !== undefined &&
+            g_instance.requests[params.requestId] !== undefined) {
+          if (!g_instance.receivedData)
+            wpt.chromeDebugger.SendReceivedData();
+          if (!params.redirectResponse.fromDiskCache &&
+              g_instance.requests[params.requestId]['fromNet'] !== false) {
+            g_instance.requests[params.requestId].fromNet = true;
+            if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
+              g_instance.requests[params.requestId].firstByteTime = params.timestamp;
+            }
+            g_instance.requests[params.requestId].response = params.redirectResponse;
+          }
+          // copy the request over to a bogus ID since the request ID is reused
+          newId = params.requestId + '.r';
+          while (g_instance.requests[newId] !== undefined)
+            newId += 'r';
+          g_instance.requests[newId] = g_instance.requests[params.requestId];
+        }
         var detail = {};
         detail.url = params.request.url;
         detail.initiator = params.initiator;
