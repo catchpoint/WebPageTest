@@ -1250,7 +1250,8 @@ bool Results::NativeRequestExists(Request * browser_request) {
       if (request && 
           !request->_from_browser &&
           !browser_host.CompareNoCase(request->GetHost()) &&
-          !browser_object.CompareNoCase(request->_request_data.GetObject()))
+          !browser_object.CompareNoCase(request->_request_data.GetObject()) &&
+          browser_request->_is_ssl == request->_is_ssl)
           ret = true;
     }
   } else
