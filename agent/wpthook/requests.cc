@@ -397,9 +397,40 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       DataChunk chunk((LPCSTR)response_headers, response_headers.GetLength());
       request->_response_data.AddChunk(chunk);
     }
-    EnterCriticalSection(&cs);
-    _requests.AddTail(request);
-    LeaveCriticalSection(&cs);
+
+    // Do a sanity check and throw out any requests that have bogus timings.
+    // Chrome bug: https://code.google.com/p/chromium/issues/detail?id=309570
+    LONGLONG slop = _test_state._ms_frequency.QuadPart * 10000;
+    LARGE_INTEGER earliest, latest;
+    earliest.QuadPart = _test_state._start.QuadPart - slop;
+    latest.QuadPart = now.QuadPart + slop;
+    if (request->_start.QuadPart > earliest.QuadPart &&
+        request->_end.QuadPart < latest.QuadPart &&
+        (!request->_first_byte.QuadPart ||
+         (request->_first_byte.QuadPart > earliest.QuadPart &&
+          request->_first_byte.QuadPart < latest.QuadPart)) &&
+        (!request->_connect_start.QuadPart ||
+         (request->_connect_start.QuadPart > earliest.QuadPart &&
+          request->_connect_start.QuadPart < latest.QuadPart)) &&
+        (!request->_connect_end.QuadPart ||
+         (request->_connect_end.QuadPart > earliest.QuadPart &&
+          request->_connect_end.QuadPart < latest.QuadPart)) &&
+        (!request->_dns_start.QuadPart ||
+         (request->_dns_start.QuadPart > earliest.QuadPart &&
+          request->_dns_start.QuadPart < latest.QuadPart)) &&
+        (!request->_dns_end.QuadPart ||
+         (request->_dns_end.QuadPart > earliest.QuadPart &&
+          request->_dns_end.QuadPart < latest.QuadPart)) &&
+        (!request->_ssl_start.QuadPart ||
+         (request->_ssl_start.QuadPart > earliest.QuadPart &&
+          request->_ssl_start.QuadPart < latest.QuadPart)) &&
+        (!request->_ssl_end.QuadPart ||
+         (request->_ssl_end.QuadPart > earliest.QuadPart &&
+          request->_ssl_end.QuadPart < latest.QuadPart))) {
+      EnterCriticalSection(&cs);
+      _requests.AddTail(request);
+      LeaveCriticalSection(&cs);
+    }
   }
 }
 
