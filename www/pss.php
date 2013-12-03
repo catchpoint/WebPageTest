@@ -63,8 +63,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="sensitive" value="1">
             <?php
             if ($mps) {
-                $script = 'addHeader\tModPagespeed:off\t%HOST_REGEX%\nnavigate\t%URL%';
-                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"addHeader&#09;ModPagespeed:off&#09;%HOST_REGEX%&#10;navigate&#09;%URL%\">\n";
+                $script = '';
                 echo "<input type=\"hidden\" name=\"runs\" value=\"7\">\n";
             } elseif ($preview) {
                 $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetCookie\thttp://%HOSTR%\t_GPSSPRVW=1\nnavigate\t%URL%';
@@ -99,7 +98,7 @@ $page_description = "Comparison Test$testLabel.";
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
               
               if ($mps) {
-                echo '<h2 class="cufon-dincond_black"><small>Compare your currently optimized site to its unoptimized version</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Evaluate the impact of <a href="https://code.google.com/p/modpagespeed/">mod_pagespeed</a> (must be installed on the server)</small></h2>';
               } elseif ($preview) {
                 echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
               } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) )
@@ -408,14 +407,32 @@ $page_description = "Comparison Test$testLabel.";
                 
                 <?php
                 // build the psuedo batch-url list
-                if( $mps || (array_key_exists('origin', $_GET) && strlen($_GET['origin'])) )
+                if ($mps) {
+                    echo 'var batch = "{test}\n'.
+                                      '{script}\n' . 
+                                      'label=mod_pagespeed Off\n' .
+                                      'addHeader\tModPagespeed:off\n' .
+                                      'navigate\t" + url + "\n' . 
+                                      '{/script}\n' .
+                                      '{/test}\n' .
+                                      '{test}\n'.
+                                      '{script}\n' . 
+                                      'label=mod_pagespeed On\n' .
+                                      'addHeader\tModPagespeed:on\n' .
+                                      'navigate\t" + url + "\n' . 
+                                      '{/script}\n' .
+                                      '{/test}\n' . 
+                                      '";' . "\n";
+                } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) )
                     echo 'var batch = "Original=" + url + "\nOptimized=" + url + " noscript";' . "\n";
                 else
                     echo 'var batch = "Original=" + url + " noscript\nOptimized=" + url;' . "\n";
+                
+                echo "form.bulkurls.value=batch;\n";
+                
+                if (!$mps) {
                 ?>
 
-                form.bulkurls.value=batch;
-                
                 var shard = form.shardDomains.value;
                 var script = '';
                 if (shard != 1)
@@ -452,6 +469,7 @@ $page_description = "Comparison Test$testLabel.";
                 }
                 <?php
                 }   // origin
+                } // !mps
                 ?>
                                 
                 return true;
