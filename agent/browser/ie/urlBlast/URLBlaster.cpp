@@ -1397,6 +1397,23 @@ void CURLBlaster::EncodeVideo(void)
 		else
 			log.Trace(_T("Execution failed '%s'"), (LPCTSTR)cmd);
 	}
+	
+	// terminate any stray x264.exe processes
+	WTS_PROCESS_INFO * proc = NULL;
+	DWORD count = 0;
+	if( WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count) ) {
+		for( DWORD i = 0; i < count; i++ ) {
+			if( !lstrcmpi(PathFindFileName(proc[i].pProcessName), _T("x264.exe")) ) {
+				HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, proc[i].ProcessId);
+				if( hProc ) {
+					TerminateProcess(hProc, 0);
+					CloseHandle(hProc);
+				}
+			}
+		}
+		
+		WTSFreeMemory(proc);
+	}
 }
 
 /*-----------------------------------------------------------------------------
