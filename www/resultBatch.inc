@@ -511,7 +511,8 @@ function DisplayTest($id, $url, $label, $complete)
 
     echo '<tr>';
     if ($videoCaptured) {
-        echo "<td><input type=\"checkbox\" name=\"t[]\" value=\"$id\"></td>";    
+        echo "<td><input type=\"checkbox\" name=\"t[]\" value=\"$id\">";    
+        echo "<input type=\"checkbox\" name=\"t[]\" value=\"$id-c:1\"></td>";    
     }
     $safeUrl = htmlspecialchars($url);
     $label = htmlspecialchars($label);
