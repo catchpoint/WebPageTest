@@ -278,7 +278,6 @@ int CGDIHook::ReleaseDC(HWND hWnd, HDC hDC)
     if (didDraw_) {
       didDraw_ = false;
     } else {
-      OutputDebugStringA("ReleaseDC");
       wpthook_.SendPaintEvent(0, 0, 0, 0);
     }
   }
