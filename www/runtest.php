@@ -327,7 +327,7 @@
         {
             if (isset($req_cmdline) && strlen($req_cmdline)) {
               $req_cmdline = trim($req_cmdline);
-              if (!preg_match('/^--[a-zA-Z0-9\-\.\+=,_ "]+$/', $req_cmdline)) {
+              if (!preg_match('/^--([a-zA-Z0-9\-\.\+=,_ "]+)(http:\/\/)?(https:\/\/)?([a-zA-Z0-9\-\.\+=,_ :"]+)?$/', $req_cmdline)) {
                 $error = 'Invalid command-line options';
                 $req_cmdline = '';
               }
