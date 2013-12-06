@@ -158,9 +158,17 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             lstrcat(cmdLine, _T("\""));
           }
         }
-        if (_test._browser_additional_command_line.GetLength())
+        if (_test._browser_additional_command_line.GetLength()) {
+          // if we are specifying a proxy server, strip any default setting out
+          if (_test._browser_additional_command_line.Find(_T("--proxy-")) !=
+              -1) {
+            CString cmd(cmdLine);
+            cmd.Replace(_T(" --no-proxy-server"), _T(""));
+            lstrcpy(cmdLine, cmd);
+          }
           lstrcat(cmdLine, CString(_T(" ")) +
                   _test._browser_additional_command_line);
+        }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
