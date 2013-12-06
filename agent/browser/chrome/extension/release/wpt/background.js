@@ -14097,20 +14097,18 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
               g_instance.requests[params.requestId].firstByteTime = params.timestamp;
             }
             g_instance.requests[params.requestId].response = params.redirectResponse;
+            request = g_instance.requests[params.requestId];
+            request.endTime = params.timestamp;
+            wpt.chromeDebugger.sendRequestDetails(request);
           }
-          // copy the request over to a bogus ID since the request ID is reused
-          newId = params.requestId + '.r';
-          while (g_instance.requests[newId] !== undefined)
-            newId += 'r';
-          g_instance.requests[newId] = g_instance.requests[params.requestId];
+          delete g_instance.requests[params.requestId];
         }
         var detail = {};
         detail.url = params.request.url;
         detail.initiator = params.initiator;
         detail.startTime = params.timestamp;
-        if (params['request'] !== undefined) {
+        if (params['request'] !== undefined)
           detail.request = params.request;
-        }
         g_instance.requests[params.requestId] = detail;
       }
     } else if (message === 'Network.dataReceived') {
@@ -14144,11 +14142,13 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     } else if (message === 'Network.loadingFinished') {
       if (!g_instance.receivedData)
         wpt.chromeDebugger.SendReceivedData();
-      if (g_instance.requests[params.requestId] !== undefined &&
-          g_instance.requests[params.requestId]['fromNet']) {
-        request = g_instance.requests[params.requestId];
-        request.endTime = params.timestamp;
-        wpt.chromeDebugger.sendRequestDetails(request);
+      if (g_instance.requests[params.requestId] !== undefined) {
+        if (g_instance.requests[params.requestId]['fromNet']) {
+          request = g_instance.requests[params.requestId];
+          request.endTime = params.timestamp;
+          wpt.chromeDebugger.sendRequestDetails(request);
+        }
+        delete g_instance.requests[params.requestId];
       }
     } else if (message === 'Network.loadingFailed') {
       if (g_instance.requests[params.requestId] !== undefined) {
@@ -14158,6 +14158,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         request.errorCode =
             wpt.chromeExtensionUtils.netErrorStringToWptCode(request.error);
         wpt.chromeDebugger.sendRequestDetails(request);
+        delete g_instance.requests[params.requestId];
       }
     }
   }

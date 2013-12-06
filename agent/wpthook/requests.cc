@@ -339,7 +339,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     LeaveCriticalSection(&cs);
   }
   _test_state.ActivityDetected();
-  if (end_time > 0 && start_time > 0 && send_start > 0) {
+  if (end_time > 0 && start_time > 0) {
     Request * request = new Request(_test_state, connection, _sockets, _dns,
                                     _test, false, *this);
     request->_from_browser = true;
