@@ -172,7 +172,7 @@ else
                                     // See if we have to override the label
                                     $new_label = getLabel($guid, $user);
                                     if (!empty($new_label)) {
-                                        $label = $new_label;
+                                        $label = htmlentities($new_label);
                                     }
 
                                     if (!$location) {
