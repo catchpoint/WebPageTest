@@ -1941,13 +1941,13 @@ function tokenizeLogLine($line) {
                 case 1: $line_data['date'] = strtotime($token); break;
                 case 2: $line_data['ip'] = $token; break;
                 case 5: $line_data['guid'] = $token; break;
-                case 6: $line_data['url'] = htmlspecialchars($token); break;
+                case 6: $line_data['url'] = $token; break;
                 case 7: $line_data['location'] = $token; break;
                 case 8: $line_data['private'] = ($token == '1' ); break;
                 case 9: $line_data['testUID'] = $token; break;
                 case 10: $line_data['testUser'] = $token; break;
                 case 11: $line_data['video'] = ($token == '1'); break;
-                case 12: $line_data['label'] = htmlspecialchars($token); break;
+                case 12: $line_data['label'] = $token; break;
                 case 13: $line_data['o'] = $token; break;
                 case 14: $line_data['key'] = $token; break;
                 case 15: $line_data['count'] = $token; break;
@@ -1967,22 +1967,24 @@ function tokenizeLogLine($line) {
 * @param string $test_guid  The ID of the test to update
 * @param string $label      The new label
 * @param string $test_uid   The test UID
-* @param string $test_user  The current user
+* @param string $cur_user   The current user
 * @param string $test_owner The user who created the test
 */
-function updateLabel($test_guid, $label, $test_uid, $test_user, $test_owner) {
+function updateLabel($test_guid, $label, $test_uid, $cur_user, $test_owner) {
     if (!class_exists("SQLite3")) {
         return "SQLite3 must be installed to update test labels";
     }
 
     // Connect to the SQLite DB, and make sure that the table exists
     $db = new SQLite3('./dat/labels.db');
-    $result = $db->query("CREATE TABLE IF NOT EXISTS labels (test_id STRING, label STRING);");
+    $result = $db->query("CREATE TABLE IF NOT EXISTS labels (test_id STRING, label STRING, user_updated STRING);");
 
-    $result = $db->query('INSERT OR IGNORE INTO labels (test_id, label)
-        VALUES ("' . $db->escapeString($test_guid) . '", "' . $db->escapeString($label) . '")');
+    $result = $db->query('INSERT OR IGNORE INTO labels (test_id, label, user_updated)
+        VALUES ("' . $db->escapeString($test_guid) . '", "' . $db->escapeString($label) . '", "' . $db->escapeString($cur_user) . '")');
 
-    $result = $db->query('UPDATE labels SET label="' . $db->escapeString($label) . '" WHERE test_id="' . $db->escapeString($test_guid) . '"');
+    $result = $db->query('UPDATE labels SET label="' . $db->escapeString($label) . '"
+                            WHERE test_id="' . $db->escapeString($test_guid) . '"
+                            AND user_updated="' . $db->escapeString($cur_user) . '"');
 
     return $result !== false;
 }
@@ -1991,16 +1993,22 @@ function updateLabel($test_guid, $label, $test_uid, $test_user, $test_owner) {
 /**
 * Get an updated test label
 *
-* @param string $test_guid  The ID of the test to update
+* @param string $test_guid    The ID of the test to get the label for
+* @param string $current_user The current user that is trying to fetch the label
 */
-function getLabel($test_guid) {
+function getLabel($test_guid, $current_user) {
     if (!class_exists("SQLite3")) {
         return "SQLite3 must be installed to get updated test labels";
     }
 
     $db = new SQLite3('./dat/labels.db');
-    $result = $db->query('SELECT label from labels where test_id = "' . $db->escapeString($test_guid) . '"');
-    $result = $result->fetchArray();
+    $result = $db->query('SELECT label FROM labels
+                            WHERE test_id = "' . $db->escapeString($test_guid) . '"
+                            AND user_updated="' . $db->escapeString($current_user) . '"');
+
+    if ($result) {
+        $result = $result->fetchArray();
+    }
 
     if (!empty($result)) {
         return $result['label'];

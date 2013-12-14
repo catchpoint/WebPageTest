@@ -28,7 +28,7 @@ else
     chdir('..');
     include 'common.inc';
     require_once('page_data.inc');
-    include 'video/filmstrip.inc.php';  // include the commpn php shared across the filmstrip code
+    include 'video/filmstrip.inc.php';  // include the common php shared across the filmstrip code
     include 'object_detail.inc';
     require_once('waterfall.inc');
 
@@ -142,7 +142,8 @@ else
                     ?>
                     font-family: arial,sans-serif
                 }
-                .pagelink a
+                .pagelink,
+                .pagelinks a
                 {
                     text-decoration: none;
                     <?php
@@ -392,18 +393,16 @@ function ScreenShotTable()
                 else
                     $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
 
-                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">";
+                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString($test['name']) . '</a>';
+            } else {
+                echo WrapableString($test['name']);
             }
-            echo WrapableString($test['name']);
 
             // Print out a link to edit the test
             echo '<br/>';
-            echo '<a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . $test['name'] . '>';
+            echo '<a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
             echo '(Edit)</a>';
 
-            if (!defined('EMBED')) {
-                echo "</a>";
-            }
             echo "</td></tr>\n";
         }
         echo '</table></td>';

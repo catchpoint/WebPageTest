@@ -150,6 +150,7 @@ function LoadTestData() {
     global $tests;
     global $admin;
     global $supportsAuth;
+    global $user;
 
     $count = 0;
     foreach( $tests as &$test ) {
@@ -169,7 +170,7 @@ function LoadTestData() {
         }
 
         // See if we have an overridden test label in the sqlite DB
-        $new_label = getLabel($test['id']);
+        $new_label = getLabel($test['id'], $user);
         if (!empty($new_label)) {
             $test['name'] = $new_label;
         }

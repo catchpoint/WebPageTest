@@ -158,19 +158,19 @@ else
                                     $date       = $line_data['date'];
                                     $ip         = $line_data['ip'];
                                     $guid       = $line_data['guid'];
-                                    $url        = $line_data['url'];
+                                    $url        = htmlentities($line_data['url']);
                                     $location   = $line_data['location'];
                                     $private    = $line_data['private'];
                                     $testUID    = $line_data['testUID'];
                                     $testUser   = $line_data['testUser'];
                                     $video      = $line_data['video'];
-                                    $label      = $line_data['label'];
+                                    $label      = htmlentities($line_data['label']);
                                     $o          = $line_data['o'];
                                     $key        = $line_data['key'];
                                     $count      = $line_data['count'];
 
                                     // See if we have to override the label
-                                    $new_label = getLabel($guid);
+                                    $new_label = getLabel($guid, $user);
                                     if (!empty($new_label)) {
                                         $label = $new_label;
                                     }
@@ -266,7 +266,12 @@ else
                                                     $labelTxt = substr($labelTxt, 0, 27) . '...';
                                                 echo "<td title=\"$label\" class=\"label\">";
                                                 echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
-                                                echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
+
+                                                // Only allow people to update labels if they are logged in
+                                                if ($user) {
+                                                    echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
+                                                }
+
                                                 echo "</td>";
 
 							                    echo '<td class="url"><a title="' . $url . '" href="' . $link . '">' . fittext($url,80) . '</a></td></tr>';
