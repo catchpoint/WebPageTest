@@ -178,7 +178,10 @@
                       is_file("./browsers/{$test['browser']}.zip")) {
                     $customBrowsers = parse_ini_file('./browsers/browsers.ini');
                     if (array_key_exists($test['browser'], $customBrowsers)) {
-                      $test['customBrowserUrl'] = "http://{$_SERVER['HTTP_HOST']}/browsers/{$test['browser']}.zip";
+                      $base_uri = "http://{$_SERVER['HTTP_HOST']}/browsers/";
+                      if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
+                          $base_uri = $settings['browsers_url'];
+                      $test['customBrowserUrl'] = "$base_uri{$test['browser']}.zip";
                       $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
                     }
                   }
