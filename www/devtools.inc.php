@@ -391,10 +391,16 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                   $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime']) * 1000) : -1;
                   $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime']) * 1000) : 0;
                   $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
-                  $request['bytesIn'] = array_key_exists('bytesIn', $rawRequest) ? $rawRequest['bytesIn'] : 0;
-                  if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
-                      $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
+                  $request['bytesIn'] = 0;
                   $request['objectSize'] = '';
+                  if (array_key_exists('bytesIn', $rawRequest)) {
+                    $request['bytesIn'] = $rawRequest['bytesIn'];
+                  } elseif (array_key_exists('bytesInData', $rawRequest)) {
+                    $request['objectSize'] = $rawRequest['bytesInData'];
+                    $request['bytesIn'] = $rawRequest['bytesInData'];
+                    if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                        $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
+                  }
                   $request['expires'] = '';
                   $request['cacheControl'] = '';
                   $request['contentType'] = '';
@@ -409,6 +415,8 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                           $request['contentType'] =  $rawRequest['response']['headers']['Content-Type'];
                       if (array_key_exists('Content-Encoding', $rawRequest['response']['headers']))
                           $request['contentEncoding'] =  $rawRequest['response']['headers']['Content-Encoding'];
+                      if (array_key_exists('Content-Length', $rawRequest['response']['headers']))
+                          $request['objectSize'] =  $rawRequest['response']['headers']['Content-Length'];
                   }
                   $request['type'] = 3;
                   $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
@@ -638,10 +646,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 if ($event['method'] == 'Network.dataReceived') {
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('bytesIn', $rawRequests[$id]))
-                        $rawRequests[$id]['bytesIn'] = 0;
+                    if (!array_key_exists('bytesInData', $rawRequests[$id]))
+                        $rawRequests[$id]['bytesInData'] = 0;
                     if (array_key_exists('encodedDataLength', $event))
-                        $rawRequests[$id]['bytesIn'] += $event['encodedDataLength'];
+                        $rawRequests[$id]['bytesInData'] += $event['encodedDataLength'];
                 }
                 if ($event['method'] == 'Network.responseReceived' &&
                     array_key_exists('response', $event)) {
