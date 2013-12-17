@@ -370,7 +370,8 @@ chrome.extension.onRequest.addListener(
           '&domContentLoadedEventEnd=' +
               request['domContentLoadedEventEnd'] +
           '&loadEventStart=' + request['loadEventStart'] +
-          '&loadEventEnd=' + request['loadEventEnd']);
+          '&loadEventEnd=' + request['loadEventEnd'] +
+          '&msFirstPaint=' + request['msFirstPaint']);
     }
     else if (request.message == 'wptDomCount') {
       wptSendEvent('domCount', 

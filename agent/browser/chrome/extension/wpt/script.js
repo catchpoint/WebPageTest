@@ -99,6 +99,17 @@ wpt.contentScript.collectStats_ = function() {
   addTime('domContentLoadedEventEnd');
   addTime('loadEventStart');
   addTime('loadEventEnd');
+  timingRequest['msFirstPaint'] = 0;
+  if (window['chrome'] !== undefined &&
+      window.chrome['loadTimes'] !== undefined) {
+    var chromeTimes = window.chrome.loadTimes();
+    if (chromeTimes['firstPaintTime'] !== undefined &&
+        chromeTimes['firstPaintTime'] > 0) {
+      var startTime = chromeTimes['requestTime'] ? chromeTimes['requestTime'] : chromeTimes['startLoadTime'];
+      if (chromeTimes['firstPaintTime'] >= startTime)
+        timingRequest['msFirstPaint'] = (chromeTimes['firstPaintTime'] - startTime) * 1000.0;
+    }
+  }
 
   // Send the times back to the extension.
   chrome.extension.sendRequest(timingRequest, function(response) {});
