@@ -400,11 +400,11 @@ void Results::SavePageData(OptimizationChecks& checks){
     // build up the string of data fileds for the page result
 
     // Date
-    buff.Format("%d/%d/%d\t", _test_state._start_time.wMonth,
+    buff.Format("%02d/%02d/%d\t", _test_state._start_time.wMonth,
           _test_state._start_time.wDay, _test_state._start_time.wYear);
     result += buff;
     // Time
-    buff.Format("%d:%d:%d\t", _test_state._start_time.wHour,
+    buff.Format("%02d:%02d:%02d\t", _test_state._start_time.wHour,
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
@@ -923,11 +923,11 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   CStringA buff;
 
   // Date
-  buff.Format("%d/%d/%d\t", _test_state._start_time.wMonth,
+  buff.Format("%02d/%02d/%02d\t", _test_state._start_time.wMonth,
         _test_state._start_time.wDay, _test_state._start_time.wYear);
   result += buff;
   // Time
-  buff.Format("%d:%d:%d\t", _test_state._start_time.wHour,
+  buff.Format("%02d:%02d:%02d\t", _test_state._start_time.wHour,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
