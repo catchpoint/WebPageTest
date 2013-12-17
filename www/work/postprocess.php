@@ -39,20 +39,22 @@ if (array_key_exists('test', $_REQUEST)) {
     
     // see if we need to send a showslow beacon
     $beaconUrl = null;
-    $showslow = GetSetting('showslow');
-    if (strpos($id, '.') === false && $showslow && strlen($showslow))
-    {
-        $beaconUrl = "$showslow/beacon/webpagetest/";
-        $showslow_key = GetSetting('showslow_key');
-        if ($showslow_key && strlen($showslow_key))
-            $beaconUrl .= '?key=' . trim($showslow_key);
-        $beaconRate = GetSetting('beaconRate');
-        if ($beaconRate && rand(1, 100) > $beaconRate )
-            unset($beaconUrl);
-        else {
-            $testInfo['showslow'] = 1;
-            $testInfo_dirty = true;
-        }
+    if( isset($testInfo) && !$testInfo['private'] ) {
+      $showslow = GetSetting('showslow');
+      if (strpos($id, '.') === false && $showslow && strlen($showslow))
+      {
+          $beaconUrl = "$showslow/beacon/webpagetest/";
+          $showslow_key = GetSetting('showslow_key');
+          if ($showslow_key && strlen($showslow_key))
+              $beaconUrl .= '?key=' . trim($showslow_key);
+          $beaconRate = GetSetting('beaconRate');
+          if ($beaconRate && rand(1, 100) > $beaconRate )
+              unset($beaconUrl);
+          else {
+              $testInfo['showslow'] = 1;
+              $testInfo_dirty = true;
+          }
+      }
     }
 
     if( isset($testInfo) && $testInfo_dirty ) {
