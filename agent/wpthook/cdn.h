@@ -112,6 +112,9 @@ CDN_PROVIDER cdnList[] = {
   {".cdncloud.net.au", "MediaCloud"},
   {".rncdn1.com", "Reflected Networks"},
   {".cdnsun.net", "CDNsun"},
+  {".mncdn.com", "Medianova"},
+  {".mncdn.net", "Medianova"},
+  {".mncdn.org", "Medianova"},
   {"END_MARKER", "END_MARKER"}
 };
 
