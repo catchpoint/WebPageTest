@@ -75,6 +75,7 @@ CDN_PROVIDER cdnList[] = {
   {".mncdn.com", _T("Medianova")},
   {".mncdn.net", _T("Medianova")},
   {".mncdn.org", _T("Medianova")},
+  {"cdn.jsdelivr.net", _T("jsDelivr")},
   {NULL, NULL}
 };
 

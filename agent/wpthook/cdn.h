@@ -115,6 +115,7 @@ CDN_PROVIDER cdnList[] = {
   {".mncdn.com", "Medianova"},
   {".mncdn.net", "Medianova"},
   {".mncdn.org", "Medianova"},
+  {"cdn.jsdelivr.net", "jsDelivr"},
   {"END_MARKER", "END_MARKER"}
 };
 
