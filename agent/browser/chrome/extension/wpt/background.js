@@ -356,8 +356,7 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptLoad') {
       wptSendEvent('load', 
                    '?timestamp=' + request['timestamp'] + 
-                   '&fixedViewport=' + request['fixedViewport'] +
-                   '&domCount=' + request['domCount']);
+                   '&fixedViewport=' + request['fixedViewport']);
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
@@ -375,7 +374,7 @@ chrome.extension.onRequest.addListener(
     }
     else if (request.message == 'wptDomCount') {
       wptSendEvent('domCount', 
-                   '&domCount=' + request['domCount']);
+                   '?domCount=' + request['domCount']);
     }
     else if (request.message == 'wptMarks') {
       if (request['marks'] != undefined &&
@@ -391,6 +390,9 @@ chrome.extension.onRequest.addListener(
       if (request['domCount'] != undefined)
         stats += 'domCount=' + request['domCount'];
       wptSendEvent('stats', stats);
+    } else if (request.message == 'wptResponsive') {
+      if (request['isResponsive'] != undefined)
+        wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -481,6 +483,10 @@ function wptExecuteTask(task) {
       case 'collectstats':
         g_processing_task = true;
         g_commandRunner.doCollectStats(wptTaskCallback);
+        break;
+      case 'checkresponsive':
+        g_processing_task = true;
+        g_commandRunner.doCheckResponsive(wptTaskCallback);
         break;
 
       default:

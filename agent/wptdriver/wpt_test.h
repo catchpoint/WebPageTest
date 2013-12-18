@@ -222,11 +222,11 @@ protected:
   CStringA  EncodeTask(ScriptCommand& command);
   bool      NavigationCommand(CString& command);
   void      FixURL(ScriptCommand& command);
-  bool      ProcessCommand(ScriptCommand& command, bool &consumed);
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
   void      ParseBlockCommand(CString block_list, bool add_head);
   int       lock_count_;
+  virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
 
   CRITICAL_SECTION cs_;
 

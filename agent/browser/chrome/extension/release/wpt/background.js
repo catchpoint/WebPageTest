@@ -13922,7 +13922,6 @@ wpt.commands.CommandRunner.prototype.doClearCache = function(options, callback) 
  * Implement the noscript command.
  */
 wpt.commands.CommandRunner.prototype.doNoScript = function() {
-  console.log("disabling javascript");
   this.chromeApi_.contentSettings.javascript.set({
     'primaryPattern': '<all_urls>',
     'setting': 'block'
@@ -13933,8 +13932,15 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
  * Implement the collectStats command.
  */
 wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  console.log("collecting stats");
   chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
+};
+
+wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'checkResponsive'},
       function(response) {
         if (callback != undefined)
           callback();
@@ -14693,8 +14699,7 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptLoad') {
       wptSendEvent('load', 
                    '?timestamp=' + request['timestamp'] + 
-                   '&fixedViewport=' + request['fixedViewport'] +
-                   '&domCount=' + request['domCount']);
+                   '&fixedViewport=' + request['fixedViewport']);
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
@@ -14712,7 +14717,7 @@ chrome.extension.onRequest.addListener(
     }
     else if (request.message == 'wptDomCount') {
       wptSendEvent('domCount', 
-                   '&domCount=' + request['domCount']);
+                   '?domCount=' + request['domCount']);
     }
     else if (request.message == 'wptMarks') {
       if (request['marks'] != undefined &&
@@ -14728,6 +14733,9 @@ chrome.extension.onRequest.addListener(
       if (request['domCount'] != undefined)
         stats += 'domCount=' + request['domCount'];
       wptSendEvent('stats', stats);
+    } else if (request.message == 'wptResponsive') {
+      if (request['isResponsive'] != undefined)
+        wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -14818,6 +14826,10 @@ function wptExecuteTask(task) {
       case 'collectstats':
         g_processing_task = true;
         g_commandRunner.doCollectStats(wptTaskCallback);
+        break;
+      case 'checkresponsive':
+        g_processing_task = true;
+        g_commandRunner.doCheckResponsive(wptTaskCallback);
         break;
 
       default:

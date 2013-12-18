@@ -116,6 +116,8 @@ public:
                           double &doc_total, double &end_total);
   void Lock();
   void UnLock();
+  void ResizeBrowserForResponsiveTest();
+  void CheckResponsive();
 
   // times
   LARGE_INTEGER _start;
@@ -151,6 +153,8 @@ public:
   CString _user_agent;
   int _fixed_viewport;
   int _dom_element_count;
+  int _is_responsive;
+  int _viewport_specified;
 
   bool  _active;
   int   _current_document;

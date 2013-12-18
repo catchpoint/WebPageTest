@@ -962,12 +962,28 @@ void WptTest::ParseBlockCommand(CString block_list, bool add_head) {
 
 /*-----------------------------------------------------------------------------
   The test is finished, insert the 2 dummy commands into the top of the
-  script to collect data
+  script to collect data (these are added to the head so they are in reverse
+  order from how they execute)
 -----------------------------------------------------------------------------*/
 void  WptTest::CollectData() {
   ScriptCommand cmd;
+
+  // Add the command that lets us know we have collected all of the data and it
+  // is time to report back
   cmd.command = _T("reportdata");
   _script_commands.AddHead(cmd);
+
+  // If we are at the end of the script, run the responsive site check
+  if (_script_commands.GetCount() == 1) {
+    cmd.command = _T("checkresponsive");
+    _script_commands.AddHead(cmd);
+
+    cmd.command = _T("resizeresponsive");
+    _script_commands.AddHead(cmd);
+  }
+
+  // Add the command to trigger the browser to collect in-page stats
+  // (before doing a responsive check where we resize the window)
   cmd.command = _T("collectstats");
   _script_commands.AddHead(cmd);
 }

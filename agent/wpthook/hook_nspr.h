@@ -49,11 +49,12 @@ typedef SECStatus (*PFN_SSL_SetURL)(PRFileDesc *fd, const char *url);
 
 class TestState;
 class TrackSockets;
+class WptTestHook;
 
 class NsprHook
 {
 public:
-  NsprHook(TrackSockets& sockets, TestState& test_state);
+  NsprHook(TrackSockets& sockets, TestState& test_state, WptTestHook& test);
   ~NsprHook();
   void Init();
 
@@ -69,6 +70,7 @@ public:
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
+  WptTestHook& _test;
   NCodeHookIA32* _hook;
 
   template <typename U> void GetFunctionByName(

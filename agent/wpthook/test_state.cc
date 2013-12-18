@@ -45,6 +45,7 @@ static const DWORD DATA_COLLECTION_INTERVAL = 100;
 static const DWORD START_RENDER_MARGIN = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
+static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -99,6 +100,8 @@ void TestState::Reset(bool cascade) {
   _on_load.QuadPart = 0;
   _fixed_viewport = -1;
   _dom_element_count = 0;
+  _is_responsive = -1;
+  _viewport_specified = -1;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -971,4 +974,30 @@ void TestState::Lock() {
 -----------------------------------------------------------------------------*/
 void TestState::UnLock() {
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+    Resize the browser window to a narrow width for checking to see if the
+    site is responsive
+-----------------------------------------------------------------------------*/
+void TestState::ResizeBrowserForResponsiveTest() {
+  RECT rect;
+  if (_frame_window && ::GetWindowRect(_frame_window, &rect)) {
+    int height = abs(rect.top - rect.bottom);
+    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                    RESPONSIVE_BROWSER_WIDTH, height, SWP_NOACTIVATE);
+    ::UpdateWindow(_frame_window);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  We are just going to grab a screen shot - the actual check is done in the
+  browser-specific extensions
+-----------------------------------------------------------------------------*/
+void TestState::CheckResponsive() {
+  OutputDebugStringA("CheckResponsive");
+  if (_frame_window) {
+    _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
+                            false);
+  }
 }

@@ -51,6 +51,7 @@ static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
+static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
@@ -222,6 +223,13 @@ void Results::SaveImages(void) {
       image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
     SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
   }
+  if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
+    OutputDebugStringA("CheckResponsive - saving image");
+    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+              true);
+  } else {
+    OutputDebugStringA("CheckResponsive - failed to get image");
+  }
 
   if (_test._video)
     SaveVideo();
@@ -237,47 +245,49 @@ void Results::SaveVideo(void) {
   POSITION pos = _screen_capture._captured_images.GetHeadPosition();
   while (pos) {
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
-    CxImage * img = new CxImage;
-    if (image.Get(*img)) {
-      DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
-      // we save the frames in increments of 100ms (for now anyway)
-      // round it to the closest interval
-      DWORD image_time = ((image_time_ms + 50) / 100);
-      if (last_image) {
-        RGBQUAD black = {0,0,0,0};
-        if (img->GetWidth() > width)
-          img->Crop(0, 0, img->GetWidth() - width, 0);
-        if (img->GetHeight() > height)
-          img->Crop(0, 0, 0, img->GetHeight() - height);
-        if (img->GetWidth() < width)
-          img->Expand(0, 0, width - img->GetWidth(), 0, black);
-        if (img->GetHeight() < height)
-          img->Expand(0, 0, 0, height - img->GetHeight(), black);
-        if (ImagesAreDifferent(last_image, img)) {
-          _visually_complete.QuadPart = image._capture_time.QuadPart;
-          file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                            image_time);
+    if (image._type != CapturedImage::RESPONSIVE_CHECK) {
+      CxImage * img = new CxImage;
+      if (image.Get(*img)) {
+        DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
+        // we save the frames in increments of 100ms (for now anyway)
+        // round it to the closest interval
+        DWORD image_time = ((image_time_ms + 50) / 100);
+        if (last_image) {
+          RGBQUAD black = {0,0,0,0};
+          if (img->GetWidth() > width)
+            img->Crop(0, 0, img->GetWidth() - width, 0);
+          if (img->GetHeight() > height)
+            img->Crop(0, 0, 0, img->GetHeight() - height);
+          if (img->GetWidth() < width)
+            img->Expand(0, 0, width - img->GetWidth(), 0, black);
+          if (img->GetHeight() < height)
+            img->Expand(0, 0, 0, height - img->GetHeight(), black);
+          if (ImagesAreDifferent(last_image, img)) {
+            _visually_complete.QuadPart = image._capture_time.QuadPart;
+            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+                              image_time);
+            SaveImage(*img, file_name, _test._image_quality);
+            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
+                              image_time);
+            SaveHistogram(*img, file_name);
+          }
+        } else {
+          width = img->GetWidth();
+          height = img->GetHeight();
+          // always save the first image at time zero
+          file_name = _file_base + _T("_progress_0000.jpg");
           SaveImage(*img, file_name, _test._image_quality);
-          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
-                            image_time);
+          file_name = _file_base + _T("_progress_0000.hist");
           SaveHistogram(*img, file_name);
         }
-      } else {
-        width = img->GetWidth();
-        height = img->GetHeight();
-        // always save the first image at time zero
-        file_name = _file_base + _T("_progress_0000.jpg");
-        SaveImage(*img, file_name, _test._image_quality);
-        file_name = _file_base + _T("_progress_0000.hist");
-        SaveHistogram(*img, file_name);
-      }
 
-      if (last_image)
-        delete last_image;
-      last_image = img;
+        if (last_image)
+          delete last_image;
+        last_image = img;
+      }
+      else
+        delete img;
     }
-    else
-      delete img;
   }
 
   if (last_image)
@@ -315,10 +325,11 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveImage(CxImage& image, CString file, BYTE quality) {
+void Results::SaveImage(CxImage& image, CString file, BYTE quality,
+                        bool force_small) {
   if (image.IsValid()) {
     CxImage img(image);
-    if (img.GetWidth() > 600 && img.GetHeight() > 600)
+    if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
       img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
 
     img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
@@ -696,6 +707,9 @@ void Results::SavePageData(OptimizationChecks& checks){
       result += buff;
     } else
       result += "\t";
+    // Is Responsive
+    buff.Format("%d\t", _test_state._is_responsive);
+    result += buff;
 
     result += "\r\n";
 

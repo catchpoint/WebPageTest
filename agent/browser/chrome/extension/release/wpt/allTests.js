@@ -5423,7 +5423,9 @@ wpt.contentScript.collectStats_ = function() {
   } catch(e){
   }
 
-  var domCount = document.getElementsByTagName("*").length;
+  var domCount = document.documentElement.getElementsByTagName("*").length;
+  if (domCount === undefined)
+    domCount = 0;
   chrome.extension.sendRequest({'message': 'wptStats',
                                 'domCount': domCount}, function(response) {});
   
@@ -5454,6 +5456,28 @@ wpt.contentScript.collectStats_ = function() {
   // Send the times back to the extension.
   chrome.extension.sendRequest(timingRequest, function(response) {});
 };
+
+wpt.contentScript.checkResponsive_ = function() {
+  var response = { 'message': 'wptResponsive' };
+  
+  // check to see if any form of the inner width is bigger than the window size (scroll bars)
+  // default to assuming that the site is responsive and only trigger if we see a case where
+  // we likely have scroll bars
+  var isResponsive = 1;
+  var bsw = document.body.scrollWidth;
+  var desw = document.documentElement.scrollWidth;
+  var wiw = window.innerWidth;
+  if (bsw > wiw)
+    isResponsive = 0;
+  var nodes = document.body.childNodes;
+  for (i in nodes) { 
+    if (nodes[i].scrollWidth > wiw)
+      isResponsive = 0;
+  }
+  response['isResponsive'] = isResponsive;
+  
+  chrome.extension.sendRequest(response, function() {});
+}
 
 // This script is automatically injected into every page before it loads.
 // We need to use it to register for the earliest onLoad callback
@@ -5554,6 +5578,8 @@ chrome.extension.onRequest.addListener(
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
       wpt.contentScript.collectStats_();
+    } else if (request.message == 'checkResponsive') {
+      wpt.contentScript.checkResponsive_();
     }
     sendResponse({});
 });
@@ -18291,7 +18317,6 @@ wpt.commands.CommandRunner.prototype.doClearCache = function(options, callback) 
  * Implement the noscript command.
  */
 wpt.commands.CommandRunner.prototype.doNoScript = function() {
-  console.log("disabling javascript");
   this.chromeApi_.contentSettings.javascript.set({
     'primaryPattern': '<all_urls>',
     'setting': 'block'
@@ -18302,8 +18327,15 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
  * Implement the collectStats command.
  */
 wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  console.log("collecting stats");
   chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
+};
+
+wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'checkResponsive'},
       function(response) {
         if (callback != undefined)
           callback();

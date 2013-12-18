@@ -360,7 +360,6 @@ wpt.commands.CommandRunner.prototype.doClearCache = function(options, callback) 
  * Implement the noscript command.
  */
 wpt.commands.CommandRunner.prototype.doNoScript = function() {
-  console.log("disabling javascript");
   this.chromeApi_.contentSettings.javascript.set({
     'primaryPattern': '<all_urls>',
     'setting': 'block'
@@ -371,8 +370,15 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
  * Implement the collectStats command.
  */
 wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  console.log("collecting stats");
   chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+      function(response) {
+        if (callback != undefined)
+          callback();
+      });
+};
+
+wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'checkResponsive'},
       function(response) {
         if (callback != undefined)
           callback();

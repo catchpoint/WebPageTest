@@ -63,7 +63,10 @@ private:
                     CStringA response_code_string,
                     CStringA response_data);
   CString GetParam(const CString query_string, const CString key) const;
-  DWORD GetDwordParam(const CString query_string, const CString key) const;
+  bool GetDwordParam(const CString query_string, const CString key,
+                     DWORD& value) const;
+  bool GetIntParam(const CString query_string, const CString key,
+                   int& value) const;
   CString GetUnescapedParam(const CString query_string,
                              const CString key) const;
   CString GetPostBody(struct mg_connection *conn,

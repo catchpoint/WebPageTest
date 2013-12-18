@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "request.h"
 #include "test_state.h"
 #include "track_sockets.h"
+#include "wpt_test_hook.h"
 
 #include "hook_nspr.h"
 
@@ -71,9 +72,11 @@ SECStatus PR_CALLBACK AuthenticateCertificate(void *arg,
 // end of C hook functions
 
 
-NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state) :
+NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state,
+                   WptTestHook& test) :
     _sockets(sockets),
     _test_state(test_state),
+    _test(test),
     _hook(NULL), 
     _SSL_ImportFD(NULL),
     _PR_Close(NULL),
@@ -226,7 +229,7 @@ SECStatus NsprHook::SSL_SetURL(PRFileDesc *fd, const char *url) {
   // Force our own certificate validator in the path.
   // This call is made after Firefox sets their auth hook so we
   // just override theirs
-  if (_SSL_AuthCertificateHook != NULL)
+  if (_test._ignore_ssl && _SSL_AuthCertificateHook != NULL)
     _SSL_AuthCertificateHook(fd, AuthenticateCertificate, NULL);
   if (_SSL_SetURL)
     ret = _SSL_SetURL(fd, url);

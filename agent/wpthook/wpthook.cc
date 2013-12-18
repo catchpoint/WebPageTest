@@ -51,7 +51,7 @@ WptHook::WptHook(void):
   ,message_window_(NULL)
   ,test_state_(results_, screen_capture_, test_, dev_tools_, trace_)
   ,winsock_hook_(dns_, sockets_, test_state_)
-  ,nspr_hook_(sockets_, test_state_)
+  ,nspr_hook_(sockets_, test_state_, test_)
   ,schannel_hook_(sockets_, test_state_)
   ,wininet_hook_(sockets_, test_state_, test_)
   ,gdi_hook_(test_state_, *this)
@@ -62,7 +62,7 @@ WptHook::WptHook(void):
   ,dns_(test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
-  ,test_(*this, shared_test_timeout) {
+  ,test_(*this, test_state_, shared_test_timeout) {
 
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -115,6 +115,7 @@ void WptHook::Init(){
 #ifdef DEBUG
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
+  test_.LoadFromFile();
   if (!test_state_.gdi_only_) {
     winsock_hook_.Init();
     nspr_hook_.Init();
@@ -123,7 +124,6 @@ void WptHook::Init(){
   }
   gdi_hook_.Init();
   test_state_.Init();
-  test_.LoadFromFile();
   ResetEvent(background_thread_started_);
   background_thread_ = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
   if (background_thread_started_ &&
