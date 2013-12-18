@@ -139,7 +139,6 @@ void TestServer::MongooseCallback(enum mg_event event,
 
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
-    OutputDebugStringA(CStringA(request_info->uri) + request_info->query_string);
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
