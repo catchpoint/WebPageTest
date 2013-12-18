@@ -224,11 +224,8 @@ void Results::SaveImages(void) {
     SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    OutputDebugStringA("CheckResponsive - saving image");
     SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
               true);
-  } else {
-    OutputDebugStringA("CheckResponsive - failed to get image");
   }
 
   if (_test._video)

@@ -139,6 +139,7 @@ void TestServer::MongooseCallback(enum mg_event event,
 
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
+    //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
@@ -386,8 +387,10 @@ bool TestServer::GetDwordParam(const CString query_string,
                                 const CString key, DWORD& value) const {
   bool found = false;
   CString string_value = GetParam(query_string, key);
-  if (string_value.GetLength())
+  if (string_value.GetLength()) {
+    found = true;
     value = _ttoi(string_value);
+  }
   return found;
 }
 
@@ -395,8 +398,10 @@ bool TestServer::GetIntParam(const CString query_string,
                                 const CString key, int& value) const {
   bool found = false;
   CString string_value = GetParam(query_string, key);
-  if (string_value.GetLength())
+  if (string_value.GetLength()) {
+    found = true;
     value = _ttoi(string_value);
+  }
   return found;
 }
 

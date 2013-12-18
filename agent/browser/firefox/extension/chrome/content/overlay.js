@@ -172,11 +172,12 @@ wpt.moz.main.onNavigate = function() {
 
 // Send onload & W3C navigation timing events.
 wpt.moz.main.onLoad = function(win) {
+  var win = window.content.document.defaultView.wrappedJSObject;
   g_active = false;
   var fixedViewport = 0;
-  if (document.querySelector("meta[name=viewport]"))
+  if (win.document.querySelector("meta[name=viewport]"))
     fixedViewport = 1;
-  var domCount = document.getElementsByTagName("*").length;
+  var domCount = win.document.getElementsByTagName("*").length;
   wpt.moz.main.sendEventToDriver_('load?fixedViewport=' +
       fixedViewport + '&domCount=' + domCount);
 };
@@ -341,6 +342,10 @@ wpt.moz.main.executeTask = function(task) {
       case 'collectstats':
         g_processing_task = true;
         wpt.moz.main.collectStats(wpt.moz.main.callback);
+        break;
+      case 'checkresponsive':
+        g_processing_task = true;
+        wpt.moz.main.checkResponsive(wpt.moz.main.callback);
         break;
 
       default:
@@ -573,6 +578,29 @@ wpt.moz.main.collectStats = function(callback) {
     wpt.moz.main.sendEventToDriver_('window_timing', timingParams);
   }
   
+  if (callback)
+    callback();
+};
+
+// check to see if any form of the inner width is bigger than the window size (scroll bars)
+// default to assuming that the site is responsive and only trigger if we see a case where
+// we likely have scroll bars
+wpt.moz.main.checkResponsive = function(callback) {
+  var win = window.content.document.defaultView.wrappedJSObject;
+
+  var isResponsive = 1;
+  var bsw = win.document.body.scrollWidth;
+  var desw = win.document.documentElement.scrollWidth;
+  var wiw = win.innerWidth;
+  if (bsw > wiw)
+    isResponsive = 0;
+  var nodes = win.document.body.childNodes;
+  for (i in nodes) { 
+    if (nodes[i].scrollWidth > wiw)
+      isResponsive = 0;
+  }
+  wpt.moz.main.sendEventToDriver_('responsive', {'isResponsive':isResponsive});
+
   if (callback)
     callback();
 };
