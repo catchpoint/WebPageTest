@@ -552,7 +552,17 @@ $page_description = "Website performance test result$testLabel.";
                     }
                 ?>
                 <tr>
-                    <td align="left" valign="middle"><a href="/result/<?php echo "$id/$run/breakdown/"; ?>">Content Breakdown</a></td>
+                    <td align="left" valign="middle">
+                        <?php if( FRIENDLY_URLS )
+                        {
+                            echo "<a href=\"/result/$id/$run/breakdown/\">Content Breakdown</a>";
+                        }
+                        else
+                        {
+                            echo "<a href=\"/breakdown.php?id=$id&run=$run&cached=0\">Content Breakdown</a>";
+                        }
+                        ?>
+                    </td>
                         <?php
                         $span = 2;
                         if($pageData[$run][0]['optimization_checked'])
