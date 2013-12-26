@@ -171,7 +171,7 @@
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2]))) {
                     $test['browser'] = trim($matches[2]);
-                    
+
                     // see if the requested browser is a custom browser
                   if (is_dir('./browsers') &&
                       is_file('./browsers/browsers.ini') &&
@@ -1455,10 +1455,23 @@ function LogTest(&$test, $testId, $url)
     if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
         $pageLoads *= $test['navigateCount'];
 
-    $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
-    $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
-    $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
-    $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\t$pageLoads" . "\r\n";
+    $line_data = array(
+        'date' => gmdate("Y-m-d G:i:s"),
+        'ip' => $ip,
+        'guid' => $testId,
+        'url' => $url,
+        'location' => $test['locationText'],
+        'private' => $test['private'],
+        'testUID' => $test['uid'],
+        'testUser' => $test['user'],
+        'video' => $video,
+        'label' => $test['label'],
+        'o' => $test['owner'],
+        'key' => $test['key'],
+        'count' => $pageLoads,
+    );
+
+    $log = makeLogLine($line_data);
 
     error_log($log, 3, $filename);
 }
@@ -1581,7 +1594,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
-        
+
         // fix up the location text for Appurify tests
         if (array_key_exists('loc_type', $test) && $test['loc_type'] == 'Appurify') {
           require_once('./lib/appurify.inc.php');
