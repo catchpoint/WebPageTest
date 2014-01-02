@@ -6,6 +6,8 @@ var CloseRequestDialog = function(hash) {
     }
     $('#radio1').attr('checked', 'checked');
     $("#request-dialog-radio").buttonset('refresh');
+    $("#dialog-contents div.dialog-tab-content").hide();
+    $("#request-details").show();
 }
 
 // initialize the pop-up dialog        
