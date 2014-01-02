@@ -51,6 +51,10 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
     define('VER_TIMELINE', '');       // Leave the timeline version empty
 }
 
+$userIsBot = false;
+if (preg_match('/robot|spider|crawler|indexer|WeSEE|AppEngine-Google|Googlebot|^$/i', $_SERVER['HTTP_USER_AGENT']))
+  $userIsBot = true;
+
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 66);           // version of the sitewide css file
@@ -189,7 +193,8 @@ if (strlen($id)) {
     if ($id !== @$_COOKIE['tid']) {
         setcookie('tid', $id);  // update session cookie
     }
-    RestoreTest($id);   // restore the test if it is archived (and deleted)
+    if (!$userIsBot)
+      RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
     if (@$settings['archive'] && !is_dir($testPath) &&
@@ -208,7 +213,8 @@ if (strlen($id)) {
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
-        touch("$testPath/testinfo.ini");
+        if (!$userIsBot)
+          touch("$testPath/testinfo.ini");
     }
     $testDate = null;
     if (gz_is_file("$testPath/testinfo.json")) {

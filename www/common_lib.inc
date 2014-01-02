@@ -1091,8 +1091,9 @@ function FixUrlSlash($url)
 */
 function RestoreTest($id)
 {
+    global $userIsBot;
     $ret = false;
-    if (ValidateTestId($id)) {
+    if (!$userIsBot && ValidateTestId($id)) {
         $testPath = './' . GetTestPath($id);
         $archive_dir = GetSetting('archive_dir');
         $archive_s3_url = GetSetting('archive_s3_url');

@@ -44,7 +44,7 @@ $now = time();
 
 if ((isset($archive_dir) && strlen($archive_dir)) ||
     (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
-    //CheckRelay();
+    CheckRelay();
     CheckOldDir('./results/old');
 
     // Archive the actual tests
@@ -104,13 +104,13 @@ function CheckRelay() {
                         if ($year != '.' && $year != '..') {
                             $yearDir = "$keydir/$year";
                             if (is_numeric($year)) {
-                                if (ElapsedDays($year, 1, 1) < 10) {
+                                if (ElapsedDays($year, '01', '01') < 10) {
                                     $months = scandir($yearDir);
                                     foreach( $months as $month ) {
                                         if ($month != '.' && $month != '..') {
                                             $monthDir = "$yearDir/$month";
                                             if (is_numeric($month)) {
-                                                if (ElapsedDays($year, $month, 1) < 10) {
+                                                if (ElapsedDays($year, $month, '01') < 10) {
                                                     $days = scandir($monthDir);
                                                     foreach( $days as $day ) {
                                                         if ($day != '.' && $day != '..') {
@@ -126,6 +126,7 @@ function CheckRelay() {
                                                                     delTree($dayDir);
                                                                 }
                                                             }
+                                                            @rmdir($dayDir);
                                                         }
                                                     }
                                                 } else {
@@ -138,6 +139,7 @@ function CheckRelay() {
                                                     delTree($monthDir);
                                                 }
                                             }
+                                            @rmdir($monthDir);
                                         }
                                     }
                                 } else {
@@ -150,11 +152,13 @@ function CheckRelay() {
                                     delTree($yearDir);
                                 }
                             }
+                            @rmdir($yearDir);
                         }
                     }
                 } else {
                     delTree($keydir);
                 }
+                @rmdir($keydir);
             } else {
                 unlink($keydir);
             }
