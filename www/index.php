@@ -95,8 +95,6 @@ $loc = ParseLocations($locations);
               echo "<input type=\"hidden\" name=\"shard\" value=\"{$_REQUEST['shard']}\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo "<input type=\"hidden\" name=\"discard\" value=\"{$_REQUEST['discard']}\">\n";
-            if (array_key_exists('continuousVideo', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"continuousVideo\" value=\"{$_REQUEST['continuousVideo']}\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -340,6 +338,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox" style="float: left;width: auto;">
+                                        <label for="continuousVideo" class="auto_width">
+                                            Continuous Video Capture<br>
+                                            <small>Unstable/experimental, may cause tests to fail</small>
+                                        </label>
+                                    </li>
+                                    <li>
                                         <?php
                                         $checked = '';
                                         if (array_key_exists('keepua', $settings) && $settings['keepua'])
@@ -404,30 +409,6 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
                                         <label for="netlog" class="auto_width">
                                             Capture Network Log
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
-                                        <label for="spdy3" class="auto_width">
-                                            Force Spdy version 3
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="spdyNoSSL" id="spdyNoSSL" class="checkbox" style="float: left;width: auto;">
-                                        <label for="spdyNoSSL" class="auto_width">
-                                            Use SPDY without SSL
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="swrender" id="swrender" class="checkbox" style="float: left;width: auto;">
-                                        <label for="swrender" class="auto_width">
-                                            Force Software Rendering (disable GPU acceleration)
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="disableThreadedParser" id="disableThreadedParser" class="checkbox" style="float: left;width: auto;">
-                                        <label for="disableThreadedParser" class="auto_width">
-                                            Disable Threaded HTML Parser
                                         </label>
                                     </li>
                                     <li>
