@@ -4,6 +4,7 @@
 /dat/*.dat
 /dat/*.json
 /dat/*.lock
+/dat/*.db
 /images/sponsors/
 /log/
 /log.txt

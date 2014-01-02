@@ -22,7 +22,7 @@ foreach($compTests as $t) {
         if (ValidateTestId($test['id'])) {
             $test['cached'] = 0;
             $test['end'] = $endTime;
-            
+
             for ($i = 1; $i < count($parts); $i++) {
                 $p = explode(':', $parts[$i]);
                 if (count($p) >= 2) {
@@ -36,22 +36,22 @@ foreach($compTests as $t) {
                         $test['end'] = trim($p[1]);
                 }
             }
-            
+
             RestoreTest($test['id']);
             $test['path'] = GetTestPath($test['id']);
             $test['pageData'] = loadAllPageData($test['path']);
-            
+
             $info = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
             if (isset($info) && is_array($info)) {
-                if (array_key_exists('discard', $info) && 
-                    $info['discard'] >= 1 && 
+                if (array_key_exists('discard', $info) &&
+                    $info['discard'] >= 1 &&
                     array_key_exists('priority', $info) &&
                     $info['priority'] >= 1) {
                     $defaultInterval = 100;
                 }
                 $test['url'] = $info['url'];
             }
-            
+
             $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
             if ($testInfo !== FALSE) {
                 if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
@@ -92,13 +92,13 @@ foreach($compTests as $t) {
                 } else {
                     $test['done'] = false;
                     $ready = false;
-                    
+
                     if( isset($testInfo['test']) && isset($testInfo['test']['startTime']) )
                         $test['started'] = true;
                     else
                         $test['started'] = false;
                 }
-                
+
                 $tests[] = $test;
             }
         }
@@ -144,12 +144,13 @@ $interval /= 100;
 
 /**
 * Load information about each of the tests (particularly about the video frames)
-* 
+*
 */
 function LoadTestData() {
     global $tests;
     global $admin;
     global $supportsAuth;
+    global $user;
 
     $count = 0;
     foreach( $tests as &$test ) {
@@ -161,25 +162,31 @@ function LoadTestData() {
         if (strlen($url)) {
             $test['url'] = $url;
         }
-        
+
         if( array_key_exists('label', $test) && strlen($test['label']) )
             $test['name'] = $test['label'];
         else {
             $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
             $test['name'] = trim($testInfo['label']);
         }
+
+        // See if we have an overridden test label in the sqlite DB
+        $new_label = getLabel($test['id'], $user);
+        if (!empty($new_label)) {
+            $test['name'] = $new_label;
+        }
+
         if( !strlen($test['name']) ) {
             $test['name'] = $test['url'];
             $test['name'] = str_replace('http://', '', $test['name']);
             $test['name'] = str_replace('https://', '', $test['name']);
         }
         $test['index'] = $count;
-        $test['name'] = "$count: {$test['name']}";
-        
+
         $videoPath = "./$testPath/video_{$test['run']}";
         if( $test['cached'] )
             $videoPath .= '_cached';
-            
+
         $test['video'] = array();
         if( is_dir($videoPath) ) {
             $test['video']['start'] = 20000;
