@@ -966,6 +966,7 @@ function LoadMedianData($benchmark, $test_time) {
 function TSVEncode(&$tsv) {
     $out = array();
     $rows = explode("\n", $tsv);
+    date_default_timezone_set('UTC');
     foreach($rows as &$row) {
         $row = trim($row);
         if (strlen($row)) {
@@ -975,7 +976,10 @@ function TSVEncode(&$tsv) {
             } else {
                 $out_row = array();
                 foreach($pieces as $column => $value) {
-                    $out_row[trim($columns[$column])] = trim($value);
+                    $name = trim($columns[$column]);
+                    if ($name == 'Date')
+                      $out_row['time'] = strtotime(trim($value));
+                    $out_row[$name] = trim($value);
                 }
                 $out[] = $out_row;
             }

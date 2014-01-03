@@ -86,7 +86,7 @@ if (array_key_exists('f', $_REQUEST)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -290,6 +290,15 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         }
         $out_data[$bmname][$metric] = array();
         $out_data[$bmname][$metric]['FV'] = TSVEncode($tsv);
+        foreach ($out_data[$bmname][$metric]['FV'] as $index => &$entry) {
+          if (is_array($entry) && array_key_exists('URL', $entry)) {
+            $urlIndex = intval($entry['URL']);
+            unset($entry['URL']);
+            if (array_key_exists($urlIndex, $meta))
+              foreach($meta[$urlIndex] as $key => $value)
+                $entry[$key] = $value;
+          }
+        }
     }
     if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
@@ -321,6 +330,15 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         $tsv = LoadTestDataTSV($benchmark['name'], 1, $metric, $test_time, $meta, $loc, $annotations);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
+            foreach ($out_data[$bmname][$metric]['RV'] as $index => &$entry) {
+              if (is_array($entry) && array_key_exists('URL', $entry)) {
+                $urlIndex = intval($entry['URL']);
+                unset($entry['URL']);
+                if (array_key_exists($urlIndex, $meta))
+                  foreach($meta[$urlIndex] as $key => $value)
+                    $entry[$key] = $value;
+              }
+            }
         }
         if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;
