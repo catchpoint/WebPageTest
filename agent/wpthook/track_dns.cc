@@ -177,6 +177,40 @@ bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
 }
 
 /*-----------------------------------------------------------------------------
+  See if we can find a DNS lookup for the given host
+-----------------------------------------------------------------------------*/
+bool TrackDns::Find(CString name, DNSAddressList &addresses,
+                    LARGE_INTEGER& start, LARGE_INTEGER& end) {
+  bool found = false;
+  addresses.RemoveAll();
+  EnterCriticalSection(&cs);
+  POSITION pos = _dns_lookups.GetStartPosition();
+  while (pos && !found) {
+    DnsInfo * info = NULL;
+    void * key = NULL;
+    _dns_lookups.GetNextAssoc(pos, key, info);
+    if (info && info->_success && name == info->_name) {
+      found = true;
+      start = info->_start;
+      end = info->_end;
+    }
+  }
+  if (found) {
+    pos = _host_addresses.GetHeadPosition();
+    bool done = false;
+    while (pos && !done) {
+      DnsHostAddresses& host_addresses = _host_addresses.GetNext(pos);
+      if (host_addresses.name_ == name) {
+        addresses.AddTailList(&host_addresses.addresses_);
+        done = true;
+      }
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return found;
+}
+
+/*-----------------------------------------------------------------------------
   Find the earliest start time for a DNS lookup after the given time
 -----------------------------------------------------------------------------*/
 LONGLONG TrackDns::GetEarliest(LONGLONG& after) {

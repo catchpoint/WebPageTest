@@ -52,7 +52,7 @@ WptHook::WptHook(void):
   ,test_state_(results_, screen_capture_, test_, dev_tools_, trace_)
   ,winsock_hook_(dns_, sockets_, test_state_)
   ,nspr_hook_(sockets_, test_state_, test_)
-  ,schannel_hook_(sockets_, test_state_)
+  ,schannel_hook_(sockets_, test_state_, test_)
   ,wininet_hook_(sockets_, test_state_, test_)
   ,gdi_hook_(test_state_, *this)
   ,sockets_(requests_, test_state_, test_)

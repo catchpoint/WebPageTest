@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include <Wininet.h>
 #include "requests.h"
 #include "test_state.h"
 #include "track_dns.h"
@@ -66,6 +67,7 @@ void Requests::Reset() {
   while (!_requests.IsEmpty())
     delete _requests.RemoveHead();
   browser_request_data_.RemoveAll();
+  _start_browser_clock = 0;
   LeaveCriticalSection(&cs);
 }
 
@@ -248,7 +250,7 @@ Request * Requests::GetActiveRequest(DWORD socket_id) {
 void Requests::ProcessBrowserRequest(CString request_data) {
   CString browser, url, initiator, initiator_line, initiator_column;
   CStringA request_headers, response_headers;
-  double  start_time = 0, end_time = 0, first_byte = 0;
+  double  start_time = 0, end_time = 0, first_byte = 0, request_time = 0;
   long  dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
         ssl_start = -1, ssl_end = -1, send_start = -1, send_end = -1,
         headers_end = -1, connection = 0, error_code = 0, 
@@ -302,23 +304,25 @@ void Requests::ProcessBrowserRequest(CString request_data) {
             else if (!key.CompareNoCase(_T("connectionId")))
               connection = _ttol(value);
             else if (!key.CompareNoCase(_T("timing.dnsStart")))
-              dns_start = _ttol(value);
+              dns_start = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.dnsEnd")))
-              dns_end = _ttol(value);
+              dns_end = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.connectStart")))
-              connect_start = _ttol(value);
+              connect_start = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.connectEnd")))
-              connect_end = _ttol(value);
+              connect_end = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.sslStart")))
-              ssl_start = _ttol(value);
+              ssl_start = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.sslEnd")))
-              ssl_end = _ttol(value);
+              ssl_end = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.sendStart")))
-              send_start = _ttol(value);
+              send_start = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.sendEnd")))
-              send_end = _ttol(value);
+              send_end = (int)(_ttof(value) + 0.5);
             else if (!key.CompareNoCase(_T("timing.receiveHeadersEnd")))
-              headers_end = _ttol(value);
+              headers_end = (int)(_ttof(value) + 0.5);
+            else if (!key.CompareNoCase(_T("timing.requestTime")))
+              request_time = _ttof(value) * 1000.0;
           }
         }
       } else if (processing_request) {
@@ -339,6 +343,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     LeaveCriticalSection(&cs);
   }
   _test_state.ActivityDetected();
+  if (request_time)
+    start_time = request_time;
   if (end_time > 0 && start_time > 0) {
     Request * request = new Request(_test_state, connection, _sockets, _dns,
                                     _test, false, *this);
@@ -347,6 +353,34 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
     request->_bytes_in = bytes_in;
+
+    // See if we can map the browser's internal clock timestamps to our
+    // performance counters.  If we have a DNS lookup we can match up or a
+    // likely socket connect then we should be able to.
+    if (_start_browser_clock == 0) {
+      if (dns_end != -1) {
+        // get the host name
+        URL_COMPONENTS parts;
+        memset(&parts, 0, sizeof(parts));
+        TCHAR szHost[10000];
+        memset(szHost, 0, sizeof(szHost));
+        parts.lpszHostName = szHost;
+        parts.dwHostNameLength = _countof(szHost);
+        parts.dwStructSize = sizeof(parts);
+        if (InternetCrackUrl((LPCTSTR)url, 0, 0, &parts)) {
+          CString host(szHost);
+          DNSAddressList addresses;
+          LARGE_INTEGER match_dns_start, match_dns_end;
+          if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
+            double dns_end_clock_time = start_time + dns_end;
+            // Figure out what the clock time would have been at our perf
+            // counter start time.
+            _start_browser_clock = dns_end_clock_time -
+                _test_state.ElapsedMsFromStart(match_dns_end);
+          }
+        }
+      }
+    }
 
     bool already_connected = false;
     if (connection) {
@@ -359,32 +393,44 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       request->_is_ssl = false;
     // figure out the conversion from browser time to perf counter
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
-    request->_end.QuadPart = now.QuadPart;
-    request->_start.QuadPart = now.QuadPart - 
+    if (_start_browser_clock != 0)
+      request->_end.QuadPart = _test_state._start.QuadPart +
+          (LONGLONG)((end_time - _start_browser_clock)  * ms_freq);
+    else
+      request->_end.QuadPart = now.QuadPart;
+    request->_start.QuadPart = request->_end.QuadPart - 
                 (LONGLONG)((end_time - start_time) * ms_freq);
-    LONGLONG start = request->_start.QuadPart;
     if (first_byte > 0) {
-      request->_first_byte.QuadPart = now.QuadPart - 
+      request->_first_byte.QuadPart = request->_end.QuadPart - 
                 (LONGLONG)((end_time - first_byte) * ms_freq);
     }
-    // if we have request timing info, use it instead
-    if (headers_end != -1 && send_start != -1 && headers_end >= send_start) {
-      request->_start.QuadPart = request->_first_byte.QuadPart - 
-          (LONGLONG)((headers_end - send_start) * ms_freq);
-    }
+    // if we have request timing info, the real start is sent directly
+    LONGLONG timing_baseline = request->_start.QuadPart;
+    if (send_start >= 0)
+      request->_start.QuadPart = timing_baseline +
+                                 (LONGLONG)(send_start * ms_freq);
+    if (headers_end != -1 && headers_end >= send_start)
+      request->_first_byte.QuadPart = timing_baseline + 
+                                      (LONGLONG)(headers_end * ms_freq);
     if (!already_connected) {
       if (dns_start > -1 && dns_end > -1) {
-        request->_dns_start.QuadPart = start + (dns_start * ms_freq);
-        request->_dns_end.QuadPart = start + (dns_end * ms_freq);
+        request->_dns_start.QuadPart = timing_baseline +
+                                       (LONGLONG)(dns_start * ms_freq);
+        request->_dns_end.QuadPart = timing_baseline +
+                                     (LONGLONG)(dns_end * ms_freq);
       }
       if (connect_start > -1 && connect_end > -1) {
         if (ssl_start > -1 && ssl_end > -1) {
           connect_end = ssl_start;
-          request->_ssl_start.QuadPart = start + (ssl_start * ms_freq);
-          request->_ssl_end.QuadPart = start + (ssl_end * ms_freq);
+          request->_ssl_start.QuadPart = timing_baseline +
+                                         (LONGLONG)(ssl_start * ms_freq);
+          request->_ssl_end.QuadPart = timing_baseline +
+                                       (LONGLONG)(ssl_end * ms_freq);
         }
-        request->_connect_start.QuadPart = start + (connect_start * ms_freq);
-        request->_connect_end.QuadPart = start + (connect_end * ms_freq);
+        request->_connect_start.QuadPart = timing_baseline +
+                                           (LONGLONG)(connect_start * ms_freq);
+        request->_connect_end.QuadPart = timing_baseline +
+                                         (LONGLONG)(connect_end * ms_freq);
       }
     }
     if (request_headers.GetLength()) {

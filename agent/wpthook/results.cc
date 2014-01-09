@@ -743,17 +743,19 @@ void Results::ProcessRequests(void) {
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request && request->_start.QuadPart && 
-        (!new_start || request->_start.QuadPart < new_start))
-        new_start = request->_start.QuadPart;
+      if (request) {
+        request->MatchConnections();
+        if (request->_start.QuadPart && 
+            (!new_start || request->_start.QuadPart < new_start))
+          new_start = request->_start.QuadPart;
+        if (request->_dns_start.QuadPart && 
+            (!new_start || request->_dns_start.QuadPart < new_start))
+          new_start = request->_dns_start.QuadPart;
+        if (request->_connect_start.QuadPart && 
+            (!new_start || request->_connect_start.QuadPart < new_start))
+          new_start = request->_connect_start.QuadPart;
+      }
     }
-    LONGLONG earliest_dns = _dns.GetEarliest(_test_state._start.QuadPart);
-    if (earliest_dns && (!new_start || earliest_dns < new_start))
-      new_start = earliest_dns;
-    LONGLONG earliest_socket =
-      _sockets.GetEarliest(_test_state._start.QuadPart);
-    if (earliest_socket && (!new_start || earliest_socket < new_start))
-      new_start = earliest_socket;
     if (new_start)
       _test_state._start.QuadPart = new_start;
   }

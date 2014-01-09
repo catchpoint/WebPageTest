@@ -143,6 +143,7 @@ void WptTest::Reset(void) {
   _save_response_bodies = false;
   _save_html_body = false;
   _preserve_user_agent = false;
+  _check_responsive = false;
   _browser_width = BROWSER_WIDTH;
   _browser_height = BROWSER_HEIGHT;
   _viewport_width = 0;
@@ -251,6 +252,8 @@ bool WptTest::Load(CString& test) {
           _save_html_body = true;
         else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
           _preserve_user_agent = true;
+        else if (!key.CompareNoCase(_T("responsive")) && _ttoi(value.Trim()))
+          _check_responsive = true;
         else if (!key.CompareNoCase(_T("client")))
           _client = value.Trim();
         else if (!key.CompareNoCase(_T("customRule"))) {
@@ -974,7 +977,7 @@ void  WptTest::CollectData() {
   _script_commands.AddHead(cmd);
 
   // If we are at the end of the script, run the responsive site check
-  if (_script_commands.GetCount() == 1) {
+  if (_check_responsive && _script_commands.GetCount() == 1) {
     cmd.command = _T("checkresponsive");
     _script_commands.AddHead(cmd);
 

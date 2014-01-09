@@ -226,6 +226,7 @@ public:
   void DataOut(DataChunk& chunk);
   void SocketClosed();
 
+  void MatchConnections();
   bool Process();
   CStringA GetRequestHeader(CStringA header);
   CStringA GetResponseHeader(CStringA header);
