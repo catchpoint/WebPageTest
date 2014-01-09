@@ -55,7 +55,6 @@ static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
-    _T("--ignore-certificate-errors"),
     _T("--disable-background-networking"),
     _T("--no-default-browser-check"),
     _T("--no-first-run"),
@@ -66,6 +65,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--allow-running-insecure-content"),
     _T("--enable-npn")
 };
+static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
+    _T(" --ignore-certificate-errors");
  
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
     _T("-no-remote")
@@ -137,6 +138,8 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
             lstrcat(cmdLine, netlog);
           }
+          if (_test._ignore_ssl)
+            lstrcat(cmdLine, CHROME_IGNORE_CERT_ERRORS);
           if (_test._spdy3)
             lstrcat(cmdLine, CHROME_SPDY3);
           if (_test._force_software_render)
