@@ -95,6 +95,8 @@ $loc = ParseLocations($locations);
               echo "<input type=\"hidden\" name=\"shard\" value=\"{$_REQUEST['shard']}\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo "<input type=\"hidden\" name=\"discard\" value=\"{$_REQUEST['discard']}\">\n";
+            if (array_key_exists('responsive', $_REQUEST))
+              echo "<input type=\"hidden\" name=\"responsive\" value=\"{$_REQUEST['responsive']}\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

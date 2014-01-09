@@ -995,7 +995,6 @@ void TestState::ResizeBrowserForResponsiveTest() {
   browser-specific extensions
 -----------------------------------------------------------------------------*/
 void TestState::CheckResponsive() {
-  OutputDebugStringA("CheckResponsive");
   if (_frame_window) {
     _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
                             false);

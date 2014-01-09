@@ -277,6 +277,7 @@ void TestServer::MongooseCallback(enum mg_event event,
                   test_state_._is_responsive);
       GetIntParam(request_info->query_string, "viewportSpecified",
                   test_state_._viewport_specified);
+      test_state_.CheckResponsive();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through

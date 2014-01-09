@@ -58,7 +58,7 @@ if (preg_match('/robot|spider|crawler|indexer|WeSEE|AppEngine-Google|Googlebot|^
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 66);           // version of the sitewide css file
-define('VER_JS', 30);            // version of the sitewide javascript file
+define('VER_JS', 31);            // version of the sitewide javascript file
 define('VER_JS_TEST', 28);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
