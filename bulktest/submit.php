@@ -7,8 +7,10 @@ $results = array();
 if (LoadResults($results)) {
     echo "Re-submitting failed tests from current results.txt...\r\n";
 } else {
-    echo "Loading URL list from urls.txt...\r\n";
-    $urls = file('./urls.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!isset($urls_file))
+      $urls_file = 'urls.txt';
+    echo "Loading URL list from $urls_file...\r\n";
+    $urls = file("./$urls_file", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     for ($i = 0; $i < $iterations; $i++) {
         foreach ($urls as $url) {
             $url = trim($url);
