@@ -35,10 +35,12 @@ extern HINSTANCE global_dll_handle; // DLL handle
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved) {
+  BOOL ret = TRUE;
   switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH:
       global_dll_handle = (HINSTANCE)hModule;
-      Initialize();
+      if (!Initialize())
+        ret = FALSE;
       break;
     case DLL_PROCESS_DETACH:
       Unload();
@@ -47,5 +49,5 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_THREAD_DETACH:
       break;
   }
-  return TRUE;
+  return ret;
 }

@@ -65,7 +65,8 @@ BOOL WINAPI RemoveGlobalHook() {
 /*-----------------------------------------------------------------------------
   See if we need to start hooking
 -----------------------------------------------------------------------------*/
-void Initialize() {
+bool Initialize() {
+  bool should_load = false;
   static bool initialized = false;
   if (!initialized) {
     initialized = true;
@@ -74,6 +75,7 @@ void Initialize() {
     _tcslwr_s(exe, _countof(exe));
     if (_tcsstr(exe, _T("chrome.exe")) &&
         _tcsstr(GetCommandLine(), _T("--type=gpu-process"))) {
+      should_load = true;
       if (!g_angle_hook) {
         g_angle_hook = new AngleHook;
         g_angle_hook->Init();
@@ -82,8 +84,11 @@ void Initialize() {
         g_dx9_hook = new Dx9Hook;
         g_dx9_hook->Init();
       }
+    } else if (_tcsstr(exe, _T("wptdriver.exe"))) {
+      should_load = true;
     }
   }
+  return should_load;
 }
 
 /*-----------------------------------------------------------------------------
