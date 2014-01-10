@@ -743,7 +743,8 @@ void Results::ProcessRequests(void) {
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request) {
+      if (request && 
+          (!request->_from_browser || !NativeRequestExists(request))) {
         request->MatchConnections();
         if (request->_start.QuadPart && 
             (!new_start || request->_start.QuadPart < new_start))
