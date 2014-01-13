@@ -550,7 +550,7 @@ function DisplayTest($id, $url, $label, $complete)
             echo "<td><a href=\"/csv.php?test=$id\">Download Page Data</a></td>";
             echo "<td><a href=\"/csv.php?test=$id&requests=1\">Download Object Data</a></td>";
         }
-        echo "<td><a href=\"/export.php?test=$id\">Download HAR</a></td>";
+        echo "<td><a href=\"/export.php?bodies=1&test=$id\">Download HAR</a></td>";
     }
     else
     {

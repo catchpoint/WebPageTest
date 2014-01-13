@@ -13,12 +13,17 @@ include 'object_detail.inc';
 require_once('lib/json.php');
 
 // see if we are loading a single run or all of them
-if( isset($testPath) )
-{
+if( isset($testPath) ) {
     $pageData;
-    if( isset($_REQUEST["run"]) && $_REQUEST["run"] )
-    {
-        $pageData[0] = array();
+    if( isset($_REQUEST["run"]) && $_REQUEST["run"] ) {
+        if (!strcasecmp($_REQUEST["run"],'median')) {
+          $raw = loadAllPageData($testPath);
+          $run = GetMedianRun($raw, $cached, $median_metric);
+          if (!$run)
+            $run = 1;
+          unset($raw);
+        }
+        $pageData[$run] = array();
         if( isset($cached) )
             $pageData[$run][$cached] = loadPageRunData($testPath, $run, $cached);
         else
@@ -330,6 +335,21 @@ function BuildResult(&$pageData)
                 
                 // add it to the list of entries
                 $entries[] = $entry;
+            }
+            
+            // add the bodies to the requests
+            if (array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies']) {
+              $bodies_file = $testPath . '/' . $run . $cached_text . '_bodies.zip';
+              if (is_file($bodies_file)) {
+                  $zip = new ZipArchive;
+                  if ($zip->open($bodies_file) === TRUE) {
+                      for( $i = 0; $i < $zip->numFiles; $i++ ) {
+                          $index = intval($zip->getNameIndex($i), 10) - 1;
+                          if (array_key_exists($index, $entries))
+                              $entries[$index]['response']['content'] = $zip->getFromIndex($i);
+                      }
+                  }
+              }
             }
         }
     }
