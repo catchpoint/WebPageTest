@@ -51,21 +51,19 @@ if( isset($testPath) ) {
     header("Content-disposition: attachment; filename=$filename");
     header('Content-type: application/json');
 
-    if( $_GET['php'] )
-      $out = json_encode($result);
-    else
-    {    
-      $json = new Services_JSON();
-      $out = $json->encode($result);
-    }
-    
     // see if we need to wrap it in a JSONP callback
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
-        
-    // send the actual JSON data
-    echo $out;
-    
+
+    if( array_key_exists('php', $_GET) && $_GET['php'] ) {
+      echo json_encode($result);
+    } elseif (version_compare(phpversion(), '5.4.0') >= 0) {
+      echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    } else {    
+      $json = new Services_JSON();
+      echo $json->encode($result);
+    }
+
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
 }
