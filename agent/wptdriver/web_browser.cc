@@ -62,8 +62,7 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--new-window"),
     _T("--disable-translate"),
     _T("--disable-desktop-notifications"),
-    _T("--allow-running-insecure-content"),
-    _T("--enable-npn")
+    _T("--allow-running-insecure-content")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
     _T(" --ignore-certificate-errors");
