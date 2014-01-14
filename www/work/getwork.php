@@ -359,7 +359,10 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
     global $supports_sharding;
     global $tester;
     if (isset($testInfo) && array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
-        if ($supports_sharding) {
+        if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
+            !$supports_sharding) {
+            $testInfo['shard_test'] = 0;
+        } else {
             if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
                 flock($testLock, LOCK_EX);
             $done = true;
@@ -424,8 +427,6 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
                 flock($testLock, LOCK_UN);
                 fclose($testLock);
             }
-        } else {
-            $testInfo['shard_test'] = 0;
         }
     }
 }

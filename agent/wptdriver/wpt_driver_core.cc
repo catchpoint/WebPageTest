@@ -219,9 +219,13 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
   if (!test._test_type.CompareNoCase(_T("traceroute"))) {
     ret = true;
     CTraceRoute trace_route(test);
+    test._index = test._specific_index ? test._specific_index : 1;
     for (test._run = 1; test._run <= test._runs; test._run++) {
+      test._run_error.Empty();
+      test._run = test._specific_run ? test._specific_run : test._run;
       test.SetFileBase();
       trace_route.Run();
+      test._index++;
     }
   }
 
