@@ -55,10 +55,18 @@ if( isset($testPath) ) {
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
 
+    $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
+    $pretty_print = array_key_exists('pretty', $_REQUEST) && $_REQUEST['pretty'] ? true : false;
     if( array_key_exists('php', $_GET) && $_GET['php'] ) {
-      echo json_encode($result);
-    } elseif (version_compare(phpversion(), '5.4.0') >= 0) {
-      echo json_encode($result, JSON_UNESCAPED_UNICODE);
+      if ($pretty_print && $json_encode_good)
+        echo json_encode($result, JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result);
+    } elseif ($json_encode_good) {
+      if ($pretty_print)
+        echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
     } else {    
       $json = new Services_JSON();
       echo $json->encode($result);

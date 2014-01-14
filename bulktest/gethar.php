@@ -4,33 +4,35 @@ include './settings.inc';
 $results = array();
 
 // see if there is an existing test we are working with
-if( LoadResults($results) )
-{
+if( LoadResults($results) ) {
     // count the number of tests that don't have status yet
     $testCount = 0;
     foreach( $results as &$result )
-        if( strlen($result['id']) && strlen($result['result']) && $result['medianRun'] )
+        if (array_key_exists('id', $result) &&
+            strlen($result['id']) &&
+            array_key_exists('result', $result) &&
+            strlen($result['result']))
             $testCount++;
             
-    if( $testCount )
-    {
+    if( $testCount ) {
         echo "Retrieving HAR files for $testCount tests...\r\n";
         
         if( !is_dir('./har') )
             mkdir('./har');
 
         $count = 0;
-        foreach( $results as &$result )
-        {
-            if( strlen($result['id']) && strlen($result['result']) && $result['medianRun'] )
-            {
+        foreach( $results as &$result ) {
+            if (array_key_exists('id', $result) &&
+                strlen($result['id']) &&
+                array_key_exists('result', $result) &&
+                strlen($result['result'])) {
                 $count++;
                 echo "\rRetrieving HAR for test $count of $testCount...                  ";
 
-                $file = BuildFileName($result['url']);
+                $file = $result['id'] . '-' . BuildFileName($result['url']);
                 if( strlen($file) && !is_file("./har/$file.har") )
                 {
-                    $response = file_get_contents("{$server}export.php?test={$result['id']}&run={$result['medianRun']}&cached=0");
+                    $response = file_get_contents("{$server}export.php?test={$result['id']}&medianRun=fastest&run=median&bodies=1&pretty=1&cached=0");
                     if( strlen($response) )
                         file_put_contents("./har/$file.har", $response);
                 }
