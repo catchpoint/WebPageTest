@@ -118,7 +118,9 @@
             $test['queue_limit'] = 0;
             $test['pngss'] = (int)$req_pngss;
             $test['iq'] = (int)$req_iq;
-            $test['bodies'] = $req_bodies;
+            $test['bodies'] = array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies'] ? 1 : 0;
+            if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies'))
+              $test['bodies'] = 1;
             $test['htmlbody'] = $req_htmlbody;
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
