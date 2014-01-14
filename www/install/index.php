@@ -53,6 +53,9 @@ include 'common.inc';
         </ul><h2>Test Locations</h2><ul>
         <?php CheckLocations(); ?>
         </ul>
+        <?php
+          //phpinfo();
+        ?>
     </body>
 </html>
 <?php

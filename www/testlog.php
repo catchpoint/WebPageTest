@@ -169,17 +169,11 @@ else
                                     $key        = $line_data['key'];
                                     $count      = $line_data['count'];
 
-                                    // See if we have to override the label
-                                    $new_label = getLabel($guid, $user);
-                                    if (!empty($new_label)) {
-                                        $label = htmlentities($new_label);
-                                    }
-
                                     if (!$location) {
                                         $location = '';
                                     }
-						            if( isset($date) && isset($location) && isset($url) && isset($guid))
-						            {
+						                        if( isset($date) && isset($location) && isset($url) && isset($guid))
+						                        {
                                         // see if it is supposed to be filtered out
                                         if ($private) {
                                             $ok = false;
@@ -208,6 +202,12 @@ else
 
                                         if( $ok )
                                         {
+                                            // See if we have to override the label
+                                            $new_label = getLabel($guid, $user);
+                                            if (!empty($new_label)) {
+                                                $label = htmlentities($new_label);
+                                            }
+
                                             $rowCount++;
                                             $totalCount++;
                                             $newDate = strftime('%x %X', $date + ($tz_offset * 60));
