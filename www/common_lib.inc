@@ -1716,7 +1716,13 @@ function json_response(&$response) {
 
     if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
         $ret['requestId'] = $_REQUEST['r'];
-    echo json_encode($response);
+    
+    if (version_compare(phpversion(), '5.4.0') >= 0 &&
+        array_key_exists('pretty', $_REQUEST) &&
+        $request['pretty'])
+      echo json_encode($response, JSON_PRETTY_PRINT);
+    else
+      echo json_encode($response);
 
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
