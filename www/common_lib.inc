@@ -1719,10 +1719,11 @@ function json_response(&$response) {
     
     if (version_compare(phpversion(), '5.4.0') >= 0 &&
         array_key_exists('pretty', $_REQUEST) &&
-        $request['pretty'])
+        $_REQUEST['pretty']) {
       echo json_encode($response, JSON_PRETTY_PRINT);
-    else
+    } else {
       echo json_encode($response);
+    }
 
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
