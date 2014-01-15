@@ -127,25 +127,27 @@ void Results::Reset(void) {
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
-  if (!_saved && _test._log_data) {
+  if (!_saved) {
     ProcessRequests();
-    OptimizationChecks checks(_requests, _test_state, _test, _dns);
-    checks.Check();
-    base_page_CDN_ = checks._base_page_CDN;
-    SaveRequests(checks);
-    SaveImages();
-    SaveProgressData();
-    SaveStatusMessages();
-    SavePageData(checks);
-    SaveResponseBodies();
-    SaveConsoleLog();
-    SaveTimedEvents();
-    if (_test._timeline) {
-      _dev_tools.SetStartTime(_test_state._start);
-      _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+    if (_test._log_data) {
+      OptimizationChecks checks(_requests, _test_state, _test, _dns);
+      checks.Check();
+      base_page_CDN_ = checks._base_page_CDN;
+      SaveRequests(checks);
+      SaveImages();
+      SaveProgressData();
+      SaveStatusMessages();
+      SavePageData(checks);
+      SaveResponseBodies();
+      SaveConsoleLog();
+      SaveTimedEvents();
+      if (_test._timeline) {
+        _dev_tools.SetStartTime(_test_state._start);
+        _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+      }
+      if (_test._trace)
+        _trace.Write(_file_base + TRACE_FILE);
     }
-    if (_test._trace)
-      _trace.Write(_file_base + TRACE_FILE);
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -738,21 +740,25 @@ void Results::ProcessRequests(void) {
   // to eliminate the gap at startup for browser initialization
   if (_test_state._start.QuadPart) {
     LONGLONG new_start = 0;
-    if (_test_state._first_navigate.QuadPart)
+    if (_test_state._first_navigate.QuadPart &&
+        _test_state._first_navigate.QuadPart > _test_state._start.QuadPart)
       new_start = _test_state._first_navigate.QuadPart;
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request && 
+      if (request &&
           (!request->_from_browser || !NativeRequestExists(request))) {
         request->MatchConnections();
-        if (request->_start.QuadPart && 
+        if (request->_start.QuadPart &&
+            request->_start.QuadPart > _test_state._start.QuadPart &&
             (!new_start || request->_start.QuadPart < new_start))
           new_start = request->_start.QuadPart;
-        if (request->_dns_start.QuadPart && 
+        if (request->_dns_start.QuadPart &&
+            request->_dns_start.QuadPart > _test_state._start.QuadPart &&
             (!new_start || request->_dns_start.QuadPart < new_start))
           new_start = request->_dns_start.QuadPart;
-        if (request->_connect_start.QuadPart && 
+        if (request->_connect_start.QuadPart &&
+            request->_connect_start.QuadPart > _test_state._start.QuadPart &&
             (!new_start || request->_connect_start.QuadPart < new_start))
           new_start = request->_connect_start.QuadPart;
       }

@@ -114,6 +114,7 @@ public:
   void Reset();
   bool Claim(CString name, ULONG addr, LARGE_INTEGER before,
              LARGE_INTEGER& start, LARGE_INTEGER& end);
+  void ClaimAll();
   bool Find(CString name, DNSAddressList &addresses,
             LARGE_INTEGER& start, LARGE_INTEGER& end);
   LONGLONG  GetEarliest(LONGLONG& after);

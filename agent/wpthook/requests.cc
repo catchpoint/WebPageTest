@@ -49,6 +49,7 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
   _active_requests.InitHashTable(257);
   connections_.InitHashTable(257);
   InitializeCriticalSection(&cs);
+  _start_browser_clock = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -67,8 +68,9 @@ void Requests::Reset() {
   while (!_requests.IsEmpty())
     delete _requests.RemoveHead();
   browser_request_data_.RemoveAll();
-  _start_browser_clock = 0;
   LeaveCriticalSection(&cs);
+  _dns.ClaimAll();
+  _sockets.ClaimAll();
 }
 
 /*-----------------------------------------------------------------------------

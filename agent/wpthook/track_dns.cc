@@ -177,6 +177,22 @@ bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
 }
 
 /*-----------------------------------------------------------------------------
+  Mark all lookups as claimed
+-----------------------------------------------------------------------------*/
+void TrackDns::ClaimAll() {
+  EnterCriticalSection(&cs);
+  POSITION pos = _dns_lookups.GetStartPosition();
+  while (pos) {
+    DnsInfo * info = NULL;
+    void * key = NULL;
+    _dns_lookups.GetNextAssoc(pos, key, info);
+    if (info)
+      info->_accounted_for = true;
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
   See if we can find a DNS lookup for the given host
 -----------------------------------------------------------------------------*/
 bool TrackDns::Find(CString name, DNSAddressList &addresses,

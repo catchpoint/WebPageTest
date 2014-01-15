@@ -270,6 +270,21 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TrackSockets::ClaimAll() {
+  EnterCriticalSection(&cs);
+  POSITION pos = _socketInfo.GetStartPosition();
+  while (pos) {
+    SocketInfo * info = NULL;
+    DWORD key = 0;
+    _socketInfo.GetNextAssoc(pos, key, info);
+    if (info)
+      info->_accounted_for = true;
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 ULONG TrackSockets::GetPeerAddress(DWORD socket_id) {
   ULONG peer_address = 0;
   EnterCriticalSection(&cs);
