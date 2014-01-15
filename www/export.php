@@ -352,7 +352,7 @@ function BuildResult(&$pageData)
                       for( $i = 0; $i < $zip->numFiles; $i++ ) {
                           $index = intval($zip->getNameIndex($i), 10) - 1;
                           if (array_key_exists($index, $entries))
-                              $entries[$index]['response']['content'] = $zip->getFromIndex($i);
+                              $entries[$index]['response']['content']['text'] = $zip->getFromIndex($i);
                       }
                   }
               }
