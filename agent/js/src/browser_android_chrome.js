@@ -45,7 +45,9 @@ var CHROME_FLAGS = [
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
-    '--disable-geolocation'
+    '--disable-geolocation',
+    // Disable external URL handlers from opening
+    '--disable-external-intent-requests'
   ];
 
 
