@@ -55,7 +55,8 @@ var CHROME_FLAGS = [
 
 var KNOWN_BROWSERS = {
     'Chrome': 'com.android.chrome',
-    'Chrome Beta': 'com.chrome.beta'
+    'Chrome Beta': 'com.chrome.beta',
+    'Chrome Dev': 'com.google.android.apps.chrome_dev'
   };
 
 
@@ -466,9 +467,9 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
-  this.adb_.shell(['ps']).then( function(procs){
+  this.adb_.shell(['ps']).then(function(procs){
     if (procs && procs.length) {
-      var packages = procs.match(/[^ ]*\.chrome[^ :]*[\r\n]/g);
+      var packages = procs.match(/[\S]*\.chrome[^:]*$/mg);
       if (packages) {
         var count = packages.length;
         for (var i = 0; i < count; i++)
