@@ -53,6 +53,11 @@ var CHROME_FLAGS = [
     '--disable-external-intent-requests'
   ];
 
+var KNOWN_BROWSERS = {
+    'Chrome': 'com.android.chrome',
+    'Chrome Beta': 'com.chrome.beta'
+  };
+
 
 /**
  * Constructs a Chrome Mobile controller for Android.
@@ -69,7 +74,7 @@ var CHROME_FLAGS = [
  *     [captureDir] capture script dir, defaults to ''.
  *     [videoCard] the video card identifier, defaults to None.
  *     [chromePackage] package, defaults to
- *         'com.google.android.apps.chrome_dev'.
+ *         'com.android.google'.
  *     [chromeActivity] activity without the '.Main' suffix, defaults to
  *         'com.google.android.apps.chrome'.
  * @constructor
@@ -85,7 +90,17 @@ function BrowserAndroidChrome(app, args) {
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
   this.chromedriver_ = args.chromedriver;
-  this.chromePackage_ = args.chromePackage || 'com.android.chrome';
+  this.chromePackage_ = undefined;
+  if (args.chromePackage)
+    this.chromePackage_ = args.chromePackage;
+  else if (args.options && args.options.browserName) {
+    var browserName = args.options.browserName;
+    var separator = browserName.lastIndexOf('-');
+    if (separator >= 0)
+      browserName = browserName.substr(separator + 1).trim();
+    this.chromePackage_ = KNOWN_BROWSERS[browserName];
+  }
+  this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
   this.chromeActivity_ =
       args.chromeActivity || 'com.google.android.apps.chrome';
   this.devToolsPort_ = args.devToolsPort;
