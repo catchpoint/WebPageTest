@@ -42,6 +42,9 @@ var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
 var CHROME_FLAGS = [
+    // Standard command-line flags
+    '--no-first-run', '--disable-background-networking',
+    '--no-default-browser-check',
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
@@ -175,16 +178,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
-  // Delete the prior run's tab(s) and start with "about:blank".
-  //
-  // If we only set "-d about:blank", Chrome will create a new tab.
-  // If we only remove the tab files, Chrome will load the
-  //   "Mobile bookmarks" page
-  //
-  // We also tried a Page.navigate to "data:text/html;charset=utf-8,", which
-  // helped but was insufficient by itself.
-  this.adb_.su(['rm',
-      '/data/data/' + this.chromePackage_ + '/files/tab*']);
+  this.clearProfile_();
+
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
@@ -201,6 +196,29 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
   'use strict';
   logger.info('chromedriver exited, resetting WD server URL');
   this.serverUrl_ = undefined;
+};
+
+/**
+ * Clears the profile directory to reset state.  The lib directory is put there
+ * by the installer so we need to keep that one.  We also have to keep the
+ * "files" directory but empty it's contents to prevent the TOS UI from
+ * coming up.
+ */
+BrowserAndroidChrome.prototype.clearProfile_ = function() {
+  // Delete the existing profile (everything except the lib directory)
+  this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
+      function(files) {
+    var lines = files.split('\n');
+    var count = lines.length;
+    for (var i = 0; i < count; i++) {
+      var file = lines[i].trim();
+      if (file.length && file != '.' && file != '..' &&
+          file != 'lib' && file != 'shared_prefs') {
+        this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
+                     file]);
+      }
+    }
+  }.bind(this));
 };
 
 /**
@@ -433,6 +451,16 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
+  this.adb_.shell(['ps']).then( function(procs){
+    if (procs && procs.length) {
+      var packages = procs.match(/[^ ]*\.chrome[^ :]*[\r\n]/g);
+      if (packages) {
+        var count = packages.length;
+        for (var i = 0; i < count; i++)
+          this.adb_.shell(['am', 'force-stop', packages[i].trim()]);
+      }
+    }
+  }.bind(this));
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
