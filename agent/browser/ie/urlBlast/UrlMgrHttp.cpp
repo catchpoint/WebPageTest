@@ -37,7 +37,10 @@ CUrlMgrHttp::CUrlMgrHttp(CLog &logRef):
 	, nextCheck(0)
 	, videoSupported(false)
 	, lastSuccess(0)
-	, version(0)
+	, majorVer(0)
+	, minorVer(0)
+	, buildNo(0)
+	, revisionNo(0)
 	, noUpdate(false)
   , port(80)
   , requestFlags(0)
@@ -84,7 +87,12 @@ CUrlMgrHttp::CUrlMgrHttp(CLog &logRef):
 				if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) )
 				{
 					if( info )
-						version = LOWORD(info->dwFileVersionLS);
+					{
+						majorVer = HIWORD(info->dwFileVersionMS);
+						minorVer = LOWORD(info->dwFileVersionMS);
+						buildNo = HIWORD(info->dwFileVersionLS);
+						revisionNo = LOWORD(info->dwFileVersionLS);
+					}
 				}
 			}
 
@@ -154,8 +162,8 @@ void CUrlMgrHttp::Start()
 			CString videoStr;
 			if( videoSupported )
 				videoStr = _T("&video=1");
-			if( version && !noUpdate )
-				verString.Format(_T("&ver=%d"), version);
+			if( ( majorVer || minorVer || buildNo || revisionNo) && !noUpdate )
+				verString.Format(_T("&ver=%d.%d.%d.%d"), majorVer, minorVer, buildNo, revisionNo);
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;
