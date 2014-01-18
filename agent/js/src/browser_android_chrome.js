@@ -469,7 +469,7 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.stopPacServerIfNeeded_();
   this.adb_.shell(['ps']).then(function(procs){
     if (procs && procs.length) {
-      var packages = procs.match(/[\S]*\.chrome[^:]*$/mg);
+      var packages = procs.match(/\S*\.chrome[^\s:]*$/mg);
       if (packages) {
         var count = packages.length;
         for (var i = 0; i < count; i++)
