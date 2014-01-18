@@ -288,7 +288,9 @@ function GetUpdate()
         if( is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip") )
         {
             $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
-            if( $update['ver'] && (int)$update['ver'] != (int)$_GET['ver'] )
+
+            // Check for inequality allows both upgrade and quick downgrade
+            if( $update['ver'] && $update['ver'] !== $_GET['ver'] )
             {
                 header('Content-Type: application/zip');
                 header("Cache-Control: no-cache, must-revalidate");
