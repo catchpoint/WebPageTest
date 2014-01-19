@@ -61,7 +61,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
 define('VER_CSS', 66);           // version of the sitewide css file
 define('VER_JS', 31);            // version of the sitewide javascript file
-define('VER_JS_TEST', 28);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 29);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
@@ -96,7 +96,7 @@ if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 
 $privateInstall = true;
-if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
     $privateInstall = false;
 
 // override some settings from the URI
