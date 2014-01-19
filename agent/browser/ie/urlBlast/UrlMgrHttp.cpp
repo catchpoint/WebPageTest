@@ -163,7 +163,7 @@ void CUrlMgrHttp::Start()
 			if( videoSupported )
 				videoStr = _T("&video=1");
 			if( ( majorVer || minorVer || buildNo || revisionNo) && !noUpdate )
-				verString.Format(_T("&ver=%d.%d.%d.%d"), majorVer, minorVer, buildNo, revisionNo);
+				verString.Format(_T("&version=%d.%d.%d.%d&ver=%d"), majorVer, minorVer, buildNo, revisionNo, revisionNo);
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;

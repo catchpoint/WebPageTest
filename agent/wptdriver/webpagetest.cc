@@ -106,7 +106,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_majorVer || _minorVer || _buildNo || _revisionNo) {
-    buff.Format(_T("&software=wpt&ver=%d.%d.%d.%d"), _majorVer, _minorVer, _buildNo, _revisionNo);
+    buff.Format(_T("&software=wpt&version=%d.%d.%d.%d&ver=%d"), _majorVer,
+                _minorVer, _buildNo, _revisionNo, _revisionNo);
     url += buff;
   }
 

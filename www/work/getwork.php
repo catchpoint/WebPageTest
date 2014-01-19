@@ -192,7 +192,7 @@ function GetJob() {
             $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
             $testerInfo['pc'] = $pc;
             $testerInfo['ec2'] = $ec2;
-            $testerInfo['ver'] = $_GET['ver'];
+            $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
             $testerInfo['freedisk'] = @$_GET['freedisk'];
             $testerInfo['ie'] = @$_GET['ie'];
             $testerInfo['dns'] = $dnsServers;
@@ -290,7 +290,7 @@ function GetUpdate()
             $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
 
             // Check for inequality allows both upgrade and quick downgrade
-            if( $update['ver'] && $update['ver'] !== $_GET['ver'] )
+            if( $update['ver'] && intval($update['ver']) !== intval($_GET['ver']) )
             {
                 header('Content-Type: application/zip');
                 header("Cache-Control: no-cache, must-revalidate");
