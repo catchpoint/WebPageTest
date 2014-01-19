@@ -50,7 +50,7 @@ var JOB_FIRST_VIEW_ONLY = 'fvonly';
 var JOB_RUNS = 'runs';
 var JOB_TEST_ID = 'Test ID';
 
-var DEFAULT_JOB_TIMEOUT = 80000;
+var DEFAULT_JOB_TIMEOUT = 120000;
 /** Allow test access. */
 exports.JOB_FINISH_TIMEOUT = 30000;
 /** Allow test access. */
