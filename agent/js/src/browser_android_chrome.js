@@ -42,6 +42,9 @@ var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
 var CHROME_FLAGS = [
+    // Standard command-line flags
+    '--no-first-run', '--disable-background-networking',
+    '--no-default-browser-check',
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
@@ -49,6 +52,12 @@ var CHROME_FLAGS = [
     // Disable external URL handlers from opening
     '--disable-external-intent-requests'
   ];
+
+var KNOWN_BROWSERS = {
+    'Chrome': 'com.android.chrome',
+    'Chrome Beta': 'com.chrome.beta',
+    'Chrome Dev': 'com.google.android.apps.chrome_dev'
+  };
 
 
 /**
@@ -66,7 +75,7 @@ var CHROME_FLAGS = [
  *     [captureDir] capture script dir, defaults to ''.
  *     [videoCard] the video card identifier, defaults to None.
  *     [chromePackage] package, defaults to
- *         'com.google.android.apps.chrome_dev'.
+ *         'com.android.google'.
  *     [chromeActivity] activity without the '.Main' suffix, defaults to
  *         'com.google.android.apps.chrome'.
  * @constructor
@@ -82,7 +91,17 @@ function BrowserAndroidChrome(app, args) {
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
   this.chromedriver_ = args.chromedriver;
-  this.chromePackage_ = args.chromePackage || 'com.android.chrome';
+  this.chromePackage_ = undefined;
+  if (args.chromePackage)
+    this.chromePackage_ = args.chromePackage;
+  else if (args.options && args.options.browserName) {
+    var browserName = args.options.browserName;
+    var separator = browserName.lastIndexOf('-');
+    if (separator >= 0)
+      browserName = browserName.substr(separator + 1).trim();
+    this.chromePackage_ = KNOWN_BROWSERS[browserName];
+  }
+  this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
   this.chromeActivity_ =
       args.chromeActivity || 'com.google.android.apps.chrome';
   this.devToolsPort_ = args.devToolsPort;
@@ -175,16 +194,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
-  // Delete the prior run's tab(s) and start with "about:blank".
-  //
-  // If we only set "-d about:blank", Chrome will create a new tab.
-  // If we only remove the tab files, Chrome will load the
-  //   "Mobile bookmarks" page
-  //
-  // We also tried a Page.navigate to "data:text/html;charset=utf-8,", which
-  // helped but was insufficient by itself.
-  this.adb_.su(['rm',
-      '/data/data/' + this.chromePackage_ + '/files/tab*']);
+  this.clearProfile_();
+
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
@@ -201,6 +212,29 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
   'use strict';
   logger.info('chromedriver exited, resetting WD server URL');
   this.serverUrl_ = undefined;
+};
+
+/**
+ * Clears the profile directory to reset state.  The lib directory is put there
+ * by the installer so we need to keep that one.  We also have to keep the
+ * "files" directory but empty it's contents to prevent the TOS UI from
+ * coming up.
+ */
+BrowserAndroidChrome.prototype.clearProfile_ = function() {
+  // Delete the existing profile (everything except the lib directory)
+  this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
+      function(files) {
+    var lines = files.split('\n');
+    var count = lines.length;
+    for (var i = 0; i < count; i++) {
+      var file = lines[i].trim();
+      if (file.length && file != '.' && file != '..' &&
+          file != 'lib' && file != 'shared_prefs') {
+        this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
+                     file]);
+      }
+    }
+  }.bind(this));
 };
 
 /**
@@ -433,6 +467,16 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
+  this.adb_.shell(['ps']).then(function(procs){
+    if (procs && procs.length) {
+      var packages = procs.match(/\S*\.chrome[^\s:]*$/mg);
+      if (packages) {
+        var count = packages.length;
+        for (var i = 0; i < count; i++)
+          this.adb_.shell(['am', 'force-stop', packages[i].trim()]);
+      }
+    }
+  }.bind(this));
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
