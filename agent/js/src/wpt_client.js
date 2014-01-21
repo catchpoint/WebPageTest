@@ -234,6 +234,7 @@ function Client(args) {
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
+  this.isBrowserAvailable = undefined;
   this.handlingUncaughtException_ = undefined;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
@@ -283,32 +284,39 @@ Client.prototype.onUncaughtException_ = function(e) {
  */
 Client.prototype.requestNextJob_ = function() {
   'use strict';
-  var getWorkUrl = url.resolve(this.baseUrl_,
-      GET_WORK_SERVLET +
+  this.isBrowserAvailable(function(isAvailable){
+    logger.info('isAvailable: ' + isAvailable);
+    if (isAvailable) {
+      var getWorkUrl = url.resolve(this.baseUrl_,
+        GET_WORK_SERVLET +
           '?location=' + encodeURIComponent(this.location_) +
           (this.deviceSerial_ ?
-             ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '') +
+            ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '') +
           '&f=json');
 
-  logger.info('Get work: %s', getWorkUrl);
-  var request = http.get(url.parse(getWorkUrl), function(res) {
-    exports.processResponse(res, function(e, responseBody) {
-      if (e || responseBody === '') {
+      logger.info('Get work: %s', getWorkUrl);
+      var request = http.get(url.parse(getWorkUrl), function(res) {
+        exports.processResponse(res, function(e, responseBody) {
+          if (e || responseBody === '') {
+            this.emit('nojob');
+          } else if (responseBody[0] === '<') {
+            // '<' is a sign that it's HTML, most likely an error page.
+            logger.warn('Error response? ' + responseBody);
+            this.emit('nojob');
+          } else if (responseBody === 'shutdown') {
+            this.emit('shutdown');
+          } else {  // We got a job
+            this.processJobResponse_(responseBody);
+          }
+        }.bind(this));
+      }.bind(this));
+      request.on('error', function(e) {
+        logger.warn('Got error: ' + e.message);
         this.emit('nojob');
-      } else if (responseBody[0] === '<') {
-        // '<' is a sign that it's HTML, most likely an error page.
-        logger.warn('Error response? ' + responseBody);
-        this.emit('nojob');
-      } else if (responseBody === 'shutdown') {
-        this.emit('shutdown');
-      } else {  // We got a job
-        this.processJobResponse_(responseBody);
-      }
-    }.bind(this));
-  }.bind(this));
-  request.on('error', function(e) {
-    logger.warn('Got error: ' + e.message);
-    this.emit('nojob');
+      }.bind(this));
+    } else {
+      this.emit('nojob');
+    }
   }.bind(this));
 };
 

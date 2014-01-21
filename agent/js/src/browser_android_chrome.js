@@ -579,3 +579,32 @@ BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   this.pcap_.scheduleStop();
 };
+
+/**
+ * Checks to see if the device is attached, available and under the max temp
+ * (if configured)
+ */
+BrowserAndroidChrome.prototype.scheduleIsAvailable = function(callback) {
+  'use strict';
+  var ok = false;
+  this.adb_.shell(['getprop', 'ro.build.version.release']).then(function(ver){
+    if (ver && ver.length) {
+      ok = true;
+      logger.info('OS Version: ' + ver);
+      this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp']).then(
+        function(deviceTemp){
+        if (deviceTemp && deviceTemp.length) {
+          deviceTemp = parseInt(deviceTemp) / 10.0;
+          logger.info('Temp: ' + deviceTemp);
+        }
+        callback(ok);
+      }.bind(this), function(e){
+        logger.info('Device temp check failed');
+        callback(false);
+      }.bind(this));
+    }
+  }.bind(this), function(e){
+    logger.info('Device offline');
+    callback(false);
+  }.bind(this));
+};
