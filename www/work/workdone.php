@@ -12,18 +12,21 @@ if(extension_loaded('newrelic')) {
 
 chdir('..');
 //$debug = true;
-include('common.inc');
-error_reporting(E_ERROR | E_PARSE);
+require_once('common.inc');
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
 require_once 'page_data.inc';
-header('Content-type: text/plain');
-header("Cache-Control: no-cache, must-revalidate");
-header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-ignore_user_abort(true);
-set_time_limit(60*5);
 require_once('harTiming.inc');
 require_once('./video/avi2frames.inc.php');
+
+if (!isset($included)) {
+  error_reporting(E_ERROR | E_PARSE);
+  header('Content-type: text/plain');
+  header("Cache-Control: no-cache, must-revalidate");
+  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+  ignore_user_abort(true);
+}
+set_time_limit(60*5);
 
 $location = $_REQUEST['location'];
 $key  = $_REQUEST['key'];

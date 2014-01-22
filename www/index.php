@@ -88,15 +88,15 @@ $loc = ParseLocations($locations);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
             if (array_key_exists('iq', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"iq\" value=\"{$_REQUEST['iq']}\">\n";
+              echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
             if (array_key_exists('pngss', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"pngss\" value=\"{$_REQUEST['pngss']}\">\n";
+              echo '<input type="hidden" name="pngss" value="' . htmlspecialchars($_REQUEST['pngss']) . "\">\n";
             if (array_key_exists('shard', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"shard\" value=\"{$_REQUEST['shard']}\">\n";
+              echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"discard\" value=\"{$_REQUEST['discard']}\">\n";
+              echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
             if (array_key_exists('responsive', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"responsive\" value=\"{$_REQUEST['responsive']}\">\n";
+              echo '<input type="hidden" name="responsive" value="' . htmlspecialchars($_REQUEST['responsive']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
