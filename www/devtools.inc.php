@@ -779,8 +779,8 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
 */
 function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset) {
   $messages = json_decode($json, true);
-  $START_MESSAGE = '{"message":"WPT start"}';
-  $STOP_MESSAGE = '{"message":"WPT stop"}';
+  $START_MESSAGE = '"WPT start"';
+  $STOP_MESSAGE = '"WPT stop"';
   $PAINT_EVENT = ',"type":"Paint",';
   $startTime = null;
   $endTime = null;
@@ -794,11 +794,11 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       // figure out the overall start offset and time of the first event
       // aligning the video to the last paint event before the first navigation
       $previousPaint = null;
-      foreach($messages as &$message) {
+      foreach($messages as $index => &$message) {
         $encoded = json_encode($message);
-        if (strpos($encoded, $START_MESSAGE) !== false)
+        if (strpos($encoded, $START_MESSAGE) !== false) {
           $startTime = FindNextNetworkRequest($messages, DevToolsEventTime($message));
-        elseif (strpos($encoded, $STOP_MESSAGE) !== false)
+        } elseif (strpos($encoded, $STOP_MESSAGE) !== false)
           $endTime = DevToolsEventTime($message);
         if (!isset($firstEvent)) {
           if (strpos($encoded, $PAINT_EVENT) !== false)
@@ -840,6 +840,8 @@ function DevToolsEventTime(&$event) {
       $time = floatval($event['params']['record']['startTime']);
     elseif (array_key_exists('timestamp', $event['params']))
       $time = $event['params']['timestamp'] * 1000;
+    elseif (array_key_exists('message', $event['params']) && array_key_exists('timestamp', $event['params']['message']))
+      $time = $event['params']['message']['timestamp'] * 1000;
   }
   return $time;
 }
