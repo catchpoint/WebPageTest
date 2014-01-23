@@ -190,10 +190,6 @@ if (array_key_exists('devtools', $_FILES)) {
                 <label for="keep_test_private">Keep Test Private</label>
               </li>
               <li>
-                <input type="text" name="url" id="url" value="" size="80">
-                <label for="url">URL<br><small>(optional)</small></label>
-              </li>
-              <li>
                 <input type="text" name="label" id="label" value="" size="80">
                 <label for="label">Label<br><small>(optional)</small></label>
               </li>
