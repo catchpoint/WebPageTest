@@ -267,10 +267,13 @@ Agent.prototype.startJobRun_ = function(job) {
  * @private
  */
 Agent.prototype.isBrowserAvailable_ = function(callback) {
-  if (this.browser_['scheduleIsAvailable'] === undefined)
+  if (this.browser_['scheduleIsAvailable'] === undefined) {
     callback(true);
-  else
-    this.browser_.scheduleIsAvailable(callback);
+  } else {
+    this.browser_.scheduleIsAvailable().then(function(isAvailable) {
+      callback(isAvailable);
+    }.bind(this));
+  }
 }
 
 /**

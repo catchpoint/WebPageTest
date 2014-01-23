@@ -584,27 +584,33 @@ BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
  * Checks to see if the device is attached, available and under the max temp
  * (if configured)
  */
-BrowserAndroidChrome.prototype.scheduleIsAvailable = function(callback) {
+BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
   'use strict';
-  var ok = false;
-  this.adb_.shell(['getprop', 'ro.build.version.release']).then(function(ver){
-    if (ver && ver.length) {
-      ok = true;
-      logger.info('OS Version: ' + ver);
-      this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp']).then(
-        function(deviceTemp){
-        if (deviceTemp && deviceTemp.length) {
-          deviceTemp = parseInt(deviceTemp) / 10.0;
-          logger.info('Temp: ' + deviceTemp);
-        }
-        callback(ok);
-      }.bind(this), function(e){
-        logger.info('Device temp check failed');
-        callback(false);
-      }.bind(this));
+
+  // see if a device is answering and has a non-loopback IP address
+  return this.adb_.shell(['netcfg']).then(
+      function(interfaces) {
+    if (interfaces && interfaces.length) {
+      var addresses =
+        interfaces.match(/\s(?!127\.0\.0\.1)([\d]+\.){3}[\d]+\/[1-9]+/g);
+      if (addresses && addresses.length) {
+        logger.info('Addresses: ' + addresses);
+        return this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp']).
+            then(function(deviceTemp){
+          var ok = true;
+          if (deviceTemp && deviceTemp.length) {
+            deviceTemp = parseInt(deviceTemp) / 10.0;
+            logger.info('Temp: ' + deviceTemp);
+          }
+          return ok;
+        }.bind(this), function() {return false;}.bind(this));
+      } else {
+        logger.info('No Network Address assigned');
+        return false;
+      }
+    } else {
+      logger.info('Device offline');
+      return false;
     }
-  }.bind(this), function(e){
-    logger.info('Device offline');
-    callback(false);
-  }.bind(this));
+  }.bind(this), function() {return false;}.bind(this));
 };
