@@ -234,6 +234,8 @@ Agent.prototype.startJobRun_ = function(job) {
         exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
         captureVideo: job.captureVideo,
         capturePackets: job.capturePackets,
+        pngScreenShot: job.task.pngScreenShot,
+        imageQuality: job.task.imageQuality,
         script: script,
         url: url,
         pac: pac,

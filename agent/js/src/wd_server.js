@@ -180,6 +180,10 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.pcapFile_ = undefined;
   this.videoFile_ = undefined;
   this.runTempDir_ = initMessage.runTempDir || '';
+  this.pngScreenShot_ = initMessage.pngScreenShot;
+  // Force the JPEG quality level to be between 30 and 95 for screen shots
+  this.imageQuality_ = initMessage.imageQuality || '30';
+  this.imageQuality_ = Math.min(Math.max(parseInt(this.imageQuality_), 30), 95);
   this.tearDown_();
 };
 
@@ -331,9 +335,6 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
 WebDriverServer.prototype.onTestStarted_ = function() {
   'use strict';
   this.app_.schedule('Test started', function() {
-    if (this.captureVideo_ && !this.videoFile_) {
-      this.takeScreenshot_('progress_0', 'test started');
-    }
     this.app_.schedule('Test started', function() {
       logger.info('Test started');
       this.testStartTime_ = Date.now();
@@ -400,15 +401,39 @@ WebDriverServer.prototype.addScreenshot_ = function(
     fileName, diskPath, description) {
   'use strict';
   logger.debug('Adding screenshot %s (%s): %s',
-      fileName, diskPath, description);
-  var contentType = /\.png$/.test(fileName) ?
-      'image/png' : 'application/octet-stream';
-  this.screenshots_.push({
-      fileName: fileName,
-      diskPath: diskPath || fileName,
-      contentType: contentType,
-      description: description
-    });
+    fileName, diskPath, description);
+  if (!this.pngScreenShot_ &&
+      /\.png$/.test(fileName) &&
+      /\.png$/.test(diskPath)) {
+    var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
+    var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
+    process_utils.scheduleExec(this.app_, 'convert',
+        [diskPath, '-resize', '50%',
+         '-quality', this.imageQuality_, diskPathJPEG]).then(function() {
+      this.screenshots_.push({
+        fileName: fileNameJPEG,
+        diskPath: diskPathJPEG,
+        contentType: 'image/jpeg',
+        description: description
+      });
+    }.bind(this), function(){
+      this.screenshots_.push({
+        fileName: fileName,
+        diskPath: diskPath || fileName,
+        contentType: 'image/png',
+        description: description
+      });
+    }.bind(this));
+  } else {
+    var contentType = /\.png$/.test(fileName) ?
+        'image/png' : 'application/octet-stream';
+    this.screenshots_.push({
+        fileName: fileName,
+        diskPath: diskPath || fileName,
+        contentType: contentType,
+        description: description
+      });
+  }
 };
 
 /**
@@ -505,24 +530,6 @@ WebDriverServer.prototype.onAfterDriverAction = function(command, commandArgs) {
   }
   this.app_.schedule('After WD action', function() {
     this.actionCbRecurseGuard_ = true;
-    if (this.captureVideo_ && !this.videoFile_) {
-      // We operate in milliseconds, WPT wants "tenths of a second" units.
-      var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
-      logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
-      this.takeScreenshot_('progress_' + wptTimestamp,
-          'After ' + commandStr).then(function(diskPath) {
-        if (diskPath &&
-            command.getName() === webdriver.command.CommandName.GET) {
-          // This is also the doc-complete screenshot.
-          this.addScreenshot_(
-              'screen_doc' + path.extname(diskPath), diskPath, commandStr);
-        }
-      }.bind(this));
-    } else if (command.getName() === webdriver.command.CommandName.GET) {
-      // No video -- just intercept a get() and take a doc-complete screenshot.
-      logger.debug('Doc-complete screenshot after: %s', commandStr);
-      this.takeScreenshot_('screen_doc', commandStr);
-    }
     // In lieu of 'finally': reset actionCbRecurseGuard_.
   }.bind(this)).then(function(ret) {
     this.actionCbRecurseGuard_ = false;
@@ -1005,16 +1012,7 @@ WebDriverServer.prototype.done_ = function(e) {
   if (this.driver_) {
     this.scheduleGetWdDevToolsLog_();
   }
-  this.takeScreenshot_('screen', (e ? 'run error' : 'end of run')).then(
-      function(diskPath) {
-    if (!e && diskPath && this.captureVideo_ && !this.videoFile_) {
-      // Last video frame
-      this.addScreenshot_(
-          'progress_' + wptTimestamp + path.extname(diskPath),
-          diskPath,
-          'end of run');
-    }
-  }.bind(this));
+  this.takeScreenshot_('screen', (e ? 'run error' : 'end of run'));
   if (videoFile) {
     this.browser_.scheduleStopVideoRecording();
     process_utils.scheduleFunction(this.app_, 'videoFile exists?',
