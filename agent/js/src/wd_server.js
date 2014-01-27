@@ -735,7 +735,11 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   'use strict';
-  var videoFile = path.join(this.runTempDir_, 'video.avi');
+  var videoFileExtension = 'avi';
+  if (this.capabilities_ && this.capabilities_.videoFileExtension)
+    videoFileExtension = this.capabilities_.videoFileExtension;
+  var videoFile = path.join(this.runTempDir_,
+                            'video.' + videoFileExtension);
   this.browser_.scheduleStartVideoRecording(videoFile,
       this.onVideoRecordingExit_.bind(this));
   this.app_.schedule('Started recording', function() {
