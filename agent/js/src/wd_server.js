@@ -184,6 +184,10 @@ WebDriverServer.prototype.init = function(initMessage) {
   // Force the JPEG quality level to be between 30 and 95 for screen shots
   this.imageQuality_ = initMessage.imageQuality || '30';
   this.imageQuality_ = Math.min(Math.max(parseInt(this.imageQuality_), 30), 95);
+  this.captureTimeline_ = initMessage.captureTimeline;
+  this.timelineStackDepth_ = 0;
+  if (initMessage.timelineStackDepth)
+    this.timelineStackDepth_ = parseInt(initMessage.timelineStackDepth);
   this.tearDown_();
 };
 
@@ -256,7 +260,10 @@ WebDriverServer.prototype.connectDevTools_ = function() {
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
   this.networkCommand_('enable');
   this.pageCommand_('enable');
-  this.timelineCommand_('start');
+  if (this.captureTimeline_ || this.captureVideo_) {
+    this.timelineCommand_('start',
+                          {maxCallStackDepth: this.timelineStackDepth_});
+  }
 };
 
 /**
@@ -613,9 +620,12 @@ WebDriverServer.prototype.networkCommand_ = function(method, params) {
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
  * @private
  */
-WebDriverServer.prototype.timelineCommand_ = function(method) {
+WebDriverServer.prototype.timelineCommand_ = function(method, params) {
   'use strict';
-  return this.devToolsCommand_({method: 'Timeline.' + method});
+  var message = {method: 'Timeline.' + method};
+  if (params)
+    message['params'] = params;
+  return this.devToolsCommand_(message);
 };
 
 /**

@@ -236,6 +236,8 @@ Agent.prototype.startJobRun_ = function(job) {
         capturePackets: job.capturePackets,
         pngScreenShot: job.task.pngScreenShot,
         imageQuality: job.task.imageQuality,
+        captureTimeline: job.task.timeline,
+        timelineStackDepth: job.task.timelineStackDepth,
         script: script,
         url: url,
         pac: pac,
