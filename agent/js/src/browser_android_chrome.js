@@ -44,7 +44,8 @@ var PAC_PORT = 80;
 var CHROME_FLAGS = [
     // Standard command-line flags
     '--no-first-run', '--disable-background-networking',
-    '--no-default-browser-check',
+    '--no-default-browser-check', '--process-per-tab',
+    '--allow-running-insecure-content',
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
@@ -113,7 +114,11 @@ function BrowserAndroidChrome(app, args) {
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
+  this.maxtemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
+  this.checknet = args.checknet;
   this.videoCard_ = args.videoCard;
+  this.deviceVideoPath_ = undefined;
+  this.recordProcess_ = undefined;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
   }
@@ -510,16 +515,31 @@ BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
  */
 BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return this.video_.scheduleIsSupported().then(function(isSupported) {
-    return {
+  if (this.videoCard_) {
+    return this.video_.scheduleIsSupported().then(function(isSupported) {
+      return {
+          webdriver: false,
+          'wkrdp.Page.captureScreenshot': false,
+          'wkrdp.Network.clearBrowserCache': true,
+          'wkrdp.Network.clearBrowserCookies': true,
+          videoRecording: isSupported,
+          takeScreenshot: true
+        };
+    }.bind(this));
+  } else {
+    return this.adb_.shell(['getprop', 'ro.build.version.release']).then(
+        function(stdout) {
+      return {
         webdriver: false,
-        'wkrdp.Page.captureScreenshot': false, // TODO(klm): check before-26.
+        'wkrdp.Page.captureScreenshot': false,
         'wkrdp.Network.clearBrowserCache': true,
         'wkrdp.Network.clearBrowserCookies': true,
-        videoRecording: isSupported,
+        videoRecording: parseFloat(stdout) >= 4.4 ? true : false,
+        videoFileExtension: 'mp4',
         takeScreenshot: true
       };
-  }.bind(this));
+    }.bind(this));
+  }
 };
 
 /**
@@ -546,12 +566,26 @@ BrowserAndroidChrome.prototype.scheduleTakeScreenshot =
 BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
     filename, onExit) {
   'use strict';
-  // The video record command needs to know device type for cropping etc.
-  this.adb_.shell(['getprop', 'ro.product.device']).then(
-      function(stdout) {
-    this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-        stdout.trim(), this.videoCard_, onExit);
-  }.bind(this));
+  if (this.videoCard_) {
+    // The video record command needs to know device type for cropping etc.
+    this.adb_.shell(['getprop', 'ro.product.device']).then(
+        function(stdout) {
+      this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
+          stdout.trim(), this.videoCard_, onExit);
+    }.bind(this));
+  } else {
+      this.adb_.getStoragePath().then(function(storagePath) {
+        this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
+        this.videoFile_ = filename;
+        this.adb_.shell(['rm', this.deviceVideoPath_]).then(function() {
+          this.adb_.spawnShell(['screenrecord', '--verbose',
+                                '--bit-rate', 8000000,
+                                this.deviceVideoPath_]).then(function(proc) {
+            this.recordProcess_ = proc;
+          }.bind(this));
+        }.bind(this));
+      }.bind(this));
+  }
 };
 
 /**
@@ -559,7 +593,30 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
  */
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
-  this.video_.scheduleStopVideoRecording();
+  if (this.deviceVideoPath_ && this.videoFile_) {
+    this.adb_.shell(['ps']).then(function(stdout) {
+      var lines = stdout.split("\n");
+      if (lines && lines.length) {
+        var lineCount = lines.length;
+        for (var i = 1; i < lineCount; i++) {
+          var line = lines[i];
+          var matches = line.match(/^\S+\s+\s(\d+)\s.*screenrecord/i);
+          if (matches) {
+            this.adb_.shell(['kill', '-SIGINT', matches[1]]);
+          }
+        }
+      }
+      if (this.recordProcess_) {
+        process_utils.scheduleWait(this.app_, this.recordProcess_,
+                                   'screenrecord', 30000).then( function() {
+          this.recordProcess_ = undefined;
+          this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
+        }.bind(this));
+      }
+    }.bind(this));
+  } else {
+    this.video_.scheduleStopVideoRecording();
+  }
 };
 
 /**
@@ -578,4 +635,44 @@ BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
 BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   this.pcap_.scheduleStop();
+};
+
+/**
+ * Checks to see if the device is attached, available and under the max temp
+ * (if configured)
+ */
+BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
+  'use strict';
+  // see if a device is answering and has a non-loopback IP address
+  return this.adb_.shell(['netcfg']).then(function(interfaces) {
+    if (interfaces && interfaces.length) {
+      var addresses =
+        interfaces.match(/\s(?!127\.0\.0\.1)([\d]+\.){3}[\d]+\/[1-9]+/g);
+      if (this.checknet != 'yes' || (addresses && addresses.length)) {
+        if (!this.maxtemp) {
+          return true;
+        } else {
+          return this.adb_.shell(['cat',
+              '/sys/class/power_supply/battery/temp']).
+              then(function(deviceTemp){
+            if (deviceTemp && deviceTemp.length) {
+              deviceTemp = parseInt(deviceTemp) / 10.0;
+              if (deviceTemp <= this.maxtemp) {
+                return true;
+              } else {
+                throw new Error('Temp: ' + deviceTemp +
+                    ' is higher than the target of ' + this.maxtemp);
+              }
+            } else {
+              throw new Error('Device temp not available');
+            }
+          }.bind(this));
+        }
+      } else {
+        throw new Error('No Network Address assigned');
+      }
+    } else {
+      throw new Error('Device offline');
+    }
+  }.bind(this));
 };
