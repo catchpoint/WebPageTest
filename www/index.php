@@ -406,6 +406,10 @@ $loc = ParseLocations($locations);
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
+                                        <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
+                                        <label for="timelineStack" class="auto_width">
+                                            Include call stack (increases overhead)
+                                        </label>
                                     </li>
                                     <li>
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">

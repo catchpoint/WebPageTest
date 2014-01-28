@@ -101,8 +101,9 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
+            $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
-            $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;;
+            $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
@@ -1682,8 +1683,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\ntcpdump=1";
             if( $test['standards'] )
                 $testFile .= "\r\nstandards=1";
-            if( $test['timeline'] )
+            if( $test['timeline'] ) {
                 $testFile .= "\r\ntimeline=1";
+                $testFile .= "\r\ntimelineStackDepth={$test['timelineStackDepth']}";
+            }
             if( $test['trace'] )
                 $testFile .= "\r\ntrace=1";
             if( $test['swrender'] )
