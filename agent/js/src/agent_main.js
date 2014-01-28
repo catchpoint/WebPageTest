@@ -187,9 +187,13 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.videoFile) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
+        var ext = path.extname(ipcMsg.videoFile);
+        var mimeType = 'video/avi';
+        if (ext == '.mp4')
+          mimeType = 'video/mp4';
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.IMAGE,
-            'video.avi', 'video/avi', buffer));
+            'video' + ext, mimeType, buffer));
       }.bind(this));
     }
     if (ipcMsg.pcapFile) {
