@@ -77,8 +77,19 @@ function Agent(client, flags) {
   this.wdServer_ = undefined;  // The wd_server child process.
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
+  // Create a single (separate) instance of the browser for checking status
+  var browserType = (flags.browser ||
+                     'browser_local_chrome.BrowserLocalChrome');
+  logger.debug('Creating agent browser ' + browserType);
+  var lastDot = browserType.lastIndexOf('.');
+  var browserModule = require(browserType.substring(0, lastDot));
+  var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
+  this.browser_ = new BrowserClass(this.app_, flags);
+
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
+  this.client_.scheduleBrowserAvailable =
+      this.scheduleBrowserAvailable_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -252,6 +263,23 @@ Agent.prototype.startJobRun_ = function(job) {
     this.wdServer_.send(message);
   }.bind(this));
 };
+
+/**
+ * For supported browsers, checks to see if the browser is available.  Currently
+ * only supported for Android where it checks to see fi the device is online
+ * and the battery temperature is under the configured limit.
+ *
+ * @private
+ */
+Agent.prototype.scheduleBrowserAvailable_ = function() {
+  if (this.browser_['scheduleIsAvailable'] === undefined) {
+    var done = new webdriver.promise.Deferred();
+    done.fulfill(true);
+    return done.promise;
+  } else {
+    return this.browser_.scheduleIsAvailable();
+  }
+}
 
 /**
  * Makes sure the run temp dir exists and is empty, but ignores deletion errors.

@@ -44,7 +44,8 @@ var PAC_PORT = 80;
 var CHROME_FLAGS = [
     // Standard command-line flags
     '--no-first-run', '--disable-background-networking',
-    '--no-default-browser-check',
+    '--no-default-browser-check', '--process-per-tab',
+    '--allow-running-insecure-content',
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
@@ -113,6 +114,8 @@ function BrowserAndroidChrome(app, args) {
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
+  this.maxtemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
+  this.checknet = args.checknet;
   this.videoCard_ = args.videoCard;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
@@ -578,4 +581,44 @@ BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
 BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   this.pcap_.scheduleStop();
+};
+
+/**
+ * Checks to see if the device is attached, available and under the max temp
+ * (if configured)
+ */
+BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
+  'use strict';
+  // see if a device is answering and has a non-loopback IP address
+  return this.adb_.shell(['netcfg']).then(function(interfaces) {
+    if (interfaces && interfaces.length) {
+      var addresses =
+        interfaces.match(/\s(?!127\.0\.0\.1)([\d]+\.){3}[\d]+\/[1-9]+/g);
+      if (this.checknet != 'yes' || (addresses && addresses.length)) {
+        if (!this.maxtemp) {
+          return true;
+        } else {
+          return this.adb_.shell(['cat',
+              '/sys/class/power_supply/battery/temp']).
+              then(function(deviceTemp){
+            if (deviceTemp && deviceTemp.length) {
+              deviceTemp = parseInt(deviceTemp) / 10.0;
+              if (deviceTemp <= this.maxtemp) {
+                return true;
+              } else {
+                throw new Error('Temp: ' + deviceTemp +
+                    ' is higher than the target of ' + this.maxtemp);
+              }
+            } else {
+              throw new Error('Device temp not available');
+            }
+          }.bind(this));
+        }
+      } else {
+        throw new Error('No Network Address assigned');
+      }
+    } else {
+      throw new Error('Device offline');
+    }
+  }.bind(this));
 };
