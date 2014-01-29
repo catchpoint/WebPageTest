@@ -839,9 +839,9 @@ function DevToolsEventTime(&$event) {
         array_key_exists('startTime', $event['params']['record']))
       $time = floatval($event['params']['record']['startTime']);
     elseif (array_key_exists('timestamp', $event['params']))
-      $time = $event['params']['timestamp'] * 1000;
+      $time = floatval($event['params']['timestamp']) * 1000.0;
     elseif (array_key_exists('message', $event['params']) && array_key_exists('timestamp', $event['params']['message']))
-      $time = $event['params']['message']['timestamp'] * 1000;
+      $time = floatval($event['params']['message']['timestamp']) * 1000.0;
   }
   return $time;
 }
@@ -856,7 +856,7 @@ function DevToolsEventEndTime(&$event) {
         array_key_exists('endTime', $event['params']['record']))
       $time = floatval($event['params']['record']['endTime']);
     elseif (array_key_exists('timestamp', $event['params']))
-      $time = $event['params']['timestamp'] * 1000;
+      $time = floatval($event['params']['timestamp']) * 1000.0;
   }
   return $time;
 }
