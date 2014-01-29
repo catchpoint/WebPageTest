@@ -687,20 +687,15 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // Get the root frameId
   this.pageCommand_('getResourceTree').then(function(result) {
     var frameId = result.frameTree.frame.id;
-    // Paint the page white
-    // TODO Verify that this blanking is required and, if not, remove it.
-    this.setPageBackground_(frameId);
     if (this.captureVideo_) {  // Generate video sync sequence, start recording.
-      // Hold white(500ms) for our video / 'test started' screenshot
-      this.app_.timeout(500, 'Hold white background');
       this.getCapabilities_().then(function(caps) {
         if (!caps.videoRecording) {
           return;
         }
-        this.scheduleStartVideoRecording_();
         // Hold orange(500ms)->white: anchor video to DevTools.
         this.setPageBackground_(frameId, GHASTLY_ORANGE_);
-        this.app_.timeout(500, 'Hold orange background');
+        this.app_.timeout(500, 'Set orange background');
+        this.scheduleStartVideoRecording_();
         // Begin recording DevTools before onTestStarted_ fires,
         // to make sure we get the paint event from the below switch to white.
         // This allows us to sync the DevTools trace vs. the video by matching
@@ -709,6 +704,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         this.app_.schedule('Start recording DevTools with video', function() {
           this.isRecordingDevTools_ = true;
         }.bind(this));
+        this.app_.timeout(500, 'Hold orange background');
         this.setPageBackground_(frameId);  // White
       }.bind(this));
     }
@@ -734,11 +730,11 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
       if (!caps.videoRecording) {
         return;
       }
-      this.scheduleStartVideoRecording_();
-      this.app_.timeout(500, 'Hold white background');
       // Hold ghastly orange(500ms)->white: anchor video to DevTools.
       this.driver_.executeScript(
-          'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
+        'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
+      this.app_.timeout(500, 'Set orange background');
+      this.scheduleStartVideoRecording_();
       this.app_.timeout(500, 'Hold orange background');
       this.driver_.executeScript(
           'document.body.style.backgroundColor="white";');
