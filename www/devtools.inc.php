@@ -1124,8 +1124,10 @@ function GetDevToolsStartTime(&$entries) {
 * @param mixed $run
 * @param mixed $cached
 */
-function DevToolsGetVideoOffset($testPath, $run, $cached) {
+function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
   $offset = 0;
+  $endTime = 0;
+  $lastEvent = 0;
   $cachedText = '';
   if( $cached )
       $cachedText = '_Cached';
@@ -1138,6 +1140,8 @@ function DevToolsGetVideoOffset($testPath, $run, $cached) {
       foreach ($events as &$event) {
         if (is_array($event) && array_key_exists('method', $event)) {
           $method_class = substr($event['method'], 0, strpos($event['method'], '.'));
+          
+          // calculate the start time stuff
           if (!$startTime && ($method_class === 'Page' || $method_class === 'Network'))
             $startTime = DevToolsEventTime($event);
           if ($method_class === 'Timeline') {
@@ -1153,6 +1157,13 @@ function DevToolsGetVideoOffset($testPath, $run, $cached) {
               }
             }
           }
+          
+          // keep track of the last activity for the end time (for video)
+          if ($method_class === 'Page' || $method_class === 'Network') {
+            $eventTime = DevToolsEventEndTime($event);
+            if ($eventTime > $lastEvent)
+              $lastEvent = $eventTime;
+          }
         }
       }
     }
@@ -1160,6 +1171,10 @@ function DevToolsGetVideoOffset($testPath, $run, $cached) {
   
   if ($startTime && $lastPaint && $lastPaint < $startTime)
     $offset = round($startTime - $lastPaint);
+  
+  if ($startTime && $lastEvent && $lastEvent > $startTime)
+    $endTime = ceil($lastEvent - $startTime);
+    
   return $offset;
 }
 ?>

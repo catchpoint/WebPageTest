@@ -1683,14 +1683,28 @@ function loadVideo($path, &$frames)
                 $file = basename($file);
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
-                    $index = (int)$parts[1];
+                    $index = intval($parts[1] * 100);
                     $frames[$index] = $file;
                 }
             }
-
-            // sort the frames in order
-            ksort($frames, SORT_NUMERIC);
+        } else {
+          $files = glob( $path . '/ms_*.jpg', GLOB_NOSORT );
+          if ($files && count($files)) {
+              $ret = true;
+              $frames = array();
+              foreach ($files as $file) {
+                  $file = basename($file);
+                  $parts = explode('_', $file);
+                  if (count($parts) >= 2) {
+                      $index = intval($parts[1]);
+                      $frames[$index] = $file;
+                  }
+              }
+          }
         }
+        // sort the frames in order
+        if (isset($frames) && count($frames))
+          ksort($frames, SORT_NUMERIC);
     }
 
     return $ret;

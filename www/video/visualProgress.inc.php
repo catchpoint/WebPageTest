@@ -58,6 +58,23 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                     }
                     $previous_file = $file;
                 }
+            } elseif (strpos($file,'ms_') !== false && strpos($file,'.hist') === false) {
+                $parts = explode('_', $file);
+                if (count($parts) >= 2) {
+                    $time = intval($parts[1]) - $startOffset;
+                    if ($time >= 0 && (!isset($end) || $time <= $end)) {
+                      if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
+                        $frames['frames'][0] = array('path' => "$base_path/$previous_file",
+                                                     'file' => $previous_file);
+                        $first_file = $previous_file;
+                      } elseif (!isset($first_file))
+                        $first_file = $file;
+                      $last_file = $file;
+                      $frames['frames'][$time] = array('path' => "$base_path/$file",
+                                                       'file' => $file);
+                    }
+                    $previous_file = $file;
+                }
             }
         }
         if (count($frames['frames']) == 1) {
