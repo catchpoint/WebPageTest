@@ -190,6 +190,8 @@ function GetImageHistogram($image_file, $options = null) {
             imagedestroy($im);
             unset($im);
         }
+        if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+          file_put_contents($histogram_file, json_encode($histogram));
     }
     return $histogram;
 }

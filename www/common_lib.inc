@@ -1643,6 +1643,27 @@ function UnLock(&$lock) {
   }
 }
 
+function LockTest($testPath) {
+  $lock = null;
+  if (is_dir($testPath)) {
+    $lock = fopen( "$testPath/test.lock", 'w',  false);
+    if( $lock ) {
+      if( !flock($lock, LOCK_EX) ) {
+        fclose($lock);
+        $lock = false;
+      }
+    }
+  }
+  return $lock;
+}
+
+function UnlockTest(&$testLock) {
+  if (isset($testLock) && $testLock) {
+    flock($testLock, LOCK_UN);
+    fclose($testLock);
+    $testLock = null;
+  }
+}
 
 /**
 * Load and sort the video frame files into an arrray
@@ -2062,7 +2083,7 @@ function getLabel($test_guid, $current_user) {
     }
 
     $db = new SQLite3('./dat/labels.db');
-    $result = $db->query('SELECT label FROM labels
+    $result = @$db->query('SELECT label FROM labels
                             WHERE test_id = "' . $db->escapeString($test_guid) . '"
                             AND user_updated="' . $db->escapeString($current_user) . '"');
 
