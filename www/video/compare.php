@@ -407,7 +407,6 @@ function ScreenShotTable()
 
         // the actual video frames
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
-        $skipped = $interval;
         $filmstrip_end_time = ceil($end / $interval) * $interval;
         $decimals = $interval >= 100 ? 1 : 3;
         for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval )
