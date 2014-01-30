@@ -10,6 +10,7 @@ $fastest = null;
 $ready = true;
 $error = null;
 $endTime = 'visual';
+$supports60fps = false;
 if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
     $endTime = trim($_REQUEST['end']);
 
@@ -148,6 +149,7 @@ function LoadTestData() {
     global $admin;
     global $supportsAuth;
     global $user;
+    global $supports60fps;
 
     $count = 0;
     foreach( $tests as &$test ) {
@@ -196,9 +198,12 @@ function LoadTestData() {
             $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
             if (isset($testInfo) && is_array($testInfo) && array_key_exists('appurify_tests', $testInfo))
               $startOffset = 0;
-            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end, $startOffset);
+            $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
             if (array_key_exists('frames', $test['video']['progress'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {
+                if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
+                  $supports60fps = true;
+                  
                 if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
                   $path = "$videoPath/{$frame['file']}";
                   if( $ms < $test['video']['start'] )

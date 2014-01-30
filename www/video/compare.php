@@ -333,7 +333,7 @@ function ScreenShotTable()
     global $maxCompare;
     global $color;
     global $bgcolor;
-    $aftAvailable = false;
+    global $supports60fps;
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = trim($_REQUEST['end']);
@@ -358,8 +358,6 @@ function ScreenShotTable()
         // build a table with the labels
         echo '<td id="labelContainer"><table id="videoLabels"><tr><th>&nbsp;</th></tr>';
         foreach( $tests as &$test ) {
-            if($test['aft'])
-                $aftAvailable = true;
             // figure out the height of this video
             $height = 100;
             if( $test['video']['width'] && $test['video']['height'] ) {
@@ -522,12 +520,14 @@ function ScreenShotTable()
 
                         // fill in the interval selection
                         echo "<td>";
+                        if ($supports60fps) {
+                          $checked = '';
+                          if( $interval < 100 )
+                              $checked = ' checked=checked';
+                          echo "<input type=\"radio\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> 60 FPS<br>";
+                        }
                         $checked = '';
-                        if( $interval < 100 )
-                            $checked = ' checked=checked';
-                        echo "<input type=\"radio\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> 60 FPS<br>";
-                        $checked = '';
-                        if( $interval == 100 )
+                        if( ($supports60fps && $interval == 100) || (!$supports60fps && $interval < 500) )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> 0.1 sec<br>";
                         $checked = '';
@@ -546,7 +546,7 @@ function ScreenShotTable()
 
                         // fill in the end-point selection
                         echo "<td>";
-                        if( !$aftAvailable && !strcasecmp($endTime, 'aft') )
+                        if( !strcasecmp($endTime, 'aft') )
                             $endTime = 'visual';
                         $checked = '';
                         if( !strcasecmp($endTime, 'visual') )
@@ -564,13 +564,6 @@ function ScreenShotTable()
                         if( !strcasecmp($endTime, 'full') )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"end\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded<br>";
-                        if( $aftAvailable )
-                        {
-                            $checked = '';
-                            if( !strcasecmp($endTime, 'aft') )
-                                $checked = ' checked=checked';
-                            echo "<input type=\"radio\" name=\"end\" value=\"aft\"$checked onclick=\"this.form.submit();\"> AFT<br>";
-                        }
                         echo "</td></tr>";
                     ?>
                 </table>

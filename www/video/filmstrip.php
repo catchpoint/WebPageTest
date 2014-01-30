@@ -1,5 +1,5 @@
 <?php
-//header('Content-disposition: attachment; filename=filmstrip.png');
+header('Content-disposition: attachment; filename=filmstrip.png');
 header ("Content-type: image/png");
 
 chdir('..');

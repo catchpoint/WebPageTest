@@ -10,6 +10,8 @@ require_once('devtools.inc.php');
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
+    if (substr($testPath, 0, 1) !== '.')
+      $testPath = './' . $testPath;
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';
@@ -17,7 +19,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
-    $current_version = 4;
+    $current_version = 5;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
