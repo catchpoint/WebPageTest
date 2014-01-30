@@ -68,108 +68,80 @@ function BuildVideoScripts($testPath)
 */
 function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $startOffset = null)
 {
-    // figure out the frame range and actual file names
-    $start = null;
-    $end = null;
+  // figure out the frame range and actual file names
+  $start = null;
+  $end = null;
+  $frames = array();
+  if( $endTime )
+      $endTime = (int)(($endTime + 99) / 100);
+  
+  if (loadVideo($videoDir, $frames_ms) && count($frames_ms)) {
+    // get 10fps frame timings for now - eventually add support for rendering 60fps video
     $frames = array();
-    if( $endTime )
-        $endTime = (int)(($endTime + 99) / 100);
-    
-    $dir = null;
-    if (is_dir($videoDir))
-        $dir = opendir($videoDir);
-    $files = array();
-    if( isset($dir) && $dir !== false ) {
-        while($file = readdir($dir)) {
-            $path = $videoDir  . "/$file";
-            if( is_file($path) && !strncmp($file, 'frame_', 6)  &&  strpos($file, '.thm') === false && strpos($file, '.hist') === false) {
-                $parts = explode('_', $file);
-                if( count($parts) >= 2 ) {
-                    $index = (int)$parts[1];
-                    $files[$index] = $file;
-                }
-            }
-        }
-        closedir($dir);
-    }
+    foreach ($frames_ms as $ms => $path)
+      $frames[ceil($ms / 100)] = $path;
 
-    // sort the files by time first, then build the list of frames    
-    $previousFile = null;
-    if (count($files)) {
-      ksort($files, SORT_NUMERIC);
-      foreach($files as $index => $file) {
-        if (isset($startOffset) && $startOffset)
-          $index = round((($index * 100) - $startOffset) / 100);
-        if ($index < 0) {
-          $previousFile = $file;
-        } elseif( $extend || !$endTime || $index <= $endTime ) {
-          if ($index > 0 && !count($frames) && isset($previousFile))
-            $frames[0] = $previousFile;
-          if( !isset($start) || $index < $start )
-              $start = $index;
-          if( !isset($end) || $index > $end )
-              $end = $index;
-          $frames[$index] = $file;
-        }
-      }
-    }
-    
     // make sure all of the images are the same size - if not, fix it
     $width = 0;
     $height = 0;
     if( count($frames) >= 1 ) {
-        foreach( $frames as $index => $file ) {
-            $image_file = $videoDir  . "/$file";
-            list($w, $h) = getimagesize($image_file);
-            if (!$width && !$height) {
-                $width = $w;
-                $height = $h;
-            } else {
-                if ($w !== $width || $h !== $height) {
-                    $src = imagecreatefromjpeg($image_file);
-                    $dest = imagecreatetruecolor($width, $height);
-                    $white = imagecolorallocate($dest, 255,255,255);
-                    imagefilledrectangle($dest, 0, 0, $width, $height, $white);
-                    imagecopy($dest, $src, 0, 0, 0, 0, min($w,$width), min($h,$height));
-                    imagedestroy($src);
-                    imagejpeg($dest, $image_file);
-                    imagedestroy($dest);
-                }
-            }
+      foreach( $frames as $index => $file ) {
+        $image_file = $videoDir  . "/$file";
+        list($w, $h) = getimagesize($image_file);
+        if (!$width && !$height) {
+          $width = $w;
+          $height = $h;
+        } else {
+          if ($w !== $width || $h !== $height) {
+            $src = imagecreatefromjpeg($image_file);
+            $dest = imagecreatetruecolor($width, $height);
+            $white = imagecolorallocate($dest, 255,255,255);
+            imagefilledrectangle($dest, 0, 0, $width, $height, $white);
+            imagecopy($dest, $src, 0, 0, 0, 0, min($w,$width), min($h,$height));
+            imagedestroy($src);
+            imagejpeg($dest, $image_file);
+            imagedestroy($dest);
+          }
         }
+      }
     }
-    
+  
     // build the actual script
     if (count($frames) >= 1) {
-        $script = '';
-        
-        // build out all of the frames
-        $lastIndex = 0;
-        $lastFrame;
-        foreach( $frames as $index => $file ) {
-            // see if this is the first frame
-            if( !isset($lastFrame) ) {
-                if( $index > 0 )
-                    $script .= "ImageSource(\"$file\", start = 1, end = $index, fps = 10) + \\ \r\n";
-            } elseif( $index > $lastIndex ) {
-                $count = $index - $lastIndex;
-                $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
-            }
-            
-            $lastFrame = $file;
-            $lastIndex = $index;
+      $script = '';
+
+      end($frames);
+      $end = key($frames);
+      reset($frames);
+      
+      // build out all of the frames
+      $lastIndex = 0;
+      $lastFrame;
+      foreach( $frames as $index => $file ) {
+        // see if this is the first frame
+        if( !isset($lastFrame) ) {
+          if( $index > 0 )
+            $script .= "ImageSource(\"$file\", start = 1, end = $index, fps = 10) + \\ \r\n";
+        } elseif( $index > $lastIndex ) {
+          $count = $index - $lastIndex;
+          $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
         }
         
-        // put in the last frame
-        if( $endTime ) {
-            $count = max((int)($endTime - $lastIndex + 1), 1);
-            $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = $count, fps = 10)\r\n";
-        } else
-            $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
-        
-        // write out the script file
-        file_put_contents("$videoDir/video.avs", $script);
+        $lastFrame = $file;
+        $lastIndex = $index;
+      }
+      
+      // put in the last frame
+      if( $endTime ) {
+        $count = max((int)($endTime - $lastIndex + 1), 1);
+        $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = $count, fps = 10)\r\n";
+      } else
+        $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
+      
+      // write out the script file
+      file_put_contents("$videoDir/video.avs", $script);
     }
+  }
 }
 
 /**
