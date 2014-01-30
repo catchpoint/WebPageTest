@@ -772,46 +772,67 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
 }
 
 /**
-* Parse and trim raw timeline data
+* Parse and trim raw timeline data.
+* Remove everything before the first non-timeline event.
 * 
 * @param mixed $json
 * @param mixed $events
 */
 function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset) {
-  $messages = json_decode($json, true);
   $START_MESSAGE = '"WPT start"';
   $STOP_MESSAGE = '"WPT stop"';
-  $PAINT_EVENT = ',"type":"Paint",';
-  $startTime = null;
-  $endTime = null;
-  $firstEvent = null;
-  $firstNetEvent = null;
-  if (strpos($json, $START_MESSAGE) !== false)
-    $endTime = 0;
+  $hasNet = strpos($json, '"Network.') !== false ? true : false;
+  $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
+  $messages = json_decode($json, true);
   unset($json);
-  if ($removeParams || isset($filter) || isset($endTime)) {
-    if ($messages && is_array($messages)) {
-      // figure out the overall start offset and time of the first event
-      // aligning the video to the last paint event before the first navigation
-      $previousPaint = null;
-      foreach($messages as $index => &$message) {
-        $encoded = json_encode($message);
-        if (strpos($encoded, $START_MESSAGE) !== false) {
-          $startTime = FindNextNetworkRequest($messages, DevToolsEventTime($message));
-        } elseif (strpos($encoded, $STOP_MESSAGE) !== false)
-          $endTime = DevToolsEventTime($message);
-        if (!isset($firstEvent)) {
-          if (strpos($encoded, $PAINT_EVENT) !== false)
-            $previousPaint = DevToolsEventEndTime($message);
-          if (DevToolsIsValidNetRequest($message)) {
-            $firstNetEvent = DevToolsEventTime($message);
-            $firstEvent = isset($previousPaint) ? $previousPaint : $firstNetEvent;
-          }
+
+  $firstEvent = null;
+  $recording = $hasTrim ? false : true;
+  $recordPending = false;
+  $events = array();
+  $startOffset = null;
+  
+  foreach ($messages as $message) {
+    if (is_array($message)) {
+      // See if we got the first valid event in the trace (throw away the timeline
+      // events at the beginning that are from video capture starting).
+      if ($hasNet) {
+        if (!$firstEvent && array_key_exists('method', $message) && $message['method'] !== 'Timeline.eventRecorded') {
+          $eventTime = DevToolsEventTime($message);
+          $firstEvent = isset($eventTime) ? $eventTime : 0;
+        }
+      } elseif (!$firstEvent) {
+        $eventTime = DevToolsEventTime($message);
+        $firstEvent = isset($eventTime) ? $eventTime : 0;
+      }
+      
+      // see if we are waiting for the first net message after a WPT Start
+      if  ($recordPending && array_key_exists('method', $message)) {
+        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+        if ($method_class === 'Network' || $method_class === 'Page') {
+          $recordPending = false;
+          $recording = true;
         }
       }
-      foreach($messages as &$message) {
-        if (DevToolsMatchEvent($filter, $message, $startTime, $endTime)) {
-          if ($removeParams) {
+
+      // see if we got a stop message (do this before capture so we don't include it)
+      if ($recording && $hasTrim) {
+        $encoded = json_encode($message);
+        if (strpos($encoded, $STOP_MESSAGE) !== false)
+          $recording = false;
+      }
+
+      // keep any events that we need to keep
+      if ($recording && isset($firstEvent)) {
+        if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
+          if (!isset($startOffset) && $firstEvent) {
+            $eventTime = DevToolsEventTime($message);
+            if ($eventTime) {
+              $startOffset = $eventTime - $firstEvent;
+            }
+          }
+
+          if ($removeParams && array_key_exists('params', $message)) {
             $event = $message['params'];
             $event['method'] = $message['method'];
             $events[] = $event;
@@ -820,13 +841,15 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
           }
         }
       }
+                    
+      // see if we got a start message (do this after capture so we don't include it)
+      if (!$recording && !$recordPending && $hasTrim) {
+        $encoded = json_encode($message);
+        if (strpos($encoded, $START_MESSAGE) !== false)
+          $recordPending = true;
+      }
     }
-  } else
-    $events = $messages;
-  if (isset($startTime) && $startTime > 0 && isset($firstEvent) && $firstEvent > 0 && $startTime > $firstEvent)
-    $startOffset = $startTime - $firstEvent;
-  elseif (isset($firstEvent) && isset($firstNetEvent) && $firstNetEvent > $firstEvent)
-    $startOffset = $firstNetEvent - $firstEvent;
+  }  
 }
 
 function DevToolsEventTime(&$event) {
@@ -839,9 +862,9 @@ function DevToolsEventTime(&$event) {
         array_key_exists('startTime', $event['params']['record']))
       $time = floatval($event['params']['record']['startTime']);
     elseif (array_key_exists('timestamp', $event['params']))
-      $time = $event['params']['timestamp'] * 1000;
+      $time = floatval($event['params']['timestamp']) * 1000.0;
     elseif (array_key_exists('message', $event['params']) && array_key_exists('timestamp', $event['params']['message']))
-      $time = $event['params']['message']['timestamp'] * 1000;
+      $time = floatval($event['params']['message']['timestamp']) * 1000.0;
   }
   return $time;
 }
@@ -856,7 +879,7 @@ function DevToolsEventEndTime(&$event) {
         array_key_exists('endTime', $event['params']['record']))
       $time = floatval($event['params']['record']['endTime']);
     elseif (array_key_exists('timestamp', $event['params']))
-      $time = $event['params']['timestamp'] * 1000;
+      $time = floatval($event['params']['timestamp']) * 1000.0;
   }
   return $time;
 }
@@ -910,13 +933,12 @@ function FindNextNetworkRequest(&$events, $startTime) {
 }
 
 function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null) {
-  $match = false;
+  $match = true;
   if (is_array($event) &&
       array_key_exists('method', $event) &&
       array_key_exists('params', $event)) {
-    $match = true;
-    if (isset($startTime)) {
-      $time = DevToolsEventTime($event);
+    if (isset($startTime) && $startTime) {
+      $time = DevToolsEventEndTime($event);
       if ($time < $startTime || (isset($endTime) && $endTime && $time >= $endTime))
         $match = false;
     }
@@ -1070,5 +1092,91 @@ function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_sta
   if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
       GetTimelineProcessingTimes($entry['params']['record'], $processingTimes, $processing_start, $processing_end);
   return $duration;
+}
+
+/**
+* Get the baseline start time in dev tools time for the given data.
+* 
+* The start time is the time of the first non-timeline event.
+* 
+* @param mixed $entries
+*/
+function GetDevToolsStartTime(&$entries) {
+  $startOffset = null;
+  foreach ($entries as &$entry) {
+    if (isset($entry) &&
+        is_array($entry) &&
+        array_key_exists('method', $entry) &&
+        $entry['method'] !== 'Timeline.eventRecorded') {
+      $eventTime = DevToolsEventTime($entry);
+      if ($eventTime && (!$startOffset || $eventTime < $startOffset)) {
+        $startOffset = $eventTime;
+      }
+    }
+  }    
+  return $startOffset;
+}
+
+/**
+* Get the relative offset for the video capture (in milliseconds).
+* This is the time between the first non-timeline event and the
+* last paint or rasterize event prior to it.
+* 
+* @param mixed $testPath
+* @param mixed $run
+* @param mixed $cached
+*/
+function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
+  $offset = 0;
+  $endTime = 0;
+  $lastEvent = 0;
+  $cachedText = '';
+  if( $cached )
+      $cachedText = '_Cached';
+  $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
+  if (gz_is_file($devToolsFile)){
+    $events = json_decode(gz_file_get_contents($devToolsFile), true);
+    if (is_array($events)) {
+      $lastPaint = 0;
+      $startTime = 0;
+      foreach ($events as &$event) {
+        if (is_array($event) && array_key_exists('method', $event)) {
+          $method_class = substr($event['method'], 0, strpos($event['method'], '.'));
+          
+          // calculate the start time stuff
+          if (!$startTime && ($method_class === 'Page' || $method_class === 'Network'))
+            $startTime = DevToolsEventTime($event);
+          if ($method_class === 'Timeline') {
+            $eventTime = DevToolsEventEndTime($event);
+            if ($eventTime &&
+                (!$startTime || $eventTime <= $startTime) &&
+                (!$lastPaint || $eventTime > $lastPaint)) {
+              $encoded = json_encode($event);
+              if (strpos($encoded, '"type":"Rasterize"') !== false ||
+                  strpos($encoded, '"type":"CompositeLayers"') !== false ||
+                  strpos($encoded, '"type":"Paint"') !== false) {
+                $lastPaint = $eventTime;
+              }
+            }
+          }
+          
+          // keep track of the last activity for the end time (for video)
+          if ($method_class === 'Page' || $method_class === 'Network') {
+            $eventTime = DevToolsEventEndTime($event);
+            if ($eventTime > $lastEvent)
+              $lastEvent = $eventTime;
+          }
+        }
+      }
+    }
+  }
+  
+  if ($startTime && $lastPaint && $lastPaint < $startTime)
+    $offset = round($startTime - $lastPaint);
+  
+  if ($startTime && $lastEvent && $lastEvent > $startTime)
+    $endTime = ceil($lastEvent - $startTime);
+    
+  return $offset;
 }
 ?>

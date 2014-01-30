@@ -10,6 +10,8 @@ require_once('devtools.inc.php');
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
+    if (substr($testPath, 0, 1) !== '.')
+      $testPath = './' . $testPath;
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';
@@ -17,7 +19,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
-    $current_version = 4;
+    $current_version = 5;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
@@ -45,6 +47,23 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
                     $time = (((int)$parts[1]) * 100) - $startOffset;
+                    if ($time >= 0 && (!isset($end) || $time <= $end)) {
+                      if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
+                        $frames['frames'][0] = array('path' => "$base_path/$previous_file",
+                                                     'file' => $previous_file);
+                        $first_file = $previous_file;
+                      } elseif (!isset($first_file))
+                        $first_file = $file;
+                      $last_file = $file;
+                      $frames['frames'][$time] = array('path' => "$base_path/$file",
+                                                       'file' => $file);
+                    }
+                    $previous_file = $file;
+                }
+            } elseif (strpos($file,'ms_') !== false && strpos($file,'.hist') === false) {
+                $parts = explode('_', $file);
+                if (count($parts) >= 2) {
+                    $time = intval($parts[1]) - $startOffset;
                     if ($time >= 0 && (!isset($end) || $time <= $end)) {
                       if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
                         $frames['frames'][0] = array('path' => "$base_path/$previous_file",
@@ -190,6 +209,8 @@ function GetImageHistogram($image_file, $options = null) {
             imagedestroy($im);
             unset($im);
         }
+        if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+          file_put_contents($histogram_file, json_encode($histogram));
     }
     return $histogram;
 }

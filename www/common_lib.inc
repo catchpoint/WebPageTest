@@ -1643,6 +1643,27 @@ function UnLock(&$lock) {
   }
 }
 
+function LockTest($testPath) {
+  $lock = null;
+  if (is_dir($testPath)) {
+    $lock = fopen( "$testPath/test.lock", 'w',  false);
+    if( $lock ) {
+      if( !flock($lock, LOCK_EX) ) {
+        fclose($lock);
+        $lock = false;
+      }
+    }
+  }
+  return $lock;
+}
+
+function UnlockTest(&$testLock) {
+  if (isset($testLock) && $testLock) {
+    flock($testLock, LOCK_UN);
+    fclose($testLock);
+    $testLock = null;
+  }
+}
 
 /**
 * Load and sort the video frame files into an arrray
@@ -1662,14 +1683,28 @@ function loadVideo($path, &$frames)
                 $file = basename($file);
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
-                    $index = (int)$parts[1];
+                    $index = intval($parts[1] * 100);
                     $frames[$index] = $file;
                 }
             }
-
-            // sort the frames in order
-            ksort($frames, SORT_NUMERIC);
+        } else {
+          $files = glob( $path . '/ms_*.jpg', GLOB_NOSORT );
+          if ($files && count($files)) {
+              $ret = true;
+              $frames = array();
+              foreach ($files as $file) {
+                  $file = basename($file);
+                  $parts = explode('_', $file);
+                  if (count($parts) >= 2) {
+                      $index = intval($parts[1]);
+                      $frames[$index] = $file;
+                  }
+              }
+          }
         }
+        // sort the frames in order
+        if (isset($frames) && count($frames))
+          ksort($frames, SORT_NUMERIC);
     }
 
     return $ret;
@@ -2062,7 +2097,7 @@ function getLabel($test_guid, $current_user) {
     }
 
     $db = new SQLite3('./dat/labels.db');
-    $result = $db->query('SELECT label FROM labels
+    $result = @$db->query('SELECT label FROM labels
                             WHERE test_id = "' . $db->escapeString($test_guid) . '"
                             AND user_updated="' . $db->escapeString($current_user) . '"');
 

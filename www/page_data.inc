@@ -63,6 +63,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
       $basic_results = true;
     if (isset($ret) && !$basic_results) {
+        $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         loadUserTimingData($ret, $testPath, $run, $cached);
         if (array_key_exists('loadTime', $ret) &&
             !$ret['loadTime'] &&
@@ -72,22 +73,30 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
         $video_dir = "$testPath/video_$run";
         if ($cached)
             $video_dir .= '_cached';
-        if( is_dir($video_dir) && (!array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'])) {
-            $frames = null;
-            loadVideo($video_dir, $frames);
-            if( isset($frames) && is_array($frames) && count($frames) ) {
-                end($frames);
-                $last = key($frames);
-                reset($frames);
-                if( $last ) {
-                    $ret['lastVisualChange'] = $last * 100;
-                    if (!array_key_exists('visualComplete', $ret))
-                        $ret['visualComplete'] = $ret['lastVisualChange'];
-                }
+        if (is_dir($video_dir)) {
+          $frames = null;
+          loadVideo($video_dir, $frames);
+          if( isset($frames) && is_array($frames) && count($frames) ) {
+            if (!array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange']) {
+              end($frames);
+              $last = max(key($frames) - $startOffset, 0);
+              reset($frames);
+              if( $last ) {
+                  $ret['lastVisualChange'] = $last;
+                  if (!array_key_exists('visualComplete', $ret))
+                      $ret['visualComplete'] = $ret['lastVisualChange'];
+              }
             }
+            if ((!array_key_exists('render', $ret) || !$ret['render']) && count($frames) > 1) {
+              next($frames);
+              $first = max(key($frames) - $startOffset, 0);
+              reset($frames);
+              if ($first)
+                $ret['render'] = $first;
+            }
+          }
         }
         require_once('./video/visualProgress.inc.php');
-        $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
         if (isset($progress) && is_array($progress)) {
             if (array_key_exists('SpeedIndex', $progress))
@@ -104,13 +113,9 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                 }
                 if (array_key_exists('VisuallyComplete', $progress['DevTools'])) {
                     $ret['VisuallyCompleteDT'] = $progress['DevTools']['VisuallyComplete'];
-                    if (!array_key_exists('visualComplete', $ret))
-                        $ret['visualComplete'] = $ret['VisuallyCompleteDT'];
                 }
                 if (array_key_exists('StartRender', $progress['DevTools'])) {
                     $ret['renderDT'] = $progress['DevTools']['StartRender'];
-                    if (!array_key_exists('render', $ret) || !$ret['render'])
-                      $ret['render'] = $ret['renderDT'];
                 }
             }
             if ((!array_key_exists('lastVisualChange', $ret) ||

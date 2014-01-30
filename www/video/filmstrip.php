@@ -72,17 +72,9 @@ foreach( $tests as &$test )
 // figure out the size of the resulting image
 $width = $thumbLeft + $colMargin;
 $count = 0;
-$skipped = $interval;
-$last = $end + $interval - 1;
-for( $frame = 0; $frame <= $last; $frame++ )
-{
-    $skipped++;
-    if( $skipped >= $interval )
-    {
-        $skipped = 0;
-        $count++;
-    }
-}
+$filmstrip_end_time = ceil($end / $interval) * $interval;
+for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval )
+  $count++;
 
 $width += ($columnWidth + ($colMargin * 2)) * $count;
 
@@ -106,27 +98,19 @@ imagefilledrectangle($im, 0, 0, $width, $height, $background);
 // put the time markers across the top
 $left = $thumbLeft;
 $top = $thumbTop - $fontHeight;
-$skipped = $interval;
-$last = $end + $interval - 1;
-for( $frame = 0; $frame <= $last; $frame++ )
-{
-    $skipped++;
-    if( $skipped >= $interval )
-    {
-        $left += $colMargin;
-        $skipped = 0;
-        $val = number_format((float)$frame / 10.0, 1) . 's';
-        $x = $left + (int)($columnWidth / 2.0) - (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
-        imagestring($im, $font, $x, $top, $val, $textColor);
-        $left += $columnWidth + $colMargin;
-    }
+$decimals = $interval >= 100 ? 1 : 3;
+for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+  $left += $colMargin;
+  $val = number_format((float)$ms / 1000.0, $decimals) . 's';
+  $x = $left + (int)($columnWidth / 2.0) - (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
+  imagestring($im, $font, $x, $top, $val, $textColor);
+  $left += $columnWidth + $colMargin;
 }
 
 // draw the text labels
 $top = $thumbTop;
 $left = $colMargin;
-foreach( $tests as &$test )
-{
+foreach( $tests as &$test ) {
     $top += $rowMargin;
     $x = $left + $labelWidth - (int)(strlen($test['label']) * $fontWidth);
     $y = $top + (int)(($test['video']['thumbHeight'] / 2.0) - ($fontHeight / 2.0));
@@ -137,84 +121,59 @@ foreach( $tests as &$test )
 // fill in the actual thumbnails
 $top = $thumbTop;
 $thumb = null;
-foreach( $tests as &$test )
-{
-    $aft = (int)$test['aft'] / 100;
+foreach( $tests as &$test ) {
     $left = $thumbLeft;
     $top += $rowMargin;
-    
+    $testEnd = ceil($test['video']['end'] / $interval) * $interval;
     $lastThumb = null;
-    if( $thumb )
-    {
+    if( $thumb ) {
         imagedestroy($thumb);
         unset($thumb);
     }
-    $skipped = $interval;
-    $last = $end + $interval - 1;
-    for( $frame = 0; $frame <= $last; $frame++ )
-    {
-        $path = $test['video']['frames'][$frame];
-        if( isset($path) )
-            $test['currentframe'] = $frame;
-        else
-        {
-            if( isset($test['currentframe']) )
-                $path = $test['video']['frames'][$test['currentframe']];
-            else
-                $path = $test['video']['frames'][0];
+    for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+        // find the closest video frame <= the target time
+        $frame_ms = null;
+        foreach ($test['video']['frames'] as $frameTime => $file) {
+          if ($frameTime <= $ms && (!isset($frame_ms) || $frameTime > $frame_ms))
+            $frame_ms = $frameTime;
         }
-
+        $path = null;
+        if (isset($frame_ms))
+          $path = $test['video']['frames'][$frame_ms];
         if( !$lastThumb )
             $lastThumb = $path;
-        
-        $skipped++;
-        if( $skipped >= $interval )
-        {
-            $skipped = 0;
-
-            if( $frame - $interval + 1 <= $test['video']['end'] )
-            {
-                unset($border);
-                $cached = '';
-                if( $test['cached'] )
-                    $cached = '_cached';
-                $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
-                if( $lastThumb != $path || !$thumb )
-                {
-                    if( $lastThumb != $path )
-                        $border = $colChanged;
-                    if( $aft && $frame >= $aft )
-                    {
-                        $aft = 0;
-                        $border = $colAFT;
-                    }
-                    
-                    // load the new thumbnail
-                    if( $thumb )
-                    {
-                        imagedestroy($thumb);
-                        unset($thuumb);
-                    }
-                    $tmp = imagecreatefromjpeg("./$imgPath");
-                    if( $tmp )
-                    {
-                        $thumb = imagecreatetruecolor($test['video']['thumbWidth'], $test['video']['thumbHeight']);
-                        fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $test['video']['thumbWidth'], $test['video']['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);
-                        imagedestroy($tmp);
-                    }
+        if ($ms <= $testEnd) {
+            unset($border);
+            $cached = '';
+            if( $test['cached'] )
+                $cached = '_cached';
+            $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
+            if( $lastThumb != $path || !$thumb ) {
+                if( $lastThumb != $path )
+                    $border = $colChanged;
+                // load the new thumbnail
+                if( $thumb ) {
+                    imagedestroy($thumb);
+                    unset($thuumb);
                 }
-                
-                // draw the thumbnail
-                $left += $colMargin;
-                $width = imagesx($thumb);
-                $padding = ($columnWidth - $width) / 2;
-                if( isset($border) )
-                    imagefilledrectangle($im, $left - 2 + $padding, $top - 2, $left + imagesx($thumb) + 2 + $padding, $top + imagesy($thumb) + 2, $border);
-                imagecopy($im, $thumb, $left + $padding, $top, 0, 0, $width, imagesy($thumb));
-                $left += $columnWidth + $colMargin;
-                
-                $lastThumb = $path;
+                $tmp = imagecreatefromjpeg("./$imgPath");
+                if( $tmp ) {
+                    $thumb = imagecreatetruecolor($test['video']['thumbWidth'], $test['video']['thumbHeight']);
+                    fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $test['video']['thumbWidth'], $test['video']['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);
+                    imagedestroy($tmp);
+                }
             }
+            
+            // draw the thumbnail
+            $left += $colMargin;
+            $width = imagesx($thumb);
+            $padding = ($columnWidth - $width) / 2;
+            if( isset($border) )
+                imagefilledrectangle($im, $left - 2 + $padding, $top - 2, $left + imagesx($thumb) + 2 + $padding, $top + imagesy($thumb) + 2, $border);
+            imagecopy($im, $thumb, $left + $padding, $top, 0, 0, $width, imagesy($thumb));
+            $left += $columnWidth + $colMargin;
+            
+            $lastThumb = $path;
         }
     }
     

@@ -1,4 +1,5 @@
 <?php
+require_once('devtools.inc.php');
 
 /**
 * Walk the given directory and convert every AVI found into the format WPT expects
@@ -29,8 +30,10 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
-    $videoCodeVersion = 1;
+function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
+    if ($needLock)
+      $testLock = LockTest($testPath);
+    $videoCodeVersion = 3;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
@@ -59,14 +62,14 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
         $needsProcessing = true;
         if (is_dir($videoDir) && is_file("$videoDir/video.json")) {
-          $videoInfo = json_decode("$videoDir/video.json", true);
+          $videoInfo = json_decode(file_get_contents("$videoDir/video.json"), true);
           if ($videoInfo &&
               is_array($videoInfo) &&
               array_key_exists('ver', $videoInfo) &&
               $videoInfo['ver'] === $videoCodeVersion)
             $needsProcessing = false;
         }
-        if (!is_dir($videoDir) || !is_file("$videoDir/frame_0000.jpg")) {
+        if ($needsProcessing) {
             if (is_dir($videoDir))
               delTree($videoDir);
             if (!is_dir($videoDir))
@@ -75,7 +78,8 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
             $videoDir = realpath($videoDir);
             if (strlen($videoFile) && strlen($videoDir)) {
                 if (Video2PNG($videoFile, $videoDir, $crop)) {
-                    FindAVIViewport($videoDir, $viewport);
+                    $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
+                    FindAVIViewport($videoDir, $startOffset, $endTime, $viewport);
                     EliminateDuplicateAVIFiles($videoDir, $viewport);
                     $lastImage = ProcessVideoFrames($videoDir, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
@@ -92,6 +96,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
             file_put_contents("$videoDir/video.json", json_encode($videoInfo));
         }
     }
+    UnlockTest($testLock);
 }
 
 /**
@@ -105,7 +110,7 @@ function Video2PNG($infile, $outdir, $crop) {
   $oldDir = getcwd();
   chdir($outdir);
 
-  $command = "ffmpeg -report -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=10$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\"";
+  $command = "ffmpeg -report -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\"";
   $result;
   exec($command, $output, $result);
   $logFiles = glob("$outdir/ffmpeg*.log");
@@ -117,9 +122,9 @@ function Video2PNG($infile, $outdir, $crop) {
       foreach ($lines as $line) {
         if (preg_match('/decimate.*pts:(?P<timecode>[0-9]+).*drop_count:-[0-9]+/', $line, $matches)) {
           $frameCount++;
-          $frameTime = sprintf("%04d", intval($matches['timecode']) + 1);
+          $frameTime = ceil((intval($matches['timecode']) * 1000) / 60);
           $src = "$outdir/img-$frameCount.png";
-          $dest = "$outdir/image-$frameTime.png";
+          $dest = "$outdir/image-" . sprintf("%06d", $frameTime) . ".png";
           if (is_file($src)) {
             $ret = true;
             rename($src, $dest);
@@ -135,7 +140,6 @@ function Video2PNG($infile, $outdir, $crop) {
     foreach ($junkImages as $img)
       unlink($img);
   }
-
   chdir($oldDir);
   return $ret;
 }
@@ -149,24 +153,21 @@ function ProcessVideoFrames($videoDir, $renderStart) {
   $startFrame = null;
   $lastFrame = 0;
   $renderFrame = 0;
-  $renderBaseline = 0;
-  if (isset($renderStart))
-    $renderBaseline = ceil($renderStart / 100);
   $lastImage = null;
   $files = glob("$videoDir/image*.png");
   foreach ($files as $file) {
     if (preg_match('/image-(?P<frame>[0-9]+).png$/', $file, $matches)) {
-      $currentFrame = $matches['frame'];
+      $frame_ms = intval($matches['frame']);
       if (!isset($startFrame)) {
-        $startFrame = $currentFrame;
-        $lastImage = "$videoDir/frame_0000.jpg";
+        $startFrame = $frame_ms;
+        $lastImage = "$videoDir/ms_000000.jpg";
       } else {
-        if ($renderBaseline) {
+        if ($renderStart) {
           if (!$renderFrame)
-            $renderFrame = $currentFrame;
-          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $renderFrame + $renderBaseline) . '.jpg';
+            $renderFrame = $frame_ms;
+          $lastImage = "$videoDir/ms_" . sprintf('%06d', $frame_ms - $renderFrame + $renderStart) . '.jpg';
         } else {
-          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $startFrame) . '.jpg';
+          $lastImage = "$videoDir/ms_" . sprintf('%06d', $frame_ms - $startFrame) . '.jpg';
         }
       }
       CopyAVIFrame($file, $lastImage);
@@ -217,8 +218,15 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   $previousFile = null;
   $files = glob("$videoDir/image*.png");
   $crop = '+0+55';
-  if (isset($viewport))
-    $crop = "{$viewport['width']}x{$viewport['height']}+{$viewport['x']}+{$viewport['y']}";
+  if (isset($viewport)) {
+    // ifnore a 3-pixel margin on the actual viewport to allow for the progress bar
+    $margin = 5;
+    $top = $viewport['y'] + $margin;
+    $height = max($viewport['height'] - $margin, 1);
+    $left = $viewport['x'];
+    $width = $viewport['width'];
+    $crop = "{$width}x{$height}+{$left}+{$top}";
+  }
   foreach ($files as $file) {
     $duplicate = false;
     if (isset($previousFile)) {
@@ -257,7 +265,7 @@ function msToHMS($duration) {
 * @param mixed $videoDir
 * @param mixed $viewport
 */
-function FindAVIViewport($videoDir, &$viewport) {
+function FindAVIViewport($videoDir, $startOffset, $endTime, &$viewport) {
   $files = glob("$videoDir/image*.png");
   if ($files && count($files) && IsOrangeAVIFrame($files[0])) {
     // load the image and figure out the viewport area (orange)
@@ -319,7 +327,17 @@ function FindAVIViewport($videoDir, &$viewport) {
         $currentFrame = intval($matches['frame']);
         if (!isset($firstFrame))
           $firstFrame = $currentFrame;
-        rename($file, "$videoDir/image-" . sprintf('%04d', $currentFrame - $firstFrame) . ".png");
+        $frameTime = $currentFrame - $firstFrame;
+        if ($startOffset)
+          $frameTime = max($frameTime - $startOffset, 0);
+        if (!$endTime || $frameTime <= $endTime) {
+          $dest = "$videoDir/image-" . sprintf('%06d', $frameTime) . ".png";
+          if (is_file($dest))
+            unlink($dest);
+          rename($file, $dest);
+        } else {
+          unlink($file);
+        }
       }
     }
   }

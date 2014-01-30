@@ -7,12 +7,14 @@ if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
   header ("Content-type: application/json");
   gz_readfile_chunked("$testPath/$run{$cachedText}_timeline.json");
 } elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
-  include 'devtools.inc.php';
+  require_once('devtools.inc.php');
   $devTools = array();
   $startOffset = null;
   GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
   if (isset($devTools) && is_array($devTools) && count($devTools)) {
     $timeline = array();
+    // do a quick pass to see if we have non-timeline entries and
+    // to get the timestamp of the first non-timeline entry
     foreach ($devTools as &$entry) {
       if (isset($entry) &&
           is_array($entry) &&

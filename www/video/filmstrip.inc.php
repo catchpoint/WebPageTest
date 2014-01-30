@@ -10,6 +10,7 @@ $fastest = null;
 $ready = true;
 $error = null;
 $endTime = 'visual';
+$supports60fps = false;
 if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
     $endTime = trim($_REQUEST['end']);
 
@@ -126,21 +127,18 @@ if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 500 ) {
 
 $interval = 0;
 if (array_key_exists('ival', $_REQUEST))
-    $interval = (int)$_REQUEST['ival'];
-if( !$interval ) {
+    $interval = floatval($_REQUEST['ival']);
+if( $interval <= 0 ) {
     if ($defaultInterval) {
         $interval = $defaultInterval;
-    } else if( isset($fastest) )
-    {
+    } else if( isset($fastest) ) {
         if( $fastest > 3000 )
             $interval = 500;
         else
             $interval = 100;
-    }
-    else
+    } else
         $interval = 100;
 }
-$interval /= 100;
 
 /**
 * Load information about each of the tests (particularly about the video frames)
@@ -151,6 +149,7 @@ function LoadTestData() {
     global $admin;
     global $supportsAuth;
     global $user;
+    global $supports60fps;
 
     $count = 0;
     foreach( $tests as &$test ) {
@@ -199,16 +198,18 @@ function LoadTestData() {
             $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
             if (isset($testInfo) && is_array($testInfo) && array_key_exists('appurify_tests', $testInfo))
               $startOffset = 0;
-            $test['video']['progress'] = GetVisualProgress($testPath, $test['run'], $test['cached'], null, $end, $startOffset);
+            $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
             if (array_key_exists('frames', $test['video']['progress'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {
+                if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
+                  $supports60fps = true;
+                  
                 if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
-                  $index = round($ms / 100);
                   $path = "$videoPath/{$frame['file']}";
-                  if( $index < $test['video']['start'] )
-                      $test['video']['start'] = $index;
-                  if( $index > $test['video']['end'] )
-                      $test['video']['end'] = $index;
+                  if( $ms < $test['video']['start'] )
+                      $test['video']['start'] = $ms;
+                  if( $ms > $test['video']['end'] )
+                      $test['video']['end'] = $ms;
                   // figure out the dimensions of the source image
                   if( !array_key_exists('width', $test['video']) ||
                       !$test['video']['width'] ||
@@ -218,14 +219,14 @@ function LoadTestData() {
                       $test['video']['width'] = $size[0];
                       $test['video']['height'] = $size[1];
                   }
-                  $test['video']['frames'][$index] = $frame['file'];
-                  $test['video']['frame_progress'][$index] = $frame['progress'];
+                  $test['video']['frames'][$ms] = $frame['file'];
+                  $test['video']['frame_progress'][$ms] = $frame['progress'];
                 }
               }
               if ($test['end'] == -1)
-                  $test['end'] = $test['video']['end'] * 100;
+                  $test['end'] = $test['video']['end'];
               elseif ($test['end'])
-                  $test['video']['end'] = ($test['end'] + 99) / 100;
+                  $test['video']['end'] = $test['end'];
             }
             if( !isset($test['video']['frames'][0]) ) {
                 $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']]['file'];

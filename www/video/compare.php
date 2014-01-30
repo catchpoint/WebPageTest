@@ -333,7 +333,7 @@ function ScreenShotTable()
     global $maxCompare;
     global $color;
     global $bgcolor;
-    $aftAvailable = false;
+    global $supports60fps;
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
         $endTime = trim($_REQUEST['end']);
@@ -357,10 +357,7 @@ function ScreenShotTable()
 
         // build a table with the labels
         echo '<td id="labelContainer"><table id="videoLabels"><tr><th>&nbsp;</th></tr>';
-        foreach( $tests as &$test )
-        {
-            if($test['aft'])
-                $aftAvailable = true;
+        foreach( $tests as &$test ) {
             // figure out the height of this video
             $height = 100;
             if( $test['video']['width'] && $test['video']['height'] ) {
@@ -379,18 +376,11 @@ function ScreenShotTable()
             $cached = 0;
             if( $test['cached'] )
                 $cached = 1;
-            $testEnd = '';
-            if( $test['end'] )
-            {
-                $testEnd = (int)(($test['end'] + 99) / 100);
-                $testEnd = (float)$testEnd / 10.0;
-            }
 
             // Print the index outside of the link tag
             echo $test['index'] . ': ';
 
             if (!defined('EMBED')) {
-                //echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$test['id']},{$test['run']}," . $name . ",$cached,$testEnd\" checked=checked> ";
                 $cached = '';
                 if( $test['cached'] )
                     $cached = 'cached/';
@@ -415,23 +405,14 @@ function ScreenShotTable()
 
         // the actual video frames
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
-        $skipped = $interval;
-        $last = $end + $interval - 1;
-        for( $frame = 0; $frame <= $last; $frame++ )
-        {
-            $skipped++;
-            if( $skipped >= $interval )
-            {
-                $skipped = 0;
-                echo '<th>' . number_format((float)$frame / 10.0, 1) . 's</th>';
-                $filmstrip_end_time = $frame / 10.0;
-            }
-        }
+        $filmstrip_end_time = ceil($end / $interval) * $interval;
+        $decimals = $interval >= 100 ? 1 : 3;
+        for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval )
+          echo '<th>' . number_format((float)$ms / 1000.0, $decimals) . 's</th>';
         echo "</tr></thead><tbody>\n";
 
         $firstFrame = 0;
-        foreach( $tests as &$test )
-        {
+        foreach($tests as &$test) {
             $aft = (int)$test['aft'] / 100;
 
             // figure out the height of the image
@@ -448,76 +429,52 @@ function ScreenShotTable()
             }
             echo "<tr>";
 
+            $testEnd = ceil($test['video']['end'] / $interval) * $interval;
             $lastThumb = null;
             $frameCount = 0;
-            $skipped = $interval;
-            $last = $end + $interval - 1;
             $progress = null;
-            for( $frame = 0; $frame <= $last; $frame++ )
-            {
-                $path = null;
-                if( isset($test['video']['frames'][$frame]) )
-                    $path = $test['video']['frames'][$frame];
-                if( isset($path) )
-                    $test['currentframe'] = $frame;
-                else
-                {
-                    if( isset($test['currentframe']) )
-                        $path = $test['video']['frames'][$test['currentframe']];
-                    else
-                        $path = $test['video']['frames'][0];
+            for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+                // find the closest video frame <= the target time
+                $frame_ms = null;
+                foreach ($test['video']['frames'] as $frameTime => $file) {
+                  if ($frameTime <= $ms && (!isset($frame_ms) || $frameTime > $frame_ms))
+                    $frame_ms = $frameTime;
                 }
-
+                $path = null;
+                if (isset($frame_ms))
+                  $path = $test['video']['frames'][$frame_ms];
                 if (array_key_exists('frame_progress', $test['video']) &&
-                    array_key_exists($frame, $test['video']['frame_progress']))
-                  $progress = $test['video']['frame_progress'][$frame];
+                    array_key_exists($frame_ms, $test['video']['frame_progress']))
+                  $progress = $test['video']['frame_progress'][$frame_ms];
 
-                if( !$lastThumb )
+                if( !isset($lastThumb) )
                     $lastThumb = $path;
 
-                $skipped++;
-                if( $skipped >= $interval )
-                {
-                    $skipped = 0;
-
-                    echo '<td>';
-                    if( $frame - $interval + 1 <= $test['video']['end'] )
-                    {
-                        echo '';
-
-                        $cached = '';
-                        if( $test['cached'] )
-                            $cached = '_cached';
-                        $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
-                        echo "<a href=\"/$imgPath\">";
-                        echo "<img title=\"{$test['name']}\"";
-                        $class = 'thumb';
-                        if( $lastThumb != $path )
-                        {
-                            if( !$firstFrame || $frameCount < $firstFrame )
-                                $firstFrame = $frameCount;
-                            $class = 'thumbChanged';
-                        }
-                        if( $aft && $frame >= $aft )
-                        {
-                            $aft = 0;
-                            $class = 'thumbAFT';
-                        }
-                        echo " class=\"$class\"";
-                        echo " width=\"$width\"";
-                        if( $height )
-                            echo " height=\"$height\"";
-                        echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
-
-                        if (isset($progress)) {
-                            echo "<br>$progress%";
-                        }
-
-                        $lastThumb = $path;
+                echo '<td>';
+                if ($ms <= $testEnd) {
+                    $cached = '';
+                    if( $test['cached'] )
+                        $cached = '_cached';
+                    $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
+                    echo "<a href=\"/$imgPath\">";
+                    echo "<img title=\"{$test['name']}\"";
+                    $class = 'thumb';
+                    if ($lastThumb != $path) {
+                        if( !$firstFrame || $frameCount < $firstFrame )
+                            $firstFrame = $frameCount;
+                        $class = 'thumbChanged';
                     }
-                    $frameCount++;
-                    echo '</td>';
+                    echo " class=\"$class\"";
+                    echo " width=\"$width\"";
+                    if( $height )
+                        echo " height=\"$height\"";
+                    echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                    if (isset($progress))
+                        echo "<br>$progress%";
+                    $lastThumb = $path;
                 }
+                $frameCount++;
+                echo '</td>';
             }
             echo "</tr>\n";
         }
@@ -529,8 +486,7 @@ function ScreenShotTable()
         // end of the container table
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
-        $ival = $interval * 100;
-        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$ival&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
+        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
@@ -564,27 +520,33 @@ function ScreenShotTable()
 
                         // fill in the interval selection
                         echo "<td>";
+                        if ($supports60fps) {
+                          $checked = '';
+                          if( $interval < 100 )
+                              $checked = ' checked=checked';
+                          echo "<input type=\"radio\" name=\"ival\" value=\"16.67\"$checked onclick=\"this.form.submit();\"> 60 FPS<br>";
+                        }
                         $checked = '';
-                        if( $interval <= 1 )
+                        if( ($supports60fps && $interval == 100) || (!$supports60fps && $interval < 500) )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"100\"$checked onclick=\"this.form.submit();\"> 0.1 sec<br>";
                         $checked = '';
-                        if( $interval == 5 )
+                        if( $interval == 500 )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"500\"$checked onclick=\"this.form.submit();\"> 0.5 sec<br>";
                         $checked = '';
-                        if( $interval == 10 )
+                        if( $interval == 1000 )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"1000\"$checked onclick=\"this.form.submit();\"> 1 sec<br>";
                         $checked = '';
-                        if( $interval == 50 )
+                        if( $interval > 1000 )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec<br>";
                         echo "</td>";
 
                         // fill in the end-point selection
                         echo "<td>";
-                        if( !$aftAvailable && !strcasecmp($endTime, 'aft') )
+                        if( !strcasecmp($endTime, 'aft') )
                             $endTime = 'visual';
                         $checked = '';
                         if( !strcasecmp($endTime, 'visual') )
@@ -602,13 +564,6 @@ function ScreenShotTable()
                         if( !strcasecmp($endTime, 'full') )
                             $checked = ' checked=checked';
                         echo "<input type=\"radio\" name=\"end\" value=\"full\"$checked onclick=\"this.form.submit();\"> Fully Loaded<br>";
-                        if( $aftAvailable )
-                        {
-                            $checked = '';
-                            if( !strcasecmp($endTime, 'aft') )
-                                $checked = ' checked=checked';
-                            echo "<input type=\"radio\" name=\"end\" value=\"aft\"$checked onclick=\"this.form.submit();\"> AFT<br>";
-                        }
                         echo "</td></tr>";
                     ?>
                 </table>
@@ -616,12 +571,13 @@ function ScreenShotTable()
         </div>
         <?php
         // display the waterfall if there is only one test
+        $end_seconds = $filmstrip_end_time / 1000;
         if( count($tests) == 1 ) {
             $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
-            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1" );
+            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1" );
             echo '<br><br>';
         } else {
           $waterfalls = array();
@@ -634,7 +590,7 @@ function ScreenShotTable()
           $labels='';
           if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
             $labels = '&labels=0';
-          InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1$labels");
+          InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
         }
         ?>
 

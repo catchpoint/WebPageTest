@@ -81,8 +81,13 @@ define('PCLZIP_TEMPORARY_DIR', $tempDir);
 if (isset($req_embed)) {
     define('EMBED', true);
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
 } elseif (isset($req_bare)) {
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
+    $noanalytics = true;
+    if (extension_loaded('newrelic'))
+      @newrelic_disable_autorum();
 }
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
