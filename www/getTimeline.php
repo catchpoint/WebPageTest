@@ -7,7 +7,7 @@ if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
   header ("Content-type: application/json");
   gz_readfile_chunked("$testPath/$run{$cachedText}_timeline.json");
 } elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
-  include 'devtools.inc.php';
+  require_once('devtools.inc.php');
   $devTools = array();
   $startOffset = null;
   GetTimeline($testPath, $run, $cached, $devTools, $startOffset);

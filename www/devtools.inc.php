@@ -790,6 +790,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $recording = $hasTrim ? false : true;
   $recordPending = false;
   $events = array();
+  $startOffset = null;
   
   foreach ($messages as $message) {
     if (is_array($message)) {
@@ -824,10 +825,11 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       // keep any events that we need to keep
       if ($recording && isset($firstEvent)) {
         if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
-          if (!$startOffset && $firstEvent) {
+          if (!isset($startOffset) && $firstEvent) {
             $eventTime = DevToolsEventTime($message);
-            if ($eventTime)
+            if ($eventTime) {
               $startOffset = $eventTime - $firstEvent;
+            }
           }
 
           if ($removeParams && array_key_exists('params', $message)) {
