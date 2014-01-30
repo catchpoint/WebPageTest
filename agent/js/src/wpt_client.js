@@ -235,12 +235,19 @@ function Client(args) {
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
-  this.scheduleBrowserAvailable = undefined;
   this.handlingUncaughtException_ = undefined;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
 
   logger.extra('Created Client (urlPath=%s): %j', urlPath, this);
+
+  // This will get overriden by any client that wants to provide browser
+  // availibility but needs to default to true and provide a promise return.
+  this.scheduleBrowserAvailable = function(){
+    var done = new webdriver.promise.Deferred();
+    done.fulfill(true);
+    return done.promise;
+  };
 }
 util.inherits(Client, events.EventEmitter);
 /** Allow test access. */
