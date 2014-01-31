@@ -226,6 +226,7 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  * coming up.
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
+  'use strict';
   // Delete the existing profile (everything except the lib directory)
   this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
       function(files) {
@@ -233,8 +234,8 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
     var count = lines.length;
     for (var i = 0; i < count; i++) {
       var file = lines[i].trim();
-      if (file.length && file != '.' && file != '..' &&
-          file != 'lib' && file != 'shared_prefs') {
+      if (file.length && file !== '.' && file !== '..' &&
+          file !== 'lib' && file !== 'shared_prefs') {
         this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
                      file]);
       }
@@ -534,7 +535,7 @@ BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
         'wkrdp.Page.captureScreenshot': false,
         'wkrdp.Network.clearBrowserCache': true,
         'wkrdp.Network.clearBrowserCookies': true,
-        videoRecording: parseFloat(stdout) >= 4.4 ? true : false,
+        videoRecording: parseFloat(stdout) >= 4.4,
         videoFileExtension: 'mp4',
         takeScreenshot: true
       };
@@ -648,7 +649,7 @@ BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
     if (interfaces && interfaces.length) {
       var addresses =
         interfaces.match(/\s(?!127\.0\.0\.1)([\d]+\.){3}[\d]+\/[1-9]+/g);
-      if (this.checknet != 'yes' || (addresses && addresses.length)) {
+      if (this.checknet !== 'yes' || (addresses && addresses.length)) {
         if (!this.maxtemp) {
           return true;
         } else {
