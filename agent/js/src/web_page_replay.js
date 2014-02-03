@@ -31,6 +31,14 @@ var logger = require('logger');
 var process_utils = require('process_utils');
 
 /**
+ * Controls WebPageReplay for this particular browser via an command script.
+ * The script, usually named 'wpr', must accept the following commands:
+ *
+ * wpr record <IP or MAC>  -- Start recording all HTTP from the IP/MAC.
+ * wpr replay <IP or MAC>  -- Start replaying recorded HTTP from the IP/MAC.
+ * wpr getlog <IP or MAC>  -- Print replay error log for the IP/MAC to stdout.
+ * wpr end <IP or MAC>  -- Stop record/replay for the IP/MAC.
+ *
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
  * @param {Object.<string>} args options with string values:
  *   #param {string=} deviceAddr IP or MAC address, defaults to 'any'.
