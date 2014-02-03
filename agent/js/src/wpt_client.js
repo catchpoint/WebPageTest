@@ -538,7 +538,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
       method: 'POST',
       host: this.baseUrl_.hostname,
       port: this.baseUrl_.port,
-      path: path.join(this.baseUrl_.path, servlet),
+      path: this.baseUrl_.path.replace(/\/+$/,'') + '/' + servlet,
       headers: mpResponse.headers
     };
   var request = http.request(options, function(res) {
