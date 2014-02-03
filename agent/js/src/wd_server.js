@@ -184,6 +184,7 @@ WebDriverServer.prototype.init = function(initMessage) {
   // Force the JPEG quality level to be between 30 and 95 for screen shots
   this.imageQuality_ = initMessage.imageQuality || '30';
   this.imageQuality_ = Math.min(Math.max(parseInt(this.imageQuality_), 30), 95);
+  this.rotate_ = initMessage.rotate;
   this.captureTimeline_ = initMessage.captureTimeline;
   this.timelineStackDepth_ = 0;
   if (initMessage.timelineStackDepth)
@@ -414,9 +415,14 @@ WebDriverServer.prototype.addScreenshot_ = function(
       /\.png$/.test(diskPath)) {
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
-    process_utils.scheduleExec(this.app_, 'convert',
-        [diskPath, '-resize', '50%',
-         '-quality', this.imageQuality_, diskPathJPEG]).then(function() {
+    var convertCommand = [diskPath];
+    convertCommand.push('-resize', '50%');
+    if (this.rotate_)
+      convertCommand.push('-rotate', this.rotate_);
+    convertCommand.push('-quality', this.imageQuality_);
+    convertCommand.push(diskPathJPEG);
+    process_utils.scheduleExec(this.app_, 'convert', convertCommand).then(
+        function() {
       this.screenshots_.push({
         fileName: fileNameJPEG,
         diskPath: diskPathJPEG,
