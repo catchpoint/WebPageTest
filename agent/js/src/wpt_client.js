@@ -34,6 +34,7 @@ var multipart = require('multipart');
 var path = require('path');
 var url = require('url');
 var util = require('util');
+var webdriver = require('selenium-webdriver');
 var Zip = require('node-zip');
 
 /** Allow tests to stub out . */
@@ -47,6 +48,7 @@ var WORK_DONE_SERVLET = 'work/workdone.php';
 var JOB_CAPTURE_PACKETS = 'tcpdump';
 var JOB_CAPTURE_VIDEO = 'Capture Video';
 var JOB_FIRST_VIEW_ONLY = 'fvonly';
+var JOB_REPLAY = 'replay';
 var JOB_RUNS = 'runs';
 var JOB_TEST_ID = 'Test ID';
 
@@ -94,8 +96,6 @@ function Job(client, task) {
   if ('string' !== typeof this.id || !this.id) {
     throw new Error('Task has invalid/missing id: ' + JSON.stringify(task));
   }
-  this.captureVideo = (1 === task[JOB_CAPTURE_VIDEO]);
-  this.capturePackets = (1 === task[JOB_CAPTURE_PACKETS]);
   var runs = task[JOB_RUNS];
   if ('number' !== typeof runs || runs <= 0 || runs > MAX_RUNS ||
       0 !== (runs - Math.floor(runs))) {  // Make sure it's an integer.
@@ -104,12 +104,11 @@ function Job(client, task) {
   }
   this.runs = runs;
   this.runNumber = 1;
-  var firstViewOnly = task[JOB_FIRST_VIEW_ONLY];
-  if (undefined !== firstViewOnly &&  // Undefined means false.
-      0 !== firstViewOnly && 1 !== firstViewOnly) {
-    throw new Error('Task has invalid fvonly field: ' + JSON.stringify(task));
-  }
-  this.isFirstViewOnly = !!firstViewOnly;
+  this.captureVideo = jsonBoolean(task, JOB_CAPTURE_VIDEO);
+  this.capturePackets = jsonBoolean(task, JOB_CAPTURE_PACKETS);
+  this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
+  this.isReplay = jsonBoolean(task, JOB_REPLAY);
+  this.runNumber = this.isReplay ? 0 : 1;
   this.isCacheWarm = false;
   this.resultFiles = [];
   this.zipResultFiles = {};
@@ -117,6 +116,17 @@ function Job(client, task) {
 }
 /** Public class. */
 exports.Job = Job;
+
+function jsonBoolean(task, attr) {
+  'use strict';
+  var value = task[attr];
+  if (value === undefined) {
+    return false;
+  } else if (0 === value || 1 === value) {
+    return !!value;
+  }
+  throw new Error('Invalid task field "' + attr + '": ' + JSON.stringify(task));
+}
 
 /**
  * Called to finish the current run of this job, submit results, start next run.
@@ -240,18 +250,20 @@ function Client(args) {
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
 
   logger.extra('Created Client (urlPath=%s): %j', urlPath, this);
-
-  // This will get overriden by any client that wants to provide browser
-  // availibility but needs to default to true and provide a promise return.
-  this.scheduleBrowserAvailable = function(){
-    var done = new webdriver.promise.Deferred();
-    done.fulfill(true);
-    return done.promise;
-  };
 }
 util.inherits(Client, events.EventEmitter);
 /** Allow test access. */
 exports.Client = Client;
+
+/**
+ * May get overridden to check for browser availability. False prevents polling.
+ *
+ * @returns {webdriver.promise.Promise}
+ */
+Client.prototype.scheduleBrowserAvailable = function() {
+  'use strict';
+  return webdriver.promise.fullyResolved(true);
+};
 
 /**
  * Unhandled exception in the client process.
@@ -349,6 +361,12 @@ Client.prototype.processJobResponse_ = function(responseBody) {
     this.emit('nojob');
     return;
   }
+  // TODO(klm): remove if/when WPT server starts sending explicit replay=1.
+  // Detect WebPageReplay request mangled into the browser name.
+  if (task.browser && /-wpr$/.test(task.browser)) {
+    task.browser = task.browser.match(/(.*)-wpr$/)[1];
+    task[JOB_REPLAY] = 1;
+  }
   var job = new Job(this, task);
   logger.info('Got job: %j', job);
   this.startNextRun_(job);
@@ -415,29 +433,37 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
     this.currentJob_ = undefined;
-    this.submitResult_(job, isRunFinished, function(e) {
-      this.handlingUncaughtException_ = undefined;
-      if (e) {
-        logger.error('Unable to submit result: %s', e.stack);
-      }
-      // Run until we finish the last iteration.
-      // Do not increment job.runNumber past job.runs.
-      if (e || (isRunFinished && job.runNumber === job.runs)) {
-        this.emit('done', job);
-      } else {
-        // Continue running
-        if (isRunFinished) {
-          job.runNumber += 1;
-          if (job.runNumber > job.runs) {  // Sanity check.
-            throw new Error('Internal error: job.runNumber > job.runs');
-          }
-        }
-        this.startNextRun_(job);
-      }
-    }.bind(this));
+    if (0 === job.runNumber) {  // Do not submit a WebPageReplay recording run.
+      this.endOfRun_(job, isRunFinished, /*e=*/undefined);
+    } else {
+      this.submitResult_(job, isRunFinished,
+          this.endOfRun_.bind(this, job, isRunFinished));
+    }
   } else {  // Belated finish of an old already timed-out job
     logger.error('Timed-out job finished, but too late: %s', job.id);
     this.handlingUncaughtException_ = undefined;
+  }
+};
+
+Client.prototype.endOfRun_ = function(job, isRunFinished, e) {
+  'use strict';
+  this.handlingUncaughtException_ = undefined;
+  if (e) {
+    logger.error('Unable to submit result: %s', e.stack);
+  }
+  // Run until we finish the last iteration.
+  // Do not increment job.runNumber past job.runs.
+  if (e || (isRunFinished && job.runNumber === job.runs)) {
+    this.emit('done', job);
+  } else {
+    // Continue running
+    if (isRunFinished) {
+      job.runNumber += 1;
+      if (job.runNumber > job.runs) {  // Sanity check.
+        throw new Error('Internal error: job.runNumber > job.runs');
+      }
+    }
+    this.startNextRun_(job);
   }
 };
 
