@@ -648,8 +648,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     if (!array_key_exists('bytesInData', $rawRequests[$id]))
                         $rawRequests[$id]['bytesInData'] = 0;
-                    if (array_key_exists('encodedDataLength', $event))
+                    if (array_key_exists('encodedDataLength', $event) && $event['encodedDataLength'])
                         $rawRequests[$id]['bytesInData'] += $event['encodedDataLength'];
+                    elseif (array_key_exists('dataLength', $event) && $event['dataLength'])
+                        $rawRequests[$id]['bytesInData'] += $event['dataLength'];
                 }
                 if ($event['method'] == 'Network.responseReceived' &&
                     array_key_exists('response', $event)) {
