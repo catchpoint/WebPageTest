@@ -407,8 +407,13 @@ function ScreenShotTable()
         echo '<td><div id="videoDiv"><table id="video"><thead><tr>';
         $filmstrip_end_time = ceil($end / $interval) * $interval;
         $decimals = $interval >= 100 ? 1 : 3;
-        for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval )
+        $frameCount = 0;
+        $ms = 0;
+        while( $ms < $filmstrip_end_time ) {
+          $ms = $frameCount * $interval;
           echo '<th>' . number_format((float)$ms / 1000.0, $decimals) . 's</th>';
+          $frameCount++;
+        }
         echo "</tr></thead><tbody>\n";
 
         $firstFrame = 0;
@@ -433,7 +438,9 @@ function ScreenShotTable()
             $lastThumb = null;
             $frameCount = 0;
             $progress = null;
-            for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+            $ms = 0;
+            while( $ms < $filmstrip_end_time ) {
+                $ms = $frameCount * $interval;
                 // find the closest video frame <= the target time
                 $frame_ms = null;
                 foreach ($test['video']['frames'] as $frameTime => $file) {

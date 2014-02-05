@@ -73,8 +73,11 @@ foreach( $tests as &$test )
 $width = $thumbLeft + $colMargin;
 $count = 0;
 $filmstrip_end_time = ceil($end / $interval) * $interval;
-for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval )
+$ms = 0;
+while( $ms < $filmstrip_end_time ) {
+  $ms = $count * $interval;
   $count++;
+}
 
 $width += ($columnWidth + ($colMargin * 2)) * $count;
 
@@ -99,7 +102,11 @@ imagefilledrectangle($im, 0, 0, $width, $height, $background);
 $left = $thumbLeft;
 $top = $thumbTop - $fontHeight;
 $decimals = $interval >= 100 ? 1 : 3;
-for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+$frameCount = 0;
+$ms = 0;
+while( $ms < $filmstrip_end_time ) {
+  $ms = $frameCount * $interval;
+  $frameCount++;
   $left += $colMargin;
   $val = number_format((float)$ms / 1000.0, $decimals) . 's';
   $x = $left + (int)($columnWidth / 2.0) - (int)((double)$fontWidth * ((double)strlen($val) / 2.0));
@@ -130,7 +137,11 @@ foreach( $tests as &$test ) {
         imagedestroy($thumb);
         unset($thumb);
     }
-    for( $ms = 0; $ms <= $filmstrip_end_time; $ms += $interval ) {
+    $frameCount = 0;
+    $ms = 0;
+    while( $ms < $filmstrip_end_time ) {
+        $ms = $frameCount * $interval;
+        $frameCount++;
         // find the closest video frame <= the target time
         $frame_ms = null;
         foreach ($test['video']['frames'] as $frameTime => $file) {
