@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var browser_base = require('browser_base');
 var child_process = require('child_process');
 var fs = require('fs');
 var logger = require('logger');
@@ -57,15 +58,16 @@ var knownOpts = {
 var WD_SERVER_EXIT_TIMEOUT = 5000;  // Wait for 5 seconds before force-killing
 
 /**
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {wpt_client.Client} client the WebPagetest client.
  * @param {Object} flags from knownOpts.
  * @constructor
  */
-function Agent(client, flags) {
+function Agent(app, client, flags) {
   'use strict';
   this.client_ = client;
   this.flags_ = flags;
-  this.app_ = webdriver.promise.controlFlow();
+  this.app_ = app;
   process_utils.injectWdAppLogging('agent_main', this.app_);
   // The directory to store run result files. Clean it up before+after each run.
   // We want a fixed name, to avoid leaving junk after agent crashes/restarts.
@@ -77,19 +79,13 @@ function Agent(client, flags) {
   this.wdServer_ = undefined;  // The wd_server child process.
   this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
-  // Create a single (separate) instance of the browser for checking status
-  var browserType = (flags.browser ||
-                     'browser_local_chrome.BrowserLocalChrome');
-  logger.debug('Creating agent browser ' + browserType);
-  var lastDot = browserType.lastIndexOf('.');
-  var browserModule = require(browserType.substring(0, lastDot));
-  var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-  this.browser_ = new BrowserClass(this.app_, flags);
+  // Create a single (separate) instance of the browser for checking status.
+  this.browser_ = browser_base.createBrowser(this.app_, flags);
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
-  this.client_.scheduleBrowserAvailable =
-      this.scheduleBrowserAvailable_.bind(this);
+  this.client_.onIsReady =
+      this.browser_.scheduleIsAvailable.bind(this.browser_);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -188,9 +184,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
           fs.readFile, ipcMsg.videoFile).then(function(buffer) {
         var ext = path.extname(ipcMsg.videoFile);
-        var mimeType = 'video/avi';
-        if (ext == '.mp4')
-          mimeType = 'video/mp4';
+        var mimeType = ('.mp4' === ext) ? 'video/mp4' : 'video/avi';
         job.resultFiles.push(new wpt_client.ResultFile(
             wpt_client.ResultFile.ResultType.IMAGE,
             'video' + ext, mimeType, buffer));
@@ -269,23 +263,6 @@ Agent.prototype.startJobRun_ = function(job) {
 };
 
 /**
- * For supported browsers, checks to see if the browser is available.  Currently
- * only supported for Android where it checks to see fi the device is online
- * and the battery temperature is under the configured limit.
- *
- * @private
- */
-Agent.prototype.scheduleBrowserAvailable_ = function() {
-  if (this.browser_['scheduleIsAvailable'] === undefined) {
-    var done = new webdriver.promise.Deferred();
-    done.fulfill(true);
-    return done.promise;
-  } else {
-    return this.browser_.scheduleIsAvailable();
-  }
-}
-
-/**
  * Makes sure the run temp dir exists and is empty, but ignores deletion errors.
  * Currently supports only flat files, no subdirectories.
  * @private
@@ -352,7 +329,8 @@ ScriptError.prototype = new Error();
  */
 Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
   'use strict';
-  var fromHost, toHost, proxy, url;
+  // Assign nulls to appease 'possibly uninitialized' warnings.
+  var fromHost = null, toHost = null, proxy = null, url = null;
   script.split('\n').forEach(function(line, lineNumber) {
     line = line.trim();
     if (!line || 0 === line.indexOf('//')) {
@@ -449,7 +427,7 @@ Agent.prototype.scheduleCleanup_ = function() {
       var pi; // Declare outside the loop, to avoid a jshint warning
       while (pid) {
         pi = undefined;
-        for (var i in processInfos) {
+        for (var i = 0; i < processInfos.length; ++i) {
           if (processInfos[i].pid === pid) {
             pi = processInfos.splice(i, 1)[0];
             logger.debug('Not killing user %s pid=%s: %s %s', process.env.USER,
@@ -505,8 +483,9 @@ exports.main = function(flags) {
   }
   exports.setSystemCommands();
   delete flags.argv; // Remove nopt dup
-  var client = new wpt_client.Client(flags);
-  var agent = new Agent(client, flags);
+  var app = webdriver.promise.controlFlow();
+  var client = new wpt_client.Client(app, flags);
+  var agent = new Agent(app, client, flags);
   agent.run();
 };
 

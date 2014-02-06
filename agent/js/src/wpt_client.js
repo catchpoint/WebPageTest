@@ -34,7 +34,6 @@ var multipart = require('multipart');
 var path = require('path');
 var url = require('url');
 var util = require('util');
-var webdriver = require('selenium-webdriver');
 var Zip = require('node-zip');
 
 /** Allow tests to stub out . */
@@ -208,7 +207,10 @@ exports.processResponse = function(response, callback) {
  * #field {Function=} onAbortJob job timeout callback.
  *     #param {Job} job the job that timed out.
  *         MUST call job.runFinished() after handling the timeout.
+ * #field {Function=} onIsReady agent ready check callback.
+ *     Any exception would skip polling for new jobs.
  *
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
  * @param {Object} args that contains:
  *     #param {string} serverUrl server base URL.
  *     #param {string} location location name to use for job polling
@@ -217,9 +219,10 @@ exports.processResponse = function(response, callback) {
  *     #param {?string=} apiKey API key, if any.
  *     #param {number=} jobTimeout milliseconds until the job is killed.
  */
-function Client(args) {
+function Client(app, args) {
   'use strict';
   events.EventEmitter.call(this);
+  this.app_ = app;
   var serverUrl = (args.serverUrl || '');
   if (-1 === serverUrl.indexOf('://')) {
     serverUrl = 'http://' + serverUrl;
@@ -245,6 +248,7 @@ function Client(args) {
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
+  this.onIsReady = undefined;
   this.handlingUncaughtException_ = undefined;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
@@ -254,16 +258,6 @@ function Client(args) {
 util.inherits(Client, events.EventEmitter);
 /** Allow test access. */
 exports.Client = Client;
-
-/**
- * May get overridden to check for browser availability. False prevents polling.
- *
- * @returns {webdriver.promise.Promise}
- */
-Client.prototype.scheduleBrowserAvailable = function() {
-  'use strict';
-  return webdriver.promise.fullyResolved(true);
-};
 
 /**
  * Unhandled exception in the client process.
@@ -304,7 +298,11 @@ Client.prototype.onUncaughtException_ = function(e) {
  */
 Client.prototype.requestNextJob_ = function() {
   'use strict';
-  this.scheduleBrowserAvailable().then(function() {
+  this.app_.schedule('Check if agent is ready for new jobs', function() {
+    if (this.onIsReady) {
+      this.onIsReady();
+    }
+  }.bind(this)).then(function() {
     var getWorkUrl = url.resolve(this.baseUrl_,
       GET_WORK_SERVLET +
         '?location=' + encodeURIComponent(this.location_) +
@@ -335,7 +333,7 @@ Client.prototype.requestNextJob_ = function() {
       this.emit('nojob');
     }.bind(this));
   }.bind(this), function(e) {
-    logger.warn('Browser not available: ' + e.message);
+    logger.warn('Agent is not ready: ' + e.message);
     this.emit('nojob');
   }.bind(this));
 };
@@ -368,7 +366,11 @@ Client.prototype.processJobResponse_ = function(responseBody) {
     task[JOB_REPLAY] = 1;
   }
   var job = new Job(this, task);
-  logger.info('Got job: %j', job);
+  this.currentJob_ = null;
+  logger.info('Got job: %s', JSON.stringify(job, function(name, value) {
+    // ControlFlow has circular references to us through its queue.
+    return ('app_' === name) ? '<REDACTED>' : value;
+  }));
   this.startNextRun_(job);
 };
 
@@ -445,6 +447,14 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
   }
 };
 
+/**
+ * Wrap up a run and possibly initiate the next run.
+ *
+ * @param {Job} job
+ * @param {boolean} isRunFinished
+ * @param {Error} e
+ * @private
+ */
 Client.prototype.endOfRun_ = function(job, isRunFinished, e) {
   'use strict';
   this.handlingUncaughtException_ = undefined;
@@ -564,7 +574,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
       method: 'POST',
       host: this.baseUrl_.hostname,
       port: this.baseUrl_.port,
-      path: this.baseUrl_.path.replace(/\/+$/,'') + '/' + servlet,
+      path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
       headers: mpResponse.headers
     };
   var request = http.request(options, function(res) {

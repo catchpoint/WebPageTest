@@ -70,6 +70,8 @@ describe('browser_android_chrome small', function() {
     }
   }
 
+  var regExTest = /./.test;
+
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
@@ -86,14 +88,23 @@ describe('browser_android_chrome small', function() {
       if ((/chromedriver/).test(command)) {
         shellStub.addKeepAlive(proc);
         keepAlive = true;
-      } else if ((/adb/).test(command) && args.some(function(arg) {
-          return 'force-stop' === arg;
-        })) {
-        // Ignore `adb force-stop`
       } else if ('xset' === command) {
         global.setTimeout(function() {
           proc.stdout.emit('data', 'has display');
         }, 1);
+      } else if ((/adb/).test(command)) {
+        if (args.some(regExTest.bind(/^shell$/)) &&
+            args.some(regExTest.bind(/^ps$/))) {
+          global.setTimeout(function() {
+            proc.stdout.emit('data',
+                'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
+            proc.stdout.emit('data',
+                'root 1 0 560 404 ffffffff 00000000 S /init\n');
+          }, 1);
+        } else if (!args.some(regExTest.bind(/^force-stop$/))) {
+          // Ignore shell am force-stop.
+          keepAlive = shellStub.callback(proc, command, args);
+        }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
       }
@@ -181,7 +192,7 @@ describe('browser_android_chrome small', function() {
     if (process.platform === 'linux') {
       spawnStub.assertCall('xset', 'q');
     }
-    spawnStub.assertCall(chromedriver, /^\-port=\d+/);
+    spawnStub.assertCall({0: chromedriver, 1: /^\-port=\d+/});
     var chromedriverProcess = spawnStub.lastCall.returnValue;
     spawnStub.assertCall();
 
@@ -249,14 +260,16 @@ describe('browser_android_chrome small', function() {
       var keepAlive = false;
       var stdout;
       if (/adb$/.test(command)) {
-        if (args.some(function(arg) {
-                return (/^while true; do nc /).test(arg);
-              })) {
+        if (args.some(regExTest.bind(/^while true; do nc /))) {
           ncProc = proc;
           shellStub.addKeepAlive(ncProc);
           keepAlive = true;
         } else if ('echo x' === args[args.length - 1]) {
           stdout = 'x';
+        } else if (args.some(regExTest.bind(/^shell$/)) &&
+            args.some(regExTest.bind(/^ps$/))) {
+          stdout = 'USER PID PPID VSIZE RSS WCHAN PC NAME\n' +
+              'root 1 0 560 404 ffffffff 00000000 S /init\n';
         }
       } else {
         keepAlive = shellStub.callback(proc, command, args);

@@ -92,14 +92,14 @@ function BrowserAndroidChrome(app, args) {
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
   this.chromedriver_ = args.chromedriver;
-  this.chromePackage_ = undefined;
-  if (args.chromePackage)
+  if (args.chromePackage) {
     this.chromePackage_ = args.chromePackage;
-  else if (args.options && args.options.browserName) {
+  } else if (args.options && args.options.browserName) {
     var browserName = args.options.browserName;
     var separator = browserName.lastIndexOf('-');
-    if (separator >= 0)
+    if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
+    }
     this.chromePackage_ = KNOWN_BROWSERS[browserName];
   }
   this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
@@ -114,8 +114,8 @@ function BrowserAndroidChrome(app, args) {
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
-  this.maxtemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
-  this.checknet = args.checknet;
+  this.maxTemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
+  this.checkNet = 'yes' === args.checknet;
   this.videoCard_ = args.videoCard;
   this.deviceVideoPath_ = undefined;
   this.recordProcess_ = undefined;
@@ -125,6 +125,7 @@ function BrowserAndroidChrome(app, args) {
   var captureDir = toDir(args.captureDir);
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
+  this.videoFile_ = undefined;
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
@@ -224,6 +225,7 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  * by the installer so we need to keep that one.  We also have to keep the
  * "files" directory but empty it's contents to prevent the TOS UI from
  * coming up.
+ * @private
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
@@ -473,21 +475,13 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
-  this.adb_.shell(['ps']).then(function(procs){
-    if (procs && procs.length) {
-      var packages = procs.match(/\S*\.chrome[^\s:]*$/mg);
-      if (packages) {
-        var count = packages.length;
-        for (var i = 0; i < count; i++)
-          this.adb_.shell(['am', 'force-stop', packages[i].trim()]);
-      }
-    }
-  }.bind(this));
+  this.adb_.scheduleForceStopMatchingPackages(/\S*\.chrome^:*$/);
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
 /**
  * @return {boolean}
+ * @override
  */
 BrowserAndroidChrome.prototype.isRunning = function() {
   'use strict';
@@ -497,6 +491,7 @@ BrowserAndroidChrome.prototype.isRunning = function() {
 
 /**
  * @return {string} WebDriver URL.
+ * @override
  */
 BrowserAndroidChrome.prototype.getServerUrl = function() {
   'use strict';
@@ -505,6 +500,7 @@ BrowserAndroidChrome.prototype.getServerUrl = function() {
 
 /**
  * @return {string} DevTools URL.
+ * @override
  */
 BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
   'use strict';
@@ -575,17 +571,17 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
           stdout.trim(), this.videoCard_, onExit);
     }.bind(this));
   } else {
-      this.adb_.getStoragePath().then(function(storagePath) {
-        this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
-        this.videoFile_ = filename;
-        this.adb_.shell(['rm', this.deviceVideoPath_]).then(function() {
-          this.adb_.spawnShell(['screenrecord', '--verbose',
-                                '--bit-rate', 8000000,
-                                this.deviceVideoPath_]).then(function(proc) {
-            this.recordProcess_ = proc;
-          }.bind(this));
+    this.adb_.getStoragePath().then(function(storagePath) {
+      this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
+      this.videoFile_ = filename;
+      this.adb_.shell(['rm', this.deviceVideoPath_]).then(function() {
+        this.adb_.spawnShell(['screenrecord', '--verbose',
+                              '--bit-rate', 8000000,
+                              this.deviceVideoPath_]).then(function(proc) {
+          this.recordProcess_ = proc;
         }.bind(this));
       }.bind(this));
+    }.bind(this));
   }
 };
 
@@ -595,24 +591,18 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   if (this.deviceVideoPath_ && this.videoFile_) {
-    this.adb_.shell(['ps']).then(function(stdout) {
-      var lines = stdout.split("\n");
-      if (lines && lines.length) {
-        var lineCount = lines.length;
-        for (var i = 1; i < lineCount; i++) {
-          var line = lines[i];
-          var matches = line.match(/^\S+\s+\s(\d+)\s.*screenrecord/i);
-          if (matches) {
-            this.adb_.shell(['kill', '-SIGINT', matches[1]]);
-          }
-        }
-      }
+    this.adb_.scheduleKill('screenrecord').then(function() {
       if (this.recordProcess_) {
-        process_utils.scheduleWait(this.app_, this.recordProcess_,
-                                   'screenrecord', 30000).then( function() {
-          this.recordProcess_ = undefined;
+        process_utils.scheduleWait(
+            this.app_, this.recordProcess_, 'screenrecord', 30000)
+            .then(function() {
           this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
         }.bind(this));
+      }
+    }.bind(this)).addBoth(function(e) {
+      this.recordProcess_ = undefined;
+      if (e) {
+        throw e;
       }
     }.bind(this));
   } else {
@@ -639,41 +629,31 @@ BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
 };
 
 /**
- * Checks to see if the device is attached, available and under the max temp
- * (if configured)
+ * Checks whether the browser is ready to run tests.
+ * Checks if the device is attached, available and under the max temp.
+ * Throws an exception if any of the requested checks fail.
+ *
+ * @override
  */
 BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
   'use strict';
-  // see if a device is answering and has a non-loopback IP address
-  return this.adb_.shell(['netcfg']).then(function(interfaces) {
-    if (interfaces && interfaces.length) {
-      var addresses =
-        interfaces.match(/\s(?!127\.0\.0\.1)([\d]+\.){3}[\d]+\/[1-9]+/g);
-      if (this.checknet !== 'yes' || (addresses && addresses.length)) {
-        if (!this.maxtemp) {
-          return true;
-        } else {
-          return this.adb_.shell(['cat',
-              '/sys/class/power_supply/battery/temp']).
-              then(function(deviceTemp){
-            if (deviceTemp && deviceTemp.length) {
-              deviceTemp = parseInt(deviceTemp) / 10.0;
-              if (deviceTemp <= this.maxtemp) {
-                return true;
-              } else {
-                throw new Error('Temp: ' + deviceTemp +
-                    ' is higher than the target of ' + this.maxtemp);
-              }
-            } else {
-              throw new Error('Device temp not available');
-            }
-          }.bind(this));
+  if (this.checkNet) {
+    this.adb_.scheduleDetectConnectedInterface().addErrback(function(e) {
+      throw new Error('Device offline: ' + e.message);
+    });
+  }
+  if (this.maxTemp) {
+    this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp'])
+        .then(function(deviceTempStr) {
+      if (deviceTempStr) {
+        var deviceTemp = parseInt(deviceTempStr) / 10.0;
+        if (deviceTemp > this.maxTemp) {
+          throw new Error('Temperature: ' + deviceTemp +
+              ' is higher than the maximum of ' + this.maxTemp);
         }
       } else {
-        throw new Error('No Network Address assigned');
+        throw new Error('Device temperature not available');
       }
-    } else {
-      throw new Error('Device offline');
-    }
-  }.bind(this));
+    }.bind(this));
+  }
 };

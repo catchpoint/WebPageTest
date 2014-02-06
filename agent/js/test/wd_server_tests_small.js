@@ -46,6 +46,9 @@ function FakeWebSocket(url) {
   'use strict';
   logger.debug('Creating fake WebSocket: %s', url);
   this.commands = [];
+  global.setTimeout(function() {
+    this.emit('open');
+  }.bind(this), 10);
 }
 util.inherits(FakeWebSocket, events.EventEmitter);
 
@@ -80,6 +83,7 @@ describe('wd_server small', function() {
   var app;
   var wds;
   var writeFileStub;
+  var spawnStub;
 
   // Set to a small number of WD event loop ticks to reduce no-op ticks.
   wd_server.WAIT_AFTER_ONLOAD_MS =
@@ -96,6 +100,9 @@ describe('wd_server small', function() {
     // For saveScreenshot.
     writeFileStub = sandbox.stub(fs, 'writeFile',
         function(path, data, cb) { cb(); });
+
+    // PNG->JPEG conversion runs a command.
+    spawnStub = test_utils.stubOutProcessSpawn(sandbox);
 
     // Create a new ControlFlow for each test.
     app = new webdriver.promise.ControlFlow();
@@ -266,8 +273,7 @@ describe('wd_server small', function() {
         chromedriver: chromedriver,
         script: 'new webdriver.Builder().build();'
       });
-    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
-        webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
+    test_utils.tickUntilIdle(app, sandbox, 500);
 
     // * Verify after run 1, make sure we didn't quit/stop WD.
     // Should spawn the chromedriver process on port 4444.
@@ -280,7 +286,7 @@ describe('wd_server small', function() {
     should.equal(doneIpcMsg.cmd, 'done');
     [pageMessage, networkMessage, timelineMessage].should.eql(
         doneIpcMsg.devToolsMessages);
-    ['screen.png'].should.eql(
+    ['screen.jpg'].should.eql(
         doneIpcMsg.screenshots.map(function(s) { return s.fileName; }));
     should.equal(1, writeFileStub.callCount);
 
@@ -298,11 +304,11 @@ describe('wd_server small', function() {
         cmd: 'run',
         exitWhenDone: true,
         filePrefix: '1_Cached_',
+        pngScreenShot: true,
         chromedriver: chromedriver,
         script: 'new webdriver.Builder().build();'
       });
-    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
-        webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30);
+    test_utils.tickUntilIdle(app, sandbox);
 
     // * Verify after run 2, make sure we did quit+stop WD.
     // Make sure we did not spawn the WD server etc. for the second time.
@@ -350,7 +356,7 @@ describe('wd_server small', function() {
     var sendStub = sandbox.stub(wd_server.process, 'send');
     var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
 
-    // Connect DevTools
+    // Connect DevTools.
     test_utils.stubHttpGet(sandbox, /^http:\/\/localhost:\d+\/json$/,
         '[{"webSocketDebuggerUrl": "ws://gaga"}]');
     var stubWebSocket = sandbox.stub(devtools, 'WebSocket', FakeWebSocket);
@@ -365,12 +371,15 @@ describe('wd_server small', function() {
         exitWhenDone: false,
         filePrefix: '1_Cached_',
         chromedriver: chromedriver,
-        url: 'http://gaga.com/ulala'
+        url: 'http://gaga.com/ulala',
+        captureTimeline: true
       });
+    // Do not use tickUntilIdle -- it will fail, because we actually stall
+    // on the DevTools WebSocket connection, and we want to inject a bunch
+    // of stuff before proceeding.
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
         webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 10);
     var fakeWs = stubWebSocket.firstCall.thisValue;  // The DevTools WebSocket.
-    fakeWs.emit('open');  // DevTools WebSocket connected.
 
     // Simulate Chrome generating profiling messages as the page loads.
     var pageMessage = {method: 'Page.gaga'};
@@ -397,8 +406,7 @@ describe('wd_server small', function() {
       }
     }
     fakeWs.on('message', onPageNavigate);
-    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
-        webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 30 + 1000);
+    test_utils.tickUntilIdle(app, sandbox);
 
     // * Verify after run 1, make sure we didn't quit/stop Chrome.
     should.ok(startChromeStub.calledOnce);
@@ -412,10 +420,8 @@ describe('wd_server small', function() {
         'Timeline.start',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
-        'Page.navigate', // to blank
-        'Page.getResourceTree',
-        'Page.setDocumentContent',
-        'Page.navigate',
+        'Page.navigate',  // To blank page.
+        'Page.navigate',  // To the real page.
         'Page.captureScreenshot'
       ].should.eql(fakeWs.commands);
     fakeWs.commands = [];  // Reset for the next verification.
@@ -424,7 +430,7 @@ describe('wd_server small', function() {
     should.equal(doneIpcMsg.cmd, 'done');
     [pageMessage, networkMessage, timelineMessage,
         pageLoadedMessage].should.eql(doneIpcMsg.devToolsMessages);
-    ['screen.png'].should.eql(
+    ['screen.jpg'].should.eql(
         doneIpcMsg.screenshots.map(function(s) { return s.fileName; }));
     should.equal(1, writeFileStub.callCount);
 
@@ -439,15 +445,17 @@ describe('wd_server small', function() {
         exitWhenDone: true,
         filePrefix: '1_Cached_',
         chromedriver: chromedriver,
-        url: 'http://gaga.com/ulala'
+        url: 'http://gaga.com/ulala',
+        pngScreenShot: true
       });
     // Verify that messages get ignored between runs
     fakeWs.emit('message', JSON.stringify(networkMessage), {});
+    // Do not use tickUntilIdle -- see comment above for run 1.
     sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
         webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20 + 1000);
     // Simulate page load finish.
     fakeWs.emit('message', JSON.stringify(pageLoadedMessage), {});
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20);
+    test_utils.tickUntilIdle(app, sandbox);
 
     // * Verify after run 2, make sure we did quit+stop Chrome.
     // Make sure we did not spawn Chrome or connect DevTools repeatedly.
@@ -456,10 +464,8 @@ describe('wd_server small', function() {
 
     // These things get called for the second time on the second run.
     [
-        'Page.navigate', // to blank
-        'Page.getResourceTree',
-        'Page.setDocumentContent',
-        'Page.navigate',
+        'Page.navigate',  // To blank page.
+        'Page.navigate',  // To the real page.
         'Page.captureScreenshot'
       ].should.eql(fakeWs.commands);
     should.ok(sendStub.calledTwice);
@@ -514,8 +520,7 @@ describe('wd_server small', function() {
     wd_server.process.emit('message', {cmd: 'run', script: failingScript});
 
     // Now run the scheduled script.
-    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
-        webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 15);
+    test_utils.tickUntilIdle(app, sandbox);
 
     // Verify run sequence before sending the result
     should.ok(startWdServerStub.calledOnce);
@@ -544,7 +549,7 @@ describe('wd_server small', function() {
     var disconnectStub = sandbox.stub(wd_server.process, 'disconnect');
 
     wd_server.process.emit('uncaughtException', new Error(error));
-    sandbox.clock.tick(webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 5);
+    test_utils.tickUntilIdle(app, sandbox);
 
     should.ok(sendStub.calledOnce);
     should.equal(sendStub.firstCall.args[0].cmd, 'error');

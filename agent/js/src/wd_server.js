@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var browser_base = require('browser_base');
 var devtools = require('devtools');
 var fs = require('fs');
 var logger = require('logger');
@@ -144,14 +145,8 @@ WebDriverServer.prototype.init = function(initMessage) {
     this.actionCbRecurseGuard_ = false;
     this.app_ = webdriver.promise.controlFlow();
     process_utils.injectWdAppLogging('wd_server', this.app_);
-    // Create the browser via reflection
-    var browserType = (initMessage.browser ||
-        'browser_local_chrome.BrowserLocalChrome');
-    logger.debug('Creating ' + browserType);
-    var lastDot = browserType.lastIndexOf('.');
-    var browserModule = require(browserType.substring(0, lastDot));
-    var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-    this.browser_ = new BrowserClass(this.app_, initMessage);
+    // Create the browser according to flags.
+    this.browser_ = browser_base.createBrowser(this.app_, initMessage);
     this.capabilities_ = undefined;
     this.devTools_ = undefined;
     this.isCacheCleared_ = false;
@@ -181,14 +176,15 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.videoFile_ = undefined;
   this.runTempDir_ = initMessage.runTempDir || '';
   this.pngScreenShot_ = initMessage.pngScreenShot;
-  // Force the JPEG quality level to be between 30 and 95 for screen shots
-  this.imageQuality_ = initMessage.imageQuality || '30';
-  this.imageQuality_ = Math.min(Math.max(parseInt(this.imageQuality_), 30), 95);
+  // Force the screenshot JPEG quality level to be between 30 and 95.
+  var imgQ = initMessage.imageQuality ? parseInt(initMessage.imageQuality) : 30;
+  this.imageQuality_ = Math.min(Math.max(imgQ, 30), 95);
   this.rotate_ = initMessage.rotate;
   this.captureTimeline_ = initMessage.captureTimeline;
   this.timelineStackDepth_ = 0;
-  if (initMessage.timelineStackDepth)
+  if (initMessage.timelineStackDepth) {
     this.timelineStackDepth_ = parseInt(initMessage.timelineStackDepth);
+  }
   this.tearDown_();
 };
 
@@ -309,30 +305,30 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   if (this.isRecordingDevTools_) {
     this.devToolsMessages_.push(message);
   }
-  if (this.abortTimer_) {
-    // We received an 'Inspector.detached' message, as noted below, so ignore
-    // messages until our abortTimer fires.
-  } else if ('Page.loadEventFired' === message.method) {
-    if (this.isRecordingDevTools_) {
-      this.onPageLoad_();
+  // If abortTimer_ is set, it means we received an 'Inspector.detached'
+  // message, as noted below, so ignore messages until our abortTimer fires.
+  if (!this.abortTimer_) {
+    if ('Page.loadEventFired' === message.method) {
+      if (this.isRecordingDevTools_) {
+        this.onPageLoad_();
+      }
+    } else if ('Inspector.detached' === message.method) {
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+        // This message typically means that the browser has crashed.
+        // Instead of waiting for the timeout, we'll give the browser a couple
+        // seconds to paint an error message (for our screenshot) and then fail
+        // the page load.
+        var err = new Error('Inspector detached on run ' + this.runNumber_ +
+            ', did the browser crash?', this.runNumber_);
+        this.abortTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
+      } else {
+        // TODO detach during coalesce?
+        logger.warn('%s after Page.loadEventFired?', message.method);
+      }
     }
-  } else if ('Inspector.detached' === message.method) {
-    if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
-      // This message typically means that the browser has crashed.
-      // Instead of waiting for the timeout, we'll give the browser a couple
-      // seconds to paint an error message (for our screenshot) and then fail
-      // the page load.
-      var err = new Error('Inspector detached on run ' + this.runNumber_ +
-          ', did the browser crash?', this.runNumber_);
-      this.abortTimer_ = global.setTimeout(
-          this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
-    } else {
-      // TODO detach during coalesce?
-      logger.warn('%s after Page.loadEventFired?', message.method);
-    }
-  } else {
     // We might be able to detect timeouts via Network.loadingFailed and
-    // Page.frameStoppedLoading messages.  For now we'll let our timeoutTimer
+    // Page.frameStoppedLoading messages. For now we'll let our timeoutTimer
     // handle this.
   }
 };
@@ -409,40 +405,41 @@ WebDriverServer.prototype.addScreenshot_ = function(
     fileName, diskPath, description) {
   'use strict';
   logger.debug('Adding screenshot %s (%s): %s',
-    fileName, diskPath, description);
-  if (!this.pngScreenShot_ &&
-      /\.png$/.test(fileName) &&
-      /\.png$/.test(diskPath)) {
+      fileName, diskPath, description);
+  if (!this.pngScreenShot_ && /\.png$/.test(fileName)) {  // Convert to JPEG.
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
     var convertCommand = [diskPath];
     convertCommand.push('-resize', '50%');
-    if (this.rotate_)
+    if (this.rotate_) {
       convertCommand.push('-rotate', this.rotate_);
+    }
     convertCommand.push('-quality', this.imageQuality_);
     convertCommand.push(diskPathJPEG);
     process_utils.scheduleExec(this.app_, 'convert', convertCommand).then(
         function() {
       this.screenshots_.push({
-        fileName: fileNameJPEG,
-        diskPath: diskPathJPEG,
-        contentType: 'image/jpeg',
-        description: description
-      });
-    }.bind(this), function(){
+          fileName: fileNameJPEG,
+          diskPath: diskPathJPEG,
+          contentType: 'image/jpeg',
+          description: description
+        });
+    }.bind(this), function(e) {
+      logger.warn('Converting %s PNG->JPEG failed, will use original PNG: %s',
+          diskPath, e.message);
       this.screenshots_.push({
-        fileName: fileName,
-        diskPath: diskPath || fileName,
-        contentType: 'image/png',
-        description: description
-      });
+          fileName: fileName,
+          diskPath: diskPath,
+          contentType: 'image/png',
+          description: description
+        });
     }.bind(this));
   } else {
     var contentType = /\.png$/.test(fileName) ?
         'image/png' : 'application/octet-stream';
     this.screenshots_.push({
         fileName: fileName,
-        diskPath: diskPath || fileName,
+        diskPath: diskPath,
         contentType: contentType,
         description: description
       });
@@ -623,14 +620,16 @@ WebDriverServer.prototype.networkCommand_ = function(method, params) {
 
 /**
  * @param {string} method command method, e.g. 'start'.
+ * @param {Object} params command options.
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
  * @private
  */
 WebDriverServer.prototype.timelineCommand_ = function(method, params) {
   'use strict';
   var message = {method: 'Timeline.' + method};
-  if (params)
-    message['params'] = params;
+  if (params) {
+    message.params = params;
+  }
   return this.devToolsCommand_(message);
 };
 
@@ -690,14 +689,14 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
-  // Get the root frameId
-  this.pageCommand_('getResourceTree').then(function(result) {
-    var frameId = result.frameTree.frame.id;
-    if (this.captureVideo_) {  // Generate video sync sequence, start recording.
-      this.getCapabilities_().then(function(caps) {
-        if (!caps.videoRecording) {
-          return;
-        }
+  if (this.captureVideo_) {  // Generate video sync sequence, start recording.
+    this.getCapabilities_().then(function(caps) {
+      if (!caps.videoRecording) {
+        return;
+      }
+      // Get the root frameId
+      this.pageCommand_('getResourceTree').then(function(result) {
+        var frameId = result.frameTree.frame.id;
         // Hold orange(500ms)->white: anchor video to DevTools.
         this.setPageBackground_(frameId, GHASTLY_ORANGE_);
         this.app_.timeout(500, 'Set orange background');
@@ -713,11 +712,11 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         this.app_.timeout(500, 'Hold orange background');
         this.setPageBackground_(frameId);  // White
       }.bind(this));
-    }
-    // Make sure we start recording DevTools regardless of the video.
-    this.app_.schedule('Start recording DevTools', function() {
-      this.isRecordingDevTools_ = true;
     }.bind(this));
+  }
+  // Make sure we start recording DevTools regardless of the video.
+  this.app_.schedule('Start recording DevTools', function() {
+    this.isRecordingDevTools_ = true;
   }.bind(this));
 };
 
@@ -754,16 +753,14 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   'use strict';
-  var videoFileExtension = 'avi';
-  if (this.capabilities_ && this.capabilities_.videoFileExtension)
-    videoFileExtension = this.capabilities_.videoFileExtension;
-  var videoFile = path.join(this.runTempDir_,
-                            'video.' + videoFileExtension);
-  this.browser_.scheduleStartVideoRecording(videoFile,
-      this.onVideoRecordingExit_.bind(this));
-  this.app_.schedule('Started recording', function() {
-    logger.debug('Video record start succeeded');
-    this.videoFile_ = videoFile;
+  this.getCapabilities_().then(function(caps) {
+    var videoFileExtension = caps.videoFileExtension || 'avi';
+    var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+    this.browser_.scheduleStartVideoRecording(
+        videoFile, this.onVideoRecordingExit_.bind(this)).then(function() {
+      logger.debug('Video record start succeeded');
+      this.videoFile_ = videoFile;
+    }.bind(this));
   }.bind(this));
 };
 
@@ -1023,8 +1020,6 @@ WebDriverServer.prototype.done_ = function(e) {
   var pcapFile = this.pcapFile_;
   // We must schedule/run a driver quit before we emit 'done', to make sure
   // we take the final screenshot and send it in the 'done' IPC message.
-  // Take the timestamp before taking the screenshot, in case we would use it.
-  var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
   if (this.driver_) {
     this.scheduleGetWdDevToolsLog_();
   }

@@ -50,8 +50,8 @@ function processResponse(response, callback) {
     throw new Error('Bad HTTP response: ' + JSON.stringify(response));
   });
 }
-/** Public function. */
-exports.ProcessResponse = processResponse;
+/** Exported for testing. */
+exports.processResponse = processResponse;
 
 /**
  * WebKit Remote Debugger Protocol connection to a WebKit based browser.
@@ -92,7 +92,7 @@ DevTools.prototype.connect = function(callback, errback) {
   var retries = 0;  // ios_webkit_debug_proxy sometimes returns an empty array.
   var listTabs = (function() {
     var request = http.get(url.parse(this.devToolsUrl_), function(response) {
-      exports.ProcessResponse(response, function(responseBody) {
+      exports.processResponse(response, function(responseBody) {
         var devToolsJson = JSON.parse(responseBody);
         if (devToolsJson.length === 0 && retries < 10) {
           retries += 1;
@@ -204,8 +204,7 @@ DevTools.prototype.sendCommand = function(command, cb) {
       cb.apply(cb, [undefined].concat(Array.prototype.slice.apply(arguments)));
     };
   }
-  var errback = cb;
-  return this.command_(command, callback, errback);
+  return this.command_(command, callback, /*errback=*/cb);
 };
 
 /**

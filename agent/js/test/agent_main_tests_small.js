@@ -112,7 +112,7 @@ describe('agent_main', function() {
     var runFinishedSpy = sandbox.spy();
     var fakeJob = {runFinished: runFinishedSpy};
 
-    var agent = new agent_main.Agent(client, /*flags=*/{});
+    var agent = new agent_main.Agent(app, client, /*flags=*/{});
     agent.run();
 
     client.onAbortJob(fakeJob);
