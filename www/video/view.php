@@ -100,7 +100,7 @@ if( $xml || $json )
     {
         if( $done )
         {
-            $ret = 200;
+            $code = 200;
 
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
@@ -108,11 +108,11 @@ if( $xml || $json )
             $embedUrl = "http://$host$uri/view.php?embed=1&id=$id";
         }
         else
-            $ret = 100;
+            $code = 100;
     }
     else
     {
-        $ret = 400;
+        $code = 400;
         $error = "Invalid video ID";
     }
 }
@@ -136,7 +136,7 @@ if( $xml )
 elseif( $json )
 {
     $ret = array();
-    $ret['statusCode'] = $ret;
+    $ret['statusCode'] = $code;
     $ret['statusText'] = $error;
     $ret['data'] = array();
     $ret['data']['videoId'] = $id;
