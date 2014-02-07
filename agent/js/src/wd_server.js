@@ -757,7 +757,8 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
     var videoFileExtension = caps.videoFileExtension || 'avi';
     var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
     this.browser_.scheduleStartVideoRecording(
-        videoFile, this.onVideoRecordingExit_.bind(this)).then(function() {
+        videoFile, this.onVideoRecordingExit_.bind(this));
+    this.app_.schedule('Video record started', function() {
       logger.debug('Video record start succeeded');
       this.videoFile_ = videoFile;
     }.bind(this));

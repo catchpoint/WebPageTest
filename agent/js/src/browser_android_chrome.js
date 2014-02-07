@@ -591,18 +591,15 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   if (this.deviceVideoPath_ && this.videoFile_) {
-    this.adb_.scheduleKill('screenrecord').then(function() {
-      if (this.recordProcess_) {
-        process_utils.scheduleWait(
-            this.app_, this.recordProcess_, 'screenrecord', 30000)
-            .then(function() {
+    var recordProcess = this.recordProcess_;
+    this.recordProcess_ = undefined;
+    this.adb_.scheduleKill('screenrecord');
+    this.app_.schedule('screenrecord kill issued', function() {
+      if (recordProcess) {
+        process_utils.scheduleWait(this.app_, recordProcess,
+            'screenrecord', 30000).then(function() {
           this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
         }.bind(this));
-      }
-    }.bind(this)).addBoth(function(e) {
-      this.recordProcess_ = undefined;
-      if (e) {
-        throw e;
       }
     }.bind(this));
   } else {
