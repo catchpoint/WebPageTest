@@ -2,81 +2,29 @@
 include 'common.inc';
 
 // see if we are processing an import or presenting the UI
-if (array_key_exists('devtools', $_FILES)) {
-  if (ValidateKey()) {
-    /****************************************************************************
-    * Importing a test
-    ****************************************************************************/
-    $test = array('runs' => 1,
-                  'discard' => 0,
-                  'fvonly' => 1);
-    $test['started'] = time();
-    $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
-    $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
-    if (array_key_exists('tsview_id', $_REQUEST) && strlen($_REQUEST['tsview_id']))
-      $test['tsview_id'] = $_REQUEST['tsview_id'];    
+if (array_key_exists('tests', $_REQUEST)) {
+    require_once('page_data.inc');
     
-    // generate the test ID
-    $test_num;
-    $id = uniqueId($test_num);
-    if( $test['private'] )
-        $id = ShardKey($test_num) . md5(uniqid(rand(), true));
-    else
-        $id = ShardKey($test_num) . $id;
-    $today = new DateTime("now", new DateTimeZone('UTC'));
-    $test['id'] = $today->format('ymd_') . $id;
+    /****************************************************************************
+    * Creating a bulk test from existing tests
+    ****************************************************************************/
+    $error = null;
+    $tests = explode(',', $_REQUEST['tests']);
+
+    $test = array('batch' => 1);
+    $test['id'] = CreateTestID;
     $id = $test['id'];
     $testPath = './' . GetTestPath($id);
     $test['path'] = $testPath;
     if (!is_dir($testPath))
       mkdir($testPath, 0777, true);
-    
-    // move the dev tools file over
-    if (array_key_exists('devtools', $_FILES) &&
-        array_key_exists('tmp_name', $_FILES['devtools']) &&
-        strlen($_FILES['devtools']['tmp_name'])) {
-      move_uploaded_file($_FILES['devtools']['tmp_name'], "$testPath/1_devtools.json");
-      gz_compress("$testPath/1_devtools.json");
-    }
-    
-    // screen shot (if we got one)
-    if (array_key_exists('screenshot', $_FILES) &&
-        array_key_exists('tmp_name', $_FILES['screenshot']) &&
-        array_key_exists('name', $_FILES['screenshot']) &&
-        strlen($_FILES['screenshot']['tmp_name']) &&
-        strlen($_FILES['screenshot']['name'])) {
-      $ext = strtolower(pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION));
-      if ($ext == 'png' || $ext == 'jpg')
-        move_uploaded_file($_FILES['screenshot']['tmp_name'], "$testPath/1_screen.$ext");
-    }
 
-    // video (if we got one)
-    if (array_key_exists('video', $_FILES) &&
-        array_key_exists('tmp_name', $_FILES['video']) &&
-        array_key_exists('name', $_FILES['video']) &&
-        strlen($_FILES['video']['tmp_name']) &&
-        strlen($_FILES['video']['name'])) {
-      $ext = strtolower(pathinfo($_FILES['video']['name'], PATHINFO_EXTENSION));
-      if ($ext == 'avi' || $ext == 'mp4') {
-        $test['video'] = 1;
-        move_uploaded_file($_FILES['video']['tmp_name'], "$testPath/1_video.$ext");
-      }
-    }
-
-    // pcap
-    if (array_key_exists('tcpdump', $_FILES) &&
-        array_key_exists('tmp_name', $_FILES['tcpdump']) &&
-        strlen($_FILES['tcpdump']['tmp_name'])) {
-      move_uploaded_file($_FILES['tcpdump']['tmp_name'], "$testPath/1.cap");
-    }
-    
     // create the test info files
     gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
 
     // write out the ini file
     $testInfo = "[test]\r\n";
-    $testInfo .= "fvonly=1\r\n";
-    $testInfo .= "runs=1\r\n";
+    $testInfo .= "batch=1\r\n";
     $testInfo .= "location=Imported Test\r\n";
     $testInfo .= "loc=Import\r\n";
     $testInfo .= "id=$id\r\n";
@@ -85,39 +33,143 @@ if (array_key_exists('devtools', $_FILES)) {
     $testInfo .= "connectivity=Unknown\r\n";
     $testInfo .= "\r\n[runs]\r\n";
     file_put_contents("$testPath/testinfo.ini",  $testInfo);
-    
-    // run the normal workdone processing flow
-    $_REQUEST['id'] = $id;
-    $_REQUEST['done'] = 1;
-    $_REQUEST['run'] = 1;
-    $_REQUEST['cached'] = 0;
-    $included = true;
-    chdir('./work');
-    include('workdone.php');
 
-    // re-load the test info
-    $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    // write out the bulk test data
+    $bulk = array();
+    $bulk['variations'] = array();
+    $bulk['urls'] = array();
+    foreach( $tests as &$test_id ) {
+      if (ValidateTestId($test_id)) {
+        RestoreTest($test_id);
+        $test_path = './' . GetTestPath($test_id);
+        $pageData = loadPageRunData($test_path, 1, 0);
+        $url = 'Imported Test';
+        if ($pageData && array_key_exists('URL', $pageData))
+          $url = $pageData['URL'];
+        $bulk['urls'][] = array('u' => $url, 'id' => $test_id);
+      }
+    }
+    gz_file_put_contents("$testPath/bulk.json", json_encode($bulk));
     
     // Return the test ID (or redirect if not using the API)
-    $host  = $_SERVER['HTTP_HOST'];
-    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    if (array_key_exists('f', $_REQUEST)) {
-      $ret = array();
-      $ret['statusCode'] = 200;
-      $ret['statusText'] = 'Ok';
-      $ret['data'] = array();
-      $ret['data']['testId'] = $test['id'];
-      $ret['data']['ownerKey'] = $test['owner'];
-      $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
-      $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
-      $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
-      $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
-      $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
-      $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
-      json_response($ret);
+    TestResult($test, $error);
+    
+} elseif (array_key_exists('devtools', $_FILES)) {
+  if (ValidateKey()) {
+    /****************************************************************************
+    * Importing a test
+    ****************************************************************************/
+    $id = null;
+    $error = null;
+    if (array_key_exists('test', $_REQUEST) &&
+        ValidateTestId($_REQUEST['test'])) {
+      $id = $_REQUEST['test'];
+      RestoreTest($id);
+      $testPath = './' . GetTestPath($id);
+      if (is_dir($testPath) && gz_is_file("$testPath/testinfo.json")) {
+        $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        $test['runs']++;
+        $run = $test['runs'];
+        if (((array_key_exists('key', $test) && strlen($test['key'])) ||
+            ((array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k'])))) &&
+            $_REQUEST['k'] !== $test['key'])
+          $error = "API Key Doesn't match key for existing test";
+      } else {
+        $error = "Invalid Test ID";
+      }
     } else {
-      header("Location: http://$host$uri/results.php?test={$test['id']}");
+      $test = array('runs' => 1,
+                    'discard' => 0,
+                    'fvonly' => 1);
+      $test['started'] = time();
+      $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
+      $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
+      if (array_key_exists('tsview_id', $_REQUEST) && strlen($_REQUEST['tsview_id']))
+        $test['tsview_id'] = $_REQUEST['tsview_id'];    
+      if (array_key_exists('k', $_REQUEST))
+        $test['key'] = $_REQUEST['k'];
+      
+      // generate the test ID
+      $test['id'] = CreateTestID;
+      $id = $test['id'];
+      $testPath = './' . GetTestPath($id);
+      $test['path'] = $testPath;
+      if (!is_dir($testPath))
+        mkdir($testPath, 0777, true);
+      $run = 1;
     }
+    
+    if (!isset($error)) {
+      // move the dev tools file over
+      if (array_key_exists('devtools', $_FILES) &&
+          array_key_exists('tmp_name', $_FILES['devtools']) &&
+          strlen($_FILES['devtools']['tmp_name'])) {
+        move_uploaded_file($_FILES['devtools']['tmp_name'], "$testPath/{$run}_devtools.json");
+        gz_compress("$testPath/{$run}_devtools.json");
+      }
+      
+      // screen shot (if we got one)
+      if (array_key_exists('screenshot', $_FILES) &&
+          array_key_exists('tmp_name', $_FILES['screenshot']) &&
+          array_key_exists('name', $_FILES['screenshot']) &&
+          strlen($_FILES['screenshot']['tmp_name']) &&
+          strlen($_FILES['screenshot']['name'])) {
+        $ext = strtolower(pathinfo($_FILES['screenshot']['name'], PATHINFO_EXTENSION));
+        if ($ext == 'png' || $ext == 'jpg')
+          move_uploaded_file($_FILES['screenshot']['tmp_name'], "$testPath/{$run}_screen.$ext");
+      }
+
+      // video (if we got one)
+      if (array_key_exists('video', $_FILES) &&
+          array_key_exists('tmp_name', $_FILES['video']) &&
+          array_key_exists('name', $_FILES['video']) &&
+          strlen($_FILES['video']['tmp_name']) &&
+          strlen($_FILES['video']['name'])) {
+        $ext = strtolower(pathinfo($_FILES['video']['name'], PATHINFO_EXTENSION));
+        if ($ext == 'avi' || $ext == 'mp4') {
+          $test['video'] = 1;
+          move_uploaded_file($_FILES['video']['tmp_name'], "$testPath/{$run}_video.$ext");
+        }
+      }
+
+      // pcap
+      if (array_key_exists('tcpdump', $_FILES) &&
+          array_key_exists('tmp_name', $_FILES['tcpdump']) &&
+          strlen($_FILES['tcpdump']['tmp_name'])) {
+        move_uploaded_file($_FILES['tcpdump']['tmp_name'], "$testPath/$run.cap");
+      }
+      
+      // create the test info files
+      gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+
+      // write out the ini file
+      $testInfo = "[test]\r\n";
+      $testInfo .= "fvonly=1\r\n";
+      $testInfo .= "runs=$run\r\n";
+      $testInfo .= "location=Imported Test\r\n";
+      $testInfo .= "loc=Import\r\n";
+      $testInfo .= "id=$id\r\n";
+      if ($test['video'])
+          $testInfo .= "video=1\r\n";
+      $testInfo .= "connectivity=Unknown\r\n";
+      $testInfo .= "\r\n[runs]\r\n";
+      file_put_contents("$testPath/testinfo.ini",  $testInfo);
+      
+      // run the normal workdone processing flow
+      $_REQUEST['id'] = $id;
+      $_REQUEST['done'] = (array_key_exists('pending', $_REQUEST) && $_REQUEST['pending']) ? 0 : 1;
+      $_REQUEST['run'] = $run;
+      $_REQUEST['cached'] = 0;
+      $included = true;
+      chdir('./work');
+      include('workdone.php');
+
+      // re-load the test info
+      $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    }
+    
+    // Return the test ID (or redirect if not using the API)
+    TestResult($test, $error);
   } else {
     // Invalid API key = block if keys are configured (for now anyway)
     header('HTTP/1.0 403 Forbidden');
@@ -190,8 +242,16 @@ if (array_key_exists('devtools', $_FILES)) {
                 <label for="keep_test_private">Keep Test Private</label>
               </li>
               <li>
+                <input type="checkbox" name="pending" id="pending" class="checkbox">
+                <label for="done">Partial Result<br><small>(more runs coming)</small></label>
+              </li>
+              <li>
                 <input type="text" name="label" id="label" value="" size="80">
                 <label for="label">Label<br><small>(optional)</small></label>
+              </li>
+              <li>
+                <input type="text" name="test" id="test" value="" size="80">
+                <label for="test">Existing Test<br><small>(Add runs to an existing test)</small></label>
               </li>
               <?php
               if (is_file('./settings/keys.ini')) {
@@ -234,5 +294,48 @@ function ValidateKey() {
       $valid = true;
   }
   return $valid;
+}
+
+function CreateTestID() {
+  $test_num;
+  $id = uniqueId($test_num);
+  if( $test['private'] )
+      $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+  else
+      $id = ShardKey($test_num) . $id;
+  $today = new DateTime("now", new DateTimeZone('UTC'));
+  $id = $today->format('ymd_') . $id;
+  return $id;
+}
+
+function TestResult(&$test, $error) {
+  $host  = $_SERVER['HTTP_HOST'];
+  $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+  if (array_key_exists('f', $_REQUEST)) {
+    $ret = array();
+    if (isset($error)) {
+      $ret['statusCode'] = 400;
+      $ret['statusText'] = $error;
+    } else {
+      $ret['statusCode'] = 200;
+      $ret['statusText'] = 'Ok';
+      $ret['data'] = array();
+      $ret['data']['testId'] = $test['id'];
+      $ret['data']['ownerKey'] = $test['owner'];
+      $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
+      $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
+      $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
+      $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
+      $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
+      $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
+    }
+    json_response($ret);
+  } else {
+    if (isset($error)) {
+      echo "<html><body>$error</body>";
+    } else {
+      header("Location: http://$host$uri/results.php?test={$test['id']}");
+    }
+  }
 }
 ?>
