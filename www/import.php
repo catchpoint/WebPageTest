@@ -12,7 +12,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     $tests = explode(',', $_REQUEST['tests']);
 
     $test = array('batch' => 1);
-    $test['id'] = CreateTestID;
+    $test['id'] = CreateTestID();
     $id = $test['id'];
     $testPath = './' . GetTestPath($id);
     $test['path'] = $testPath;

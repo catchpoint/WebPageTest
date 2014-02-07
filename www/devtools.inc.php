@@ -1206,6 +1206,7 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 * slice that they consumed (with a total maximum of 1 for any slice).
 */
 function DevToolsGetCPUSlices($testPath, $run, $cached, $slice_count, $end_ms) {
+  return null;
   $slices = null;
   $devTools = array();
   $startOffset = null;
@@ -1263,7 +1264,7 @@ function DevToolsGetEventTimes(&$record) {
         $firstStart = key($children_times);
         $times[$start] = array('start' => $start, 'end' => $firstStart, 'type' => $type);
         $times += $children_times;
-        $lastEnd = end($children_times)['end'];
+        //$lastEnd = end($children_times)['end'];
         $times[$lastEnd] = array('start' => $lastEnd, 'end' => $end, 'type' => $type);
       } else {
         $times[$start] = array('start' => $start, 'end' => $end, 'type' => $type);
