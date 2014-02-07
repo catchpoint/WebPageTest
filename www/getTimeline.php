@@ -29,14 +29,14 @@ if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
           $ok = true;
           header("Content-disposition: attachment; filename=timeline.json");
           header ("Content-type: application/json");
-          echo '["WebPagetest",';
+          echo "[\"WebPagetest\",\n";
         } else
-          echo ',';
+          echo ",\n";
         echo json_encode($entry['params']['record']);
       }
     }
     if ($ok)
-      echo ']';
+      echo "\n]";
   }
 }
 if (!$ok)
