@@ -272,7 +272,7 @@ Adb.prototype.getPidsOfProcess = function(name) {
   'use strict';
   return this.shell(['ps', name]).then(function(stdout) {
     var pids = [];
-    var lines = stdout.split(/\r?\n/);
+    var lines = stdout.split(/[\r\n]+/);
     if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {  // Heading.
       throw new Error(util.format('ps command failed, output: %j', stdout));
     }
@@ -284,7 +284,7 @@ Adb.prototype.getPidsOfProcess = function(name) {
       if (iLine === 0) {  // Skip the header
         return;
       }
-      if (fields.length < 2) {
+      if (fields.length !== 9) {
         throw new Error(util.format('Failed to parse ps output line %d: %j',
             iLine, stdout));
       }
@@ -370,12 +370,12 @@ Adb.prototype.scheduleDetectConnectedInterface = function() {
   'use strict';
   return this.shell(['netcfg']).then(function(stdout) {
     var connectedInterfaces = [];
-    stdout.split(/\r?\n/).forEach(function(line, lineNumber) {
+    stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
       if (!line) {
         return;  // Skip empty lines.
       }
       var fields = line.split(/\s+/);
-      if (fields.length < 3) {
+      if (fields.length !== 5) {
         throw new Error(util.format('netcfg output unrecognized at line %d: %j',
             lineNumber, stdout));
       }
