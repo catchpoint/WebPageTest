@@ -517,7 +517,7 @@ void WptDriverCore::KillBrowsers() {
     WTS_PROCESS_INFO * proc = NULL;
     DWORD count = 0;
     DWORD browser_count = _countof(BROWSERS);
-    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc,&count)) {
+    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count)) {
       for (DWORD i = 0; i < count; i++) {
         bool terminate = false;
 
@@ -537,6 +537,8 @@ void WptDriverCore::KillBrowsers() {
           }
         }
       }
+      if (proc)
+        WTSFreeMemory(proc);
     }
   }
 }
