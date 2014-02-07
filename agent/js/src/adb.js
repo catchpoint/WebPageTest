@@ -371,7 +371,7 @@ Adb.prototype.scheduleDetectConnectedInterface = function() {
   return this.shell(['netcfg']).then(function(stdout) {
     var connectedInterfaces = [];
     stdout.split(/\r?\n/).forEach(function(line, lineNumber) {
-      if (!line || !line.length) {
+      if (!line) {
         return;  // Skip empty lines.
       }
       var fields = line.split(/\s+/);
