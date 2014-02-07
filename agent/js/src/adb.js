@@ -284,7 +284,7 @@ Adb.prototype.getPidsOfProcess = function(name) {
       if (iLine === 0) {  // Skip the header
         return;
       }
-      if (fields.length !== 9) {
+      if (fields.length < 2) {
         throw new Error(util.format('Failed to parse ps output line %d: %j',
             iLine, stdout));
       }
@@ -371,11 +371,11 @@ Adb.prototype.scheduleDetectConnectedInterface = function() {
   return this.shell(['netcfg']).then(function(stdout) {
     var connectedInterfaces = [];
     stdout.split(/\r?\n/).forEach(function(line, lineNumber) {
-      if (!line) {
+      if (!line || !line.length) {
         return;  // Skip empty lines.
       }
       var fields = line.split(/\s+/);
-      if (fields.length !== 5) {
+      if (fields.length < 3) {
         throw new Error(util.format('netcfg output unrecognized at line %d: %j',
             lineNumber, stdout));
       }
