@@ -155,6 +155,10 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
             $ret['docTime'] > $ret['TTFB'])
             $ret['effectiveBpsDoc'] = intval($ret['bytesInDoc'] / (($ret['docTime'] - $ret['TTFB']) / 1000.0));
         // clean up any insane values (from negative numbers as unsigned most likely)
+        if (array_key_exists('firstPaint', $ret) &&
+            array_key_exists('fullyLoaded', $ret) &&
+            $ret['firstPaint'] > $ret['fullyLoaded'])
+          $ret['firstPaint'] = 0;
         $times = array('loadTime',
                        'TTFB',
                        'render',

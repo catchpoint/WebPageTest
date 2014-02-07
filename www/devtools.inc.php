@@ -20,6 +20,12 @@ if(extension_loaded('newrelic')) {
 function GetDevToolsProgress($testPath, $run, $cached) {
     $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
     if (!isset($progress) || !is_array($progress)) {
+      $completed = false;
+      if( gz_is_file("$testPath/testinfo.json") ) {
+        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        if (array_key_exists('completed', $testInfo) && strlen($testInfo['completed']))
+          $completed = true;
+      }
       $startOffset = null;
       if (GetTimeline($testPath, $run, $cached, $timeline, $startOffset)) {
         $cachedText = '';
@@ -131,7 +137,7 @@ function GetDevToolsProgress($testPath, $run, $cached) {
                 }
             }
         }
-        if (isset($progress) && is_array($progress))
+        if ($completed && isset($progress) && is_array($progress))
             SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
       }
     }
@@ -1189,5 +1195,81 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
     $endTime = ceil($lastEvent - $startTime);
     
   return $offset;
+}
+
+/**
+* If we have a timeline, figure out what each thread was doing at each point in time.
+* Basically CPU utilization from the timeline.
+* 
+* returns an array of threads with each thread being an array of slices (one for
+* each time period).  Each slice is an array of events and the fraction of that
+* slice that they consumed (with a total maximum of 1 for any slice).
+*/
+function DevToolsGetCPUSlices($testPath, $run, $cached, $slice_count, $end_ms) {
+  $slices = null;
+  $devTools = array();
+  $startOffset = null;
+  GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
+  if (isset($devTools) && is_array($devTools) && count($devTools)) {
+    $timeline = array();
+    // do a quick pass to see if we have non-timeline entries and
+    // to get the timestamp of the first non-timeline entry
+    foreach ($devTools as &$entry) {
+      if (isset($entry) &&
+          is_array($entry) &&
+          array_key_exists('method', $entry) &&
+          $entry['method'] == 'Timeline.eventRecorded' &&
+          array_key_exists('params', $entry) &&
+          is_array($entry['params']) &&
+          array_key_exists('record', $entry['params']) &&
+          is_array($entry['params']['record'])) {
+        $times = DevToolsGetEventTimes($entry['params']['record']);
+        if ($times) {
+        }
+        unset($times);
+      }
+    }
+  }
+  return $slices;
+}
+
+/**
+* Break out all of the individual times of an event and it's children
+* 
+* @param mixed $entry
+*/
+function DevToolsGetEventTimes(&$record) {
+  $times = null;
+  
+  if (array_key_exists('startTime', $record) &&
+      array_key_exists('endTime', $record) &&
+      array_key_exists('type', $record)) {
+      $times = array();
+      $start = $record['startTime'];
+      $end = $record['endTime'];
+      $type = $record['type'];
+      if (array_key_exists('children', $record) && count($record['children'])) {
+        $children_times = array();
+        foreach($record['children'] as &$child) {
+          $child_times = DevToolsGetEventTimes($child);
+          if (isset($child_times)) {
+            $children_times += $child_times;
+          }
+        }
+      }
+      
+      if (isset($children_times) && count($children_times)) {
+        ksort($children_times, SORT_NUMERIC);
+        $firstStart = key($children_times);
+        $times[$start] = array('start' => $start, 'end' => $firstStart, 'type' => $type);
+        $times += $children_times;
+        $lastEnd = end($children_times)['end'];
+        $times[$lastEnd] = array('start' => $lastEnd, 'end' => $end, 'type' => $type);
+      } else {
+        $times[$start] = array('start' => $start, 'end' => $end, 'type' => $type);
+      }
+  }
+  
+  return $times;
 }
 ?>
