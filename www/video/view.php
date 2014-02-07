@@ -122,7 +122,7 @@ if( $xml )
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     echo "<response>\n";
-    echo "<statusCode>$ret</statusCode>\n";
+    echo "<statusCode>$code</statusCode>\n";
     echo "<statusText>$error</statusText>\n";
     if( strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
