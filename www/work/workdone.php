@@ -263,10 +263,8 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             $testInfo_dirty = true;
         }
         // pre-process any background processing we need to do for this run
-        if (isset($runNumber) && isset($cacheWarmed)) {
+        if (isset($runNumber) && isset($cacheWarmed))
             ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, false);
-            loadPageRunData($testPath, $runNumber, $cacheWarmed);
-        }
             
         // see if the test is complete
         if( $done )
