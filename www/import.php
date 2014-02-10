@@ -90,7 +90,7 @@ if (array_key_exists('tests', $_REQUEST)) {
         $test['key'] = $_REQUEST['k'];
       
       // generate the test ID
-      $test['id'] = CreateTestID;
+      $test['id'] = CreateTestID();
       $id = $test['id'];
       $testPath = './' . GetTestPath($id);
       $test['path'] = $testPath;
