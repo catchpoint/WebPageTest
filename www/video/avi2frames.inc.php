@@ -1,5 +1,13 @@
 <?php
 require_once('devtools.inc.php');
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('ProcessAllAVIVideos');
+  newrelic_add_custom_tracer('ProcessAVIVideo');
+  newrelic_add_custom_tracer('Video2PNG');
+  newrelic_add_custom_tracer('FindAVIViewport');
+  newrelic_add_custom_tracer('EliminateDuplicateAVIFiles');
+  newrelic_add_custom_tracer('ProcessVideoFrames');
+}
 
 /**
 * Walk the given directory and convert every AVI found into the format WPT expects

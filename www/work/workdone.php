@@ -3,7 +3,6 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('StartProcessingIncrementalResult');
   newrelic_add_custom_tracer('CheckForSpam');
   newrelic_add_custom_tracer('loadPageRunData');
-  newrelic_add_custom_tracer('ProcessAVIVideo');
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
