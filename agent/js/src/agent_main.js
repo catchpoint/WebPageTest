@@ -34,7 +34,6 @@ var nopt = require('nopt');
 var path = require('path');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
-var traffic_shaper = require('traffic_shaper');
 var webdriver = require('selenium-webdriver');
 var wpt_client = require('wpt_client');
 
@@ -77,7 +76,6 @@ function Agent(app, client, flags) {
   }
   this.runTempDir_ = 'runtmp' + (runTempSuffix ? '_' + runTempSuffix : '');
   this.wdServer_ = undefined;  // The wd_server child process.
-  this.trafficShaper_ = new traffic_shaper.TrafficShaper(this.app_, flags);
 
   // Create a single (separate) instance of the browser for checking status.
   this.browser_ = browser_base.createBrowser(this.app_, flags);
@@ -218,8 +216,7 @@ Agent.prototype.startJobRun_ = function(job) {
       job.id, job.runNumber, job.runs, job.isCacheWarm);
   this.scheduleCleanRunTempDir_();
   if (!this.wdServer_) {
-    this.trafficShaper_.scheduleStart(
-        job.task.bwIn, job.task.bwOut, job.task.latency, job.task.plr);
+    this.startTrafficShaper_(job);
     this.startWdServer_(job);
   }
   var script = job.task.script;
@@ -412,7 +409,9 @@ Agent.prototype.scheduleCleanup_ = function() {
       }.bind(this));
     }.bind(this));
   }
-  this.trafficShaper_.scheduleStop();
+  this.trafficShaper_('clear').addErrback(function(e) {
+    logger.debug('Ignoring failed trafficShaper clear');
+  }.bind(this));
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
     // Kill all processes for this user, except our own process and parent(s).
     //
@@ -447,6 +446,75 @@ Agent.prototype.scheduleCleanup_ = function() {
     }.bind(this));
   }
   this.scheduleCleanRunTempDir_();
+};
+
+/**
+ * Schedules a traffic shaper command.
+ *
+ * The "--trafficShaper" script defaults to "./ipfw_config".  If the value
+ * contains commas, the comma-separated values are passes as additional
+ * command arguments (e.g. "my_ipfw,--x,123").
+ *
+ * @param {string} command 'set', 'get', or 'clear'.
+ * @param {Object.<string>=} options:
+ *    #param {string=} down_bw input bandwidth in bits/s (>= 0)
+ *    #param {string=} down_delay input delay in ms (>= 0)
+ *    #param {string=} down_plr input packet loss rate [0..1].
+ *    #param {string=} up_bw output bandwidth in bits/s (>= 0)
+ *    #param {string=} up_delay output delay in ms (>= 0)
+ *    #param {string=} up_plr output packet loss rate [0..1].
+ *    #param {string=} device deviceSerial id (undefined for desktops).
+ *    #param {string=} address network address (IP or MAC).
+ * @return {webdriver.promise.Promise} The scheduled promise.
+ * @private
+ */
+Agent.prototype.trafficShaper_ = function(command, opts) { // jshint unused:false
+  'use strict';
+  var cmd = this.flags_.trafficShaper || './ipfw_config';
+  var args = [];
+  if (0 !== cmd.indexOf(',')) {
+    // support 'proxy,--url,http://foo:8084,ipfw_config'
+    args = cmd.split(',');  // ignore escaping literal ','s for now
+    cmd = args.shift();
+  }
+  args.push(command);
+  for (var key in opts) {
+    if (undefined !== opts[key]) {
+      args.push('--'+key, opts[key]);
+    }
+  }
+  if (!(opts && 'device' in opts) && this.flags_.deviceSerial) {
+    args.push('--device', this.flags_.deviceSerial);
+  }
+  if (!(opts && 'address' in opts) && this.flags_.deviceAddr) {
+    args.push('--address', this.flags_.deviceAddr);
+  }
+  return process_utils.scheduleExec(this.app_, cmd, args);
+};
+
+/**
+ * Configures the traffic shaper.
+ *
+ * @param {Job} job.
+ * @private
+ */
+Agent.prototype.startTrafficShaper_ = function(job) {
+  'use strict';
+  var halfDelay = Math.floor(job.task.latency / 2);
+  var opts = {
+      down_bw: job.task.bwIn && (1000 * job.task.bwIn),
+      down_delay: job.task.latency && halfDelay,
+      down_plr: job.task.plr && 0,
+      up_bw: job.task.bwOut && (1000 * job.task.bwOut),
+      up_delay: job.task.latency && job.task.latency - halfDelay,
+      up_plr: job.task.plr && job.task.plr};  // all loss on out
+  this.trafficShaper_('set', opts).addErrback(function(e) {
+    var stderr = (e.stderr || e.message || '').trim();
+    throw new Error('Unable to `' + args.join(' ') + '`\n' + stderr + '\n' +
+      ' To disable traffic shaping, re-run your test with ' +
+      '"Advanced Settings > Test Settings > Connection = Native Connection"' +
+      ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
+  }.bind(this));
 };
 
 /**
