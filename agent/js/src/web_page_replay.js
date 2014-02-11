@@ -45,7 +45,7 @@ var process_utils = require('process_utils');
  *     tolerate request pass-throughs, those must be warnings, not errors.
  *     Reset the log, so that the next "wpr getlog" for this IP/MAC would only
  *     return the log from this point on.
- * wpr end <IP or MAC>  -- Stop record/replay for the IP/MAC.
+ * wpr stop <IP or MAC>  -- Stop record/replay for the IP/MAC.
  *     Delete the recording, if any, and undo any DNS spoofing, if any.
  *     Must tolerate
  * At the job level, record/replay works as follows, when the job specifies it:
@@ -70,12 +70,12 @@ var process_utils = require('process_utils');
  * 2.4. Kill wd_server and leftover processes, including any children of wpr.
  *
  * 3. At the very end, with traffic shaping reset, stop WebPageReplay:
- * 3.1. Command "wpr end <IP or MAC>".
+ * 3.1. Command "wpr stop <IP or MAC>".
  *
  * (3.1) has a chance to nuke the recording from run #0.
  *
  * If the job does not specify WebPageReplay, we just run the command:
- * "wpr end <IP or MAC>"
+ * "wpr stop <IP or MAC>"
  * in case the previous run somehow failed to do that.
  *
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
@@ -88,7 +88,8 @@ function WebPageReplay(app, args) {
   'use strict';
   this.app_ = app;
   this.deviceAddr_ = (args.deviceAddr || 'any');
-  this.wprCommand_ = (args.wprCommand || 'wpr');
+  this.wprCommand_ = (args.wprcommand || 'wpr');
+  this.isSupported_ = undefined;
 }
 /** Export class. */
 exports.WebPageReplay = WebPageReplay;
@@ -99,7 +100,7 @@ exports.WebPageReplay = WebPageReplay;
  */
 WebPageReplay.prototype.scheduleIsSupported_ = function() {
   'use strict';
-  return this.app_.schedule('isSupported', function() {
+  return this.app_.schedule('wpr isSupported', function() {
     if (undefined !== this.isSupported_) {
       return this.isSupported_;
     }
@@ -136,23 +137,22 @@ WebPageReplay.prototype.scheduleIsSupported_ = function() {
  * Apply replay options.
  *
  * @param {Object} args WebPageReplay arguments:
- *   #param {string=} command, one of: 'record', 'replay', 'geterrorlog', 'end.
+ *   #param {string=} command one of: 'record', 'replay', 'geterrorlog', 'stop'.
  *   #param {string} source IP or MAC of the browser, for all commands.
  * @return {webdriver.promise.Promise} resolve({string} commandOutput).
  * @private
  */
 WebPageReplay.prototype.scheduleWprCommand_ = function(args) {
   'use strict';
-  this.scheduleIsSupported_().then(function(isSupported) {
+  return this.scheduleIsSupported_().then(function(isSupported) {
     if (!isSupported) {
-      throw new Error(this.wprCommand_ + ' not found.' +
-        ' Please rerun without WebPageReplay.');
+      throw new Error('WebPageReplay not supported.');
     }
+    return process_utils.scheduleExec(this.app_, this.wprCommand_, args).then(
+        function(stdout) {
+      return stdout.trim();
+    });
   }.bind(this));
-  return process_utils.scheduleExec(this.app_, this.wprCommand_, args).then(
-      function(stdout) {
-    return stdout.trim();
-  });
 };
 
 /**
@@ -196,6 +196,6 @@ WebPageReplay.prototype.scheduleStop = function() {
     if (!isSupported) {
       return;
     }
-    this.scheduleWprCommand_(['end', this.deviceAddr_]);
+    this.scheduleWprCommand_(['stop', this.deviceAddr_]);
   }.bind(this));
 };

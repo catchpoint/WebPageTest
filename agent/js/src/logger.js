@@ -105,6 +105,23 @@ var STACK_LINE_RE_ = new RegExp(
     (/(?:\S+\/)?(\S+?):(\d+)[\s\S]*/).source);
 
 /**
+ * Returns a debug string indicating who called the caller of this function.
+ *
+ * @param {int=} level the caller level: 1 by default, 0 = myself.
+ * @return {string} debug annotation.
+ */
+exports.whoIsMyCaller = function(level) {
+  'use strict';
+  if (level === undefined) {
+    level = 1;
+  }
+  var callerStackLine = new Error().stack.split('\n', 3 + level)[2 + level];
+  var matches = callerStackLine.match(STACK_LINE_RE_);
+  var functionName = matches[1] || 'unknown';
+  return matches[2] + ':' + matches[3] + ' ' + functionName;
+};
+
+/**
  * maybeLog is a wrapper for the visionmedia jog module that will:
  * a) automatically wrap strings in an object to get maximum info.
  * b) use jog.info because it stores the most information.
@@ -123,10 +140,7 @@ function maybeLog(levelName, levelProperties, data) {
   var level = levelProperties[0];
   if (level <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
-    var callerStackLine = new Error().stack.split('\n', 3)[2];
-    var matches = callerStackLine.match(STACK_LINE_RE_);
-    var functionName = matches[1] || 'unknown';
-    var sourceAnnotation = matches[2] + ':' + matches[3] + ' ' + functionName;
+    var sourceAnnotation = exports.whoIsMyCaller(2);
     var message;
     var logData = data;
     if (typeof data === 'string') {
@@ -188,6 +202,12 @@ exports.log = function(levelPrinter, levelName, stamp, source, message) {
 // Generate level-named functions -- info, debug, etc.
 Object.keys(exports.LEVELS).forEach(function(levelName) {
   'use strict';
-  exports[levelName] = maybeLog.bind(
+  var boundLog = maybeLog.bind(
       /*this=*/undefined, levelName, exports.LEVELS[levelName]);
+  // We cannot simply assign boundLog, because SinonJS somehow doesn't like it,
+  // and the stubs on the logging functions break.
+  // This is also why whoIsMyCaller needs an arg to return indirect callers.
+  exports[levelName] = function() {
+    boundLog.apply(undefined, arguments);
+  };
 });

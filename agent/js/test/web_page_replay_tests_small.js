@@ -108,7 +108,7 @@ describe('web_page_replay small', function() {
         [cmd, 'record', '1.2.3.4'],
         [cmd, 'replay', '1.2.3.4'],
         [cmd, 'getlog', '1.2.3.4'],
-        [cmd, 'end', '1.2.3.4']
+        [cmd, 'stop', '1.2.3.4']
     );
   });
 });

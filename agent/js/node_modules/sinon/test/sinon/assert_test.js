@@ -384,6 +384,28 @@ buster.testCase("sinon.assert", {
             refute.exception(function () {
                 sinon.assert.callOrder(first, second, first);
             });
+        },
+
+        "fails if first spy was not called": function () {
+            var first = sinon.spy();
+            var second = sinon.spy();
+
+            second();
+
+            assert.exception(function () {
+                sinon.assert.callOrder(first, second);
+            });
+        },
+
+        "fails if second spy was not called": function () {
+            var first = sinon.spy();
+            var second = sinon.spy();
+
+            first();
+
+            assert.exception(function () {
+                sinon.assert.callOrder(first, second);
+            });
         }
     },
 
@@ -1023,6 +1045,34 @@ buster.testCase("sinon.assert", {
             assert.equals(message,
                           "expected doSomething, doop, foo to be called in " +
                           "order but were called as doop, doSomething, foo");
+        },
+
+        "assert.callOrder with missing first call exception message": function () {
+            var obj = { doop: function () {}, foo: function () {} };
+            sinon.spy(obj, "doop");
+            sinon.spy(obj, "foo");
+
+            obj.foo();
+
+            var message = this.message("callOrder", obj.doop, obj.foo);
+
+            assert.equals(message,
+                          "expected doop, foo to be called in " +
+                          "order but were called as foo");
+        },
+
+        "assert.callOrder with missing last call exception message": function () {
+            var obj = { doop: function () {}, foo: function () {} };
+            sinon.spy(obj, "doop");
+            sinon.spy(obj, "foo");
+
+            obj.doop();
+
+            var message = this.message("callOrder", obj.doop, obj.foo);
+
+            assert.equals(message,
+                          "expected doop, foo to be called in " +
+                          "order but were called as doop");
         },
 
         "assert.callCount exception message": function () {

@@ -873,6 +873,14 @@ WebDriverServer.prototype.connect = function() {
         Array.prototype.slice.call(arguments));
     this.uncaughtExceptionHandler_.apply(this, arguments);
   }.bind(this));
+  process.on('uncaughtException', function(e) {
+    // Likely from a background function that's not ControlFlow-scheduled.
+    // Immediately unwind the app's scheduled functions, as if the currently
+    // function task threw this exception.
+    logger.error('Top-level process uncaught exception: %s', e.message);
+    var promise = new webdriver.promise.Deferred(undefined, this.app_);
+    promise.reject(e);  // Like throw, only in the ControlFlow.
+  }.bind(this));
   // When IDLE is emitted, the app no longer runs an event loop.
   this.app_.on(webdriver.promise.ControlFlow.EventType.IDLE, function() {
     logger.debug('The main control flow has gone idle, history: %j',
@@ -900,7 +908,7 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
       webdriver: wdSandbox
     };
     logger.info('Running user script');
-    vm.runInNewContext(this.script_, sandbox, 'WPT Job Script');
+    vm.runInNewContext(this.script_, sandbox, 'WPT_Job_Script');
     logger.info('User script returned, but not necessarily finished');
   }.bind(this));
 };

@@ -35,6 +35,7 @@ var path = require('path');
 var process_utils = require('process_utils');
 var system_commands = require('system_commands');
 var webdriver = require('selenium-webdriver');
+var web_page_replay = require('web_page_replay');
 var wpt_client = require('wpt_client');
 
 /**
@@ -76,6 +77,7 @@ function Agent(app, client, flags) {
   }
   this.runTempDir_ = 'runtmp' + (runTempSuffix ? '_' + runTempSuffix : '');
   this.wdServer_ = undefined;  // The wd_server child process.
+  this.webPageReplay_ = new web_page_replay.WebPageReplay(this.app_, flags);
 
   // Create a single (separate) instance of the browser for checking status.
   this.browser_ = browser_base.createBrowser(this.app_, flags);
@@ -119,7 +121,8 @@ Agent.prototype.startWdServer_ = function(job) {
   this.wdServer_.on('message', function(ipcMsg) {
     logger.debug('got IPC: %s', ipcMsg.cmd);
     if ('done' === ipcMsg.cmd || 'error' === ipcMsg.cmd) {
-      var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+      var isRunFinished =  // Note: WPR recording runs are cold-cache only.
+          (0 === job.runNumber) || job.isFirstViewOnly || job.isCacheWarm;
       if ('error' === ipcMsg.cmd) {
         job.error = ipcMsg.e;
         // Error in a first-view run: can't do a repeat run.
@@ -127,7 +130,7 @@ Agent.prototype.startWdServer_ = function(job) {
       }
       this.scheduleProcessDone_(ipcMsg, job);
       if (isRunFinished) {
-        this.scheduleCleanup_();
+        this.scheduleCleanup_(/*isEndOfJob=*/job.runNumber === job.runs);
       }
       // Do this only at the very end, as it starts a new run of the job.
       this.scheduleNoFault_('Job finished',
@@ -149,56 +152,66 @@ Agent.prototype.startWdServer_ = function(job) {
  */
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
-  this.scheduleNoFault_('Process job results', function() {
-    if (ipcMsg.devToolsMessages) {
-      job.zipResultFiles['devtools.json'] =
-          JSON.stringify(ipcMsg.devToolsMessages);
-    }
-    if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
-      var imageDescriptors = [];
-      ipcMsg.screenshots.forEach(function(screenshot) {
-        logger.debug('Adding screenshot %s', screenshot.fileName);
-        process_utils.scheduleFunctionNoFault(this.app_,
-            'Read ' + screenshot.diskPath,
-            fs.readFile, screenshot.diskPath).then(function(buffer) {
+  if (job.runNumber > 0 || job.error) {
+    // Don't care about WPR recording run results, unless it's an error.
+    this.scheduleNoFault_('Process job results', function() {
+      if (ipcMsg.devToolsMessages) {
+        job.zipResultFiles['devtools.json'] =
+            JSON.stringify(ipcMsg.devToolsMessages);
+      }
+      if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
+        var imageDescriptors = [];
+        ipcMsg.screenshots.forEach(function(screenshot) {
+          logger.debug('Adding screenshot %s', screenshot.fileName);
+          process_utils.scheduleFunctionNoFault(this.app_,
+              'Read ' + screenshot.diskPath,
+              fs.readFile, screenshot.diskPath).then(function(buffer) {
+            job.resultFiles.push(new wpt_client.ResultFile(
+                wpt_client.ResultFile.ResultType.IMAGE,
+                screenshot.fileName,
+                screenshot.contentType,
+                buffer));
+            if (screenshot.description) {
+              imageDescriptors.push({
+                filename: screenshot.fileName,
+                description: screenshot.description
+              });
+            }
+          }.bind(this));
+        }.bind(this));
+        if (imageDescriptors.length > 0) {
+          job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
+        }
+      }
+      if (ipcMsg.videoFile) {
+        process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
+            fs.readFile, ipcMsg.videoFile).then(function(buffer) {
+          var ext = path.extname(ipcMsg.videoFile);
+          var mimeType = ('.mp4' === ext) ? 'video/mp4' : 'video/avi';
           job.resultFiles.push(new wpt_client.ResultFile(
               wpt_client.ResultFile.ResultType.IMAGE,
-              screenshot.fileName,
-              screenshot.contentType,
-              buffer));
-          if (screenshot.description) {
-            imageDescriptors.push({
-              filename: screenshot.fileName,
-              description: screenshot.description
-            });
+              'video' + ext, mimeType, buffer));
+        }.bind(this));
+      }
+      if (ipcMsg.pcapFile) {
+        process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
+                fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.PCAP,
+              '.cap', 'application/vnd.tcpdump.pcap', buffer));
+        });
+        process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
+            fs.unlink, ipcMsg.pcapFile);
+      }
+      if (job.isReplay) {
+        this.webPageReplay_.scheduleGetErrorLog().then(function(log) {
+          if (log) {
+            job.zipResultFiles['replay.log'] = log;
           }
         }.bind(this));
-      }.bind(this));
-      if (imageDescriptors.length > 0) {
-        job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
-    }
-    if (ipcMsg.videoFile) {
-      process_utils.scheduleFunctionNoFault(this.app_, 'Read video file',
-          fs.readFile, ipcMsg.videoFile).then(function(buffer) {
-        var ext = path.extname(ipcMsg.videoFile);
-        var mimeType = ('.mp4' === ext) ? 'video/mp4' : 'video/avi';
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.IMAGE,
-            'video' + ext, mimeType, buffer));
-      }.bind(this));
-    }
-    if (ipcMsg.pcapFile) {
-      process_utils.scheduleFunctionNoFault(this.app_, 'Read pcap file',
-              fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.PCAP,
-            '.cap', 'application/vnd.tcpdump.pcap', buffer));
-      });
-      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
-          fs.unlink, ipcMsg.pcapFile);
-    }
-  }.bind(this));
+    }.bind(this));
+  }
 };
 
 /**
@@ -216,7 +229,22 @@ Agent.prototype.startJobRun_ = function(job) {
       job.id, job.runNumber, job.runs, job.isCacheWarm);
   this.scheduleCleanRunTempDir_();
   if (!this.wdServer_) {
+    if (job.isReplay) {
+      if (job.runNumber === 0) {
+        this.webPageReplay_.scheduleStop();  // Force-stop WPR before we begin.
+        this.webPageReplay_.scheduleRecord();
+      } else {
+        this.webPageReplay_.scheduleReplay();
+      }
+    } else if (job.runNumber === 1) {  // WPR not requested, just force-stop it.
+      process_utils.scheduleNoFault(
+          this.app_, 'Stop WPR just in case, ignore failures', function() {
+        this.webPageReplay_.scheduleStop();
+      }.bind(this));
+    }
+
     this.startTrafficShaper_(job);
+
     this.startWdServer_(job);
   }
   var script = job.task.script;
@@ -233,16 +261,21 @@ Agent.prototype.startJobRun_ = function(job) {
     url = 'http://' + url;
   }
   this.scheduleNoFault_('Send IPC "run"', function() {
+    var isRecordingRun = 0 === job.runNumber;
     var message = {
         cmd: 'run',
         options: {browserName: job.task.browser},
         runNumber: job.runNumber,
-        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
-        captureVideo: job.captureVideo,
-        capturePackets: job.capturePackets,
-        pngScreenShot: job.task.pngScreenShot,
+        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm || isRecordingRun,
+        // Suppress video capture on WPR recording.
+        captureVideo: job.captureVideo && !isRecordingRun,
+        // Suppress packet capture on WPR recording.
+        capturePackets: job.capturePackets && !isRecordingRun,
+        // Suppress JPEG conversion on WPR recording.
+        pngScreenShot: !!job.task.pngScreenShot || isRecordingRun,
         imageQuality: job.task.imageQuality,
-        captureTimeline: job.task.timeline,
+        // Suppress Timeline capture on WPR recording.
+        captureTimeline: !!job.task.timeline && !isRecordingRun,
         timelineStackDepth: job.task.timelineStackDepth,
         script: script,
         url: url,
@@ -382,7 +415,7 @@ Agent.prototype.abortJob_ = function(job) {
     this.scheduleNoFault_('Send IPC "abort"',
         this.wdServer_.send.bind(this.wdServer_, {cmd: 'abort'}));
   }
-  this.scheduleCleanup_();
+  this.scheduleCleanup_(/*isEndOfJob=*/true);
   this.scheduleNoFault_('Timed out job finished',
       job.runFinished.bind(job, /*isRunFinished=*/true));
 };
@@ -390,9 +423,10 @@ Agent.prototype.abortJob_ = function(job) {
 /**
  * Kill the wdServer and traffic shaper.
  *
+ * @param {boolean} isEndOfJob whether we are done with the entire job.
  * @private
  */
-Agent.prototype.scheduleCleanup_ = function() {
+Agent.prototype.scheduleCleanup_ = function(isEndOfJob) {
   'use strict';
   if (this.wdServer_) {
     this.scheduleNoFault_('Remove message listener',
@@ -407,6 +441,12 @@ Agent.prototype.scheduleCleanup_ = function() {
       this.app_.schedule('undef wd_server', function() {
         this.wdServer_ = undefined;
       }.bind(this));
+    }.bind(this));
+  }
+  if (isEndOfJob) {
+    process_utils.scheduleNoFault(
+        this.app_, 'Stop WPR just in case, ignore failures', function() {
+      this.webPageReplay_.scheduleStop();
     }.bind(this));
   }
   this.trafficShaper_('clear').addErrback(function(/*e*/) {
@@ -512,7 +552,7 @@ Agent.prototype.startTrafficShaper_ = function(job) {
     };
   this.trafficShaper_('set', opts).addErrback(function(e) {
     var stderr = (e.stderr || e.message || '').trim();
-    throw new Error('Unable to `' + opts.join(' ') + '`\n' + stderr + '\n' +
+    throw new Error('Unable to configure traffic shaping:\n' + stderr + '\n' +
       ' To disable traffic shaping, re-run your test with ' +
       '"Advanced Settings > Test Settings > Connection = Native Connection"' +
       ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');

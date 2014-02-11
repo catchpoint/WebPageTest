@@ -102,7 +102,6 @@ function Job(client, task) {
         JSON.stringify(task));
   }
   this.runs = runs;
-  this.runNumber = 1;
   this.captureVideo = jsonBoolean(task, JOB_CAPTURE_VIDEO);
   this.capturePackets = jsonBoolean(task, JOB_CAPTURE_PACKETS);
   this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
@@ -407,6 +406,7 @@ Client.prototype.startNextRun_ = function(job) {
     try {
       this.onStartJobRun(job);
     } catch (e) {
+      logger.debug('onStartJobRunFailed: %s\n%s', e.stack);
       job.error = e.message;
       this.abortJob_(job);
     }
@@ -435,7 +435,7 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
     this.currentJob_ = undefined;
-    if (0 === job.runNumber) {  // Do not submit a WebPageReplay recording run.
+    if (0 === job.runNumber && !job.error) {  // Don't submit WPR recording run.
       this.endOfRun_(job, isRunFinished, /*e=*/undefined);
     } else {
       this.submitResult_(job, isRunFinished,
@@ -463,7 +463,9 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, e) {
   }
   // Run until we finish the last iteration.
   // Do not increment job.runNumber past job.runs.
-  if (e || (isRunFinished && job.runNumber === job.runs)) {
+  if (e || (isRunFinished && job.runNumber === job.runs) ||
+      // WPR recording run failure fails the whole job.
+      (job.runNumber === 0 && job.error)) {
     this.emit('done', job);
   } else {
     // Continue running
@@ -628,17 +630,21 @@ Client.prototype.submitResult_ = function(job, isRunFinished, callback) {
       }
       this.postResultFile_(job, resultFile, fields, submitNextResult);
     } else {
-      if (job.runNumber === job.runs && isRunFinished) {
+      if ((job.runNumber === job.runs && isRunFinished) ||
+          // WPR record run failure terminates the whole job.
+          (job.runNumber === 0 && job.error)) {
         fields.push(['done', '1']);
-        if (job.error) {
-          fields.push(['testerror', job.error]);
-        }
+      }
+      if (job.error) {
+        fields.push(['testerror', job.error]);
+      }
+      if (fields.length) {
         this.postResultFile_(job, undefined, fields, function(e2) {
           if (callback) {
             callback(e2);
           }
         }.bind(this));
-      } else if (callback) {
+      } else if (callback) {  // Nothing to post.
         callback();
       }
     }
