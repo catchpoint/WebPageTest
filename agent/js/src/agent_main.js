@@ -409,7 +409,7 @@ Agent.prototype.scheduleCleanup_ = function() {
       }.bind(this));
     }.bind(this));
   }
-  this.trafficShaper_('clear').addErrback(function(e) {
+  this.trafficShaper_('clear').addErrback(function(/*e*/) {
     logger.debug('Ignoring failed trafficShaper clear');
   }.bind(this));
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
@@ -456,7 +456,7 @@ Agent.prototype.scheduleCleanup_ = function() {
  * command arguments (e.g. "my_ipfw,--x,123").
  *
  * @param {string} command 'set', 'get', or 'clear'.
- * @param {Object.<string>=} options:
+ * @param {Object.<string>=} opts
  *    #param {string=} down_bw input bandwidth in bits/s (>= 0)
  *    #param {string=} down_delay input delay in ms (>= 0)
  *    #param {string=} down_plr input packet loss rate [0..1].
@@ -468,7 +468,8 @@ Agent.prototype.scheduleCleanup_ = function() {
  * @return {webdriver.promise.Promise} The scheduled promise.
  * @private
  */
-Agent.prototype.trafficShaper_ = function(command, opts) { // jshint unused:false
+Agent.prototype.trafficShaper_ =
+    function(command, opts) {  // jshint unused:false
   'use strict';
   var cmd = this.flags_.trafficShaper || './ipfw_config';
   var args = [];
@@ -478,11 +479,11 @@ Agent.prototype.trafficShaper_ = function(command, opts) { // jshint unused:fals
     cmd = args.shift();
   }
   args.push(command);
-  for (var key in opts) {
+  Object.keys(opts || {}).forEach(function(key) {
     if (undefined !== opts[key]) {
-      args.push('--'+key, opts[key]);
+      args.push('--' + key, opts[key]);
     }
-  }
+  }.bind(this));
   if (!(opts && 'device' in opts) && this.flags_.deviceSerial) {
     args.push('--device', this.flags_.deviceSerial);
   }
@@ -495,7 +496,7 @@ Agent.prototype.trafficShaper_ = function(command, opts) { // jshint unused:fals
 /**
  * Configures the traffic shaper.
  *
- * @param {Job} job.
+ * @param {Job} job
  * @private
  */
 Agent.prototype.startTrafficShaper_ = function(job) {
@@ -507,10 +508,11 @@ Agent.prototype.startTrafficShaper_ = function(job) {
       down_plr: job.task.plr && 0,
       up_bw: job.task.bwOut && (1000 * job.task.bwOut),
       up_delay: job.task.latency && job.task.latency - halfDelay,
-      up_plr: job.task.plr && job.task.plr};  // all loss on out
+      up_plr: job.task.plr && job.task.plr  // All loss on out.
+    };
   this.trafficShaper_('set', opts).addErrback(function(e) {
     var stderr = (e.stderr || e.message || '').trim();
-    throw new Error('Unable to `' + args.join(' ') + '`\n' + stderr + '\n' +
+    throw new Error('Unable to `' + opts.join(' ') + '`\n' + stderr + '\n' +
       ' To disable traffic shaping, re-run your test with ' +
       '"Advanced Settings > Test Settings > Connection = Native Connection"' +
       ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
