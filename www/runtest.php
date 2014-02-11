@@ -189,6 +189,8 @@
                       $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
                           "$base_uri{$test['browser']}.zip" : "$base_uri{$test['browser']}.apk";
                       $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
+                      if (is_file("./browsers/{$test['browser']}.json"))
+                        $test['customBrowserSettings'] = json_decode(file_get_contents("./browsers/{$test['browser']}.json"), true);
                     }
                   }
                 }
@@ -1768,6 +1770,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "customBrowserUrl={$test['customBrowserUrl']}\r\n";
             if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
                 $testFile .= "customBrowserMD5={$test['customBrowserMD5']}\r\n";
+            if (array_key_exists('customBrowserSettings', $test) &&
+                is_array($test['customBrowserSettings']) &&
+                count($test['customBrowserSettings'])) {
+              foreach ($test['customBrowserSettings'] as $setting => $value)
+                $testFile .= "customBrowser_$setting=$value\r\n";
+            }
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
