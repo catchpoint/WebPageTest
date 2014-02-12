@@ -91,9 +91,9 @@ function SendMessage($to, $subject, &$body) {
         $mailServerSettings = $settings['mailserver'];
         $mailInit = array ();
         if (array_key_exists('host', $mailServerSettings))
-            $mailInit['host'] = $mailServerSettings['hos t'];
+            $mailInit['host'] = $mailServerSettings['host'];
         if (array_key_exists('port', $mailServerSettings))
-            $mailInit['port'] = $mailServerSettings['po rt'];
+            $mailInit['port'] = $mailServerSettings['port'];
         if (array_key_exists('useAuth', $mailServerSettings) && $mailServerSettings['useAuth'])
         {
             $mailInit['auth'] = true;
