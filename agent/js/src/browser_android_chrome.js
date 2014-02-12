@@ -477,6 +477,7 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.stopPacServerIfNeeded_();
   this.adb_.scheduleForceStopMatchingPackages(/\S*\.chrome^:*$/);
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
+  this.adb_.scheduleDismissErrorDialog();
 };
 
 /**

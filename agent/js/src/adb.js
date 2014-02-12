@@ -393,3 +393,19 @@ Adb.prototype.scheduleDetectConnectedInterface = function() {
     return connectedInterfaces[0];
   }.bind(this));
 };
+
+/**
+ * Checks for the application error dialog and sends keyboard commands to
+ * dismiss it if it is present.
+ */
+Adb.prototype.scheduleDismissErrorDialog = function() {
+  'use strict';
+  this.shell(['dumpsys', 'window', 'windows']).then(function(stdout) {
+    if (/Window #[^\n]*Application Error\:/.test(stdout)) {
+      logger.warn("Application Error dialog detected, dismissing it.");
+      this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
+      this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
+      this.shell(['input','keyevent','KEYCODE_ENTER']);
+    }
+  }.bind(this));
+};
