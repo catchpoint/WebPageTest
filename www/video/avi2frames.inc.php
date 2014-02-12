@@ -41,7 +41,7 @@ function ProcessAllAVIVideos($testPath) {
 function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
     if ($needLock)
       $testLock = LockTest($testPath);
-    $videoCodeVersion = 3;
+    $videoCodeVersion = 4;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
@@ -87,7 +87,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
             if (strlen($videoFile) && strlen($videoDir)) {
                 if (Video2PNG($videoFile, $videoDir, $crop)) {
                     $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
-                    FindAVIViewport($videoDir, $startOffset, $endTime, $viewport);
+                    FindAVIViewport($videoDir, $startOffset, $endTime + 2000, $viewport);
                     EliminateDuplicateAVIFiles($videoDir, $viewport);
                     $lastImage = ProcessVideoFrames($videoDir, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
