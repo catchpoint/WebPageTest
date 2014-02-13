@@ -175,11 +175,11 @@ else
                       else
                           echo "<PageSpeedData>http://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
                     }
-                    xmlDomains($id, $testPath, $fvMedian, 1);
-                    xmlBreakdown($id, $testPath, $fvMedian, 1);
-                    xmlRequests($id, $testPath, $fvMedian, 1);
-                    StatusMessages($id, $testPath, $fvMedian, 1);
-                    ConsoleLog($id, $testPath, $fvMedian, 1);
+                    xmlDomains($id, $testPath, $rvMedian, 1);
+                    xmlBreakdown($id, $testPath, $rvMedian, 1);
+                    xmlRequests($id, $testPath, $rvMedian, 1);
+                    StatusMessages($id, $testPath, $rvMedian, 1);
+                    ConsoleLog($id, $testPath, $rvMedian, 1);
                     echo "</repeatView>\n";
                 }
             }
@@ -299,7 +299,8 @@ else
                     
                     xmlDomains($id, $testPath, $i, 0);
                     xmlBreakdown($id, $testPath, $i, 0);
-                    xmlRequests($id, $testPath, $i, 0);
+                    if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests'] != 'median')
+                      xmlRequests($id, $testPath, $i, 0);
                     StatusMessages($id, $testPath, $i, 0);
                     ConsoleLog($id, $testPath, $i, 0);
                     echo "</firstView>\n";
@@ -393,7 +394,8 @@ else
                     
                     xmlDomains($id, $testPath, $i, 1);
                     xmlBreakdown($id, $testPath, $i, 1);
-                    xmlRequests($id, $testPath, $i, 1);
+                    if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests'] != 'median')
+                      xmlRequests($id, $testPath, $i, 1);
                     StatusMessages($id, $testPath, $i, 1);
                     ConsoleLog($id, $testPath, $i, 1);
                     echo "</repeatView>\n";
