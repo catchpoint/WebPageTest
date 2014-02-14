@@ -233,7 +233,7 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   foreach ($files as $file) {
     $duplicate = false;
     if (isset($previousFile)) {
-      $command = "convert  \"$previousFile\" \"$file\" -crop $crop miff:- | compare -metric AE - -fuzz 1% null: 2>&1";
+      $command = "convert  \"$previousFile\" \"$file\" -crop $crop miff:- | compare -metric AE - -fuzz 2% null: 2>&1";
       //$command = "convert  \"$previousFile\" \"$file\" -crop $crop miff:- | compare -metric AE - null: 2>&1";
       $differentPixels = shell_exec($command);
       if (isset($differentPixels) && strlen($differentPixels) && $differentPixels == 0)
