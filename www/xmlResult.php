@@ -154,7 +154,10 @@ else
             
             if( isset($rv) )
             {
-                $rvMedian = GetMedianRun($pageData, 1, $median_metric);
+                if (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv')
+                  $rvMedian = $fvMedian;
+                else
+                  $rvMedian = GetMedianRun($pageData, 1, $median_metric);
                 if($rvMedian)
                 {
                     echo "<repeatView>\n";
