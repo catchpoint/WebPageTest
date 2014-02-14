@@ -33,24 +33,30 @@ function OutputCSI($id, $testPath, $run, $cached, $runs, $format)
           header('HTTP/1.0 404 Not Found');
           return;
         }
+  $data = null;
   if ($format == 'csv')
     OutputCsvHeaders('csi.csv');
+  else if ($format == 'json')
+    $data = array();
 	// If it is for a particular run specified by the $run variable, then output
 	// csi only for that run. Else, output for all.
 	if ( !is_null($_GET['run']) )
         {
-		ParseCsiForRun($id, $testPath, $run, $cached, $format);
+		ParseCsiForRun($id, $testPath, $run, $cached, $data);
         }
 	else if ( $runs )
         {
                 for ( $run = 1; $run <= $runs; $run++ )
                 {
 			// First-view.
-			ParseCsiForRun($id, $testPath, $run, FALSE, $format);
+			ParseCsiForRun($id, $testPath, $run, FALSE, $data);
 			// Repeat-view.
-			ParseCsiForRun($id, $testPath, $run, TRUE, $format);
+			ParseCsiForRun($id, $testPath, $run, TRUE, $data);
 		}
 	}
+  if ($format == 'json') {
+    json_response($data);
+  }
 }
 
 /**
@@ -68,14 +74,13 @@ function OutputCsvHeaders($filename)
 /**
  * Function for parsing/outputting the CSI data for a given run
  */
-function ParseCsiForRun($id, $testPath, $run, $cached, $format)
+function ParseCsiForRun($id, $testPath, $run, $cached, &$data)
 {
         $params = ParseCsiInfo($id, $testPath, $run, $cached, true);
-  if ($format == 'csv') {
+  if (!is_null($data))
+    OutputJsonFromParams($id, $run, $cached, $params, $data);
+  else
     OutputCsvFromParams($id, $run, $cached, $params);
-  } else if ($format == 'json') {
-    OutputJsonFromParams($id, $run, $cached, $params);
-  }
 }
 
 /***
@@ -111,14 +116,13 @@ function OutputCsvFromParams($id, $run, $cached, $params)
 /***
  * Function to output the values from the params map/array in json format.
  */
-function OutputJsonFromParams($id, $run, $cached, $params)
+function OutputJsonFromParams($id, $run, $cached, $params, &$data)
 {
   if (!array_key_exists('s', $params) || $params['s'] == '')
     $params['s'] = 'None';
   if (!array_key_exists('action', $params) || $params['action'] == '')
     $params['action'] = 'None';
 
-  $data = array();
   foreach ($params as $param_name => $param_value) {
     if ($param_name == 's' || $param_name == 'action'
         || $param_name == 'rt' || $param_name == 'it'
@@ -135,7 +139,5 @@ function OutputJsonFromParams($id, $run, $cached, $params)
       'value' => $param_value
     ));
   }
-
-  echo json_response($data);
 }
 ?>
