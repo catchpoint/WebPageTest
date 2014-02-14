@@ -41,7 +41,7 @@ function ProcessAllAVIVideos($testPath) {
 function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
     if ($needLock)
       $testLock = LockTest($testPath);
-    $videoCodeVersion = 6;
+    $videoCodeVersion = 7;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
