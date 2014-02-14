@@ -41,7 +41,7 @@ function ProcessAllAVIVideos($testPath) {
 function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
     if ($needLock)
       $testLock = LockTest($testPath);
-    $videoCodeVersion = 4;
+    $videoCodeVersion = 5;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
@@ -87,7 +87,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
             if (strlen($videoFile) && strlen($videoDir)) {
                 if (Video2PNG($videoFile, $videoDir, $crop)) {
                     $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
-                    FindAVIViewport($videoDir, $startOffset, $endTime + 2000, $viewport);
+                    FindAVIViewport($videoDir, $startOffset, $viewport);
                     EliminateDuplicateAVIFiles($videoDir, $viewport);
                     $lastImage = ProcessVideoFrames($videoDir, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
@@ -273,7 +273,7 @@ function msToHMS($duration) {
 * @param mixed $videoDir
 * @param mixed $viewport
 */
-function FindAVIViewport($videoDir, $startOffset, $endTime, &$viewport) {
+function FindAVIViewport($videoDir, $startOffset, &$viewport) {
   $files = glob("$videoDir/image*.png");
   if ($files && count($files) && IsOrangeAVIFrame($files[0])) {
     // load the image and figure out the viewport area (orange)
@@ -338,14 +338,10 @@ function FindAVIViewport($videoDir, $startOffset, $endTime, &$viewport) {
         $frameTime = $currentFrame - $firstFrame;
         if ($startOffset)
           $frameTime = max($frameTime - $startOffset, 0);
-        if (!$endTime || $frameTime <= $endTime) {
-          $dest = "$videoDir/image-" . sprintf('%06d', $frameTime) . ".png";
-          if (is_file($dest))
-            unlink($dest);
-          rename($file, $dest);
-        } else {
-          unlink($file);
-        }
+        $dest = "$videoDir/image-" . sprintf('%06d', $frameTime) . ".png";
+        if (is_file($dest))
+          unlink($dest);
+        rename($file, $dest);
       }
     }
   }

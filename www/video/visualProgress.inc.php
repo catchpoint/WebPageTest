@@ -25,7 +25,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
-    $current_version = 6;
+    $current_version = 7;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
