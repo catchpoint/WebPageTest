@@ -266,6 +266,8 @@ if (!isset($out_data)) {
 <?php
 } else {
     // spit out the raw data
+    if (GetTestErrors($errors, $benchmark, $test_time))
+      $out_data[$benchmark]['errors'] = $errors;
     header ("Content-type: application/json; charset=utf-8");
     echo json_encode($out_data);
 }
@@ -290,6 +292,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         }
         $out_data[$bmname][$metric] = array();
         $out_data[$bmname][$metric]['FV'] = TSVEncode($tsv);
+        $out_data[$bmname]['notes'] = $annotations;
         foreach ($out_data[$bmname][$metric]['FV'] as $index => &$entry) {
           if (is_array($entry) && array_key_exists('URL', $entry)) {
             $urlIndex = intval($entry['URL']);
