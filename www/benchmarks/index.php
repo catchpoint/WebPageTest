@@ -146,6 +146,8 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
         $tsv = LoadDataTSV($benchmark['name'], 0, 'docTime', $aggregate, $loc, $annotations);
         $metric = 'docTime';
     }
+    if ($aggregate == 'count')
+        $label = 'Successful Tests (First View)';
     if (isset($out_data)) {
         $out_data[$bmname] = array();
         $out_data[$bmname][$metric] = array();
@@ -186,6 +188,8 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
             $tsv = LoadDataTSV($benchmark['name'], 1, 'docTime', $aggregate, $loc, $annotations);
             $metric = 'docTime';
         }
+        if ($aggregate == 'count')
+            $label = 'Successful Tests (Repeat View)';
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
         }
