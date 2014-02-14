@@ -54,7 +54,6 @@ WptHook::WptHook(void):
   ,nspr_hook_(sockets_, test_state_, test_)
   ,schannel_hook_(sockets_, test_state_, test_)
   ,wininet_hook_(sockets_, test_state_, test_)
-  ,gdi_hook_(test_state_, *this)
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
@@ -122,7 +121,6 @@ void WptHook::Init(){
     schannel_hook_.Init();
     wininet_hook_.Init();
   }
-  gdi_hook_.Init();
   test_state_.Init();
   ResetEvent(background_thread_started_);
   background_thread_ = (HANDLE)_beginthreadex(0, 0, ::ThreadProc, this, 0, 0);
@@ -241,18 +239,7 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         }
     }
     default:
-        if (message == test_state_.paint_msg_) {
-          if (!test_state_._exit && test_state_._active) {
-            int x = LOWORD(wParam);
-            int y = HIWORD(wParam);
-            int width = LOWORD(lParam);
-            int height = HIWORD(lParam);
-            //TCHAR buff[1024];
-            //wsprintf(buff, _T("Paint Event - %d,%d - %d x %d"), x, y, width, height);
-            //OutputDebugString(buff);
-            test_state_.PaintEvent(x, y, width, height);
-          }
-        } else if (message == report_message_) {
+        if (message == report_message_) {
           OnReport();
         } else {
           ret = false;
@@ -310,25 +297,4 @@ void WptHook::BackgroundThread() {
 
   test_server_.Stop();
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread() Stopped\n"));
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WptHook::SendPaintEvent(int x, int y, int width, int height) {
-  x = max(x,0);
-  y = max(y,0);
-  height = max(height,0);
-  width = max(width,0);
-  bool ok = true;
-  // ignore cursor and spinners
-  if (width && height && ((width <= 5) || (width == height && width <= 32)))
-    ok = false;
-  if (ok) {
-    if (test_state_.gdi_only_)
-      PostMessage(HWND_BROADCAST, test_state_.paint_msg_,
-                  MAKEWPARAM(x,y), MAKELPARAM(width, height));
-    else if (message_window_)
-      PostMessage(message_window_, test_state_.paint_msg_,
-                  MAKEWPARAM(x,y), MAKELPARAM(width, height));
-  }
 }

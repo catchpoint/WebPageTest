@@ -205,7 +205,6 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       si.wShowWindow = SW_SHOWNORMAL;
       si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
-      InstallGlobalHook();
       EnterCriticalSection(&cs);
       _browser_process = NULL;
       HANDLE additional_process = NULL;
@@ -335,7 +334,6 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       }
       LeaveCriticalSection(&cs);
       ResetIpfw();
-      RemoveGlobalHook();
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }

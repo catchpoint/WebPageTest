@@ -51,7 +51,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atlcoll.h>
 #include <in6addr.h>
 #include "../wpthook/wpthook_dll.h"
-#include "../wptglobal/wptglobal_dll.h"
 
 // shared internal includes
 #include "wpt_status.h"

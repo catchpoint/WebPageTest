@@ -56,6 +56,12 @@ private:
   DevTools          &dev_tools_;
   Trace             &trace_;
   CRITICAL_SECTION  cs;
+  bool              started_;
+  ULARGE_INTEGER    last_cpu_idle_;
+  ULARGE_INTEGER    last_cpu_kernel_;
+  ULARGE_INTEGER    last_cpu_user_;
+  LARGE_INTEGER     start_check_time_;
+  LARGE_INTEGER     start_check_freq_;
 
   void SendResponse(struct mg_connection *conn,
                     const struct mg_request_info *request_info,
@@ -71,4 +77,5 @@ private:
                              const CString key) const;
   CString GetPostBody(struct mg_connection *conn,
                       const struct mg_request_info *request_info);
+  bool OkToStart();
 };

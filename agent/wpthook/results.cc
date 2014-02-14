@@ -230,8 +230,7 @@ void Results::SaveImages(void) {
               true);
   }
 
-  if (_test._video)
-    SaveVideo();
+  SaveVideo();
 }
 
 /*-----------------------------------------------------------------------------
@@ -262,13 +261,17 @@ void Results::SaveVideo(void) {
           if (img->GetHeight() < height)
             img->Expand(0, 0, 0, height - img->GetHeight(), black);
           if (ImagesAreDifferent(last_image, img)) {
-            _visually_complete.QuadPart = image._capture_time.QuadPart;
-            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveImage(*img, file_name, _test._image_quality);
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveHistogram(*img, file_name);
+            if (!_test_state._render_start.QuadPart)
+              _test_state._render_start.QuadPart = image._capture_time.QuadPart;
+            if (_test._video) {
+              _visually_complete.QuadPart = image._capture_time.QuadPart;
+              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+                                image_time);
+              SaveImage(*img, file_name, _test._image_quality);
+              file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
+                                image_time);
+              SaveHistogram(*img, file_name);
+            }
           }
         } else {
           width = img->GetWidth();

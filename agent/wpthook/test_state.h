@@ -98,9 +98,6 @@ public:
   void OnStatusMessage(CString status);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
-  void PaintEvent(int x, int y, int width, int height);
-  void CheckStartRender();
-  void RenderCheckThread();
   void CollectData();
   void Reset(bool cascade = true);
   void Init();
@@ -168,7 +165,6 @@ public:
 
   HWND  _frame_window;
   HWND  _document_window;
-  bool  _screen_updated;
 
   WptTestHook& _test;
   
@@ -182,8 +178,6 @@ private:
   ScreenCapture& _screen_capture;
   DevTools &_dev_tools;
   Trace &_trace;
-  HANDLE  _render_check_thread;
-  HANDLE  _check_render_event;
   HANDLE  _data_timer;
   CAtlList<CString>        _console_log_messages; // messages to the console
   CAtlList<CString>        _timed_events; // any supported timed events

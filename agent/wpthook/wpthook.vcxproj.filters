@@ -221,9 +221,6 @@
     <ClInclude Include="cdn.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="hook_gdi.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="hook_nspr.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -377,9 +374,6 @@
       <Filter>Third-Party\NCodeHook</Filter>
     </ClCompile>
     <ClCompile Include="hook_winsock.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hook_gdi.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="track_sockets.cc">
