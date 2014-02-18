@@ -202,6 +202,17 @@
             } else {
                 $test['location'] = trim($req_location);
             }
+            
+            // set the browser to the default if one wasn't specified
+            if ((!array_key_exists('browser', $test) ||
+                 !strlen($test['browser'])) &&
+                array_key_exists($test['location'], $locations) &&
+                array_key_exists('browser', $locations[$test['location']]) &&
+                strlen($locations[$test['location']]['browser'])) {
+              $browsers = explode(',',$locations[$test['location']]['browser']);
+              if (isset($browsers) && is_array($browsers) && count($browsers))
+                $test['browser'] = trim($browsers[0]);
+            }
 
             // Extract the multiple locations.
             if ( isset($req_multiple_locations))
@@ -1733,7 +1744,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
-                $testFile .= "browser={$test['browserExe']}\r\n";
+                $testFile .= "browserExe={$test['browserExe']}\r\n";
             if( isset($test['browser']) && strlen($test['browser']) )
                 $testFile .= "browser={$test['browser']}\r\n";
             if( $test['pngss'] || $settings['pngss'] )

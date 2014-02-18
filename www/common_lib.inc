@@ -278,7 +278,7 @@ function GetDefaultLocation()
 *
 * @param mixed $dir
 */
-function delTree($dir)
+function delTree($dir, $remove = true)
 {
   $dir = trim($dir, '/');
   if (is_dir($dir)) {
@@ -291,7 +291,8 @@ function delTree($dir)
           unlink("$dir/$file");
       }
     }
-    rmdir( $dir );
+    if ($remove)
+      rmdir( $dir );
   }
 }
 
