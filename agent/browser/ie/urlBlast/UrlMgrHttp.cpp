@@ -326,7 +326,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 							}
 							else if( !key.CompareNoCase(_T("Host")) )
 								info.host = value;
-							else if( !key.CompareNoCase(_T("Browser")) )
+							else if( !key.CompareNoCase(_T("BrowserExe")) )
 								info.browser = value;
 							else if( !key.CompareNoCase(_T("noopt")) && _ttol(value) )
                 info.checkOpt = 0;

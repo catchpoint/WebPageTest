@@ -839,8 +839,6 @@ void CTestState::PaintEvent(int x, int y, int width, int height) {
   if (active) {
     SetBrowserWindowUpdated(true);
     CheckWindowPainted();
-    if (painted && (x || y || width || height))
-      dev_tools_.AddPaintEvent(x, y, width, height);
   }
 }
 
