@@ -45,6 +45,8 @@ const TCHAR * DIALOG_WHITELIST[] = {
   , _T("task manager")
   , _T("aol pagetest")
   , _T("shut down windows")
+  , _T("vmware")
+  , _T("security essentials")
 };
 
 const DWORD SOFTWARE_INSTALL_RETRY_DELAY = 30000; // try every 30 seconds
@@ -650,6 +652,7 @@ void WptDriverCore::CloseDialogs(void) {
         if (::IsWindowVisible(hWnd))
           if (::GetClassName(hWnd, szClass, 100))
             if (!lstrcmp(szClass,_T("#32770")) ||
+                !lstrcmp(szClass,_T("Notepad")) ||
                 !lstrcmp(szClass,_T("Internet Explorer_Server"))) {
               bool bKill = true;
 

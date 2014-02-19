@@ -134,9 +134,10 @@ public:
   void ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
                            LPDWORD lpNumberOfBytesTransferred);
   PTP_IO CreateThreadpoolIo(HANDLE fl, PTP_WIN32_IO_CALLBACK_WPT pfnio,
-                            PVOID pv, PTP_CALLBACK_ENVIRON pcbe);
-  void CloseThreadpoolIo(PTP_IO pio);
-  void StartThreadpoolIo(PTP_IO pio);
+                            PVOID pv, PTP_CALLBACK_ENVIRON pcbe,
+                            bool kernelBase);
+  void CloseThreadpoolIo(PTP_IO pio, bool kernelBase);
+  void StartThreadpoolIo(PTP_IO pio, bool kernelBase);
   void ThreadpoolCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context,
     PVOID Overlapped, ULONG IoResult, ULONG_PTR NumberOfBytesTransferred,
     PTP_IO Io);
@@ -186,7 +187,10 @@ private:
   LPFN_WSAEVENTSELECT _WSAEventSelect;
   LPFN_WSAENUMNETWORKEVENTS _WSAEnumNetworkEvents;
   LPFN_CREATETHREADPOOLIO _CreateThreadpoolIo;
+  LPFN_CREATETHREADPOOLIO _CreateThreadpoolIo_base;
   LPFN_CLOSETHREADPOOLIO _CloseThreadpoolIo;
+  LPFN_CLOSETHREADPOOLIO _CloseThreadpoolIo_base;
   LPFN_STARTTHREADPOOLIO _StartThreadpoolIo;
+  LPFN_STARTTHREADPOOLIO _StartThreadpoolIo_base;
   LPFN_WSAIOCTL _WSAIoctl;
 };
