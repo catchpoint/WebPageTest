@@ -57,17 +57,6 @@ if (ValidateTestId($id) && gz_is_file("$path/testinfo.json")) {
               }
             }
             MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");
-            if (strpos($fileName, 'video.avi') || strpos($fileName, 'video.mp4')) {
-              $parts = explode('_', $fileName);
-              if( count($parts) ) {
-                $runNum = $parts[0];
-                $cached = 0;
-                if( strpos($fileName, '_Cached') )
-                  $cached = 1;
-                require_once('./video/avi2frames.inc.php');
-                ProcessAVIVideo($testInfo, $testPath, $runNum, $cached);
-              }
-            }
           }
         }
       }
