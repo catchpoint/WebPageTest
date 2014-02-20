@@ -41,7 +41,7 @@ function ProcessAllAVIVideos($testPath) {
 function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
     if ($needLock)
       $testLock = LockTest($testPath);
-    $videoCodeVersion = 8;
+    $videoCodeVersion = 9;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
@@ -222,7 +222,7 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   $files = glob("$videoDir/image*.png");
   $crop = '+0+55';
   if (isset($viewport)) {
-    // ignore a 4-pixel header on the actual viewport to allow for the progress bar
+    // Ignore a 4-pixel header on the actual viewport to allow for the progress bar.
     $margin = 4;
     $top = $viewport['y'] + $margin;
     $height = max($viewport['height'] - $margin, 1);
@@ -230,20 +230,67 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
     $width = $viewport['width'];
     $crop = "{$width}x{$height}+{$left}+{$top}";
   }
+  
+  // Do a first pass that eliminates frames with duplicate content.
   foreach ($files as $file) {
     $duplicate = false;
-    if (isset($previousFile)) {
-      $command = "convert  \"$previousFile\" \"$file\" -crop $crop miff:- | compare -metric AE - -fuzz 3% null: 2>&1";
-      //$command = "convert  \"$previousFile\" \"$file\" -crop $crop miff:- | compare -metric AE - null: 2>&1";
-      $differentPixels = shell_exec($command);
-      if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 10)
-        $duplicate = true;
-    }
-    if ($duplicate) {
+    if (isset($previousFile))
+      $duplicate = AreAVIFramesDuplicate($previousFile, $file, 0, $crop);
+    if ($duplicate)
       unlink($file);
-    } else
+    else
       $previousFile = $file;
   }
+  
+  // Do a second pass looking for the first non-blank frame with an allowance
+  // for up to a 10% per-pixel difference for noise.
+  $files = glob("$videoDir/image*.png");
+  $blank = $files[0];
+  $count = count($files);
+  for ($i = 1; $i < $count; $i++) {
+    if (AreAVIFramesDuplicate($blank, $files[$i], 10, $crop))
+      unlink($files[$i]);
+    else
+      break;
+  }
+  
+  // Do a third pass looking for the last frame but with an allowance for up
+  // to a 10% difference in individual pixels to deal with noise.
+  $files = glob("$videoDir/image*.png");
+  $files = array_reverse($files);
+  $count = count($files);
+  $duplicates = array();
+  if ($count > 2) {
+    $baseline = $files[0];
+    $previousFrame = $baseline;
+    for ($i = 1; $i < $count; $i++) {
+      if (AreAVIFramesDuplicate($baseline, $files[$i], 10, $crop)) {
+        $duplicates[] = $previousFrame;
+        $previousFrame = $files[$i];
+      } else {
+        break;
+      }
+    }
+    if (count($duplicates)) {
+      foreach ($duplicates as $file)
+        unlink($file);
+    }
+  }
+}
+
+function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
+  $duplicate = false;
+  $fuzzStr = '';
+  if ($fuzzPct)
+    $fuzzStr = "-fuzz $fuzzPct% ";
+  $cropStr = '';
+  if (isset($crop))
+    $cropStr = "-crop $crop ";
+  $command = "convert  \"$image1\" \"$image2\" {$cropStr}miff:- | compare -metric AE - {$fuzzStr}null: 2>&1";
+  $differentPixels = shell_exec($command);
+  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels == 0)
+    $duplicate = true;
+  return $duplicate;
 }
 
 /**
