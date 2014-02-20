@@ -44,7 +44,7 @@ $now = time();
 
 if ((isset($archive_dir) && strlen($archive_dir)) ||
     (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
-    CheckRelay();
+    //CheckRelay();
     CheckOldDir('./results/old');
 
     // Archive the actual tests
