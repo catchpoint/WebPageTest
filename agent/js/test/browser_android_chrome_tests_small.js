@@ -338,6 +338,7 @@ describe('browser_android_chrome small', function() {
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
 
+    assertAdbCall('forward', '--remove', /^tcp:\d+$/);
     if (args.pac) {
       spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);

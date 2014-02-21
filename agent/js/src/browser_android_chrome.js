@@ -386,9 +386,25 @@ BrowserAndroidChrome.prototype.releaseDevToolsPortIfNeeded_ = function() {
   'use strict';
   if (this.devtoolsPortLock_) {
     logger.debug('Releasing DevTools port ' + this.devToolsPort_);
+    var devToolsPort = this.devToolsPort_;
     this.devToolsPort_ = undefined;
     this.devtoolsPortLock_.release();
     this.devtoolsPortLock_ = undefined;
+    this.adb_.adb(['forward', '--remove', 'tcp:' + devToolsPort]).addErrback(
+        function(e) {
+      // Log a warning.  '--remove' is a relatively new adb feature, so we'll
+      // test if it's supported by running `adb -s <serial> --help` and
+      // grepping the stderr usage for this command.
+      //
+      // Ideally we'd use `adb -s <serial> help`, which returns 0 instead of 1,
+      // but 'help' still prints to stderr and our exec only supports stdout.
+      this.adb_.adb(['--help']).addBoth(function(e2) {
+        var isSupported = (e2 && (/adb\s+forward\s+--remove/).test(e2.stderr));
+        logger.warn('Unable to release adb port ' + devToolsPort + ': ' +
+            (isSupported ? e.stderr :
+             'Your version of adb lacks "forward --remove" support?'));
+      }.bind(this));
+    }.bind(this));
   }
 };
 
