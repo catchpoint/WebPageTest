@@ -353,4 +353,61 @@ describe('wpt_client small', function() {
     wpt_client.process.emit('uncaughtException', e);
     should.ok(doneSpy.calledOnce);
   });
+
+  function testSignal_(signal_name, expectedStartCount, expectedAbortCount) {
+    // Creates a 2-run uncached+cached job, emits the given signal in the
+    // middle of the first run's uncached load, then verifies that the job
+    // exits with the expected startRun and abort counts.
+    var startSpy = sandbox.spy();
+    var submitSpy = sandbox.spy();
+    var abortSpy = sandbox.spy();
+    var exitSpy = sandbox.spy();
+
+    var client = new wpt_client.Client(app, {serverUrl: 'url'});
+    test_utils.stubLog(sandbox, function(
+         levelPrinter, levelName, stamp, source, message) {
+      return ((/^Received \S+, will exit after /).test(message) ||
+          (/^Aborting job /).test(message) ||
+          (/^Finished run \d+/).test(message) ||
+          (/^Exiting due to /).test(message));
+    });
+    client.onStartJobRun = function(job) {
+      startSpy();
+      if (1 === job.runNumber && !job.isCacheWarm) {
+        global.setTimeout(function() {
+          wpt_client.process.emit(signal_name);  // Signal on first iteration
+        }, 5);
+      }
+      global.setTimeout(function() {
+        if (!abortSpy.called && !exitSpy.called) {
+          var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+          job.isCacheWarm = !isRunFinished;  // Set for next iteration
+          job.runFinished(isRunFinished);
+        }
+      }, 10);
+    };
+    client.onAbortJob = function(job) {
+      abortSpy();
+      job.runFinished(true);
+    };
+    sandbox.stub(client, 'submitResult_', function(
+        job, isJobFinished, callback) {
+      submitSpy();
+      callback();
+    });
+    wpt_client.process.exit = exitSpy;
+    client.processJobResponse_('{"Test ID": "gaga", "runs": 2, "fvonly": 0}');
+    sandbox.clock.tick(40);
+
+    should.ok(exitSpy.calledOnce);
+    should.equal(startSpy.callCount, expectedStartCount);
+    should.equal(submitSpy.callCount, startSpy.callCount);
+    should.equal(abortSpy.callCount, expectedAbortCount);
+  }
+
+  it('should handle SIGQUIT', testSignal_.bind(undefined, 'SIGQUIT', 4, 0));
+  it('should handle SIGABRT', testSignal_.bind(undefined, 'SIGABRT', 2, 0));
+  it('should handle SIGTERM', testSignal_.bind(undefined, 'SIGTERM', 1, 1));
+  it('should handle SIGINT', testSignal_.bind(undefined, 'SIGINT', 1, 1));
+
 });
