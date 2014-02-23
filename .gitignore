@@ -33,3 +33,4 @@ agent/js/node_modules/jshint/
 agent/js/results/
 agent/js/src-cov/
 agent/js/runtmp_*
+.vagrant
